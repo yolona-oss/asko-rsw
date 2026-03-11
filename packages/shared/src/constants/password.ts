@@ -1,0 +1,3 @@
+export const MAX_USER_PASSWORD_LENGTH = 64
+export const MIN_USER_PASSWORD_LENGTH = 8
+export const MIN_USER_PASSWORD_ENTROPY = 50
