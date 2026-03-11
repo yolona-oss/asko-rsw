@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build:web": "cd packages/shared && npm run build && cd ../../apps/web && npm run build",
+    "build:web": "cd packages/shared && npm run build && cd ../ui && npm run build && cd ../../apps/web && npm run build",
     "prod:web": "cd apps/web && npm run start",
     "build": "turbo run build",
     "dev": "turbo run dev",
