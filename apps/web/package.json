@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:web": "cd packages/shared && npm run build && cd ../../apps/web && npm run build",
+    "prod:web": "cd apps/web && npm run start",
     "dev": "next dev --turbopack --port 3000",
     "build": "next build",
     "start": "next start",
