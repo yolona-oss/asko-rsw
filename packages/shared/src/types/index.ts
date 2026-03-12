@@ -9,3 +9,9 @@ export * from './address-book.type';
 export * from './currency.type'
 export * from './review.type';
 export * from './week-schedule.type';
+
+export * from './device.type';
+export * from './repair.type';
+export * from './certificate.type';
+export * from './dealer.type';
+export * from './repairer.type';

@@ -15,6 +15,13 @@ import { FileUploadModule } from 'modules/file-upload/file-upload.module';
 import { AddressModule } from 'modules/address/address.module';
 import { WScheduleModule } from 'modules/wschedule/wschedule.module';
 import { TaskScheduleModule } from 'modules/task-schedule/task.module';
+import { DeviceModule } from 'modules/device/device.module';
+import { CertificateModule } from 'modules/certificate/certificate.module';
+import { RepairModule } from 'modules/repair/repair.module';
+import { RepairerModule } from 'modules/repairer/repairer.module';
+import { DealerModule } from 'modules/dealer/dealer.module';
+import { ReviewModule } from 'modules/review/review.module';
+import { NotificationModule } from 'modules/notification/notification.module';
 
 import { join } from 'path';
 console.log("Images path: ", join(process.cwd(), 'images'))
@@ -31,6 +38,13 @@ console.log("Images path: ", join(process.cwd(), 'images'))
         AddressModule,
         FileUploadModule,
         UserModule,
+        DeviceModule,
+        CertificateModule,
+        RepairModule,
+        RepairerModule,
+        DealerModule,
+        ReviewModule,
+        NotificationModule,
 
         ServeStaticModule.forRootAsync({
             inject: [AppConfig],

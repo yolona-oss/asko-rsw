@@ -10,15 +10,22 @@ export class NotificationGateway {
         this.server.to(`user:${userId}`).emit('notification', payload);
     }
 
-    emitToManagers(restaurantId: string, payload: any) {
-        this.server.to(`managers:${restaurantId}`).emit('notification', payload);
+    emitRepairUpdate(userId: string, payload: any) {
+        this.server.to(`user:${userId}`).emit('repair:update', payload);
     }
 
-    emitToKitchen(restaurantId: string, payload: any) {
-        this.server.to(`kitchen:${restaurantId}`).emit('notification', payload);
+    emitRepairCompleted(userId: string, payload: any) {
+        this.server.to(`user:${userId}`).emit('repair:completed', payload);
     }
 
-    // optional: client joins rooms on connect
+    emitToManagers(payload: any) {
+        this.server.to('managers').emit('notification', payload);
+    }
+
+    emitToRepairers(payload: any) {
+        this.server.to('repairers').emit('notification', payload);
+    }
+
     @SubscribeMessage('joinRoom')
     onJoin(@MessageBody() body: { room: string }, @ConnectedSocket() client: Socket) {
         client.join(body.room);
