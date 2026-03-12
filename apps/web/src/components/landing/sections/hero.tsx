@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 export function HeroSection() {
   return (
@@ -29,7 +29,7 @@ export function HeroSection() {
           </div>
 
           <div className="relative w-full aspect-[358/159] md:aspect-[1120/486] overflow-hidden">
-            <Image
+            <SkeletonImage
               src="/images/hero-bg.png"
               alt="Ремонт бытовой техники ASKO"
               fill

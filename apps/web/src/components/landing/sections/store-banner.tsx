@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 export function StoreBannerSection() {
   return (
@@ -27,13 +27,16 @@ export function StoreBannerSection() {
             </div>
           </div>
 
-          <div className="relative w-full aspect-[358/190] md:aspect-[1120/466] overflow-hidden flex items-end justify-center"
-            style={{
-              background: `linear-gradient(0deg, rgba(0,0,0,0.36), rgba(0,0,0,0.36)), url(/images/1193d61dbf4fc3ce48ae2b59274b4402d2e0cf38.jpg) center/cover`,
-            }}
-          >
-            <div className="py-6 md:py-12">
-              <Image
+          <div className="relative w-full aspect-[358/190] md:aspect-[1120/466] overflow-hidden flex items-end justify-center">
+            <SkeletonImage
+              src="/images/1193d61dbf4fc3ce48ae2b59274b4402d2e0cf38.jpg"
+              alt=""
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-black/36" />
+            <div className="relative py-6 md:py-12">
+              <SkeletonImage
                 src="/images/asko-undertext-logo.svg"
                 alt="ASKO Официальный магазин"
                 width={654}

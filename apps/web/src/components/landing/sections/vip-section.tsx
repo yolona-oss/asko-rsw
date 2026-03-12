@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const vipCards = [
   {
@@ -17,13 +18,15 @@ const vipCards = [
 
 export function VipSection() {
   return (
-    <section
-      className="relative py-8 md:py-16 lg:py-24"
-      style={{
-        background: `linear-gradient(0deg, rgba(0,0,0,0.47), rgba(0,0,0,0.47)), url(/images/b5b74734a8947326bb92bf563b03dd350fa5f2dc.jpg) center/cover`,
-      }}
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative py-8 md:py-16 lg:py-24">
+      <SkeletonImage
+        src="/images/b5b74734a8947326bb92bf563b03dd350fa5f2dc.jpg"
+        alt=""
+        fill
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-black/47" />
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Mobile layout */}
         <div className="flex flex-col gap-6 lg:hidden">
           <h2 className="text-[42px] leading-[46px] font-medium text-page-bg">

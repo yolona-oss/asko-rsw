@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const tabs = ['Стиральные машины', 'Посудомоечные машины', 'Электроплиты', 'Варочные панели'];
 
@@ -38,7 +38,7 @@ function ModelCard({ model }: { model: typeof models[number] }) {
   return (
     <div className="flex flex-col gap-6 lg:gap-10">
       <div className="relative w-full aspect-[358/400] lg:aspect-[548/769] overflow-hidden">
-        <Image
+        <SkeletonImage
           src={model.image}
           alt={model.title}
           fill

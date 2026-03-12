@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const faqs = [
   {
@@ -99,14 +99,14 @@ export function FaqSection() {
             </div>
 
             <div className="relative w-[548px] h-[616px] flex-shrink-0 overflow-hidden">
-              <Image
+              <SkeletonImage
                 src="/images/1731b900ff4fac95565c50b611fe49f94d6da6dd.jpg"
                 alt="ASKO"
                 fill
                 className="object-cover brightness-[0.71]"
               />
               <div className="absolute bottom-12 right-12">
-                <Image
+                <SkeletonImage
                   src="/images/logo.svg"
                   alt="ASKO"
                   width={360}

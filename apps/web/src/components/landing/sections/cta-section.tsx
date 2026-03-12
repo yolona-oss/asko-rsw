@@ -1,19 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 export function CtaSection() {
   const [messenger, setMessenger] = useState('telegram');
 
   return (
-    <section
-      id="cta"
-      className="relative"
-      style={{
-        background: `linear-gradient(0deg, rgba(0,0,0,0.62), rgba(0,0,0,0.62)), url(/images/91a976b91feaec523511756feaddfcb4585e85ff.jpg) center/cover`,
-      }}
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-16 lg:py-24">
+    <section id="cta" className="relative">
+      <SkeletonImage
+        src="/images/91a976b91feaec523511756feaddfcb4585e85ff.jpg"
+        alt=""
+        fill
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-black/62" />
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-16 lg:py-24">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-32">
           <div className="flex flex-col gap-2 lg:max-w-[377px]">
             <h2 className="text-[32px] leading-9 md:text-[42px] md:leading-[46px] font-medium text-page-bg">

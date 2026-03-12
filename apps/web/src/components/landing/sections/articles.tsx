@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const articles = [
   {
@@ -69,7 +69,7 @@ export function ArticlesSection() {
                   className="flex-shrink-0 w-full snap-start flex flex-col gap-4 pr-4"
                 >
                   <div className="relative w-full aspect-[320/250] overflow-hidden">
-                    <Image
+                    <SkeletonImage
                       src={article.image}
                       alt={article.title}
                       fill
@@ -115,7 +115,7 @@ export function ArticlesSection() {
             {articles.map((article) => (
               <article key={article.title} className="flex flex-col gap-6">
                 <div className="relative w-full aspect-[262/204] overflow-hidden">
-                  <Image
+                  <SkeletonImage
                     src={article.image}
                     alt={article.title}
                     fill

@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const features = [
   {
@@ -39,7 +39,7 @@ export function PersonalAccountSection() {
                   }`}
               >
                 <div className="relative w-full lg:w-[547px] flex-shrink-0 aspect-[332/319] lg:aspect-[547/478] overflow-hidden">
-                  <Image
+                  <SkeletonImage
                     src={feature.image}
                     alt={feature.title}
                     fill

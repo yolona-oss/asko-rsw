@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@asko/ui';
+import { SkeletonImage } from '@/components/landing/skeleton-image';
 
 const categories = [
   'Холодильники',
@@ -140,7 +140,7 @@ export function ServicesSection() {
             </div>
 
             <div className="relative w-full lg:flex-1 aspect-[358/231] lg:aspect-[643/413] overflow-hidden">
-              <Image
+              <SkeletonImage
                 src={service.image}
                 alt={service.title}
                 fill
