@@ -15,7 +15,7 @@ const navLinks = [
 
 export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authReady } = useAuth();
   const accountHref = isAuthenticated ? '/account' : '/auth';
 
   return (
@@ -56,15 +56,19 @@ export function LandingHeader() {
           </nav>
 
           <div className="hidden md:flex items-center">
-            <Link
-              href={accountHref}
-              className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-white/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
-            >
-              Личный кабинет
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
-              </svg>
-            </Link>
+            {!authReady ? (
+              <div className="animate-pulse bg-[#C4C4C4] h-9 w-[160px]" />
+            ) : (
+              <Link
+                href={accountHref}
+                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-white/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
+              >
+                Личный кабинет
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                </svg>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -84,13 +88,17 @@ export function LandingHeader() {
                 </Link>
               ))}
               <hr className="border-border-light my-2" />
-              <Link
-                href={accountHref}
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-main border border-border-light"
-                onClick={() => setMenuOpen(false)}
-              >
-                Личный кабинет
-              </Link>
+              {!authReady ? (
+                <div className="animate-pulse bg-[#C4C4C4] h-9 w-full" />
+              ) : (
+                <Link
+                  href={accountHref}
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-main border border-border-light"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Личный кабинет
+                </Link>
+              )}
             </nav>
           </div>
         )}

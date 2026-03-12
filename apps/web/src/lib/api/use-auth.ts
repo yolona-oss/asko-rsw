@@ -1,15 +1,18 @@
 'use client';
 
+import { useContext } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
+import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared';
 
 export function useAuth() {
   const { accessToken, user } = useAppSelector((s) => s.auth);
-  return { isAuthenticated: !!accessToken, accessToken, user };
+  const authReady = useContext(AuthReadyContext);
+  return { isAuthenticated: !!accessToken, accessToken, user, authReady };
 }
 
 export function useSession() {
