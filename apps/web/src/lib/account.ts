@@ -1,17 +1,35 @@
+import type { IAuthUser, Role } from '@asko/shared';
+
 export type UserRole = 'user' | 'dealer' | 'manager';
 export type LoadingStage = 'skeleton' | 'partial' | 'loaded';
 
-export interface AccountUser {
-  name: string;
-  role: UserRole;
+export interface AccountUser extends IAuthUser {
   avatar?: string;
-  email?: string;
 }
 
 export interface MenuItem {
   href: string;
   label: string;
   icon: string; // icon key
+}
+
+const ROLE_MAP: Partial<Record<Role, UserRole>> = {
+  user: 'user',
+  dealer: 'dealer',
+  manager: 'manager',
+};
+
+export function primaryRole(user: AccountUser): UserRole {
+  for (const role of user.roles) {
+    const mapped = ROLE_MAP[role as Role];
+    if (mapped) return mapped;
+  }
+  return 'user';
+}
+
+export function displayName(user: AccountUser): string {
+  const full = [user.firstName, user.lastName].filter(Boolean).join(' ');
+  return full || user.email?.split('@')[0] || '';
 }
 
 export const menuByRole: Record<UserRole, MenuItem[]> = {

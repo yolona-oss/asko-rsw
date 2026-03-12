@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useAccount } from '@/components/account/account-provider';
+import { primaryRole } from '@/lib/account';
 import { UserRequestStatus } from '@/components/account/user/user-request-status';
 import { ManagerRequestDetail } from '@/components/account/manager/manager-request-detail';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
@@ -19,7 +20,7 @@ export default function RequestDetailPage() {
     );
   }
 
-  if (user.role === 'manager') {
+  if (primaryRole(user) === 'manager') {
     return <ManagerRequestDetail requestId={id} />;
   }
 

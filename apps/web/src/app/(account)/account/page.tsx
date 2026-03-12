@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount } from '@/components/account/account-provider';
+import { primaryRole } from '@/lib/account';
 import { UserDashboard } from '@/components/account/user/user-dashboard';
 import { DealerDashboard } from '@/components/account/dealer/dealer-dashboard';
 import { ManagerDashboard } from '@/components/account/manager/manager-dashboard';
@@ -29,7 +30,7 @@ export default function AccountDashboardPage() {
     return <DashboardSkeleton />;
   }
 
-  switch (user.role) {
+  switch (primaryRole(user)) {
     case 'dealer':
       return <DealerDashboard />;
     case 'manager':

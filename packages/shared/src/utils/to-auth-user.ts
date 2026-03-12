@@ -12,6 +12,8 @@ import { IAuthUser } from '../dto/auth/auth-user.dto';
 
 export const toAuthUser = (user: IUser): IAuthUser => ({
     id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     phone: user.phone,
     createdAt: user.createdAt,

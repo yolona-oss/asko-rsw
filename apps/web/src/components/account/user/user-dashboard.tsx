@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAccount } from '@/components/account/account-provider';
-import { getGreeting } from '@/lib/account';
+import { getGreeting, displayName } from '@/lib/account';
 
 function StatCard({
   title,
@@ -36,7 +36,7 @@ export function UserDashboard() {
       {/* Greeting */}
       <h1 className="text-[32px] lg:text-[42px] font-medium leading-tight tracking-[-0.01em] text-text-main">
         {greeting},<br />
-        {user?.name}!
+        {user && displayName(user)}!
       </h1>
 
       {/* Stat cards - mobile stacked, desktop 3-col */}

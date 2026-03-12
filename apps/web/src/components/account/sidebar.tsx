@@ -4,14 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAccount } from './account-provider';
-import { menuByRole } from '@/lib/account';
+import { menuByRole, primaryRole } from '@/lib/account';
 import { MenuIcon } from './menu-icon';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
 
 export function AccountSidebar() {
   const pathname = usePathname();
   const { stage, user } = useAccount();
-  const menu = user ? menuByRole[user.role] : [];
+  const menu = user ? menuByRole[primaryRole(user)] : [];
 
   return (
     <aside className="hidden lg:flex flex-col w-[200px] flex-shrink-0 bg-page-bg border-r border-border-light">

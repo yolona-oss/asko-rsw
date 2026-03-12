@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAccount } from './account-provider';
-import { menuByRole } from '@/lib/account';
+import { menuByRole, primaryRole } from '@/lib/account';
 import { MenuIcon } from './menu-icon';
 import { SkeletonCircle } from './skeleton';
 
@@ -13,7 +13,7 @@ export function AccountHeader() {
   const { stage, user } = useAccount();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const menu = user ? menuByRole[user.role] : [];
+  const menu = user ? menuByRole[primaryRole(user)] : [];
 
   return (
     <>

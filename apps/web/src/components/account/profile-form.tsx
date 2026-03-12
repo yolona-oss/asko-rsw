@@ -195,7 +195,7 @@ export function ProfileForm() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl text-white font-medium">
-                  {firstName?.[0]?.toUpperCase() || user?.name?.[0]?.toUpperCase() || '?'}
+                  {firstName?.[0]?.toUpperCase() || user?.firstName?.[0]?.toUpperCase() || '?'}
                 </div>
               )}
             </div>

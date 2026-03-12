@@ -16,12 +16,14 @@ export function useAuth() {
 }
 
 export function useSession() {
+  const authReady = useContext(AuthReadyContext);
   return useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data } = await authApi.getSession();
       return data;
     },
+    enabled: authReady,
     retry: false,
     staleTime: 5 * 60 * 1000,
   });

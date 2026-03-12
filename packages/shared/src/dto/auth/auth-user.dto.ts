@@ -5,6 +5,8 @@ import { AuthProvider } from "./enums/auth-provider.enum";
  */
 export interface IAuthUser {
     id: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     phone?: string;
     createdAt: Date;

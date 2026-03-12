@@ -1,7 +1,7 @@
 'use client';
 
 import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, createContext, type ReactNode } from 'react';
 import { store, useAppDispatch, useAppSelector } from './index';
 import { setCredentials } from './auth-slice';
@@ -18,6 +18,7 @@ export const AuthReadyContext = createContext(false);
  */
 function AuthGate({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const accessToken = useAppSelector((s) => s.auth.accessToken);
   const [ready, setReady] = useState(!!accessToken);
 
@@ -34,6 +35,7 @@ function AuthGate({ children }: { children: ReactNode }) {
         const token = store.getState().auth.accessToken;
         if (token) {
           dispatch(setCredentials({ accessToken: token, user }));
+          queryClient.setQueryData(['session'], user);
         }
       })
       .catch(() => {

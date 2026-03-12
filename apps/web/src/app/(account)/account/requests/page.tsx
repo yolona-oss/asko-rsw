@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount } from '@/components/account/account-provider';
+import { primaryRole } from '@/lib/account';
 import { ManagerRequests } from '@/components/account/manager/manager-requests';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
 
@@ -25,7 +26,7 @@ export default function RequestsPage() {
     );
   }
 
-  if (user.role === 'manager') {
+  if (primaryRole(user) === 'manager') {
     return <ManagerRequests />;
   }
 
