@@ -13,13 +13,16 @@
   "dependencies": {
     "@asko/shared": "*",
     "@asko/ui": "*",
+    "@nestjs/websockets": "^11.1.16",
     "@reduxjs/toolkit": "^2.11.2",
     "@tanstack/react-query": "^5.90.21",
     "axios": "^1.13.6",
+    "framer-motion": "^12.36.0",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

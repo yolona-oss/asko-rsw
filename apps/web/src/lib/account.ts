@@ -23,17 +23,15 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   ],
   dealer: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/orders', label: 'Заказы', icon: 'orders' },
-    { href: '/account/clients', label: 'Клиенты', icon: 'clients' },
+    { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   manager: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
-    { href: '/account/reports', label: 'Отчеты', icon: 'certificate' },
-    { href: '/account/settings', label: 'Настройки', icon: 'settings' },
+    { href: '/account/access', label: 'Доступы', icon: 'clients' },
+    { href: '/account/payments', label: 'Платежи', icon: 'payments' },
   ],
 };
 

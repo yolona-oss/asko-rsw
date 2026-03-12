@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-// Inlined from @asko/shared REFRESH_TOKEN.cookie.name
-// to avoid pulling Node.js APIs into Edge Runtime
 const REFRESH_TOKEN_COOKIE = 'refreshTkn';
 
 const PROTECTED_PREFIX = '/account';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith(PROTECTED_PREFIX)) {
