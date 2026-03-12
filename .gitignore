@@ -3,6 +3,8 @@ save*
 *.save
 .turbo
 .turbo/
+asko-scraper/
+asko-scraper
 import/
 *.txt
 *.log

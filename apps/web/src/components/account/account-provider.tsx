@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import type { AccountUser, LoadingStage, UserRole } from '@/lib/account';
 import { useAuth, useSession } from '@/lib/api/use-auth';
+import { profileApi } from '@/lib/api/profile';
 import type { Role } from '@asko/shared';
 
 interface AccountContextType {
@@ -42,24 +43,39 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Stage 1: we have basic auth data from Redux (login response)
     if (authUser) {
-      setUser({
+      setUser((prev) => ({
         name: authUser.email?.split('@')[0] ?? '',
         role: mapRole(authUser.roles),
         email: authUser.email,
-      });
-      setStage('partial');
+        avatar: prev?.avatar,
+      }));
+      // Only upgrade skeleton → partial, never downgrade loaded → partial
+      setStage((prev) => prev === 'skeleton' ? 'partial' : prev);
     }
   }, [authUser]);
+
+  const avatarFetched = useRef(false);
 
   useEffect(() => {
     // Stage 2: full session data loaded via React Query
     if (sessionUser) {
-      setUser({
+      setUser((prev) => ({
         name: sessionUser.email?.split('@')[0] ?? '',
         role: mapRole(sessionUser.roles),
         email: sessionUser.email,
-      });
+        avatar: prev?.avatar,
+      }));
       setStage('loaded');
+
+      // Fetch avatar once
+      if (!avatarFetched.current) {
+        avatarFetched.current = true;
+        profileApi.getAvatarUrl(sessionUser.id).then((url) => {
+          if (url) {
+            setUser((prev) => prev ? { ...prev, avatar: url } : prev);
+          }
+        });
+      }
     }
   }, [sessionUser]);
 

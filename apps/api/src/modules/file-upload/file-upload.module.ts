@@ -11,11 +11,12 @@ import path from "path";
 
 import { Express } from "express";
 import { loadFileFromPath } from "utils";
+import { Image } from "@entities/image.entity";
 
 @Module({
     imports: [
         MikroOrmModule.forFeature([
-
+            Image
         ])
     ],
     controllers: [
@@ -35,7 +36,7 @@ export class FileUploadModule implements OnApplicationBootstrap {
     constructor(
         private imagesService: ImageService,
         private config: AppConfig
-    ) {}
+    ) { }
 
     async onApplicationBootstrap() {
         const productImagePath = path.join(process.cwd(), this.config.blankImages.product)
@@ -44,17 +45,17 @@ export class FileUploadModule implements OnApplicationBootstrap {
 
         try {
             await this.imagesService.createBlank(await loadFileFromPath(productImagePath), ImageTypeEnum.Product)
-        } catch(e) {
+        } catch (e) {
             console.log(e)
         }
         try {
             await this.imagesService.createBlank(await loadFileFromPath(userImagePath), ImageTypeEnum.User)
-        } catch(e) {
+        } catch (e) {
             console.log(e)
         }
         try {
             await this.imagesService.createBlank(await loadFileFromPath(categoryImagePath), ImageTypeEnum.Category)
-        } catch(e) {
+        } catch (e) {
             console.log(e)
         }
     }

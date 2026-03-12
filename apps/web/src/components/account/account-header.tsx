@@ -59,11 +59,10 @@ export function AccountHeader() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-3 px-2 py-3 text-base tracking-[-0.01em] ${
-                        isActive
+                      className={`flex items-center gap-3 px-2 py-3 text-base tracking-[-0.01em] ${isActive
                           ? 'text-brand-red font-medium'
                           : 'text-text-main'
-                      }`}
+                        }`}
                     >
                       <MenuIcon icon={item.icon} active={isActive} />
                       {item.label}

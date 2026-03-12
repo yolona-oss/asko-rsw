@@ -46,6 +46,16 @@ export class ImageService {
     }
 
     async uploadUserAvatar(file: Express.Multer.File, ownerId: string) {
+        // Remove previous avatar(s) for this user
+        const existing = await this.em.find(Image, {
+            ownerType: ImageTypeEnum.User,
+            ownerId: String(ownerId),
+        });
+        for (const old of existing) {
+            await this.imgProcessor.deleteImageFiles(old.image);
+            this.em.remove(old);
+        }
+
         const imageObj = await this.imgProcessor.processUserAvatar(file);
         const image = new Image();
 
