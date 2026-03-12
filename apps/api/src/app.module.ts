@@ -24,6 +24,7 @@ import { ReviewModule } from 'modules/review/review.module';
 import { NotificationModule } from 'modules/notification/notification.module';
 
 import { join } from 'path';
+import { CursorModule } from 'modules/cursor/cursor.module';
 console.log("Images path: ", join(process.cwd(), 'images'))
 
 @Module({
@@ -46,6 +47,8 @@ console.log("Images path: ", join(process.cwd(), 'images'))
         ReviewModule,
         NotificationModule,
 
+        CursorModule,
+
         ServeStaticModule.forRootAsync({
             inject: [AppConfig],
             useFactory: (config: AppConfig) => {
@@ -59,16 +62,8 @@ console.log("Images path: ", join(process.cwd(), 'images'))
                 }]
             }
         }),
-        // ThrottlerModule.forRoot([{
-        //     ttl: 15 * 60 * 1000,
-        //     limit: 100
-        // }]),
     ],
     providers: [
-        // {
-        //     provide: APP_GUARD,
-        //     useClass: ThrottlerGuard
-        // },
         {
             provide: APP_GUARD,
             useClass: JwtGuard,

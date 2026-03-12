@@ -4,12 +4,16 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Session } from '@entities/auth/session.entity';
 import { Certificate } from '@entities/certificate.entity';
 import { CertificateStatus } from '@asko/shared';
+import { CursorService } from 'modules/cursor/cursor.service';
 
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
 
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly cursorService: CursorService
+    ) { }
 
     @Cron(CronExpression.EVERY_HOUR)
     async cleanupExpiredSessions() {
@@ -36,5 +40,11 @@ export class TasksService {
         if (expired > 0) {
             this.logger.log(`Expired ${expired} certificate(s)`);
         }
+    }
+
+    @Cron(CronExpression.EVERY_10_SECONDS)
+    async handleStaleCursors() {
+        this.logger.debug('Cleaning up stale cursors...');
+        await this.cursorService.cleanupStaleCursors();
     }
 }
