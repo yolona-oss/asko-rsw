@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./dist/src",
+        "paths": {
+            "@entities/*": ["entities/*"],
+            "entities/*": ["entities/*"],
+            "common/*": ["common/*"],
+            "modules/*": ["modules/*"]
+        }
+    }
+}

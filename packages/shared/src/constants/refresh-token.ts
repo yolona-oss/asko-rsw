@@ -6,9 +6,9 @@ export const REFRESH_TOKEN = {
     cookie: {
         name: "refreshTkn",
         options: {
-            sameSite: false,
+            sameSite: 'strict' as const,
             secure: true,
-            httpOnly: false,
+            httpOnly: true,
             expires: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days
         },
     },

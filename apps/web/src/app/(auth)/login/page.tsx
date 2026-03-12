@@ -1,10 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
+import { useLogin } from '@/lib/api/use-auth';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const login = useLogin();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !password) return;
+    login.mutate({ email, password });
+  }
+
+  const errorMessage = login.error
+    ? (login.error as any)?.response?.data?.message ?? 'Ошибка авторизации'
+    : null;
+
   return (
     <>
       {/* Mobile layout */}
@@ -23,8 +39,12 @@ export default function LoginPage() {
           </div>
 
           {/* Form content */}
-          <div className="relative z-10 flex flex-col flex-1 px-4 pt-8 pb-10">
+          <form onSubmit={handleSubmit} className="relative z-10 flex flex-col flex-1 px-4 pt-8 pb-10">
             <div className="flex flex-col gap-6 flex-1">
+              {errorMessage && (
+                <div className="px-3 py-2 text-sm text-white bg-red-600/80">{errorMessage}</div>
+              )}
+
               {/* Email */}
               <div className="flex flex-col gap-2">
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
@@ -32,8 +52,11 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
                   className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
+                  required
                 />
               </div>
 
@@ -44,18 +67,22 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
                   className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#B5B7C0] placeholder:text-[#B5B7C0] outline-none"
+                  required
                 />
               </div>
 
               {/* Button */}
               <button
-                type="button"
-                className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm"
+                type="submit"
+                disabled={login.isPending}
+                className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60"
                 style={{ background: '#EB001C' }}
               >
-                Авторизироваться
+                {login.isPending ? 'Загрузка...' : 'Авторизироваться'}
               </button>
 
               {/* Forgot password */}
@@ -77,7 +104,7 @@ export default function LoginPage() {
                 className="brightness-0 invert"
               />
             </div>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -86,7 +113,11 @@ export default function LoginPage() {
         <div className="relative w-[1120px] h-[676px] bg-white">
           {/* Left: form */}
           <div className="absolute left-6 top-1/2 -translate-y-1/2 w-[446px]">
-            <div className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              {errorMessage && (
+                <div className="px-3 py-2 text-sm text-white bg-red-600">{errorMessage}</div>
+              )}
+
               <div className="flex flex-col gap-8">
                 {/* Email */}
                 <div className="flex flex-col gap-2">
@@ -95,8 +126,11 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@email.com"
                     className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
+                    required
                   />
                 </div>
 
@@ -107,21 +141,25 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Введите пароль"
                     className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#B5B7C0] placeholder:text-[#B5B7C0] outline-none"
+                    required
                   />
                 </div>
               </div>
 
               {/* Button */}
               <button
-                type="button"
-                className="flex items-center justify-center w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer"
+                type="submit"
+                disabled={login.isPending}
+                className="flex items-center justify-center w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer disabled:opacity-60"
                 style={{ background: '#EB001C' }}
               >
-                Авторизироваться
+                {login.isPending ? 'Загрузка...' : 'Авторизироваться'}
               </button>
-            </div>
+            </form>
 
             {/* Forgot password - positioned below the form */}
             <Link

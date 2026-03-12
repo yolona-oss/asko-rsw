@@ -1,7 +1,11 @@
+import { IsString, IsEmail } from 'class-validator';
+
 export class ConfirmMailDto {
-    token: string;
+    @IsString()
+    token!: string;
 }
 
 export class ResendConfirmMailDto {
-    email: string;
+    @IsEmail()
+    email!: string;
 }

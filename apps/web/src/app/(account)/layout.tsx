@@ -1,4 +1,7 @@
-import { AccountSidebar } from '@/components/layout/account-sidebar';
+import { AccountProvider } from '@/components/account/account-provider';
+import { AccountSidebar } from '@/components/account/sidebar';
+import { AccountHeader } from '@/components/account/account-header';
+import { AuthGuard } from '@/components/account/auth-guard';
 
 export default function AccountLayout({
   children,
@@ -6,11 +9,18 @@ export default function AccountLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 flex min-h-screen">
-      <AccountSidebar />
-      <main className="flex-1 bg-gray-50">
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
-      </main>
-    </div>
+    <AccountProvider>
+      <AuthGuard>
+        <div className="flex min-h-screen bg-page-bg">
+          <AccountSidebar />
+          <div className="relative flex-1 flex flex-col">
+            <AccountHeader />
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
+        </div>
+      </AuthGuard>
+    </AccountProvider>
   );
 }

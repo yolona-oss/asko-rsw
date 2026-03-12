@@ -1,10 +1,21 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
 
-export default function SignupPage() {
+export default function AuthPage() {
+  const [email, setEmail] = useState('');
+  const router = useRouter();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const url = email ? `/register?email=${encodeURIComponent(email)}` : '/register';
+    router.push(url);
+  }
+
   return (
     <>
       {/* Mobile layout */}
@@ -43,20 +54,22 @@ export default function SignupPage() {
               </div>
 
               {/* Input + Button */}
-              <div className="flex flex-col gap-4 w-full">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
                   className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                 />
                 <button
-                  type="button"
+                  type="submit"
                   className="flex items-center justify-center w-full h-10 text-sm font-medium text-white shadow-sm"
                   style={{ background: '#D7102A' }}
                 >
                   Создать аккаунт
                 </button>
-              </div>
+              </form>
 
               {/* Divider */}
               <div className="flex items-center gap-1 w-full">
@@ -138,20 +151,22 @@ export default function SignupPage() {
               </div>
 
               {/* Input + Button */}
-              <div className="flex flex-col gap-4 w-full">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
                   className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                 />
                 <button
-                  type="button"
+                  type="submit"
                   className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm"
                   style={{ background: '#D7102A' }}
                 >
                   Создать аккаунт
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Bottom: divider + login */}

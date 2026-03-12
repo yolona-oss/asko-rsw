@@ -1,16 +1,48 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "noEmit": false,
-    "declaration": false,
-    "paths": {
-      "@/*": ["./src/*"]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2021",
+        "outDir": "./dist",
+        "baseUrl": "./src",
+        "useDefineForClassFields": false,
+        "skipLibCheck": true,
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "incremental": true,
+        "importHelpers": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "strictBindCallApply": true,
+        "forceConsistentCasingInFileNames": false,
+        "strictPropertyInitialization": false,
+        "alwaysStrict": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noImplicitAny": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "incremental": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "types": ["jest", "node"],
+        "paths": {
+            "@entities/*": ["entities/*"],
+            "entities/*": ["entities/*"],
+            "common/*": ["common/*"],
+            "modules/*": ["modules/*"]
+        }
+        //"assets": [
+        //    {
+        //        "include": "./src/raw_data/russian-cities.json",
+        //        "outDir": "build/src/raw_data",
+        //        "watchAssets": true
+        //    }
+        //],
+        //"watchAssets": true
     }
-  },
-  "include": ["./src/**/*"],
-  "exclude": ["node_modules", "dist"]
 }

@@ -15,13 +15,15 @@ export function isCrossEnv(): boolean {
     return isProdEnv() || isDevEnv()
 }
 
-function findRepoRoot(startDir: string): string {
+let findRepoRoot: (d: string) => string
+
+function findMonorepoBaseRoot(startDir: string): string {
     let dir = startDir
 
     while (dir !== path.dirname(dir)) {
         if (
             fs.existsSync(path.join(dir, 'package.json')) &&
-                fs.existsSync(path.join(dir, 'apps'))
+            fs.existsSync(path.join(dir, 'apps'))
         ) {
             return dir
         }
@@ -30,6 +32,12 @@ function findRepoRoot(startDir: string): string {
 
     throw new Error('Unable to locate monorepo root')
 }
+
+function findCurrentPaackageRoot(_: string) {
+    return './'
+}
+
+findRepoRoot = findCurrentPaackageRoot
 
 export function getEnvFileDir(): string {
     return findRepoRoot(process.cwd())
@@ -53,9 +61,9 @@ function getExistsEnvPostfix(postfixes: string[]): string {
 
     throw new Error(
         'Unable to find .env file with avaliable postfixes: ' +
-            postfixes.join(', ') +
-            '. In: ' +
-            baseDir
+        postfixes.join(', ') +
+        '. In: ' +
+        baseDir
     )
 }
 
@@ -82,9 +90,11 @@ function resolveEnvFile(): string {
 }
 
 export function getEnvFilePath(): string | undefined {
-  try {
-    return resolveEnvFile();
-  } catch {
-    return undefined;
-  }
+    try {
+        const dotenvpath = resolveEnvFile()
+        console.log(`ENV on use: ${dotenvpath}`)
+        return dotenvpath
+    } catch {
+        return undefined;
+    }
 }

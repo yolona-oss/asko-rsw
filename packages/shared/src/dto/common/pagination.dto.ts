@@ -1,6 +1,16 @@
+import { IsOptional, IsNumber, IsString } from 'class-validator';
+
 export class PaginationDto {
+    @IsOptional()
+    @IsNumber()
     offset?: number = 1;
+
+    @IsOptional()
+    @IsNumber()
     limit?: number = 20;
+
+    @IsOptional()
+    @IsString()
     search?: string;
 }
 

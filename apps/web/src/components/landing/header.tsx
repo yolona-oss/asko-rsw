@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
+import { useAuth } from '@/lib/api/use-auth';
 
 const navLinks = [
   { href: '/', label: 'Главная', active: true },
@@ -14,6 +15,8 @@ const navLinks = [
 
 export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const accountHref = isAuthenticated ? '/account' : '/auth';
 
   return (
     <header className="sticky top-0 z-50 bg-page-bg border-b border-border-light">
@@ -54,7 +57,7 @@ export function LandingHeader() {
 
           <div className="hidden md:flex items-center">
             <Link
-              href="/login"
+              href={accountHref}
               className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-white/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
             >
               Личный кабинет
@@ -82,7 +85,7 @@ export function LandingHeader() {
               ))}
               <hr className="border-border-light my-2" />
               <Link
-                href="/login"
+                href={accountHref}
                 className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-main border border-border-light"
                 onClick={() => setMenuOpen(false)}
               >
