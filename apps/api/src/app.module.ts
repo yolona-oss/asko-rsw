@@ -25,6 +25,7 @@ import { NotificationModule } from 'modules/notification/notification.module';
 
 import { join } from 'path';
 import { CursorModule } from 'modules/cursor/cursor.module';
+import { HealthModule } from 'modules/health/health.module';
 console.log("Images path: ", join(process.cwd(), 'images'))
 
 @Module({
@@ -48,6 +49,7 @@ console.log("Images path: ", join(process.cwd(), 'images'))
         NotificationModule,
 
         CursorModule,
+        HealthModule,
 
         ServeStaticModule.forRootAsync({
             inject: [AppConfig],

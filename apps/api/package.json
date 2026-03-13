@@ -99,7 +99,7 @@
     },
     "devDependencies": {
         "@nestjs/cli": "^11.0.16",
-        "@nestjs/testing": "^7.5.5",
+        "@nestjs/testing": "^11.0.16",
         "@types/compression": "^1.8.1",
         "@types/cookie-parser": "^1.4.9",
         "@types/crypto-js": "^4.2.2",
