@@ -2,12 +2,12 @@
 
 import { useAccount } from '@/components/account/account-provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { CertificateWizard } from '@/components/account/dealer/certificate-wizard';
+import { AdminUsers } from '@/components/account/admin/admin-users';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
 
-export default function CreateCertificatePage() {
+export default function UsersPage() {
   const { stage } = useAccount();
-  const allowed = useRoleGuard(['dealer']);
+  const allowed = useRoleGuard(['admin']);
 
   if (!allowed) {
     if (stage === 'skeleton') {
@@ -21,5 +21,5 @@ export default function CreateCertificatePage() {
     return null;
   }
 
-  return <CertificateWizard />;
+  return <AdminUsers />;
 }

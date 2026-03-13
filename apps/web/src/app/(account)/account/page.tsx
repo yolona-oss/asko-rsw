@@ -5,6 +5,7 @@ import { primaryRole } from '@/lib/account';
 import { UserDashboard } from '@/components/account/user/user-dashboard';
 import { DealerDashboard } from '@/components/account/dealer/dealer-dashboard';
 import { ManagerDashboard } from '@/components/account/manager/manager-dashboard';
+import { AdminDashboard } from '@/components/account/admin/admin-dashboard';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
 
 function DashboardSkeleton() {
@@ -31,6 +32,8 @@ export default function AccountDashboardPage() {
   }
 
   switch (primaryRole(user)) {
+    case 'admin':
+      return <AdminDashboard />;
     case 'dealer':
       return <DealerDashboard />;
     case 'manager':

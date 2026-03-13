@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount } from '@/components/account/account-provider';
+import { useRoleGuard } from '@/hooks/use-role-guard';
 import { ProfileForm } from '@/components/account/profile-form';
 import { SkeletonBlock, SkeletonCircle } from '@/components/account/skeleton';
 
@@ -32,10 +33,12 @@ function ProfileSkeleton() {
 }
 
 export default function ProfilePage() {
-  const { stage, user } = useAccount();
+  const { stage } = useAccount();
+  const allowed = useRoleGuard(['user', 'dealer', 'admin']);
 
-  if (stage === 'skeleton' || !user) {
-    return <ProfileSkeleton />;
+  if (!allowed) {
+    if (stage === 'skeleton') return <ProfileSkeleton />;
+    return null;
   }
 
   return (

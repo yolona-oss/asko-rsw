@@ -1,6 +1,6 @@
 import type { IAuthUser, Role } from '@asko/shared';
 
-export type UserRole = 'user' | 'dealer' | 'manager';
+export type UserRole = 'user' | 'dealer' | 'manager' | 'admin';
 export type LoadingStage = 'skeleton' | 'partial' | 'loaded';
 
 export interface AccountUser extends IAuthUser {
@@ -14,6 +14,8 @@ export interface MenuItem {
 }
 
 const ROLE_MAP: Partial<Record<Role, UserRole>> = {
+  super_admin: 'admin',
+  admin: 'admin',
   user: 'user',
   dealer: 'dealer',
   manager: 'manager',
@@ -33,6 +35,13 @@ export function displayName(user: AccountUser): string {
 }
 
 export const menuByRole: Record<UserRole, MenuItem[]> = {
+  admin: [
+    { href: '/account', label: 'Главная', icon: 'home' },
+    { href: '/account/devices', label: 'Устройства', icon: 'devices' },
+    { href: '/account/invitations', label: 'Приглашения', icon: 'invite' },
+    { href: '/account/users', label: 'Пользователи', icon: 'clients' },
+    { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },
+  ],
   user: [
     { href: '/account', label: 'Главная', icon: 'home' },
     { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
