@@ -2,7 +2,8 @@ FROM node:20-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
-# ---------- prune (turbo) ----------
+
+# ---------- prune ----------
 FROM base AS prune
 
 COPY . .
@@ -16,7 +17,7 @@ FROM base AS deps
 COPY --from=prune /app/out/json/ .
 COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=prune /app/out/.npmrc ./.npmrc
+COPY .npmrc .npmrc
 
 RUN pnpm install --frozen-lockfile
 
@@ -36,7 +37,7 @@ FROM base AS prod-deps
 COPY --from=prune /app/out/json/ .
 COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=prune /app/out/.npmrc ./.npmrc
+COPY .npmrc .npmrc
 
 RUN pnpm install --prod --frozen-lockfile
 
@@ -48,6 +49,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=prod-deps /app/node_modules ./node_modules
+
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
@@ -55,7 +57,5 @@ COPY apps/api/images ./apps/api/images
 COPY apps/api/.env.prod ./apps/api/.env.prod
 
 WORKDIR /app/apps/api
-
-EXPOSE 4000
 
 CMD ["node", "dist/src/main.js"]
