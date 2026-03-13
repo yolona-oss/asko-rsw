@@ -1,20 +1,38 @@
-FROM node:20-alpine AS runner
+FROM node:20-alpine AS base
+RUN corepack enable
 WORKDIR /app
 
+# ---------- prune ----------
+FROM base AS prune
+COPY . .
+RUN pnpm dlx turbo prune api --docker
+
+# ---------- deps ----------
+FROM base AS deps
+COPY --from=prune /app/out/full/ .
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY .npmrc .npmrc
+COPY tsconfig.json tsconfig.json
+RUN pnpm install --frozen-lockfile
+
+# ---------- builder ----------
+FROM base AS builder
+COPY --from=deps /app ./
+RUN pnpm turbo run build --filter=api...
+
+# ---------- runner ----------
+FROM node:20-alpine AS runner
+WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/node_modules ./node_modules
-
-# copy api build
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
-
-# copy shared build INTO node_modules scope
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 
-# assets
 COPY apps/api/images ./apps/api/images
 COPY apps/api/.env.prod ./apps/api/.env.prod
 
 WORKDIR /app/apps/api
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
