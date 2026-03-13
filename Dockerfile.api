@@ -10,7 +10,7 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json ./packages/ui/
 RUN npm ci
 
-# --- builder: compile shared + api, then prune to prod deps ---
+# --- builder: compile shared + api ---
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app ./
@@ -20,16 +20,26 @@ COPY apps/api ./apps/api
 COPY apps/api/.env.prod ./apps/api/.env.prod
 RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=apps/api
-# prune dev dependencies in-place (avoids a second npm ci)
-RUN npm prune --omit=dev
+
+# --- prod-deps: production-only node_modules (depends on builder to force sequential execution) ---
+FROM base AS prod-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json ./packages/ui/
+# dummy copy from builder to create a dependency edge — prevents parallel npm ci
+COPY --from=builder /app/package.json /tmp/.deps-barrier
+RUN npm ci --omit=dev
 
 # --- runner ---
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/package.json ./
 
 # shared dist (workspace symlink resolves here)
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
