@@ -1,39 +1,39 @@
 FROM node:20-alpine AS base
 RUN corepack enable
+WORKDIR /app
+
+
+# ---------- prune ----------
+FROM base AS prune
+
+COPY . .
+
+RUN pnpm dlx turbo prune web --docker
 
 
 # ---------- deps ----------
 FROM base AS deps
-WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json tsconfig.json ./
-
-COPY apps/web/package.json ./apps/web/
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/ui/package.json ./packages/ui/
+COPY --from=prune /app/out/json/ .
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=prune /app/out/.npmrc ./.npmrc
 
 RUN pnpm install --frozen-lockfile
 
 
-# ---------- builder ----------
+# ---------- build ----------
 FROM base AS builder
-WORKDIR /app
 
 COPY --from=deps /app ./
+COPY --from=prune /app/out/full/ .
 
-COPY packages/shared ./packages/shared
-COPY packages/ui ./packages/ui
-COPY apps/web ./apps/web
-
-COPY apps/web/.env.prod ./apps/web/.env.prod
-
-RUN pnpm --filter @asko/shared build
-RUN pnpm --filter @asko/ui build
-RUN pnpm --filter @asko/web build
+RUN pnpm turbo run build --filter=web...
 
 
 # ---------- runner ----------
-FROM base AS runner
+FROM node:20-alpine AS runner
+
 WORKDIR /app
 ENV NODE_ENV=production
 

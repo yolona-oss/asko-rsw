@@ -1,60 +1,55 @@
 FROM node:20-alpine AS base
 RUN corepack enable
+WORKDIR /app
+
+# ---------- prune (turbo) ----------
+FROM base AS prune
+
+COPY . .
+
+RUN pnpm dlx turbo prune api --docker
+
 
 # ---------- deps ----------
 FROM base AS deps
-WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json tsconfig.json ./
-
-COPY apps/api/package.json ./apps/api/
-COPY apps/web/package.json ./apps/web/
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/ui/package.json ./packages/ui/
+COPY --from=prune /app/out/json/ .
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=prune /app/out/.npmrc ./.npmrc
 
 RUN pnpm install --frozen-lockfile
 
 
-# ---------- builder ----------
+# ---------- build ----------
 FROM base AS builder
-WORKDIR /app
 
 COPY --from=deps /app ./
+COPY --from=prune /app/out/full/ .
 
-COPY packages/shared ./packages/shared
-COPY apps/api ./apps/api
-
-COPY apps/api/.env.prod ./apps/api/.env.prod
-
-RUN pnpm --filter @asko/shared build
-RUN pnpm --filter api build
+RUN pnpm turbo run build --filter=api...
 
 
 # ---------- prod deps ----------
 FROM base AS prod-deps
-WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-
-COPY apps/api/package.json ./apps/api/
-COPY packages/shared/package.json ./packages/shared/
+COPY --from=prune /app/out/json/ .
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=prune /app/out/.npmrc ./.npmrc
 
 RUN pnpm install --prod --frozen-lockfile
 
 
 # ---------- runner ----------
-FROM base AS runner
+FROM node:20-alpine AS runner
+
 WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=prod-deps /app/package.json ./
-
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
-
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
 COPY apps/api/images ./apps/api/images
 COPY apps/api/.env.prod ./apps/api/.env.prod
