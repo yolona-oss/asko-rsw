@@ -27,21 +27,4 @@ jobs:
       - name: Run deploy script
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "set -e; \
-             echo '=== Current working directory ==='; \
-             pwd; \
-             echo '=== Changing to APP_DIR ==='; \
-             cd ${{ secrets.APP_DIR }} || { echo 'Failed to cd into APP_DIR'; exit 1; }; \
-             echo '=== Now in:'; pwd; \
-             echo '=== Files in directory:'; \
-             ls -la; \
-             echo '=== Running deploy script ==='; \
-             if [ -x ./deploy.sh ]; then \
-               ./deploy.sh; \
-             elif [ -f ./deploy.sh ]; then \
-               echo 'Script exists but not executable, fixing...'; \
-               chmod +x ./deploy.sh && ./deploy.sh; \
-             else \
-               echo 'deploy.sh not found!'; \
-               exit 1; \
-             fi"
+          "bash ${{ secrets.APP_DIR }}/deploy.sh"
