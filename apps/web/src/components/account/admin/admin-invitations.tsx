@@ -1,5 +1,6 @@
 'use client';
 
+import { Role } from '@asko/shared';
 import { useState } from 'react';
 
 interface Invitation {
@@ -10,12 +11,12 @@ interface Invitation {
   used: boolean;
 }
 
-const ROLE_OPTIONS = [
-  { value: 'user', label: 'Пользователь' },
-  { value: 'dealer', label: 'Дилер' },
-  { value: 'manager', label: 'Менеджер' },
-  { value: 'repairer', label: 'Мастер' },
-  { value: 'admin', label: 'Администратор' },
+const ROLE_OPTIONS: Array<{ value: Role, label: string }> = [
+  { value: Role.USER, label: 'Пользователь' },
+  { value: Role.DEALER, label: 'Дилер' },
+  { value: Role.MANAGER, label: 'Менеджер' },
+  { value: Role.REPAIRER, label: 'Мастер' },
+  { value: Role.ADMIN, label: 'Администратор' },
 ];
 
 const TTL_OPTIONS = [

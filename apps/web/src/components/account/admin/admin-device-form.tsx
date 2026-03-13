@@ -52,14 +52,14 @@ export function AdminDeviceForm() {
   };
 
   const handleSubmit = () => {
-    alert('Устройство создано');
+    alert('Товар создан');
     router.push('/account/devices');
   };
 
   return (
     <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
       <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-        Новое устройство
+        Новый товар
       </h1>
 
       <div className="max-w-[600px] flex flex-col gap-6">
@@ -75,7 +75,7 @@ export function AdminDeviceForm() {
         </div>
 
         <div>
-          <FieldLabel>Тип устройства</FieldLabel>
+          <FieldLabel>Тип товара</FieldLabel>
           <select
             value={data.type}
             onChange={(e) => update({ type: e.target.value })}
@@ -113,7 +113,7 @@ export function AdminDeviceForm() {
         <div>
           <FieldLabel>Описание</FieldLabel>
           <textarea
-            placeholder="Описание устройства..."
+            placeholder="Описание товара..."
             value={data.description}
             onChange={(e) => update({ description: e.target.value })}
             rows={4}
@@ -156,7 +156,7 @@ export function AdminDeviceForm() {
             onClick={handleSubmit}
             className="px-8 py-2.5 text-sm font-medium text-white bg-brand-red cursor-pointer"
           >
-            Создать устройство
+            Создать товар
           </button>
         </div>
       </div>

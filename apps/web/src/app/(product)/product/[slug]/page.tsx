@@ -29,11 +29,6 @@ export default async function ProductPage({
     <div className="bg-page-bg">
       <Container>
         <div className="flex flex-col gap-8 md:gap-12 py-6 md:py-8 lg:py-10">
-          {/* Breadcrumb */}
-          <nav className="text-sm leading-[18px] tracking-[-0.01em] text-text-main">
-            Главная — {product.category.toLowerCase()} — {product.title}
-          </nav>
-
           {/* Desktop: gallery + info side by side */}
           <div className="hidden lg:flex gap-14">
             <ProductGallery images={product.images} title={product.title} />

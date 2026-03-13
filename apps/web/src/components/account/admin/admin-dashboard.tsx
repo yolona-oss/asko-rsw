@@ -30,7 +30,7 @@ export function AdminDashboard() {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Устройства:" value={12} href="/account/devices" />
+        <StatCard title="Товары:" value={12} href="/account/devices" />
         <StatCard title="Ожидают проверки:" value={3} href="/account/manage-certificates" />
         <StatCard title="Активные пользователи:" value={48} href="/account/users" />
         <StatCard title="Приглашения:" value={5} href="/account/invitations" />
@@ -41,7 +41,7 @@ export function AdminDashboard() {
           href="/account/devices"
           className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red cursor-pointer"
         >
-          Управление устройствами
+          Управление товарами
         </Link>
         <Link
           href="/account/invitations"

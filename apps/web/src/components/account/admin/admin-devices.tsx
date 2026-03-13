@@ -73,13 +73,13 @@ export function AdminDevices() {
     <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
       <div className="flex items-center justify-between">
         <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-          Устройства
+          Товары
         </h1>
         <Link
           href="/account/devices/create"
           className="px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
         >
-          Добавить устройство
+          Добавить товар
         </Link>
       </div>
 
