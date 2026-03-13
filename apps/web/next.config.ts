@@ -14,6 +14,17 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        // 'reflect-metadata': require.resolve('reflect-metadata'),
+      };
+    }
+
+    return config;
+  },
 };
 
 export default nextConfig;
