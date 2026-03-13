@@ -220,25 +220,22 @@ export const CursorProvider: React.FC<CursorProviderProps> = ({
     }}>
       {children}
 
-      {/* Debug overlay */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          position: 'fixed',
-          bottom: 10,
-          right: 10,
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: 10,
-          borderRadius: 5,
-          fontSize: 12,
-          zIndex: 100000,
-          fontFamily: 'monospace',
-        }}>
-          <div>🔌 {isConnected ? 'Connected' : 'Disconnected'}</div>
-          <div>👥 Cursors: {cursors.size}</div>
-          <div>📍 Container: {containerRect ? `${Math.round(containerRect.width)}x${Math.round(containerRect.height)}` : 'null'}</div>
-        </div>
-      )}
+      <div style={{
+        position: 'fixed',
+        bottom: 10,
+        right: 10,
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: 10,
+        borderRadius: 5,
+        fontSize: 12,
+        zIndex: 100000,
+        fontFamily: 'monospace',
+      }}>
+        <div>🔌 {isConnected ? 'Connected' : 'Disconnected'}</div>
+        <div>👥 Cursors: {cursors.size}</div>
+        <div>📍 Container: {containerRect ? `${Math.round(containerRect.width)}x${Math.round(containerRect.height)}` : 'null'}</div>
+      </div>
     </CursorContext.Provider>
   );
 };
