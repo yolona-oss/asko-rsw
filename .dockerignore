@@ -1,0 +1,9 @@
+node_modules
+.next
+dist
+.git
+*.log
+.turbo
+__save_api_basic
+asko-scraper
+notes

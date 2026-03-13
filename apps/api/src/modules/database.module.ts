@@ -49,10 +49,10 @@ import { readFileSync } from "fs";
                                 ca: readFileSync('ca.pem')
                             } : false
                         },
-                        pool: {
-                            min: 0,
-                            max: 5, // NOTE for dev opt on free trial server
-                        },
+                        // pool: {
+                        //     min: 0,
+                        //     max: 5, // NOTE for dev opt on free trial server
+                        // },
                     },
                     entities: [
                         RepairRequest,

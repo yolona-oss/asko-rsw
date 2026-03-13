@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
+import { useState } from 'react';
+import { PaymentModal } from './payment-modal';
 
 function StatCard({
   title,

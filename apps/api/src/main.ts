@@ -10,13 +10,13 @@ import { GlobalExceptionFilter } from './common/filters/global.filter';
 
 import { corsOptions } from './config/cors.config';
 import { helmetOptions } from './config/helmet.config';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { isProdEnv } from '@asko/shared';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-        logger: ['error', 'warn', 'debug', 'log', 'verbose'],
+        logger: isProdEnv() ? ['error', 'warn'] : ['error', 'warn', 'debug', 'log', 'verbose'],
         rawBody: true,
         bufferLogs: true
     });
@@ -28,7 +28,6 @@ async function bootstrap() {
     // app.use(json({ limit: '50mb' }));
     // app.use(urlencoded({ limit: '50mb', extended: true }));
 
-    app.setGlobalPrefix('api')
     app.useGlobalFilters(new GlobalExceptionFilter())
     app.enableCors(corsOptions)
     // app.enableShutdownHooks(['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGKILL'])
@@ -43,11 +42,6 @@ async function bootstrap() {
             },
         }),
     );
-
-    app.enableVersioning({
-        type: VersioningType.URI,
-        defaultVersion: '1',
-    });
 
     if (!isProdEnv()) {
         const swaggerConfig = new DocumentBuilder()
