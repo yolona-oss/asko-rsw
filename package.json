@@ -1,17 +1,12 @@
 {
+  "packageManager": "pnpm@9.0.0",
   "name": "@asko/monorepo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "build:web": "cd packages/shared && npm run build && cd ../ui && npm run build && cd ../../apps/web && npm run build",
-    "prod:web": "cd apps/web && npm run start",
-    "build": "turbo run build",
-    "dev": "turbo run dev",
+    "build:web": "turbo run build --filter=@asko/web",
+    "prod:web": "cd apps/web && pnpm run start",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean"
@@ -20,8 +15,8 @@
     "turbo": "^2",
     "typescript": "^5.8"
   },
-  "packageManager": "npm@11.10.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "pnpm": ">=9"
   }
 }

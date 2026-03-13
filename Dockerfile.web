@@ -1,43 +1,50 @@
-FROM node:lts-alpine AS base
+FROM node:20-alpine AS base
+RUN corepack enable
 
-# --- deps ---
+
+# ---------- deps ----------
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY apps/api/package.json ./apps/api/
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json tsconfig.json ./
+
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json ./packages/ui/
-RUN npm ci
 
-# --- builder: compile shared -> ui -> web ---
+RUN pnpm install --frozen-lockfile
+
+
+# ---------- builder ----------
 FROM base AS builder
 WORKDIR /app
+
 COPY --from=deps /app ./
-COPY tsconfig.json ./
+
 COPY packages/shared ./packages/shared
 COPY packages/ui ./packages/ui
 COPY apps/web ./apps/web
-# env file must be present at build time — NEXT_PUBLIC_* vars are inlined
-COPY apps/web/.env.prod ./apps/web/.env.prod
-RUN npm run build --workspace=packages/shared
-RUN npm run build --workspace=packages/ui
-RUN npm run build --workspace=apps/web
 
-# --- runner ---
+COPY apps/web/.env.prod ./apps/web/.env.prod
+
+RUN pnpm --filter @asko/shared build
+RUN pnpm --filter @asko/ui build
+RUN pnpm --filter @asko/web build
+
+
+# ---------- runner ----------
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# standalone output (includes traced node_modules + monorepo structure)
 COPY --from=builder /app/apps/web/.next/standalone ./
-# static assets (not included in standalone trace)
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-# public folder
 COPY --from=builder /app/apps/web/public ./apps/web/public
-# env file (for runtime config resolution)
+
 COPY apps/web/.env.prod ./apps/web/.env.prod
 
 WORKDIR /app/apps/web
+
 EXPOSE 3000
+
 CMD ["node", "server.js"]
