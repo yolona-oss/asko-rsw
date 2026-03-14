@@ -191,8 +191,12 @@ export class UserService {
 
         await this.em.persistAndFlush(user)
 
-        const default_avatar_e = await this.imagesService.findBlank(ImageTypeEnum.User)
-        await this.imagesService.attachImage(default_avatar_e.id, { ownerId: user.id, ownerType: ImageTypeEnum.User })
+        try {
+            const default_avatar_e = await this.imagesService.findBlank(ImageTypeEnum.User)
+            await this.imagesService.attachImage(default_avatar_e.id, { ownerId: user.id, ownerType: ImageTypeEnum.User })
+        } catch {
+            // Blank image not yet seeded — user is created without a default avatar
+        }
 
         return user
     }

@@ -33,6 +33,7 @@ export default function AccountDashboardPage() {
     return <DashboardSkeleton />;
   }
 
+  console.log(user)
   switch (primaryRole(user)) {
     case 'admin':
       return <AdminDashboard />;
