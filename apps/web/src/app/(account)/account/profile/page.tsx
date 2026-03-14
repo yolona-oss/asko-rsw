@@ -39,7 +39,7 @@ function ProfileSkeleton() {
 
 export default function ProfilePage() {
   const { stage } = useAccount();
-  const allowed = useRoleGuard(['user', 'dealer', 'admin']);
+  const allowed = useRoleGuard(['user', 'dealer', 'admin', 'repairer']);
 
   if (!allowed) {
     if (stage === 'skeleton') return <ProfileSkeleton />;

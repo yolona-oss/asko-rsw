@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { Dialog } from '@asko/ui';
 import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
+import { useLogout } from '@/lib/api/use-auth';
 import { MenuIcon } from './menu-icon';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
 
@@ -12,6 +15,8 @@ export function AccountSidebar() {
   const pathname = usePathname();
   const { stage, user } = useAccount();
   const menu = user ? menuByRole[primaryRole(user)] : [];
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const logout = useLogout();
 
   return (
     <aside className="hidden lg:flex flex-col w-[200px] flex-shrink-0 bg-page-bg border-r border-border-light">
@@ -46,11 +51,10 @@ export function AccountSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-2 py-2 text-sm tracking-[-0.01em] transition-colors ${
-                  isActive
-                    ? 'text-brand-red font-medium'
-                    : 'text-text-main hover:text-brand-red'
-                }`}
+                className={`flex items-center gap-3 px-2 py-2 text-sm tracking-[-0.01em] transition-colors ${isActive
+                  ? 'text-brand-red font-medium'
+                  : 'text-text-main hover:text-brand-red'
+                  }`}
               >
                 {stage === 'loaded' ? (
                   <MenuIcon icon={item.icon} active={isActive} />
@@ -64,22 +68,48 @@ export function AccountSidebar() {
         )}
       </nav>
 
-      {/* Back to site */}
-      <div className="px-4 pb-6">
+      {/* Back to site + Logout */}
+      <div className="px-4 pb-6 flex flex-col gap-3">
         {stage === 'loaded' ? (
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Вернуться на сайт
-          </Link>
+          <>
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Вернуться на сайт
+            </Link>
+            <button
+              type="button"
+              onClick={() => setLogoutDialogOpen(true)}
+              className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Выйти
+            </button>
+          </>
         ) : (
-          <SkeletonBlock className="h-4 w-32" />
+          <>
+            <SkeletonBlock className="h-4 w-32" />
+            <SkeletonBlock className="h-4 w-16" />
+          </>
         )}
       </div>
+
+      <Dialog
+        open={logoutDialogOpen}
+        title="Выйти из аккаунта?"
+        description="Вы будете перенаправлены на страницу входа."
+        confirmLabel="Выйти"
+        cancelLabel="Отмена"
+        loading={logout.isPending}
+        onConfirm={() => logout.mutate()}
+        onCancel={() => setLogoutDialogOpen(false)}
+      />
     </aside>
   );
 }

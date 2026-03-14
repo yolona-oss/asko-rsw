@@ -4,16 +4,20 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { Dialog } from '@asko/ui';
 import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
+import { useLogout } from '@/lib/api/use-auth';
 import { MenuIcon } from './menu-icon';
 import { SkeletonCircle } from './skeleton';
 
 export function AccountHeader() {
   const { stage, user } = useAccount();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const pathname = usePathname();
   const menu = user ? menuByRole[primaryRole(user)] : [];
+  const logout = useLogout();
 
   return (
     <>
@@ -60,8 +64,8 @@ export function AccountHeader() {
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
                       className={`flex items-center gap-3 px-2 py-3 text-base tracking-[-0.01em] ${isActive
-                          ? 'text-brand-red font-medium'
-                          : 'text-text-main'
+                        ? 'text-brand-red font-medium'
+                        : 'text-text-main'
                         }`}
                     >
                       <MenuIcon icon={item.icon} active={isActive} />
@@ -70,7 +74,7 @@ export function AccountHeader() {
                   );
                 })}
               </nav>
-              <div className="px-4 mt-8">
+              <div className="px-4 mt-8 flex flex-col gap-3">
                 <Link
                   href="/"
                   onClick={() => setMenuOpen(false)}
@@ -81,13 +85,23 @@ export function AccountHeader() {
                   </svg>
                   Вернуться на сайт
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); setLogoutDialogOpen(true); }}
+                  className="flex items-center gap-1 text-sm text-text-main"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                  </svg>
+                  Выйти
+                </button>
               </div>
             </div>
           </>
         )}
       </header>
 
-      {/* Desktop top bar (notification + avatar) */}
+      {/* Desktop top bar (notification + avatar + logout) */}
       <div className="hidden lg:flex items-center justify-end gap-4 absolute top-8 right-8 z-10">
         {stage === 'loaded' ? (
           <>
@@ -103,14 +117,37 @@ export function AccountHeader() {
                 <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
               )}
             </div>
+            {/* Logout */}
+            <button
+              type="button"
+              onClick={() => setLogoutDialogOpen(true)}
+              aria-label="Выйти"
+              className="text-text-main hover:text-brand-red transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+            </button>
           </>
         ) : (
           <>
             <SkeletonCircle className="w-6 h-6" />
             <SkeletonCircle className="w-9 h-9" />
+            <SkeletonCircle className="w-5 h-5" />
           </>
         )}
       </div>
+
+      <Dialog
+        open={logoutDialogOpen}
+        title="Выйти из аккаунта?"
+        description="Вы будете перенаправлены на страницу входа."
+        confirmLabel="Выйти"
+        cancelLabel="Отмена"
+        loading={logout.isPending}
+        onConfirm={() => logout.mutate()}
+        onCancel={() => setLogoutDialogOpen(false)}
+      />
     </>
   );
 }

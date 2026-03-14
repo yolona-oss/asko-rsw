@@ -33,7 +33,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         dispatch(logout());
-        router.replace('/login');
+        router.replace('/auth');
       });
   }, [isAuthenticated, dispatch, router]);
 

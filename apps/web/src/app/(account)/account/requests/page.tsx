@@ -3,6 +3,7 @@
 import { useAccount } from '@/components/account/account-provider';
 import { primaryRole } from '@/lib/account';
 import { ManagerRequests } from '@/components/account/manager/manager-requests';
+import { RepairerRequest } from '@/components/account/repairer/repairer-request';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
 import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -31,6 +32,10 @@ export default function RequestsPage() {
 
   if (primaryRole(user) === 'manager') {
     return <ManagerRequests />;
+  }
+
+  if (primaryRole(user) === 'repairer') {
+    return <RepairerRequest />;
   }
 
   return (

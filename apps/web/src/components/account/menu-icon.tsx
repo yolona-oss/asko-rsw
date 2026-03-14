@@ -58,6 +58,24 @@ export function MenuIcon({ icon, active = false }: { icon: string; active?: bool
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       );
+    case 'wrench':
+      return (
+        <svg className={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.653-4.655m5.8-5.8l1.875-1.875a3.375 3.375 0 00-4.773-4.773L8.67 8.67m5.8 5.8l-5.8-5.8" />
+        </svg>
+      );
+    case 'history':
+      return (
+        <svg className={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'manual':
+      return (
+        <svg className={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        </svg>
+      );
     default:
       return <div className="w-5 h-5 rounded-full bg-[#C4C4C4]" />;
   }

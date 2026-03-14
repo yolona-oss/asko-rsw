@@ -32,6 +32,9 @@ export type { ToggleProps } from './components/toggle';
 export { Modal } from './components/modal';
 export type { ModalProps } from './components/modal';
 
+export { Dialog } from './components/dialog';
+export type { DialogProps } from './components/dialog';
+
 export {
   DataTable,
   DataTableHeader,

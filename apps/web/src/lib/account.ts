@@ -1,6 +1,6 @@
 import type { IAuthUser, Role } from '@asko/shared/client';
 
-export type UserRole = 'user' | 'dealer' | 'manager' | 'admin';
+export type UserRole = 'user' | 'dealer' | 'manager' | 'admin' | 'repairer';
 export type LoadingStage = 'skeleton' | 'partial' | 'loaded';
 
 export interface AccountUser extends IAuthUser {
@@ -19,6 +19,7 @@ const ROLE_MAP: Partial<Record<Role, UserRole>> = {
   user: 'user',
   dealer: 'dealer',
   manager: 'manager',
+  repairer: 'repairer',
 };
 
 export function primaryRole(user: AccountUser): UserRole {
@@ -59,6 +60,13 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
     { href: '/account/access', label: 'Доступы', icon: 'clients' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
+  ],
+  repairer: [
+    { href: '/account', label: 'Главная', icon: 'home' },
+    { href: '/account/requests', label: 'Заявка', icon: 'wrench' },
+    { href: '/account/history', label: 'История', icon: 'history' },
+    { href: '/account/man', label: 'Мануалы', icon: 'manual' },
+    { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
 };
 

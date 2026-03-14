@@ -1,3 +1,4 @@
+import { CreateInvitationLinkDto } from '@asko/shared';
 import { api } from './client';
 
 export const adminApi = {
@@ -22,8 +23,8 @@ export const adminApi = {
   getInvitations() {
     return api.get('/invite/');
   },
-  createInvitation(data: { role: string; ttl: string }) {
-    return api.post('/invite/', data);
+  createInvitation(data: CreateInvitationLinkDto) {
+    return api.post('/invite', data, { withCredentials: true });
   },
   deleteInvitation(id: string) {
     return api.delete(`/invite/${id}`);
