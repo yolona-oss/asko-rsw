@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 function StatCard({ title, value, href }: { title: string; value: number; href: string }) {
   return (
@@ -23,11 +25,11 @@ export function AdminDashboard() {
   const greeting = getGreeting();
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
-      <h1 className="text-[32px] lg:text-[42px] font-medium leading-tight tracking-[-0.01em] text-text-main">
+    <PageContainer>
+      <PageHeader size="large">
         {greeting},<br />
         {user && displayName(user)}!
-      </h1>
+      </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard title="Товары:" value={12} href="/account/devices" />
@@ -62,6 +64,6 @@ export function AdminDashboard() {
           Проверка сертификатов
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

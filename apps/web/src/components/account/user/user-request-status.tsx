@@ -1,5 +1,8 @@
 'use client';
 
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
+
 const STEPS = [
   { key: 'created', label: 'Заявка создана' },
   { key: 'choosing', label: 'Выбор мастера' },
@@ -56,11 +59,11 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const currentStepIdx = STEPS.findIndex((s) => s.key === request.status);
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
+    <PageContainer>
       {/* Page title */}
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
+      <PageHeader>
         Статусы заявки
-      </h1>
+      </PageHeader>
 
       {/* Status info */}
       <div className="flex flex-col gap-2">
@@ -86,6 +89,6 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </div>
         ))}
       </div>
-    </div>
+    </PageContainer>
   );
 }

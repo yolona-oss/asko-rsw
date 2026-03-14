@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Button, Card, Select, FormField, DataTable, DataTableHeader, DataTableRow, DataTableCell } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 interface Invitation {
   id: string;
@@ -46,41 +49,30 @@ function InvitationRow({ invitation }: { invitation: Invitation }) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-0 px-5 py-4 border-b border-border-light last:border-b-0 bg-white">
-      <div className="lg:w-[200px] lg:flex-shrink-0">
-        <p className="text-xs text-text-sub lg:hidden">Токен:</p>
+    <DataTableRow>
+      <DataTableCell mobileLabel="Токен:" className="lg:w-[200px] lg:flex-shrink-0">
         <p className="text-sm font-mono text-text-main">{invitation.token.slice(0, 12)}...</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Роль:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Роль:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{ROLE_LABELS[invitation.role] ?? invitation.role}</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Истекает:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Истекает:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{invitation.expiresAt}</p>
-      </div>
-      <div className="lg:w-[100px] lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Статус:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
         <span className={`text-sm font-medium ${invitation.used ? 'text-text-sub' : 'text-green-600'}`}>
           {invitation.used ? 'xxxxxxx' : 'Активно'}
         </span>
-      </div>
-      <div className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="px-4 py-2 text-sm font-medium text-text-main border border-border-light rounded-sm hover:bg-gray-50 transition-colors cursor-pointer"
-        >
+      </DataTableCell>
+      <DataTableCell className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
+        <Button variant="secondary" size="sm" onClick={handleCopy}>
           Копировать
-        </button>
-        <button
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-brand-red border border-brand-red rounded-sm hover:bg-red-50 transition-colors cursor-pointer"
-        >
+        </Button>
+        <Button variant="danger" size="sm">
           Удалить
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DataTableCell>
+    </DataTableRow>
   );
 }
 
@@ -93,63 +85,46 @@ export function AdminInvitations() {
   };
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-        Приглашения
-      </h1>
+    <PageContainer>
+      <PageHeader>Приглашения</PageHeader>
 
       {/* Create form */}
-      <div className="bg-white rounded-sm border border-border-light p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-text-main">Роль</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="px-4 py-2.5 border border-border-light rounded-sm text-sm text-text-main bg-white focus:outline-none focus:border-text-main transition-colors appearance-none min-w-[180px]"
-          >
+      <Card className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+        <FormField label="Роль">
+          <Select value={role} onChange={(e) => setRole(e.target.value)} className="min-w-[180px]">
             <option value="" disabled>Выбрать роль</option>
             {ROLE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-text-main">Срок действия</label>
-          <select
-            value={ttl}
-            onChange={(e) => setTtl(e.target.value)}
-            className="px-4 py-2.5 border border-border-light rounded-sm text-sm text-text-main bg-white focus:outline-none focus:border-text-main transition-colors appearance-none min-w-[140px]"
-          >
+          </Select>
+        </FormField>
+        <FormField label="Срок действия">
+          <Select value={ttl} onChange={(e) => setTtl(e.target.value)} className="min-w-[140px]">
             <option value="" disabled>Выбрать</option>
             {TTL_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </select>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={!role || !ttl}
-          className="px-6 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+          </Select>
+        </FormField>
+        <Button onClick={handleCreate} disabled={!role || !ttl}>
           Создать приглашение
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {/* Desktop table header */}
-      <div className="hidden lg:flex items-center px-5 py-3 text-xs font-medium text-text-sub uppercase tracking-wider border-b border-border-light">
+      <DataTableHeader>
         <div className="w-[200px] flex-shrink-0">Токен</div>
         <div className="flex-1 px-4">Роль</div>
         <div className="flex-1 px-4">Истекает</div>
         <div className="w-[100px] px-4">Статус</div>
         <div className="w-[200px] flex-shrink-0" />
-      </div>
+      </DataTableHeader>
 
-      <div className="flex flex-col border border-border-light rounded-sm overflow-hidden">
+      <DataTable>
         {MOCK_INVITATIONS.map((inv) => (
           <InvitationRow key={inv.id} invitation={inv} />
         ))}
-      </div>
-    </div>
+      </DataTable>
+    </PageContainer>
   );
 }

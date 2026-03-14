@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button, Input, Select, Textarea, FormField } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 interface FormData {
   name: string;
@@ -35,14 +38,6 @@ const DEVICE_TYPES = [
   { value: 'other', label: 'Другое' },
 ];
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="text-base lg:text-lg font-bold text-text-main block mb-2">
-      {children}
-    </label>
-  );
-}
-
 export function AdminDeviceForm() {
   const router = useRouter();
   const [data, setData] = useState<FormData>(INITIAL_DATA);
@@ -57,109 +52,92 @@ export function AdminDeviceForm() {
   };
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-        Новый товар
-      </h1>
+    <PageContainer>
+      <PageHeader>Новый товар</PageHeader>
 
       <div className="max-w-[600px] flex flex-col gap-6">
-        <div>
-          <FieldLabel>Название</FieldLabel>
-          <input
+        <FormField label="Название" variant="bold">
+          <Input
             type="text"
             placeholder="Введите название..."
             value={data.name}
             onChange={(e) => update({ name: e.target.value })}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors"
+            className="max-w-[500px]"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <FieldLabel>Тип товара</FieldLabel>
-          <select
+        <FormField label="Тип товара" variant="bold">
+          <Select
             value={data.type}
             onChange={(e) => update({ type: e.target.value })}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main bg-white focus:outline-none focus:border-text-main transition-colors appearance-none"
+            className="max-w-[500px]"
           >
             <option value="" disabled>Выберите тип</option>
             {DEVICE_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
-        <div>
-          <FieldLabel>Модель</FieldLabel>
-          <input
+        <FormField label="Модель" variant="bold">
+          <Input
             type="text"
             placeholder="Введите модель..."
             value={data.model}
             onChange={(e) => update({ model: e.target.value })}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors"
+            className="max-w-[500px]"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <FieldLabel>Бренд</FieldLabel>
-          <input
+        <FormField label="Бренд" variant="bold">
+          <Input
             type="text"
             placeholder="Введите бренд..."
             value={data.brand}
             onChange={(e) => update({ brand: e.target.value })}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors"
+            className="max-w-[500px]"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <FieldLabel>Описание</FieldLabel>
-          <textarea
+        <FormField label="Описание" variant="bold">
+          <Textarea
             placeholder="Описание товара..."
             value={data.description}
             onChange={(e) => update({ description: e.target.value })}
             rows={4}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors resize-none"
+            className="max-w-[500px]"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <FieldLabel>Спецификации (JSON)</FieldLabel>
-          <textarea
+        <FormField label="Спецификации (JSON)" variant="bold">
+          <Textarea
             placeholder='{"weight": "80kg", "dimensions": "600x850x600mm"}'
             value={data.specifications}
             onChange={(e) => update({ specifications: e.target.value })}
             rows={4}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors resize-none font-mono"
+            className="max-w-[500px] font-mono"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <FieldLabel>Ссылка</FieldLabel>
-          <input
+        <FormField label="Ссылка" variant="bold">
+          <Input
             type="url"
             placeholder="https://..."
             value={data.link}
             onChange={(e) => update({ link: e.target.value })}
-            className="w-full max-w-[500px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main placeholder:text-[#999] bg-white focus:outline-none focus:border-text-main transition-colors"
+            className="max-w-[500px]"
           />
-        </div>
+        </FormField>
 
         <div className="flex items-center gap-4 mt-2">
-          <button
-            type="button"
-            onClick={() => router.push('/account/devices')}
-            className="px-6 py-2.5 text-sm font-medium text-text-main border border-border-light rounded-sm hover:bg-gray-50 transition-colors cursor-pointer"
-          >
+          <Button variant="secondary" onClick={() => router.push('/account/devices')}>
             Отмена
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-8 py-2.5 text-sm font-medium text-white bg-brand-red cursor-pointer"
-          >
+          </Button>
+          <Button variant="primary" size="lg" onClick={handleSubmit}>
             Создать товар
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

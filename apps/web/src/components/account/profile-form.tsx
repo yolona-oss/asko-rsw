@@ -7,37 +7,7 @@ import { useAuth } from '@/lib/api/use-auth';
 import { profileApi } from '@/lib/api/profile';
 import { AvatarCropModal } from './avatar-crop-modal';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="text-sm font-medium text-text-sub">{children}</label>
-  );
-}
-
-function FieldInput({
-  value,
-  onChange,
-  type = 'text',
-  placeholder,
-  disabled,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  placeholder?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      disabled={disabled}
-      className="w-full px-4 py-2.5 text-sm text-text-main bg-white border border-border-light focus:border-text-main outline-none transition-colors disabled:opacity-50"
-    />
-  );
-}
+import { Button, Input, FormField } from '@asko/ui';
 
 export function ProfileForm() {
   const { user } = useAccount();
@@ -247,34 +217,25 @@ export function ProfileForm() {
 
         {/* Form fields */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Имя</FieldLabel>
-            <FieldInput value={firstName} onChange={setFirstName} placeholder="Ваше имя" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Фамилия</FieldLabel>
-            <FieldInput value={lastName} onChange={setLastName} placeholder="Ваша фамилия" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Email</FieldLabel>
-            <FieldInput value={email} onChange={setEmail} type="email" placeholder="example@mail.com" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Телефон</FieldLabel>
-            <FieldInput value={phone} onChange={setPhone} type="tel" placeholder="+7 (999) 123-45-67" />
-          </div>
+          <FormField label="Имя">
+            <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Ваше имя" />
+          </FormField>
+          <FormField label="Фамилия">
+            <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Ваша фамилия" />
+          </FormField>
+          <FormField label="Email">
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="example@mail.com" />
+          </FormField>
+          <FormField label="Телефон">
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+7 (999) 123-45-67" />
+          </FormField>
         </div>
 
         {/* Message + Save */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center justify-center px-8 py-2.5 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
-          >
+          <Button onClick={handleSave} disabled={saving} size="lg">
             {saving ? 'Сохранение...' : 'Сохранить'}
-          </button>
+          </Button>
           {message && (
             <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
               {message.text}

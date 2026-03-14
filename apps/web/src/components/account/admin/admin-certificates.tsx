@@ -1,6 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  Button,
+  Toggle,
+  TabList,
+  Tab,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+} from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 type CertTab = 'pending' | 'active' | 'expired' | 'revoked';
 
@@ -50,56 +63,43 @@ function CertificateRow({ cert }: { cert: Certificate }) {
   const showRevoke = cert.status === 'active';
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-0 px-5 py-4 border-b border-border-light last:border-b-0 bg-white">
-      <div className="lg:w-[100px] lg:flex-shrink-0">
-        <p className="text-xs text-text-sub lg:hidden">Номер:</p>
+    <DataTableRow>
+      <DataTableCell mobileLabel="Номер:" className="lg:w-[100px] lg:flex-shrink-0">
         <p className="text-sm font-medium text-text-main">{cert.number}</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Пользователь:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Пользователь:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{cert.userName}</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Устройство:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{cert.device}</p>
-      </div>
-      <div className="lg:w-[150px] lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Дилер:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Дилер:" className="lg:w-[150px] lg:px-4">
         <p className="text-sm text-text-main">{cert.dealer}</p>
-      </div>
-      <div className="lg:w-[90px] lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Статус:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Статус:" className="lg:w-[90px] lg:px-4">
         <span className={`text-sm font-medium ${STATUS_COLORS[cert.status]}`}>
           {STATUS_LABELS[cert.status]}
         </span>
-      </div>
-      <div className="lg:w-[100px] lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Выдан:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
         <p className="text-sm text-text-main">{cert.issuedAt}</p>
-      </div>
-      <div className="lg:w-[100px] lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Истекает:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
         <p className="text-sm text-text-main">{cert.expiresAt}</p>
-      </div>
-      <div className="lg:w-[120px] lg:flex-shrink-0 lg:text-right">
+      </DataTableCell>
+      <DataTableCell className="lg:w-[120px] lg:flex-shrink-0 lg:text-right">
         {showApprove && (
-          <button
-            type="button"
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-sm cursor-pointer"
-          >
+          <Button variant="success" size="sm">
             Одобрить
-          </button>
+          </Button>
         )}
         {showRevoke && (
-          <button
-            type="button"
-            className="px-4 py-2 text-sm font-medium text-brand-red border border-brand-red rounded-sm hover:bg-red-50 transition-colors cursor-pointer"
-          >
+          <Button variant="danger" size="sm">
             Отозвать
-          </button>
+          </Button>
         )}
-      </div>
-    </div>
+      </DataTableCell>
+    </DataTableRow>
   );
 }
 
@@ -110,50 +110,33 @@ export function AdminCertificates() {
   const filteredCerts = MOCK_CERTIFICATES.filter((c) => c.status === activeTab);
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
+    <PageContainer>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-          Управление сертификатами
-        </h1>
+        <PageHeader>Управление сертификатами</PageHeader>
       </div>
 
       {/* Auto-verification toggle */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <span className="text-sm font-medium text-text-main">Авто-верификация</span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={autoVerify}
-          onClick={() => setAutoVerify(!autoVerify)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoVerify ? 'bg-green-600' : 'bg-[#C4C4C4]'
-            }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoVerify ? 'translate-x-6' : 'translate-x-1'
-              }`}
-          />
-        </button>
-      </label>
+      <Toggle
+        checked={autoVerify}
+        onChange={setAutoVerify}
+        label="Авто-верификация"
+      />
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <TabList>
         {TABS.map((tab) => (
-          <button
+          <Tab
             key={tab.key}
-            type="button"
+            active={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-sm border transition-colors cursor-pointer ${activeTab === tab.key
-              ? 'bg-dark-deep text-white border-dark-deep'
-              : 'bg-white text-text-main border-border-light hover:border-text-main'
-              }`}
           >
             {tab.label}
-          </button>
+          </Tab>
         ))}
-      </div>
+      </TabList>
 
       {/* Desktop table header */}
-      <div className="hidden lg:flex items-center px-5 py-3 text-xs font-medium text-text-sub uppercase tracking-wider border-b border-border-light">
+      <DataTableHeader>
         <div className="w-[100px] flex-shrink-0">Номер</div>
         <div className="flex-1 px-4">Пользователь</div>
         <div className="flex-1 px-4">Устройство</div>
@@ -162,19 +145,19 @@ export function AdminCertificates() {
         <div className="w-[100px] px-4">Выдан</div>
         <div className="w-[100px] px-4">Истекает</div>
         <div className="w-[120px] flex-shrink-0" />
-      </div>
+      </DataTableHeader>
 
-      <div className="flex flex-col border border-border-light rounded-sm overflow-hidden">
+      <DataTable>
         {filteredCerts.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-text-sub">
+          <DataTableEmpty>
             Нет сертификатов в этой категории
-          </div>
+          </DataTableEmpty>
         ) : (
           filteredCerts.map((cert) => (
             <CertificateRow key={cert.id} cert={cert} />
           ))
         )}
-      </div>
-    </div>
+      </DataTable>
+    </PageContainer>
   );
 }

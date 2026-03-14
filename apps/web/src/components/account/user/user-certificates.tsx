@@ -2,6 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { Card, Button } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 const MOCK_CERTIFICATE = {
   id: 'ASKO-4582-9384',
@@ -41,11 +44,11 @@ export function UserCertificates() {
   const cert = MOCK_CERTIFICATE;
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
+    <PageContainer>
       {/* Page title */}
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
+      <PageHeader>
         Активные сертификаты
-      </h1>
+      </PageHeader>
 
       {/* Status pills */}
       <div className="flex flex-wrap gap-3">
@@ -57,7 +60,7 @@ export function UserCertificates() {
       {/* Certificate card + sidebar */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main certificate card */}
-        <div className="flex-1 bg-white rounded-sm border border-border-light p-6 lg:p-8">
+        <Card padding="lg" className="flex-1">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
             {/* Info */}
             <div className="flex-1 flex flex-col gap-4">
@@ -91,15 +94,12 @@ export function UserCertificates() {
               <p className="text-sm text-text-main">Расширенная гарантия активна</p>
 
               {/* Download PDF */}
-              <button
-                type="button"
-                className="flex items-center gap-2 mt-4 px-5 py-2.5 border border-border-light rounded-sm text-sm font-medium text-text-main hover:bg-gray-50 transition-colors w-fit"
-              >
+              <Button variant="secondary" className="mt-4 gap-2 w-fit">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
                 Скачать сертификат PDF
-              </button>
+              </Button>
             </div>
 
             {/* Device image */}
@@ -117,7 +117,7 @@ export function UserCertificates() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Sidebar CTA */}
         <div className="lg:w-[280px] flex-shrink-0 bg-dark-deep rounded-sm p-6 flex flex-col gap-4 text-white">
@@ -146,13 +146,10 @@ export function UserCertificates() {
           Зарегистрируйте устройство, чтобы активировать сертификат и получить доступ к
           обслуживанию
         </p>
-        <button
-          type="button"
-          className="flex items-center justify-center w-full lg:w-fit px-8 py-2.5 text-sm font-medium text-white bg-brand-red mt-2 cursor-pointer"
-        >
+        <Button variant="primary" className="w-full lg:w-fit mt-2">
           Добавить устройство
-        </button>
+        </Button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

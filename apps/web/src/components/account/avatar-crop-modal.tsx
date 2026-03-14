@@ -7,6 +7,7 @@ import {
   useEffect,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { Modal, Button } from '@asko/ui';
 
 interface AvatarCropModalProps {
   imageSrc: string;
@@ -140,89 +141,75 @@ export function AvatarCropModal({ imageSrc, onConfirm, onCancel }: AvatarCropMod
   if (!imgNatural.w) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
-      <div className="bg-white rounded-sm shadow-lg flex flex-col items-center gap-6 p-6 w-[360px] max-w-[95vw]">
-        <h3 className="text-lg font-medium text-text-main">Выберите область</h3>
+    <Modal open={true} onClose={onCancel} className="flex flex-col items-center gap-6 p-6 w-[360px] max-w-[95vw]">
+      <h3 className="text-lg font-medium text-text-main">Выберите область</h3>
 
-        {/* Crop viewport */}
-        <div
-          ref={containerRef}
-          className="relative select-none touch-none overflow-hidden"
-          style={{ width: CROP_SIZE, height: CROP_SIZE, cursor: dragging ? 'grabbing' : 'grab' }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+      {/* Crop viewport */}
+      <div
+        ref={containerRef}
+        className="relative select-none touch-none overflow-hidden"
+        style={{ width: CROP_SIZE, height: CROP_SIZE, cursor: dragging ? 'grabbing' : 'grab' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        {/* Image */}
+        <img
+          src={imageSrc}
+          alt=""
+          draggable={false}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: imgNatural.w * scale,
+            height: imgNatural.h * scale,
+            transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
+            pointerEvents: 'none',
+            maxWidth: 'none',
+          }}
+        />
+
+        {/* Circle mask overlay */}
+        <svg
+          className="absolute inset-0 pointer-events-none"
+          width={CROP_SIZE}
+          height={CROP_SIZE}
+          viewBox={`0 0 ${CROP_SIZE} ${CROP_SIZE}`}
         >
-          {/* Image */}
-          <img
-            src={imageSrc}
-            alt=""
-            draggable={false}
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: imgNatural.w * scale,
-              height: imgNatural.h * scale,
-              transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
-              pointerEvents: 'none',
-              maxWidth: 'none',
-            }}
-          />
-
-          {/* Circle mask overlay */}
-          <svg
-            className="absolute inset-0 pointer-events-none"
+          <defs>
+            <mask id="crop-mask">
+              <rect width={CROP_SIZE} height={CROP_SIZE} fill="white" />
+              <circle cx={CROP_SIZE / 2} cy={CROP_SIZE / 2} r={CROP_SIZE / 2 - 2} fill="black" />
+            </mask>
+          </defs>
+          <rect
             width={CROP_SIZE}
             height={CROP_SIZE}
-            viewBox={`0 0 ${CROP_SIZE} ${CROP_SIZE}`}
-          >
-            <defs>
-              <mask id="crop-mask">
-                <rect width={CROP_SIZE} height={CROP_SIZE} fill="white" />
-                <circle cx={CROP_SIZE / 2} cy={CROP_SIZE / 2} r={CROP_SIZE / 2 - 2} fill="black" />
-              </mask>
-            </defs>
-            <rect
-              width={CROP_SIZE}
-              height={CROP_SIZE}
-              fill="rgba(0,0,0,0.5)"
-              mask="url(#crop-mask)"
-            />
-            <circle
-              cx={CROP_SIZE / 2}
-              cy={CROP_SIZE / 2}
-              r={CROP_SIZE / 2 - 1}
-              fill="none"
-              stroke="white"
-              strokeWidth={2}
-            />
-          </svg>
-        </div>
-
-        <p className="text-sm text-text-sub text-center">
-          Перетащите для перемещения, прокрутите для масштабирования
-        </p>
-
-        {/* Actions */}
-        <div className="flex gap-4 w-full">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-text-main border border-border-light"
-          >
-            Отмена
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-brand-red"
-          >
-            Сохранить
-          </button>
-        </div>
+            fill="rgba(0,0,0,0.5)"
+            mask="url(#crop-mask)"
+          />
+          <circle
+            cx={CROP_SIZE / 2}
+            cy={CROP_SIZE / 2}
+            r={CROP_SIZE / 2 - 1}
+            fill="none"
+            stroke="white"
+            strokeWidth={2}
+          />
+        </svg>
       </div>
-    </div>
+
+      <p className="text-sm text-text-sub text-center">
+        Перетащите для перемещения, прокрутите для масштабирования
+      </p>
+
+      {/* Actions */}
+      <div className="flex gap-4 w-full">
+        <Button variant="secondary" onClick={onCancel} fullWidth>Отмена</Button>
+        <Button onClick={handleConfirm} fullWidth>Сохранить</Button>
+      </div>
+    </Modal>
   );
 }

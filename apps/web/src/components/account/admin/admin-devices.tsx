@@ -1,6 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  Button,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+} from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 interface Device {
   id: string;
@@ -33,48 +42,36 @@ const MOCK_DEVICES: Device[] = [
 
 function DeviceRow({ device }: { device: Device }) {
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-0 px-5 py-4 border-b border-border-light last:border-b-0 bg-white">
-      <div className="lg:w-35 lg:flex-shrink-0">
-        <p className="text-xs text-text-sub lg:hidden">Название:</p>
+    <DataTableRow>
+      <DataTableCell mobileLabel="Название:" className="lg:w-35 lg:flex-shrink-0">
         <p className="text-sm font-medium text-text-main">{device.name}</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Тип:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Тип:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{TYPE_LABELS[device.type] ?? device.type}</p>
-      </div>
-      <div className="lg:flex-1 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Модель:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Модель:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{device.model}</p>
-      </div>
-      <div className="lg:w-20 lg:px-4">
-        <p className="text-xs text-text-sub lg:hidden">Бренд:</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Бренд:" className="lg:w-20 lg:px-4">
         <p className="text-sm text-text-main">{device.brand}</p>
-      </div>
-      <div className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
-        <button
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-text-main border border-border-light rounded-sm hover:bg-gray-50 transition-colors cursor-pointer"
-        >
+      </DataTableCell>
+      <DataTableCell className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
+        <Button variant="secondary" size="sm">
           Изменить
-        </button>
-        <button
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-brand-red border border-brand-red rounded-sm hover:bg-red-50 transition-colors cursor-pointer"
-        >
+        </Button>
+        <Button variant="danger" size="sm">
           Удалить
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DataTableCell>
+    </DataTableRow>
   );
 }
 
 export function AdminDevices() {
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
+    <PageContainer>
       <div className="flex items-center justify-between">
-        <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-          Товары
-        </h1>
+        <PageHeader>Товары</PageHeader>
       </div>
 
       <div className="flex items-start">
@@ -86,20 +83,19 @@ export function AdminDevices() {
         </Link>
       </div>
 
-      {/* Desktop table header */}
-      <div className="hidden lg:flex items-center px-5 py-3 text-xs font-medium text-text-sub uppercase tracking-wider border-b border-border-light">
+      <DataTableHeader>
         <div className="w-35 flex-shrink-0">Название</div>
         <div className="flex-1 px-4">Тип</div>
         <div className="flex-1 px-4">Модель</div>
         <div className="w-20 px-4">Бренд</div>
         <div className="w-[200px] flex-shrink-0" />
-      </div>
+      </DataTableHeader>
 
-      <div className="flex flex-col border border-border-light rounded-sm overflow-hidden">
+      <DataTable>
         {MOCK_DEVICES.map((device) => (
           <DeviceRow key={device.id} device={device} />
         ))}
-      </div>
-    </div>
+      </DataTable>
+    </PageContainer>
   );
 }

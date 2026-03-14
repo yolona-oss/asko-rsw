@@ -3,16 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Badge, Select } from '@asko/ui';
+import type { BadgeVariant } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 type RequestStatus = 'new' | 'assigned' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
 
-const STATUS_COLORS: Record<RequestStatus, string> = {
-  new: 'bg-green-600 text-white',
-  assigned: 'bg-yellow-500 text-white',
-  in_progress: 'bg-blue-500 text-white',
-  completed: 'bg-gray-600 text-white',
-  paid: 'bg-emerald-600 text-white',
-  cancelled: 'bg-red-500 text-white',
+const STATUS_BADGE_VARIANT: Record<RequestStatus, BadgeVariant> = {
+  new: 'success',
+  assigned: 'warning',
+  in_progress: 'info',
+  completed: 'neutral',
+  paid: 'success',
+  cancelled: 'error',
 };
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
@@ -57,20 +61,21 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const isAssigned = request.status !== 'new';
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
+    <PageContainer>
+      <PageHeader>
         Заявки на обслуживание
-      </h1>
+      </PageHeader>
 
       {/* Status header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-text-main">Статус заявки:</h2>
-          <span
-            className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium ${STATUS_COLORS[request.status]}`}
+          <Badge
+            variant={STATUS_BADGE_VARIANT[request.status]}
+            className="px-4 py-1.5 text-sm"
           >
             {STATUS_LABELS[request.status]}
-          </span>
+          </Badge>
         </div>
         <div className="flex items-center gap-2 text-sm text-text-sub">
           <span>ID #{request.id}</span>
@@ -126,17 +131,17 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 При смене исполнителя заявка перейдёт в статус «Новая».
               </p>
             )}
-            <select
+            <Select
               value={selectedMaster}
               onChange={(e) => setSelectedMaster(e.target.value)}
-              className="w-full max-w-[400px] px-4 py-3 border border-border-light rounded-sm text-sm text-text-main bg-white focus:outline-none focus:border-text-main transition-colors appearance-none"
+              className="max-w-[400px] py-3"
             >
               {MASTERS.map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <Link
@@ -192,6 +197,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

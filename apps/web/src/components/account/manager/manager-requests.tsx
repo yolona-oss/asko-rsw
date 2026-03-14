@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Card, TabList, Tab } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 type TabKey = 'new' | 'assigned' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
 
@@ -52,7 +55,7 @@ const MOCK_REQUESTS: RequestCard[] = Array.from({ length: 9 }, (_, i) => ({
 
 function RequestCardItem({ request }: { request: RequestCard }) {
   return (
-    <div className="bg-white rounded-sm border border-border-light p-5 flex flex-col gap-3">
+    <Card padding="none" className="p-5 flex flex-col gap-3">
       <div className="flex items-center gap-2 text-xs text-text-sub">
         <span>{request.date}</span>
         <span>&bull;</span>
@@ -77,7 +80,7 @@ function RequestCardItem({ request }: { request: RequestCard }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
         </svg>
       </Link>
-    </div>
+    </Card>
   );
 }
 
@@ -88,28 +91,23 @@ export function ManagerRequests() {
   const filteredRequests = MOCK_REQUESTS;
 
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
+    <PageContainer>
+      <PageHeader>
         Заявки на обслуживание
-      </h1>
+      </PageHeader>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <TabList>
         {TABS.map((tab) => (
-          <button
+          <Tab
             key={tab.key}
-            type="button"
+            active={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-sm border transition-colors cursor-pointer ${
-              activeTab === tab.key
-                ? 'bg-dark-deep text-white border-dark-deep'
-                : 'bg-white text-text-main border-border-light hover:border-text-main'
-            }`}
           >
             {tab.label}
-          </button>
+          </Tab>
         ))}
-      </div>
+      </TabList>
 
       {/* Request cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -117,6 +115,6 @@ export function ManagerRequests() {
           <RequestCardItem key={req.id} request={req} />
         ))}
       </div>
-    </div>
+    </PageContainer>
   );
 }

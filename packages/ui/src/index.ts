@@ -17,6 +17,36 @@ export type { SelectProps } from './components/select';
 export { FormField } from './components/form-field';
 export type { FormFieldProps } from './components/form-field';
 
+export { Card } from './components/card';
+export type { CardProps } from './components/card';
+
+export { Badge } from './components/badge';
+export type { BadgeProps, BadgeVariant } from './components/badge';
+
+export { TabList, Tab } from './components/tabs';
+export type { TabListProps, TabProps } from './components/tabs';
+
+export { Toggle } from './components/toggle';
+export type { ToggleProps } from './components/toggle';
+
+export { Modal } from './components/modal';
+export type { ModalProps } from './components/modal';
+
+export {
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+} from './components/data-table';
+export type {
+  DataTableProps,
+  DataTableHeaderProps,
+  DataTableRowProps,
+  DataTableCellProps,
+  DataTableEmptyProps,
+} from './components/data-table';
+
 export { Container } from './components/container';
 export type { ContainerProps } from './components/container';
 

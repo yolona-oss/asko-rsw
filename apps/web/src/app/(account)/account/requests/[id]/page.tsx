@@ -6,6 +6,7 @@ import { primaryRole } from '@/lib/account';
 import { UserRequestStatus } from '@/components/account/user/user-request-status';
 import { ManagerRequestDetail } from '@/components/account/manager/manager-request-detail';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { PageContainer } from '@/components/account/page-container';
 
 export default function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,10 +14,10 @@ export default function RequestDetailPage() {
 
   if (stage === 'skeleton' || !user) {
     return (
-      <div className="p-4 lg:p-8 flex flex-col gap-6">
+      <PageContainer>
         <SkeletonBlock className="h-8 w-64" />
         <SkeletonCard className="h-[400px]" />
-      </div>
+      </PageContainer>
     );
   }
 

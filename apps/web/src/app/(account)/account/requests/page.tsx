@@ -4,13 +4,16 @@ import { useAccount } from '@/components/account/account-provider';
 import { primaryRole } from '@/lib/account';
 import { ManagerRequests } from '@/components/account/manager/manager-requests';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { Card } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
 
 export default function RequestsPage() {
   const { stage, user } = useAccount();
 
   if (stage === 'skeleton' || !user) {
     return (
-      <div className="p-4 lg:p-8 flex flex-col gap-6">
+      <PageContainer>
         <SkeletonBlock className="h-8 w-72" />
         <div className="flex gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -22,7 +25,7 @@ export default function RequestsPage() {
             <SkeletonCard key={i} className="h-[200px]" />
           ))}
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -30,15 +33,12 @@ export default function RequestsPage() {
     return <ManagerRequests />;
   }
 
-  // User role - show their requests (placeholder for now, request detail is via [id])
   return (
-    <div className="p-4 lg:p-8 flex flex-col gap-6">
-      <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
-        Мои заявки
-      </h1>
-      <div className="bg-white rounded-sm border border-border-light p-6 text-text-sub">
+    <PageContainer>
+      <PageHeader>Мои заявки</PageHeader>
+      <Card className="text-text-sub">
         У вас пока нет заявок
-      </div>
-    </div>
+      </Card>
+    </PageContainer>
   );
 }
