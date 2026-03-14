@@ -1,9 +1,7 @@
 services:
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
+    image: ghcr.io/yolona-oss/asko-rsw/api:latest
     container_name: asko-api
     restart: unless-stopped
     network_mode: host
@@ -17,9 +15,7 @@ services:
 
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
+    image: ghcr.io/yolona-oss/asko-rsw/web:latest
     container_name: asko-web
     restart: unless-stopped
     network_mode: host
