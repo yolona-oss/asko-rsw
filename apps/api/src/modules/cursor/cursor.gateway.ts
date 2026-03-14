@@ -20,6 +20,7 @@ import Redis from 'ioredis';
     credentials: true,
     methods: ['GET', 'POST'],
   },
+  path: '/ws/socket.io',
   namespace: 'cursors',
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,
