@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -17,7 +17,7 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
 import { adminApi } from '@/lib/api/admin';
-import type { IInvitationLink } from '@asko/shared/client';
+import { Role, type IInvitationLink } from '@asko/shared/client';
 
 // Admin role is intentionally excluded — admin accounts require direct provisioning
 const ROLE_OPTIONS = [
@@ -181,7 +181,7 @@ export function AdminInvitations() {
     setCreateError('');
     try {
       const { data } = await adminApi.createInvitation({
-        role,
+        role: role as Role,
         ttl: ttl !== '' ? ttl : undefined,
       });
       const { invite, link } = data as { invite: IInvitationLink; link: string };
