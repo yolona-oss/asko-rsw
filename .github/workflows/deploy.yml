@@ -25,6 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Write env files from secrets
+        run: |
+          echo "${{ secrets.API_ENV_PROD }}" > apps/api/.env.prod
+          echo "${{ secrets.WEB_ENV_PROD }}" > apps/web/.env.prod
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
