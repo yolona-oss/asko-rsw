@@ -34,7 +34,7 @@ const MOCK_DEVICES: Device[] = [
 function DeviceRow({ device }: { device: Device }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-0 px-5 py-4 border-b border-border-light last:border-b-0 bg-white">
-      <div className="lg:w-[220px] lg:flex-shrink-0">
+      <div className="lg:w-35 lg:flex-shrink-0">
         <p className="text-xs text-text-sub lg:hidden">Название:</p>
         <p className="text-sm font-medium text-text-main">{device.name}</p>
       </div>
@@ -46,11 +46,11 @@ function DeviceRow({ device }: { device: Device }) {
         <p className="text-xs text-text-sub lg:hidden">Модель:</p>
         <p className="text-sm text-text-main">{device.model}</p>
       </div>
-      <div className="lg:w-[120px] lg:px-4">
+      <div className="lg:w-20 lg:px-4">
         <p className="text-xs text-text-sub lg:hidden">Бренд:</p>
         <p className="text-sm text-text-main">{device.brand}</p>
       </div>
-      <div className="lg:w-[160px] lg:flex-shrink-0 lg:text-right flex gap-2">
+      <div className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
         <button
           type="button"
           className="px-4 py-2 text-sm font-medium text-text-main border border-border-light rounded-sm hover:bg-gray-50 transition-colors cursor-pointer"
@@ -75,9 +75,12 @@ export function AdminDevices() {
         <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
           Товары
         </h1>
+      </div>
+
+      <div className="flex items-start">
         <Link
           href="/account/devices/create"
-          className="px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
+          className="m-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
         >
           Добавить товар
         </Link>
@@ -85,11 +88,11 @@ export function AdminDevices() {
 
       {/* Desktop table header */}
       <div className="hidden lg:flex items-center px-5 py-3 text-xs font-medium text-text-sub uppercase tracking-wider border-b border-border-light">
-        <div className="w-[220px] flex-shrink-0">Название</div>
+        <div className="w-35 flex-shrink-0">Название</div>
         <div className="flex-1 px-4">Тип</div>
         <div className="flex-1 px-4">Модель</div>
-        <div className="w-[120px] px-4">Бренд</div>
-        <div className="w-[160px] flex-shrink-0" />
+        <div className="w-20 px-4">Бренд</div>
+        <div className="w-[200px] flex-shrink-0" />
       </div>
 
       <div className="flex flex-col border border-border-light rounded-sm overflow-hidden">

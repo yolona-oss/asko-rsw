@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
 import dotenv from 'dotenv';
-import { getEnvFilePath } from '@asko/shared';
+import { getEnvFilePath } from '@asko/shared/server';
 
 dotenv.config({ path: getEnvFilePath(), override: true });
 

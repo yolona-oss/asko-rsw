@@ -115,27 +115,25 @@ export function AdminCertificates() {
         <h1 className="text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main">
           Управление сертификатами
         </h1>
-
-        {/* Auto-verification toggle */}
-        <label className="flex items-center gap-3 cursor-pointer">
-          <span className="text-sm font-medium text-text-main">Авто-верификация</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={autoVerify}
-            onClick={() => setAutoVerify(!autoVerify)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              autoVerify ? 'bg-green-600' : 'bg-[#C4C4C4]'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                autoVerify ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </label>
       </div>
+
+      {/* Auto-verification toggle */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <span className="text-sm font-medium text-text-main">Авто-верификация</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={autoVerify}
+          onClick={() => setAutoVerify(!autoVerify)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoVerify ? 'bg-green-600' : 'bg-[#C4C4C4]'
+            }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoVerify ? 'translate-x-6' : 'translate-x-1'
+              }`}
+          />
+        </button>
+      </label>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">
@@ -144,11 +142,10 @@ export function AdminCertificates() {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-sm border transition-colors cursor-pointer ${
-              activeTab === tab.key
-                ? 'bg-dark-deep text-white border-dark-deep'
-                : 'bg-white text-text-main border-border-light hover:border-text-main'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-sm border transition-colors cursor-pointer ${activeTab === tab.key
+              ? 'bg-dark-deep text-white border-dark-deep'
+              : 'bg-white text-text-main border-border-light hover:border-text-main'
+              }`}
           >
             {tab.label}
           </button>

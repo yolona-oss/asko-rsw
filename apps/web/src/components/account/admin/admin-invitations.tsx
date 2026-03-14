@@ -62,7 +62,7 @@ function InvitationRow({ invitation }: { invitation: Invitation }) {
       <div className="lg:w-[100px] lg:px-4">
         <p className="text-xs text-text-sub lg:hidden">Статус:</p>
         <span className={`text-sm font-medium ${invitation.used ? 'text-text-sub' : 'text-green-600'}`}>
-          {invitation.used ? 'Использовано' : 'Активно'}
+          {invitation.used ? 'xxxxxxx' : 'Активно'}
         </span>
       </div>
       <div className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">

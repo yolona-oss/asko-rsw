@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
 import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
-import type { LoginCredentials, CreateUserDto } from '@asko/shared';
+import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 
 export function useAuth() {
   const { accessToken, user } = useAppSelector((s) => s.auth);

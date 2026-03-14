@@ -1,4 +1,4 @@
-import type { UpdateUserDto } from '@asko/shared';
+import type { UpdateUserDto } from '@asko/shared/client';
 import { api } from './client';
 
 export const profileApi = {
