@@ -76,7 +76,7 @@ export const CursorProvider: React.FC<CursorProviderProps> = ({
 
   useEffect(() => {
     const connectSocket = () => {
-      const socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:4001"}/cursors`, {
+      const socket = io(`${(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:4001") + "/cursors"}`, {
         query: {
           userId,
           username,
