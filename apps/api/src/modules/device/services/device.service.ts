@@ -28,38 +28,47 @@ export class DeviceService {
     }
 
     async importDevices(products: Record<string, any>[]): Promise<{ created: number; errors: string[] }> {
+        let created = 0;
         const errors: string[] = [];
-        const devices: Device[] = [];
+        const BATCH_SIZE = 50;
 
-        for (const product of products) {
+        for (let i = 0; i < products.length; i += BATCH_SIZE) {
+            const batch = products.slice(i, i + BATCH_SIZE);
+            const fork = this.em.fork();
+
             try {
-                const type = VALID_DEVICE_TYPES.has(product.type)
-                    ? (product.type as DeviceType)
-                    : DeviceType.OTHER;
+                const devices: Device[] = [];
 
-                const device = this.em.create(Device, {
-                    name: product.name,
-                    type,
-                    model: product.model ?? '',
-                    brand: product.brand ?? '',
-                    description: product.description,
-                    specifications: product.specifications,
-                    features: Array.isArray(product.specifications?.features)
-                        ? { items: product.specifications.features }
-                        : product.specifications?.features,
-                    link: product.specifications?.url,
-                });
-                devices.push(device);
+                for (const product of batch) {
+                    const type = VALID_DEVICE_TYPES.has(product.type)
+                        ? (product.type as DeviceType)
+                        : DeviceType.OTHER;
+
+                    const device = fork.create(Device, {
+                        name: String(product.name ?? '').slice(0, 255),
+                        type,
+                        model: String(product.model ?? '').slice(0, 255),
+                        brand: String(product.brand ?? '').slice(0, 255),
+                        description: product.description,
+                        specifications: product.specifications,
+                        features: Array.isArray(product.specifications?.features)
+                            ? { items: product.specifications.features }
+                            : product.specifications?.features,
+                        link: String(product.specifications?.url ?? '').slice(0, 500) || undefined,
+                    });
+                    devices.push(device);
+                }
+
+                await fork.persistAndFlush(devices);
+                created += devices.length;
             } catch (e: any) {
-                errors.push(`${product.name ?? 'unknown'}: ${e.message}`);
+                for (const product of batch) {
+                    errors.push(`${product.name ?? 'unknown'}: ${e.message}`);
+                }
             }
         }
 
-        if (devices.length > 0) {
-            await this.em.persistAndFlush(devices);
-        }
-
-        return { created: devices.length, errors };
+        return { created, errors };
     }
 
     async updateDevice(id: string, dto: UpdateDeviceDto): Promise<Device> {

@@ -13,6 +13,7 @@ import { helmetOptions } from './config/helmet.config';
 import { ValidationPipe, } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { isProdEnv } from '@asko/shared';
+import { urlencoded } from 'express';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -25,6 +26,7 @@ async function bootstrap() {
     app.use(compression())
     app.use(cookieParser())
     app.useBodyParser('json', { limit: '10mb' });
+    app.use(urlencoded({ limit: '50mb', extended: true }));
 
     app.useGlobalFilters(new GlobalExceptionFilter())
     app.enableCors(corsOptions)
