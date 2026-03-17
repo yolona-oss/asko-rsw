@@ -1,13 +1,21 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+    Body, Controller, Get, Param, Post, Query, Delete,
+    UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ReviewService } from '../services/review.service';
-import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload } from '@asko/shared';
+import { ImageService } from 'modules/file-upload/services/image.service';
+import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
 import { Public } from 'common/decorators/public.decorotor';
 
 @Controller('reviews')
 export class ReviewController {
-    constructor(private readonly reviewService: ReviewService) { }
+    constructor(
+        private readonly reviewService: ReviewService,
+        private readonly imageService: ImageService,
+    ) { }
 
     /** User submits a review */
     @RequiredRoles(...ALL_ROLES)
@@ -23,10 +31,53 @@ export class ReviewController {
         return this.reviewService.findByUser(user.sub);
     }
 
+    // ── Review images ──
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/images')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadImage(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+    ) {
+        await this.reviewService.findUserReview(user.sub, id);
+        return this.imageService.uploadReviewImage(file, id);
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Delete(':id/images/:imageId')
+    async removeImage(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Param('imageId') imageId: string,
+    ) {
+        await this.reviewService.findUserReview(user.sub, id);
+        return this.imageService.remove(imageId);
+    }
+
+    @Public()
+    @Get(':id/images')
+    async findImages(@Param('id') id: string) {
+        return this.imageService.findAttachedImages(ImageTypeEnum.Review, id);
+    }
+
     @Public()
     @Get('rating/repairer/:repairerId')
     async findRepairerRating(@Param('repairerId') repairerId: string) {
-        return this.reviewService.findRepairerRating(repairerId);
+        console.log('11111111111111111')
+        const r = await this.reviewService.findRepairerRating(repairerId);
+        console.log(r)
+        console.log('22222222222222222')
+        return r
     }
 
     /** Public: get reviews for a repairer */

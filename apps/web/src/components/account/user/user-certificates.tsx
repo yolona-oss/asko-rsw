@@ -1,25 +1,39 @@
 'use client';
 
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, Button } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { userApi } from '@/lib/api/user';
+import { CertificateStatus } from '@asko/shared/client';
 
-const MOCK_CERTIFICATE = {
-  id: 'ASKO-4582-9384',
-  status: 'active' as const,
-  activationDate: '12.03.2025',
-  duration: '36 месяцев',
-  validUntil: '12.08.2028',
-  devicesCount: 1,
-  device: {
-    name: 'Стиральная машина ASKO W2086C',
-    description:
-      'Устройство зарегистрировано и защищено расширенной гарантией ASKO. Сертификат подтверждает право на обслуживание и ремонт.',
-    image: '/images/b9fd50ea648ab558085721e0f33610b5b0b61bac.png',
-  },
+const STATUS_LABELS: Record<string, string> = {
+  [CertificateStatus.PENDING_APPROVAL]: 'На проверке',
+  [CertificateStatus.ACTIVE]: 'Активен',
+  [CertificateStatus.EXPIRED]: 'Истек',
+  [CertificateStatus.REVOKED]: 'Отозван',
 };
+
+interface Certificate {
+  id: string;
+  certificateNumber: string;
+  status: CertificateStatus;
+  issuedAt: string;
+  expiresAt: string;
+  description?: string;
+  userDevice?: {
+    device?: {
+      name?: string;
+      description?: string;
+    };
+  };
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 
 function StatusPill({
   label,
@@ -40,82 +54,62 @@ function StatusPill({
   );
 }
 
-export function UserCertificates() {
-  const cert = MOCK_CERTIFICATE;
+function CertificateCard({ cert }: { cert: Certificate }) {
+  const isActive = cert.status === CertificateStatus.ACTIVE;
+  const deviceName = cert.userDevice?.device?.name ?? 'Устройство';
+  const deviceDesc = cert.userDevice?.device?.description
+    ?? 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.';
+
+  const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
+  const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
 
   return (
-    <PageContainer>
-      {/* Page title */}
-      <PageHeader>
-        Активные сертификаты
-      </PageHeader>
-
+    <>
       {/* Status pills */}
       <div className="flex flex-wrap gap-3">
-        <StatusPill label="Сертификат" value="Активен" active />
-        <StatusPill label="Срок действия" value={`до ${cert.validUntil}`} />
-        <StatusPill label="Добавленно" value={`${cert.devicesCount} устройство`} />
+        <StatusPill
+          label="Сертификат"
+          value={STATUS_LABELS[cert.status] ?? cert.status}
+          active={isActive}
+        />
+        <StatusPill label="Срок действия" value={`до ${formatDate(cert.expiresAt)}`} />
       </div>
 
       {/* Certificate card + sidebar */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Main certificate card */}
         <Card padding="lg" className="flex-1">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
-            {/* Info */}
-            <div className="flex-1 flex flex-col gap-4">
-              <h2 className="text-2xl lg:text-[32px] font-bold leading-tight text-text-main">
-                {cert.device.name}
-              </h2>
-              <p className="text-sm leading-relaxed text-text-sub">
-                {cert.device.description}
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl lg:text-[32px] font-bold leading-tight text-text-main">
+              {deviceName}
+            </h2>
+            <p className="text-sm leading-relaxed text-text-sub">
+              {deviceDesc}
+            </p>
+
+            <div className="flex flex-col gap-2 mt-2">
+              <p className="text-sm text-text-main">
+                Номер сертификата: <strong>{cert.certificateNumber}</strong>
               </p>
-
-              <div className="flex flex-col gap-2 mt-2">
-                <p className="text-sm text-text-main">
-                  Номер сертификата: <strong>{cert.id}</strong>
-                </p>
-                <p className="text-sm text-text-main">
-                  Дата активации: <strong>{cert.activationDate}</strong>
-                </p>
-                <p className="text-sm text-text-main">
-                  Срок действия: <strong>{cert.duration}</strong>
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 mt-2">
-                <span className="text-sm">
-                  Статус: <span className="text-green-600 font-medium">Активен</span>
-                </span>
-                <span className="text-sm text-text-sub">
-                  Действителен до {cert.validUntil}
-                </span>
-              </div>
-              <p className="text-sm text-text-main">Расширенная гарантия активна</p>
-
-              {/* Download PDF */}
-              <Button variant="secondary" className="mt-4 gap-2 w-fit">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-                Скачать сертификат PDF
-              </Button>
+              <p className="text-sm text-text-main">
+                Дата активации: <strong>{formatDate(cert.issuedAt)}</strong>
+              </p>
+              <p className="text-sm text-text-main">
+                Срок действия: <strong>{durationMonths} месяцев</strong>
+              </p>
             </div>
 
-            {/* Device image */}
-            <div className="w-full lg:w-[240px] flex-shrink-0">
-              <div className="relative w-full aspect-[3/4]">
-                <Image
-                  src={cert.device.image}
-                  alt={cert.device.name}
-                  fill
-                  className="object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-sm">
+                Статус:{' '}
+                <span className={isActive ? 'text-green-600 font-medium' : 'text-text-sub font-medium'}>
+                  {STATUS_LABELS[cert.status] ?? cert.status}
+                </span>
+              </span>
+              <span className="text-sm text-text-sub">
+                Действителен до {formatDate(cert.expiresAt)}
+              </span>
             </div>
+            {isActive && <p className="text-sm text-text-main">Расширенная гарантия активна</p>}
           </div>
         </Card>
 
@@ -136,6 +130,42 @@ export function UserCertificates() {
           </Link>
         </div>
       </div>
+    </>
+  );
+}
+
+export function UserCertificates() {
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCertificates() {
+      try {
+        const { data } = await userApi.getMyCertificates();
+        const list = Array.isArray(data) ? data : data.data ?? [];
+        setCertificates(list);
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCertificates();
+  }, []);
+
+  return (
+    <PageContainer>
+      <PageHeader>Активные сертификаты</PageHeader>
+
+      {loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : certificates.length === 0 ? (
+        <p className="text-sm text-text-sub">У вас нет сертификатов</p>
+      ) : (
+        certificates.map((cert) => (
+          <CertificateCard key={cert.id} cert={cert} />
+        ))
+      )}
 
       {/* Add new device section */}
       <div className="flex flex-col gap-3">

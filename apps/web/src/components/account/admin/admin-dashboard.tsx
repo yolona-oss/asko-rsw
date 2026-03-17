@@ -1,12 +1,14 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { adminApi } from '@/lib/api/admin';
 
-function StatCard({ title, value, href }: { title: string; value: number; href: string }) {
+function StatCard({ title, value, href }: { title: string; value: number | string; href: string }) {
   return (
     <Link
       href={href}
@@ -24,6 +26,36 @@ export function AdminDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
 
+  const [stats, setStats] = useState({ devices: 0, pending: 0, users: 0, invitations: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [devicesRes, pendingRes, usersRes, invitationsRes] = await Promise.all([
+          adminApi.getDevices({ limit: 1 }),
+          adminApi.getPendingCertificates({ limit: 1 }),
+          adminApi.getUsers({ limit: 1 }),
+          adminApi.getInvitations(),
+        ]);
+
+        setStats({
+          devices: devicesRes.data?.total ?? devicesRes.data?.data?.length ?? 0,
+          pending: pendingRes.data?.total ?? pendingRes.data?.data?.length ?? 0,
+          users: usersRes.data?.total ?? usersRes.data?.length ?? 0,
+          invitations: Array.isArray(invitationsRes.data) ? invitationsRes.data.length : 0,
+        });
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const display = (v: number) => loading ? '—' : v;
+
   return (
     <PageContainer>
       <PageHeader size="large">
@@ -32,10 +64,10 @@ export function AdminDashboard() {
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Товары:" value={12} href="/account/devices" />
-        <StatCard title="Ожидают проверки:" value={3} href="/account/manage-certificates" />
-        <StatCard title="Активные пользователи:" value={48} href="/account/users" />
-        <StatCard title="Приглашения:" value={5} href="/account/invitations" />
+        <StatCard title="Товары:" value={display(stats.devices)} href="/account/devices" />
+        <StatCard title="Ожидают проверки:" value={display(stats.pending)} href="/account/manage-certificates" />
+        <StatCard title="Активные пользователи:" value={display(stats.users)} href="/account/users" />
+        <StatCard title="Приглашения:" value={display(stats.invitations)} href="/account/invitations" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">

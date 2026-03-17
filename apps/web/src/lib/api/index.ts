@@ -1,3 +1,9 @@
 export { api } from './client';
 export { authApi } from './auth';
 export { useAuth, useSession, useLogin, useSignup, useLogout } from './use-auth';
+export { adminApi } from './admin';
+export { managerApi } from './manager';
+export { repairerApi } from './repairer';
+export { profileApi } from './profile';
+export { userApi } from './user';
+export { dealerApi } from './dealer';

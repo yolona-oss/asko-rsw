@@ -1,64 +1,151 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge, Select } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { managerApi } from '@/lib/api/manager';
+import { api } from '@/lib/api/client';
+import { RepairRequestStatus } from '@asko/shared/client';
 
-type RequestStatus = 'new' | 'assigned' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
-
-const STATUS_BADGE_VARIANT: Record<RequestStatus, BadgeVariant> = {
-  new: 'success',
-  assigned: 'warning',
-  in_progress: 'info',
-  completed: 'neutral',
-  paid: 'success',
-  cancelled: 'error',
+const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  [RepairRequestStatus.PENDING]: 'success',
+  [RepairRequestStatus.PAID]: 'success',
+  [RepairRequestStatus.ASSIGNED]: 'warning',
+  [RepairRequestStatus.ACCEPTED]: 'warning',
+  [RepairRequestStatus.IN_PROGRESS]: 'info',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'info',
+  [RepairRequestStatus.COMPLETED]: 'neutral',
+  [RepairRequestStatus.CANCELLED]: 'error',
+  [RepairRequestStatus.REFUSED]: 'error',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'error',
+  [RepairRequestStatus.REFUNDED]: 'error',
 };
 
-const STATUS_LABELS: Record<RequestStatus, string> = {
-  new: 'Новая',
-  assigned: 'Назначена',
-  in_progress: 'В работе',
-  completed: 'Завершена',
-  paid: 'Оплачена',
-  cancelled: 'Отменена',
+const STATUS_LABELS: Record<string, string> = {
+  [RepairRequestStatus.PENDING]: 'Новая',
+  [RepairRequestStatus.PAID]: 'Оплачена',
+  [RepairRequestStatus.ASSIGNED]: 'Назначена',
+  [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
+  [RepairRequestStatus.COMPLETED]: 'Завершена',
+  [RepairRequestStatus.CANCELLED]: 'Отменена',
+  [RepairRequestStatus.REFUSED]: 'Отказ',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос возврата',
+  [RepairRequestStatus.REFUNDED]: 'Возвращено',
 };
 
-const MOCK_DETAIL = {
-  id: '434362',
-  status: 'new' as RequestStatus,
-  createdAt: '11.02.2026, в 13:22 по МСК',
-  client: {
-    name: 'Морозов Владислав Игоревич',
-    phone: '+7(928)-333-33-33',
-  },
-  device: 'Сушильная машина ASKO T408HD.W',
-  address: 'ул. Центральная, 7, кв. 98',
-  photos: [
-    '/images/b5b74734a8947326bb92bf563b03dd350fa5f2dc.jpg',
-    '/images/b850363a431f1b42ee5b1bee40f79c306ae24bc4.jpg',
-    '/images/b9702e3c768dd388a49acb4be05c6b9e9e479151.jpg',
-  ],
-  assignedMaster: '',
-};
+interface RepairRequestDetail {
+  id: string;
+  status: RepairRequestStatus;
+  description: string;
+  createdAt: string;
+  user?: { firstName?: string; lastName?: string; phone?: string };
+  userDevice?: { device?: { name?: string } };
+  address?: { city?: string; street?: string; building?: string; apartment?: string };
+  repairer?: { id: string; user?: { firstName?: string; lastName?: string } };
+}
 
-const MASTERS = [
-  { value: '', label: 'Выбрать доступного мастера' },
-  { value: 'grigoriev', label: 'Григорьев Анатолий' },
-  { value: 'petrov', label: 'Петров Сергей' },
-  { value: 'ivanov', label: 'Иванов Максим' },
-];
+interface RepairerOption {
+  id: string;
+  user?: { firstName?: string; lastName?: string };
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
 
 export function ManagerRequestDetail({ requestId }: { requestId: string }) {
-  const request = MOCK_DETAIL;
-  const [selectedMaster, setSelectedMaster] = useState(request.assignedMaster);
+  const [request, setRequest] = useState<RepairRequestDetail | null>(null);
+  const [repairers, setRepairers] = useState<RepairerOption[]>([]);
+  const [selectedRepairer, setSelectedRepairer] = useState('');
   const [mainPhoto, setMainPhoto] = useState(0);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [assigning, setAssigning] = useState(false);
 
-  const isAssigned = request.status !== 'new';
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: req } = await managerApi.getRepairRequest(requestId);
+        setRequest(req);
+        setSelectedRepairer(req.repairer?.id ?? '');
+
+        // Fetch available repairers
+        const { data: repData } = await managerApi.getRepairers({ limit: 100 });
+        const list = repData.data ?? repData ?? [];
+        setRepairers(list);
+
+        // Fetch request photos
+        try {
+          const { data: images } = await api.get('/file-upload/image/attached', {
+            params: { ownerType: 'repair_request', ownerId: requestId },
+          });
+          const urls = (Array.isArray(images) ? images : [])
+            .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
+            .filter(Boolean);
+          setPhotos(urls);
+        } catch {
+          // no photos
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [requestId]);
+
+  const handleAssign = async () => {
+    if (!selectedRepairer || !request) return;
+    setAssigning(true);
+    try {
+      await managerApi.assignRepairer(request.id, selectedRepairer);
+      const { data: updated } = await managerApi.getRepairRequest(requestId);
+      setRequest(updated);
+    } catch {
+      // silently fail
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <PageHeader>Заявки на обслуживание</PageHeader>
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      </PageContainer>
+    );
+  }
+
+  if (!request) {
+    return (
+      <PageContainer>
+        <PageHeader>Заявки на обслуживание</PageHeader>
+        <p className="text-sm text-text-sub">Заявка не найдена</p>
+      </PageContainer>
+    );
+  }
+
+  const isAssigned = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
+  const clientName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
+  const clientPhone = request.user?.phone || '';
+  const deviceName = request.userDevice?.device?.name || request.description;
+  const addressParts = [request.address?.city, request.address?.street, request.address?.building, request.address?.apartment ? `кв. ${request.address.apartment}` : ''].filter(Boolean);
+  const addressStr = addressParts.join(', ') || 'Не указан';
+  const assignedName = request.repairer?.user
+    ? [request.repairer.user.lastName, request.repairer.user.firstName].filter(Boolean).join(' ')
+    : 'Не назначен';
 
   return (
     <PageContainer>
@@ -71,14 +158,14 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-text-main">Статус заявки:</h2>
           <Badge
-            variant={STATUS_BADGE_VARIANT[request.status]}
+            variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'}
             className="px-4 py-1.5 text-sm"
           >
-            {STATUS_LABELS[request.status]}
+            {STATUS_LABELS[request.status] ?? request.status}
           </Badge>
         </div>
         <div className="flex items-center gap-2 text-sm text-text-sub">
-          <span>ID #{request.id}</span>
+          <span>ID #{request.id.slice(0, 8)}</span>
           <button
             type="button"
             className="text-text-sub hover:text-text-main"
@@ -97,28 +184,26 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         <div className="flex-1 flex flex-col gap-5">
           <div>
             <p className="text-sm text-text-sub">Дата создания заявки:</p>
-            <p className="text-sm font-medium text-text-main">{request.createdAt}</p>
+            <p className="text-sm font-medium text-text-main">{formatDate(request.createdAt)}</p>
           </div>
 
           {isAssigned && (
             <div>
               <p className="text-sm font-bold text-text-main">Исполнитель</p>
-              <p className="text-sm text-text-main">
-                {MASTERS.find((m) => m.value === selectedMaster)?.label || 'Не назначен'}
-              </p>
+              <p className="text-sm text-text-main">{assignedName}</p>
             </div>
           )}
 
           <div>
             <p className="text-sm font-bold text-text-main">Клиент</p>
-            <p className="text-sm text-text-main">{request.client.name}</p>
-            <p className="text-sm text-text-main">{request.client.phone}</p>
+            <p className="text-sm text-text-main">{clientName}</p>
+            {clientPhone && <p className="text-sm text-text-main">{clientPhone}</p>}
           </div>
 
           <div>
             <p className="text-sm font-bold text-text-main">Детали заявки</p>
-            <p className="text-sm text-text-main">{request.device}</p>
-            <p className="text-sm text-text-main">{request.address}</p>
+            <p className="text-sm text-text-main">{deviceName}</p>
+            <p className="text-sm text-text-main">{addressStr}</p>
           </div>
 
           {/* Master assignment */}
@@ -131,17 +216,28 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 При смене исполнителя заявка перейдёт в статус «Новая».
               </p>
             )}
-            <Select
-              value={selectedMaster}
-              onChange={(e) => setSelectedMaster(e.target.value)}
-              className="max-w-[400px] py-3"
-            >
-              {MASTERS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedRepairer}
+                onChange={(e) => setSelectedRepairer(e.target.value)}
+                className="max-w-[400px] py-3"
+              >
+                <option value="">Выбрать доступного мастера</option>
+                {repairers.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
+                  </option>
+                ))}
+              </Select>
+              <button
+                type="button"
+                onClick={handleAssign}
+                disabled={!selectedRepairer || assigning}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
+              >
+                {assigning ? 'Назначение...' : 'Назначить'}
+              </button>
+            </div>
           </div>
 
           <Link
@@ -156,46 +252,48 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         </div>
 
         {/* Right column - photos */}
-        <div className="lg:w-[360px] flex-shrink-0">
-          <p className="text-sm font-bold text-text-main mb-3">Фото клиента</p>
-          {/* Main photo */}
-          <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
-            {request.photos[mainPhoto] && (
-              <Image
-                src={request.photos[mainPhoto]}
-                alt="Фото устройства"
-                fill
-                className="object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            )}
-          </div>
-          {/* Thumbnails */}
-          <div className="flex gap-2 mt-2">
-            {request.photos.map((photo, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setMainPhoto(idx)}
-                className={`relative w-20 h-16 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${
-                  idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
-                }`}
-              >
+        {photos.length > 0 && (
+          <div className="lg:w-[360px] flex-shrink-0">
+            <p className="text-sm font-bold text-text-main mb-3">Фото клиента</p>
+            {/* Main photo */}
+            <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
+              {photos[mainPhoto] && (
                 <Image
-                  src={photo}
-                  alt=""
+                  src={photos[mainPhoto]}
+                  alt="Фото устройства"
                   fill
                   className="object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
-              </button>
-            ))}
+              )}
+            </div>
+            {/* Thumbnails */}
+            <div className="flex gap-2 mt-2">
+              {photos.map((photo, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setMainPhoto(idx)}
+                  className={`relative w-20 h-16 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${
+                    idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
+                  }`}
+                >
+                  <Image
+                    src={photo}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </PageContainer>
   );

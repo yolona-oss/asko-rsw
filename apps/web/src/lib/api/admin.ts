@@ -3,8 +3,8 @@ import { api } from './client';
 
 export const adminApi = {
   // Devices
-  getDevices() {
-    return api.get('/devices');
+  getDevices(params?: { offset?: number; limit?: number; search?: string }) {
+    return api.get('/devices', { params });
   },
   getDevice(id: string) {
     return api.get(`/devices/${id}`);
@@ -39,11 +39,11 @@ export const adminApi = {
   },
 
   // Certificates
-  getCertificates() {
-    return api.get('/certificates');
+  getCertificates(params?: { offset?: number; limit?: number; search?: string }) {
+    return api.get('/certificates', { params });
   },
-  getPendingCertificates() {
-    return api.get('/certificates/pending');
+  getPendingCertificates(params?: { offset?: number; limit?: number }) {
+    return api.get('/certificates/pending', { params });
   },
   approveCertificate(id: string) {
     return api.post(`/certificates/${id}/approve`);

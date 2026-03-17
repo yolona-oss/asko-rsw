@@ -83,6 +83,34 @@ export class ImageService {
         return image;
     }
 
+    async uploadDeviceImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.Device;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.Device);
+
+        await this.em.persistAndFlush(image);
+
+        return image;
+    }
+
+    async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.Review;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.Review);
+
+        await this.em.persistAndFlush(image);
+
+        return image;
+    }
+
     async uploadBlankImage(file: Express.Multer.File, type: ImageTypeEnum) {
         let imageObj: ImageObj
 

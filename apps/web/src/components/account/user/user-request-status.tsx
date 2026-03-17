@@ -1,26 +1,42 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { userApi } from '@/lib/api/user';
+import { RepairRequestStatus } from '@asko/shared/client';
 
 const STEPS = [
-  { key: 'created', label: 'Заявка создана' },
-  { key: 'choosing', label: 'Выбор мастера' },
-  { key: 'traveling', label: 'Мастер выехал' },
-  { key: 'done', label: 'Ремонт выполнен' },
-  { key: 'completed', label: 'Завершено' },
+  { key: 'created', label: 'Заявка создана', statuses: [RepairRequestStatus.PENDING, RepairRequestStatus.PAID] },
+  { key: 'choosing', label: 'Выбор мастера', statuses: [RepairRequestStatus.ASSIGNED] },
+  { key: 'traveling', label: 'Мастер выехал', statuses: [RepairRequestStatus.ACCEPTED] },
+  { key: 'done', label: 'Ремонт выполнен', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION] },
+  { key: 'completed', label: 'Завершено', statuses: [RepairRequestStatus.COMPLETED] },
 ] as const;
 
-type StepKey = (typeof STEPS)[number]['key'];
-
-const MOCK_REQUEST = {
-  id: '434362',
-  status: 'created' as StepKey,
-  date: '26 фев, 14:32',
-  title: 'Заявка создана',
-  description:
-    'Мы получили вашу заявку и начали подбор мастера.\nНазначение обычно занимает 5–15 минут.\nСтатус обновляется автоматически.',
+const STATUS_DESCRIPTIONS: Record<string, string> = {
+  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку и начали подбор мастера.\nНазначение обычно занимает 5–15 минут.\nСтатус обновляется автоматически.',
+  [RepairRequestStatus.PAID]: 'Оплата получена. Ожидайте назначения мастера.',
+  [RepairRequestStatus.ASSIGNED]: 'Мастер назначен и скоро свяжется с вами для согласования времени визита.',
+  [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку и выехал к вам.',
+  [RepairRequestStatus.IN_PROGRESS]: 'Мастер работает над ремонтом вашего устройства.',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'Ремонт почти завершён, ожидайте подтверждения.',
+  [RepairRequestStatus.COMPLETED]: 'Ремонт успешно завершён. Спасибо за обращение!',
+  [RepairRequestStatus.CANCELLED]: 'Заявка отменена.',
+  [RepairRequestStatus.REFUSED]: 'Мастер отказался от заявки. Мы подберём нового специалиста.',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос на возврат средств отправлен.',
+  [RepairRequestStatus.REFUNDED]: 'Средства возвращены.',
 };
+
+function getStepIndex(status: RepairRequestStatus): number {
+  const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));
+  return idx >= 0 ? idx : 0;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
 
 function StepCircle({
   label,
@@ -54,25 +70,66 @@ function StepLine({ completed }: { completed: boolean }) {
   );
 }
 
+interface RepairRequest {
+  id: string;
+  status: RepairRequestStatus;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function UserRequestStatus({ requestId }: { requestId: string }) {
-  const request = MOCK_REQUEST;
-  const currentStepIdx = STEPS.findIndex((s) => s.key === request.status);
+  const [request, setRequest] = useState<RepairRequest | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRequest() {
+      try {
+        const { data } = await userApi.getRepairRequest(requestId);
+        setRequest(data);
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRequest();
+  }, [requestId]);
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <PageHeader>Статусы заявки</PageHeader>
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      </PageContainer>
+    );
+  }
+
+  if (!request) {
+    return (
+      <PageContainer>
+        <PageHeader>Статусы заявки</PageHeader>
+        <p className="text-sm text-text-sub">Заявка не найдена</p>
+      </PageContainer>
+    );
+  }
+
+  const currentStepIdx = getStepIndex(request.status);
+  const stepLabel = STEPS[currentStepIdx]?.label ?? request.status;
+  const description = STATUS_DESCRIPTIONS[request.status] ?? '';
 
   return (
     <PageContainer>
-      {/* Page title */}
-      <PageHeader>
-        Статусы заявки
-      </PageHeader>
+      <PageHeader>Статусы заявки</PageHeader>
 
       {/* Status info */}
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl lg:text-[32px] font-bold text-text-main">
-          {request.title}
+          {stepLabel}
         </h2>
-        <span className="text-sm text-text-sub">{request.date}</span>
+        <span className="text-sm text-text-sub">{formatDate(request.updatedAt)}</span>
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-2 max-w-lg">
-          {request.description}
+          {description}
         </p>
       </div>
 

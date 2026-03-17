@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -10,14 +11,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-
-interface Device {
-  id: string;
-  name: string;
-  type: string;
-  model: string;
-  brand: string;
-}
+import { adminApi } from '@/lib/api/admin';
 
 const TYPE_LABELS: Record<string, string> = {
   washing_machine: 'Стиральная машина',
@@ -31,16 +25,15 @@ const TYPE_LABELS: Record<string, string> = {
   other: 'Другое',
 };
 
-const MOCK_DEVICES: Device[] = [
-  { id: 'd1', name: 'ASKO W4114C.W', type: 'washing_machine', model: 'W4114C.W', brand: 'ASKO' },
-  { id: 'd2', name: 'ASKO T408HD.W', type: 'dryer', model: 'T408HD.W', brand: 'ASKO' },
-  { id: 'd3', name: 'ASKO DFI746U', type: 'dishwasher', model: 'DFI746U', brand: 'ASKO' },
-  { id: 'd4', name: 'ASKO OCS8664S', type: 'oven', model: 'OCS8664S', brand: 'ASKO' },
-  { id: 'd5', name: 'ASKO HI1611G', type: 'cooktop', model: 'HI1611G', brand: 'ASKO' },
-  { id: 'd6', name: 'ASKO R22838S', type: 'refrigerator', model: 'R22838S', brand: 'ASKO' },
-];
+interface Device {
+  id: string;
+  name: string;
+  type: string;
+  model: string;
+  brand: string;
+}
 
-function DeviceRow({ device }: { device: Device }) {
+function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
   return (
     <DataTableRow>
       <DataTableCell mobileLabel="Название:" className="lg:w-35 lg:flex-shrink-0">
@@ -59,7 +52,7 @@ function DeviceRow({ device }: { device: Device }) {
         <Button variant="secondary" size="sm">
           Изменить
         </Button>
-        <Button variant="danger" size="sm">
+        <Button variant="danger" size="sm" onClick={() => onDelete(device.id)}>
           Удалить
         </Button>
       </DataTableCell>
@@ -68,6 +61,33 @@ function DeviceRow({ device }: { device: Device }) {
 }
 
 export function AdminDevices() {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDevices = async () => {
+    try {
+      const { data } = await adminApi.getDevices({ limit: 100 });
+      setDevices(data.data ?? []);
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await adminApi.deleteDevice(id);
+      setDevices((prev) => prev.filter((d) => d.id !== id));
+    } catch {
+      // silently fail
+    }
+  };
+
   return (
     <PageContainer>
       <div className="flex items-center justify-between">
@@ -83,19 +103,25 @@ export function AdminDevices() {
         </Link>
       </div>
 
-      <DataTableHeader>
-        <div className="w-35 flex-shrink-0">Название</div>
-        <div className="flex-1 px-4">Тип</div>
-        <div className="flex-1 px-4">Модель</div>
-        <div className="w-20 px-4">Бренд</div>
-        <div className="w-[200px] flex-shrink-0" />
-      </DataTableHeader>
+      {loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+      ) : (
+        <>
+          <DataTableHeader>
+            <div className="w-35 flex-shrink-0">Название</div>
+            <div className="flex-1 px-4">Тип</div>
+            <div className="flex-1 px-4">Модель</div>
+            <div className="w-20 px-4">Бренд</div>
+            <div className="w-[200px] flex-shrink-0" />
+          </DataTableHeader>
 
-      <DataTable>
-        {MOCK_DEVICES.map((device) => (
-          <DeviceRow key={device.id} device={device} />
-        ))}
-      </DataTable>
+          <DataTable>
+            {devices.map((device) => (
+              <DeviceRow key={device.id} device={device} onDelete={handleDelete} />
+            ))}
+          </DataTable>
+        </>
+      )}
     </PageContainer>
   );
 }

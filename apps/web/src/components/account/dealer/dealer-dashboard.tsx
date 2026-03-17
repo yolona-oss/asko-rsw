@@ -1,15 +1,41 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { CTABanner } from '@/components/account/cta-banner';
+import { dealerApi } from '@/lib/api/dealer';
 
 export function DealerDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
+
+  const [clientsCount, setClientsCount] = useState<number>(0);
+  const [pointsBalance, setPointsBalance] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [clientsRes, profileRes] = await Promise.all([
+          dealerApi.getClients(),
+          dealerApi.getProfile(),
+        ]);
+
+        const clients = Array.isArray(clientsRes.data) ? clientsRes.data : [];
+        setClientsCount(clients.length);
+        setPointsBalance(profileRes.data?.pointsBalance ?? 0);
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
     <PageContainer>
@@ -25,7 +51,7 @@ export function DealerDashboard() {
         <Card className="flex flex-col gap-2">
           <span className="text-base font-medium text-text-sub">Мои клиенты</span>
           <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
-            32
+            {loading ? '—' : clientsCount}
           </span>
         </Card>
 
@@ -33,7 +59,7 @@ export function DealerDashboard() {
         <Card className="flex flex-col gap-2">
           <span className="text-base font-medium text-text-sub">Заработанные баллы</span>
           <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
-            3245
+            {loading ? '—' : pointsBalance}
           </span>
         </Card>
       </div>

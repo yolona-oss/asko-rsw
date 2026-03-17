@@ -5,4 +5,5 @@ export enum ImageTypeEnum {
     Device = "device",
     RepairRequest = "repair_request",
     Certificate = "certificate",
+    Review = "review",
 }

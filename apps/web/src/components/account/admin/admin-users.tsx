@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   TabList,
@@ -9,9 +9,11 @@ import {
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  DataTableEmpty,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { adminApi } from '@/lib/api/admin';
 
 type UserTab = 'all' | 'user' | 'dealer' | 'manager' | 'repairer';
 
@@ -23,15 +25,6 @@ const TABS: { key: UserTab; label: string }[] = [
   { key: 'repairer', label: 'Мастера' },
 ];
 
-interface UserEntry {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  roles: string[];
-  createdAt: string;
-}
-
 const ROLE_LABELS: Record<string, string> = {
   user: 'Пользователь',
   dealer: 'Дилер',
@@ -39,20 +32,27 @@ const ROLE_LABELS: Record<string, string> = {
   repairer: 'Мастер',
   admin: 'Администратор',
   super_admin: 'Суперадмин',
+  operator: 'Оператор',
 };
 
-const MOCK_USERS: UserEntry[] = [
-  { id: 'u1', name: 'Иванов Иван Иванович', email: 'ivanov@mail.ru', phone: '+7(999)111-22-33', roles: ['user'], createdAt: '01.01.2026' },
-  { id: 'u2', name: 'Петров Петр Петрович', email: 'petrov@mail.ru', phone: '+7(999)222-33-44', roles: ['dealer'], createdAt: '15.01.2026' },
-  { id: 'u3', name: 'Сидоров Сидор Сидорович', email: 'sidorov@mail.ru', phone: '+7(999)333-44-55', roles: ['manager'], createdAt: '20.01.2026' },
-  { id: 'u4', name: 'Козлов Андрей Викторович', email: 'kozlov@mail.ru', phone: '+7(999)444-55-66', roles: ['repairer'], createdAt: '25.01.2026' },
-  { id: 'u5', name: 'Морозова Анна Сергеевна', email: 'morozova@mail.ru', phone: '+7(999)555-66-77', roles: ['user'], createdAt: '01.02.2026' },
-  { id: 'u6', name: 'Волков Дмитрий Олегович', email: 'volkov@mail.ru', phone: '+7(999)666-77-88', roles: ['dealer'], createdAt: '05.02.2026' },
-  { id: 'u7', name: 'Новиков Алексей Павлович', email: 'novikov@mail.ru', phone: '+7(999)777-88-99', roles: ['manager'], createdAt: '10.02.2026' },
-  { id: 'u8', name: 'Соколова Елена Дмитриевна', email: 'sokolova@mail.ru', phone: '+7(999)888-99-00', roles: ['repairer'], createdAt: '15.02.2026' },
-];
+interface UserEntry {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  roles: string[];
+  createdAt: string;
+}
 
-function UserRow({ user }: { user: UserEntry }) {
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function UserRow({ user, onDelete }: { user: UserEntry; onDelete: (id: string) => void }) {
+  const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
+
   return (
     <DataTableRow>
       <DataTableCell className="flex items-center gap-3 lg:w-[200px] lg:flex-shrink-0">
@@ -63,14 +63,14 @@ function UserRow({ user }: { user: UserEntry }) {
         </div>
         <div>
           <p className="text-xs text-text-sub lg:hidden">Имя:</p>
-          <p className="text-sm font-medium text-text-main">{user.name}</p>
+          <p className="text-sm font-medium text-text-main">{name}</p>
         </div>
       </DataTableCell>
       <DataTableCell mobileLabel="Email:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{user.email}</p>
+        <p className="text-sm text-text-main">{user.email ?? '—'}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Телефон:" className="lg:w-[160px] lg:px-4">
-        <p className="text-sm text-text-main">{user.phone}</p>
+        <p className="text-sm text-text-main">{user.phone ?? '—'}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Роли:" className="lg:w-[140px] lg:px-4">
         <p className="text-sm text-text-main">
@@ -78,10 +78,10 @@ function UserRow({ user }: { user: UserEntry }) {
         </p>
       </DataTableCell>
       <DataTableCell mobileLabel="Создан:" className="lg:w-[110px] lg:px-4">
-        <p className="text-sm text-text-main">{user.createdAt}</p>
+        <p className="text-sm text-text-main">{formatDate(user.createdAt)}</p>
       </DataTableCell>
       <DataTableCell className="lg:w-[100px] lg:flex-shrink-0 lg:text-right">
-        <Button variant="danger" size="sm">
+        <Button variant="danger" size="sm" onClick={() => onDelete(user.id)}>
           Удалить
         </Button>
       </DataTableCell>
@@ -91,10 +91,36 @@ function UserRow({ user }: { user: UserEntry }) {
 
 export function AdminUsers() {
   const [activeTab, setActiveTab] = useState<UserTab>('all');
+  const [users, setUsers] = useState<UserEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const { data } = await adminApi.getUsers({ limit: 200 });
+        const list = Array.isArray(data) ? data : data.data ?? [];
+        setUsers(list);
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await adminApi.deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch {
+      // silently fail
+    }
+  };
 
   const filteredUsers = activeTab === 'all'
-    ? MOCK_USERS
-    : MOCK_USERS.filter((u) => u.roles.includes(activeTab));
+    ? users
+    : users.filter((u) => u.roles.includes(activeTab));
 
   return (
     <PageContainer>
@@ -113,21 +139,31 @@ export function AdminUsers() {
         ))}
       </TabList>
 
-      {/* Desktop table header */}
-      <DataTableHeader>
-        <div className="w-[200px] flex-shrink-0">Имя</div>
-        <div className="flex-1 px-4">Email</div>
-        <div className="w-[160px] px-4">Телефон</div>
-        <div className="w-[140px] px-4">Роли</div>
-        <div className="w-[110px] px-4">Создан</div>
-        <div className="w-[100px] flex-shrink-0" />
-      </DataTableHeader>
+      {loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+      ) : (
+        <>
+          {/* Desktop table header */}
+          <DataTableHeader>
+            <div className="w-[200px] flex-shrink-0">Имя</div>
+            <div className="flex-1 px-4">Email</div>
+            <div className="w-[160px] px-4">Телефон</div>
+            <div className="w-[140px] px-4">Роли</div>
+            <div className="w-[110px] px-4">Создан</div>
+            <div className="w-[100px] flex-shrink-0" />
+          </DataTableHeader>
 
-      <DataTable>
-        {filteredUsers.map((user) => (
-          <UserRow key={user.id} user={user} />
-        ))}
-      </DataTable>
+          <DataTable>
+            {filteredUsers.length === 0 ? (
+              <DataTableEmpty>Нет пользователей</DataTableEmpty>
+            ) : (
+              filteredUsers.map((user) => (
+                <UserRow key={user.id} user={user} onDelete={handleDelete} />
+              ))
+            )}
+          </DataTable>
+        </>
+      )}
     </PageContainer>
   );
 }

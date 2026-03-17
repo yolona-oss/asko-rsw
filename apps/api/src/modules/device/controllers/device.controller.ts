@@ -1,5 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+    Body, Controller, Delete, Get, Param, Patch, Post, Query,
+    UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DeviceService } from '../services/device.service';
+import { ImageService } from 'modules/file-upload/services/image.service';
 import {
     CreateDeviceDto,
     UpdateDeviceDto,
@@ -8,6 +13,7 @@ import {
     ALL_ROLES,
     ADMIN_ROLES,
     JwtPayload,
+    ImageTypeEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -15,7 +21,10 @@ import { Public } from 'common/decorators/public.decorotor';
 
 @Controller('devices')
 export class DeviceController {
-    constructor(private readonly deviceService: DeviceService) {}
+    constructor(
+        private readonly deviceService: DeviceService,
+        private readonly imageService: ImageService,
+    ) {}
 
     // ── Admin: catalog management ──
 
@@ -38,6 +47,34 @@ export class DeviceController {
         return { message: 'Device deleted' };
     }
 
+    // ── Admin: device images ──
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post(':id/images')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadImage(
+        @Param('id') id: string,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+    ) {
+        await this.deviceService.findById(id);
+        return this.imageService.uploadDeviceImage(file, id);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Delete(':id/images/:imageId')
+    async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
+        await this.deviceService.findById(id);
+        return this.imageService.remove(imageId);
+    }
+
     // ── Public: browse catalog ──
 
     @Public()
@@ -50,6 +87,13 @@ export class DeviceController {
     @Get(':id')
     async findOne(@Param('id') id: string) {
         return this.deviceService.findById(id);
+    }
+
+    @Public()
+    @Get(':id/images')
+    async findImages(@Param('id') id: string) {
+        await this.deviceService.findById(id);
+        return this.imageService.findAttachedImages(ImageTypeEnum.Device, id);
     }
 }
 

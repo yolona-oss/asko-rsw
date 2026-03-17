@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input, Select, Textarea, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { adminApi } from '@/lib/api/admin';
 
 interface FormData {
   name: string;
@@ -41,14 +42,44 @@ const DEVICE_TYPES = [
 export function AdminDeviceForm() {
   const router = useRouter();
   const [data, setData] = useState<FormData>(INITIAL_DATA);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const update = (partial: Partial<FormData>) => {
     setData((prev) => ({ ...prev, ...partial }));
   };
 
-  const handleSubmit = () => {
-    alert('Товар создан');
-    router.push('/account/devices');
+  const handleSubmit = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      let specifications: Record<string, unknown> | undefined;
+      if (data.specifications.trim()) {
+        try {
+          specifications = JSON.parse(data.specifications);
+        } catch {
+          setError('Некорректный JSON в спецификациях');
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      await adminApi.createDevice({
+        name: data.name,
+        type: data.type,
+        model: data.model,
+        brand: data.brand,
+        description: data.description || undefined,
+        specifications,
+        link: data.link || undefined,
+      });
+
+      router.push('/account/devices');
+    } catch {
+      setError('Ошибка при создании товара');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -129,12 +160,14 @@ export function AdminDeviceForm() {
           />
         </FormField>
 
+        {error && <p className="text-sm text-brand-red">{error}</p>}
+
         <div className="flex items-center gap-4 mt-2">
           <Button variant="secondary" onClick={() => router.push('/account/devices')}>
             Отмена
           </Button>
-          <Button variant="primary" size="lg" onClick={handleSubmit}>
-            Создать товар
+          <Button variant="primary" size="lg" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Создание...' : 'Создать товар'}
           </Button>
         </div>
       </div>

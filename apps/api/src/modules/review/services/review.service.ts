@@ -69,9 +69,10 @@ export class ReviewService {
         const sum = data.reduce((sum, review) => {
             return sum + review.rating
         }, 0)
+        console.log(data, total)
 
         return {
-            average: sum / total,
+            average: total ? sum / total : 0,
             count: total
         }
     }
@@ -79,5 +80,12 @@ export class ReviewService {
     /** Get reviews by user */
     async findByUser(userId: string): Promise<Review[]> {
         return this.em.find(Review, { user: userId }, { populate: ['repairRequest', 'repairer'] });
+    }
+
+    /** Find a specific review owned by user (for image upload authorization) */
+    async findUserReview(userId: string, reviewId: string): Promise<Review> {
+        const review = await this.em.findOne(Review, { id: reviewId, user: userId });
+        if (!review) throw AppErrors.dbEntityNotFound('Review not found');
+        return review;
     }
 }

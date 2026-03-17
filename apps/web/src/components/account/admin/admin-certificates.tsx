@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   Toggle,
@@ -14,87 +14,98 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { adminApi } from '@/lib/api/admin';
+import { CertificateStatus } from '@asko/shared/client';
 
-type CertTab = 'pending' | 'active' | 'expired' | 'revoked';
+type CertTab = 'pending_approval' | 'active' | 'expired' | 'revoked';
 
 const TABS: { key: CertTab; label: string }[] = [
-  { key: 'pending', label: 'Ожидающие' },
+  { key: 'pending_approval', label: 'Ожидающие' },
   { key: 'active', label: 'Активные' },
   { key: 'expired', label: 'Истекшие' },
   { key: 'revoked', label: 'Отозванные' },
 ];
 
 const STATUS_COLORS: Record<CertTab, string> = {
-  pending: 'text-yellow-600',
+  pending_approval: 'text-yellow-600',
   active: 'text-green-600',
   expired: 'text-text-sub',
   revoked: 'text-brand-red',
 };
 
-const STATUS_LABELS: Record<CertTab, string> = {
-  pending: 'Ожидает',
-  active: 'Активен',
-  expired: 'Истек',
-  revoked: 'Отозван',
+const STATUS_LABELS: Record<string, string> = {
+  [CertificateStatus.PENDING_APPROVAL]: 'Ожидает',
+  [CertificateStatus.ACTIVE]: 'Активен',
+  [CertificateStatus.EXPIRED]: 'Истек',
+  [CertificateStatus.REVOKED]: 'Отозван',
 };
 
 interface Certificate {
   id: string;
-  number: string;
-  userName: string;
-  device: string;
-  dealer: string;
-  status: CertTab;
+  certificateNumber: string;
+  status: CertificateStatus;
   issuedAt: string;
   expiresAt: string;
+  user?: { firstName?: string; lastName?: string };
+  userDevice?: { device?: { name?: string } };
+  dealer?: { companyName?: string; user?: { firstName?: string; lastName?: string } };
 }
 
-const MOCK_CERTIFICATES: Certificate[] = [
-  { id: 'c1', number: 'CERT-001', userName: 'Иванов И.И.', device: 'ASKO W4114C.W', dealer: 'ООО "АскоСервис"', status: 'pending', issuedAt: '10.03.2026', expiresAt: '10.03.2027' },
-  { id: 'c2', number: 'CERT-002', userName: 'Петров П.П.', device: 'ASKO T408HD.W', dealer: 'ИП Сидоров', status: 'active', issuedAt: '01.02.2026', expiresAt: '01.02.2027' },
-  { id: 'c3', number: 'CERT-003', userName: 'Козлов А.В.', device: 'ASKO DFI746U', dealer: 'ООО "ТехноМаркет"', status: 'pending', issuedAt: '12.03.2026', expiresAt: '12.03.2027' },
-  { id: 'c4', number: 'CERT-004', userName: 'Морозова А.С.', device: 'ASKO OCS8664S', dealer: 'ООО "АскоСервис"', status: 'active', issuedAt: '15.01.2026', expiresAt: '15.01.2027' },
-  { id: 'c5', number: 'CERT-005', userName: 'Волков Д.О.', device: 'ASKO HI1611G', dealer: 'ИП Новиков', status: 'expired', issuedAt: '01.01.2025', expiresAt: '01.01.2026' },
-  { id: 'c6', number: 'CERT-006', userName: 'Соколова Е.Д.', device: 'ASKO R22838S', dealer: 'ООО "АскоСервис"', status: 'revoked', issuedAt: '20.12.2025', expiresAt: '20.12.2026' },
-];
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 
-function CertificateRow({ cert }: { cert: Certificate }) {
-  const showApprove = cert.status === 'pending';
-  const showRevoke = cert.status === 'active';
+function CertificateRow({
+  cert,
+  onApprove,
+  onRevoke,
+}: {
+  cert: Certificate;
+  onApprove: (id: string) => void;
+  onRevoke: (id: string) => void;
+}) {
+  const showApprove = cert.status === CertificateStatus.PENDING_APPROVAL;
+  const showRevoke = cert.status === CertificateStatus.ACTIVE;
+  const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '—';
+  const deviceName = cert.userDevice?.device?.name ?? '—';
+  const dealerName = cert.dealer?.companyName
+    || [cert.dealer?.user?.lastName, cert.dealer?.user?.firstName].filter(Boolean).join(' ')
+    || '—';
 
   return (
     <DataTableRow>
-      <DataTableCell mobileLabel="Номер:" className="lg:w-[100px] lg:flex-shrink-0">
-        <p className="text-sm font-medium text-text-main">{cert.number}</p>
+      <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
+        <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Пользователь:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{cert.userName}</p>
+        <p className="text-sm text-text-main">{userName}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{cert.device}</p>
+        <p className="text-sm text-text-main">{deviceName}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Дилер:" className="lg:w-[150px] lg:px-4">
-        <p className="text-sm text-text-main">{cert.dealer}</p>
+        <p className="text-sm text-text-main">{dealerName}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Статус:" className="lg:w-[90px] lg:px-4">
-        <span className={`text-sm font-medium ${STATUS_COLORS[cert.status]}`}>
-          {STATUS_LABELS[cert.status]}
+        <span className={`text-sm font-medium ${STATUS_COLORS[cert.status as CertTab] ?? 'text-text-main'}`}>
+          {STATUS_LABELS[cert.status] ?? cert.status}
         </span>
       </DataTableCell>
       <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
-        <p className="text-sm text-text-main">{cert.issuedAt}</p>
+        <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
-        <p className="text-sm text-text-main">{cert.expiresAt}</p>
+        <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
       </DataTableCell>
       <DataTableCell className="lg:w-[120px] lg:flex-shrink-0 lg:text-right">
         {showApprove && (
-          <Button variant="success" size="sm">
+          <Button variant="success" size="sm" onClick={() => onApprove(cert.id)}>
             Одобрить
           </Button>
         )}
         {showRevoke && (
-          <Button variant="danger" size="sm">
+          <Button variant="danger" size="sm" onClick={() => onRevoke(cert.id)}>
             Отозвать
           </Button>
         )}
@@ -104,10 +115,47 @@ function CertificateRow({ cert }: { cert: Certificate }) {
 }
 
 export function AdminCertificates() {
-  const [activeTab, setActiveTab] = useState<CertTab>('pending');
+  const [activeTab, setActiveTab] = useState<CertTab>('pending_approval');
   const [autoVerify, setAutoVerify] = useState(false);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCerts = MOCK_CERTIFICATES.filter((c) => c.status === activeTab);
+  const fetchCertificates = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await adminApi.getCertificates({ limit: 200 });
+      const list = data.data ?? (Array.isArray(data) ? data : []);
+      setCertificates(list);
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
+
+  const handleApprove = async (id: string) => {
+    try {
+      await adminApi.approveCertificate(id);
+      await fetchCertificates();
+    } catch {
+      // silently fail
+    }
+  };
+
+  const handleRevoke = async (id: string) => {
+    try {
+      await adminApi.revokeCertificate(id);
+      await fetchCertificates();
+    } catch {
+      // silently fail
+    }
+  };
+
+  const filteredCerts = certificates.filter((c) => c.status === activeTab);
 
   return (
     <PageContainer>
@@ -135,29 +183,40 @@ export function AdminCertificates() {
         ))}
       </TabList>
 
-      {/* Desktop table header */}
-      <DataTableHeader>
-        <div className="w-[100px] flex-shrink-0">Номер</div>
-        <div className="flex-1 px-4">Пользователь</div>
-        <div className="flex-1 px-4">Устройство</div>
-        <div className="w-[150px] px-4">Дилер</div>
-        <div className="w-[90px] px-4">Статус</div>
-        <div className="w-[100px] px-4">Выдан</div>
-        <div className="w-[100px] px-4">Истекает</div>
-        <div className="w-[120px] flex-shrink-0" />
-      </DataTableHeader>
+      {loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+      ) : (
+        <>
+          {/* Desktop table header */}
+          <DataTableHeader>
+            <div className="w-[140px] flex-shrink-0">Номер</div>
+            <div className="flex-1 px-4">Пользователь</div>
+            <div className="flex-1 px-4">Устройство</div>
+            <div className="w-[150px] px-4">Дилер</div>
+            <div className="w-[90px] px-4">Статус</div>
+            <div className="w-[100px] px-4">Выдан</div>
+            <div className="w-[100px] px-4">Истекает</div>
+            <div className="w-[120px] flex-shrink-0" />
+          </DataTableHeader>
 
-      <DataTable>
-        {filteredCerts.length === 0 ? (
-          <DataTableEmpty>
-            Нет сертификатов в этой категории
-          </DataTableEmpty>
-        ) : (
-          filteredCerts.map((cert) => (
-            <CertificateRow key={cert.id} cert={cert} />
-          ))
-        )}
-      </DataTable>
+          <DataTable>
+            {filteredCerts.length === 0 ? (
+              <DataTableEmpty>
+                Нет сертификатов в этой категории
+              </DataTableEmpty>
+            ) : (
+              filteredCerts.map((cert) => (
+                <CertificateRow
+                  key={cert.id}
+                  cert={cert}
+                  onApprove={handleApprove}
+                  onRevoke={handleRevoke}
+                />
+              ))
+            )}
+          </DataTable>
+        </>
+      )}
     </PageContainer>
   );
 }
