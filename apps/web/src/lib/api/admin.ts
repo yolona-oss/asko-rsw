@@ -21,6 +21,61 @@ export const adminApi = {
   deleteDevice(id: string) {
     return api.delete(`/devices/${id}`);
   },
+  deleteAllDevices() {
+    return api.delete<{ count: number }>('/devices/all');
+  },
+  getDeviceImages(deviceId: string) {
+    return api.get(`/devices/${deviceId}/images`);
+  },
+  uploadDeviceImage(deviceId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/devices/${deviceId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteDeviceImage(deviceId: string, imageId: string) {
+    return api.delete(`/devices/${deviceId}/images/${imageId}`);
+  },
+  reorderDeviceImages(deviceId: string, imageIds: string[]) {
+    return api.put(`/devices/${deviceId}/images/reorder`, imageIds);
+  },
+
+  // Articles
+  getArticles(params?: { offset?: number; limit?: number; search?: string }) {
+    return api.get('/articles', { params });
+  },
+  getArticle(id: string) {
+    return api.get(`/articles/${id}`);
+  },
+  createArticle(data: Record<string, unknown>) {
+    return api.post('/articles', data);
+  },
+  updateArticle(id: string, data: Record<string, unknown>) {
+    return api.patch(`/articles/${id}`, data);
+  },
+  deleteArticle(id: string) {
+    return api.delete(`/articles/${id}`);
+  },
+  deleteAllArticles() {
+    return api.delete<{ count: number }>('/articles/all');
+  },
+  getArticleImages(articleId: string) {
+    return api.get(`/articles/${articleId}/images`);
+  },
+  uploadArticleImage(articleId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/articles/${articleId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteArticleImage(articleId: string, imageId: string) {
+    return api.delete(`/articles/${articleId}/images/${imageId}`);
+  },
+  reorderArticleImages(articleId: string, imageIds: string[]) {
+    return api.put(`/articles/${articleId}/images/reorder`, imageIds);
+  },
 
   // Invitations
   getInvitations() {

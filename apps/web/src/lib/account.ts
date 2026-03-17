@@ -40,6 +40,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   admin: [
     { href: '/account', label: 'Главная', icon: 'home' },
     { href: '/account/devices', label: 'Устройства', icon: 'devices' },
+    { href: '/account/articles', label: 'Статьи', icon: 'manual' },
     { href: '/account/invitations', label: 'Приглашения', icon: 'invite' },
     { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },

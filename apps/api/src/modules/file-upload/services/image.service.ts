@@ -97,6 +97,20 @@ export class ImageService {
         return image;
     }
 
+    async uploadArticleImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.Article;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.Article);
+
+        await this.em.persistAndFlush(image);
+
+        return image;
+    }
+
     async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -187,6 +201,21 @@ export class ImageService {
         }
 
         await this.em.persistAndFlush(targets);
+    }
+
+    async reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]) {
+        const images = await this.findAttachedImages(ownerType, ownerId);
+        const map = new Map(images.map(img => [img.id, img]));
+
+        for (let i = 0; i < imageIds.length; i++) {
+            const img = map.get(imageIds[i]);
+            if (img) {
+                img.order = i;
+            }
+        }
+
+        await this.em.flush();
+        return this.findAttachedImages(ownerType, ownerId);
     }
 
     async remove(id: string) {

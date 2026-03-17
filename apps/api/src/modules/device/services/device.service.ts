@@ -30,41 +30,50 @@ export class DeviceService {
     async importDevices(products: Record<string, any>[]): Promise<{ created: number; errors: string[] }> {
         let created = 0;
         const errors: string[] = [];
-        const BATCH_SIZE = 50;
 
-        for (let i = 0; i < products.length; i += BATCH_SIZE) {
-            const batch = products.slice(i, i + BATCH_SIZE);
+        for (const product of products) {
             const fork = this.em.fork();
-
             try {
-                const devices: Device[] = [];
+                const type = VALID_DEVICE_TYPES.has(product.type)
+                    ? (product.type as DeviceType)
+                    : DeviceType.OTHER;
 
-                for (const product of batch) {
-                    const type = VALID_DEVICE_TYPES.has(product.type)
-                        ? (product.type as DeviceType)
-                        : DeviceType.OTHER;
+                const specs = product.specifications;
 
-                    const device = fork.create(Device, {
-                        name: String(product.name ?? '').slice(0, 255),
-                        type,
-                        model: String(product.model ?? '').slice(0, 255),
-                        brand: String(product.brand ?? '').slice(0, 255),
-                        description: product.description,
-                        specifications: product.specifications,
-                        features: Array.isArray(product.specifications?.features)
-                            ? { items: product.specifications.features }
-                            : product.specifications?.features,
-                        link: String(product.specifications?.url ?? '').slice(0, 500) || undefined,
-                    });
-                    devices.push(device);
+                // specifications: use the flat technical object
+                const specifications = specs?.technical && typeof specs.technical === 'object'
+                    ? specs.technical
+                    : undefined;
+
+                // features: convert ["key: value", ...] array to { key: value }
+                let features: Record<string, string> | undefined;
+                if (Array.isArray(specs?.features)) {
+                    features = {};
+                    for (const item of specs.features) {
+                        const idx = String(item).indexOf(': ');
+                        if (idx !== -1) {
+                            features[String(item).slice(0, idx)] = String(item).slice(idx + 2);
+                        }
+                    }
+                } else if (specs?.features && typeof specs.features === 'object' && !Array.isArray(specs.features)) {
+                    features = specs.features;
                 }
 
-                await fork.persistAndFlush(devices);
-                created += devices.length;
+                const device = fork.create(Device, {
+                    name: String(product.name ?? '').slice(0, 255),
+                    type,
+                    model: String(product.model ?? '').slice(0, 255),
+                    brand: String(product.brand ?? '').slice(0, 255),
+                    description: product.description,
+                    specifications,
+                    features,
+                    link: String(specs?.url ?? '').slice(0, 500) || undefined,
+                });
+
+                await fork.persistAndFlush(device);
+                created++;
             } catch (e: any) {
-                for (const product of batch) {
-                    errors.push(`${product.name ?? 'unknown'}: ${e.message}`);
-                }
+                errors.push(`${product.name ?? 'unknown'}: ${e.message}`);
             }
         }
 
@@ -83,6 +92,10 @@ export class DeviceService {
         const device = await this.em.findOne(Device, { id });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         await this.em.removeAndFlush(device);
+    }
+
+    async deleteAllDevices(): Promise<number> {
+        return this.em.nativeDelete(Device, {});
     }
 
     async findAll(pagination: PaginationDto): Promise<{ data: Device[]; total: number }> {

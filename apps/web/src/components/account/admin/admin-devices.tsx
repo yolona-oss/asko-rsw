@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Button,
+  Modal,
   DataTable,
   DataTableHeader,
   DataTableRow,
@@ -55,9 +56,11 @@ function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string
         <p className="text-sm text-text-main">{device.brand}</p>
       </DataTableCell>
       <DataTableCell className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
-        <Button variant="secondary" size="sm">
-          Изменить
-        </Button>
+        <Link href={`/account/devices/${device.id}`}>
+          <Button variant="secondary" size="sm">
+            Изменить
+          </Button>
+        </Link>
         <Button variant="danger" size="sm" onClick={() => onDelete(device.id)}>
           Удалить
         </Button>
@@ -70,6 +73,9 @@ export function AdminDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +94,7 @@ export function AdminDevices() {
       const CHUNK = 20;
       const status: ImportStatus = { total: products.length, done: 0, errors: [] };
       setImportStatus({ ...status });
+      setImporting(true);
 
       for (let i = 0; i < products.length; i += CHUNK) {
         const batch = products.slice(i, i + CHUNK);
@@ -102,9 +109,11 @@ export function AdminDevices() {
         setImportStatus({ ...status });
       }
 
+      setImporting(false);
       await fetchDevices();
     } catch {
-      alert('Ошибка чтения файла');
+      setImporting(false);
+      setImportStatus({ total: 0, done: 0, errors: ['Ошибка чтения файла'] });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -134,6 +143,19 @@ export function AdminDevices() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      await adminApi.deleteAllDevices();
+      setDevices([]);
+    } catch {
+      // silently fail
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAll(false);
+    }
+  };
+
   return (
     <PageContainer>
       <div className="flex items-center justify-between">
@@ -159,40 +181,103 @@ export function AdminDevices() {
           size="sm"
           className="m-2"
           onClick={() => fileInputRef.current?.click()}
-          disabled={importStatus !== null && importStatus.done < importStatus.total}
+          disabled={importing}
         >
           Импорт JSON
         </Button>
+        {devices.length > 0 && (
+          <Button
+            variant="danger"
+            size="sm"
+            className="m-2"
+            onClick={() => setShowDeleteAll(true)}
+          >
+            Удалить все
+          </Button>
+        )}
       </div>
 
-      {importStatus && (
-        <div className="px-4 py-2 text-sm">
-          {importStatus.done < importStatus.total ? (
-            <p className="text-text-sub">
-              Импорт: {importStatus.done} / {importStatus.total}...
-            </p>
-          ) : (
-            <div>
-              <p className="text-green-600">
-                Импорт завершён: {importStatus.done - importStatus.errors.length} из{' '}
-                {importStatus.total} успешно
-              </p>
-              {importStatus.errors.length > 0 && (
-                <details className="mt-1">
-                  <summary className="text-red-600 cursor-pointer">
-                    Ошибки: {importStatus.errors.length}
-                  </summary>
-                  <ul className="mt-1 list-disc list-inside text-red-600 text-xs">
-                    {importStatus.errors.map((err, i) => (
-                      <li key={i}>{err}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
+      <Modal
+        open={importStatus !== null}
+        onClose={importing ? undefined : () => setImportStatus(null)}
+        className="w-full max-w-md p-6"
+      >
+        {importStatus && (
+          <>
+            <h2 className="text-base font-medium text-text-main mb-4">Импорт товаров</h2>
+
+            <div className="mb-1 flex justify-between text-sm text-text-sub">
+              <span>
+                {importing ? 'Импортируется...' : 'Завершено'}
+              </span>
+              <span>
+                {importStatus.done + importStatus.errors.length} / {importStatus.total}
+              </span>
             </div>
-          )}
+
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+              <div
+                className="h-full bg-brand-red rounded-full transition-all duration-300"
+                style={{
+                  width: `${importStatus.total > 0 ? ((importStatus.done + importStatus.errors.length) / importStatus.total) * 100 : 0}%`,
+                }}
+              />
+            </div>
+
+            <div className="flex gap-4 text-sm mb-4">
+              <span className="text-green-600">Успешно: {importStatus.done}</span>
+              <span className="text-red-600">Ошибки: {importStatus.errors.length}</span>
+            </div>
+
+            {importStatus.errors.length > 0 && (
+              <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-sm p-3 mb-4">
+                <ul className="space-y-1">
+                  {importStatus.errors.map((err, i) => (
+                    <li key={i} className="text-xs text-red-600">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {!importing && (
+              <div className="flex justify-end">
+                <Button variant="secondary" size="sm" onClick={() => setImportStatus(null)}>
+                  Закрыть
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
+
+      <Modal
+        open={showDeleteAll}
+        onClose={deletingAll ? undefined : () => setShowDeleteAll(false)}
+        className="w-full max-w-sm p-6"
+      >
+        <h2 className="text-base font-medium text-text-main mb-2">Удалить все товары?</h2>
+        <p className="text-sm text-text-sub mb-6">
+          Это действие удалит все {devices.length} товаров. Отменить будет невозможно.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowDeleteAll(false)}
+            disabled={deletingAll}
+          >
+            Отмена
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteAll}
+            disabled={deletingAll}
+          >
+            {deletingAll ? 'Удаление...' : 'Удалить все'}
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>

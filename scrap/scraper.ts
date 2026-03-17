@@ -1,29 +1,23 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
 
 // --- Configuration ---
 const BASE_URL = 'https://asko-russia.ru';
 const REQUEST_DELAY_MS = 1500;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
 
-// DeviceType enum matching your MikroORM schema
+// DeviceType enum matching the DB enum exactly
 enum DeviceType {
   WASHING_MACHINE = 'washing_machine',
+  DRYER = 'dryer',
   DISHWASHER = 'dishwasher',
   OVEN = 'oven',
-  COMPACT_OVEN = 'compact_oven',
-  HOB = 'hob',
-  HOOD = 'hood',
+  COOKTOP = 'cooktop',
   REFRIGERATOR = 'refrigerator',
-  COFFEE_MACHINE = 'coffee_machine',
-  DRYER = 'dryer',
-  VACUUM_SEALER = 'vacuum_sealer',
-  WARMER_DRAWER = 'warmer_drawer',
-  MICROWAVE = 'microwave',
-  COMBO_SET = 'combo_set',
-  UNKNOWN = 'unknown'
+  FREEZER = 'freezer',
+  HOOD = 'hood',
+  OTHER = 'other',
 }
 
 interface CatalogInfo {
@@ -32,41 +26,39 @@ interface CatalogInfo {
 }
 
 const CATALOG_URLS: CatalogInfo[] = [
-  { url: 'https://asko-russia.ru/catalog/complects-asko/domashnyaya-prachechnaya/', type: DeviceType.COMBO_SET },
+  { url: 'https://asko-russia.ru/catalog/stiralnye_mashiny/', type: DeviceType.WASHING_MACHINE },
+  { url: 'https://asko-russia.ru/catalog/sushilnye-mashiny/', type: DeviceType.DRYER },
   { url: 'https://asko-russia.ru/catalog/posudomoechnye_mashiny/', type: DeviceType.DISHWASHER },
   { url: 'https://asko-russia.ru/catalog/dukhovye-shkafy/', type: DeviceType.OVEN },
-  { url: 'https://asko-russia.ru/catalog/kompaktnye-dukhovye-shkafy/', type: DeviceType.COMPACT_OVEN },
-  { url: 'https://asko-russia.ru/catalog/varochnye-paneli/', type: DeviceType.HOB },
+  { url: 'https://asko-russia.ru/catalog/kompaktnye-dukhovye-shkafy/', type: DeviceType.OVEN },
+  { url: 'https://asko-russia.ru/catalog/varochnye-paneli/', type: DeviceType.COOKTOP },
   { url: 'https://asko-russia.ru/catalog/vytyazhki/', type: DeviceType.HOOD },
   { url: 'https://asko-russia.ru/catalog/kholodilniki/', type: DeviceType.REFRIGERATOR },
-  { url: 'https://asko-russia.ru/catalog/complects-asko/komplekty-kbt/', type: DeviceType.COMBO_SET },
-  { url: 'https://asko-russia.ru/catalog/vakuumatory/', type: DeviceType.VACUUM_SEALER },
-  { url: 'https://asko-russia.ru/catalog/podogrevateli_posudy/', type: DeviceType.WARMER_DRAWER },
-  { url: 'https://asko-russia.ru/catalog/mikrovolnovye_pechi/', type: DeviceType.MICROWAVE },
-  { url: 'https://asko-russia.ru/catalog/kofemashiny/', type: DeviceType.COFFEE_MACHINE },
-  { url: 'https://asko-russia.ru/catalog/stiralnye_mashiny/', type: DeviceType.WASHING_MACHINE }
+  { url: 'https://asko-russia.ru/catalog/morozilniki/', type: DeviceType.FREEZER },
+  { url: 'https://asko-russia.ru/catalog/complects-asko/domashnyaya-prachechnaya/', type: DeviceType.OTHER },
+  { url: 'https://asko-russia.ru/catalog/complects-asko/komplekty-kbt/', type: DeviceType.OTHER },
+  { url: 'https://asko-russia.ru/catalog/vakuumatory/', type: DeviceType.OTHER },
+  { url: 'https://asko-russia.ru/catalog/podogrevateli_posudy/', type: DeviceType.OTHER },
+  { url: 'https://asko-russia.ru/catalog/mikrovolnovye_pechi/', type: DeviceType.OTHER },
+  { url: 'https://asko-russia.ru/catalog/kofemashiny/', type: DeviceType.OTHER },
 ];
 
-// --- Interfaces matching MikroORM entity ---
-interface Specifications {
-  url: string;
-  category: DeviceType;
-  images: string[];
-  technical: Record<string, string>;
-  features: string[];
-  technologies: string[];
-  price: string | null;
-  inStock: boolean;
-}
-
-interface Product {
-  id: string;
+// Output format — compatible with POST /devices/import
+// The import endpoint reads: specifications.technical → DB specifications,
+// specifications.features (object) → DB features, specifications.url → DB link
+interface ProductOutput {
   name: string;
   type: DeviceType;
   model: string;
   brand: string;
   description: string | null;
-  specifications: Specifications;
+  specifications: {
+    url: string;
+    technical: Record<string, string>;
+    features: Record<string, string>;
+    images: string[];
+    price: string | null;
+  };
 }
 
 // --- Utility Functions ---
@@ -92,21 +84,21 @@ const extractModelFromUrl = (url: string): string => {
 // --- Core Scraping Functions ---
 async function fetchPage(url: string): Promise<cheerio.CheerioAPI | null> {
   try {
-    console.log(`🌐 Fetching: ${url}`);
+    console.log(`  Fetching: ${url}`);
     await delay(REQUEST_DELAY_MS);
 
     const response = await axios.get(url, {
       headers: { 'User-Agent': USER_AGENT },
-      timeout: 10000
+      timeout: 10000,
     });
 
     if (response.status !== 200) {
-      console.warn(`⚠️ Received status ${response.status} for ${url}`);
+      console.warn(`  Warning: status ${response.status} for ${url}`);
       return null;
     }
     return cheerio.load(response.data);
   } catch (error) {
-    console.error(`❌ Error fetching ${url}:`, error instanceof Error ? error.message : String(error));
+    console.error(`  Error fetching ${url}:`, error instanceof Error ? error.message : String(error));
     return null;
   }
 }
@@ -127,10 +119,8 @@ async function getProductUrlsFromCatalogPage(catalogUrl: string): Promise<string
 }
 
 async function getAllProductUrlsFromCatalog(catalogInfo: CatalogInfo): Promise<string[]> {
-  console.log(`\n📁 Processing catalog: ${catalogInfo.url}`);
+  console.log(`\nProcessing catalog: ${catalogInfo.url}`);
   let allUrls: string[] = [];
-  let pageNum = 1;
-  let maxPageNum = 1;
 
   const $page1 = await fetchPage(catalogInfo.url);
   if (!$page1) return [];
@@ -147,6 +137,7 @@ async function getAllProductUrlsFromCatalog(catalogInfo: CatalogInfo): Promise<s
     }
   });
 
+  let maxPageNum = 1;
   if (paginationLinks.length > 0) {
     const pageNumbers = paginationLinks
       .map(link => {
@@ -157,48 +148,40 @@ async function getAllProductUrlsFromCatalog(catalogInfo: CatalogInfo): Promise<s
 
     if (pageNumbers.length > 0) {
       maxPageNum = Math.max(...pageNumbers);
-      console.log(`   Pagination detected. Max page: ${maxPageNum}`);
+      console.log(`  Pagination detected. Max page: ${maxPageNum}`);
     }
   }
 
-  // Fetch subsequent pages
-  for (pageNum = 2; pageNum <= maxPageNum; pageNum++) {
+  for (let pageNum = 2; pageNum <= maxPageNum; pageNum++) {
     const separator = catalogInfo.url.includes('?') ? '&' : '?';
     const paginatedUrl = `${catalogInfo.url}${separator}PAGEN_1=${pageNum}`;
-    console.log(`   Fetching page ${pageNum}...`);
+    console.log(`  Fetching page ${pageNum}...`);
     const pageUrls = await getProductUrlsFromCatalogPage(paginatedUrl);
     allUrls = [...allUrls, ...pageUrls];
   }
 
-  console.log(`   Total unique URLs found: ${[...new Set(allUrls)].length}`);
-  return [...new Set(allUrls)];
+  const unique = [...new Set(allUrls)];
+  console.log(`  Total unique URLs found: ${unique.length}`);
+  return unique;
 }
 
-async function scrapeProduct(productUrl: string, deviceType: DeviceType): Promise<Product | null> {
-  console.log(`🔍 Scraping product: ${productUrl}`);
+async function scrapeProduct(productUrl: string, deviceType: DeviceType): Promise<ProductOutput | null> {
+  console.log(`Scraping: ${productUrl}`);
   const $ = await fetchPage(productUrl);
   if (!$) return null;
 
-  // Generate UUID for the product
-  const id = uuidv4();
-
-  // Extract model name (prioritize from URL if needed)
+  // Extract model from h1 or URL
   let model = extractModelFromUrl(productUrl);
-
-  // Try to get a better model name from h1
-  const h1Text = $('h1').first().text();
+  const h1Text = cleanText($('h1').first().text());
   const modelMatch = h1Text.match(/Asko\s+(\S+)/i);
   if (modelMatch && modelMatch[1]) {
     model = modelMatch[1];
   }
 
-  // Extract product name (full name from h1)
   const name = h1Text || model;
-
-  // Brand is always Asko
   const brand = 'Asko';
 
-  // Extract description
+  // Description
   let description = '';
   const descDiv = $('.description').text();
   if (descDiv) {
@@ -207,7 +190,6 @@ async function scrapeProduct(productUrl: string, deviceType: DeviceType): Promis
     const metaDesc = $('meta[name="description"]').attr('content');
     description = metaDesc ? cleanText(metaDesc) : '';
   }
-
   if (!description) {
     const longDesc = $('.product-full-description, .product-tabs__content').first().text();
     if (longDesc) {
@@ -215,124 +197,77 @@ async function scrapeProduct(productUrl: string, deviceType: DeviceType): Promis
     }
   }
 
-  // Build specifications object
-  const specifications: Specifications = {
-    url: productUrl,
-    category: deviceType,
-    images: [],
-    technical: {},
-    features: [],
-    technologies: [],
-    price: null,
-    inStock: false
-  };
+  // Features/specifications from .characteristics__row
+  const technical: Record<string, string> = {};
+  $('section.characteristics .characteristics__row').each((_, row) => {
+    const featureName = cleanText($(row).find('.characteristics__name').text());
+    let featureValue = cleanText($(row).find('.characteristics__property').text());
+    featureValue = featureValue.replace(/Перейти в глоссарий/g, '').trim();
 
-  // Extract images
-  $('img').each((_, img) => {
-    let src = $(img).attr('src');
-    if (src) {
-      const isProductImage = $(img).closest('.product-slider, .gallery, .product-image').length > 0;
-      if (isProductImage && (src.includes('/upload/') || src.includes('product'))) {
-        if (!src.startsWith('http')) {
-          src = fullUrl(src);
-        }
-        specifications.images.push(src);
-      }
-    }
-  });
-  specifications.images = [...new Set(specifications.images)];
-
-  // Extract features from the correct container path
-  // section.characteristics._vr-m-s .characteristics__wrap .characteristics__row
-  $('section.characteristics._vr-m-s .characteristics__wrap .characteristics__row').each((_, row) => {
-    const nameElement = $(row).find('.characteristics__name');
-    const valueElement = $(row).find('.characteristics__property');
-
-    const name = cleanText(nameElement.text());
-    let value = cleanText(valueElement.text());
-
-    // Clean up value (remove any "Перейти в глоссарий" text if present)
-    value = value.replace(/Перейти в глоссарий/g, '').trim();
-
-    if (name && value) {
-      // Store in features array as a formatted string
-      specifications.features.push(`${name}: ${value}`);
-
-      // Also store in technical object for structured access
-      specifications.technical[name] = value;
+    if (featureName && featureValue) {
+      technical[featureName] = featureValue;
     }
   });
 
-  // Extract additional technologies (from glossary links)
-  $('a[href*="glossary"]').each((_, link) => {
-    const techName = $(link).text().trim();
-    if (techName && techName.length > 0 && techName !== 'Перейти в глоссарий') {
-      const cleanedTech = cleanText(techName.replace(/™/g, '').replace(/®/g, ''));
-      if (cleanedTech.length > 3) {
-        specifications.technologies.push(cleanedTech);
-      }
-    }
-  });
-
-  // Also look for technologies in other common containers
-  $('.technologies-list li, .tech-item, .product-techs a').each((_, el) => {
-    const techText = $(el).text().trim();
-    if (techText && techText !== 'Перейти в глоссарий' && !specifications.technologies.includes(techText)) {
-      specifications.technologies.push(cleanText(techText));
-    }
-  });
-  specifications.technologies = [...new Set(specifications.technologies)];
-
-  // Extract price from the correct container
-  // Price is in .big-price__price span
+  // Price from .big-price__price span
+  let price: string | null = null;
   const priceElement = $('.big-price__price span').first();
   if (priceElement.length) {
-    specifications.price = cleanText(priceElement.text());
+    price = cleanText(priceElement.text());
   } else {
-    // Fallback to other price selectors
     const fallbackPrice = $('.product-price, .price, .current-price').first();
-    specifications.price = fallbackPrice.length ? cleanText(fallbackPrice.text()) : null;
+    price = fallbackPrice.length ? cleanText(fallbackPrice.text()) : null;
   }
 
-  // Extract stock status
-  const stockElement = $('.product-stock, .stock, .availability').first();
-  specifications.inStock = stockElement.length ? stockElement.text().toLowerCase().includes('в наличии') : false;
-
-  // Extract product code if available
-  const codeElement = $('.product-code, .article, .sku').first();
-  if (codeElement.length) {
-    const codeText = cleanText(codeElement.text());
-    const codeMatch = codeText.match(/(\d+)/);
-    if (codeMatch) {
-      specifications.technical['product_code'] = codeMatch[1];
+  // Images from swiper container on the product page
+  const images: string[] = [];
+  $('section.product-page-card div.swiper-wrapper img, section.product-page-card div.swiper-wrapper source').each((_, el) => {
+    const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('srcset');
+    if (src) {
+      // srcset may contain multiple URLs — take the first
+      const firstSrc = src.split(',')[0].trim().split(/\s+/)[0];
+      if (firstSrc && !firstSrc.includes('data:')) {
+        images.push(fullUrl(firstSrc));
+      }
     }
-  }
+  });
 
-  // Create the final product object matching your MikroORM entity
-  const product: Product = {
-    id,
+  // Also check for slide images via background-image or other img patterns in swiper
+  $('section.product-page-card .swiper-slide img').each((_, img) => {
+    const src = $(img).attr('src') || $(img).attr('data-src');
+    if (src && !src.includes('data:') && !images.includes(fullUrl(src))) {
+      images.push(fullUrl(src));
+    }
+  });
+
+  const uniqueImages = [...new Set(images)];
+
+  const product: ProductOutput = {
     name,
     type: deviceType,
     model,
     brand,
     description: description || null,
-    specifications: specifications
+    specifications: {
+      url: productUrl,
+      technical,
+      features: { ...technical }, // same data in features for the import endpoint
+      images: uniqueImages,
+      price,
+    },
   };
 
-  console.log(`   ✅ Scraped: ${product.name} (${product.model})`);
-  console.log(`      Features found: ${specifications.features.length}`);
-  console.log(`      Technologies found: ${specifications.technologies.length}`);
-
+  console.log(`  OK: ${name} (${model}) — ${Object.keys(technical).length} specs, ${uniqueImages.length} images`);
   return product;
 }
 
 // --- Main Function ---
 async function main(): Promise<void> {
-  console.log('🚀 Starting scraper for asko-russia.ru');
+  console.log('Starting scraper for asko-russia.ru');
   const allProductUrls = new Map<string, DeviceType>();
 
-  // Step 1: Gather all product URLs with their device types
-  console.log('\n📋 Step 1: Gathering all product URLs...');
+  // Step 1: Gather all product URLs
+  console.log('\nStep 1: Gathering product URLs...');
   for (const catalogInfo of CATALOG_URLS) {
     const urls = await getAllProductUrlsFromCatalog(catalogInfo);
     urls.forEach(url => {
@@ -341,7 +276,7 @@ async function main(): Promise<void> {
   }
 
   const uniqueUrlsArray = Array.from(allProductUrls.entries());
-  console.log(`\n🎯 Total unique product URLs found: ${uniqueUrlsArray.length}`);
+  console.log(`\nTotal unique product URLs: ${uniqueUrlsArray.length}`);
 
   if (uniqueUrlsArray.length === 0) {
     console.log('No product URLs found. Exiting.');
@@ -349,14 +284,14 @@ async function main(): Promise<void> {
   }
 
   // Step 2: Scrape each product
-  console.log('\n📦 Step 2: Scraping individual product pages...');
-  const scrapedProducts: Product[] = [];
+  console.log('\nStep 2: Scraping products...');
+  const scrapedProducts: ProductOutput[] = [];
   let successCount = 0;
   let failCount = 0;
 
   for (let i = 0; i < uniqueUrlsArray.length; i++) {
     const [url, deviceType] = uniqueUrlsArray[i];
-    console.log(`\n[${i + 1}/${uniqueUrlsArray.length}] Processing (${deviceType})...`);
+    console.log(`\n[${i + 1}/${uniqueUrlsArray.length}] (${deviceType})`);
     const productData = await scrapeProduct(url, deviceType);
 
     if (productData) {
@@ -369,91 +304,30 @@ async function main(): Promise<void> {
     // Save progress every 10 products
     if ((i + 1) % 10 === 0) {
       await fs.writeFile('products_partial.json', JSON.stringify(scrapedProducts, null, 2));
-      console.log(`   💾 Partial save: ${scrapedProducts.length} products so far.`);
+      console.log(`  Partial save: ${scrapedProducts.length} products`);
     }
   }
 
-  // Step 3: Save final results
-  console.log('\n💾 Step 3: Saving final results...');
-  const outputFile = 'asko_products.json';
-  await fs.writeFile(outputFile, JSON.stringify(scrapedProducts, null, 2));
+  // Step 3: Save results
+  console.log('\nStep 3: Saving...');
+  await fs.writeFile('asko_products.json', JSON.stringify(scrapedProducts, null, 2));
 
-  // Also save in a format that shows the schema
-  interface SchemaExample {
-    entity_example: {
-      id: string;
-      name: string;
-      type: string;
-      model: string;
-      brand: string;
-      description: string | null;
-      specifications: Specifications;
-    };
-    total_products: number;
-    products: Product[];
-  }
+  console.log(`\nDone!`);
+  console.log(`  Success: ${successCount}`);
+  console.log(`  Failed: ${failCount}`);
+  console.log(`  Output: asko_products.json`);
 
-  const schemaExample: SchemaExample = {
-    entity_example: {
-      id: "uuid",
-      name: "string",
-      type: "enum (DeviceType)",
-      model: "string",
-      brand: "string (Asko)",
-      description: "text (optional)",
-      specifications: {
-        url: "product URL",
-        category: DeviceType.UNKNOWN,
-        images: ["url1", "url2"],
-        features: ["Характеристика 1: значение 1", "Характеристика 2: значение 2"],
-        technologies: ["Технология 1", "Технология 2"],
-        price: "string or null",
-        inStock: true,
-        technical: {
-          "Характеристика 1": "значение 1",
-          "Характеристика 2": "значение 2",
-          "product_code": "код товара"
-        }
-      }
-    },
-    total_products: scrapedProducts.length,
-    products: scrapedProducts
-  };
-
-  await fs.writeFile('asko_products_with_schema.json', JSON.stringify(schemaExample, null, 2));
-
-  console.log(`✅ Scraping complete!`);
-
-  // Step 4: Summary
-  console.log(`\n📊 Summary:`);
-  console.log(`   - Total products scraped successfully: ${successCount}`);
-  console.log(`   - Failed products: ${failCount}`);
-  console.log(`   - Data saved to: asko_products.json`);
-  console.log(`   - Schema example saved to: asko_products_with_schema.json`);
-
-  // Group by device type
+  // Group by type
   const typeCount: Record<string, number> = {};
   scrapedProducts.forEach(p => {
     typeCount[p.type] = (typeCount[p.type] || 0) + 1;
   });
-  console.log(`\n📈 Products by type:`);
+  console.log(`\nBy type:`);
   Object.entries(typeCount).forEach(([type, count]) => {
-    console.log(`   - ${type}: ${count}`);
+    console.log(`  ${type}: ${count}`);
   });
-
-  // Show sample of features from first product
-  if (scrapedProducts.length > 0) {
-    console.log(`\n🔍 Sample features from first product:`);
-    const sampleProduct = scrapedProducts[0];
-    console.log(`   Product: ${sampleProduct.name}`);
-    console.log(`   Features (first 5):`);
-    sampleProduct.specifications.features.slice(0, 5).forEach((feature, idx) => {
-      console.log(`     ${idx + 1}. ${feature}`);
-    });
-  }
 }
 
-// Run the script
 main().catch(error => {
-  console.error('💥 Fatal error:', error);
+  console.error('Fatal error:', error);
 });

@@ -4,6 +4,7 @@ import { AppConfig } from "app.config";
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import {
+    Article,
     RepairRequest,
     Review,
     WSchedule,
@@ -55,6 +56,7 @@ import { readFileSync } from "fs";
                     //     // },
                     // },
                     entities: [
+                        Article,
                         RepairRequest,
                         Review,
                         WSchedule,

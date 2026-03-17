@@ -1,3 +1,4 @@
+export * from './article.entity';
 export * from './auth'
 export * from './address.entity';
 export * from './certificate.entity';

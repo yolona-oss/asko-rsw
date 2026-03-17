@@ -1,4 +1,5 @@
 export * from './address'
+export * from './article'
 export * from './auth'
 export * from './common'
 export * from './image'

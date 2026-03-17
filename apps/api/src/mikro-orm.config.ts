@@ -3,6 +3,7 @@ import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import {
+    Article,
     RepairRequest,
     Review,
     WSchedule,
@@ -52,6 +53,7 @@ const config = defineConfig<PostgreSqlDriver>({
     //     } : {}
     // },
     entities: [
+        Article,
         RepairRequest,
         Review,
         WSchedule,

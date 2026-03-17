@@ -3,91 +3,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button, Modal, Input, Select, Textarea, FormField } from '@asko/ui';
+import { Button, Modal, Input, Textarea, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
 
-interface KVPair {
-  key: string;
-  value: string;
-}
-
-function KeyValueEditor({
-  pairs,
-  onChange,
-}: {
-  pairs: KVPair[];
-  onChange: (pairs: KVPair[]) => void;
-}) {
-  const updatePair = (index: number, field: 'key' | 'value', val: string) => {
-    const next = pairs.map((p, i) => (i === index ? { ...p, [field]: val } : p));
-    onChange(next);
-  };
-
-  const removePair = (index: number) => {
-    onChange(pairs.filter((_, i) => i !== index));
-  };
-
-  const addPair = () => {
-    onChange([...pairs, { key: '', value: '' }]);
-  };
-
-  return (
-    <div className="flex flex-col gap-2 max-w-[500px]">
-      {pairs.map((pair, i) => (
-        <div key={i} className="flex gap-2 items-center">
-          <Input
-            type="text"
-            placeholder="Ключ"
-            value={pair.key}
-            onChange={(e) => updatePair(i, 'key', e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="text"
-            placeholder="Значение"
-            value={pair.value}
-            onChange={(e) => updatePair(i, 'value', e.target.value)}
-            className="flex-1"
-          />
-          <Button variant="danger" size="sm" onClick={() => removePair(i)}>
-            &times;
-          </Button>
-        </div>
-      ))}
-      <Button variant="secondary" size="sm" onClick={addPair} className="self-start">
-        + Добавить
-      </Button>
-    </div>
-  );
-}
-
-function kvToRecord(pairs: KVPair[]): Record<string, string> | undefined {
-  const filtered = pairs.filter((p) => p.key.trim());
-  if (filtered.length === 0) return undefined;
-  const obj: Record<string, string> = {};
-  for (const p of filtered) {
-    obj[p.key.trim()] = p.value;
-  }
-  return obj;
-}
-
-function recordToKV(obj?: Record<string, any> | null): KVPair[] {
-  if (!obj || typeof obj !== 'object') return [];
-  return Object.entries(obj).map(([key, value]) => ({
-    key,
-    value: String(value ?? ''),
-  }));
-}
-
-interface DeviceImage {
+interface ArticleImage {
   id: string;
+  order: number;
   image: {
     original: { secure_url: string };
     thumbnail?: { secure_url: string };
+    medium?: { secure_url: string };
   };
-  order: number;
 }
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -256,7 +184,7 @@ function ImageCropModal({
           viewBox={`0 0 ${CROP_CONTAINER} ${CROP_CONTAINER * (cropH / cropW)}`}
         >
           <defs>
-            <mask id="crop-rect-mask">
+            <mask id="article-crop-mask">
               <rect width={CROP_CONTAINER} height={CROP_CONTAINER * (cropH / cropW)} fill="white" />
               <rect
                 x={(CROP_CONTAINER - cropW) / 2}
@@ -271,7 +199,7 @@ function ImageCropModal({
             width={CROP_CONTAINER}
             height={CROP_CONTAINER * (cropH / cropW)}
             fill="rgba(0,0,0,0.55)"
-            mask="url(#crop-rect-mask)"
+            mask="url(#article-crop-mask)"
           />
           <rect
             x={(CROP_CONTAINER - cropW) / 2}
@@ -303,8 +231,8 @@ function ImageCropModal({
   );
 }
 
-function DeviceImages({ deviceId }: { deviceId: string }) {
-  const [images, setImages] = useState<DeviceImage[]>([]);
+function ArticleImages({ articleId }: { articleId: string }) {
+  const [images, setImages] = useState<ArticleImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -314,8 +242,8 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
 
   const fetchImages = async () => {
     try {
-      const { data } = await adminApi.getDeviceImages(deviceId);
-      setImages(data);
+      const { data } = await adminApi.getArticleImages(articleId);
+      setImages((data as ArticleImage[]).sort((a, b) => a.order - b.order));
     } catch {
       // silently fail
     }
@@ -323,7 +251,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
 
   useEffect(() => {
     fetchImages();
-  }, [deviceId]);
+  }, [articleId]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -351,7 +279,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
     setUploading(true);
     try {
       const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-      await adminApi.uploadDeviceImage(deviceId, file);
+      await adminApi.uploadArticleImage(articleId, file);
       await fetchImages();
     } catch {
       setError('Ошибка загрузки изображения');
@@ -368,7 +296,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
 
   const handleDelete = async (imageId: string) => {
     try {
-      await adminApi.deleteDeviceImage(deviceId, imageId);
+      await adminApi.deleteArticleImage(articleId, imageId);
       setImages((prev) => prev.filter((img) => img.id !== imageId));
     } catch {
       setError('Ошибка удаления изображения');
@@ -400,14 +328,25 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
     setImages(reordered);
 
     try {
-      await adminApi.reorderDeviceImages(deviceId, reordered.map((img) => img.id));
+      await adminApi.reorderArticleImages(articleId, reordered.map((img) => img.id));
     } catch {
       await fetchImages();
     }
   };
 
+  const imageLabel = (i: number) => {
+    if (i === 0) return 'Превью';
+    if (i === 1) return 'Основное';
+    return `#${i + 1}`;
+  };
+
   return (
     <div className="flex flex-col gap-3 max-w-[500px]">
+      <p className="text-xs text-text-sub">
+        Первое изображение — превью (для карточек). Второе — основное изображение статьи.
+        Перетаскивайте для изменения порядка.
+      </p>
+
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {images.map((img, i) => (
@@ -427,8 +366,8 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
                 height={150}
                 className="w-full h-auto object-cover aspect-square pointer-events-none"
               />
-              <div className="absolute top-1 left-1 w-5 h-5 bg-black/50 text-white rounded-full text-[10px] flex items-center justify-center">
-                {i + 1}
+              <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/50 text-white rounded-sm text-[10px] font-medium">
+                {imageLabel(i)}
               </div>
               <button
                 type="button"
@@ -471,101 +410,57 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
   );
 }
 
-interface FormData {
-  name: string;
-  type: string;
-  model: string;
-  brand: string;
-  description: string;
-  link: string;
+interface ArticleFormProps {
+  articleId?: string;
 }
 
-const INITIAL_DATA: FormData = {
-  name: '',
-  type: '',
-  model: '',
-  brand: 'ASKO',
-  description: '',
-  link: '',
-};
-
-const DEVICE_TYPES = [
-  { value: 'washing_machine', label: 'Стиральная машина' },
-  { value: 'dryer', label: 'Сушильная машина' },
-  { value: 'dishwasher', label: 'Посудомоечная машина' },
-  { value: 'oven', label: 'Духовой шкаф' },
-  { value: 'cooktop', label: 'Варочная панель' },
-  { value: 'refrigerator', label: 'Холодильник' },
-  { value: 'freezer', label: 'Морозильник' },
-  { value: 'hood', label: 'Вытяжка' },
-  { value: 'other', label: 'Другое' },
-];
-
-interface AdminDeviceFormProps {
-  deviceId?: string;
-}
-
-export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
+export function AdminArticleForm({ articleId }: ArticleFormProps) {
   const router = useRouter();
-  const [data, setData] = useState<FormData>(INITIAL_DATA);
-  const [specifications, setSpecifications] = useState<KVPair[]>([]);
-  const [features, setFeatures] = useState<KVPair[]>([]);
-  const [loading, setLoading] = useState(!!deviceId);
-  const [submitting, setSubmitting] = useState(false);
+  const isEdit = !!articleId;
+
+  const [title, setTitle] = useState('');
+  const [text, setText] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState('');
 
-  const isEdit = !!deviceId;
-
   useEffect(() => {
-    if (!deviceId) return;
-    adminApi
-      .getDevice(deviceId)
-      .then(({ data: device }) => {
-        setData({
-          name: device.name ?? '',
-          type: device.type ?? '',
-          model: device.model ?? '',
-          brand: device.brand ?? '',
-          description: device.description ?? '',
-          link: device.link ?? '',
-        });
-        setSpecifications(recordToKV(device.specifications));
-        setFeatures(recordToKV(device.features));
-      })
-      .catch(() => setError('Не удалось загрузить товар'))
-      .finally(() => setLoading(false));
-  }, [deviceId]);
+    if (!isEdit) return;
+    (async () => {
+      try {
+        const { data: article } = await adminApi.getArticle(articleId);
+        setTitle(article.title ?? '');
+        setText(article.text ?? '');
+        setTagsInput((article.tags ?? []).join(', '));
+      } catch {
+        setError('Не удалось загрузить статью');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [articleId, isEdit]);
 
-  const update = (partial: Partial<FormData>) => {
-    setData((prev) => ({ ...prev, ...partial }));
-  };
-
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     setError('');
-    setSubmitting(true);
+    setSaving(true);
     try {
-      const payload = {
-        name: data.name,
-        type: data.type,
-        model: data.model,
-        brand: data.brand,
-        description: data.description || undefined,
-        specifications: kvToRecord(specifications),
-        features: kvToRecord(features),
-        link: data.link || undefined,
-      };
+      const tags = tagsInput
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const data = { title, text, tags };
 
       if (isEdit) {
-        await adminApi.updateDevice(deviceId, payload);
+        await adminApi.updateArticle(articleId, data);
       } else {
-        await adminApi.createDevice(payload);
+        await adminApi.createArticle(data);
       }
-
-      router.push('/account/devices');
+      router.push('/account/articles');
     } catch {
-      setError(isEdit ? 'Ошибка при обновлении товара' : 'Ошибка при создании товара');
+      setError(isEdit ? 'Ошибка при обновлении статьи' : 'Ошибка при создании статьи');
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
@@ -579,96 +474,62 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
 
   return (
     <PageContainer>
-      <PageHeader>{isEdit ? 'Редактирование товара' : 'Новый товар'}</PageHeader>
+      <PageHeader>
+        {isEdit ? 'Редактирование статьи' : 'Новая статья'}
+      </PageHeader>
 
       <div className="max-w-[600px] flex flex-col gap-6">
-        <FormField label="Название" variant="bold">
+        <FormField label="Заголовок" variant="bold">
           <Input
             type="text"
-            placeholder="Введите название..."
-            value={data.name}
-            onChange={(e) => update({ name: e.target.value })}
+            placeholder="Заголовок статьи"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="max-w-[500px]"
           />
         </FormField>
 
-        <FormField label="Тип товара" variant="bold">
-          <Select
-            value={data.type}
-            onChange={(e) => update({ type: e.target.value })}
-            className="max-w-[500px]"
-          >
-            <option value="" disabled>Выберите тип</option>
-            {DEVICE_TYPES.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </Select>
-        </FormField>
-
-        <FormField label="Модель" variant="bold">
+        <FormField label="Теги (через запятую)" variant="bold">
           <Input
             type="text"
-            placeholder="Введите модель..."
-            value={data.model}
-            onChange={(e) => update({ model: e.target.value })}
+            placeholder="ремонт, ASKO, обслуживание"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
             className="max-w-[500px]"
           />
         </FormField>
 
-        <FormField label="Бренд" variant="bold">
-          <Input
-            type="text"
-            placeholder="Введите бренд..."
-            value={data.brand}
-            onChange={(e) => update({ brand: e.target.value })}
-            className="max-w-[500px]"
-          />
-        </FormField>
-
-        <FormField label="Описание" variant="bold">
+        <FormField label="Текст статьи" variant="bold">
           <Textarea
-            placeholder="Описание товара..."
-            value={data.description}
-            onChange={(e) => update({ description: e.target.value })}
-            rows={4}
+            placeholder="Текст статьи. Каждый абзац с новой строки."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={16}
             className="max-w-[500px]"
           />
         </FormField>
 
-        <FormField label="Спецификации" variant="bold">
-          <KeyValueEditor pairs={specifications} onChange={setSpecifications} />
-        </FormField>
-
-        <FormField label="Характеристики" variant="bold">
-          <KeyValueEditor pairs={features} onChange={setFeatures} />
-        </FormField>
-
-        <FormField label="Ссылка" variant="bold">
-          <Input
-            type="url"
-            placeholder="https://..."
-            value={data.link}
-            onChange={(e) => update({ link: e.target.value })}
-            className="max-w-[500px]"
-          />
-        </FormField>
-
-        {isEdit && deviceId && (
+        {isEdit && articleId && (
           <FormField label="Изображения" variant="bold">
-            <DeviceImages deviceId={deviceId} />
+            <ArticleImages articleId={articleId} />
           </FormField>
         )}
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
         <div className="flex items-center gap-4 mt-2">
-          <Button variant="secondary" onClick={() => router.push('/account/devices')}>
+          <Button variant="secondary" onClick={() => router.push('/account/articles')}>
             Отмена
           </Button>
-          <Button variant="primary" size="lg" onClick={handleSubmit} disabled={submitting}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleSave}
+            disabled={saving || !title.trim() || !text.trim()}
+          >
             {isEdit
-              ? (submitting ? 'Сохранение...' : 'Сохранить')
-              : (submitting ? 'Создание...' : 'Создать товар')}
+              ? (saving ? 'Сохранение...' : 'Сохранить')
+              : (saving ? 'Создание...' : 'Создать статью')}
           </Button>
         </div>
       </div>

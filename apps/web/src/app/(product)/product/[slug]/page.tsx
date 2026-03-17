@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getProductBySlug, getAllProductSlugs } from '@/lib/products';
+import type { Product, SpecRow } from '@/lib/products';
 import { Container } from '@asko/ui';
 import { ProductGallery } from '@/components/product/product-gallery';
 import { ProductInfo } from '@/components/product/product-info';
@@ -8,9 +8,55 @@ import { ProductSpecs } from '@/components/product/product-specs';
 import { ProductCare } from '@/components/product/product-care';
 import { ProductAllSpecs } from '@/components/product/product-all-specs';
 import { ProductRecommendations } from '@/components/product/product-recommendations';
+import { fetchDevice, fetchDeviceImageUrls } from '@/lib/api/product';
 
-export async function generateStaticParams() {
-  return getAllProductSlugs().map((slug) => ({ slug }));
+const TYPE_LABELS: Record<string, string> = {
+  washing_machine: 'Стиральная машина',
+  dryer: 'Сушильная машина',
+  dishwasher: 'Посудомоечная машина',
+  oven: 'Духовой шкаф',
+  cooktop: 'Варочная панель',
+  refrigerator: 'Холодильник',
+  freezer: 'Морозильник',
+  hood: 'Вытяжка',
+  other: 'Другое',
+};
+
+const DEFAULT_BADGES: Product['badges'] = [
+  { icon: 'shield', label: 'Оригинальные запчасти' },
+  { icon: 'gem', label: 'Премиальный сервис' },
+  { icon: 'user', label: 'Опытные специалисты' },
+];
+
+function kvToSpecs(obj?: Record<string, any> | null): SpecRow[] {
+  if (!obj || typeof obj !== 'object') return [];
+  return Object.entries(obj).map(([label, value]) => ({
+    label,
+    value: String(value ?? ''),
+  }));
+}
+
+function deviceToProduct(device: any, images: string[]): Product {
+  const specs = kvToSpecs(device.specifications);
+  const features = kvToSpecs(device.features);
+  const allSpecs = [...specs, ...features];
+
+  const mid = Math.ceil(allSpecs.length / 2);
+
+  return {
+    slug: device.id,
+    title: `${device.name}`,
+    category: TYPE_LABELS[device.type] ?? device.type,
+    subtitle: 'Официальные запчасти от производителя',
+    rating: 5,
+    images: images.length > 0 ? images : ['/images/placeholder.png'],
+    badges: DEFAULT_BADGES,
+    specsPreview: allSpecs.slice(0, 8),
+    specsLeft: allSpecs.slice(0, mid),
+    specsRight: allSpecs.slice(mid),
+    careTitle: `О правильном уходе за ${device.brand ?? 'ASKO'} ${device.model ?? ''}`.trim(),
+    careDescription: device.description ?? '',
+  };
 }
 
 export default async function ProductPage({
@@ -19,11 +65,17 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
 
-  if (!product) {
+  const [device, images] = await Promise.all([
+    fetchDevice(slug),
+    fetchDeviceImageUrls(slug),
+  ]);
+
+  if (!device) {
     notFound();
   }
+
+  const product = deviceToProduct(device, images);
 
   return (
     <div className="bg-page-bg">

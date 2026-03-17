@@ -1,5 +1,5 @@
 import {
-    Body, Controller, Delete, Get, Param, Patch, Post, Query,
+    Body, Controller, Delete, Get, Param, Patch, Post, Put, Query,
     UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -47,6 +47,13 @@ export class DeviceController {
     }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @Delete('all')
+    async removeAll() {
+        const count = await this.deviceService.deleteAllDevices();
+        return { message: `Deleted ${count} devices`, count };
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
     @Delete(':id')
     async remove(@Param('id') id: string) {
         await this.deviceService.deleteDevice(id);
@@ -72,6 +79,16 @@ export class DeviceController {
     ) {
         await this.deviceService.findById(id);
         return this.imageService.uploadDeviceImage(file, id);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Put(':id/images/reorder')
+    async reorderImages(
+        @Param('id') id: string,
+        @Body() imageIds: string[],
+    ) {
+        await this.deviceService.findById(id);
+        return this.imageService.reorderByIds(ImageTypeEnum.Device, id, imageIds);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
