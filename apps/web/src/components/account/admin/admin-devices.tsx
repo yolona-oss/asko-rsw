@@ -78,40 +78,26 @@ export function AdminDevices() {
 
     try {
       const text = await file.text();
-      const products: Record<string, any>[] = JSON.parse(text);
+      const products = JSON.parse(text);
 
       if (!Array.isArray(products)) {
         alert('JSON должен содержать массив продуктов');
         return;
       }
 
-      const status: ImportStatus = { total: products.length, done: 0, errors: [] };
-      setImportStatus({ ...status });
+      setImportStatus({ total: products.length, done: 0, errors: [] });
 
-      for (const product of products) {
-        try {
-          await adminApi.createDevice({
-            name: product.name,
-            type: product.type,
-            model: product.model,
-            brand: product.brand,
-            description: product.description,
-            specifications: product.specifications,
-            features: product.specifications?.features,
-            link: product.specifications?.url,
-          });
-          status.done++;
-        } catch (err: any) {
-          status.errors.push(
-            `${product.name}: ${err?.response?.data?.message ?? err.message ?? 'Ошибка'}`,
-          );
-        }
-        setImportStatus({ ...status });
-      }
+      const { data } = await adminApi.importDevices(products);
+
+      setImportStatus({
+        total: products.length,
+        done: data.created + data.errors.length,
+        errors: data.errors,
+      });
 
       await fetchDevices();
-    } catch {
-      alert('Ошибка чтения файла');
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? 'Ошибка импорта');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

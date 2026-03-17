@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Device, UserDevice, Address } from 'entities';
-import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto } from '@asko/shared';
+import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto, DeviceType } from '@asko/shared';
 import { AppErrors } from 'common/error';
+
+const VALID_DEVICE_TYPES = new Set<string>(Object.values(DeviceType));
 
 @Injectable()
 export class DeviceService {
@@ -23,6 +25,41 @@ export class DeviceService {
         });
         await this.em.persistAndFlush(device);
         return device;
+    }
+
+    async importDevices(products: Record<string, any>[]): Promise<{ created: number; errors: string[] }> {
+        const errors: string[] = [];
+        const devices: Device[] = [];
+
+        for (const product of products) {
+            try {
+                const type = VALID_DEVICE_TYPES.has(product.type)
+                    ? (product.type as DeviceType)
+                    : DeviceType.OTHER;
+
+                const device = this.em.create(Device, {
+                    name: product.name,
+                    type,
+                    model: product.model ?? '',
+                    brand: product.brand ?? '',
+                    description: product.description,
+                    specifications: product.specifications,
+                    features: Array.isArray(product.specifications?.features)
+                        ? { items: product.specifications.features }
+                        : product.specifications?.features,
+                    link: product.specifications?.url,
+                });
+                devices.push(device);
+            } catch (e: any) {
+                errors.push(`${product.name ?? 'unknown'}: ${e.message}`);
+            }
+        }
+
+        if (devices.length > 0) {
+            await this.em.persistAndFlush(devices);
+        }
+
+        return { created: devices.length, errors };
     }
 
     async updateDevice(id: string, dto: UpdateDeviceDto): Promise<Device> {

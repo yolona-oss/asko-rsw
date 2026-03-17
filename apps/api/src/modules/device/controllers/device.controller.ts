@@ -35,6 +35,12 @@ export class DeviceController {
     }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @Post('import')
+    async importDevices(@Body() products: Record<string, any>[]) {
+        return this.deviceService.importDevices(products);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
     @Patch(':id')
     async update(@Param('id') id: string, @Body() dto: UpdateDeviceDto) {
         return this.deviceService.updateDevice(id, dto);

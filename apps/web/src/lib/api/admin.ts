@@ -12,6 +12,9 @@ export const adminApi = {
   createDevice(data: Record<string, unknown>) {
     return api.post('/devices', data);
   },
+  importDevices(products: Record<string, unknown>[]) {
+    return api.post<{ created: number; errors: string[] }>('/devices/import', products);
+  },
   updateDevice(id: string, data: Record<string, unknown>) {
     return api.patch(`/devices/${id}`, data);
   },
