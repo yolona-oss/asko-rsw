@@ -27,6 +27,9 @@ export class Device {
     @Property({ type: 'json', nullable: true })
     specifications?: Record<string, any>;
 
+    @Property({ type: 'boolean', default: false, nullable: true })
+    isFeatured?: boolean
+
     @Property({ type: 'varchar', length: 500, nullable: true })
     link?: string;
 

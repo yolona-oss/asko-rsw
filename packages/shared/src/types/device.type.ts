@@ -19,6 +19,7 @@ export interface IDevice {
     description?: string;
     specifications?: Record<string, any>;
     link?: string;
+    isFeatured?: boolean
     createdAt: Date;
     updatedAt: Date;
 }
