@@ -85,19 +85,26 @@ export function AdminDevices() {
         return;
       }
 
-      setImportStatus({ total: products.length, done: 0, errors: [] });
+      const CHUNK = 20;
+      const status: ImportStatus = { total: products.length, done: 0, errors: [] };
+      setImportStatus({ ...status });
 
-      const { data } = await adminApi.importDevices(products);
-
-      setImportStatus({
-        total: products.length,
-        done: data.created + data.errors.length,
-        errors: data.errors,
-      });
+      for (let i = 0; i < products.length; i += CHUNK) {
+        const batch = products.slice(i, i + CHUNK);
+        try {
+          const { data } = await adminApi.importDevices(batch);
+          status.done += data.created;
+          status.errors.push(...data.errors);
+        } catch (err: any) {
+          const msg = err?.response?.data?.message ?? 'Ошибка';
+          batch.forEach((p: any) => status.errors.push(`${p.name ?? '?'}: ${msg}`));
+        }
+        setImportStatus({ ...status });
+      }
 
       await fetchDevices();
-    } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Ошибка импорта');
+    } catch {
+      alert('Ошибка чтения файла');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

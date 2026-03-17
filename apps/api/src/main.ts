@@ -25,7 +25,7 @@ async function bootstrap() {
     app.use(helmet(helmetOptions))
     app.use(compression())
     app.use(cookieParser())
-    app.useBodyParser('json', { limit: '10mb' });
+    app.useBodyParser('json', { limit: '2mb' });
     app.use(urlencoded({ limit: '50mb', extended: true }));
 
     app.useGlobalFilters(new GlobalExceptionFilter())

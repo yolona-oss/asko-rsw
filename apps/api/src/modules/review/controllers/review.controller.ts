@@ -73,11 +73,7 @@ export class ReviewController {
     @Public()
     @Get('rating/repairer/:repairerId')
     async findRepairerRating(@Param('repairerId') repairerId: string) {
-        console.log('11111111111111111')
-        const r = await this.reviewService.findRepairerRating(repairerId);
-        console.log(r)
-        console.log('22222222222222222')
-        return r
+        return await this.reviewService.findRepairerRating(repairerId);
     }
 
     /** Public: get reviews for a repairer */
