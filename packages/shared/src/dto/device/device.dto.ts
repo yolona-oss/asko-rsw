@@ -23,6 +23,10 @@ export class CreateDeviceDto {
     specifications?: Record<string, any>;
 
     @IsOptional()
+    @IsObject()
+    features?: Record<string, any>;
+
+    @IsOptional()
     @IsString()
     link?: string;
 }
@@ -51,6 +55,10 @@ export class UpdateDeviceDto {
     @IsOptional()
     @IsObject()
     specifications?: Record<string, any>;
+
+    @IsOptional()
+    @IsObject()
+    features?: Record<string, any>;
 
     @IsOptional()
     @IsString()

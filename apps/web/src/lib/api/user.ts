@@ -44,4 +44,8 @@ export const userApi = {
       ownerId,
     });
   },
+
+  getWorkSteps(requestId: string) {
+    return api.get(`/repair-requests/${requestId}/steps`);
+  },
 };

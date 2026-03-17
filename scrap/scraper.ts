@@ -1,7 +1,7 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const fs = require('fs/promises');
-const { v4: uuidv4 } = require('uuid');
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import fs from 'fs/promises';
+import { v4 as uuidv4 } from 'uuid';
 
 // --- Configuration ---
 const BASE_URL = 'https://asko-russia.ru';
@@ -9,24 +9,29 @@ const REQUEST_DELAY_MS = 1500;
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
 
 // DeviceType enum matching your MikroORM schema
-const DeviceType = {
-  WASHING_MACHINE: 'washing_machine',
-  DISHWASHER: 'dishwasher',
-  OVEN: 'oven',
-  COMPACT_OVEN: 'compact_oven',
-  HOB: 'hob',
-  HOOD: 'hood',
-  REFRIGERATOR: 'refrigerator',
-  COFFEE_MACHINE: 'coffee_machine',
-  DRYER: 'dryer',
-  VACUUM_SEALER: 'vacuum_sealer',
-  WARMER_DRAWER: 'warmer_drawer',
-  MICROWAVE: 'microwave',
-  COMBO_SET: 'combo_set',
-  UNKNOWN: 'unknown'
-};
+enum DeviceType {
+  WASHING_MACHINE = 'washing_machine',
+  DISHWASHER = 'dishwasher',
+  OVEN = 'oven',
+  COMPACT_OVEN = 'compact_oven',
+  HOB = 'hob',
+  HOOD = 'hood',
+  REFRIGERATOR = 'refrigerator',
+  COFFEE_MACHINE = 'coffee_machine',
+  DRYER = 'dryer',
+  VACUUM_SEALER = 'vacuum_sealer',
+  WARMER_DRAWER = 'warmer_drawer',
+  MICROWAVE = 'microwave',
+  COMBO_SET = 'combo_set',
+  UNKNOWN = 'unknown'
+}
 
-const CATALOG_URLS = [
+interface CatalogInfo {
+  url: string;
+  type: DeviceType;
+}
+
+const CATALOG_URLS: CatalogInfo[] = [
   { url: 'https://asko-russia.ru/catalog/complects-asko/domashnyaya-prachechnaya/', type: DeviceType.COMBO_SET },
   { url: 'https://asko-russia.ru/catalog/posudomoechnye_mashiny/', type: DeviceType.DISHWASHER },
   { url: 'https://asko-russia.ru/catalog/dukhovye-shkafy/', type: DeviceType.OVEN },
@@ -42,19 +47,41 @@ const CATALOG_URLS = [
   { url: 'https://asko-russia.ru/catalog/stiralnye_mashiny/', type: DeviceType.WASHING_MACHINE }
 ];
 
-// --- Utility Functions ---
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// --- Interfaces matching MikroORM entity ---
+interface Specifications {
+  url: string;
+  category: DeviceType;
+  images: string[];
+  technical: Record<string, string>;
+  features: string[];
+  technologies: string[];
+  price: string | null;
+  inStock: boolean;
+}
 
-const fullUrl = (relativeUrl) => {
+interface Product {
+  id: string;
+  name: string;
+  type: DeviceType;
+  model: string;
+  brand: string;
+  description: string | null;
+  specifications: Specifications;
+}
+
+// --- Utility Functions ---
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+const fullUrl = (relativeUrl: string): string => {
   if (relativeUrl.startsWith('http')) return relativeUrl;
   return `${BASE_URL}${relativeUrl.startsWith('/') ? '' : '/'}${relativeUrl}`;
 };
 
-const cleanText = (text) => {
+const cleanText = (text: string): string => {
   return text.replace(/\s+/g, ' ').trim();
 };
 
-const extractModelFromUrl = (url) => {
+const extractModelFromUrl = (url: string): string => {
   const matches = url.match(/\/([^\/]+)\.html$/);
   if (matches && matches[1]) {
     return matches[1].replace(/-/g, ' ').toUpperCase();
@@ -63,7 +90,7 @@ const extractModelFromUrl = (url) => {
 };
 
 // --- Core Scraping Functions ---
-async function fetchPage(url) {
+async function fetchPage(url: string): Promise<cheerio.CheerioAPI | null> {
   try {
     console.log(`🌐 Fetching: ${url}`);
     await delay(REQUEST_DELAY_MS);
@@ -79,16 +106,16 @@ async function fetchPage(url) {
     }
     return cheerio.load(response.data);
   } catch (error) {
-    console.error(`❌ Error fetching ${url}:`, error.message);
+    console.error(`❌ Error fetching ${url}:`, error instanceof Error ? error.message : String(error));
     return null;
   }
 }
 
-async function getProductUrlsFromCatalogPage(catalogUrl) {
+async function getProductUrlsFromCatalogPage(catalogUrl: string): Promise<string[]> {
   const $ = await fetchPage(catalogUrl);
   if (!$) return [];
 
-  const productUrls = [];
+  const productUrls: string[] = [];
   $('a[href*=".html"]').each((_, element) => {
     const href = $(element).attr('href');
     if (href && href.includes('/catalog/') && !href.includes('#') && href.endsWith('.html')) {
@@ -99,9 +126,9 @@ async function getProductUrlsFromCatalogPage(catalogUrl) {
   return [...new Set(productUrls)];
 }
 
-async function getAllProductUrlsFromCatalog(catalogInfo) {
+async function getAllProductUrlsFromCatalog(catalogInfo: CatalogInfo): Promise<string[]> {
   console.log(`\n📁 Processing catalog: ${catalogInfo.url}`);
-  let allUrls = [];
+  let allUrls: string[] = [];
   let pageNum = 1;
   let maxPageNum = 1;
 
@@ -112,7 +139,7 @@ async function getAllProductUrlsFromCatalog(catalogInfo) {
   allUrls = [...allUrls, ...page1Urls];
 
   // Find pagination
-  const paginationLinks = [];
+  const paginationLinks: string[] = [];
   $page1('a').each((_, el) => {
     const href = $page1(el).attr('href');
     if (href && href.includes('PAGEN_')) {
@@ -126,7 +153,7 @@ async function getAllProductUrlsFromCatalog(catalogInfo) {
         const match = link.match(/PAGEN_\d+=(\d+)/);
         return match ? parseInt(match[1], 10) : null;
       })
-      .filter(num => num !== null);
+      .filter((num): num is number => num !== null);
 
     if (pageNumbers.length > 0) {
       maxPageNum = Math.max(...pageNumbers);
@@ -147,7 +174,7 @@ async function getAllProductUrlsFromCatalog(catalogInfo) {
   return [...new Set(allUrls)];
 }
 
-async function scrapeProduct(productUrl, deviceType) {
+async function scrapeProduct(productUrl: string, deviceType: DeviceType): Promise<Product | null> {
   console.log(`🔍 Scraping product: ${productUrl}`);
   const $ = await fetchPage(productUrl);
   if (!$) return null;
@@ -189,24 +216,13 @@ async function scrapeProduct(productUrl, deviceType) {
   }
 
   // Build specifications object
-  const specifications = {
-    // Basic product info
+  const specifications: Specifications = {
     url: productUrl,
     category: deviceType,
-
-    // Images
     images: [],
-
-    // Technical specifications from the page (key-value pairs from characteristics)
     technical: {},
-
-    // Features (key characteristics from .characteristics__row)
     features: [],
-
-    // Additional technologies
     technologies: [],
-
-    // Price and availability
     price: null,
     inStock: false
   };
@@ -227,10 +243,7 @@ async function scrapeProduct(productUrl, deviceType) {
   specifications.images = [...new Set(specifications.images)];
 
   // Extract features from the correct container path
-  // html.page.bx-core.bx-linux.bx-no-touch.bx-no-retina.bx-firefox.TridactylThemeDefault 
-  // body main.main-content.main-content--gap.move-anchors-finished 
-  // div.js-ecom_product-detail div.container div.two-columns.two-columns--reverse 
-  // div.two-columns__wide section.characteristics._vr-m-s div.characteristics__wrap
+  // section.characteristics._vr-m-s .characteristics__wrap .characteristics__row
   $('section.characteristics._vr-m-s .characteristics__wrap .characteristics__row').each((_, row) => {
     const nameElement = $(row).find('.characteristics__name');
     const valueElement = $(row).find('.characteristics__property');
@@ -296,7 +309,7 @@ async function scrapeProduct(productUrl, deviceType) {
   }
 
   // Create the final product object matching your MikroORM entity
-  const product = {
+  const product: Product = {
     id,
     name,
     type: deviceType,
@@ -314,9 +327,9 @@ async function scrapeProduct(productUrl, deviceType) {
 }
 
 // --- Main Function ---
-async function main() {
+async function main(): Promise<void> {
   console.log('🚀 Starting scraper for asko-russia.ru');
-  const allProductUrls = new Map(); // Map to store URL -> deviceType
+  const allProductUrls = new Map<string, DeviceType>();
 
   // Step 1: Gather all product URLs with their device types
   console.log('\n📋 Step 1: Gathering all product URLs...');
@@ -337,7 +350,7 @@ async function main() {
 
   // Step 2: Scrape each product
   console.log('\n📦 Step 2: Scraping individual product pages...');
-  const scrapedProducts = [];
+  const scrapedProducts: Product[] = [];
   let successCount = 0;
   let failCount = 0;
 
@@ -366,7 +379,21 @@ async function main() {
   await fs.writeFile(outputFile, JSON.stringify(scrapedProducts, null, 2));
 
   // Also save in a format that shows the schema
-  const schemaExample = {
+  interface SchemaExample {
+    entity_example: {
+      id: string;
+      name: string;
+      type: string;
+      model: string;
+      brand: string;
+      description: string | null;
+      specifications: Specifications;
+    };
+    total_products: number;
+    products: Product[];
+  }
+
+  const schemaExample: SchemaExample = {
     entity_example: {
       id: "uuid",
       name: "string",
@@ -376,12 +403,12 @@ async function main() {
       description: "text (optional)",
       specifications: {
         url: "product URL",
-        category: "device type",
+        category: DeviceType.UNKNOWN,
         images: ["url1", "url2"],
         features: ["Характеристика 1: значение 1", "Характеристика 2: значение 2"],
         technologies: ["Технология 1", "Технология 2"],
         price: "string or null",
-        inStock: "boolean",
+        inStock: true,
         technical: {
           "Характеристика 1": "значение 1",
           "Характеристика 2": "значение 2",
@@ -405,7 +432,7 @@ async function main() {
   console.log(`   - Schema example saved to: asko_products_with_schema.json`);
 
   // Group by device type
-  const typeCount = {};
+  const typeCount: Record<string, number> = {};
   scrapedProducts.forEach(p => {
     typeCount[p.type] = (typeCount[p.type] || 0) + 1;
   });

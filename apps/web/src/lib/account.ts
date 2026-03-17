@@ -47,6 +47,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   ],
   user: [
     { href: '/account', label: 'Главная', icon: 'home' },
+    { href: '/account/requests', label: 'Заявки', icon: 'orders' },
     { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },

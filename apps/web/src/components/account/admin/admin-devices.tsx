@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -33,6 +33,12 @@ interface Device {
   brand: string;
 }
 
+interface ImportStatus {
+  total: number;
+  done: number;
+  errors: string[];
+}
+
 function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
   return (
     <DataTableRow>
@@ -63,6 +69,53 @@ function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string
 export function AdminDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const products: Record<string, any>[] = JSON.parse(text);
+
+      if (!Array.isArray(products)) {
+        alert('JSON должен содержать массив продуктов');
+        return;
+      }
+
+      const status: ImportStatus = { total: products.length, done: 0, errors: [] };
+      setImportStatus({ ...status });
+
+      for (const product of products) {
+        try {
+          await adminApi.createDevice({
+            name: product.name,
+            type: product.type,
+            model: product.model,
+            brand: product.brand,
+            description: product.description,
+            specifications: product.specifications,
+            features: product.specifications?.features,
+            link: product.specifications?.url,
+          });
+          status.done++;
+        } catch (err: any) {
+          status.errors.push(
+            `${product.name}: ${err?.response?.data?.message ?? err.message ?? 'Ошибка'}`,
+          );
+        }
+        setImportStatus({ ...status });
+      }
+
+      await fetchDevices();
+    } catch {
+      alert('Ошибка чтения файла');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const fetchDevices = async () => {
     try {
@@ -94,14 +147,59 @@ export function AdminDevices() {
         <PageHeader>Товары</PageHeader>
       </div>
 
-      <div className="flex items-start">
+      <div className="flex items-start gap-2">
         <Link
           href="/account/devices/create"
           className="m-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
         >
           Добавить товар
         </Link>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={handleImport}
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          className="m-2"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importStatus !== null && importStatus.done < importStatus.total}
+        >
+          Импорт JSON
+        </Button>
       </div>
+
+      {importStatus && (
+        <div className="px-4 py-2 text-sm">
+          {importStatus.done < importStatus.total ? (
+            <p className="text-text-sub">
+              Импорт: {importStatus.done} / {importStatus.total}...
+            </p>
+          ) : (
+            <div>
+              <p className="text-green-600">
+                Импорт завершён: {importStatus.done - importStatus.errors.length} из{' '}
+                {importStatus.total} успешно
+              </p>
+              {importStatus.errors.length > 0 && (
+                <details className="mt-1">
+                  <summary className="text-red-600 cursor-pointer">
+                    Ошибки: {importStatus.errors.length}
+                  </summary>
+                  <ul className="mt-1 list-disc list-inside text-red-600 text-xs">
+                    {importStatus.errors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>

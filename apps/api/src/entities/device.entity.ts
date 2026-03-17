@@ -4,7 +4,7 @@ import { DeviceType } from '@asko/shared';
 
 @Entity()
 export class Device {
-    [OptionalProps]?: 'description' | 'specifications' | 'link' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'description' | 'specifications' | 'features' | 'link' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -26,6 +26,9 @@ export class Device {
 
     @Property({ type: 'json', nullable: true })
     specifications?: Record<string, any>;
+
+    @Property({ type: 'json', nullable: true })
+    features?: Record<string, any>;
 
     @Property({ type: 'boolean', default: false, nullable: true })
     isFeatured?: boolean

@@ -18,6 +18,7 @@ export class DeviceService {
             brand: dto.brand,
             description: dto.description,
             specifications: dto.specifications,
+            features: dto.features,
             link: dto.link,
         });
         await this.em.persistAndFlush(device);

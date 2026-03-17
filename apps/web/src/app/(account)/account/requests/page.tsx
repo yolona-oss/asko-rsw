@@ -4,10 +4,9 @@ import { useAccount } from '@/components/account/account-provider';
 import { primaryRole } from '@/lib/account';
 import { ManagerRequests } from '@/components/account/manager/manager-requests';
 import { RepairerRequest } from '@/components/account/repairer/repairer-request';
+import { UserRequests } from '@/components/account/user/user-requests';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
-import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
 
 export default function RequestsPage() {
   const { stage, user } = useAccount();
@@ -38,12 +37,5 @@ export default function RequestsPage() {
     return <RepairerRequest />;
   }
 
-  return (
-    <PageContainer>
-      <PageHeader>Мои заявки</PageHeader>
-      <Card className="text-text-sub">
-        У вас пока нет заявок
-      </Card>
-    </PageContainer>
-  );
+  return <UserRequests />;
 }
