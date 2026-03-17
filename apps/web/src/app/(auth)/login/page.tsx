@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
 import { useLogin } from '@/lib/api/use-auth';
+import { EmailInput, PasswordInput } from '@asko/ui';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -50,12 +51,10 @@ export default function LoginPage() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   Email
                 </label>
-                <input
-                  type="email"
+                <EmailInput
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                   required
                 />
               </div>
@@ -65,12 +64,11 @@ export default function LoginPage() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   Пароль
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#B5B7C0] placeholder:text-[#B5B7C0] outline-none"
+                  showStrength={false}
                   required
                 />
               </div>
@@ -124,12 +122,10 @@ export default function LoginPage() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     Email
                   </label>
-                  <input
-                    type="email"
+                  <EmailInput
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@email.com"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                     required
                   />
                 </div>
@@ -139,12 +135,11 @@ export default function LoginPage() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     Пароль
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Введите пароль"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#B5B7C0] placeholder:text-[#B5B7C0] outline-none"
+                    showStrength={false}
                     required
                   />
                 </div>

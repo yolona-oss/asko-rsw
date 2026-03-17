@@ -7,7 +7,7 @@ import { Public } from 'common/decorators/public.decorotor';
 
 @Controller('reviews')
 export class ReviewController {
-    constructor(private readonly reviewService: ReviewService) {}
+    constructor(private readonly reviewService: ReviewService) { }
 
     /** User submits a review */
     @RequiredRoles(...ALL_ROLES)
@@ -21,6 +21,12 @@ export class ReviewController {
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
         return this.reviewService.findByUser(user.sub);
+    }
+
+    @Public()
+    @Get('rating/repairer/:repairerId')
+    async findRepairerRating(@Param('repairerId') repairerId: string) {
+        return this.reviewService.findRepairerRating(repairerId);
     }
 
     /** Public: get reviews for a repairer */

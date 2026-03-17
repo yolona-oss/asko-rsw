@@ -44,7 +44,7 @@ export class TasksService {
 
     @Cron(CronExpression.EVERY_10_SECONDS)
     async handleStaleCursors() {
-        this.logger.debug('Cleaning up stale cursors...');
+        // this.logger.debug('Cleaning up stale cursors...');
         await this.cursorService.cleanupStaleCursors();
     }
 }

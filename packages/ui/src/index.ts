@@ -8,6 +8,18 @@ export type { ButtonProps, ButtonVariant, ButtonSize } from './components/button
 export { Input } from './components/input';
 export type { InputProps } from './components/input';
 
+export { NameInput } from './components/name-input'
+export type { NameInputProps } from './components/name-input'
+
+export { PhoneInput } from './components/phone-input';
+export type { PhoneInputProps } from './components/phone-input';
+
+export { PasswordInput } from './components/password-input';
+export type { PasswordInputProps, PasswordRule } from './components/password-input';
+
+export { EmailInput } from './components/email-input';
+export type { EmailInputProps } from './components/email-input';
+
 export { Textarea } from './components/textarea';
 export type { TextareaProps } from './components/textarea';
 

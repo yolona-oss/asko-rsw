@@ -10,6 +10,8 @@ import { EmailService } from 'common/email/email';
 import { AppError, AppErrors, AppErrorTypeEnum } from 'common/error';
 import { LoginThrottleService } from './login-throttle.service';
 import { InviteService } from './invite.service';
+import { RepairerService } from 'modules/repairer/services/repairer.service';
+import { DealerService } from 'modules/dealer/services/dealer.service';
 import Crypto from './crypto.service';
 import crypto from 'crypto'
 
@@ -44,6 +46,8 @@ export class AuthService {
         private readonly config: AppConfig,
         private readonly loginThrottle: LoginThrottleService,
         private readonly inviteService: InviteService,
+        private readonly repairerService: RepairerService,
+        private readonly dealerService: DealerService,
     ) { }
 
     async login(params: LoginCredentials, request: Request, response: Response): Promise<IAuthSession> {
@@ -123,11 +127,15 @@ export class AuthService {
         if (inviteToken) {
             const inviteRole = await this.inviteService.redeem(inviteToken);
             roles = [inviteRole];
+            console.log(`new role set: ${inviteRole}`)
         }
 
         // verification of fields is done in users service
         dto.roles = roles;
         const newUser = await this.userService.create(dto)
+
+        // Auto-create role-specific profile on invite registration
+        await this.createRoleProfile(newUser.id, roles);
 
         await this.sendEmailConfirmation(newUser);
 
@@ -357,6 +365,18 @@ export class AuthService {
         return {
             access_token,
             refresh_token
+        }
+    }
+
+    private async createRoleProfile(userId: string, roles: Role[]): Promise<void> {
+        try {
+            if (roles.includes(Role.REPAIRER)) {
+                await this.repairerService.create({ userId, city: '', specializations: [] });
+            } else if (roles.includes(Role.DEALER)) {
+                await this.dealerService.createProfile({ userId });
+            }
+        } catch (error) {
+            console.error(`Failed to create role profile for user ${userId}:`, error);
         }
     }
 

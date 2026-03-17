@@ -17,6 +17,8 @@ import { InviteController } from './controllers/invite.controller';
 import { User, Session, InvitationLink } from 'entities';
 import { AddressModule } from 'modules/address/address.module';
 import { FileUploadModule } from 'modules/file-upload/file-upload.module';
+import { RepairerModule } from 'modules/repairer/repairer.module';
+import { DealerModule } from 'modules/dealer/dealer.module';
 
 
 @Module({
@@ -50,7 +52,9 @@ import { FileUploadModule } from 'modules/file-upload/file-upload.module';
             })
         }),
         AddressModule,
-        FileUploadModule
+        FileUploadModule,
+        RepairerModule,
+        DealerModule,
     ],
     exports: [UserService]
 })

@@ -1,4 +1,5 @@
-import type { IAuthUser, Role } from '@asko/shared/client';
+import { Role } from '@asko/shared/client';
+import type { IAuthUser } from '@asko/shared/client';
 
 export type UserRole = 'user' | 'dealer' | 'manager' | 'admin' | 'repairer';
 export type LoadingStage = 'skeleton' | 'partial' | 'loaded';
@@ -14,12 +15,12 @@ export interface MenuItem {
 }
 
 const ROLE_MAP: Partial<Record<Role, UserRole>> = {
-  super_admin: 'admin',
-  admin: 'admin',
-  user: 'user',
-  dealer: 'dealer',
-  manager: 'manager',
-  repairer: 'repairer',
+  [Role.SUPER_ADMIN]: 'admin',
+  [Role.ADMIN]:       'admin',
+  [Role.USER]:        'user',
+  [Role.DEALER]:      'dealer',
+  [Role.MANAGER]:     'manager',
+  [Role.REPAIRER]:    'repairer',
 };
 
 export function primaryRole(user: AccountUser): UserRole {
@@ -42,6 +43,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/invitations', label: 'Приглашения', icon: 'invite' },
     { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },
+    { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   user: [
     { href: '/account', label: 'Главная', icon: 'home' },
@@ -60,6 +62,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
     { href: '/account/access', label: 'Доступы', icon: 'clients' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
+    { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   repairer: [
     { href: '/account', label: 'Главная', icon: 'home' },

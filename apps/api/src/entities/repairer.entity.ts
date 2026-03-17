@@ -21,9 +21,6 @@ export class Repairer {
     @Property({ type: 'boolean', default: true })
     isActive: boolean = true;
 
-    @Property({ type: 'float', default: 0 })
-    rating: number = 0;
-
     @Property({ type: 'integer', default: 0 })
     completedRepairs: number = 0;
 

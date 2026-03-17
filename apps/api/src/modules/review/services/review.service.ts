@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Review, RepairRequest, Repairer } from 'entities';
-import { CreateReviewDto, RepairRequestStatus, PaginationDto } from '@asko/shared';
+import { CreateReviewDto, RepairRequestStatus, PaginationDto, PaginatedResponseDto } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
 @Injectable()
 export class ReviewService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(private readonly em: EntityManager) { }
 
     /** User creates a review after repair is completed */
     async create(userId: string, dto: CreateReviewDto): Promise<Review> {
@@ -31,26 +31,26 @@ export class ReviewService {
         await this.em.persistAndFlush(review);
 
         // Update repairer average rating
-        await this.updateRepairerRating(request.repairer.id);
+        // await this.updateRepairerRating(request.repairer.id);
 
         return review;
     }
 
     /** Recalculate repairer's average rating */
-    private async updateRepairerRating(repairerId: string): Promise<void> {
-        const reviews = await this.em.find(Review, { repairer: repairerId });
-        if (reviews.length === 0) return;
-
-        const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-        const repairer = await this.em.findOne(Repairer, { id: repairerId });
-        if (repairer) {
-            repairer.rating = Math.round(avg * 10) / 10;
-            await this.em.flush();
-        }
-    }
+    // private async updateRepairerRating(repairerId: string): Promise<void> {
+    //     const reviews = await this.em.find(Review, { repairer: repairerId });
+    //     if (reviews.length === 0) return;
+    //
+    //     const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    //     const repairer = await this.em.findOne(Repairer, { id: repairerId });
+    //     if (repairer) {
+    //         repairer.rating = Math.round(avg * 10) / 10;
+    //         await this.em.flush();
+    //     }
+    // }
 
     /** Get reviews for a repairer */
-    async findByRepairer(repairerId: string, pagination: PaginationDto): Promise<{ data: Review[]; total: number }> {
+    async findByRepairer(repairerId: string, pagination: PaginationDto): Promise<PaginatedResponseDto<Review>> {
         const [data, total] = await this.em.findAndCount(
             Review,
             { repairer: repairerId },
@@ -61,7 +61,19 @@ export class ReviewService {
                 populate: ['user'],
             }
         );
-        return { data, total };
+        return { data, pagination, overallCount: total };
+    }
+
+    async findRepairerRating(repairerId: string): Promise<{ average: number; count: number }> {
+        const [data, total] = await this.em.findAndCount(Review, { repairer: repairerId })
+        const sum = data.reduce((sum, review) => {
+            return sum + review.rating
+        }, 0)
+
+        return {
+            average: sum / total,
+            count: total
+        }
     }
 
     /** Get reviews by user */

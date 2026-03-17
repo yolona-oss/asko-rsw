@@ -43,7 +43,7 @@ export function RepairerHistory() {
     if (!user) return;
     repairerApi.getRepairerRating(user.id)
       .then(({ data }) => setRating(data))
-      .catch(() => {});
+      .catch(() => { });
   }, [user]);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function RepairerHistory() {
         setRequests(data?.items ?? []);
         setTotal(data?.total ?? 0);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [page]);
 
@@ -71,7 +71,7 @@ export function RepairerHistory() {
           <span className="text-sm text-text-sub">Мой рейтинг</span>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-text-main">
-              {rating ? rating.average.toFixed(1) : '—'}
+              {rating ? rating.average.toFixed(1) : '-'}
             </span>
             <span className="text-text-sub text-sm">/ 5.0</span>
           </div>

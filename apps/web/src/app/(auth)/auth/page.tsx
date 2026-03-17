@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
+import { EmailInput } from '@asko/ui';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -55,12 +56,10 @@ export default function AuthPage() {
 
               {/* Input + Button */}
               <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-                <input
-                  type="email"
+                <EmailInput
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                 />
                 <button
                   type="submit"
@@ -153,12 +152,10 @@ export default function AuthPage() {
 
                 {/* Input + Button */}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-                  <input
-                    type="email"
+                  <EmailInput
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@email.com"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#737373] outline-none"
                   />
                   <button
                     type="submit"

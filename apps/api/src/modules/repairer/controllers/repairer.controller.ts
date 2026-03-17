@@ -15,7 +15,7 @@ import { JwtAuthUser } from 'common/decorators/user.decorator';
 
 @Controller('repairers')
 export class RepairerController {
-    constructor(private readonly repairerService: RepairerService) {}
+    constructor(private readonly repairerService: RepairerService) { }
 
     /** Admin/Manager creates repairer profile */
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)

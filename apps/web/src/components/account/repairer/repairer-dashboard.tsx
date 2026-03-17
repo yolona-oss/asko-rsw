@@ -27,6 +27,8 @@ export function RepairerDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
 
+  // TODO save in browser store
+  // TODO bg update some how
   const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [activeRequest, setActiveRequest] = useState<any | null>(null);

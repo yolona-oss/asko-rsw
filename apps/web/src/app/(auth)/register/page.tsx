@@ -6,6 +6,22 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
 import { useSignup } from '@/lib/api/use-auth';
+import { EmailInput, PasswordInput, PhoneInput, Input, NameInput } from '@asko/ui';
+import {
+  MIN_USER_PASSWORD_LENGTH,
+  MAX_USER_PASSWORD_LENGTH,
+  NAME_REGEX,
+} from '@asko/shared/client';
+
+const NAMES_D = ['Иван', 'Петр', 'Александр', 'Дмитрий'];
+
+const SURNAMES_D = ['Иванов', 'Петров', 'Сидоров', 'Кузнецов'];
+
+const PATRONYMICS_D = [
+  'Иванович',
+  'Петрович',
+  'Александрович',
+];
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -17,12 +33,56 @@ function RegisterForm() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
+  const [nameError, setNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const passwordsMatch = password === confirmPassword;
+  const showConfirmError = confirmTouched && confirmPassword.length > 0 && !passwordsMatch;
+
   const signup = useSignup();
+
+  function validateName(value: string) {
+    if (value && !NAME_REGEX.test(value)) {
+      setNameError('Допустимы только буквы, цифры, пробелы, дефисы и точки');
+    } else {
+      setNameError('');
+    }
+  }
+
+  function validatePhone(digits: string) {
+    if (digits && digits.length > 1 && digits.length < 11) {
+      setPhoneError('Введите полный номер телефона');
+    } else {
+      setPhoneError('');
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !password) return;
-    signup.mutate({ email, password, firstName, phone });
+
+    if (!passwordsMatch) {
+      setConfirmTouched(true);
+      return;
+    }
+
+    // Validate phone before submit
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits && phoneDigits.length < 11) {
+      setPhoneError('Введите полный номер телефона');
+      return;
+    }
+
+    signup.mutate({
+      email,
+      password,
+      firstName,
+      phone: phoneDigits || undefined,
+      inviteToken: inviteToken ?? undefined,
+    });
   }
 
   const errorMessage = signup.error
@@ -64,13 +124,21 @@ function RegisterForm() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   ФИО
                 </label>
-                <input
+                <NameInput
                   type="text"
+                  names={NAMES_D}
+                  surnames={SURNAMES_D}
+                  patronymics={PATRONYMICS_D}
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    validateName(e.target.value);
+                  }}
+                  onBlur={() => validateName(firstName)}
                   placeholder="Введите ФИО"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                  error={!!nameError}
                 />
+                {nameError && <p className="text-xs text-brand-red">{nameError}</p>}
               </div>
 
               {/* Номер телефона */}
@@ -78,13 +146,13 @@ function RegisterForm() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   Номер телефона
                 </label>
-                <input
-                  type="tel"
+                <PhoneInput
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+7 (___) ___-__-__"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                  onValueChange={(digits) => validatePhone(digits)}
+                  error={!!phoneError}
                 />
+                {phoneError && <p className="text-xs text-brand-red">{phoneError}</p>}
               </div>
 
               {/* Email */}
@@ -92,12 +160,10 @@ function RegisterForm() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   Email
                 </label>
-                <input
-                  type="email"
+                <EmailInput
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
                   required
                 />
               </div>
@@ -107,20 +173,44 @@ function RegisterForm() {
                 <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
                   Пароль
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Придумайте пароль"
-                  className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                  minLength={MIN_USER_PASSWORD_LENGTH}
+                  maxLength={MAX_USER_PASSWORD_LENGTH}
                   required
                 />
               </div>
 
+              {/* Повторите пароль */}
+              {password.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
+                    Повторите пароль
+                  </label>
+                  <PasswordInput
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (!confirmTouched) setConfirmTouched(true);
+                    }}
+                    onBlur={() => setConfirmTouched(true)}
+                    placeholder="Повторите пароль"
+                    showStrength={false}
+                    error={showConfirmError}
+                    required
+                  />
+                  {showConfirmError && (
+                    <p className="text-xs text-brand-red">Пароли не совпадают</p>
+                  )}
+                </div>
+              )}
+
               {/* Button */}
               <button
                 type="submit"
-                disabled={signup.isPending}
+                disabled={signup.isPending || (password.length > 0 && !passwordsMatch)}
                 className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60"
                 style={{ background: '#EB001C' }}
               >
@@ -164,13 +254,21 @@ function RegisterForm() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     ФИО
                   </label>
-                  <input
+                  <NameInput
                     type="text"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    names={NAMES_D}
+                    surnames={SURNAMES_D}
+                    patronymics={PATRONYMICS_D}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      validateName(e.target.value);
+                    }}
+                    onBlur={() => validateName(firstName)}
                     placeholder="Введите ФИО"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                    error={!!nameError}
                   />
+                  {nameError && <p className="text-xs text-brand-red">{nameError}</p>}
                 </div>
 
                 {/* Номер телефона */}
@@ -178,13 +276,13 @@ function RegisterForm() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     Номер телефона
                   </label>
-                  <input
-                    type="tel"
+                  <PhoneInput
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+7 (___) ___-__-__"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                    onValueChange={(digits) => validatePhone(digits)}
+                    error={!!phoneError}
                   />
+                  {phoneError && <p className="text-xs text-brand-red">{phoneError}</p>}
                 </div>
 
                 {/* Email */}
@@ -192,12 +290,10 @@ function RegisterForm() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     Email
                   </label>
-                  <input
-                    type="email"
+                  <EmailInput
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@email.com"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
                     required
                   />
                 </div>
@@ -207,21 +303,45 @@ function RegisterForm() {
                   <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
                     Пароль
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Придумайте пароль"
-                    className="w-full h-9 px-3 text-sm bg-white border border-[#E2E8F0] text-[#737373] placeholder:text-[#B5B7C0] outline-none"
+                    minLength={MIN_USER_PASSWORD_LENGTH}
+                    maxLength={MAX_USER_PASSWORD_LENGTH}
                     required
                   />
                 </div>
+
+                {/* Повторите пароль */}
+                {password.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main">
+                      Повторите пароль
+                    </label>
+                    <PasswordInput
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (!confirmTouched) setConfirmTouched(true);
+                      }}
+                      onBlur={() => setConfirmTouched(true)}
+                      placeholder="Повторите пароль"
+                      showStrength={false}
+                      error={showConfirmError}
+                      required
+                    />
+                    {showConfirmError && (
+                      <p className="text-xs text-brand-red">Пароли не совпадают</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Button */}
               <button
                 type="submit"
-                disabled={signup.isPending}
+                disabled={signup.isPending || (password.length > 0 && !passwordsMatch)}
                 className="flex items-center justify-center w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60"
                 style={{ background: '#EB001C' }}
               >

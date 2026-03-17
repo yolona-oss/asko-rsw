@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { UpdateLocationDto, WorkStepStatus } from '@asko/shared/client';
+import type { PaginatedResponseDto, IReview, UpdateLocationDto, WorkStepStatus } from '@asko/shared/client';
 
 export const repairerApi = {
   updateLocation(data: UpdateLocationDto) {
@@ -40,7 +40,11 @@ export const repairerApi = {
   },
 
   getRepairerRating(repairerId: string) {
-    return api.get(`/reviews/repairer/${repairerId}`);
+    return api.get<{ average: number, count: number }>(`/reviews/rating/repairer/${repairerId}`);
+  },
+
+  getRepairerReviews(repairerId: string) {
+    return api.get<PaginatedResponseDto<IReview>>(`/reviews/repairer/${repairerId}`);
   },
 
   getDevices() {

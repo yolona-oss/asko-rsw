@@ -16,7 +16,7 @@ export class InviteService {
     constructor(
         private readonly em: EntityManager,
         private readonly config: AppConfig,
-    ) {}
+    ) { }
 
     @CreateRequestContext()
     async create(dto: CreateInvitationLinkDto, creatorId: string): Promise<{ invite: IInvitationLink; link: string }> {
@@ -84,7 +84,7 @@ export class InviteService {
         }
 
         invite.used = true;
-        await this.em.persistAndFlush(invite);
+        await this.em.persist(invite).flush();
 
         return invite.role;
     }
