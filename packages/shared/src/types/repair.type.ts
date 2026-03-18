@@ -41,6 +41,8 @@ export interface IRepairRequest {
     refundRequested: boolean;
     refundReason?: string;
     refuseReason?: string;
+    rejectedRepairers?: string[];
+    completionNote?: string;
     createdAt: Date;
     updatedAt: Date;
 }

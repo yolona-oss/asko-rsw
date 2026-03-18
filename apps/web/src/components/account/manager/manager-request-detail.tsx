@@ -44,6 +44,8 @@ interface RepairRequestDetail {
   status: RepairRequestStatus;
   description: string;
   createdAt: string;
+  rejectedRepairers?: string[];
+  refuseReason?: string;
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
   address?: { city?: string; street?: string; building?: string; apartment?: string };
@@ -206,6 +208,13 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             <p className="text-sm text-text-main">{addressStr}</p>
           </div>
 
+          {/* Refusal notice */}
+          {request.refuseReason && request.rejectedRepairers && request.rejectedRepairers.length > 0 && (
+            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              Предыдущий мастер отклонил заявку: {request.refuseReason}
+            </div>
+          )}
+
           {/* Master assignment */}
           <div>
             <p className="text-sm font-bold text-text-main mb-2">
@@ -223,11 +232,13 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 className="max-w-[400px] py-3"
               >
                 <option value="">Выбрать доступного мастера</option>
-                {repairers.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
-                  </option>
-                ))}
+                {repairers
+                  .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
+                  .map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
+                    </option>
+                  ))}
               </Select>
               <button
                 type="button"

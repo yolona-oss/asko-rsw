@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { repairerApi } from '@/lib/api/repairer';
-import { WorkStepStatus } from '@asko/shared/client';
+import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -73,7 +73,35 @@ export function RepairerRequest() {
   const [completeLoading, setCompleteLoading] = useState(false);
   const [completeError, setCompleteError] = useState('');
 
+  const [actionLoading, setActionLoading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAccept = async () => {
+    if (!request) return;
+    setActionLoading(true);
+    try {
+      await repairerApi.acceptRequest(request.id);
+      setRequest({ ...request, status: RepairRequestStatus.ACCEPTED });
+    } catch {
+      // handle error
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartWork = async () => {
+    if (!request) return;
+    setActionLoading(true);
+    try {
+      await repairerApi.startWork(request.id);
+      setRequest({ ...request, status: RepairRequestStatus.IN_PROGRESS });
+    } catch {
+      // handle error
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     setIsMobile(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent));
@@ -156,18 +184,40 @@ export function RepairerRequest() {
   const finalStep = steps.find((s) => s.isFinal);
   const isFinalInProgress = finalStep?.status === WorkStepStatus.IN_PROGRESS;
 
+  const status = request.status as RepairRequestStatus;
+
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Текущая заявка</PageHeader>
-        <button
-          type="button"
-          onClick={() => { setRefuseReason(''); setRefuseError(''); setRefuseOpen(true); }}
-          className="text-sm text-brand-red hover:underline flex-shrink-0 cursor-pointer"
-        >
-          Отклонить
-        </button>
-      </div>
+      <PageHeader>Текущая заявка</PageHeader>
+
+      {/* Accept request (ASSIGNED status) */}
+      {status === RepairRequestStatus.ASSIGNED && (
+        <Card className="flex flex-col gap-3">
+          <p className="text-sm text-text-sub">Вам назначена новая заявка. Примите её для начала работы.</p>
+          <div className="flex gap-3">
+            <Button variant="primary" onClick={handleAccept} disabled={actionLoading}>
+              {actionLoading ? 'Принятие...' : 'Принять заявку'}
+            </Button>
+            <button
+              type="button"
+              onClick={() => { setRefuseReason(''); setRefuseError(''); setRefuseOpen(true); }}
+              className="text-sm text-brand-red hover:underline cursor-pointer"
+            >
+              Отклонить
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {/* Start work (ACCEPTED status) */}
+      {status === RepairRequestStatus.ACCEPTED && (
+        <Card className="flex flex-col gap-3">
+          <p className="text-sm text-text-sub">Вы приняли заявку. Начните работу, когда будете на месте.</p>
+          <Button variant="primary" onClick={handleStartWork} disabled={actionLoading}>
+            {actionLoading ? 'Запуск...' : 'Начать работу'}
+          </Button>
+        </Card>
+      )}
 
       {/* Device info */}
       <Card className="flex flex-col gap-4">

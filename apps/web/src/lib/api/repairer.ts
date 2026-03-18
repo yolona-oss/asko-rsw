@@ -18,6 +18,14 @@ export const repairerApi = {
     return api.get('/repairers/requests', { params });
   },
 
+  acceptRequest(requestId: string) {
+    return api.post(`/repair-requests/${requestId}/accept`);
+  },
+
+  startWork(requestId: string) {
+    return api.post(`/repair-requests/${requestId}/start`);
+  },
+
   refuseRequest(requestId: string, reason: string) {
     return api.post(`/repair-requests/${requestId}/refuse`, { reason });
   },

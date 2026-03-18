@@ -15,10 +15,16 @@ import {
     JwtPayload,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { NotificationService } from 'modules/notification/services/common-notification.service';
+import { ImageService } from 'modules/file-upload/services/image.service';
 
 @Injectable()
 export class RepairRequestService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly notificationService: NotificationService,
+        private readonly imageService: ImageService,
+    ) {}
 
     /** User creates a repair request */
     async create(userId: string, dto: CreateRepairRequestDto): Promise<RepairRequest> {
@@ -136,7 +142,7 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Repairer refuses assigned request */
+    /** Repairer refuses assigned request — reverts to PAID so manager can re-assign */
     async refuseRequest(repairerUserId: string, requestId: string, dto: RefuseRequestDto): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -147,10 +153,23 @@ export class RepairRequestService {
             throw AppErrors.badRequest('Request is not in ASSIGNED status');
         }
 
-        request.status = RepairRequestStatus.REFUSED;
+        // Track rejected repairer
+        if (!request.rejectedRepairers) request.rejectedRepairers = [];
+        request.rejectedRepairers.push(repairer.id);
+
+        request.status = RepairRequestStatus.PAID;
         request.refuseReason = dto.reason;
         request.repairer = undefined;
         await this.em.flush();
+
+        // Notify managers about refusal
+        this.notificationService.notifyManagers({
+            type: 'repairer_refused',
+            requestId: request.id,
+            repairerId: repairer.id,
+            reason: dto.reason,
+        });
+
         return request;
     }
 
@@ -178,28 +197,43 @@ export class RepairRequestService {
         await this.em.flush();
     }
 
-    /** Complete the request */
-    async complete(requestId: string): Promise<RepairRequest> {
+    /** Complete the request with optional description and media files */
+    async complete(requestId: string, description?: string, files?: Express.Multer.File[]): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer', 'userDevice', 'userDevice.address'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.AWAITING_COMPLETION) {
-            throw AppErrors.badRequest('Request is not awaiting completion');
+        if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
+            throw AppErrors.badRequest('Request is not in a completable status');
         }
 
         request.status = RepairRequestStatus.COMPLETED;
+        if (description) {
+            request.completionNote = description;
+        }
 
         // Update repairer stats and location
         if (request.repairer) {
             const repairer = request.repairer;
             repairer.completedRepairs += 1;
-            // Update repairer location to device address (requirement 3.5)
             if (request.userDevice?.address) {
-                // We don't have lat/lng on Address entity, so just update the timestamp
                 repairer.lastLocationUpdate = new Date();
             }
         }
 
         await this.em.flush();
+
+        // Upload completion images
+        if (files && files.length > 0) {
+            for (const file of files) {
+                await this.imageService.uploadRepairRequestImage(file, requestId);
+            }
+        }
+
+        // Notify user about completion
+        this.notificationService.notifyRepairCompleted(String(request.user), {
+            type: 'repair_completed',
+            requestId: request.id,
+        });
+
         return request;
     }
 

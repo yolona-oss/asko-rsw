@@ -13,6 +13,14 @@ interface UserDevice {
   serialNumber?: string;
 }
 
+interface Certificate {
+  id: string;
+  certificateNumber: string;
+  status: string;
+  expiresAt: string;
+  userDevice?: { id: string };
+}
+
 interface UploadedImage {
   id: string;
   file: File;
@@ -24,9 +32,11 @@ export function CreateRequest() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [devices, setDevices] = useState<UserDevice[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
 
   const [userDeviceId, setUserDeviceId] = useState('');
+  const [certificateId, setCertificateId] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
 
@@ -34,19 +44,35 @@ export function CreateRequest() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetchDevices() {
+    async function fetchData() {
       try {
-        const { data } = await userApi.getMyDevices();
-        const list = Array.isArray(data) ? data : data.data ?? [];
-        setDevices(list);
+        const [devRes, certRes] = await Promise.all([
+          userApi.getMyDevices(),
+          userApi.getMyCertificates(),
+        ]);
+        const devList = Array.isArray(devRes.data) ? devRes.data : devRes.data.data ?? [];
+        setDevices(devList);
+
+        const certList = Array.isArray(certRes.data) ? certRes.data : certRes.data.data ?? [];
+        setCertificates(certList.filter((c: Certificate) => c.status === 'active'));
       } catch {
         // silently fail
       } finally {
         setLoadingDevices(false);
       }
     }
-    fetchDevices();
+    fetchData();
   }, []);
+
+  // Filter certificates by selected device
+  const filteredCertificates = certificates.filter(
+    (c) => !userDeviceId || c.userDevice?.id === userDeviceId,
+  );
+
+  // Reset certificate when device changes
+  useEffect(() => {
+    setCertificateId('');
+  }, [userDeviceId]);
 
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -88,6 +114,7 @@ export function CreateRequest() {
       const { data: request } = await userApi.createRepairRequest({
         userDeviceId,
         description: description.trim(),
+        ...(certificateId ? { certificateId } : {}),
       });
 
       // 2. Upload and attach images
@@ -100,7 +127,14 @@ export function CreateRequest() {
         }
       }
 
-      // 3. Redirect to the request status page
+      // 3. Auto-trigger dummy payment (placeholder until real payment)
+      try {
+        await userApi.dummyPay(request.id);
+      } catch {
+        // continue even if dummy pay fails
+      }
+
+      // 4. Redirect to the request status page
       router.push(`/account/requests/${request.id}`);
     } catch {
       setError('Ошибка при создании заявки. Попробуйте ещё раз.');
@@ -144,6 +178,23 @@ export function CreateRequest() {
             </Select>
           )}
         </FormField>
+
+        {/* Certificate select */}
+        {filteredCertificates.length > 0 && (
+          <FormField label="Сертификат (необязательно)" variant="bold">
+            <Select
+              value={certificateId}
+              onChange={(e) => setCertificateId(e.target.value)}
+            >
+              <option value="">Без сертификата</option>
+              {filteredCertificates.map((c) => (
+                <option key={c.id} value={c.id}>
+                  №{c.certificateNumber}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        )}
 
         {/* Problem description */}
         <FormField label="Описание проблемы" variant="bold">

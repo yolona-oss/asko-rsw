@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Button, Textarea } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
@@ -80,6 +81,29 @@ function StepLine({ completed }: { completed: boolean }) {
   );
 }
 
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className="cursor-pointer"
+        >
+          <svg
+            className={`w-8 h-8 ${star <= value ? 'text-yellow-400' : 'text-[#E8E8E8]'}`}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface WorkStep {
   id: string;
   title: string;
@@ -142,6 +166,15 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Review state
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewFiles, setReviewFiles] = useState<File[]>([]);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const reviewFileRef = useRef<HTMLInputElement>(null);
+
   const fetchData = useCallback(async () => {
     try {
       const [reqRes, stepsRes] = await Promise.all([
@@ -151,6 +184,20 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       setRequest(reqRes.data);
       const steps = Array.isArray(stepsRes.data) ? stepsRes.data : stepsRes.data?.data ?? [];
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
+
+      // Check if already reviewed
+      if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
+        try {
+          const { data: myReviews } = await userApi.getMyReviews();
+          const reviews = Array.isArray(myReviews) ? myReviews : [];
+          const reviewed = reviews.some(
+            (r: any) => r.repairRequest?.id === requestId || r.repairRequestId === requestId,
+          );
+          if (reviewed) setReviewSubmitted(true);
+        } catch {
+          // ignore
+        }
+      }
     } catch {
       // silently fail
     } finally {
@@ -175,6 +222,39 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       intervalRef.current = null;
     }
   }, [request?.status]);
+
+  const handleReviewSubmit = async () => {
+    if (reviewRating === 0) {
+      setReviewError('Выберите оценку');
+      return;
+    }
+    setReviewSubmitting(true);
+    setReviewError('');
+    try {
+      const { data: review } = await userApi.createReview({
+        repairRequestId: requestId,
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      });
+      // Upload review images
+      for (const file of reviewFiles) {
+        try {
+          await userApi.uploadReviewImage(review.id, file);
+        } catch {
+          // continue
+        }
+      }
+      setReviewSubmitted(true);
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setReviewSubmitted(true);
+      } else {
+        setReviewError('Не удалось отправить отзыв. Попробуйте ещё раз.');
+      }
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -244,6 +324,59 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
               <WorkStepCard key={step.id} step={step} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Review form (COMPLETED status) */}
+      {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
+        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light rounded-sm bg-white">
+          <h3 className="text-lg font-medium text-text-main">Оставить отзыв</h3>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-text-sub">Оцените работу мастера</p>
+            <StarRating value={reviewRating} onChange={setReviewRating} />
+          </div>
+          <Textarea
+            placeholder="Расскажите о вашем опыте (необязательно)"
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+            rows={3}
+          />
+          <div>
+            <input
+              ref={reviewFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => setReviewFiles(Array.from(e.target.files ?? []))}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => reviewFileRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              {reviewFiles.length > 0
+                ? `Выбрано фото: ${reviewFiles.length}`
+                : 'Добавить фото'}
+            </button>
+          </div>
+          {reviewError && <p className="text-sm text-brand-red">{reviewError}</p>}
+          <Button
+            variant="primary"
+            onClick={handleReviewSubmit}
+            disabled={reviewSubmitting || reviewRating === 0}
+          >
+            {reviewSubmitting ? 'Отправка...' : 'Отправить отзыв'}
+          </Button>
+        </div>
+      )}
+
+      {reviewSubmitted && request.status === RepairRequestStatus.COMPLETED && (
+        <div className="max-w-lg mt-6 p-4 bg-green-50 border border-green-200 rounded-sm">
+          <p className="text-sm text-green-700 font-medium">Спасибо за ваш отзыв!</p>
         </div>
       )}
 

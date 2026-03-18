@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairRequestService } from '../services/repair-request.service';
 import { WorkStepService } from '../services/work-step.service';
 import { RepairPaymentService } from '../services/repair-payment.service';
@@ -76,6 +77,12 @@ export class RepairRequestController {
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @Post(':id/dummy-pay')
+    async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairPaymentService.createDummyPayment(id, user.sub);
+    }
+
+    @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
         return this.repairPaymentService.getPaymentsByRequest(id);
@@ -135,8 +142,13 @@ export class RepairRequestController {
 
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/complete')
-    async complete(@Param('id') id: string) {
-        return this.repairRequestService.complete(id);
+    @UseInterceptors(FilesInterceptor('files', 10))
+    async complete(
+        @Param('id') id: string,
+        @Body('description') description?: string,
+        @UploadedFiles() files?: Express.Multer.File[],
+    ) {
+        return this.repairRequestService.complete(id, description, files);
     }
 
     // ── Work steps ──

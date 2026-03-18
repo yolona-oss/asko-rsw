@@ -57,6 +57,28 @@ export class RepairPaymentService {
         return payment;
     }
 
+    /** Auto-create and confirm a dummy payment (placeholder until real payment integration) */
+    async createDummyPayment(requestId: string, userId: string): Promise<RepairPayment> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId, user: userId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.status !== RepairRequestStatus.PENDING) {
+            throw AppErrors.badRequest('Request is not in PENDING status');
+        }
+
+        const payment = this.em.create(RepairPayment, {
+            repairRequest: request,
+            amount: 0,
+            currency: CurrencyEnum.DEFAULT,
+            status: PaymentStatus.PAID,
+            paidAt: new Date(),
+        });
+        request.status = RepairRequestStatus.PAID;
+        request.totalCost = 0;
+
+        await this.em.persistAndFlush(payment);
+        return payment;
+    }
+
     /** Get payments for a repair request */
     async getPaymentsByRequest(requestId: string): Promise<RepairPayment[]> {
         return this.em.find(RepairPayment, { repairRequest: requestId }, { orderBy: { createdAt: 'DESC' } });

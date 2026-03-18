@@ -80,4 +80,24 @@ export const userApi = {
   }) {
     return api.post('/user-devices', data);
   },
+
+  dummyPay(requestId: string) {
+    return api.post(`/repair-requests/${requestId}/dummy-pay`);
+  },
+
+  createReview(data: { repairRequestId: string; rating: number; comment?: string }) {
+    return api.post('/reviews', data);
+  },
+
+  uploadReviewImage(reviewId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/reviews/${reviewId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  getMyReviews() {
+    return api.get('/reviews/my');
+  },
 };

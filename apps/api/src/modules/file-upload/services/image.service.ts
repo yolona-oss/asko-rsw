@@ -135,6 +135,20 @@ export class ImageService {
         return image;
     }
 
+    async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.RepairRequest;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.RepairRequest);
+
+        await this.em.persistAndFlush(image);
+
+        return image;
+    }
+
     async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
