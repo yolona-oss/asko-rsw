@@ -5,13 +5,29 @@ import { useRouter } from 'next/navigation';
 import { Button, Input, Select, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { dealerApi, type SearchedUser, type ClientDevice } from '@/lib/api/dealer';
+import { dealerApi, type SearchedUser } from '@/lib/api/dealer';
+
 
 type Step = 1 | 2 | 3;
 
+interface CatalogDevice {
+  id: string;
+  name: string;
+  brand: string;
+  model: string;
+}
+
 interface FormData {
   clientUserId: string;
-  userDeviceId: string;
+  deviceId: string;
+  serialNumber: string;
+  country: string;
+  city: string;
+  street: string;
+  house: string;
+  building: string;
+  floor: string;
+  room: string;
   expiresAt: string;
   purchaseReceiptUrl: string;
   description: string;
@@ -19,7 +35,15 @@ interface FormData {
 
 const INITIAL_DATA: FormData = {
   clientUserId: '',
-  userDeviceId: '',
+  deviceId: '',
+  serialNumber: '',
+  country: 'Россия',
+  city: '',
+  street: '',
+  house: '',
+  building: '',
+  floor: '',
+  room: '',
   expiresAt: '',
   purchaseReceiptUrl: '',
   description: '',
@@ -59,7 +83,7 @@ function Step1({
 
   const handleSelect = (user: SearchedUser) => {
     setSelectedUser(user);
-    onChange({ clientUserId: user.id, userDeviceId: '' });
+    onChange({ clientUserId: user.id });
   };
 
   return (
@@ -118,39 +142,102 @@ function Step1({
 function Step2({
   data,
   onChange,
-  devices,
-  loading,
+  catalog,
+  loadingCatalog,
 }: {
   data: FormData;
   onChange: (d: Partial<FormData>) => void;
-  devices: ClientDevice[];
-  loading: boolean;
+  catalog: CatalogDevice[];
+  loadingCatalog: boolean;
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <FormField label="Устройство клиента" variant="bold">
-        {loading ? (
-          <p className="text-sm text-text-sub">Загрузка устройств...</p>
-        ) : devices.length === 0 ? (
-          <p className="text-sm text-text-sub">У клиента нет зарегистрированных устройств</p>
+      <FormField label="Устройство из каталога" variant="bold">
+        {loadingCatalog ? (
+          <p className="text-sm text-text-sub">Загрузка...</p>
+        ) : catalog.length === 0 ? (
+          <p className="text-sm text-text-sub">Нет доступных устройств</p>
         ) : (
           <Select
-            value={data.userDeviceId}
-            onChange={(e) => onChange({ userDeviceId: e.target.value })}
+            value={data.deviceId}
+            onChange={(e) => onChange({ deviceId: e.target.value })}
             className="max-w-[500px]"
           >
             <option value="" disabled>Выберите устройство</option>
-            {devices.map((d) => {
-              const label = d.device?.name
-                ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
-                : d.id;
-              return (
-                <option key={d.id} value={d.id}>{label}</option>
-              );
-            })}
+            {catalog.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.brand} {d.name} ({d.model})
+              </option>
+            ))}
           </Select>
         )}
       </FormField>
+
+      <FormField label="Серийный номер" variant="bold">
+        <Input
+          placeholder="SN-00000000"
+          value={data.serialNumber}
+          onChange={(e) => onChange({ serialNumber: e.target.value })}
+          className="max-w-[500px]"
+        />
+      </FormField>
+
+      <p className="text-sm font-bold text-text-main">Адрес установки</p>
+
+      <div className="flex gap-3 max-w-[500px]">
+        <FormField label="Город" className="flex-1">
+          <Input
+            placeholder="Москва"
+            value={data.city}
+            onChange={(e) => onChange({ city: e.target.value })}
+          />
+        </FormField>
+        <FormField label="Улица" className="flex-1">
+          <Input
+            placeholder="Ленина"
+            value={data.street}
+            onChange={(e) => onChange({ street: e.target.value })}
+          />
+        </FormField>
+      </div>
+
+      <div className="flex gap-3 max-w-[500px]">
+        <FormField label="Дом" className="flex-1">
+          <Input
+            placeholder="1"
+            value={data.house}
+            onChange={(e) => onChange({ house: e.target.value })}
+            type="number"
+          />
+        </FormField>
+        <FormField label="Корпус" className="flex-1">
+          <Input
+            placeholder="—"
+            value={data.building}
+            onChange={(e) => onChange({ building: e.target.value })}
+            type="number"
+          />
+        </FormField>
+      </div>
+
+      <div className="flex gap-3 max-w-[500px]">
+        <FormField label="Этаж" className="flex-1">
+          <Input
+            placeholder="—"
+            value={data.floor}
+            onChange={(e) => onChange({ floor: e.target.value })}
+            type="number"
+          />
+        </FormField>
+        <FormField label="Помещение" className="flex-1">
+          <Input
+            placeholder="—"
+            value={data.room}
+            onChange={(e) => onChange({ room: e.target.value })}
+            type="number"
+          />
+        </FormField>
+      </div>
     </div>
   );
 }
@@ -198,27 +285,21 @@ export function CertificateWizard() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<FormData>(INITIAL_DATA);
-  const [devices, setDevices] = useState<ClientDevice[]>([]);
-  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogDevice[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch devices when client is selected
   useEffect(() => {
-    if (!data.clientUserId) {
-      setDevices([]);
-      return;
-    }
-    setLoadingDevices(true);
     dealerApi
-      .getUserDevices(data.clientUserId)
+      .getDeviceCatalog({ limit: 200 })
       .then(({ data: res }) => {
-        const list = Array.isArray(res) ? res : [];
-        setDevices(list);
+        const list = Array.isArray(res) ? res : res.data ?? [];
+        setCatalog(list);
       })
-      .catch(() => setDevices([]))
-      .finally(() => setLoadingDevices(false));
-  }, [data.clientUserId]);
+      .catch(() => {})
+      .finally(() => setLoadingCatalog(false));
+  }, []);
 
   const updateData = (partial: Partial<FormData>) => {
     setData((prev) => ({ ...prev, ...partial }));
@@ -226,7 +307,7 @@ export function CertificateWizard() {
 
   const canProceed = () => {
     if (step === 1) return !!data.clientUserId;
-    if (step === 2) return !!data.userDeviceId;
+    if (step === 2) return !!data.deviceId && !!data.serialNumber && !!data.city && !!data.street && !!data.house;
     if (step === 3) return !!data.expiresAt;
     return false;
   };
@@ -240,7 +321,15 @@ export function CertificateWizard() {
       try {
         await dealerApi.createCertificate({
           clientUserId: data.clientUserId,
-          userDeviceId: data.userDeviceId,
+          deviceId: data.deviceId,
+          serialNumber: data.serialNumber,
+          country: data.country,
+          city: data.city,
+          street: data.street,
+          house: Number(data.house),
+          ...(data.building ? { building: Number(data.building) } : {}),
+          ...(data.floor ? { floor: Number(data.floor) } : {}),
+          ...(data.room ? { room: Number(data.room) } : {}),
           expiresAt: new Date(data.expiresAt).toISOString(),
           purchaseReceiptUrl: data.purchaseReceiptUrl || undefined,
           description: data.description || undefined,
@@ -265,7 +354,7 @@ export function CertificateWizard() {
       {/* Step content */}
       <div className="max-w-[600px]">
         {step === 1 && <Step1 data={data} onChange={updateData} />}
-        {step === 2 && <Step2 data={data} onChange={updateData} devices={devices} loading={loadingDevices} />}
+        {step === 2 && <Step2 data={data} onChange={updateData} catalog={catalog} loadingCatalog={loadingCatalog} />}
         {step === 3 && <Step3 data={data} onChange={updateData} />}
 
         {error && <p className="text-sm text-brand-red mt-4">{error}</p>}

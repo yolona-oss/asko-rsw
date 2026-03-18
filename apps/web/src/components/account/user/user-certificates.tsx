@@ -136,7 +136,49 @@ function CertificateCard({ cert }: { cert: Certificate }) {
 
 interface UserDevice {
   id: string;
-  device?: { name?: string };
+  serialNumber?: string;
+  device?: { name?: string; brand?: string; model?: string };
+  address?: { city?: string; street?: string; house?: number };
+  createdAt?: string;
+}
+
+function DeviceSlider({
+  devices,
+  loading,
+}: {
+  devices: UserDevice[];
+  loading: boolean;
+}) {
+  if (loading) return <p className="text-sm text-text-sub">Загрузка устройств...</p>;
+  if (devices.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h2 className="text-lg font-bold text-text-main">Мои устройства</h2>
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
+        {devices.map((ud) => {
+          const name = ud.device?.name ?? 'Устройство';
+          const subtitle = [ud.device?.brand, ud.device?.model].filter(Boolean).join(' ');
+          const addr = ud.address
+            ? [ud.address.city, ud.address.street, ud.address.house].filter(Boolean).join(', ')
+            : null;
+          return (
+            <div
+              key={ud.id}
+              className="flex-shrink-0 w-[260px] border border-border-light rounded-sm p-4 flex flex-col gap-2"
+            >
+              <p className="text-sm font-medium text-text-main truncate">{name}</p>
+              {subtitle && <p className="text-xs text-text-sub truncate">{subtitle}</p>}
+              {ud.serialNumber && (
+                <p className="text-xs text-text-sub">S/N: {ud.serialNumber}</p>
+              )}
+              {addr && <p className="text-xs text-text-sub truncate">{addr}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface CatalogDevice {
@@ -474,7 +516,9 @@ function AddCertificateForm({
 
 export function UserCertificates() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDevices, setLoadingDevices] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
 
@@ -491,8 +535,22 @@ export function UserCertificates() {
     }
   };
 
+  const fetchDevices = async () => {
+    setLoadingDevices(true);
+    try {
+      const { data } = await userApi.getMyDevices();
+      const list = Array.isArray(data) ? data : data.data ?? [];
+      setDevices(list);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
   useEffect(() => {
     fetchCertificates();
+    fetchDevices();
   }, []);
 
   return (
@@ -503,6 +561,8 @@ export function UserCertificates() {
           Добавить сертификат
         </Button>
       </div>
+
+      <DeviceSlider devices={devices} loading={loadingDevices} />
 
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
@@ -537,7 +597,7 @@ export function UserCertificates() {
       <AddDeviceForm
         open={showAddDevice}
         onClose={() => setShowAddDevice(false)}
-        onSuccess={fetchCertificates}
+        onSuccess={() => { fetchCertificates(); fetchDevices(); }}
       />
     </PageContainer>
   );

@@ -7,12 +7,6 @@ export interface SearchedUser {
   email?: string;
 }
 
-export interface ClientDevice {
-  id: string;
-  device?: { name?: string; model?: string };
-  serialNumber?: string;
-}
-
 export const dealerApi = {
   getProfile() {
     return api.get('/dealers/profile');
@@ -26,10 +20,6 @@ export const dealerApi = {
     return api.get<SearchedUser[]>('/dealers/search-user', { params: { email } });
   },
 
-  getUserDevices(userId: string) {
-    return api.get<ClientDevice[]>(`/dealers/user-devices/${userId}`);
-  },
-
   getPointsHistory(params?: { offset?: number; limit?: number }) {
     return api.get('/dealers/points', { params });
   },
@@ -38,9 +28,22 @@ export const dealerApi = {
     return api.get('/certificates/dealer', { params });
   },
 
+  getDeviceCatalog(params?: { offset?: number; limit?: number }) {
+    return api.get('/devices', { params });
+  },
+
   createCertificate(data: {
     clientUserId: string;
-    userDeviceId: string;
+    deviceId: string;
+    serialNumber: string;
+    country: string;
+    city: string;
+    street: string;
+    house: number;
+    building?: number;
+    floor?: number;
+    room?: number;
+    postalCode?: string;
     expiresAt: string;
     purchaseReceiptUrl?: string;
     description?: string;

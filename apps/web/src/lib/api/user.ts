@@ -67,7 +67,7 @@ export const userApi = {
     room?: number;
     postalCode?: string;
   }) {
-    return api.post('/addresse', data);
+    return api.post('/address', data);
   },
 
   registerDevice(data: {

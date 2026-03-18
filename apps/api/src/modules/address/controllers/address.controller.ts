@@ -3,7 +3,7 @@ import { AddressService } from './../services/address.service';
 import { ALL_ROLES, CreateAddressDto } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 
-@Controller('addresse')
+@Controller('address')
 export class AddressController {
     constructor(private readonly addressService: AddressService) { }
 

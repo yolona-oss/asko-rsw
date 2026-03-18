@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Certificate, UserDevice, DealerProfile } from 'entities';
+import { Certificate, UserDevice, DealerProfile, Device, Address, DealerClient, User } from 'entities';
 import {
     AddCertificateDto,
     CreateCertificateDto,
@@ -44,8 +44,41 @@ export class CertificateService {
         const dealerProfile = await this.em.findOne(DealerProfile, { user: dealerUserId });
         if (!dealerProfile) throw AppErrors.dbEntityNotFound('Dealer profile not found');
 
-        const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: dto.clientUserId }, { populate: ['user', 'device'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        const clientUser = await this.em.findOne(User, { id: dto.clientUserId });
+        if (!clientUser) throw AppErrors.dbEntityNotFound('Client user not found');
+
+        const device = await this.em.findOne(Device, { id: dto.deviceId });
+        if (!device) throw AppErrors.dbEntityNotFound('Device not found in catalog');
+
+        // Create address for the device
+        const address = this.em.create(Address, {
+            country: dto.country,
+            city: dto.city,
+            street: dto.street,
+            house: dto.house,
+            building: dto.building,
+            floor: dto.floor,
+            room: dto.room,
+            postalCode: dto.postalCode,
+        });
+
+        // Create UserDevice for the client
+        const userDevice = this.em.create(UserDevice, {
+            user: clientUser,
+            device: device,
+            serialNumber: dto.serialNumber,
+            address: address,
+        });
+
+        // Link client to dealer
+        const existingLink = await this.em.findOne(DealerClient, { dealer: dealerProfile.id, clientUser: dto.clientUserId });
+        if (!existingLink) {
+            const link = this.em.create(DealerClient, {
+                dealer: dealerProfile,
+                clientUser: clientUser,
+            });
+            this.em.persist(link);
+        }
 
         const certNumber = generateCertificateNumber();
 
@@ -59,7 +92,11 @@ export class CertificateService {
             purchaseReceiptUrl: dto.purchaseReceiptUrl,
             description: dto.description,
         });
-        await this.em.persistAndFlush(cert);
+
+        await this.em.persist(address);
+        await this.em.persist(userDevice);
+        await this.em.persist(cert);
+        await this.em.flush();
         return cert;
     }
 

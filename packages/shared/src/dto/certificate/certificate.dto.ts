@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt } from 'class-validator';
 
 /** User adds an existing certificate */
 export class AddCertificateDto {
@@ -18,7 +18,38 @@ export class CreateCertificateDto {
     clientUserId!: string;
 
     @IsString()
-    userDeviceId!: string;
+    deviceId!: string;
+
+    @IsString()
+    serialNumber!: string;
+
+    @IsString()
+    country!: string;
+
+    @IsString()
+    city!: string;
+
+    @IsString()
+    street!: string;
+
+    @IsInt()
+    house!: number;
+
+    @IsOptional()
+    @IsInt()
+    building?: number;
+
+    @IsOptional()
+    @IsInt()
+    floor?: number;
+
+    @IsOptional()
+    @IsInt()
+    room?: number;
+
+    @IsOptional()
+    @IsString()
+    postalCode?: string;
 
     @IsDateString()
     expiresAt!: string;
