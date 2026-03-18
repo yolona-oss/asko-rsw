@@ -43,15 +43,15 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: app_config.database.name,
     host: app_config.database.host,
     port: parseInt(app_config.database.port),
-    // highlighter: ,
-    // driverOptions: {
-    //     connection: isProdEnv() ? {
-    //         ssl: {
-    //             rejectUnauthorized: true,
-    //             ca: readFileSync('./ca.pem').toString(),
-    //         },
-    //     } : {}
-    // },
+    // highlighter: HighlightRegistry,
+    driverOptions: {
+        connection: {
+            ssl: isProdEnv() ? {
+                rejectUnauthorized: true,
+                ca: readFileSync('.postgres/root.crt')
+            } : {}
+        }
+    },
     entities: [
         Article,
         RepairRequest,

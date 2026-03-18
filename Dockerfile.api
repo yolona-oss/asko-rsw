@@ -35,6 +35,7 @@ COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 
 COPY apps/api/images ./apps/api/images
 COPY apps/api/.env.prod ./apps/api/.env.prod
+COPY .postgres/root.crt ./apps/api/.postgres/root.crt
 
 WORKDIR /app/apps/api
 
