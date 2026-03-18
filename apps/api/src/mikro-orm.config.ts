@@ -44,14 +44,14 @@ const config = defineConfig<PostgreSqlDriver>({
     host: app_config.database.host,
     port: parseInt(app_config.database.port),
     // highlighter: HighlightRegistry,
-    driverOptions: {
-        connection: {
-            ssl: isProdEnv() ? {
-                rejectUnauthorized: true,
-                ca: readFileSync('.postgres/root.crt')
-            } : {}
-        }
-    },
+    // driverOptions: {
+    //     connection: {
+    //         ssl: isProdEnv() ? {
+    //             rejectUnauthorized: true,
+    //             ca: readFileSync('.postgres/root.crt')
+    //         } : {}
+    //     }
+    // },
     entities: [
         Article,
         RepairRequest,

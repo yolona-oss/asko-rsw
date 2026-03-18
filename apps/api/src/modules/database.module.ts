@@ -43,14 +43,14 @@ import { readFileSync } from "fs";
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    driverOptions: {
-                        connection: {
-                            ssl: isProdEnv() ? {
-                                rejectUnauthorized: true,
-                                ca: readFileSync('.postgres/root.crt')
-                            } : false
-                        }
-                    },
+                    // driverOptions: {
+                    //     connection: {
+                    //         ssl: isProdEnv() ? {
+                    //             rejectUnauthorized: true,
+                    //             ca: readFileSync('.postgres/root.crt')
+                    //         } : false
+                    //     }
+                    // },
                     entities: [
                         Article,
                         RepairRequest,
