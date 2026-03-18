@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './../services/image.service';
-import { AttachImageDto, ImageTypeEnum, UploadImageDto } from '@asko/shared';
+import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, UploadImageDto } from '@asko/shared';
 
 @Controller('file-upload/image')
 export class ImageUploadController {
@@ -105,5 +105,10 @@ export class ImageUploadController {
         @Query('ownerId') ownerId: string,
     ) {
         return this.imageService.findAttachedImages(ownerType, ownerId);
+    }
+
+    @Post('from-url')
+    async createFromUrl(@Body() dto: CreateImageFromUrlDto) {
+        return this.imageService.createFromUrl(dto.url, dto.ownerType, dto.ownerId);
     }
 }

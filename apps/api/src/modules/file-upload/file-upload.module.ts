@@ -1,6 +1,8 @@
 import { Logger, Module, OnApplicationBootstrap } from "@nestjs/common";
 import { ImageProcessingService } from "./services/image-processing.service";
 import { CloudinaryService } from "./services/cloudinary.service";
+import { LocalStorageService } from "./services/local-storage.service";
+import { STORAGE_PROVIDER } from "./storage/storage-provider.interface";
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 import { ImageUploadController } from "./controllers/image-upload.controller";
 import { ImageService } from "./services/image.service";
@@ -21,12 +23,21 @@ import { Image } from "@entities/image.entity";
         ImageUploadController
     ],
     providers: [
-        CloudinaryService,
+        {
+            provide: STORAGE_PROVIDER,
+            useFactory: (config: AppConfig) => {
+                if (config.fileStorageMode === 'local') {
+                    return new LocalStorageService(config);
+                }
+                return new CloudinaryService();
+            },
+            inject: [AppConfig],
+        },
         ImageProcessingService,
         ImageService
     ],
     exports: [
-        CloudinaryService,
+        STORAGE_PROVIDER,
         ImageService
     ]
 })

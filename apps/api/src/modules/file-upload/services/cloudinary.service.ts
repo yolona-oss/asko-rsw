@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 // import { AppConfig } from 'app.config';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { Readable } from 'stream';
+import { StorageProvider } from '../storage/storage-provider.interface';
 
 export interface CloudinaryUploadResult {
     public_id: string;
@@ -24,7 +25,7 @@ export interface ImageSizes {
 }
 
 @Injectable()
-export class CloudinaryService {
+export class CloudinaryService implements StorageProvider {
     constructor(
         // private readonly config: AppConfig
     ) {}

@@ -1,23 +1,23 @@
 import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ImageProcessingService } from "./image-processing.service";
-import { CloudinaryService } from "./cloudinary.service";
 import { AttachImageDto, ImagesReorderSchemaDto, ImageTypeEnum, UploadImageDto } from "@asko/shared";
 import { Image } from 'entities/image.entity'
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
-import * as multer from 'multer'
+import { STORAGE_PROVIDER, StorageProvider } from "../storage/storage-provider.interface";
+import 'multer';
 
 @Injectable()
 export class ImageService {
     constructor(
         private readonly em: EntityManager,
         private readonly imgProcessor: ImageProcessingService,
-        private readonly cloudinary: CloudinaryService
+        @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     ) {}
 
     async upload(file: Express.Multer.File, dto: UploadImageDto) {
-        const imageObj = await this.cloudinary.uploadImage(file);
+        const imageObj = await this.storage.uploadImage(file);
         const image = new Image();
         image.image = {
             original: imageObj,
@@ -30,7 +30,7 @@ export class ImageService {
     }
 
     async streamUpload(file: Express.Multer.File, dto: UploadImageDto) {
-        const imageObj = await this.cloudinary.uploadStream(file.stream, file.mimetype);
+        const imageObj = await this.storage.uploadStream(file.stream, file.mimetype);
         if (!imageObj) {
             throw AppErrors.externalServiceUnavailable('Unable to upload image');
         }
@@ -42,6 +42,30 @@ export class ImageService {
         image.order = 0
         await this.em.persistAndFlush(image);
 
+        return image;
+    }
+
+    async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string): Promise<Image> {
+        const defaultEntry = {
+            public_id: 'external',
+            version: 1,
+            signature: '',
+            width: 0,
+            height: 0,
+            format: '',
+            resource_type: 'image',
+            url,
+            secure_url: url,
+            original_filename: '',
+        };
+
+        const image = new Image();
+        image.image = { original: defaultEntry } as ImageObj;
+        if (ownerType) image.ownerType = ownerType;
+        if (ownerId) image.ownerId = ownerId;
+        image.order = 0;
+
+        await this.em.persistAndFlush(image);
         return image;
     }
 

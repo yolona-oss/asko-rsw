@@ -1,17 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { CloudinaryService, ImageSizes } from './cloudinary.service';
-// import * as sharp from 'sharp';
+import { Inject, Injectable } from '@nestjs/common';
+import { ImageSizes } from './cloudinary.service';
+import { STORAGE_PROVIDER, StorageProvider } from '../storage/storage-provider.interface';
 
 @Injectable()
 export class ImageProcessingService {
-    constructor(private readonly cloudinaryService: CloudinaryService) {}
+    constructor(@Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider) {}
 
     async processUserAvatar(file: Express.Multer.File): Promise<ImageSizes> {
-        // Upload original image
-        const original = await this.cloudinaryService.uploadImage(file, 'avatars');
+        const original = await this.storage.uploadImage(file, 'avatars');
 
-        // Create thumbnail using Cloudinary transformations
-        const thumbnailUrl = await this.cloudinaryService.generateThumbnail(
+        const thumbnailUrl = await this.storage.generateThumbnail(
             original.secure_url,
             150,
             150,
@@ -30,11 +28,9 @@ export class ImageProcessingService {
     }
 
     async processProductImage(file: Express.Multer.File): Promise<ImageSizes> {
-        // Upload original image
-        const original = await this.cloudinaryService.uploadImage(file, 'products');
+        const original = await this.storage.uploadImage(file, 'products');
 
-        // Generate multiple sizes using Cloudinary
-        const sizes = await this.cloudinaryService.generateMultipleSizes(original.secure_url);
+        const sizes = await this.storage.generateMultipleSizes(original.secure_url);
 
         return {
             original,
@@ -68,7 +64,7 @@ export class ImageProcessingService {
         .map(image => image.public_id);
 
         if (publicIds.length > 0) {
-            await this.cloudinaryService.deleteImages(publicIds);
+            await this.storage.deleteImages(publicIds);
         }
     }
 }
