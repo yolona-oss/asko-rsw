@@ -33,6 +33,16 @@ jobs:
           StrictHostKeyChecking no
         EOF
 
+    - name: Write env files
+      env:
+        API_ENV: ${{ secrets.API_ENV_PROD }}
+        WEB_ENV: ${{ secrets.WEB_ENV_PROD }}
+      run: |
+        printf '%s\n' "$API_ENV" | ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          "cat > ${{ secrets.APP_DIR }}/apps/api/.env.prod"
+        printf '%s\n' "$WEB_ENV" | ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          "cat > ${{ secrets.APP_DIR }}/apps/web/.env.prod"
+
     - name: Run deploy script
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
