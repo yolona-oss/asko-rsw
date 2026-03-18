@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Device, UserDevice, Address } from 'entities';
-import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto, DeviceType } from '@asko/shared';
+import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto, DeviceType, ImageTypeEnum } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { ImageService } from 'modules/file-upload/services/image.service';
 
 const VALID_DEVICE_TYPES = new Set<string>(Object.values(DeviceType));
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|gif|svg|avif)$/i;
 
 function slugify(text: string): string {
     return text
@@ -17,7 +19,10 @@ function slugify(text: string): string {
 
 @Injectable()
 export class DeviceService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly imageService: ImageService,
+    ) {}
 
     private async generateUniqueSlug(brand: string, model: string): Promise<string> {
         const base = slugify(`${brand}-${model}`);
@@ -100,6 +105,19 @@ export class DeviceService {
                 });
 
                 await fork.persistAndFlush(device);
+
+                if (Array.isArray(product.images)) {
+                    let order = 0;
+                    for (const url of product.images) {
+                        if (typeof url !== 'string' || !IMAGE_EXTENSIONS.test(url)) continue;
+                        try {
+                            await this.imageService.createFromUrl(url, ImageTypeEnum.Device, device.id, order++);
+                        } catch {
+                            // skip failed image
+                        }
+                    }
+                }
+
                 created++;
             } catch (e: any) {
                 errors.push(`${product.name ?? 'unknown'}: ${e.message}`);

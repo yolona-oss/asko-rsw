@@ -45,7 +45,7 @@ export class ImageService {
         return image;
     }
 
-    async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string): Promise<Image> {
+    async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<Image> {
         const defaultEntry = {
             public_id: 'external',
             version: 1,
@@ -63,7 +63,7 @@ export class ImageService {
         image.image = { original: defaultEntry } as ImageObj;
         if (ownerType) image.ownerType = ownerType;
         if (ownerId) image.ownerId = ownerId;
-        image.order = 0;
+        image.order = order ?? 0;
 
         await this.em.persistAndFlush(image);
         return image;
