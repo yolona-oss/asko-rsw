@@ -118,20 +118,6 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
           </>
         )}
 
-        {/* External link */}
-        {device.link && (
-          <>
-            <div className="h-px bg-border-light" />
-            <a
-              href={device.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-brand-red hover:underline self-start"
-            >
-              Официальная документация →
-            </a>
-          </>
-        )}
       </Card>
 
       {/* Add Note Modal */}

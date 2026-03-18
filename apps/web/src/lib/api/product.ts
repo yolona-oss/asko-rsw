@@ -2,6 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export interface DeviceListItem {
   id: string;
+  slug: string;
   name: string;
   type: string;
   model: string;
@@ -33,8 +34,20 @@ export async function fetchDevice(id: string) {
   return res.json();
 }
 
+export async function fetchDeviceBySlug(slug: string) {
+  const res = await fetch(`${API_URL}/devices/slug/${slug}`, { next: { revalidate: 60 } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export async function fetchDeviceImages(id: string): Promise<DeviceImage[]> {
   const res = await fetch(`${API_URL}/devices/${id}/images`, { next: { revalidate: 60 } });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchDeviceImagesBySlug(slug: string): Promise<DeviceImage[]> {
+  const res = await fetch(`${API_URL}/devices/slug/${slug}/images`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   return res.json();
 }
@@ -47,6 +60,13 @@ export async function fetchFirstDeviceImage(deviceId: string): Promise<string | 
 
 export async function fetchDeviceImageUrls(id: string): Promise<string[]> {
   const images = await fetchDeviceImages(id);
+  return images
+    .map((img) => img.image?.large?.secure_url ?? img.image?.original?.secure_url)
+    .filter(Boolean) as string[];
+}
+
+export async function fetchDeviceImageUrlsBySlug(slug: string): Promise<string[]> {
+  const images = await fetchDeviceImagesBySlug(slug);
   return images
     .map((img) => img.image?.large?.secure_url ?? img.image?.original?.secure_url)
     .filter(Boolean) as string[];

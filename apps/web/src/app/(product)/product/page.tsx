@@ -51,7 +51,7 @@ export default async function ProductListPage({
                 return (
                   <Link
                     key={device.id}
-                    href={`/product/${device.id}`}
+                    href={`/product/${device.slug}`}
                     className="group flex flex-col bg-white border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
                     <div className="relative aspect-square bg-gray-50">

@@ -25,10 +25,6 @@ export class CreateDeviceDto {
     @IsOptional()
     @IsObject()
     features?: Record<string, any>;
-
-    @IsOptional()
-    @IsString()
-    link?: string;
 }
 
 export class UpdateDeviceDto {
@@ -62,7 +58,7 @@ export class UpdateDeviceDto {
 
     @IsOptional()
     @IsString()
-    link?: string;
+    slug?: string;
 }
 
 export class RegisterUserDeviceDto {

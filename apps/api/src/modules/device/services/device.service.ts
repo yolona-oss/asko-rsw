@@ -6,22 +6,42 @@ import { AppErrors } from 'common/error';
 
 const VALID_DEVICE_TYPES = new Set<string>(Object.values(DeviceType));
 
+function slugify(text: string): string {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9а-яё]+/gi, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-')
+        || 'device';
+}
+
 @Injectable()
 export class DeviceService {
     constructor(private readonly em: EntityManager) {}
 
+    private async generateUniqueSlug(brand: string, model: string): Promise<string> {
+        const base = slugify(`${brand}-${model}`);
+        let slug = base;
+        let counter = 1;
+        while (await this.em.findOne(Device, { slug })) {
+            slug = `${base}-${counter++}`;
+        }
+        return slug;
+    }
+
     // ── Admin: Device catalog CRUD ──
 
     async createDevice(dto: CreateDeviceDto): Promise<Device> {
+        const slug = await this.generateUniqueSlug(dto.brand, dto.model);
         const device = this.em.create(Device, {
             name: dto.name,
             type: dto.type,
             model: dto.model,
             brand: dto.brand,
+            slug,
             description: dto.description,
             specifications: dto.specifications,
             features: dto.features,
-            link: dto.link,
         });
         await this.em.persistAndFlush(device);
         return device;
@@ -59,15 +79,24 @@ export class DeviceService {
                     features = specs.features;
                 }
 
+                const brandStr = String(product.brand ?? '').slice(0, 255);
+                const modelStr = String(product.model ?? '').slice(0, 255);
+                const baseSlug = slugify(`${brandStr}-${modelStr}`);
+                let slug = baseSlug;
+                let counter = 1;
+                while (await fork.findOne(Device, { slug })) {
+                    slug = `${baseSlug}-${counter++}`;
+                }
+
                 const device = fork.create(Device, {
                     name: String(product.name ?? '').slice(0, 255),
                     type,
-                    model: String(product.model ?? '').slice(0, 255),
-                    brand: String(product.brand ?? '').slice(0, 255),
+                    model: modelStr,
+                    brand: brandStr,
+                    slug,
                     description: product.description,
                     specifications,
                     features,
-                    link: String(specs?.url ?? '').slice(0, 500) || undefined,
                 });
 
                 await fork.persistAndFlush(device);
@@ -115,6 +144,12 @@ export class DeviceService {
 
     async findById(id: string): Promise<Device> {
         const device = await this.em.findOne(Device, { id });
+        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        return device;
+    }
+
+    async findBySlug(slug: string): Promise<Device> {
+        const device = await this.em.findOne(Device, { slug });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         return device;
     }

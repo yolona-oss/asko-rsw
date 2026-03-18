@@ -8,7 +8,7 @@ import { ProductSpecs } from '@/components/product/product-specs';
 import { ProductCare } from '@/components/product/product-care';
 import { ProductAllSpecs } from '@/components/product/product-all-specs';
 import { ProductRecommendations } from '@/components/product/product-recommendations';
-import { fetchDevice, fetchDeviceImageUrls } from '@/lib/api/product';
+import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/product';
 
 const TYPE_LABELS: Record<string, string> = {
   washing_machine: 'Стиральная машина',
@@ -67,8 +67,8 @@ export default async function ProductPage({
   const { slug } = await params;
 
   const [device, images] = await Promise.all([
-    fetchDevice(slug),
-    fetchDeviceImageUrls(slug),
+    fetchDeviceBySlug(slug),
+    fetchDeviceImageUrlsBySlug(slug),
   ]);
 
   if (!device) {

@@ -4,7 +4,7 @@ import { DeviceType } from '@asko/shared';
 
 @Entity()
 export class Device {
-    [OptionalProps]?: 'description' | 'specifications' | 'features' | 'link' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'description' | 'specifications' | 'features' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -30,11 +30,11 @@ export class Device {
     @Property({ type: 'json', nullable: true })
     features?: Record<string, any>;
 
+    @Property({ type: 'varchar', length: 255, unique: true })
+    slug!: string;
+
     @Property({ type: 'boolean', default: false, nullable: true })
     isFeatured?: boolean
-
-    @Property({ type: 'varchar', length: 500, nullable: true })
-    link?: string;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

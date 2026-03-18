@@ -477,7 +477,7 @@ interface FormData {
   model: string;
   brand: string;
   description: string;
-  link: string;
+  slug: string;
 }
 
 const INITIAL_DATA: FormData = {
@@ -486,7 +486,7 @@ const INITIAL_DATA: FormData = {
   model: '',
   brand: 'ASKO',
   description: '',
-  link: '',
+  slug: '',
 };
 
 const DEVICE_TYPES = [
@@ -527,7 +527,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
           model: device.model ?? '',
           brand: device.brand ?? '',
           description: device.description ?? '',
-          link: device.link ?? '',
+          slug: device.slug ?? '',
         });
         setSpecifications(recordToKV(device.specifications));
         setFeatures(recordToKV(device.features));
@@ -552,7 +552,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
         description: data.description || undefined,
         specifications: kvToRecord(specifications),
         features: kvToRecord(features),
-        link: data.link || undefined,
+        slug: data.slug || undefined,
       };
 
       if (isEdit) {
@@ -643,12 +643,12 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
           <KeyValueEditor pairs={features} onChange={setFeatures} />
         </FormField>
 
-        <FormField label="Ссылка" variant="bold">
+        <FormField label="Slug (URL)" variant="bold">
           <Input
-            type="url"
-            placeholder="https://..."
-            value={data.link}
-            onChange={(e) => update({ link: e.target.value })}
+            type="text"
+            placeholder="asko-w6098x"
+            value={data.slug}
+            onChange={(e) => update({ slug: e.target.value })}
             className="max-w-[500px]"
           />
         </FormField>

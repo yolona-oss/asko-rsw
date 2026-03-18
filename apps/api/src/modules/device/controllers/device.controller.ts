@@ -107,6 +107,19 @@ export class DeviceController {
     }
 
     @Public()
+    @Get('slug/:slug')
+    async findBySlug(@Param('slug') slug: string) {
+        return this.deviceService.findBySlug(slug);
+    }
+
+    @Public()
+    @Get('slug/:slug/images')
+    async findImagesBySlug(@Param('slug') slug: string) {
+        const device = await this.deviceService.findBySlug(slug);
+        return this.imageService.findAttachedImages(ImageTypeEnum.Device, device.id);
+    }
+
+    @Public()
     @Get(':id')
     async findOne(@Param('id') id: string) {
         return this.deviceService.findById(id);
