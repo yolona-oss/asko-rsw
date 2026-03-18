@@ -2,7 +2,7 @@
 
 set -e
 
-cd /home/deploy/apps/asko
+cd /home/asko-rws/apps/asko
 
 echo "backup current commit"
 OLD=$(git rev-parse HEAD)
