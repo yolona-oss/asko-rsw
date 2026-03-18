@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { RepairerService } from '../services/repairer.service';
+import { RepairRequestService } from '../../repair/services/repair-request.service';
 import {
     CreateRepairerDto,
     UpdateRepairerDto,
@@ -15,7 +16,10 @@ import { JwtAuthUser } from 'common/decorators/user.decorator';
 
 @Controller('repairers')
 export class RepairerController {
-    constructor(private readonly repairerService: RepairerService) { }
+    constructor(
+        private readonly repairerService: RepairerService,
+        private readonly repairRequestService: RepairRequestService,
+    ) { }
 
     /** Admin/Manager creates repairer profile */
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
@@ -50,6 +54,24 @@ export class RepairerController {
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
         return this.repairerService.findAll(pagination);
+    }
+
+    /** Repairer gets active request */
+    @RequiredRoles(Role.REPAIRER)
+    @Get('requests/active')
+    async getActiveRequest(@JwtAuthUser() user: JwtPayload) {
+        return this.repairRequestService.findActiveByRepairer(user.sub);
+    }
+
+    /** Repairer gets all assigned requests */
+    @RequiredRoles(Role.REPAIRER)
+    @Get('requests')
+    async getRequests(
+        @JwtAuthUser() user: JwtPayload,
+        @Query() pagination: PaginationDto,
+        @Query('status') status?: string,
+    ) {
+        return this.repairRequestService.findByRepairerFiltered(user.sub, pagination, status);
     }
 
     /** Manager: find active repairers in a city */

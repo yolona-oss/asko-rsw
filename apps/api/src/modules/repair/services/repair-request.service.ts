@@ -231,6 +231,47 @@ export class RepairRequestService {
         return { data, total };
     }
 
+    async findActiveByRepairer(repairerUserId: string): Promise<RepairRequest | null> {
+        const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        return this.em.findOne(
+            RepairRequest,
+            {
+                repairer: repairer.id,
+                status: {
+                    $in: [
+                        RepairRequestStatus.ASSIGNED,
+                        RepairRequestStatus.ACCEPTED,
+                        RepairRequestStatus.IN_PROGRESS,
+                        RepairRequestStatus.AWAITING_COMPLETION,
+                    ],
+                },
+            },
+            { populate: ['user', 'userDevice', 'userDevice.device', 'userDevice.address', 'certificate', 'workSteps'] },
+        );
+    }
+
+    async findByRepairerFiltered(repairerUserId: string, pagination: PaginationDto, status?: string): Promise<{ data: RepairRequest[]; total: number }> {
+        const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const where: Record<string, any> = { repairer: repairer.id };
+        if (status) where.status = status;
+
+        const [data, total] = await this.em.findAndCount(
+            RepairRequest,
+            where,
+            {
+                limit: pagination.limit ?? 20,
+                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                orderBy: { createdAt: 'DESC' },
+                populate: ['user', 'userDevice', 'userDevice.device', 'userDevice.address', 'certificate', 'workSteps'],
+            }
+        );
+        return { data, total };
+    }
+
     async findByRepairer(repairerUserId: string, pagination: PaginationDto): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
