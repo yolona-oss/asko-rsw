@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, type DragEvent, type ChangeEvent } from 'react';
 import Image from 'next/image';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from './account-provider';
 import { useAuth } from '@/lib/api/use-auth';
 import { profileApi } from '@/lib/api/profile';
@@ -12,6 +13,7 @@ import { Button, Input, FormField } from '@asko/ui';
 export function ProfileForm() {
   const { user } = useAccount();
   const { user: authUser } = useAuth();
+  const queryClient = useQueryClient();
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -92,6 +94,7 @@ export function ProfileForm() {
     try {
       setUploadingAvatar(true);
       await profileApi.uploadAvatar(blob, authUser.id);
+      queryClient.invalidateQueries({ queryKey: ['user-avatar'] });
       setMessage({ type: 'success', text: 'Аватар обновлён' });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось загрузить аватар' });
@@ -112,6 +115,7 @@ export function ProfileForm() {
         email: email || undefined,
         phone: phone || undefined,
       });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
       setMessage({ type: 'success', text: 'Профиль сохранён' });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
