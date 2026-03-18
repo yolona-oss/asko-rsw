@@ -39,7 +39,7 @@ function AuthGate({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        // no valid refresh token — user stays unauthenticated
+        // no valid refresh token - user stays unauthenticated
       })
       .finally(() => setReady(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps

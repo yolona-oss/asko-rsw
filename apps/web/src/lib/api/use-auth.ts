@@ -7,7 +7,19 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
 import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
-import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
+import type { LoginCredentials, CreateUserDto, IAuthSession } from '@asko/shared/client';
+import { DEV_ACCOUNT_SWITCHER } from '@/lib/dev/constants';
+import { saveDevAccount } from '@/lib/dev/dev-accounts';
+
+function maybeSaveDevAccount(data: IAuthSession) {
+  if (!DEV_ACCOUNT_SWITCHER || !data.refresh_token) return;
+  saveDevAccount({
+    label: data.user.firstName ?? data.user.email ?? data.user.id,
+    email: data.user.email,
+    roles: data.user.roles,
+    refreshToken: data.refresh_token,
+  });
+}
 
 export function useAuth() {
   const { accessToken, user } = useAppSelector((s) => s.auth);
@@ -37,6 +49,7 @@ export function useLogin() {
     mutationFn: (credentials: LoginCredentials) =>
       authApi.login(credentials).then((r) => r.data),
     onSuccess: (data) => {
+      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },
@@ -50,6 +63,7 @@ export function useSignup() {
   return useMutation({
     mutationFn: (data: CreateUserDto) => authApi.signup(data).then((r) => r.data),
     onSuccess: (data) => {
+      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },

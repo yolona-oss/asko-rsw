@@ -21,4 +21,8 @@ export const authApi = {
   refresh() {
     return api.post<{ access_token: string }>('/auth/refresh');
   },
+
+  devSwitch(refreshToken: string) {
+    return api.post<IAuthSession>('/auth/dev-switch', { refresh_token: refreshToken });
+  },
 };

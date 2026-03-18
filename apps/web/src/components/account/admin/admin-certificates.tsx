@@ -67,11 +67,11 @@ function CertificateRow({
 }) {
   const showApprove = cert.status === CertificateStatus.PENDING_APPROVAL;
   const showRevoke = cert.status === CertificateStatus.ACTIVE;
-  const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '—';
-  const deviceName = cert.userDevice?.device?.name ?? '—';
+  const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '-';
+  const deviceName = cert.userDevice?.device?.name ?? '-';
   const dealerName = cert.dealer?.companyName
     || [cert.dealer?.user?.lastName, cert.dealer?.user?.firstName].filter(Boolean).join(' ')
-    || '—';
+    || '-';
 
   return (
     <DataTableRow>

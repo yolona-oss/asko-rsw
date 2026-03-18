@@ -85,7 +85,7 @@ export function UserDashboard() {
       {/* Stat cards - mobile stacked, desktop 3-col */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Мои заявки */}
-        <StatCard title="Мои заявки:" value={loading ? '—' : requestsCount}>
+        <StatCard title="Мои заявки:" value={loading ? '-' : requestsCount}>
           {lastRequest && (
             <div className="mt-auto pt-4 flex flex-col gap-1">
               <p className="text-sm font-bold text-text-main">Последняя заявка:</p>
@@ -106,7 +106,7 @@ export function UserDashboard() {
         <StatCard title="Активные сертификаты:">
           <div className="flex items-center justify-end">
             <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
-              {loading ? '—' : certsCount}
+              {loading ? '-' : certsCount}
             </span>
           </div>
         </StatCard>
@@ -115,7 +115,7 @@ export function UserDashboard() {
         <Card className="flex flex-col gap-3">
           <div className="flex items-baseline gap-2">
             <span className="text-base font-medium text-text-sub">Счет на оплату:</span>
-            <span className="text-2xl font-bold text-text-main">—</span>
+            <span className="text-2xl font-bold text-text-main">-</span>
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-text-main">Статус:</span>

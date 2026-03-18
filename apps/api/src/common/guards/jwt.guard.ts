@@ -50,7 +50,7 @@ export class JwtGuard implements CanActivate {
             })
             request[REQUSET_USER_KEY] = payload;
 
-            // No specific roles required — any authenticated user is allowed
+            // No specific roles required - any authenticated user is allowed
             if (!requiredRoles) {
                 return true;
                 // throw new Error("JwtGuard::canActivate(): No roles to access setted up to route.")

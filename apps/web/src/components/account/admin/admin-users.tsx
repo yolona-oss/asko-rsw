@@ -67,10 +67,10 @@ function UserRow({ user, onDelete }: { user: UserEntry; onDelete: (id: string) =
         </div>
       </DataTableCell>
       <DataTableCell mobileLabel="Email:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{user.email ?? '—'}</p>
+        <p className="text-sm text-text-main">{user.email ?? '-'}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Телефон:" className="lg:w-[160px] lg:px-4">
-        <p className="text-sm text-text-main">{user.phone ?? '—'}</p>
+        <p className="text-sm text-text-main">{user.phone ?? '-'}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Роли:" className="lg:w-[140px] lg:px-4">
         <p className="text-sm text-text-main">

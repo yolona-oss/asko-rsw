@@ -92,6 +92,17 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Styling**: Tailwind CSS v4 with custom theme in `src/styles/globals.css`
 - **State**: Redux Toolkit for client state, React Query v5 for server state
 - **API client**: Axios (configured in `src/lib/api/client.ts`)
+- **API requests**: API client calls grouped in object like:
+```typescript
+export const adminApi = {
+  // Devices
+  getDevices(params?: { offset?: number; limit?: number; search?: string }) {
+    return api.get('/devices', { params });
+  },
+  getDevice(id: string) {
+    return api.get(`/devices/${id}`);
+  }
+}```
 - **Transpiles**: `@asko/shared` and `@asko/ui` via `next.config.ts`
 - **Output**: standalone (for Docker deployment)
 

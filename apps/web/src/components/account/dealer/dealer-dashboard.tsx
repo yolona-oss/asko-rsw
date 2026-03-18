@@ -51,7 +51,7 @@ export function DealerDashboard() {
         <Card className="flex flex-col gap-2">
           <span className="text-base font-medium text-text-sub">Мои клиенты</span>
           <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
-            {loading ? '—' : clientsCount}
+            {loading ? '-' : clientsCount}
           </span>
         </Card>
 
@@ -59,7 +59,7 @@ export function DealerDashboard() {
         <Card className="flex flex-col gap-2">
           <span className="text-base font-medium text-text-sub">Заработанные баллы</span>
           <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
-            {loading ? '—' : pointsBalance}
+            {loading ? '-' : pointsBalance}
           </span>
         </Card>
       </div>

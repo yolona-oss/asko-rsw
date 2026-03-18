@@ -5,7 +5,7 @@ import Image, { ImageProps } from 'next/image';
 
 /**
  * Next/Image wrapper that shows a pulse skeleton until the image loads.
- * Drop-in replacement — accepts all next/image props.
+ * Drop-in replacement - accepts all next/image props.
  */
 export function SkeletonImage({ className = '', onLoad, ...props }: ImageProps) {
   const [loaded, setLoaded] = useState(false);

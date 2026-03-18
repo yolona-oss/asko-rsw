@@ -38,7 +38,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }, [isAuthenticated, dispatch, router]);
 
   if (checking) {
-    return null; // or a loading skeleton — layout already shows skeleton via AccountProvider
+    return null; // or a loading skeleton - layout already shows skeleton via AccountProvider
   }
 
   return <>{children}</>;

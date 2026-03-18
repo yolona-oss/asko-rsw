@@ -4,6 +4,7 @@ import {
     AddCertificateDto,
     CreateCertificateDto,
     AssignCertificateDto,
+    CertificateStatus,
     PaginationDto,
     ALL_ROLES,
     ADMIN_ROLES,
@@ -66,8 +67,12 @@ export class CertificateController {
     /** Dealer gets certificates they created */
     @RequiredRoles(Role.DEALER)
     @Get('dealer')
-    async findDealerCerts(@JwtAuthUser() user: JwtPayload) {
-        return this.certificateService.findByDealer(user.sub);
+    async findDealerCerts(
+        @JwtAuthUser() user: JwtPayload,
+        @Query() pagination: PaginationDto,
+        @Query('status') status?: CertificateStatus,
+    ) {
+        return this.certificateService.findByDealer(user.sub, pagination, status);
     }
 
     /** Admin: list all certificates */

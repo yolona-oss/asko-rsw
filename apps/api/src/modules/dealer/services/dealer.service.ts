@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, User, Certificate } from 'entities';
+import { DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, User, Certificate, UserDevice } from 'entities';
 import {
     CreateDealerProfileDto,
     UpdateDealerProfileDto,
@@ -119,6 +119,22 @@ export class DealerService {
         const dealer = await this.em.findOne(DealerProfile, { user: dealerUserId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
         return this.em.find(DealerClient, { dealer: dealer.id }, { populate: ['clientUser'] });
+    }
+
+    /** Search user by email (for certificate wizard) */
+    async searchUserByEmail(email: string): Promise<Pick<User, 'id' | 'firstName' | 'lastName' | 'email'>[]> {
+        if (!email || email.length < 3) return [];
+        const users = await this.em.find(
+            User,
+            { email: { $ilike: `%${email}%` } },
+            { fields: ['id', 'firstName', 'lastName', 'email'], limit: 10 },
+        );
+        return users.map((u) => ({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email }));
+    }
+
+    /** Get a user's devices (for certificate wizard) */
+    async getUserDevicesForCertificate(userId: string): Promise<UserDevice[]> {
+        return this.em.find(UserDevice, { user: userId }, { populate: ['device'] });
     }
 
     /** Dealer gets points history */

@@ -10,7 +10,8 @@ import {
     LoginCredentials,
     ResendConfirmMailDto,
     CreateUserDto,
-    extractToken
+    extractToken,
+    isProdEnv
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
@@ -105,6 +106,25 @@ export class AuthController {
             .cookie(REFRESH_TOKEN.cookie.name, "", expireCookieOptions)
             .status(205)
             .json({})
+    }
+
+    @Public()
+    @Post('/dev-switch')
+    async devSwitch(
+        @Body() body: { refresh_token: string },
+        @Req() request: Request,
+        @Res() response: Response,
+    ) {
+        // if (isProdEnv()) {
+        //     return response.status(404).json({ message: 'Not found' });
+        // }
+        try {
+            const session = await this.authService.devSwitchAccount(body.refresh_token, request, response);
+            return response.status(200).json(session);
+        } catch (err: any) {
+            const status = err?.status ?? err?.response?.status ?? 500;
+            return response.status(status).json({ message: err?.message ?? 'Dev switch failed' });
+        }
     }
 
     @RequiredRoles(...ALL_ROLES)

@@ -70,6 +70,18 @@ export class DealerController {
     }
 
     @RequiredRoles(Role.DEALER)
+    @Get('search-user')
+    async searchUser(@Query('email') email: string) {
+        return this.dealerService.searchUserByEmail(email);
+    }
+
+    @RequiredRoles(Role.DEALER)
+    @Get('user-devices/:userId')
+    async getUserDevices(@Param('userId') userId: string) {
+        return this.dealerService.getUserDevicesForCertificate(userId);
+    }
+
+    @RequiredRoles(Role.DEALER)
     @Post('clients')
     async addClient(@JwtAuthUser() user: JwtPayload, @Body() dto: AddDealerClientDto) {
         return this.dealerService.addClient(user.sub, dto);

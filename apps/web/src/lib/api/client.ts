@@ -27,9 +27,9 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
-    // Skip refresh for the refresh endpoint itself to avoid infinite loop
-    if (original?.url === '/auth/refresh') {
-      store.dispatch(logout());
+    // Skip refresh for auth endpoints that don't use access tokens
+    if (original?.url === '/auth/refresh' || original?.url === '/auth/dev-switch') {
+      if (original?.url === '/auth/refresh') store.dispatch(logout());
       return Promise.reject(error);
     }
 
@@ -48,7 +48,7 @@ api.interceptors.response.use(
           return api(original);
         }
       } catch {
-        // refresh failed — logout
+        // refresh failed - logout
       } finally {
         refreshPromise = null;
       }

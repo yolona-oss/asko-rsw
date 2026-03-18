@@ -54,7 +54,7 @@ export function AdminDashboard() {
     fetchData();
   }, []);
 
-  const display = (v: number) => loading ? '—' : v;
+  const display = (v: number) => loading ? '-' : v;
 
   return (
     <PageContainer>

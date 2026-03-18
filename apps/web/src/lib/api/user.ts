@@ -30,6 +30,10 @@ export const userApi = {
     return api.get(`/certificates/${id}`);
   },
 
+  addCertificate(data: { userDeviceId: string; certificateNumber: string; expiresAt: string }) {
+    return api.post('/certificates/add', data);
+  },
+
   uploadImage(file: File) {
     const formData = new FormData();
     formData.append('file', file);
@@ -47,5 +51,33 @@ export const userApi = {
 
   getWorkSteps(requestId: string) {
     return api.get(`/repair-requests/${requestId}/steps`);
+  },
+
+  getDeviceCatalog(params?: { offset?: number; limit?: number; search?: string }) {
+    return api.get('/devices', { params });
+  },
+
+  createAddress(data: {
+    country: string;
+    city: string;
+    street: string;
+    house: number;
+    building?: number;
+    floor?: number;
+    room?: number;
+    postalCode?: string;
+  }) {
+    return api.post('/addresse', data);
+  },
+
+  registerDevice(data: {
+    deviceId: string;
+    serialNumber: string;
+    addressId: string;
+    purchaseDate?: string;
+    warrantyUntil?: string;
+    notes?: string;
+  }) {
+    return api.post('/user-devices', data);
   },
 };

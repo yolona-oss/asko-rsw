@@ -19,7 +19,7 @@ import { SkeletonCard } from '@/components/account/skeleton';
 import { adminApi } from '@/lib/api/admin';
 import { Role, type IInvitationLink } from '@asko/shared/client';
 
-// Admin role is intentionally excluded — admin accounts require direct provisioning
+// Admin role is intentionally excluded - admin accounts require direct provisioning
 const ROLE_OPTIONS = [
   { value: 'user', label: 'Пользователь' },
   { value: 'dealer', label: 'Дилер' },

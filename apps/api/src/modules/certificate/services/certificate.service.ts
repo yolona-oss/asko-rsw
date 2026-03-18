@@ -117,10 +117,28 @@ export class CertificateService {
         return this.em.find(Certificate, { user: userId }, { populate: ['userDevice', 'userDevice.device'] });
     }
 
-    async findByDealer(dealerUserId: string): Promise<Certificate[]> {
+    async findByDealer(dealerUserId: string, pagination?: PaginationDto, status?: CertificateStatus): Promise<{ data: Certificate[]; total: number }> {
         const dealer = await this.em.findOne(DealerProfile, { user: dealerUserId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
-        return this.em.find(Certificate, { dealer: dealer.id }, { populate: ['user', 'userDevice', 'userDevice.device'] });
+
+        const where: any = { dealer: dealer.id };
+        if (pagination?.search) {
+            where.certificateNumber = { $ilike: `%${pagination.search}%` };
+        }
+        if (status) {
+            where.status = status;
+        }
+
+        const limit = pagination?.limit ?? 20;
+        const offset = ((pagination?.offset ?? 1) - 1) * limit;
+
+        const [data, total] = await this.em.findAndCount(Certificate, where, {
+            limit,
+            offset,
+            orderBy: { createdAt: 'DESC' },
+            populate: ['user', 'userDevice', 'userDevice.device'],
+        });
+        return { data, total };
     }
 
     async findAll(pagination: PaginationDto): Promise<{ data: Certificate[]; total: number }> {

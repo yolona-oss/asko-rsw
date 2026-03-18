@@ -45,7 +45,7 @@ const alphabets = [
 
 const SALT_LENGTH = 32
 
-/** Extract LSB from byte — mirrors getBit(val, sizeof(val)) with sizeof(char)=1 */
+/** Extract LSB from byte - mirrors getBit(val, sizeof(val)) with sizeof(char)=1 */
 function getLsb(byte: number): number {
     return byte & 1
 }

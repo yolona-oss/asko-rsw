@@ -3,7 +3,7 @@ import { AppProviders } from '@/store/providers';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'ASKO — Ремонт бытовой техники на дому с гарантией',
+  title: 'ASKO - Ремонт бытовой техники на дому с гарантией',
   description: 'Профессиональный ремонт бытовой техники ASKO с выездом на дом. Оригинальные запчасти, опытные мастера, гарантия на все виды работ.',
 };
 

@@ -129,7 +129,7 @@ export function RepairerDashboard() {
         <div className="flex flex-col gap-1">
           <span className="text-base font-medium text-text-sub">Выполненные заявки</span>
           <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
-            {completedCount ?? '—'}
+            {completedCount ?? '-'}
           </span>
         </div>
         <Link href="/account/history">

@@ -35,7 +35,7 @@ function repairerName(r: RepairerWithUser): string {
 }
 
 function formatDate(date: string | Date | undefined): string {
-  if (!date) return '—';
+  if (!date) return '-';
   return new Date(date).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -75,7 +75,7 @@ function RepairerRow({
 
       {/* Email */}
       <DataTableCell mobileLabel="Почта:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{repairer.user?.email ?? '—'}</p>
+        <p className="text-sm text-text-main">{repairer.user?.email ?? '-'}</p>
       </DataTableCell>
 
       {/* City */}

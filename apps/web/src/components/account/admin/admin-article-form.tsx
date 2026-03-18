@@ -343,7 +343,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
   return (
     <div className="flex flex-col gap-3 max-w-[500px]">
       <p className="text-xs text-text-sub">
-        Первое изображение — превью (для карточек). Второе — основное изображение статьи.
+        Первое изображение - превью (для карточек). Второе - основное изображение статьи.
         Перетаскивайте для изменения порядка.
       </p>
 

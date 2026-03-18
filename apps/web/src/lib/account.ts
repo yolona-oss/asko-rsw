@@ -16,11 +16,11 @@ export interface MenuItem {
 
 const ROLE_MAP: Partial<Record<Role, UserRole>> = {
   [Role.SUPER_ADMIN]: 'admin',
-  [Role.ADMIN]:       'admin',
-  [Role.USER]:        'user',
-  [Role.DEALER]:      'dealer',
-  [Role.MANAGER]:     'manager',
-  [Role.REPAIRER]:    'repairer',
+  [Role.ADMIN]: 'admin',
+  [Role.USER]: 'user',
+  [Role.DEALER]: 'dealer',
+  [Role.MANAGER]: 'manager',
+  [Role.REPAIRER]: 'repairer',
 };
 
 export function primaryRole(user: AccountUser): UserRole {
@@ -55,7 +55,8 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   ],
   dealer: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
+    { href: '/account/certificates', label: 'Сертификаты', icon: 'certificate' },
+    { href: '/account/certificates/create', label: 'Новый Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],

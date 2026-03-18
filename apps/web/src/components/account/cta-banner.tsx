@@ -12,11 +12,11 @@ export interface CTABannerProps {
 export function CTABanner({ title, description, linkHref, linkLabel }: CTABannerProps) {
   return (
     <div className="relative overflow-hidden bg-[#151515] rounded-sm">
-      {/* Decorative red glow — top right */}
+      {/* Decorative red glow - top right */}
       <div className="absolute -top-[100px] -right-[100px] w-[800px] h-[500px] -rotate-[150deg] pointer-events-none">
         <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.38)_0%,_transparent_70%)] blur-[69px]" />
       </div>
-      {/* Decorative red glow — bottom left */}
+      {/* Decorative red glow - bottom left */}
       <div className="absolute -top-[200px] -left-[200px] w-[600px] h-[500px] rotate-[60deg] pointer-events-none">
         <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.3)_0%,_transparent_70%)] blur-[62px]" />
       </div>
@@ -39,7 +39,7 @@ export function CTABanner({ title, description, linkHref, linkLabel }: CTABanner
         </Link>
       </div>
 
-      {/* Appliance images — desktop only */}
+      {/* Appliance images - desktop only */}
       <div className="hidden lg:block absolute right-0 top-0 w-[430px] h-full">
         <Image
           src="/images/cta-stove.png"
