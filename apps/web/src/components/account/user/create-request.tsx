@@ -193,7 +193,7 @@ export function CreateRequest() {
                   : d.serialNumber ?? d.id;
                 return (
                   <option key={d.id} value={d.id} disabled={inRepair}>
-                    {label}{inRepair ? ' — в ремонте' : ''}
+                    {label}{inRepair ? ' - в ремонте' : ''}
                   </option>
                 );
               })}

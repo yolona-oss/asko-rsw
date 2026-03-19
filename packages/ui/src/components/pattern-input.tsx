@@ -13,7 +13,7 @@ export interface PatternInputProps
   error?: boolean;
   /** Regex pattern for basic validation (used when no validator provided) */
   pattern?: RegExp;
-  /** Custom validation function — takes priority over pattern */
+  /** Custom validation function - takes priority over pattern */
   validator?: (value: string) => ValidationResult | null;
   /** Format the raw value for display */
   formatter?: (value: string) => string;

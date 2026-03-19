@@ -211,7 +211,7 @@ function Step2({
         </FormField>
         <FormField label="Корпус" className="flex-1">
           <Input
-            placeholder="—"
+            placeholder="-"
             value={data.building}
             onChange={(e) => onChange({ building: e.target.value })}
             type="number"
@@ -222,7 +222,7 @@ function Step2({
       <div className="flex gap-3 max-w-[500px]">
         <FormField label="Этаж" className="flex-1">
           <Input
-            placeholder="—"
+            placeholder="-"
             value={data.floor}
             onChange={(e) => onChange({ floor: e.target.value })}
             type="number"
@@ -230,7 +230,7 @@ function Step2({
         </FormField>
         <FormField label="Помещение" className="flex-1">
           <Input
-            placeholder="—"
+            placeholder="-"
             value={data.room}
             onChange={(e) => onChange({ room: e.target.value })}
             type="number"

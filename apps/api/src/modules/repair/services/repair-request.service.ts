@@ -159,7 +159,7 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Repairer refuses assigned request — reverts to PAID so manager can re-assign */
+    /** Repairer refuses assigned request - reverts to PAID so manager can re-assign */
     async refuseRequest(repairerUserId: string, requestId: string, dto: RefuseRequestDto): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');

@@ -433,7 +433,7 @@ function AddDeviceForm({
           </FormField>
           <FormField label="Корпус" className="flex-1">
             <Input
-              placeholder="—"
+              placeholder="-"
               value={building}
               onChange={(e) => setBuilding(e.target.value)}
               type="number"
@@ -444,7 +444,7 @@ function AddDeviceForm({
         <div className="flex gap-3">
           <FormField label="Этаж" className="flex-1">
             <Input
-              placeholder="—"
+              placeholder="-"
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
               type="number"
@@ -452,7 +452,7 @@ function AddDeviceForm({
           </FormField>
           <FormField label="Помещение" className="flex-1">
             <Input
-              placeholder="—"
+              placeholder="-"
               value={room}
               onChange={(e) => setRoom(e.target.value)}
               type="number"

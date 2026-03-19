@@ -54,7 +54,7 @@ export class PaymentService {
             this.enabledProviders.push(PaymentProviderType.TBANK);
         }
 
-        // Target handlers — called when payment is confirmed
+        // Target handlers - called when payment is confirmed
         this.targetHandlers = new Map<PaymentTargetType, TargetHandler>([
             [PaymentTargetType.REPAIR_REQUEST, this.handleRepairRequestPaid.bind(this)],
             [PaymentTargetType.CERTIFICATE, this.handleCertificatePaid.bind(this)],

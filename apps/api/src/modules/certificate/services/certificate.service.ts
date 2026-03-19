@@ -150,7 +150,7 @@ export class CertificateService {
         return cert;
     }
 
-    /** Mark certificate as paid — called by payment handler */
+    /** Mark certificate as paid - called by payment handler */
     async markPaid(certId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
