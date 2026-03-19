@@ -80,7 +80,7 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Password hashing**: argon2
 - **Caching**: Redis (ioredis)
 - **File uploads**: Multistrategies via provider with signle interface: Cloudinary, Local. Have option to save URL to image from external service
-- **Payments**: multi-provider
+- **Payments**: multi-provider via PaymentModule
 - **Email**: Nodemailer (SMTP)
 - **Real-time**: Socket.io via `@nestjs/websockets`
 - **Path aliases**: `@entities/...` → `src/entities/`, `modules/...` → `src/modules/`, `common/...` → `src/common/`

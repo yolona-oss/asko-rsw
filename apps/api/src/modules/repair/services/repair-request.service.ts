@@ -9,6 +9,7 @@ import {
     RepairRequestStatus,
     CertificateStatus,
     PaymentStatus,
+    PaymentTargetType,
     PaginationDto,
     SetRepairPriceDto,
 } from '@asko/shared';
@@ -220,6 +221,15 @@ export class RepairRequestService {
 
         request.totalCost = dto.amount;
         await this.em.flush();
+
+        // Create payment invoice for the user via PaymentModule
+        await this.paymentService.createInvoice(
+            String(request.user),
+            PaymentTargetType.REPAIR_REQUEST,
+            request.id,
+            dto.amount,
+        );
+
         return request;
     }
 

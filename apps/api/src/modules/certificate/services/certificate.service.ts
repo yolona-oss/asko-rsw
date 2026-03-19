@@ -6,11 +6,13 @@ import {
     CreateCertificateDto,
     CertificateStatus,
     RepairRequestStatus,
+    PaymentTargetType,
     generateCertificateNumber,
     PaginationDto,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { DealerService } from 'modules/dealer/services/dealer.service';
+import { PaymentService } from 'modules/payment/services/payment.service';
 
 /**
  * Calculate certificate price.
@@ -31,6 +33,8 @@ export class CertificateService {
         private readonly em: EntityManager,
         @Inject(forwardRef(() => DealerService))
         private readonly dealerService: DealerService,
+        @Inject(forwardRef(() => PaymentService))
+        private readonly paymentService: PaymentService,
     ) { }
 
     // NOTE add handler for OFFLINE certificate purchasing with some ID and than eter that ID to get access to cert(just is NOT secure i think)
@@ -58,6 +62,15 @@ export class CertificateService {
             price,
         });
         await this.em.persistAndFlush(cert);
+
+        // Create payment invoice via PaymentModule
+        await this.paymentService.createInvoice(
+            userId,
+            PaymentTargetType.CERTIFICATE,
+            cert.id,
+            price,
+        );
+
         return cert;
     }
 
@@ -126,6 +139,15 @@ export class CertificateService {
         await this.em.persist(userDevice);
         await this.em.persist(cert);
         await this.em.flush();
+
+        // Create payment invoice for the client user via PaymentModule
+        await this.paymentService.createInvoice(
+            dto.clientUserId,
+            PaymentTargetType.CERTIFICATE,
+            cert.id,
+            price,
+        );
+
         return cert;
     }
 

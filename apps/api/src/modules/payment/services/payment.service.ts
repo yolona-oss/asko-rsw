@@ -1,7 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
-import { RepairPayment, RepairRequest, Certificate, User } from 'entities';
+import { RepairPayment, RepairRequest, Certificate, User, PointsWithdrawal } from 'entities';
 import {
     CreatePaymentDto,
     PaymentProviderType,
@@ -9,6 +9,7 @@ import {
     PaymentStatus,
     RepairRequestStatus,
     CertificateStatus,
+    WithdrawalStatus,
     CurrencyEnum,
     PaginatedResponseDto,
     IRepairPayment,
@@ -20,6 +21,7 @@ import { DummyProvider } from '../providers/dummy.provider';
 import { YookassaProvider } from '../providers/yookassa.provider';
 import { TbankProvider } from '../providers/tbank.provider';
 import { CertificateService } from 'modules/certificate/services/certificate.service';
+import { DealerService } from 'modules/dealer/services/dealer.service';
 
 type TargetHandler = (targetId: string, amount: number) => Promise<void>;
 
@@ -35,6 +37,8 @@ export class PaymentService {
         private readonly configService: ConfigService,
         @Inject(forwardRef(() => CertificateService))
         private readonly certificateService: CertificateService,
+        @Inject(forwardRef(() => DealerService))
+        private readonly dealerService: DealerService,
         dummyProvider: DummyProvider,
         yookassaProvider: YookassaProvider,
         tbankProvider: TbankProvider,
@@ -61,6 +65,7 @@ export class PaymentService {
         this.targetHandlers = new Map<PaymentTargetType, TargetHandler>([
             [PaymentTargetType.REPAIR_REQUEST, this.handleRepairRequestPaid.bind(this)],
             [PaymentTargetType.CERTIFICATE, this.handleCertificatePaid.bind(this)],
+            [PaymentTargetType.DEALER_WITHDRAWAL, this.handleDealerWithdrawalPaid.bind(this)],
         ]);
     }
 
@@ -72,7 +77,115 @@ export class PaymentService {
         };
     }
 
-    /** Create payment via selected provider */
+    /** Create a PENDING payment invoice (no provider call). Used by setPrice, certificate creation. */
+    async createInvoice(
+        userId: string,
+        targetType: PaymentTargetType,
+        targetId: string,
+        amount: number,
+        currency?: string,
+    ): Promise<RepairPayment> {
+        // Cancel any existing PENDING invoices for this target (handles price update scenario)
+        const existing = await this.em.find(RepairPayment, {
+            targetType, targetId, status: PaymentStatus.PENDING,
+        });
+        for (const old of existing) {
+            old.status = PaymentStatus.FAILED;
+        }
+
+        const paymentRecord = this.em.create(RepairPayment, {
+            user: this.em.getReference(User, userId),
+            repairRequest: targetType === PaymentTargetType.REPAIR_REQUEST
+                ? this.em.getReference(RepairRequest, targetId) : undefined,
+            targetType,
+            targetId,
+            amount,
+            currency: currency ?? CurrencyEnum.DEFAULT,
+            status: PaymentStatus.PENDING,
+        });
+        await this.em.persistAndFlush(paymentRecord);
+        return paymentRecord;
+    }
+
+    /** Process an existing PENDING invoice — user pays via selected provider */
+    async processInvoice(
+        userId: string,
+        targetType: PaymentTargetType,
+        targetId: string,
+        provider?: PaymentProviderType,
+    ) {
+        const invoice = await this.em.findOne(RepairPayment, {
+            targetType, targetId, status: PaymentStatus.PENDING,
+        });
+        if (!invoice) throw AppErrors.badRequest('No pending payment found for this target');
+
+        // Verify user owns the payment
+        const invoiceUserId = typeof invoice.user === 'object' ? invoice.user?.id : String(invoice.user);
+        if (invoiceUserId !== userId) {
+            throw AppErrors.badRequest('Payment does not belong to this user');
+        }
+
+        const providerType = provider ?? this.defaultProvider;
+        const providerImpl = this.providers.get(providerType);
+        if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
+
+        invoice.provider = providerType;
+
+        const result = await providerImpl.createPayment({
+            amount: invoice.amount,
+            currency: invoice.currency,
+            description: `Payment for ${targetType} ${targetId}`,
+        });
+
+        invoice.providerPaymentId = result.externalId;
+
+        if (result.paid) {
+            invoice.status = PaymentStatus.PAID;
+            invoice.paidAt = new Date();
+            await this.em.flush();
+
+            const handler = this.targetHandlers.get(targetType);
+            if (handler) await handler(targetId, invoice.amount);
+        } else {
+            await this.em.flush();
+        }
+
+        return {
+            paymentId: invoice.id,
+            status: result.paid ? PaymentStatus.PAID : PaymentStatus.PENDING,
+            redirectUrl: result.redirectUrl,
+        };
+    }
+
+    /** Admin-initiated outgoing payment (e.g. dealer withdrawal payout) */
+    async processPayout(_adminUserId: string, dto: {
+        targetType: PaymentTargetType;
+        targetId: string;
+        amount: number;
+        recipientUserId: string;
+        currency?: string;
+    }): Promise<{ paymentId: string; status: PaymentStatus }> {
+        await this.validatePayoutTarget(dto.targetType, dto.targetId);
+
+        const paymentRecord = this.em.create(RepairPayment, {
+            user: this.em.getReference(User, dto.recipientUserId),
+            targetType: dto.targetType,
+            targetId: dto.targetId,
+            amount: dto.amount,
+            currency: dto.currency ?? CurrencyEnum.DEFAULT,
+            status: PaymentStatus.PAID,
+            provider: 'manual',
+            paidAt: new Date(),
+        });
+        await this.em.persistAndFlush(paymentRecord);
+
+        const handler = this.targetHandlers.get(dto.targetType);
+        if (handler) await handler(dto.targetId, dto.amount);
+
+        return { paymentId: paymentRecord.id, status: PaymentStatus.PAID };
+    }
+
+    /** Create payment via selected provider (legacy / direct flow) */
     async createPayment(userId: string, dto: CreatePaymentDto) {
         const providerType = dto.provider ?? this.defaultProvider;
         const provider = this.providers.get(providerType);
@@ -187,13 +300,32 @@ export class PaymentService {
         }
     }
 
-    private async handleRepairRequestPaid(_targetId: string, _amount: number): Promise<void> {
-        // Payment is recorded by createPayment. Price (totalCost) is set by repairer via setPrice.
-        // No status change needed — user can pay at any status.
+    private async validatePayoutTarget(targetType: PaymentTargetType, targetId: string): Promise<void> {
+        if (targetType === PaymentTargetType.DEALER_WITHDRAWAL) {
+            const withdrawal = await this.em.findOne(PointsWithdrawal, { id: targetId });
+            if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
+            if (withdrawal.status !== WithdrawalStatus.APPROVED) {
+                throw AppErrors.badRequest('Withdrawal must be approved before payout');
+            }
+        }
+    }
+
+    private async handleRepairRequestPaid(targetId: string, _amount: number): Promise<void> {
+        const request = await this.em.findOne(RepairRequest, { id: targetId });
+        if (!request) return;
+        // Only transition to PAID if currently PENDING (payment before assignment)
+        if (request.status === RepairRequestStatus.PENDING) {
+            request.status = RepairRequestStatus.PAID;
+            await this.em.flush();
+        }
     }
 
     private async handleCertificatePaid(targetId: string, _amount: number): Promise<void> {
         await this.certificateService.markPaid(targetId);
+    }
+
+    private async handleDealerWithdrawalPaid(targetId: string, _amount: number): Promise<void> {
+        await this.dealerService.completeWithdrawal(targetId);
     }
 
     /** Refund a payment via the provider */

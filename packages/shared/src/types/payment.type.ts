@@ -8,4 +8,5 @@ export enum PaymentProviderType {
 export enum PaymentTargetType {
     REPAIR_REQUEST = 'repairRequest',
     CERTIFICATE = 'certificate',
+    DEALER_WITHDRAWAL = 'dealerWithdrawal',
 }

@@ -10,12 +10,10 @@ import {
     RequestRefundDto,
     AddWorkStepDto,
     UpdateWorkStepDto,
-    CreateRepairPaymentDto,
     SetRepairPriceDto,
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
-    CurrencyEnum,
     ALL_ROLES,
     ADMIN_ROLES,
     STAFF_ROLES,
@@ -63,24 +61,23 @@ export class RepairRequestController {
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
-    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateRepairPaymentDto) {
-        return this.paymentService.createPayment(user.sub, {
-            targetType: PaymentTargetType.REPAIR_REQUEST,
-            targetId: id,
-            amount: dto.amount,
-            currency: dto.currency ?? CurrencyEnum.DEFAULT,
-        });
+    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.paymentService.processInvoice(
+            user.sub,
+            PaymentTargetType.REPAIR_REQUEST,
+            id,
+        );
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.paymentService.createPayment(user.sub, {
-            targetType: PaymentTargetType.REPAIR_REQUEST,
-            targetId: id,
-            amount: 0,
-            provider: PaymentProviderType.DUMMY,
-        });
+        return this.paymentService.processInvoice(
+            user.sub,
+            PaymentTargetType.REPAIR_REQUEST,
+            id,
+            PaymentProviderType.DUMMY,
+        );
     }
 
     @RequiredRoles(...ALL_ROLES)

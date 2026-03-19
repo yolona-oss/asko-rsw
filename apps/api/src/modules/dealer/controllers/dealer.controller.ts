@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { DealerService } from '../services/dealer.service';
+import { PaymentService } from 'modules/payment/services/payment.service';
 import {
     CreateDealerProfileDto,
     UpdateDealerProfileDto,
@@ -7,6 +8,7 @@ import {
     RequestPointsWithdrawalDto,
     ProcessWithdrawalDto,
     PaginationDto,
+    PaymentTargetType,
     ADMIN_ROLES,
     STAFF_ROLES,
     Role,
@@ -18,7 +20,10 @@ import { JwtAuthUser } from 'common/decorators/user.decorator';
 
 @Controller('dealers')
 export class DealerController {
-    constructor(private readonly dealerService: DealerService) {}
+    constructor(
+        private readonly dealerService: DealerService,
+        private readonly paymentService: PaymentService,
+    ) {}
 
     // ── Admin ──
 
@@ -65,7 +70,13 @@ export class DealerController {
     @RequiredRoles(...ADMIN_ROLES)
     @Post('withdrawals/:id/mark-paid')
     async markPaid(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.dealerService.markWithdrawalPaid(id, user.sub);
+        const withdrawal = await this.dealerService.getWithdrawalForPayout(id);
+        return this.paymentService.processPayout(user.sub, {
+            targetType: PaymentTargetType.DEALER_WITHDRAWAL,
+            targetId: id,
+            amount: withdrawal.amount,
+            recipientUserId: withdrawal.dealerUserId,
+        });
     }
 
     // ── Dealer ──

@@ -10,10 +10,8 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
-    CreateRepairPaymentDto,
     PaymentTargetType,
     PaymentProviderType,
-    CurrencyEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -110,25 +108,24 @@ export class CertificateController {
     /** Pay for a certificate */
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
-    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateRepairPaymentDto) {
-        return this.paymentService.createPayment(user.sub, {
-            targetType: PaymentTargetType.CERTIFICATE,
-            targetId: id,
-            amount: dto.amount,
-            currency: dto.currency ?? CurrencyEnum.DEFAULT,
-        });
+    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.paymentService.processInvoice(
+            user.sub,
+            PaymentTargetType.CERTIFICATE,
+            id,
+        );
     }
 
     /** Dummy pay for a certificate (testing) */
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.paymentService.createPayment(user.sub, {
-            targetType: PaymentTargetType.CERTIFICATE,
-            targetId: id,
-            amount: 0,
-            provider: PaymentProviderType.DUMMY,
-        });
+        return this.paymentService.processInvoice(
+            user.sub,
+            PaymentTargetType.CERTIFICATE,
+            id,
+            PaymentProviderType.DUMMY,
+        );
     }
 
     /** Get payments for a certificate */
