@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Select, FormField } from '@asko/ui';
+import { Button, Input, Select, FormField, SerialNumberInput } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { dealerApi, type SearchedUser } from '@/lib/api/dealer';
@@ -174,10 +174,9 @@ function Step2({
       </FormField>
 
       <FormField label="Серийный номер" variant="bold">
-        <Input
-          placeholder="SN-00000000"
+        <SerialNumberInput
           value={data.serialNumber}
-          onChange={(e) => onChange({ serialNumber: e.target.value })}
+          onValueChange={(v) => onChange({ serialNumber: v })}
           className="max-w-[500px]"
         />
       </FormField>
@@ -307,7 +306,7 @@ export function CertificateWizard() {
 
   const canProceed = () => {
     if (step === 1) return !!data.clientUserId;
-    if (step === 2) return !!data.deviceId && !!data.serialNumber && !!data.city && !!data.street && !!data.house;
+    if (step === 2) return !!data.deviceId && !!data.serialNumber && data.serialNumber !== 'SN-' && !!data.city && !!data.street && !!data.house;
     if (step === 3) return !!data.expiresAt;
     return false;
   };

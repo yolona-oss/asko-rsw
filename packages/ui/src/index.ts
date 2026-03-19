@@ -17,6 +17,9 @@ export type { NameInputProps } from './components/name-input'
 export { PhoneInput } from './components/phone-input';
 export type { PhoneInputProps } from './components/phone-input';
 
+export { SerialNumberInput } from './components/serial-number-input';
+export type { SerialNumberInputProps } from './components/serial-number-input';
+
 export { PasswordInput } from './components/password-input';
 export type { PasswordInputProps, PasswordRule } from './components/password-input';
 

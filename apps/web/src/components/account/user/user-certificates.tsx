@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Button, Input, FormField, Select, Modal } from '@asko/ui';
+import { Card, Button, Input, FormField, Select, Modal, SerialNumberInput } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
@@ -311,10 +311,9 @@ function AddDeviceForm({
         </FormField>
 
         <FormField label="Серийный номер">
-          <Input
-            placeholder="SN-00000000"
+          <SerialNumberInput
             value={serialNumber}
-            onChange={(e) => setSerialNumber(e.target.value)}
+            onValueChange={setSerialNumber}
             required
           />
         </FormField>
@@ -393,7 +392,7 @@ function AddDeviceForm({
           <Button
             variant="primary"
             type="submit"
-            disabled={submitting || !deviceId || !serialNumber || !city || !street || !house}
+            disabled={submitting || !deviceId || !serialNumber || serialNumber === 'SN-' || !city || !street || !house}
           >
             {submitting ? 'Регистрация...' : 'Зарегистрировать'}
           </Button>
