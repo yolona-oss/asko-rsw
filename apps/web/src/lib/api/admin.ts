@@ -1,5 +1,6 @@
 import { CreateInvitationLinkDto } from '@asko/shared';
 import { api } from './client';
+import { fileUploadApi } from './file-upload';
 
 export const adminApi = {
   // Devices
@@ -24,22 +25,10 @@ export const adminApi = {
   deleteAllDevices() {
     return api.delete<{ count: number }>('/devices/all');
   },
-  getDeviceImages(deviceId: string) {
-    return api.get(`/devices/${deviceId}/images`);
-  },
-  uploadDeviceImage(deviceId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/devices/${deviceId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  deleteDeviceImage(deviceId: string, imageId: string) {
-    return api.delete(`/devices/${deviceId}/images/${imageId}`);
-  },
-  reorderDeviceImages(deviceId: string, imageIds: string[]) {
-    return api.put(`/devices/${deviceId}/images/reorder`, imageIds);
-  },
+  getDeviceImages: fileUploadApi.getDeviceImages,
+  uploadDeviceImage: fileUploadApi.uploadDeviceImage,
+  deleteDeviceImage: fileUploadApi.deleteDeviceImage,
+  reorderDeviceImages: fileUploadApi.reorderDeviceImages,
 
   // Articles
   getArticles(params?: { offset?: number; limit?: number; search?: string }) {
@@ -60,22 +49,10 @@ export const adminApi = {
   deleteAllArticles() {
     return api.delete<{ count: number }>('/articles/all');
   },
-  getArticleImages(articleId: string) {
-    return api.get(`/articles/${articleId}/images`);
-  },
-  uploadArticleImage(articleId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/articles/${articleId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  deleteArticleImage(articleId: string, imageId: string) {
-    return api.delete(`/articles/${articleId}/images/${imageId}`);
-  },
-  reorderArticleImages(articleId: string, imageIds: string[]) {
-    return api.put(`/articles/${articleId}/images/reorder`, imageIds);
-  },
+  getArticleImages: fileUploadApi.getArticleImages,
+  uploadArticleImage: fileUploadApi.uploadArticleImage,
+  deleteArticleImage: fileUploadApi.deleteArticleImage,
+  reorderArticleImages: fileUploadApi.reorderArticleImages,
 
   // Invitations
   getInvitations() {

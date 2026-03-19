@@ -1,4 +1,5 @@
 import { api } from './client';
+import { fileUploadApi } from './file-upload';
 
 export const userApi = {
   getMyRequests(params?: { offset?: number; limit?: number }) {
@@ -34,20 +35,8 @@ export const userApi = {
     return api.post('/certificates/add', data);
   },
 
-  uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post('/file-upload/image/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-
-  attachImage(imageId: string, ownerType: string, ownerId: string) {
-    return api.post(`/file-upload/image/attach/${imageId}`, {
-      ownerType,
-      ownerId,
-    });
-  },
+  uploadImage: fileUploadApi.uploadImage,
+  attachImage: fileUploadApi.attachImage,
 
   getWorkSteps(requestId: string) {
     return api.get(`/repair-requests/${requestId}/steps`);
@@ -89,13 +78,7 @@ export const userApi = {
     return api.post('/reviews', data);
   },
 
-  uploadReviewImage(reviewId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/reviews/${reviewId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
+  uploadReviewImage: fileUploadApi.uploadReviewImage,
 
   getMyReviews() {
     return api.get('/reviews/my');
