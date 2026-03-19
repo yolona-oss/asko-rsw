@@ -17,9 +17,10 @@ import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
 import { CertificateStatus } from '@asko/shared/client';
 
-type CertTab = 'pending_approval' | 'active' | 'expired' | 'revoked';
+type CertTab = 'pending_payment' | 'pending_approval' | 'active' | 'expired' | 'revoked';
 
 const TABS: { key: CertTab; label: string }[] = [
+  { key: 'pending_payment', label: 'Ожидают оплаты' },
   { key: 'pending_approval', label: 'Ожидающие' },
   { key: 'active', label: 'Активные' },
   { key: 'expired', label: 'Истекшие' },
@@ -27,6 +28,7 @@ const TABS: { key: CertTab; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<CertTab, string> = {
+  pending_payment: 'text-orange-600',
   pending_approval: 'text-yellow-600',
   active: 'text-green-600',
   expired: 'text-text-sub',
@@ -34,6 +36,7 @@ const STATUS_COLORS: Record<CertTab, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
   [CertificateStatus.PENDING_APPROVAL]: 'Ожидает',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
