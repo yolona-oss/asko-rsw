@@ -1,4 +1,5 @@
 export enum CertificateStatus {
+    PENDING_PAYMENT = 'pending_payment',
     PENDING_APPROVAL = 'pending_approval',
     ACTIVE = 'active',
     EXPIRED = 'expired',

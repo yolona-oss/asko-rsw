@@ -4,7 +4,7 @@ import { DeviceType } from '@asko/shared';
 
 @Entity()
 export class Device {
-    [OptionalProps]?: 'description' | 'specifications' | 'features' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'price' | 'description' | 'specifications' | 'features' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -20,6 +20,9 @@ export class Device {
 
     @Property({ type: 'varchar', length: 255 })
     brand!: string;
+
+    @Property({ type: 'float', nullable: true })
+    price?: number;
 
     @Property({ type: 'text', nullable: true })
     description?: string;

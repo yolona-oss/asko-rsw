@@ -15,8 +15,10 @@ import {
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
-/** Points per approved certificate (configurable) */
-const POINTS_PER_CERTIFICATE = 100;
+/** Points = certificatePrice * 0.03, rounded to nearest integer */
+function calculateDealerPoints(certificatePrice: number): number {
+    return Math.round(certificatePrice * 0.03);
+}
 
 @Injectable()
 export class DealerService {
@@ -95,20 +97,23 @@ export class DealerService {
         }
     }
 
-    /** Award points to dealer when certificate approved */
+    /** Award points to dealer when certificate approved. Points = certificatePrice * 0.03 */
     async awardPointsForCertificate(certificate: Certificate): Promise<void> {
         if (!certificate.dealer) return;
 
         const dealer = await this.em.findOne(DealerProfile, { id: certificate.dealer.id });
         if (!dealer) return;
 
-        dealer.pointsBalance += POINTS_PER_CERTIFICATE;
+        const points = calculateDealerPoints(certificate.price ?? 0);
+        if (points <= 0) return;
+
+        dealer.pointsBalance += points;
 
         const transaction = this.em.create(PointsTransaction, {
             dealer: dealer,
             type: PointsTransactionType.EARNED,
-            amount: POINTS_PER_CERTIFICATE,
-            reason: `Certificate ${certificate.certificateNumber} approved`,
+            amount: points,
+            reason: `Certificate ${certificate.certificateNumber} approved (price: ${certificate.price})`,
         });
         await this.em.persist(transaction);
         await this.em.flush();

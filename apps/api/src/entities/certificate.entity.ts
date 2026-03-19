@@ -7,7 +7,7 @@ import { DealerProfile } from './dealer-profile.entity';
 
 @Entity()
 export class Certificate {
-    [OptionalProps]?: 'dealer' | 'status' | 'issuedAt' | 'purchaseReceiptUrl' | 'description' | 'createdAt';
+    [OptionalProps]?: 'dealer' | 'status' | 'issuedAt' | 'price' | 'paid' | 'purchaseReceiptUrl' | 'description' | 'createdAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -33,6 +33,12 @@ export class Certificate {
 
     @Property({ type: 'datetime' })
     expiresAt!: Date;
+
+    @Property({ type: 'float', nullable: true })
+    price?: number;
+
+    @Property({ type: 'boolean', default: false })
+    paid: boolean = false;
 
     @Property({ type: 'varchar', length: 500, nullable: true })
     purchaseReceiptUrl?: string;

@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { RepairPayment, RepairRequest } from 'entities';
+import { RepairPayment, RepairRequest, Certificate } from 'entities';
 import {
     CreatePaymentDto,
     PaymentProviderType,
     PaymentTargetType,
     PaymentStatus,
     RepairRequestStatus,
+    CertificateStatus,
     CurrencyEnum,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
@@ -15,6 +16,7 @@ import { PaymentProvider } from '../providers/payment-provider.interface';
 import { DummyProvider } from '../providers/dummy.provider';
 import { YookassaProvider } from '../providers/yookassa.provider';
 import { TbankProvider } from '../providers/tbank.provider';
+import { CertificateService } from 'modules/certificate/services/certificate.service';
 
 type TargetHandler = (targetId: string, amount: number) => Promise<void>;
 
@@ -28,6 +30,8 @@ export class PaymentService {
     constructor(
         private readonly em: EntityManager,
         private readonly configService: ConfigService,
+        @Inject(forwardRef(() => CertificateService))
+        private readonly certificateService: CertificateService,
         dummyProvider: DummyProvider,
         yookassaProvider: YookassaProvider,
         tbankProvider: TbankProvider,
@@ -74,21 +78,19 @@ export class PaymentService {
         // Validate target exists and belongs to user
         await this.validateTarget(userId, dto.targetType, dto.targetId);
 
-        // Create RepairPayment record (used as the universal payment record)
-        const payment = this.em.create(RepairPayment, {
-            repairRequest: dto.targetType === PaymentTargetType.REPAIR_REQUEST
-                ? this.em.getReference(RepairRequest, dto.targetId)
-                : this.em.getReference(RepairRequest, dto.targetId), // placeholder; see note below
-            amount: dto.amount,
-            currency: dto.currency ?? CurrencyEnum.DEFAULT,
-            status: PaymentStatus.PENDING,
-            provider: providerType,
-        });
+        // Create RepairPayment record for repair requests, otherwise track in-memory
+        let paymentRecord: RepairPayment | undefined;
 
-        // For non-repairRequest targets, we still use RepairPayment as a universal record
-        // The targetType/targetId are tracked via metadata approach below
-
-        await this.em.persistAndFlush(payment);
+        if (dto.targetType === PaymentTargetType.REPAIR_REQUEST) {
+            paymentRecord = this.em.create(RepairPayment, {
+                repairRequest: this.em.getReference(RepairRequest, dto.targetId),
+                amount: dto.amount,
+                currency: dto.currency ?? CurrencyEnum.DEFAULT,
+                status: PaymentStatus.PENDING,
+                provider: providerType,
+            });
+            await this.em.persistAndFlush(paymentRecord);
+        }
 
         // Call provider
         const result = await provider.createPayment({
@@ -97,11 +99,15 @@ export class PaymentService {
             description: `Payment for ${dto.targetType} ${dto.targetId}`,
         });
 
-        payment.providerPaymentId = result.externalId;
+        if (paymentRecord) {
+            paymentRecord.providerPaymentId = result.externalId;
+        }
 
         if (result.paid) {
-            payment.status = PaymentStatus.PAID;
-            payment.paidAt = new Date();
+            if (paymentRecord) {
+                paymentRecord.status = PaymentStatus.PAID;
+                paymentRecord.paidAt = new Date();
+            }
             await this.em.flush();
 
             // Trigger target handler
@@ -112,8 +118,8 @@ export class PaymentService {
         }
 
         return {
-            paymentId: payment.id,
-            status: payment.status,
+            paymentId: paymentRecord?.id ?? dto.targetId,
+            status: result.paid ? PaymentStatus.PAID : PaymentStatus.PENDING,
             redirectUrl: result.redirectUrl,
         };
     }
@@ -133,7 +139,6 @@ export class PaymentService {
             payment.status = PaymentStatus.PAID;
             payment.paidAt = new Date();
 
-            // Trigger target handler for repair request
             const handler = this.targetHandlers.get(PaymentTargetType.REPAIR_REQUEST);
             if (handler && payment.repairRequest) {
                 await handler(payment.repairRequest.id, payment.amount);
@@ -155,8 +160,16 @@ export class PaymentService {
             if (request.status !== RepairRequestStatus.PENDING) {
                 throw AppErrors.badRequest('Request is not in PENDING status');
             }
+        } else if (targetType === PaymentTargetType.CERTIFICATE) {
+            const cert = await this.em.findOne(Certificate, { id: targetId, user: userId });
+            if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+            if (cert.paid) {
+                throw AppErrors.badRequest('Certificate already paid');
+            }
+            if (cert.status !== CertificateStatus.PENDING_PAYMENT) {
+                throw AppErrors.badRequest('Certificate is not awaiting payment');
+            }
         }
-        // Certificate target validation can be added when certificate payments are needed
     }
 
     private async handleRepairRequestPaid(targetId: string, amount: number): Promise<void> {
@@ -168,7 +181,7 @@ export class PaymentService {
         }
     }
 
-    private async handleCertificatePaid(_targetId: string, _amount: number): Promise<void> {
-        // TODO: implement certificate payment handling when needed
+    private async handleCertificatePaid(targetId: string, _amount: number): Promise<void> {
+        await this.certificateService.markPaid(targetId);
     }
 }

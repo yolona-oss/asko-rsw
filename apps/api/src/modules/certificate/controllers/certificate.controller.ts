@@ -57,6 +57,16 @@ export class CertificateController {
         return this.certificateService.revokeCertificate(id);
     }
 
+    /** Calculate certificate price before purchase */
+    @RequiredRoles(...ALL_ROLES)
+    @Get('calculate-price')
+    async calculatePrice(
+        @Query('userDeviceId') userDeviceId: string,
+        @Query('expiresAt') expiresAt: string,
+    ) {
+        return this.certificateService.calculatePrice(userDeviceId, expiresAt);
+    }
+
     /** User gets their certificates */
     @RequiredRoles(...ALL_ROLES)
     @Get('my')

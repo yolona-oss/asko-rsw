@@ -12,6 +12,19 @@ import {
 import { AppErrors } from 'common/error';
 import { DealerService } from 'modules/dealer/services/dealer.service';
 
+/**
+ * Calculate certificate price.
+ * Formula: devicePrice * 0.3 * durationYears * 0.5
+ * durationYears = (expiresAt - issuedAt) in fractional years
+ */
+function calculateCertificatePrice(devicePrice: number, issuedAt: Date, expiresAt: Date): number {
+    const msPerYear = 365.25 * 24 * 60 * 60 * 1000;
+    const durationYears = (expiresAt.getTime() - issuedAt.getTime()) / msPerYear;
+    if (durationYears <= 0) return 0;
+    const price = devicePrice * 0.3 * durationYears * 0.5;
+    return Math.round(price * 100) / 100; // round to 2 decimals
+}
+
 @Injectable()
 export class CertificateService {
     constructor(
@@ -22,18 +35,25 @@ export class CertificateService {
 
     /** User adds an existing certificate (purchased offline) */
     async addCertificate(userId: string, dto: AddCertificateDto): Promise<Certificate> {
-        const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: userId });
+        const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: userId }, { populate: ['device'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
         if (existing) throw AppErrors.dbEntityExists('Certificate number already registered');
 
+        const issuedAt = new Date();
+        const expiresAt = new Date(dto.expiresAt);
+        const devicePrice = userDevice.device?.price ?? 0;
+        const price = calculateCertificatePrice(devicePrice, issuedAt, expiresAt);
+
         const cert = this.em.create(Certificate, {
             user: userId,
             userDevice: userDevice,
             certificateNumber: dto.certificateNumber,
-            status: CertificateStatus.PENDING_APPROVAL,
-            expiresAt: new Date(dto.expiresAt),
+            status: CertificateStatus.PENDING_PAYMENT,
+            issuedAt,
+            expiresAt,
+            price,
         });
         await this.em.persistAndFlush(cert);
         return cert;
@@ -82,13 +102,20 @@ export class CertificateService {
 
         const certNumber = generateCertificateNumber();
 
+        const issuedAt = new Date();
+        const expiresAt = new Date(dto.expiresAt);
+        const devicePrice = device.price ?? 0;
+        const price = calculateCertificatePrice(devicePrice, issuedAt, expiresAt);
+
         const cert = this.em.create(Certificate, {
             user: dto.clientUserId,
             userDevice: userDevice,
             dealer: dealerProfile,
             certificateNumber: certNumber,
-            status: CertificateStatus.PENDING_APPROVAL,
-            expiresAt: new Date(dto.expiresAt),
+            status: CertificateStatus.PENDING_PAYMENT,
+            issuedAt,
+            expiresAt,
+            price,
             purchaseReceiptUrl: dto.purchaseReceiptUrl,
             description: dto.description,
         });
@@ -107,17 +134,44 @@ export class CertificateService {
         if (cert.status !== CertificateStatus.PENDING_APPROVAL) {
             throw AppErrors.badRequest('Certificate is not pending approval');
         }
+        if (!cert.paid) {
+            throw AppErrors.badRequest('Certificate must be paid before activation');
+        }
 
         cert.status = CertificateStatus.ACTIVE;
         await this.em.flush();
 
-        // If dealer-created, award points and link client
+        // If dealer-created, award points based on certificate price
         if (cert.dealer) {
             await this.dealerService.awardPointsForCertificate(cert);
             await this.dealerService.linkClientOnCertificateApproval(cert);
         }
 
         return cert;
+    }
+
+    /** Mark certificate as paid — called by payment handler */
+    async markPaid(certId: string): Promise<Certificate> {
+        const cert = await this.em.findOne(Certificate, { id: certId });
+        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (cert.paid) throw AppErrors.badRequest('Certificate already paid');
+
+        cert.paid = true;
+        // Move from PENDING_PAYMENT to PENDING_APPROVAL
+        if (cert.status === CertificateStatus.PENDING_PAYMENT) {
+            cert.status = CertificateStatus.PENDING_APPROVAL;
+        }
+        await this.em.flush();
+        return cert;
+    }
+
+    /** Calculate certificate price for a given device and expiry date */
+    async calculatePrice(userDeviceId: string, expiresAt: string): Promise<{ price: number }> {
+        const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
+        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        const devicePrice = userDevice.device?.price ?? 0;
+        const price = calculateCertificatePrice(devicePrice, new Date(), new Date(expiresAt));
+        return { price };
     }
 
     /** Admin revokes a certificate */
