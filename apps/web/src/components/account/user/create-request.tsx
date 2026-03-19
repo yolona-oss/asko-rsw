@@ -21,11 +21,19 @@ interface Certificate {
   userDevice?: { id: string };
 }
 
+interface RepairRequest {
+  id: string;
+  status: string;
+  userDevice?: { id: string };
+}
+
 interface UploadedImage {
   id: string;
   file: File;
   preview: string;
 }
+
+const TERMINAL_STATUSES = ['completed', 'cancelled', 'refunded', 'refused'];
 
 export function CreateRequest() {
   const router = useRouter();
@@ -33,6 +41,7 @@ export function CreateRequest() {
 
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [devicesInRepair, setDevicesInRepair] = useState<Set<string>>(new Set());
   const [loadingDevices, setLoadingDevices] = useState(true);
 
   const [userDeviceId, setUserDeviceId] = useState('');
@@ -46,15 +55,26 @@ export function CreateRequest() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [devRes, certRes] = await Promise.all([
+        const [devRes, certRes, reqRes] = await Promise.all([
           userApi.getMyDevices(),
           userApi.getMyCertificates(),
+          userApi.getMyRequests({ limit: 100 }),
         ]);
         const devList = Array.isArray(devRes.data) ? devRes.data : devRes.data.data ?? [];
         setDevices(devList);
 
         const certList = Array.isArray(certRes.data) ? certRes.data : certRes.data.data ?? [];
         setCertificates(certList.filter((c: Certificate) => c.status === 'active'));
+
+        // Determine which devices have active repair requests
+        const reqList: RepairRequest[] = Array.isArray(reqRes.data) ? reqRes.data : reqRes.data.data ?? [];
+        const activeDeviceIds = new Set<string>();
+        for (const req of reqList) {
+          if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {
+            activeDeviceIds.add(req.userDevice.id);
+          }
+        }
+        setDevicesInRepair(activeDeviceIds);
       } catch {
         // silently fail
       } finally {
@@ -136,8 +156,16 @@ export function CreateRequest() {
 
       // 4. Redirect to the request status page
       router.push(`/account/requests/${request.id}`);
-    } catch {
-      setError('Ошибка при создании заявки. Попробуйте ещё раз.');
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message;
+      if (status === 409) {
+        setError(message || 'Для этого устройства уже существует активная заявка на ремонт');
+        // Refresh devices in repair state
+        setDevicesInRepair((prev) => new Set([...prev, userDeviceId]));
+      } else {
+        setError('Ошибка при создании заявки. Попробуйте ещё раз.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -166,12 +194,13 @@ export function CreateRequest() {
                 Выберите устройство
               </option>
               {devices.map((d) => {
+                const inRepair = devicesInRepair.has(d.id);
                 const label = d.device?.name
                   ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
                   : d.serialNumber ?? d.id;
                 return (
-                  <option key={d.id} value={d.id}>
-                    {label}
+                  <option key={d.id} value={d.id} disabled={inRepair}>
+                    {label}{inRepair ? ' — в ремонте' : ''}
                   </option>
                 );
               })}

@@ -31,6 +31,22 @@ export class RepairRequestService {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: userId }, { populate: ['address'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
+        // Check if there's already an active repair request for this device
+        const activeRequest = await this.em.findOne(RepairRequest, {
+            userDevice: dto.userDeviceId,
+            status: {
+                $nin: [
+                    RepairRequestStatus.COMPLETED,
+                    RepairRequestStatus.CANCELLED,
+                    RepairRequestStatus.REFUNDED,
+                    RepairRequestStatus.REFUSED,
+                ],
+            },
+        });
+        if (activeRequest) {
+            throw AppErrors.conflict('Для этого устройства уже существует активная заявка на ремонт');
+        }
+
         let certificate: Certificate | undefined;
         if (dto.certificateId) {
             const cert = await this.em.findOne(Certificate, { id: dto.certificateId, user: userId });
