@@ -55,19 +55,13 @@ export default async function ProductListPage({
                     className="group flex flex-col bg-white border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
                     <div className="relative aspect-square bg-gray-50">
-                      {imgUrl ? (
-                        <Image
-                          src={imgUrl}
-                          alt={device.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-text-sub text-xs">
-                          Нет фото
-                        </div>
-                      )}
+                      <Image
+                        src={imgUrl ?? '/images/placeholder.png'}
+                        alt={device.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
                     </div>
                     <div className="p-3 md:p-4 flex flex-col gap-1">
                       <span className="text-[11px] text-text-sub uppercase tracking-wider">

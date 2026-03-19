@@ -49,7 +49,7 @@ function deviceToProduct(device: any, images: string[]): Product {
     category: TYPE_LABELS[device.type] ?? device.type,
     subtitle: 'Официальные запчасти от производителя',
     rating: 5,
-    images: images.length > 0 ? images : ['/images/placeholder.png'],
+    images,
     badges: DEFAULT_BADGES,
     specsPreview: allSpecs.slice(0, 8),
     specsLeft: allSpecs.slice(0, mid),

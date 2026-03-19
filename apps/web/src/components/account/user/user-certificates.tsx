@@ -66,7 +66,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
   const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
   const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
 
-  const [deviceImageUrl, setDeviceImageUrl] = useState<string | null>(null);
+  const [deviceImageUrl, setDeviceImageUrl] = useState('/images/placeholder.png');
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,11 +75,8 @@ function CertificateCard({ cert }: { cert: Certificate }) {
       const images = Array.isArray(data) ? data : [];
       if (images.length > 0) {
         const img = images[0];
-        setDeviceImageUrl(
-          img.image?.medium?.secure_url
-          ?? img.image?.original?.secure_url
-          ?? null,
-        );
+        const url = img.image?.medium?.secure_url ?? img.image?.original?.secure_url;
+        if (url) setDeviceImageUrl(url);
       }
     }).catch(() => {});
   }, [device?.id]);
@@ -127,7 +124,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
             <span style="color:#979797">Действителен до ${formatDateLong(cert.expiresAt)}</span>
           </div>
           ${isActive ? '<div class="warranty">Расширенная гарантия активна</div>' : ''}
-          ${deviceImageUrl ? `<img class="device-img" src="${deviceImageUrl}" alt="${deviceName}" />` : ''}
+          <img class="device-img" src="${deviceImageUrl}" alt="${deviceName}" />
         </div>
       </body>
       </html>
@@ -135,15 +132,13 @@ function CertificateCard({ cert }: { cert: Certificate }) {
     printWindow.document.close();
 
     // Wait for image to load before printing
-    if (deviceImageUrl) {
-      const img = printWindow.document.querySelector('img');
-      if (img) {
-        img.onload = () => { printWindow.print(); };
-        img.onerror = () => { printWindow.print(); };
-        return;
-      }
+    const img = printWindow.document.querySelector('img');
+    if (img) {
+      img.onload = () => { printWindow.print(); };
+      img.onerror = () => { printWindow.print(); };
+    } else {
+      printWindow.print();
     }
-    printWindow.print();
   }, [cert, deviceName, brandModel, deviceDesc, durationMonths, isActive, deviceImageUrl]);
 
   return (
@@ -204,15 +199,13 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         </div>
 
         {/* Device image */}
-        {deviceImageUrl && (
-          <div className="hidden lg:block flex-shrink-0 w-[236px] self-start mt-4">
-            <img
-              src={deviceImageUrl}
-              alt={deviceName}
-              className="w-full h-auto max-h-[332px] object-contain rounded-lg"
-            />
-          </div>
-        )}
+        <div className="hidden lg:block flex-shrink-0 w-[236px] self-start mt-4">
+          <img
+            src={deviceImageUrl}
+            alt={deviceName}
+            className="w-full h-auto max-h-[332px] object-contain rounded-lg"
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.png';
+
 export interface DeviceListItem {
   id: string;
   slug: string;
@@ -52,22 +54,24 @@ export async function fetchDeviceImagesBySlug(slug: string): Promise<DeviceImage
   return res.json();
 }
 
-export async function fetchFirstDeviceImage(deviceId: string): Promise<string | null> {
+export async function fetchFirstDeviceImage(deviceId: string): Promise<string> {
   const images = await fetchDeviceImages(deviceId);
-  if (!images.length) return null;
+  if (!images.length) return DEVICE_PLACEHOLDER_IMAGE;
   return images[0].image.medium?.secure_url ?? images[0].image.original.secure_url;
 }
 
 export async function fetchDeviceImageUrls(id: string): Promise<string[]> {
   const images = await fetchDeviceImages(id);
-  return images
+  const urls = images
     .map((img) => img.image?.large?.secure_url ?? img.image?.original?.secure_url)
     .filter(Boolean) as string[];
+  return urls.length > 0 ? urls : [DEVICE_PLACEHOLDER_IMAGE];
 }
 
 export async function fetchDeviceImageUrlsBySlug(slug: string): Promise<string[]> {
   const images = await fetchDeviceImagesBySlug(slug);
-  return images
+  const urls = images
     .map((img) => img.image?.large?.secure_url ?? img.image?.original?.secure_url)
     .filter(Boolean) as string[];
+  return urls.length > 0 ? urls : [DEVICE_PLACEHOLDER_IMAGE];
 }
