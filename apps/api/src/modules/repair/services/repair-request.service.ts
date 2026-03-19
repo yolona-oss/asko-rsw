@@ -24,7 +24,7 @@ export class RepairRequestService {
         private readonly notificationService: NotificationService,
         private readonly imageService: ImageService,
         private readonly paymentService: PaymentService,
-    ) {}
+    ) { }
 
     /** User creates a repair request */
     async create(userId: string, dto: CreateRepairRequestDto): Promise<RepairRequest> {
@@ -227,9 +227,9 @@ export class RepairRequestService {
     async markAwaitingCompletion(requestId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) return;
-        if (!request.totalCost) {
-            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
-        }
+        // if (!request.totalCost) {
+        //     throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
+        // }
         request.status = RepairRequestStatus.AWAITING_COMPLETION;
         await this.em.flush();
     }

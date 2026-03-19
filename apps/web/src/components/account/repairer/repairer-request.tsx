@@ -2,31 +2,15 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { repairerApi } from '@/lib/api/repairer';
+import { api } from '@/lib/api/client';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input } from '@asko/ui';
+import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
-
-function getMapUrl(
-  destLat: number,
-  destLng: number,
-  srcLat?: number,
-  srcLng?: number,
-  mobile?: boolean,
-): string {
-  const dest = `${destLat},${destLng}`;
-  const src = srcLat != null && srcLng != null ? `${srcLat},${srcLng}` : null;
-  if (mobile) {
-    return src
-      ? `yandexmaps://maps.yandex.ru/?rtext=${src}~${dest}&rtt=auto`
-      : `yandexmaps://maps.yandex.ru/?pt=${dest}&z=15`;
-  }
-  return src
-    ? `https://yandex.md/maps/?rtext=${src}~${dest}&rtt=auto`
-    : `https://yandex.md/maps/?pt=${dest}&z=15&l=map`;
-}
 
 const STEP_STATUS_LABEL: Record<WorkStepStatus, string> = {
   [WorkStepStatus.PENDING]: 'Ожидает',
@@ -55,13 +39,42 @@ function StepCircle({ status, index }: { status: WorkStepStatus; index: number }
   );
 }
 
+const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  [RepairRequestStatus.PENDING]: 'warning',
+  [RepairRequestStatus.PAID]: 'success',
+  [RepairRequestStatus.ASSIGNED]: 'warning',
+  [RepairRequestStatus.ACCEPTED]: 'warning',
+  [RepairRequestStatus.IN_PROGRESS]: 'info',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'info',
+  [RepairRequestStatus.COMPLETED]: 'neutral',
+  [RepairRequestStatus.CANCELLED]: 'error',
+  [RepairRequestStatus.REFUSED]: 'error',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
+  [RepairRequestStatus.PAID]: 'Оплачена',
+  [RepairRequestStatus.ASSIGNED]: 'Назначена',
+  [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
+  [RepairRequestStatus.COMPLETED]: 'Завершена',
+  [RepairRequestStatus.CANCELLED]: 'Отменена',
+  [RepairRequestStatus.REFUSED]: 'Отказ',
+};
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
 export function RepairerRequest() {
   const [request, setRequest] = useState<any | null>(null);
   const [steps, setSteps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
   const [refuseOpen, setRefuseOpen] = useState(false);
   const [refuseReason, setRefuseReason] = useState('');
   const [refuseLoading, setRefuseLoading] = useState(false);
@@ -74,6 +87,9 @@ export function RepairerRequest() {
   const [completeError, setCompleteError] = useState('');
 
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [mainPhoto, setMainPhoto] = useState(0);
 
   const [priceValue, setPriceValue] = useState('');
   const [priceSaving, setPriceSaving] = useState(false);
@@ -130,22 +146,25 @@ export function RepairerRequest() {
   };
 
   useEffect(() => {
-    setIsMobile(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent));
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCurrentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {},
-      );
-    }
-
     repairerApi.getActiveRequest()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!data) { setLoading(false); return; }
         setRequest(data);
         if (data.totalCost) setPriceValue(String(data.totalCost));
-        return repairerApi.getWorkSteps(data.id);
+
+        const [stepsRes] = await Promise.all([
+          repairerApi.getWorkSteps(data.id).catch(() => ({ data: [] })),
+          api.get('/file-upload/image/attached', {
+            params: { ownerType: 'repair_request', ownerId: data.id },
+          }).then(({ data: images }) => {
+            const urls = (Array.isArray(images) ? images : [])
+              .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
+              .filter(Boolean);
+            setPhotos(urls);
+          }).catch(() => {}),
+        ]);
+        setSteps(stepsRes.data ?? []);
       })
-      .then((res) => { if (res) setSteps(res.data ?? []); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -217,6 +236,18 @@ export function RepairerRequest() {
     <PageContainer>
       <PageHeader>Текущая заявка</PageHeader>
 
+      {/* Status header */}
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-bold text-text-main">Статус:</h2>
+        <Badge
+          variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'}
+          className="px-4 py-1.5 text-sm"
+        >
+          {STATUS_LABELS[request.status] ?? request.status}
+        </Badge>
+        <span className="text-sm text-text-sub ml-auto">{formatDate(request.createdAt)}</span>
+      </div>
+
       {/* Accept request (ASSIGNED status) */}
       {status === RepairRequestStatus.ASSIGNED && (
         <Card className="flex flex-col gap-3">
@@ -246,97 +277,174 @@ export function RepairerRequest() {
         </Card>
       )}
 
-      {/* Device info */}
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium text-text-main">Информация об устройстве</h2>
-        <div className="flex flex-col gap-2 text-sm">
-          {request.device?.name && (
-            <div className="flex gap-2">
-              <span className="text-text-sub w-32 flex-shrink-0">Устройство:</span>
-              <span className="text-text-main font-medium">{request.device.name}</span>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left column — details */}
+        <div className="flex-1 flex flex-col gap-6">
+          {/* Client info */}
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-lg font-medium text-text-main">Клиент</h2>
+            <div className="flex flex-col gap-2 text-sm">
+              {(request.user?.lastName || request.user?.firstName) && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Имя:</span>
+                  <span className="text-text-main font-medium">
+                    {[request.user.lastName, request.user.firstName].filter(Boolean).join(' ')}
+                  </span>
+                </div>
+              )}
+              {request.user?.phone && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Телефон:</span>
+                  <a href={`tel:${request.user.phone}`} className="text-text-main font-medium hover:text-brand-red">
+                    {request.user.phone}
+                  </a>
+                </div>
+              )}
+              {request.user?.email && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Email:</span>
+                  <span className="text-text-main">{request.user.email}</span>
+                </div>
+              )}
             </div>
+          </Card>
+
+          {/* Device info */}
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-lg font-medium text-text-main">Устройство</h2>
+            <div className="flex flex-col gap-2 text-sm">
+              {request.userDevice?.device?.name && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Название:</span>
+                  <span className="text-text-main font-medium">{request.userDevice.device.name}</span>
+                </div>
+              )}
+              {request.userDevice?.device?.brand && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Бренд:</span>
+                  <span className="text-text-main">{request.userDevice.device.brand}</span>
+                </div>
+              )}
+              {request.userDevice?.device?.model && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Модель:</span>
+                  <span className="text-text-main">{request.userDevice.device.model}</span>
+                </div>
+              )}
+              {request.userDevice?.serialNumber && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Серийный №:</span>
+                  <span className="text-text-main">{request.userDevice.serialNumber}</span>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <span className="text-text-sub w-32 flex-shrink-0">Описание:</span>
+                <span className="text-text-main">{request.description}</span>
+              </div>
+              {request.preferredDate && (
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Желаемая дата:</span>
+                  <span className="text-text-main">
+                    {new Date(request.preferredDate).toLocaleDateString('ru-RU')}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Manual link */}
+            {request.userDevice?.device?.id && (
+              <Link
+                href={`/account/man/${request.userDevice.device.id}`}
+                className="text-sm text-brand-red hover:underline self-start"
+              >
+                Открыть мануал устройства →
+              </Link>
+            )}
+          </Card>
+
+          {/* Address */}
+          {request.address && (
+            <Card className="flex flex-col gap-3">
+              <h2 className="text-lg font-medium text-text-main">Адрес</h2>
+              <p className="text-sm text-text-main">
+                {[
+                  request.address.city,
+                  request.address.street,
+                  request.address.house ? `д. ${request.address.house}` : '',
+                  request.address.building ? `корп. ${request.address.building}` : '',
+                  request.address.floor ? `этаж ${request.address.floor}` : '',
+                  request.address.room ? `кв. ${request.address.room}` : '',
+                ].filter(Boolean).join(', ')}
+              </p>
+            </Card>
           )}
-          <div className="flex gap-2">
-            <span className="text-text-sub w-32 flex-shrink-0">Описание:</span>
-            <span className="text-text-main">{request.description}</span>
-          </div>
-          {request.preferredDate && (
-            <div className="flex gap-2">
-              <span className="text-text-sub w-32 flex-shrink-0">Желаемая дата:</span>
-              <span className="text-text-main">
-                {new Date(request.preferredDate).toLocaleDateString('ru-RU')}
-              </span>
-            </div>
+
+          {/* Certificate */}
+          {request.certificate && (
+            <Card className="flex flex-col gap-2">
+              <h2 className="text-lg font-medium text-text-main">Сертификат</h2>
+              <div className="flex flex-col gap-1 text-sm">
+                <div className="flex gap-2">
+                  <span className="text-text-sub w-32 flex-shrink-0">Номер:</span>
+                  <span className="text-text-main">{request.certificate.certificateNumber ?? request.certificate.id?.slice(0, 8)}</span>
+                </div>
+                {request.certificate.expiresAt && (
+                  <div className="flex gap-2">
+                    <span className="text-text-sub w-32 flex-shrink-0">Действует до:</span>
+                    <span className="text-text-main">{new Date(request.certificate.expiresAt).toLocaleDateString('ru-RU')}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
           )}
         </div>
 
-        {/* Media */}
-        {request.media && request.media.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {request.media.map((m: any, i: number) => (
-              <a key={i} href={m.url} target="_blank" rel="noopener noreferrer" className="block">
-                <img
-                  src={m.thumbnail ?? m.url}
-                  alt=""
-                  className="w-20 h-20 object-cover rounded border border-border-light"
-                />
-              </a>
-            ))}
+        {/* Right column — photos */}
+        {photos.length > 0 && (
+          <div className="lg:w-[360px] flex-shrink-0">
+            <Card className="flex flex-col gap-3">
+              <h2 className="text-lg font-medium text-text-main">Фото клиента</h2>
+              <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
+                {photos[mainPhoto] && (
+                  <Image
+                    src={photos[mainPhoto]}
+                    alt="Фото устройства"
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+              {photos.length > 1 && (
+                <div className="flex gap-2 flex-wrap">
+                  {photos.map((photo, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setMainPhoto(idx)}
+                      className={`relative w-16 h-12 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${
+                        idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
+                      }`}
+                    >
+                      <Image
+                        src={photo}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Card>
           </div>
         )}
-
-        {/* Manual link */}
-        {request.device?.id && (
-          <Link
-            href={`/account/man/${request.device.id}`}
-            className="text-sm text-brand-red hover:underline self-start"
-          >
-            Открыть мануал устройства →
-          </Link>
-        )}
-      </Card>
-
-      {/* User contact */}
-      {request.allowCalls && request.userPhone && (
-        <Card className="flex items-center gap-4">
-          <div>
-            <p className="text-sm text-text-sub mb-0.5">Телефон клиента</p>
-            <a
-              href={`tel:${request.userPhone}`}
-              className="text-base font-medium text-text-main hover:text-brand-red"
-            >
-              {request.userPhone}
-            </a>
-          </div>
-        </Card>
-      )}
-
-      {/* Map */}
-      {request.addressLat && request.addressLng && (
-        <Card className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-text-sub">Адрес устройства</p>
-          {request.address && (
-            <p className="text-sm text-text-main">{request.address}</p>
-          )}
-          <a
-            href={getMapUrl(
-              request.addressLat,
-              request.addressLng,
-              currentLocation?.lat,
-              currentLocation?.lng,
-              isMobile,
-            )}
-            target={isMobile ? undefined : '_blank'}
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-            </svg>
-            Проложить маршрут
-          </a>
-        </Card>
-      )}
+      </div>
 
       {/* Work steps */}
       <Card className="flex flex-col gap-4">
