@@ -1,3 +1,4 @@
+import { PaginatedResponseDto } from '@asko/shared/client';
 import { api } from './client';
 
 export interface PaymentOptions {
@@ -37,11 +38,6 @@ export interface PaymentRecord {
   };
 }
 
-export interface PaymentListResult {
-  data: PaymentRecord[];
-  total: number;
-}
-
 export interface PaymentStats {
   confirmedTotal: number;
   refundedTotal: number;
@@ -59,11 +55,11 @@ export const paymentApi = {
   },
 
   listPayments(params?: { offset?: number; limit?: number; status?: string; provider?: string; search?: string }) {
-    return api.get<PaymentListResult>('/payment/list', { params });
+    return api.get<PaginatedResponseDto<PaymentRecord>>('/payment/list', { params });
   },
 
   getMyPayments(params?: { offset?: number; limit?: number; status?: string }) {
-    return api.get<PaymentListResult>('/payment/my', { params });
+    return api.get<PaginatedResponseDto<PaymentRecord>>('/payment/my', { params });
   },
 
   getStats() {

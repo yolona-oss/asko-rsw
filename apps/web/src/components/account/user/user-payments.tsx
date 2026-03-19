@@ -57,7 +57,7 @@ export function UserPayments() {
         limit: pageSize,
       });
       setPayments(result.data ?? []);
-      setTotal(result.total ?? 0);
+      setTotal(result.overallCount ?? 0);
     } catch {
       // silently fail
     } finally {

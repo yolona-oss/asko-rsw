@@ -10,6 +10,9 @@ import {
     RepairRequestStatus,
     CertificateStatus,
     CurrencyEnum,
+    PaginatedResponseDto,
+    IRepairPayment,
+    PaginationDto,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { PaymentProvider } from '../providers/payment-provider.interface';
@@ -203,40 +206,43 @@ export class PaymentService {
 
     /** List all payments (for manager/admin) */
     async listPayments(params: {
-        offset?: number;
-        limit?: number;
         status?: string;
         provider?: string;
-        search?: string;
-    }) {
+    }, pagination: PaginationDto): Promise<PaginatedResponseDto<RepairPayment>> {
         const where: FilterQuery<RepairPayment> = {};
         if (params.status) where.status = params.status as PaymentStatus;
         if (params.provider) where.provider = params.provider;
 
-        const [data, total] = await this.em.findAndCount(RepairPayment, where, {
+        const [data, overallCount] = await this.em.findAndCount(RepairPayment, where, {
             populate: ['user'],
             orderBy: { createdAt: 'DESC' },
-            offset: params.offset ?? 0,
-            limit: params.limit ?? 50,
+            offset: pagination.offset ?? 0,
+            limit: pagination.limit ?? 50,
         });
-        return { data, total };
+        return {
+            data,
+            overallCount,
+            pagination
+        };
     }
 
     /** List payments for a specific user */
     async listUserPayments(userId: string, params: {
-        offset?: number;
-        limit?: number;
         status?: string;
-    }) {
+    }, pagination: PaginationDto): Promise<PaginatedResponseDto<RepairPayment>> {
         const where: FilterQuery<RepairPayment> = { user: userId };
         if (params.status) where.status = params.status as PaymentStatus;
 
-        const [data, total] = await this.em.findAndCount(RepairPayment, where, {
+        const [data, overallCount] = await this.em.findAndCount(RepairPayment, where, {
             orderBy: { createdAt: 'DESC' },
-            offset: params.offset ?? 0,
-            limit: params.limit ?? 50,
+            offset: pagination.offset ?? 0,
+            limit: pagination.limit ?? 50,
         });
-        return { data, total };
+        return {
+            data,
+            overallCount,
+            pagination
+        };
     }
 
     /** Get payment statistics */

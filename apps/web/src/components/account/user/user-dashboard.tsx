@@ -85,8 +85,8 @@ export function UserDashboard() {
     try {
       const { data: result } = await paymentApi.getMyPayments({ status: 'pending', limit: 50 });
       setPendingPayments(result.data ?? []);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.error(`Cannot retrive payments: `, err)
     }
   }, []);
 

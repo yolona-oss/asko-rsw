@@ -71,7 +71,7 @@ export function ManagerPayments() {
         ]);
         const result = paymentsRes.data;
         setPayments(result.data ?? []);
-        setTotal(result.total ?? 0);
+        setTotal(result.overallCount ?? 0);
         setStats(statsRes.data);
       } catch {
         // silently fail

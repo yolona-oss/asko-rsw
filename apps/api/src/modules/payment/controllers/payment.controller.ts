@@ -7,7 +7,7 @@ import { Public } from 'common/decorators/public.decorotor';
 
 @Controller('payment')
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+    constructor(private readonly paymentService: PaymentService) { }
 
     @RequiredRoles(...ALL_ROLES)
     @Get('options')
@@ -32,10 +32,11 @@ export class PaymentController {
         @Query('search') search?: string,
     ) {
         return this.paymentService.listPayments({
-            offset: offset ? parseInt(offset) : undefined,
-            limit: limit ? parseInt(limit) : undefined,
             status,
             provider,
+        }, {
+            offset: offset ? parseInt(offset) : undefined,
+            limit: limit ? parseInt(limit) : undefined,
             search,
         });
     }
@@ -50,9 +51,10 @@ export class PaymentController {
         @Query('status') status?: string,
     ) {
         return this.paymentService.listUserPayments(user.sub, {
+            status,
+        }, {
             offset: offset ? parseInt(offset) : undefined,
             limit: limit ? parseInt(limit) : undefined,
-            status,
         });
     }
 
