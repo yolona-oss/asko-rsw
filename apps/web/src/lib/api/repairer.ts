@@ -14,7 +14,7 @@ export const repairerApi = {
     return api.get('/repairers/requests/active');
   },
 
-  getAssignedRequests(params?: { page?: number; limit?: number; status?: string }) {
+  getAssignedRequests(params?: { offset?: number; limit?: number; status?: string }) {
     return api.get('/repairers/requests', { params });
   },
 

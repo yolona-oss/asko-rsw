@@ -35,7 +35,7 @@ export function RepairerHistory() {
 
   const [requests, setRequests] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [offset, setOffset] = useState(1);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
 
@@ -48,14 +48,14 @@ export function RepairerHistory() {
 
   useEffect(() => {
     setLoading(true);
-    repairerApi.getAssignedRequests({ page, limit: LIMIT })
+    repairerApi.getAssignedRequests({ offset, limit: LIMIT })
       .then(({ data }) => {
-        setRequests(data?.items ?? []);
-        setTotal(data?.total ?? 0);
+        setRequests(data?.data ?? []);
+        setTotal(data?.overallCount ?? 0);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [offset]);
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -137,16 +137,16 @@ export function RepairerHistory() {
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="secondary"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
+            disabled={offset <= 1}
+            onClick={() => setOffset((p) => p - 1)}
           >
             Назад
           </Button>
-          <span className="text-sm text-text-sub">{page} / {totalPages}</span>
+          <span className="text-sm text-text-sub">{offset} / {totalPages}</span>
           <Button
             variant="secondary"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={offset >= totalPages}
+            onClick={() => setOffset((p) => p + 1)}
           >
             Вперёд
           </Button>

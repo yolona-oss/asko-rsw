@@ -65,7 +65,7 @@ export function RepairerDashboard() {
       .catch(() => setActiveRequest(null));
 
     repairerApi.getAssignedRequests({ status: 'completed', limit: 1 })
-      .then(({ data }) => setCompletedCount(data?.total ?? 0))
+      .then(({ data }) => setCompletedCount(data?.overallCount ?? 0))
       .catch(() => setCompletedCount(0));
   }, []);
 
