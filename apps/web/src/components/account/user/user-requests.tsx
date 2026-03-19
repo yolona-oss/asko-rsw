@@ -9,7 +9,7 @@ import { userApi } from '@/lib/api/user';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Создана',
+  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
   [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначен мастер',
   [RepairRequestStatus.ACCEPTED]: 'Мастер выехал',

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Textarea } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { PaymentModal } from '@/components/account/user/payment-modal';
 import { userApi } from '@/lib/api/user';
 import { RepairRequestStatus } from '@asko/shared/client';
 
@@ -16,7 +17,8 @@ const TERMINAL_STATUSES = [
 ];
 
 const STEPS = [
-  { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING, RepairRequestStatus.PAID] },
+  { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING] },
+  { key: 'payment', label: 'Оплата', statuses: [RepairRequestStatus.PAID] },
   { key: 'choosing', label: 'Выбор\nмастера', statuses: [RepairRequestStatus.ASSIGNED] },
   { key: 'traveling', label: 'Мастер\nвыехал', statuses: [RepairRequestStatus.ACCEPTED] },
   { key: 'done', label: 'Ремонт\nвыполнен', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION] },
@@ -24,7 +26,7 @@ const STEPS = [
 ] as const;
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку и начали подбор мастера.\n\nНазначение обычно занимает 5\u201315 минут.\nСтатус обновится автоматически.',
+  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку.\n\nДля продолжения необходимо произвести оплату.',
   [RepairRequestStatus.PAID]: 'Оплата получена. Ожидайте назначения мастера.',
   [RepairRequestStatus.ASSIGNED]: 'Мастер назначен и скоро свяжется с вами для согласования времени визита.',
   [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку и выехал к вам.',
@@ -166,6 +168,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Payment modal state
+  const [paymentOpen, setPaymentOpen] = useState(false);
+
   // Review state
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
@@ -292,7 +297,29 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-3">
           {description}
         </p>
+        {request.status === RepairRequestStatus.PENDING && (
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full lg:w-fit mt-4"
+            onClick={() => setPaymentOpen(true)}
+          >
+            Оплатить
+          </Button>
+        )}
       </div>
+
+      {/* Payment modal */}
+      <PaymentModal
+        open={paymentOpen}
+        onClose={() => {
+          setPaymentOpen(false);
+          fetchData();
+        }}
+        targetType="repairRequest"
+        targetId={requestId}
+        amount={0}
+      />
 
       {/* Progress steps */}
       <div className="flex items-start mt-6 overflow-x-auto pb-6 -mx-4 px-4 lg:mx-0 lg:px-0">

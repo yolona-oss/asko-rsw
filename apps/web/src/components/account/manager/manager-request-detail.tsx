@@ -12,7 +12,7 @@ import { api } from '@/lib/api/client';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
-  [RepairRequestStatus.PENDING]: 'success',
+  [RepairRequestStatus.PENDING]: 'warning',
   [RepairRequestStatus.PAID]: 'success',
   [RepairRequestStatus.ASSIGNED]: 'warning',
   [RepairRequestStatus.ACCEPTED]: 'warning',
@@ -26,7 +26,7 @@ const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Новая',
+  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
   [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
@@ -140,6 +140,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   }
 
   const isAssigned = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
+  const canAssign = request.status === RepairRequestStatus.PAID || isAssigned;
   const clientName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
   const clientPhone = request.user?.phone || '';
   const deviceName = request.userDevice?.device?.name || request.description;
@@ -216,40 +217,48 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           )}
 
           {/* Master assignment */}
-          <div>
-            <p className="text-sm font-bold text-text-main mb-2">
-              {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
-            </p>
-            {isAssigned && (
-              <p className="text-xs text-text-sub mb-2">
-                При смене исполнителя заявка перейдёт в статус «Новая».
-              </p>
-            )}
-            <div className="flex items-center gap-2">
-              <Select
-                value={selectedRepairer}
-                onChange={(e) => setSelectedRepairer(e.target.value)}
-                className="max-w-[400px] py-3"
-              >
-                <option value="">Выбрать доступного мастера</option>
-                {repairers
-                  .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
-                  .map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
-                    </option>
-                  ))}
-              </Select>
-              <button
-                type="button"
-                onClick={handleAssign}
-                disabled={!selectedRepairer || assigning}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
-              >
-                {assigning ? 'Назначение...' : 'Назначить'}
-              </button>
+          {request.status === RepairRequestStatus.PENDING && (
+            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              Заявка ожидает оплаты клиентом. Назначение мастера будет доступно после оплаты.
             </div>
-          </div>
+          )}
+
+          {canAssign && (
+            <div>
+              <p className="text-sm font-bold text-text-main mb-2">
+                {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
+              </p>
+              {isAssigned && (
+                <p className="text-xs text-text-sub mb-2">
+                  При смене исполнителя заявка перейдёт в статус «Новая».
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedRepairer}
+                  onChange={(e) => setSelectedRepairer(e.target.value)}
+                  className="max-w-[400px] py-3"
+                >
+                  <option value="">Выбрать доступного мастера</option>
+                  {repairers
+                    .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
+                      </option>
+                    ))}
+                </Select>
+                <button
+                  type="button"
+                  onClick={handleAssign}
+                  disabled={!selectedRepairer || assigning}
+                  className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
+                >
+                  {assigning ? 'Назначение...' : 'Назначить'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <Link
             href="/account/requests"

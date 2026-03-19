@@ -6,7 +6,6 @@ import { Button, Select, Textarea, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
-import { paymentApi } from '@/lib/api/payment';
 
 interface UserDevice {
   id: string;
@@ -148,18 +147,7 @@ export function CreateRequest() {
         }
       }
 
-      // 3. Auto-trigger dummy payment (placeholder until real payment)
-      try {
-        await paymentApi.createPayment({
-          targetType: 'repairRequest',
-          targetId: request.id,
-          amount: 0,
-        });
-      } catch {
-        // continue even if dummy pay fails
-      }
-
-      // 4. Redirect to the request status page
+      // 3. Redirect to the request status page (user pays from there)
       router.push(`/account/requests/${request.id}`);
     } catch (err: any) {
       const status = err?.response?.status;
