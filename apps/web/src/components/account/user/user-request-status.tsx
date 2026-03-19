@@ -26,7 +26,7 @@ const STEPS = [
 ] as const;
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку.\n\nДля продолжения необходимо произвести оплату.',
+  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку. Ожидайте назначения мастера и оценки стоимости ремонта.',
   [RepairRequestStatus.PAID]: 'Оплата получена. Ожидайте назначения мастера.',
   [RepairRequestStatus.ASSIGNED]: 'Мастер назначен и скоро свяжется с вами для согласования времени визита.',
   [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку и выехал к вам.',
@@ -123,6 +123,7 @@ interface RepairRequest {
   description: string;
   createdAt: string;
   updatedAt: string;
+  totalCost?: number;
   repairer?: {
     user?: { firstName?: string; lastName?: string };
   };
@@ -297,15 +298,25 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-3">
           {description}
         </p>
-        {request.status === RepairRequestStatus.PENDING && (
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full lg:w-fit mt-4"
-            onClick={() => setPaymentOpen(true)}
-          >
-            Оплатить
-          </Button>
+        {request.status === RepairRequestStatus.PENDING && request.totalCost != null && request.totalCost > 0 && (
+          <>
+            <p className="text-sm text-text-sub mt-2">
+              Сумма к оплате: {request.totalCost.toLocaleString('ru-RU')} ₽
+            </p>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full lg:w-fit mt-2"
+              onClick={() => setPaymentOpen(true)}
+            >
+              Оплатить
+            </Button>
+          </>
+        )}
+        {request.status === RepairRequestStatus.PAID && (
+          <div className="mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-sm">
+            <p className="text-sm text-green-700 font-medium">Заявка оплачена</p>
+          </div>
         )}
       </div>
 
@@ -318,7 +329,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         }}
         targetType="repairRequest"
         targetId={requestId}
-        amount={0}
+        amount={request.totalCost ?? 0}
       />
 
       {/* Progress steps */}

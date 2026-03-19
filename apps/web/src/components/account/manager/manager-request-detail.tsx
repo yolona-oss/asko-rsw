@@ -140,7 +140,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   }
 
   const isAssigned = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
-  const canAssign = request.status === RepairRequestStatus.PAID || isAssigned;
+  const canAssign = request.status === RepairRequestStatus.PENDING || request.status === RepairRequestStatus.PAID || isAssigned;
   const clientName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
   const clientPhone = request.user?.phone || '';
   const deviceName = request.userDevice?.device?.name || request.description;
@@ -217,12 +217,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           )}
 
           {/* Master assignment */}
-          {request.status === RepairRequestStatus.PENDING && (
-            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-              Заявка ожидает оплаты клиентом. Назначение мастера будет доступно после оплаты.
-            </div>
-          )}
-
           {canAssign && (
             <div>
               <p className="text-sm font-bold text-text-main mb-2">
