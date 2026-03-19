@@ -88,6 +88,7 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Media files**: Media files stored in Image entity and connects to object with ownerType and ownerId
 - **Env files**: `.env.dev` / `.env.prod` loaded based on `NODE_ENV`
 - **Configs**: Mapped environment variables stored in Injectable AppConfig object
+- **Pagination**: Pagination must be implemented with PaginationDto and PaginatedResponseDto from `@asko/shared`
 
 ### Web (`apps/web`)
 - **Routing**: App Router with route groups — `(auth)`, `(account)`, `(landing)`, `(product)`

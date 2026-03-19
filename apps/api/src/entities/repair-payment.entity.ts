@@ -2,13 +2,17 @@ import { Entity, PrimaryKey, Property, ManyToOne, Enum, OptionalProps } from '@m
 import { v4 as uuid } from 'uuid';
 import { PaymentStatus, CurrencyEnum } from '@asko/shared';
 import { RepairRequest } from './repair-request.entity';
+import { User } from './auth/user.entity';
 
 @Entity()
 export class RepairPayment {
-    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'targetType' | 'targetId' | 'repairRequest';
+    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'targetType' | 'targetId' | 'repairRequest' | 'user';
 
     @PrimaryKey()
     id: string = uuid();
+
+    @ManyToOne(() => User, { nullable: true })
+    user?: User;
 
     @ManyToOne(() => RepairRequest, { nullable: true })
     repairRequest?: RepairRequest;

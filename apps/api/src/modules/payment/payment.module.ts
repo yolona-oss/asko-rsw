@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { RepairPayment, RepairRequest, Certificate } from 'entities';
+import { RepairPayment, RepairRequest, Certificate, User } from 'entities';
 import { PaymentService } from './services/payment.service';
 import { PaymentController } from './controllers/payment.controller';
 import { DummyProvider } from './providers/dummy.provider';
@@ -10,7 +10,7 @@ import { CertificateModule } from 'modules/certificate/certificate.module';
 
 @Module({
     imports: [
-        MikroOrmModule.forFeature([RepairPayment, RepairRequest, Certificate]),
+        MikroOrmModule.forFeature([RepairPayment, RepairRequest, Certificate, User]),
         forwardRef(() => CertificateModule),
     ],
     controllers: [PaymentController],

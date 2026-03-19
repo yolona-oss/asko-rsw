@@ -19,6 +19,36 @@ export interface CreatePaymentResult {
   redirectUrl?: string;
 }
 
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  provider?: string;
+  targetType?: string;
+  targetId?: string;
+  paidAt?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+}
+
+export interface PaymentListResult {
+  data: PaymentRecord[];
+  total: number;
+}
+
+export interface PaymentStats {
+  confirmedTotal: number;
+  refundedTotal: number;
+  confirmedCount: number;
+  refundedCount: number;
+}
+
 export const paymentApi = {
   getOptions() {
     return api.get<PaymentOptions>('/payment/options');
@@ -26,5 +56,21 @@ export const paymentApi = {
 
   createPayment(data: CreatePaymentParams) {
     return api.post<CreatePaymentResult>('/payment/create', data);
+  },
+
+  listPayments(params?: { offset?: number; limit?: number; status?: string; provider?: string; search?: string }) {
+    return api.get<PaymentListResult>('/payment/list', { params });
+  },
+
+  getMyPayments(params?: { offset?: number; limit?: number; status?: string }) {
+    return api.get<PaymentListResult>('/payment/my', { params });
+  },
+
+  getStats() {
+    return api.get<PaymentStats>('/payment/stats');
+  },
+
+  getMyStats() {
+    return api.get<PaymentStats>('/payment/my/stats');
   },
 };

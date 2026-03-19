@@ -1,7 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EntityManager } from '@mikro-orm/postgresql';
-import { RepairPayment, RepairRequest, Certificate } from 'entities';
+import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
+import { RepairPayment, RepairRequest, Certificate, User } from 'entities';
 import {
     CreatePaymentDto,
     PaymentProviderType,
@@ -79,6 +79,7 @@ export class PaymentService {
         await this.validateTarget(userId, dto.targetType, dto.targetId);
 
         const paymentRecord = this.em.create(RepairPayment, {
+            user: this.em.getReference(User, userId),
             repairRequest: dto.targetType === PaymentTargetType.REPAIR_REQUEST
                 ? this.em.getReference(RepairRequest, dto.targetId) : undefined,
             targetType: dto.targetType,
@@ -198,5 +199,56 @@ export class PaymentService {
     /** Get payments by target type and id */
     async getPaymentsByTarget(targetType: string, targetId: string): Promise<RepairPayment[]> {
         return this.em.find(RepairPayment, { targetType, targetId }, { orderBy: { createdAt: 'DESC' } });
+    }
+
+    /** List all payments (for manager/admin) */
+    async listPayments(params: {
+        offset?: number;
+        limit?: number;
+        status?: string;
+        provider?: string;
+        search?: string;
+    }) {
+        const where: FilterQuery<RepairPayment> = {};
+        if (params.status) where.status = params.status as PaymentStatus;
+        if (params.provider) where.provider = params.provider;
+
+        const [data, total] = await this.em.findAndCount(RepairPayment, where, {
+            populate: ['user'],
+            orderBy: { createdAt: 'DESC' },
+            offset: params.offset ?? 0,
+            limit: params.limit ?? 50,
+        });
+        return { data, total };
+    }
+
+    /** List payments for a specific user */
+    async listUserPayments(userId: string, params: {
+        offset?: number;
+        limit?: number;
+        status?: string;
+    }) {
+        const where: FilterQuery<RepairPayment> = { user: userId };
+        if (params.status) where.status = params.status as PaymentStatus;
+
+        const [data, total] = await this.em.findAndCount(RepairPayment, where, {
+            orderBy: { createdAt: 'DESC' },
+            offset: params.offset ?? 0,
+            limit: params.limit ?? 50,
+        });
+        return { data, total };
+    }
+
+    /** Get payment statistics */
+    async getPaymentStats(userId?: string) {
+        const baseWhere: FilterQuery<RepairPayment> = userId ? { user: userId } : {};
+
+        const paid = await this.em.find(RepairPayment, { ...baseWhere, status: PaymentStatus.PAID });
+        const refunded = await this.em.find(RepairPayment, { ...baseWhere, status: PaymentStatus.REFUNDED });
+
+        const confirmedTotal = paid.reduce((sum, p) => sum + p.amount, 0);
+        const refundedTotal = refunded.reduce((sum, p) => sum + p.amount, 0);
+
+        return { confirmedTotal, refundedTotal, confirmedCount: paid.length, refundedCount: refunded.length };
     }
 }

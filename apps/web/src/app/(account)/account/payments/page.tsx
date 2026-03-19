@@ -1,15 +1,17 @@
 'use client';
 
 import { useAccount } from '@/components/account/account-provider';
+import { primaryRole } from '@/lib/account';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
-import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { ManagerPayments } from '@/components/account/manager/manager-payments';
+import { UserPayments } from '@/components/account/user/user-payments';
+import { DealerPayments } from '@/components/account/dealer/dealer-payments';
 
 export default function PaymentsPage() {
-  const { stage } = useAccount();
+  const { stage, user } = useAccount();
 
-  if (stage === 'skeleton') {
+  if (stage === 'skeleton' || !user) {
     return (
       <PageContainer>
         <SkeletonBlock className="h-8 w-48" />
@@ -18,12 +20,15 @@ export default function PaymentsPage() {
     );
   }
 
-  return (
-    <PageContainer>
-      <PageHeader>Платежи</PageHeader>
-      <Card className="text-text-sub">
-        Раздел находится в разработке
-      </Card>
-    </PageContainer>
-  );
+  const role = primaryRole(user);
+
+  switch (role) {
+    case 'admin':
+    case 'manager':
+      return <ManagerPayments />;
+    case 'dealer':
+      return <DealerPayments />;
+    default:
+      return <UserPayments />;
+  }
 }
