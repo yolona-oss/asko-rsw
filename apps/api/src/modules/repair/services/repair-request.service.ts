@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { RepairRequest, UserDevice, Certificate, Repairer, WorkStep, RepairPayment } from 'entities';
+import { RepairRequest, UserDevice, Certificate, Repairer, RepairPayment } from 'entities';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -9,14 +9,12 @@ import {
     RepairRequestStatus,
     CertificateStatus,
     PaymentStatus,
-    WorkStepStatus,
     PaginationDto,
-    Role,
-    JwtPayload,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
 import { ImageService } from 'modules/file-upload/services/image.service';
+import { PaymentService } from 'modules/payment/services/payment.service';
 
 @Injectable()
 export class RepairRequestService {
@@ -24,6 +22,7 @@ export class RepairRequestService {
         private readonly em: EntityManager,
         private readonly notificationService: NotificationService,
         private readonly imageService: ImageService,
+        private readonly paymentService: PaymentService,
     ) {}
 
     /** User creates a repair request */
@@ -99,10 +98,12 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.REFUNDED;
 
-        // Mark payment as refunded
-        const payment = await this.em.findOne(RepairPayment, { repairRequest: requestId, status: PaymentStatus.PAID });
+        // Refund via payment provider
+        const payment = await this.em.findOne(RepairPayment, {
+            targetType: 'repairRequest', targetId: requestId, status: PaymentStatus.PAID,
+        });
         if (payment) {
-            payment.status = PaymentStatus.REFUNDED;
+            await this.paymentService.refundPayment(payment.id);
         }
 
         await this.em.flush();

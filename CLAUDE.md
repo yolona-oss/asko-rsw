@@ -79,7 +79,7 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Auth**: JWT RS256 (access + refresh tokens), Passport strategies
 - **Password hashing**: argon2
 - **Caching**: Redis (ioredis)
-- **File uploads**: Cloudinary
+- **File uploads**: Multistrategies(Cloudinary, Local, Static URL)
 - **Payments**: multi-provider
 - **Email**: Nodemailer (SMTP)
 - **Real-time**: Socket.io via `@nestjs/websockets`
@@ -87,6 +87,7 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Entities**: ~23 MikroORM entities (User, RepairRequest, Device, Repairer, Review, DealerProfile, etc.)
 - **Media files**: Media files stored in Image entity and connects to object with ownerType and ownerId
 - **Env files**: `.env.dev` / `.env.prod` loaded based on `NODE_ENV`
+- **Configs**: Mapped environment variables stored in Injectable AppConfig object
 
 ### Web (`apps/web`)
 - **Routing**: App Router with route groups — `(auth)`, `(account)`, `(landing)`, `(product)`

@@ -15,13 +15,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './../services/image.service';
-import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, UploadImageDto } from '@asko/shared';
+import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, Role, UploadImageDto } from '@asko/shared';
+import { RequiredRoles } from 'common/decorators/role.decorator';
 
 @Controller('file-upload/image')
 export class ImageUploadController {
     constructor(
         private readonly imageService: ImageService,
-    ) {}
+    ) { }
 
     @Post('upload/stream')
     @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 8 * 1024 * 1024 }, }))
@@ -63,6 +64,7 @@ export class ImageUploadController {
         return this.imageService.uploadUserAvatar(file, userId);
     }
 
+    @RequiredRoles(Role.SUPER_ADMIN)
     @Post('upload/blank/:type')
     @UseInterceptors(FileInterceptor('file'))
     async uploadBlankImage(

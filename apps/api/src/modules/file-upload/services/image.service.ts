@@ -14,7 +14,7 @@ export class ImageService {
         private readonly em: EntityManager,
         private readonly imgProcessor: ImageProcessingService,
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
-    ) {}
+    ) { }
 
     async upload(file: Express.Multer.File, dto: UploadImageDto) {
         const imageObj = await this.storage.uploadImage(file);
@@ -206,7 +206,7 @@ export class ImageService {
                 throw AppErrors.badRequest('Input order schema is invalid');
             }
 
-            if (schema[schema.length-1].order > Math.max(...targets.map(i => i.order))) {
+            if (schema[schema.length - 1].order > Math.max(...targets.map(i => i.order))) {
                 throw AppErrors.badRequest('Input order schema is invalid: too big order number');
             }
         }
@@ -308,7 +308,8 @@ export class ImageService {
     async findAttachedImages(ownerType: ImageTypeEnum, ownerId: string) {
         return await this.em.find(Image,
             { ownerType, ownerId },
-            { orderBy: { order: 'ASC' }
+            {
+                orderBy: { order: 'ASC' }
             }
         );
     }

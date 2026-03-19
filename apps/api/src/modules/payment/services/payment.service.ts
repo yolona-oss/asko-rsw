@@ -78,19 +78,17 @@ export class PaymentService {
         // Validate target exists and belongs to user
         await this.validateTarget(userId, dto.targetType, dto.targetId);
 
-        // Create RepairPayment record for repair requests, otherwise track in-memory
-        let paymentRecord: RepairPayment | undefined;
-
-        if (dto.targetType === PaymentTargetType.REPAIR_REQUEST) {
-            paymentRecord = this.em.create(RepairPayment, {
-                repairRequest: this.em.getReference(RepairRequest, dto.targetId),
-                amount: dto.amount,
-                currency: dto.currency ?? CurrencyEnum.DEFAULT,
-                status: PaymentStatus.PENDING,
-                provider: providerType,
-            });
-            await this.em.persistAndFlush(paymentRecord);
-        }
+        const paymentRecord = this.em.create(RepairPayment, {
+            repairRequest: dto.targetType === PaymentTargetType.REPAIR_REQUEST
+                ? this.em.getReference(RepairRequest, dto.targetId) : undefined,
+            targetType: dto.targetType,
+            targetId: dto.targetId,
+            amount: dto.amount,
+            currency: dto.currency ?? CurrencyEnum.DEFAULT,
+            status: PaymentStatus.PENDING,
+            provider: providerType,
+        });
+        await this.em.persistAndFlush(paymentRecord);
 
         // Call provider
         const result = await provider.createPayment({
@@ -99,15 +97,11 @@ export class PaymentService {
             description: `Payment for ${dto.targetType} ${dto.targetId}`,
         });
 
-        if (paymentRecord) {
-            paymentRecord.providerPaymentId = result.externalId;
-        }
+        paymentRecord.providerPaymentId = result.externalId;
 
         if (result.paid) {
-            if (paymentRecord) {
-                paymentRecord.status = PaymentStatus.PAID;
-                paymentRecord.paidAt = new Date();
-            }
+            paymentRecord.status = PaymentStatus.PAID;
+            paymentRecord.paidAt = new Date();
             await this.em.flush();
 
             // Trigger target handler
@@ -118,7 +112,7 @@ export class PaymentService {
         }
 
         return {
-            paymentId: paymentRecord?.id ?? dto.targetId,
+            paymentId: paymentRecord.id,
             status: result.paid ? PaymentStatus.PAID : PaymentStatus.PENDING,
             redirectUrl: result.redirectUrl,
         };
@@ -132,16 +126,16 @@ export class PaymentService {
         const result = await provider.handleWebhook(body, headers);
         if (!result.externalId) return { ok: true };
 
-        const payment = await this.em.findOne(RepairPayment, { providerPaymentId: result.externalId }, { populate: ['repairRequest'] });
+        const payment = await this.em.findOne(RepairPayment, { providerPaymentId: result.externalId });
         if (!payment) return { ok: true };
 
         if (result.paid && payment.status === PaymentStatus.PENDING) {
             payment.status = PaymentStatus.PAID;
             payment.paidAt = new Date();
 
-            const handler = this.targetHandlers.get(PaymentTargetType.REPAIR_REQUEST);
-            if (handler && payment.repairRequest) {
-                await handler(payment.repairRequest.id, payment.amount);
+            if (payment.targetType && payment.targetId) {
+                const handler = this.targetHandlers.get(payment.targetType as PaymentTargetType);
+                if (handler) await handler(payment.targetId, payment.amount);
             }
         }
 
@@ -183,5 +177,26 @@ export class PaymentService {
 
     private async handleCertificatePaid(targetId: string, _amount: number): Promise<void> {
         await this.certificateService.markPaid(targetId);
+    }
+
+    /** Refund a payment via the provider */
+    async refundPayment(paymentId: string): Promise<void> {
+        const payment = await this.em.findOne(RepairPayment, { id: paymentId });
+        if (!payment || payment.status !== PaymentStatus.PAID) return;
+
+        if (payment.provider && payment.providerPaymentId) {
+            const provider = this.providers.get(payment.provider);
+            if (provider) {
+                await provider.refund(payment.providerPaymentId, payment.amount);
+            }
+        }
+
+        payment.status = PaymentStatus.REFUNDED;
+        await this.em.flush();
+    }
+
+    /** Get payments by target type and id */
+    async getPaymentsByTarget(targetType: string, targetId: string): Promise<RepairPayment[]> {
+        return this.em.find(RepairPayment, { targetType, targetId }, { orderBy: { createdAt: 'DESC' } });
     }
 }

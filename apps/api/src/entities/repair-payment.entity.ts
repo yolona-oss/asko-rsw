@@ -5,13 +5,19 @@ import { RepairRequest } from './repair-request.entity';
 
 @Entity()
 export class RepairPayment {
-    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt';
+    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'targetType' | 'targetId' | 'repairRequest';
 
     @PrimaryKey()
     id: string = uuid();
 
-    @ManyToOne(() => RepairRequest)
-    repairRequest!: RepairRequest;
+    @ManyToOne(() => RepairRequest, { nullable: true })
+    repairRequest?: RepairRequest;
+
+    @Property({ type: 'varchar', length: 50, nullable: true })
+    targetType?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    targetId?: string;
 
     @Property({ type: 'float' })
     amount!: number;

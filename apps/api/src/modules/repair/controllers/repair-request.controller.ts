@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFil
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairRequestService } from '../services/repair-request.service';
 import { WorkStepService } from '../services/work-step.service';
-import { RepairPaymentService } from '../services/repair-payment.service';
+import { PaymentService } from 'modules/payment/services/payment.service';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -12,6 +12,9 @@ import {
     UpdateWorkStepDto,
     CreateRepairPaymentDto,
     PaginationDto,
+    PaymentTargetType,
+    PaymentProviderType,
+    CurrencyEnum,
     ALL_ROLES,
     ADMIN_ROLES,
     STAFF_ROLES,
@@ -26,7 +29,7 @@ export class RepairRequestController {
     constructor(
         private readonly repairRequestService: RepairRequestService,
         private readonly workStepService: WorkStepService,
-        private readonly repairPaymentService: RepairPaymentService,
+        private readonly paymentService: PaymentService,
     ) {}
 
     // ── User endpoints ──
@@ -60,32 +63,29 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
     async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateRepairPaymentDto) {
-        dto.repairRequestId = id;
-        return this.repairPaymentService.createPayment(user.sub, dto);
-    }
-
-    @RequiredRoles(...ALL_ROLES)
-    @Post(':id/payments/:paymentId/confirm')
-    async confirmPayment(@Param('paymentId') paymentId: string) {
-        return this.repairPaymentService.confirmPayment(paymentId);
-    }
-
-    @RequiredRoles(...ALL_ROLES)
-    @Post(':id/payments/:paymentId/fail')
-    async failPayment(@Param('paymentId') paymentId: string) {
-        return this.repairPaymentService.failPayment(paymentId);
+        return this.paymentService.createPayment(user.sub, {
+            targetType: PaymentTargetType.REPAIR_REQUEST,
+            targetId: id,
+            amount: dto.amount,
+            currency: dto.currency ?? CurrencyEnum.DEFAULT,
+        });
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.repairPaymentService.createDummyPayment(id, user.sub);
+        return this.paymentService.createPayment(user.sub, {
+            targetType: PaymentTargetType.REPAIR_REQUEST,
+            targetId: id,
+            amount: 0,
+            provider: PaymentProviderType.DUMMY,
+        });
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
-        return this.repairPaymentService.getPaymentsByRequest(id);
+        return this.paymentService.getPaymentsByTarget('repairRequest', id);
     }
 
     // ── Manager endpoints ──
