@@ -74,6 +74,14 @@ export const userApi = {
     return api.post(`/repair-requests/${requestId}/dummy-pay`);
   },
 
+  payCertificate(certId: string, data: { amount: number; currency?: string; provider?: string }) {
+    return api.post(`/certificates/${certId}/pay`, data);
+  },
+
+  dummyPayCertificate(certId: string) {
+    return api.post(`/certificates/${certId}/dummy-pay`);
+  },
+
   createReview(data: { repairRequestId: string; rating: number; comment?: string }) {
     return api.post('/reviews', data);
   },

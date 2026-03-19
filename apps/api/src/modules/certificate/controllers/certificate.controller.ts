@@ -10,13 +10,21 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
+    CreateRepairPaymentDto,
+    PaymentTargetType,
+    PaymentProviderType,
+    CurrencyEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { PaymentService } from 'modules/payment/services/payment.service';
 
 @Controller('certificates')
 export class CertificateController {
-    constructor(private readonly certificateService: CertificateService) {}
+    constructor(
+        private readonly certificateService: CertificateService,
+        private readonly paymentService: PaymentService,
+    ) {}
 
     /** User adds a certificate they purchased */
     @RequiredRoles(...ALL_ROLES)
@@ -97,6 +105,37 @@ export class CertificateController {
     @Get('pending')
     async findPending(@Query() pagination: PaginationDto) {
         return this.certificateService.findPending(pagination);
+    }
+
+    /** Pay for a certificate */
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/pay')
+    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: CreateRepairPaymentDto) {
+        return this.paymentService.createPayment(user.sub, {
+            targetType: PaymentTargetType.CERTIFICATE,
+            targetId: id,
+            amount: dto.amount,
+            currency: dto.currency ?? CurrencyEnum.DEFAULT,
+        });
+    }
+
+    /** Dummy pay for a certificate (testing) */
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/dummy-pay')
+    async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.paymentService.createPayment(user.sub, {
+            targetType: PaymentTargetType.CERTIFICATE,
+            targetId: id,
+            amount: 0,
+            provider: PaymentProviderType.DUMMY,
+        });
+    }
+
+    /** Get payments for a certificate */
+    @RequiredRoles(...ALL_ROLES)
+    @Get(':id/payments')
+    async getPayments(@Param('id') id: string) {
+        return this.paymentService.getPaymentsByTarget('certificate', id);
     }
 
     @RequiredRoles(...ALL_ROLES)

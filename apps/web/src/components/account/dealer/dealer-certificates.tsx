@@ -23,6 +23,7 @@ type StatusFilter = 'all' | CertificateStatus;
 
 const STATUS_TABS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Все' },
+  { key: CertificateStatus.PENDING_PAYMENT, label: 'Ожидают оплаты' },
   { key: CertificateStatus.PENDING_APPROVAL, label: 'Ожидающие' },
   { key: CertificateStatus.ACTIVE, label: 'Активные' },
   { key: CertificateStatus.EXPIRED, label: 'Истекшие' },
@@ -30,6 +31,7 @@ const STATUS_TABS: { key: StatusFilter; label: string }[] = [
 ];
 
 const STATUS_LABELS: Record<string, string> = {
+  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
   [CertificateStatus.PENDING_APPROVAL]: 'Ожидает',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
@@ -37,6 +39,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
+  [CertificateStatus.PENDING_PAYMENT]: 'text-orange-600',
   [CertificateStatus.PENDING_APPROVAL]: 'text-yellow-600',
   [CertificateStatus.ACTIVE]: 'text-green-600',
   [CertificateStatus.EXPIRED]: 'text-text-sub',

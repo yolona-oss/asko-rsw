@@ -31,9 +31,11 @@ export class CertificateService {
         private readonly em: EntityManager,
         @Inject(forwardRef(() => DealerService))
         private readonly dealerService: DealerService,
-    ) {}
+    ) { }
 
-    /** User adds an existing certificate (purchased offline) */
+    // NOTE add handler for OFFLINE certificate purchasing with some ID and than eter that ID to get access to cert(just is NOT secure i think)
+
+    /** User adds an existing certificate */
     async addCertificate(userId: string, dto: AddCertificateDto): Promise<Certificate> {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: userId }, { populate: ['device'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');

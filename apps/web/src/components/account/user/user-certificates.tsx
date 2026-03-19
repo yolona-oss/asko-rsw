@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button, Input, FormField, Select, Modal, SerialNumberInput } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { PaymentModal } from '@/components/account/user/payment-modal';
 import { userApi } from '@/lib/api/user';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { CertificateStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
+  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
   [CertificateStatus.PENDING_APPROVAL]: 'На проверке',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
@@ -22,6 +24,8 @@ interface Certificate {
   issuedAt: string;
   expiresAt: string;
   description?: string;
+  price?: number;
+  paid?: boolean;
   userDevice?: {
     device?: {
       id?: string;
@@ -55,8 +59,9 @@ function FileTextIcon() {
   );
 }
 
-function CertificateCard({ cert }: { cert: Certificate }) {
+function CertificateCard({ cert, onPay }: { cert: Certificate; onPay?: (cert: Certificate) => void }) {
   const isActive = cert.status === CertificateStatus.ACTIVE;
+  const isPendingPayment = cert.status === CertificateStatus.PENDING_PAYMENT;
   const device = cert.userDevice?.device;
   const deviceName = device?.name ?? 'Устройство';
   const brandModel = [device?.brand, device?.model].filter(Boolean).join(' ');
@@ -176,7 +181,11 @@ function CertificateCard({ cert }: { cert: Certificate }) {
             <div className="flex items-center gap-2 text-sm">
               <span>
                 Статус:{' '}
-                <span className={isActive ? 'text-green-600 font-medium' : 'text-text-sub font-medium'}>
+                <span className={
+                  isActive ? 'text-green-600 font-medium'
+                    : isPendingPayment ? 'text-orange-600 font-medium'
+                    : 'text-text-sub font-medium'
+                }>
                   {STATUS_LABELS[cert.status] ?? cert.status}
                 </span>
               </span>
@@ -187,15 +196,26 @@ function CertificateCard({ cert }: { cert: Certificate }) {
             {isActive && <p className="text-sm text-text-main">Расширенная гарантия активна</p>}
           </div>
 
-          {/* Export PDF button */}
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            className="flex items-center gap-2 border border-border-light px-6 py-2.5 mt-6 w-fit text-sm font-medium text-text-main cursor-pointer hover:bg-gray-50 transition-colors"
-          >
-            <FileTextIcon />
-            Скачать сертификат PDF
-          </button>
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-3 mt-6">
+            {isPendingPayment && onPay && (
+              <button
+                type="button"
+                onClick={() => onPay(cert)}
+                className="flex items-center gap-2 bg-brand-red text-white px-6 py-2.5 text-sm font-medium cursor-pointer hover:bg-brand-red/90 transition-colors"
+              >
+                Оплатить {cert.price ? `${cert.price.toLocaleString('ru-RU')} ₽` : ''}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              className="flex items-center gap-2 border border-border-light px-6 py-2.5 text-sm font-medium text-text-main cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <FileTextIcon />
+              Скачать сертификат PDF
+            </button>
+          </div>
         </div>
 
         {/* Device image */}
@@ -486,7 +506,7 @@ function AddCertificateForm({
 }: {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (cert: Certificate) => void;
 }) {
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
@@ -516,7 +536,7 @@ function AddCertificateForm({
     setSubmitting(true);
     setError('');
     try {
-      await userApi.addCertificate({
+      const { data: newCert } = await userApi.addCertificate({
         userDeviceId: deviceId,
         certificateNumber: certNumber.trim(),
         expiresAt,
@@ -524,8 +544,8 @@ function AddCertificateForm({
       setCertNumber('');
       setExpiresAt('');
       setDeviceId('');
-      onSuccess();
       onClose();
+      onSuccess(newCert);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Не удалось добавить сертификат');
     } finally {
@@ -597,6 +617,16 @@ export function UserCertificates() {
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
+  const [paymentCert, setPaymentCert] = useState<Certificate | null>(null);
+
+  const handlePay = (cert: Certificate) => {
+    setPaymentCert(cert);
+  };
+
+  const handlePaymentClose = () => {
+    setPaymentCert(null);
+    fetchCertificates();
+  };
 
   const fetchCertificates = async () => {
     setLoading(true);
@@ -632,7 +662,7 @@ export function UserCertificates() {
   return (
     <PageContainer>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader>Активные сертификаты</PageHeader>
+        <PageHeader>Мои сертификаты</PageHeader>
         <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
           Добавить сертификат
         </Button>
@@ -646,7 +676,7 @@ export function UserCertificates() {
         <p className="text-sm text-text-sub">У вас нет сертификатов</p>
       ) : (
         certificates.map((cert) => (
-          <CertificateCard key={cert.id} cert={cert} />
+          <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
         ))
       )}
 
@@ -667,7 +697,12 @@ export function UserCertificates() {
       <AddCertificateForm
         open={showAddForm}
         onClose={() => setShowAddForm(false)}
-        onSuccess={fetchCertificates}
+        onSuccess={(cert) => {
+          fetchCertificates();
+          if (cert.status === CertificateStatus.PENDING_PAYMENT && cert.price) {
+            setPaymentCert(cert);
+          }
+        }}
       />
 
       <AddDeviceForm
@@ -675,6 +710,16 @@ export function UserCertificates() {
         onClose={() => setShowAddDevice(false)}
         onSuccess={() => { fetchCertificates(); fetchDevices(); }}
       />
+
+      {paymentCert && (
+        <PaymentModal
+          open={!!paymentCert}
+          onClose={handlePaymentClose}
+          targetType="certificate"
+          targetId={paymentCert.id}
+          amount={paymentCert.price ?? 0}
+        />
+      )}
     </PageContainer>
   );
 }
