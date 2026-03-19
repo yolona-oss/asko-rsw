@@ -5,24 +5,18 @@ import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto,
 import { AppErrors } from 'common/error';
 import { ImageService } from 'modules/file-upload/services/image.service';
 
+import { slugify } from 'common/utils'
+import { randomInt } from 'crypto';
+
 const VALID_DEVICE_TYPES = new Set<string>(Object.values(DeviceType));
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|gif|svg|avif)$/i;
-
-function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9а-яё]+/gi, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/-{2,}/g, '-')
-        || 'device';
-}
 
 @Injectable()
 export class DeviceService {
     constructor(
         private readonly em: EntityManager,
         private readonly imageService: ImageService,
-    ) {}
+    ) { }
 
     private async generateUniqueSlug(brand: string, model: string): Promise<string> {
         const base = slugify(`${brand}-${model}`);
@@ -99,6 +93,8 @@ export class DeviceService {
                     model: modelStr,
                     brand: brandStr,
                     slug,
+                    // NOTE USES RANDOMIZER FOR PRICE(MUST BE REMOVED IN RELEACE) used cause no device data provided by service customer and used own scraper
+                    price: product.price ?? randomInt(5),
                     description: product.description,
                     specifications,
                     features,
@@ -113,7 +109,7 @@ export class DeviceService {
                         try {
                             await this.imageService.createFromUrl(url, ImageTypeEnum.Device, device.id, order++);
                         } catch {
-                            // skip failed image
+                            console.error(`DeviceService::importDevices(): Cannot create image entitiy with static url entitiy`)
                         }
                     }
                 }

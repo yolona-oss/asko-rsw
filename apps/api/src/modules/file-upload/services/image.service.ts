@@ -163,6 +163,7 @@ export class ImageService {
         return image;
     }
 
+    /*** Upload default(blank) image with type of ImageTypeEnum that can be only one */
     async uploadBlankImage(file: Express.Multer.File, type: ImageTypeEnum) {
         let imageObj: ImageObj
 
