@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Card, Button, Input, FormField, Select, Modal, SerialNumberInput } from '@asko/ui';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Button, Input, FormField, Select, Modal, SerialNumberInput } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import { CertificateStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -24,7 +24,10 @@ interface Certificate {
   description?: string;
   userDevice?: {
     device?: {
+      id?: string;
       name?: string;
+      brand?: string;
+      model?: string;
       description?: string;
     };
   };
@@ -35,102 +38,183 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function StatusPill({
-  label,
-  value,
-  active = false,
-}: {
-  label: string;
-  value: string;
-  active?: boolean;
-}) {
+function formatDateLong(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function FileTextIcon() {
   return (
-    <div className="border border-border-light rounded-sm px-4 py-3 flex flex-col gap-0.5">
-      <span className="text-xs text-text-sub">{label}</span>
-      <span className={`text-sm font-medium ${active ? 'text-green-600' : 'text-text-main'}`}>
-        {value}
-      </span>
-    </div>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 13H8" />
+      <path d="M16 17H8" />
+      <path d="M16 13h-2" />
+    </svg>
   );
 }
 
 function CertificateCard({ cert }: { cert: Certificate }) {
   const isActive = cert.status === CertificateStatus.ACTIVE;
-  const deviceName = cert.userDevice?.device?.name ?? 'Устройство';
-  const deviceDesc = cert.userDevice?.device?.description
-    ?? 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.';
+  const device = cert.userDevice?.device;
+  const deviceName = device?.name ?? 'Устройство';
+  const brandModel = [device?.brand, device?.model].filter(Boolean).join(' ');
+  const deviceDesc = device?.description
+    ?? 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.\nСертификат подтверждает право на обслуживание и ремонт.';
 
   const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
   const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
 
+  const [deviceImageUrl, setDeviceImageUrl] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!device?.id) return;
+    fileUploadApi.getDeviceImages(device.id).then(({ data }) => {
+      const images = Array.isArray(data) ? data : [];
+      if (images.length > 0) {
+        const img = images[0];
+        setDeviceImageUrl(
+          img.image?.medium?.secure_url
+          ?? img.image?.original?.secure_url
+          ?? null,
+        );
+      }
+    }).catch(() => {});
+  }, [device?.id]);
+
+  const handleExportPdf = useCallback(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Сертификат ${cert.certificateNumber}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 40px; color: #323232; }
+          .card { border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; position: relative; min-height: 420px; }
+          .title { font-size: 28px; font-weight: 400; line-height: 1.2; margin-bottom: 8px; }
+          .title strong { font-weight: 500; }
+          .desc { font-size: 13px; color: #979797; line-height: 1.5; margin-bottom: 24px; max-width: 500px; }
+          .details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+          .details p { font-size: 16px; line-height: 1.4; }
+          .details strong { font-weight: 500; }
+          .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 4px; }
+          .status-active { color: #108b00; font-weight: 500; }
+          .warranty { font-size: 13px; margin-bottom: 24px; }
+          .device-img { position: absolute; right: 24px; top: 100px; width: 220px; height: 310px; object-fit: contain; border-radius: 8px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="title">${deviceName} ${brandModel ? `<strong>${brandModel}</strong>` : ''}</div>
+          <div class="desc">${deviceDesc.replace(/\n/g, '<br>')}</div>
+          <div class="details">
+            <p>Номер сертификата: <strong>${cert.certificateNumber}</strong></p>
+            <p>Дата активации: <strong>${formatDate(cert.issuedAt)}</strong></p>
+            <p>Срок действия: <strong>${durationMonths} месяцев</strong></p>
+          </div>
+          <div class="status-line">
+            <span>Статус: <span class="${isActive ? 'status-active' : ''}">${STATUS_LABELS[cert.status] ?? cert.status}</span></span>
+            <span style="color:#979797">Действителен до ${formatDateLong(cert.expiresAt)}</span>
+          </div>
+          ${isActive ? '<div class="warranty">Расширенная гарантия активна</div>' : ''}
+          ${deviceImageUrl ? `<img class="device-img" src="${deviceImageUrl}" alt="${deviceName}" />` : ''}
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    // Wait for image to load before printing
+    if (deviceImageUrl) {
+      const img = printWindow.document.querySelector('img');
+      if (img) {
+        img.onload = () => { printWindow.print(); };
+        img.onerror = () => { printWindow.print(); };
+        return;
+      }
+    }
+    printWindow.print();
+  }, [cert, deviceName, brandModel, deviceDesc, durationMonths, isActive, deviceImageUrl]);
+
   return (
-    <>
-      {/* Status pills */}
-      <div className="flex flex-wrap gap-3">
-        <StatusPill
-          label="Сертификат"
-          value={STATUS_LABELS[cert.status] ?? cert.status}
-          active={isActive}
-        />
-        <StatusPill label="Срок действия" value={`до ${formatDate(cert.expiresAt)}`} />
-      </div>
-
-      {/* Certificate card + sidebar */}
+    <div
+      ref={cardRef}
+      className="relative border border-border-light bg-white rounded-sm p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
+    >
       <div className="flex flex-col lg:flex-row gap-6">
-        <Card padding="lg" className="flex-1">
-          <div className="flex flex-col gap-4">
-            <h2 className="text-2xl lg:text-[32px] font-bold leading-tight text-text-main">
-              {deviceName}
-            </h2>
-            <p className="text-sm leading-relaxed text-text-sub">
-              {deviceDesc}
+        {/* Left content */}
+        <div className="flex flex-col gap-0 flex-1 min-w-0">
+          {/* Title */}
+          <h2 className="text-2xl lg:text-[32px] leading-tight text-text-main tracking-tight">
+            {deviceName}{' '}
+            {brandModel && <span className="font-medium">{brandModel}</span>}
+          </h2>
+          <p className="text-sm leading-relaxed text-text-sub mt-2 max-w-[527px] whitespace-pre-line">
+            {deviceDesc}
+          </p>
+
+          {/* Certificate details */}
+          <div className="flex flex-col gap-2 mt-6">
+            <p className="text-lg text-text-main tracking-tight">
+              Номер сертификата: <span className="font-medium">{cert.certificateNumber}</span>
             </p>
+            <p className="text-lg text-text-main tracking-tight">
+              Дата активации: <span className="font-medium">{formatDate(cert.issuedAt)}</span>
+            </p>
+            <p className="text-lg text-text-main tracking-tight">
+              Срок действия: <span className="font-medium">{durationMonths} месяцев</span>
+            </p>
+          </div>
 
-            <div className="flex flex-col gap-2 mt-2">
-              <p className="text-sm text-text-main">
-                Номер сертификата: <strong>{cert.certificateNumber}</strong>
-              </p>
-              <p className="text-sm text-text-main">
-                Дата активации: <strong>{formatDate(cert.issuedAt)}</strong>
-              </p>
-              <p className="text-sm text-text-main">
-                Срок действия: <strong>{durationMonths} месяцев</strong>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-sm">
+          {/* Status line */}
+          <div className="flex flex-col gap-1 mt-6">
+            <div className="flex items-center gap-2 text-sm">
+              <span>
                 Статус:{' '}
                 <span className={isActive ? 'text-green-600 font-medium' : 'text-text-sub font-medium'}>
                   {STATUS_LABELS[cert.status] ?? cert.status}
                 </span>
               </span>
-              <span className="text-sm text-text-sub">
-                Действителен до {formatDate(cert.expiresAt)}
+              <span className="text-text-sub">
+                Действителен до {formatDateLong(cert.expiresAt)}
               </span>
             </div>
             {isActive && <p className="text-sm text-text-main">Расширенная гарантия активна</p>}
           </div>
-        </Card>
 
-        {/* Sidebar CTA */}
-        <div className="lg:w-[280px] flex-shrink-0 bg-dark-deep rounded-sm p-6 flex flex-col gap-4 text-white">
-          <h3 className="text-xl font-bold leading-tight">
-            Возникла проблема с устройством?
-          </h3>
-          <p className="text-sm leading-relaxed text-white/80">
-            Создайте заявку, и специалист сервисного центра ASKO свяжется с вами для
-            диагностики и согласования ремонта.
-          </p>
-          <Link
-            href="/account/requests/create"
-            className="flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white bg-brand-red mt-auto cursor-pointer"
+          {/* Export PDF button */}
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="flex items-center gap-2 border border-border-light px-6 py-2.5 mt-6 w-fit text-sm font-medium text-text-main cursor-pointer hover:bg-gray-50 transition-colors"
           >
-            Создать заявку
-          </Link>
+            <FileTextIcon />
+            Скачать сертификат PDF
+          </button>
         </div>
+
+        {/* Device image */}
+        {deviceImageUrl && (
+          <div className="hidden lg:block flex-shrink-0 w-[236px] self-start mt-4">
+            <img
+              src={deviceImageUrl}
+              alt={deviceName}
+              className="w-full h-auto max-h-[332px] object-contain rounded-lg"
+            />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 

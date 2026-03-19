@@ -80,11 +80,12 @@ packages/ui       — React component library (ESM, Tailwind v4)
 - **Password hashing**: argon2
 - **Caching**: Redis (ioredis)
 - **File uploads**: Cloudinary
-- **Payments**: Stripe
+- **Payments**: multi-provider
 - **Email**: Nodemailer (SMTP)
 - **Real-time**: Socket.io via `@nestjs/websockets`
 - **Path aliases**: `@entities/...` → `src/entities/`, `modules/...` → `src/modules/`, `common/...` → `src/common/`
 - **Entities**: ~23 MikroORM entities (User, RepairRequest, Device, Repairer, Review, DealerProfile, etc.)
+- **Media files**: Media files stored in Image entity and connects to object with ownerType and ownerId
 - **Env files**: `.env.dev` / `.env.prod` loaded based on `NODE_ENV`
 
 ### Web (`apps/web`)
