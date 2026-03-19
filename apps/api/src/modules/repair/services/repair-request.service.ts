@@ -227,6 +227,9 @@ export class RepairRequestService {
     async markAwaitingCompletion(requestId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) return;
+        if (!request.totalCost) {
+            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
+        }
         request.status = RepairRequestStatus.AWAITING_COMPLETION;
         await this.em.flush();
     }
@@ -237,6 +240,9 @@ export class RepairRequestService {
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
             throw AppErrors.badRequest('Request is not in a completable status');
+        }
+        if (!request.totalCost) {
+            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
         }
 
         request.status = RepairRequestStatus.COMPLETED;

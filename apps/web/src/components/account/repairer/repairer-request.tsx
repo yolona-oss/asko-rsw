@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { repairerApi } from '@/lib/api/repairer';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
-import { Card, Button, Badge, Modal, Textarea, FormField } from '@asko/ui';
+import { Card, Button, Badge, Modal, Textarea, FormField, Input } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
@@ -75,6 +75,11 @@ export function RepairerRequest() {
 
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [priceValue, setPriceValue] = useState('');
+  const [priceSaving, setPriceSaving] = useState(false);
+  const [priceError, setPriceError] = useState('');
+  const [priceSuccess, setPriceSuccess] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAccept = async () => {
@@ -103,6 +108,27 @@ export function RepairerRequest() {
     }
   };
 
+  const handleSetPrice = async () => {
+    if (!request) return;
+    const amount = parseFloat(priceValue);
+    if (!amount || amount <= 0) {
+      setPriceError('Введите корректную сумму');
+      return;
+    }
+    setPriceSaving(true);
+    setPriceError('');
+    setPriceSuccess(false);
+    try {
+      await repairerApi.setRepairPrice(request.id, { amount });
+      setRequest({ ...request, totalCost: amount });
+      setPriceSuccess(true);
+    } catch {
+      setPriceError('Не удалось сохранить стоимость');
+    } finally {
+      setPriceSaving(false);
+    }
+  };
+
   useEffect(() => {
     setIsMobile(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent));
     if (navigator.geolocation) {
@@ -116,6 +142,7 @@ export function RepairerRequest() {
       .then(({ data }) => {
         if (!data) { setLoading(false); return; }
         setRequest(data);
+        if (data.totalCost) setPriceValue(String(data.totalCost));
         return repairerApi.getWorkSteps(data.id);
       })
       .then((res) => { if (res) setSteps(res.data ?? []); })
@@ -388,6 +415,40 @@ export function RepairerRequest() {
           </Button>
         )}
       </Card>
+
+      {/* Set / update price */}
+      {(status === RepairRequestStatus.IN_PROGRESS || status === RepairRequestStatus.AWAITING_COMPLETION) && (
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-lg font-medium text-text-main">
+            {request.totalCost ? 'Стоимость ремонта' : 'Указать стоимость ремонта'}
+          </h2>
+          {request.totalCost && (
+            <p className="text-sm text-text-sub">
+              Текущая стоимость: <span className="font-medium text-text-main">{request.totalCost.toLocaleString('ru-RU')} ₽</span>
+            </p>
+          )}
+          <FormField label="Сумма (₽)">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={priceValue}
+              onChange={(e) => { setPriceValue(e.target.value); setPriceSuccess(false); }}
+              placeholder="Введите стоимость ремонта"
+            />
+          </FormField>
+          {priceError && <p className="text-sm text-brand-red">{priceError}</p>}
+          {priceSuccess && <p className="text-sm text-green-600">Стоимость сохранена</p>}
+          <Button
+            variant="primary"
+            className="w-full lg:w-fit"
+            onClick={handleSetPrice}
+            disabled={priceSaving || !priceValue}
+          >
+            {priceSaving ? 'Сохранение...' : request.totalCost ? 'Обновить стоимость' : 'Сохранить стоимость'}
+          </Button>
+        </Card>
+      )}
 
       {/* Refuse modal */}
       <Modal open={refuseOpen} onClose={() => setRefuseOpen(false)} className="w-full max-w-md p-6">
