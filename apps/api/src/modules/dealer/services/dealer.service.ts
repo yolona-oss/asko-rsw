@@ -214,6 +214,21 @@ export class DealerService {
         return withdrawal;
     }
 
+    /** Admin marks withdrawal as paid (completed) */
+    async markWithdrawalPaid(withdrawalId: string, adminUserId: string): Promise<PointsWithdrawal> {
+        const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
+        if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
+        if (withdrawal.status !== WithdrawalStatus.APPROVED) {
+            throw AppErrors.badRequest('Withdrawal must be approved before marking as paid');
+        }
+
+        withdrawal.status = WithdrawalStatus.COMPLETED;
+        withdrawal.processedAt = new Date();
+        withdrawal.processedBy = this.em.getReference(User, adminUserId);
+        await this.em.flush();
+        return withdrawal;
+    }
+
     /** Dealer gets withdrawals */
     async getWithdrawals(dealerUserId: string): Promise<PointsWithdrawal[]> {
         const dealer = await this.em.findOne(DealerProfile, { user: dealerUserId });

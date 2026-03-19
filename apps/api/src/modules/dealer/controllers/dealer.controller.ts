@@ -11,6 +11,7 @@ import {
     STAFF_ROLES,
     Role,
     JwtPayload,
+    WithdrawalStatus,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -47,6 +48,24 @@ export class DealerController {
         @Body() dto: ProcessWithdrawalDto,
     ) {
         return this.dealerService.processWithdrawal(id, user.sub, dto);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post('withdrawals/:id/approve')
+    async approveWithdrawal(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.dealerService.processWithdrawal(id, user.sub, { status: WithdrawalStatus.APPROVED } as ProcessWithdrawalDto);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post('withdrawals/:id/reject')
+    async rejectWithdrawal(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.dealerService.processWithdrawal(id, user.sub, { status: WithdrawalStatus.REJECTED } as ProcessWithdrawalDto);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post('withdrawals/:id/mark-paid')
+    async markPaid(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.dealerService.markWithdrawalPaid(id, user.sub);
     }
 
     // ── Dealer ──

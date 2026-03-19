@@ -1,27 +1,81 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Modal } from '@asko/ui';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
 
 interface PaymentModalProps {
   open: boolean;
   onClose: () => void;
+  targetType: 'repairRequest' | 'certificate';
+  targetId: string;
+  amount: number;
   requestNumber?: string;
-  amount?: number;
 }
 
-const PAYMENT_METHODS = [
-  { id: 'sbp', label: 'Оплатить СБП', color: 'bg-brand-red text-white' },
-  { id: 'card', label: 'Оплата картой', color: 'bg-dark text-white' },
-  { id: 'mts', label: 'МТС БАНК', color: 'bg-dark text-white' },
-  { id: 'other', label: 'Другие банки', color: 'bg-transparent border border-border-light text-text-main' },
-] as const;
+const PROVIDER_LABELS: Record<string, string> = {
+  dummy: 'Тестовая оплата',
+  yookassa: 'ЮKassa',
+  tbank: 'Т-Банк',
+  card: 'Оплата картой',
+};
+
+const PROVIDER_COLORS: Record<string, string> = {
+  dummy: 'bg-brand-red text-white',
+  yookassa: 'bg-dark text-white',
+  tbank: 'bg-dark text-white',
+  card: 'bg-transparent border border-border-light text-text-main',
+};
 
 export function PaymentModal({
   open,
   onClose,
-  requestNumber = '1234',
-  amount = 14600,
+  targetType,
+  targetId,
+  amount,
+  requestNumber,
 }: PaymentModalProps) {
+  const dispatch = useAppDispatch();
+  const { options, optionsLoading, creating, result, error } = useAppSelector((s) => s.payment);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      dispatch(fetchPaymentOptions());
+      dispatch(resetPayment());
+      setSelectedProvider(null);
+    }
+  }, [open, dispatch]);
+
+  // Set default provider when options load
+  useEffect(() => {
+    if (options && !selectedProvider) {
+      setSelectedProvider(options.defaultProvider);
+    }
+  }, [options, selectedProvider]);
+
+  // Handle payment result
+  useEffect(() => {
+    if (result) {
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+      } else if (result.status === 'paid') {
+        onClose();
+      }
+    }
+  }, [result, onClose]);
+
+  const handlePay = () => {
+    if (!selectedProvider) return;
+    dispatch(createPayment({
+      targetType,
+      targetId,
+      amount,
+      provider: selectedProvider,
+    }));
+  };
+
   return (
     <Modal open={open} onClose={onClose} className="w-full max-w-[600px] p-6 lg:p-8">
       {/* Close button */}
@@ -37,31 +91,60 @@ export function PaymentModal({
       </button>
 
       <h2 className="text-xl lg:text-2xl font-bold text-text-main">
-        Оплата заявки №{requestNumber}
+        Оплата{requestNumber ? ` заявки №${requestNumber}` : ''}
       </h2>
       <p className="text-sm text-text-sub mt-1">
         Сумма к оплате: {amount.toLocaleString('ru-RU')} ₽
       </p>
 
-      {/* Payment methods grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-        {PAYMENT_METHODS.map((method) => (
-          <div key={method.id} className="flex flex-col items-center gap-3">
-            <div className="w-full aspect-[4/3] bg-[#F5F5F5] rounded-sm border border-border-light flex items-center justify-center">
-              <span className="text-xs text-text-sub">{method.label}</span>
-            </div>
-            <span className="text-sm font-medium text-text-main text-center">
-              {method.label}
-            </span>
-            <button
-              type="button"
-              className={`px-5 py-2 text-sm font-medium rounded-sm cursor-pointer ${method.color}`}
-            >
-              Выбрать
-            </button>
-          </div>
-        ))}
-      </div>
+      {/* Provider selection */}
+      {optionsLoading ? (
+        <p className="text-sm text-text-sub mt-6">Загрузка способов оплаты...</p>
+      ) : options ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+          {options.providers.map((provider) => {
+            const isSelected = provider === selectedProvider;
+            return (
+              <button
+                key={provider}
+                type="button"
+                onClick={() => setSelectedProvider(provider)}
+                className={`flex flex-col items-center gap-3 p-4 rounded-sm border-2 transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'border-brand-red bg-[#FFF5F5]'
+                    : 'border-border-light/30 hover:border-text-sub'
+                }`}
+              >
+                <div className="w-full aspect-[4/3] bg-[#F5F5F5] rounded-sm flex items-center justify-center">
+                  <span className="text-xs text-text-sub text-center px-1">
+                    {PROVIDER_LABELS[provider] ?? provider}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-text-main text-center">
+                  {PROVIDER_LABELS[provider] ?? provider}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* Error */}
+      {error && <p className="text-sm text-brand-red mt-4">{error}</p>}
+
+      {/* Pay button */}
+      <button
+        type="button"
+        onClick={handlePay}
+        disabled={!selectedProvider || creating}
+        className={`w-full mt-6 py-3 text-sm font-medium rounded-sm cursor-pointer transition-colors ${
+          selectedProvider && !creating
+            ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-white')
+            : 'bg-gray-200 text-text-sub cursor-not-allowed'
+        }`}
+      >
+        {creating ? 'Обработка...' : 'Оплатить'}
+      </button>
     </Modal>
   );
 }

@@ -50,4 +50,12 @@ export const dealerApi = {
   }) {
     return api.post('/certificates/create', data);
   },
+
+  requestWithdraw(amount: number) {
+    return api.post('/dealers/withdraw', { amount });
+  },
+
+  getMyWithdrawals() {
+    return api.get('/dealers/withdrawals');
+  },
 };
