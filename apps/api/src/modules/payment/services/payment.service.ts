@@ -79,7 +79,7 @@ export class PaymentService {
         if (!provider) throw AppErrors.badRequest(`Unknown payment provider: ${providerType}`);
 
         // Validate target exists and belongs to user
-        await this.validateTarget(userId, dto.targetType, dto.targetId);
+        await this.validateTarget(userId, dto.targetType, dto.targetId, dto.amount);
 
         const paymentRecord = this.em.create(RepairPayment, {
             user: this.em.getReference(User, userId),
@@ -151,12 +151,29 @@ export class PaymentService {
         return { ok: true };
     }
 
-    private async validateTarget(userId: string, targetType: PaymentTargetType, targetId: string): Promise<void> {
+    private async validateTarget(userId: string, targetType: PaymentTargetType, targetId: string, amount: number): Promise<void> {
         if (targetType === PaymentTargetType.REPAIR_REQUEST) {
             const request = await this.em.findOne(RepairRequest, { id: targetId, user: userId });
             if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-            if (request.status !== RepairRequestStatus.PENDING) {
-                throw AppErrors.badRequest('Request is not in PENDING status');
+            // For real payments, require price to be set by repairer
+            if (amount > 0) {
+                if (!request.totalCost || request.totalCost <= 0) {
+                    throw AppErrors.badRequest('Price has not been set for this request');
+                }
+                // Check remaining balance
+                const paidPayments = await this.em.find(RepairPayment, {
+                    targetType: 'repairRequest',
+                    targetId,
+                    status: PaymentStatus.PAID,
+                });
+                const paidAmount = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+                const remaining = request.totalCost - paidAmount;
+                if (remaining <= 0) {
+                    throw AppErrors.badRequest('Request is already fully paid');
+                }
+                if (amount > remaining) {
+                    throw AppErrors.badRequest(`Payment amount exceeds remaining balance (${remaining})`);
+                }
             }
         } else if (targetType === PaymentTargetType.CERTIFICATE) {
             const cert = await this.em.findOne(Certificate, { id: targetId, user: userId });
@@ -170,13 +187,9 @@ export class PaymentService {
         }
     }
 
-    private async handleRepairRequestPaid(targetId: string, amount: number): Promise<void> {
-        const request = await this.em.findOne(RepairRequest, { id: targetId });
-        if (request && request.status === RepairRequestStatus.PENDING) {
-            request.status = RepairRequestStatus.PAID;
-            request.totalCost = amount;
-            await this.em.flush();
-        }
+    private async handleRepairRequestPaid(_targetId: string, _amount: number): Promise<void> {
+        // Payment is recorded by createPayment. Price (totalCost) is set by repairer via setPrice.
+        // No status change needed — user can pay at any status.
     }
 
     private async handleCertificatePaid(targetId: string, _amount: number): Promise<void> {

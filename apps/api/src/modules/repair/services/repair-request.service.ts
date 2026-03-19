@@ -10,6 +10,7 @@ import {
     CertificateStatus,
     PaymentStatus,
     PaginationDto,
+    SetRepairPriceDto,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
@@ -128,8 +129,8 @@ export class RepairRequestService {
     async assignRepairer(managerId: string, requestId: string, dto: AssignRepairerDto): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.PAID) {
-            throw AppErrors.badRequest('Request must be in PAID status to assign a repairer');
+        if (![RepairRequestStatus.PENDING, RepairRequestStatus.PAID].includes(request.status)) {
+            throw AppErrors.badRequest('Request must be in PENDING or PAID status to assign a repairer');
         }
 
         const repairer = await this.em.findOne(Repairer, { id: dto.repairerId });
@@ -202,6 +203,22 @@ export class RepairRequestService {
         }
 
         request.status = RepairRequestStatus.IN_PROGRESS;
+        await this.em.flush();
+        return request;
+    }
+
+    /** Repairer sets or updates repair price */
+    async setPrice(repairerUserId: string, requestId: string, dto: SetRepairPriceDto): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { user: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (![RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.COMPLETED].includes(request.status)) {
+            throw AppErrors.badRequest('Price can only be set when request is in progress or completed');
+        }
+
+        request.totalCost = dto.amount;
         await this.em.flush();
         return request;
     }

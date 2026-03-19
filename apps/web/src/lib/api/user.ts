@@ -70,8 +70,16 @@ export const userApi = {
     return api.post('/user-devices', data);
   },
 
+  payRepairRequest(requestId: string, data: { amount: number; currency?: string }) {
+    return api.post(`/repair-requests/${requestId}/pay`, data);
+  },
+
   dummyPay(requestId: string) {
     return api.post(`/repair-requests/${requestId}/dummy-pay`);
+  },
+
+  getRepairPayments(requestId: string) {
+    return api.get(`/repair-requests/${requestId}/payments`);
   },
 
   payCertificate(certId: string, data: { amount: number; currency?: string; provider?: string }) {

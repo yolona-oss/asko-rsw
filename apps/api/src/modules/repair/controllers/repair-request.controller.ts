@@ -11,6 +11,7 @@ import {
     AddWorkStepDto,
     UpdateWorkStepDto,
     CreateRepairPaymentDto,
+    SetRepairPriceDto,
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
@@ -138,6 +139,12 @@ export class RepairRequestController {
     @Post(':id/start')
     async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairRequestService.startWork(user.sub, id);
+    }
+
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/set-price')
+    async setPrice(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
+        return this.repairRequestService.setPrice(user.sub, id, dto);
     }
 
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)

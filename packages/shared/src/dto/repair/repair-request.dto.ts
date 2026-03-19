@@ -40,6 +40,11 @@ export class AssignRepairerDto {
     repairerId!: string;
 }
 
+export class SetRepairPriceDto {
+    @IsNumber()
+    amount!: number;
+}
+
 export class RefuseRequestDto {
     @IsString()
     reason!: string;

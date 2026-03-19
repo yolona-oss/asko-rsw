@@ -38,6 +38,10 @@ export const repairerApi = {
     return api.patch(`/repair-requests/${requestId}/steps/${stepId}`, { status });
   },
 
+  setRepairPrice(requestId: string, data: { amount: number }) {
+    return api.post(`/repair-requests/${requestId}/set-price`, data);
+  },
+
   completeWork(requestId: string, description: string, files: File[]) {
     const form = new FormData();
     form.append('description', description);
