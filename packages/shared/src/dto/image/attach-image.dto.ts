@@ -1,6 +1,9 @@
-import { ImageTypeEnum } from '../../types/image/enum/image-type.enum';
+import { IsString } from 'class-validator';
 
 export class AttachImageDto {
+    @IsString()
     ownerType!: string;
+
+    @IsString()
     ownerId!: string;
 }
