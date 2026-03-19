@@ -8,6 +8,9 @@ export type { ButtonProps, ButtonVariant, ButtonSize } from './components/button
 export { Input } from './components/input';
 export type { InputProps } from './components/input';
 
+export { PatternInput } from './components/pattern-input';
+export type { PatternInputProps, ValidationResult } from './components/pattern-input';
+
 export { NameInput } from './components/name-input'
 export type { NameInputProps } from './components/name-input'
 
