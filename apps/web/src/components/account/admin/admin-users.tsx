@@ -42,10 +42,10 @@ interface UserEntry {
   email?: string;
   phone?: string;
   roles: string[];
-  createdAt: string;
+  createdAt: Date | string;
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -98,8 +98,7 @@ export function AdminUsers() {
     async function fetchUsers() {
       try {
         const { data } = await adminApi.getUsers({ limit: 200 });
-        const list = Array.isArray(data) ? data : data.data ?? [];
-        setUsers(list);
+        setUsers(data.data);
       } catch {
         // silently fail
       } finally {

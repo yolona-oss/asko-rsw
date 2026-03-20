@@ -17,7 +17,7 @@ interface Certificate {
   id: string;
   certificateNumber: string;
   status: string;
-  expiresAt: string;
+  expiresAt: Date | string;
   userDevice?: { id: string };
 }
 

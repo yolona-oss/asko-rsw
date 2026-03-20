@@ -58,14 +58,14 @@ interface Certificate {
   id: string;
   certificateNumber: string;
   status: CertificateStatus;
-  issuedAt: string;
-  expiresAt: string;
-  createdAt: string;
+  issuedAt: Date | string;
+  expiresAt: Date | string;
+  createdAt: Date | string;
   user?: { firstName?: string; lastName?: string; email?: string };
   userDevice?: { device?: { name?: string } };
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: Date | string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',

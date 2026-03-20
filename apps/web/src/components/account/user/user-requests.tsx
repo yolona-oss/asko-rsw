@@ -40,15 +40,15 @@ interface RepairRequest {
   id: string;
   status: RepairRequestStatus;
   description: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   userDevice?: {
     device?: { name?: string };
     serialNumber?: string;
   };
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

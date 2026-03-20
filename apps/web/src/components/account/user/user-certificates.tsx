@@ -21,8 +21,8 @@ interface Certificate {
   id: string;
   certificateNumber: string;
   status: CertificateStatus;
-  issuedAt: string;
-  expiresAt: string;
+  issuedAt: Date | string;
+  expiresAt: Date | string;
   description?: string;
   price?: number;
   paid?: boolean;
@@ -37,12 +37,12 @@ interface Certificate {
   };
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function formatDateLong(dateStr: string) {
+function formatDateLong(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 }
@@ -236,7 +236,7 @@ interface UserDevice {
   serialNumber?: string;
   device?: { name?: string; brand?: string; model?: string };
   address?: { city?: string; street?: string; house?: number };
-  createdAt?: string;
+  createdAt?: Date | string;
 }
 
 function DeviceSlider({

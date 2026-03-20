@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from '@asko/ui';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
+import { PaymentTargetType } from '@asko/shared/client';
 
 interface PaymentModalProps {
   open: boolean;
@@ -13,6 +14,11 @@ interface PaymentModalProps {
   amount: number;
   requestNumber?: string;
 }
+
+const TARGET_TYPE_MAP: Record<string, PaymentTargetType> = {
+  repairRequest: PaymentTargetType.REPAIR_REQUEST,
+  certificate: PaymentTargetType.CERTIFICATE,
+};
 
 const PROVIDER_LABELS: Record<string, string> = {
   dummy: 'Тестовая оплата',
@@ -69,10 +75,10 @@ export function PaymentModal({
   const handlePay = () => {
     if (!selectedProvider) return;
     dispatch(createPayment({
-      targetType,
+      targetType: TARGET_TYPE_MAP[targetType] ?? targetType as PaymentTargetType,
       targetId,
       amount,
-      provider: selectedProvider,
+      provider: selectedProvider as any,
     }));
   };
 

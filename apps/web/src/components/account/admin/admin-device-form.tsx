@@ -7,6 +7,7 @@ import { Button, Modal, Input, Select, Textarea, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
+import type { DeviceType } from '@asko/shared/client';
 
 interface KVPair {
   key: string;
@@ -546,13 +547,13 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
     try {
       const payload = {
         name: data.name,
-        type: data.type,
+        type: data.type as DeviceType,
         model: data.model,
         brand: data.brand,
         description: data.description || undefined,
         specifications: kvToRecord(specifications),
         features: kvToRecord(features),
-        slug: data.slug || undefined,
+        slug: data.slug || Math.random().toString(36).substring(2, 2 + 10),
       };
 
       if (isEdit) {

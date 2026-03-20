@@ -44,7 +44,7 @@ function getStepIndex(status: RepairRequestStatus): number {
   return idx >= 0 ? idx : 0;
 }
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
@@ -113,16 +113,16 @@ interface WorkStep {
   status: string;
   order: number;
   isFinal: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 interface RepairRequest {
   id: string;
   status: RepairRequestStatus;
   description: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   totalCost?: number;
   repairer?: {
     user?: { firstName?: string; lastName?: string };

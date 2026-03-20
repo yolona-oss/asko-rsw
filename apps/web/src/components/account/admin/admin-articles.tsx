@@ -13,20 +13,13 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-
-interface Article {
-  id: string;
-  title: string;
-  slug: string;
-  tags?: string[];
-  createdAt: string;
-}
+import { IArticle } from '@asko/shared';
 
 function ArticleRow({
   article,
   onDelete,
 }: {
-  article: Article;
+  article: IArticle;
   onDelete: (id: string) => void;
 }) {
   return (
@@ -64,7 +57,7 @@ function ArticleRow({
 }
 
 export function AdminArticles() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<IArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
@@ -72,7 +65,7 @@ export function AdminArticles() {
   const fetchArticles = async () => {
     try {
       const { data } = await adminApi.getArticles({ limit: 100 });
-      setArticles(data.data ?? []);
+      setArticles(data.data);
     } catch {
       // silently fail
     } finally {

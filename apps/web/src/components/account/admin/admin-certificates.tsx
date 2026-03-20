@@ -15,7 +15,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import { CertificateStatus } from '@asko/shared/client';
+import { CertificateStatus, ICertificate } from '@asko/shared/client';
 
 type CertTab = 'pending_payment' | 'pending_approval' | 'active' | 'expired' | 'revoked';
 
@@ -43,20 +43,8 @@ const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.REVOKED]: 'Отозван',
 };
 
-interface Certificate {
-  id: string;
-  certificateNumber: string;
-  status: CertificateStatus;
-  issuedAt: string;
-  expiresAt: string;
-  user?: { firstName?: string; lastName?: string };
-  userDevice?: { device?: { name?: string } };
-  dealer?: { companyName?: string; user?: { firstName?: string; lastName?: string } };
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function formatDate(date: Date | string) {
+  return new Date(date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function CertificateRow({
@@ -64,7 +52,7 @@ function CertificateRow({
   onApprove,
   onRevoke,
 }: {
-  cert: Certificate;
+  cert: ICertificate;
   onApprove: (id: string) => void;
   onRevoke: (id: string) => void;
 }) {
@@ -120,15 +108,14 @@ function CertificateRow({
 export function AdminCertificates() {
   const [activeTab, setActiveTab] = useState<CertTab>('pending_approval');
   const [autoVerify, setAutoVerify] = useState(false);
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await adminApi.getCertificates({ limit: 200 });
-      const list = data.data ?? (Array.isArray(data) ? data : []);
-      setCertificates(list);
+      setCertificates(data.data);
     } catch {
       // silently fail
     } finally {

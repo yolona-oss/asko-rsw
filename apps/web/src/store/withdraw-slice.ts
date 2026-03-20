@@ -7,8 +7,8 @@ export interface Withdrawal {
   id: string;
   amount: number;
   status: string;
-  requestedAt: string;
-  processedAt?: string;
+  requestedAt: Date | string;
+  processedAt?: Date | string;
 }
 
 export interface WithdrawState {

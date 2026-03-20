@@ -72,7 +72,7 @@ export const adminApi = {
     return api.get<IInvitationLink[]>('/invite/');
   },
   createInvitation(data: CreateInvitationLinkDto) {
-    return api.post<IInvitationLink>('/invite', data, { withCredentials: true });
+    return api.post<{ invite: IInvitationLink; link: string }>('/invite', data, { withCredentials: true });
   },
   deleteInvitation(id: string) {
     return api.delete<void>(`/invite/${id}`);
