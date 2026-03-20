@@ -21,7 +21,10 @@
         "lint:json": "node -e \"JSON.parse(require('fs').readFileSync('package.json','utf8'))\""
     },
     "dependencies": {
+        "@asko/proto": "workspace:*",
         "@asko/shared": "workspace:*",
+        "@grpc/grpc-js": "^1.12.6",
+        "@grpc/proto-loader": "^0.7.15",
         "@mikro-orm/cli": "^6.5.9",
         "@mikro-orm/core": "^6.5.9",
         "@mikro-orm/migrations": "^6.5.9",
@@ -33,6 +36,7 @@
         "@nestjs/core": "^11.1.5",
         "@nestjs/event-emitter": "^3.0.1",
         "@nestjs/jwt": "^11.0.0",
+        "@nestjs/microservices": "^11.1.5",
         "@nestjs/mongoose": "^11.0.3",
         "@nestjs/passport": "^11.0.5",
         "@nestjs/platform-express": "^11.1.5",

@@ -1,5 +1,16 @@
 services:
 
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user-service
+    container_name: asko-user-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5000
+
   api:
     build:
       context: .
@@ -7,8 +18,11 @@ services:
     container_name: asko-api
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      - user-service
     environment:
       NODE_ENV: production
+      USER_SERVICE_URL: "localhost:5000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s

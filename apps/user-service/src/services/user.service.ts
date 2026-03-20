@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User, UserPopulateHints } from 'entities/auth/user.entity';
 
-// import { ImageUploadService } from 'modules/file-upload/services/image-upload.service';
-
 import { AppErrors } from 'common/error';
 import { DeepPartial } from 'types/deep-partial.type';
 import CryptoService from './crypto.service'
@@ -19,7 +17,6 @@ import {
     TokenType,
     DEFAULT_USER_ROLE,
     AuthProvider,
-    ImageTypeEnum,
 } from '@asko/shared';
 
 import { Writeable } from 'types/writable.type';
@@ -27,20 +24,16 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { CreateRequestContext, Populate } from '@mikro-orm/core';
 
 import { Session, UserAddress } from 'entities';
-import { AddressService } from 'modules/address/services/address.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
 
 @Injectable()
 export class UserService {
     constructor(
-        private readonly addressService: AddressService,
         private readonly em: EntityManager,
-        private readonly imagesService: ImageService
     ) { }
 
     @CreateRequestContext()
     async findAll(dto: PaginationDto,
-        relations?: Populate<User, "sessions" | "addresses" | "roles" | "employeeAssignments">
+        relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
         const offset = dto.offset ?? 1
         const limit = dto.limit ?? 10
@@ -149,7 +142,7 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    private async create_roleWrap(userData: CreateUserDto, provideRoles: Role[] = [DEFAULT_USER_ROLE]) {
+    async create_roleWrap(userData: CreateUserDto, provideRoles: Role[] = [DEFAULT_USER_ROLE]) {
         const isEmailDuplicate = userData.email ? Boolean(await this.findByEmail(userData.email)) : false
         const isPhoneDuplicate = userData.phone ? Boolean(await this.findByPhone(userData.phone)) : false
         if (isEmailDuplicate || isPhoneDuplicate) {
@@ -166,7 +159,6 @@ export class UserService {
 
         const provider = userData.email ? AuthProvider.EMAIL : AuthProvider.PHONE
 
-        // throw falls
         this.checkPasswordStrenth(userData.password)
 
         const passwordHash = await CryptoService.createPasswordHash(userData.password)
@@ -183,20 +175,12 @@ export class UserService {
             providers: [provider],
 
             addresses: [],
-            employeeAssignments: [],
 
             createdAt: new Date(),
             updatedAt: new Date(),
         })
 
         await this.em.persistAndFlush(user)
-
-        try {
-            const default_avatar_e = await this.imagesService.findBlank(ImageTypeEnum.User)
-            await this.imagesService.attachImage(default_avatar_e.id, { ownerId: user.id, ownerType: ImageTypeEnum.User })
-        } catch {
-            // Blank image not yet seeded - user is created without a default avatar
-        }
 
         return user
     }
@@ -210,7 +194,6 @@ export class UserService {
         await this.em.removeAndFlush(user)
     }
 
-    // TODO add image uplaoding, password safety updating
     @CreateRequestContext()
     async updateSafe(id: string, _newUserInfo: DeepPartial<UpdateUserDto>, currentPassword?: string): Promise<User> {
         const user = await this.findById(id)
@@ -223,13 +206,10 @@ export class UserService {
             throw AppErrors.invalidData('Nothing to update')
         }
 
-        // TODO send verification from auth service
-
         if (newUserInfo.password) {
-            // for clean email pass credentials
             if (newUserInfo.email && !user.email && !user.passwordHash) {
                 user.passwordHash = await CryptoService.createPasswordHash(newUserInfo.password)
-            } else if (currentPassword && user.passwordHash) { // for password update
+            } else if (currentPassword && user.passwordHash) {
                 if (!user.email) {
                     throw AppErrors.internalError('User has no email but have password.\nP.S sorry')
                 }
@@ -320,10 +300,6 @@ export class UserService {
         await this.em.persistAndFlush(user)
     }
 
-    /***
-    * Checks password strenth by entropy
-    * on not enough entropy, throws
-    */
     private checkPasswordStrenth(password: string) {
         if (password.length < MIN_USER_PASSWORD_LENGTH) {
             throw AppErrors.badRequest("Insufficient user password length. Must be at least " + MIN_USER_PASSWORD_LENGTH + " characters.")
@@ -334,9 +310,6 @@ export class UserService {
         }
     }
 
-    /***
-    * Creates super admin if one does not exist and there is only one super admin
-    */
     @CreateRequestContext()
     async __createSuperAdmin(user: CreateUserDto) {
         const defaultUser = await this.em.findAll(User, { where: { roles: { $contains: [Role.SUPER_ADMIN] } } })

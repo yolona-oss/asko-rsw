@@ -1,19 +1,12 @@
-// import dotenv from 'dotenv'
 import { Global, Injectable, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
 import { Algorithm } from 'jsonwebtoken';
 import { getEnvFilePath } from '@asko/shared';
-
 import ms from 'ms'
 
 @Injectable()
 export class AppConfig {
     constructor(private readonly configService: ConfigService) { }
-
-    get app_name() {
-        return "almagest-web";
-    }
 
     get serverUrl() {
         return this.configService.getOrThrow<string>('SERVER_URL');
@@ -24,16 +17,8 @@ export class AppConfig {
     }
 
     get port() {
-        const port = this.configService.getOrThrow<string>('PORT');
-        return parseInt(port || '') || 4000;
-    }
-
-    get staticPath() {
-        return this.configService.getOrThrow<string>('STATIC_PATH');
-    }
-
-    get userServiceUrl(): string {
-        return this.configService.get<string>('USER_SERVICE_URL') ?? 'localhost:5000';
+        const port = this.configService.get<string>('GRPC_PORT');
+        return parseInt(port || '') || 5000;
     }
 
     get database() {
@@ -78,20 +63,6 @@ export class AppConfig {
         };
     }
 
-    get cloudinary() {
-        return {
-            resolve_name: this.configService.getOrThrow<string>('CLOUDINARY_RESOLVE_NAME'),
-            api_key: this.configService.getOrThrow<string>('CLOUDINARY_API_KEY'),
-            api_secret: this.configService.getOrThrow<string>('CLOUDINARY_API_SECRET'),
-        };
-    }
-
-    get stripe() {
-        return {
-            secret_key: this.configService.getOrThrow<string>('STRIPE_SECRET_KEY')
-        }
-    }
-
     get email() {
         return {
             config: {
@@ -114,18 +85,6 @@ export class AppConfig {
             email: this.configService.getOrThrow<string>('DEFAULT_USER_EMAIL'),
             phone: this.configService.getOrThrow<string>('DEFAULT_USER_PHONE'),
             password: this.configService.getOrThrow<string>('DEFAULT_USER_PASSWORD'),
-        };
-    }
-
-    get fileStorageMode(): 'cloudinary' | 'local' {
-        return (this.configService.get<string>('FILE_STORAGE_MODE') ?? 'cloudinary') as 'cloudinary' | 'local';
-    }
-
-    get blankImages() {
-        return {
-            user: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_USER'),
-            product: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_PRODUCT'),
-            category: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_CATEGORY'),
         };
     }
 }

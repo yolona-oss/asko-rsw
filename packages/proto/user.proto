@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+package user;
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+    string phone = 3;
+    string google_id = 4;
+    string device_info = 5;
+    string ip_address = 6;
+}
+
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string phone = 5;
+    string google_id = 6;
+    string invite_token = 7;
+    string device_info = 8;
+    string ip_address = 9;
+}
+
+message RegisterResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    AuthUser user = 3;
+    repeated string roles = 4;
+}
+
+message AuthSessionResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    AuthUser user = 3;
+}
+
+message AccessTokenResponse {
+    string access_token = 1;
+}
+
+message ConfirmEmailRequest {
+    string token = 1;
+}
+
+message ConfirmEmailResponse {
+    string message = 1;
+}
+
+message ResendConfirmationRequest {
+    string email = 1;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message LogoutRequest {
+    string refresh_token = 1;
+}
+
+message DevSwitchRequest {
+    string refresh_token = 1;
+    string device_info = 2;
+    string ip_address = 3;
+}
+
+message FindByTokenRequest {
+    string access_token = 1;
+}
+
+// ─── User CRUD ───────────────────────────────────────────────────────────────
+
+message UserIdRequest {
+    string id = 1;
+}
+
+message PaginationRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+}
+
+message UpdateUserRequest {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string phone = 4;
+    string password = 5;
+    string address_id = 6;
+    string current_password = 7;
+}
+
+message ChangePasswordRequest {
+    string id = 1;
+    string old_password = 2;
+    string new_password = 3;
+}
+
+message AddRoleRequest {
+    string id = 1;
+    string role = 2;
+}
+
+message RemoveRoleRequest {
+    string id = 1;
+    string role = 2;
+}
+
+// ─── Invite ──────────────────────────────────────────────────────────────────
+
+message CreateInviteRequest {
+    string role = 1;
+    int32 ttl = 2;
+    string creator_id = 3;
+}
+
+message InviteIdRequest {
+    string id = 1;
+}
+
+message InviteTokenRequest {
+    string token = 1;
+}
+
+message InviteLinkResponse {
+    string id = 1;
+    string token = 2;
+    string role = 3;
+    int32 ttl = 4;
+    bool used = 5;
+    string expires_at = 6;
+    string created_at = 7;
+}
+
+message InviteCreatedResponse {
+    InviteLinkResponse invite = 1;
+    string link = 2;
+}
+
+message InviteListResponse {
+    repeated InviteLinkResponse invites = 1;
+}
+
+// ─── Shared Messages ─────────────────────────────────────────────────────────
+
+message AuthUser {
+    string id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string email = 4;
+    string phone = 5;
+    string google_id = 6;
+    repeated string providers = 7;
+    repeated string roles = 8;
+    string created_at = 9;
+    string updated_at = 10;
+}
+
+message UserResponse {
+    string id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string email = 4;
+    string phone = 5;
+    string google_id = 6;
+    repeated string providers = 7;
+    repeated string roles = 8;
+    bool email_verified = 9;
+    bool phone_verified = 10;
+    string created_at = 11;
+    string updated_at = 12;
+}
+
+message PaginatedUsersResponse {
+    repeated UserResponse data = 1;
+    int32 overall_count = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message EmptyRequest {}
+message EmptyResponse {}
+
+// ─── Service ─────────────────────────────────────────────────────────────────
+
+service UserService {
+    // Auth
+    rpc Login(LoginRequest) returns (AuthSessionResponse);
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc ConfirmEmail(ConfirmEmailRequest) returns (ConfirmEmailResponse);
+    rpc ResendConfirmation(ResendConfirmationRequest) returns (EmptyResponse);
+    rpc RefreshAccessToken(RefreshTokenRequest) returns (AccessTokenResponse);
+    rpc Logout(LogoutRequest) returns (EmptyResponse);
+    rpc DevSwitchAccount(DevSwitchRequest) returns (AuthSessionResponse);
+    rpc FindUserByAccessToken(FindByTokenRequest) returns (AuthUserResponse);
+
+    // User CRUD
+    rpc FindAllUsers(PaginationRequest) returns (PaginatedUsersResponse);
+    rpc FindUserById(UserIdRequest) returns (UserResponse);
+    rpc DeleteUser(UserIdRequest) returns (EmptyResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+    rpc ChangePassword(ChangePasswordRequest) returns (UserResponse);
+    rpc GetProfile(UserIdRequest) returns (UserResponse);
+    rpc SetEmailConfirmed(UserIdRequest) returns (EmptyResponse);
+    rpc AddRole(AddRoleRequest) returns (EmptyResponse);
+    rpc RemoveRole(RemoveRoleRequest) returns (EmptyResponse);
+
+    // Invite
+    rpc CreateInvite(CreateInviteRequest) returns (InviteCreatedResponse);
+    rpc FindAllInvites(EmptyRequest) returns (InviteListResponse);
+    rpc CheckInvite(InviteTokenRequest) returns (InviteLinkResponse);
+    rpc DeleteInvite(InviteIdRequest) returns (EmptyResponse);
+}
+
+message AuthUserResponse {
+    AuthUser user = 1;
+}

@@ -6,10 +6,10 @@ import crypto from 'crypto';
 import { InvitationLink } from 'entities/auth/invitation-link.entity';
 import { User } from 'entities/auth/user.entity';
 import { AppErrors } from 'common/error';
-import { AppConfig } from 'app.config';
+import { AppConfig } from '../app.config';
 import { CreateInvitationLinkDto, IInvitationLink, Role } from '@asko/shared';
 
-const DEFAULT_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
+const DEFAULT_TTL = 7 * 24 * 60 * 60;
 
 @Injectable()
 export class InviteService {

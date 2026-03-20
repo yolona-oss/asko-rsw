@@ -1,7 +1,10 @@
 import { Res, Body, Controller, Post, NotImplementedException, Req, Get } from '@nestjs/common';
 import { Request, Response } from 'express'
 
-import { AuthService } from "./../services/auth.service";
+import { UserClientService } from 'modules/user-client/user-client.service';
+import { RepairerService } from 'modules/repairer/services/repairer.service';
+import { DealerService } from 'modules/dealer/services/dealer.service';
+import { ImageService } from 'modules/file-upload/services/image.service';
 
 import {
     ALL_ROLES,
@@ -11,15 +14,31 @@ import {
     ResendConfirmMailDto,
     CreateUserDto,
     extractToken,
-    isProdEnv
+    getHostUrl,
+    Role,
+    ImageTypeEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
 import { AppErrors } from 'common/error';
+import { CookieOptions } from 'express';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    constructor(
+        private readonly userClient: UserClientService,
+        private readonly repairerService: RepairerService,
+        private readonly dealerService: DealerService,
+        private readonly imageService: ImageService,
+    ) { }
+
+    private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
+        const url = getHostUrl(request.headers);
+        if (!url) {
+            throw AppErrors.unauthorized('You are unauthenticated!');
+        }
+        response.cookie(REFRESH_TOKEN.cookie.name, refreshToken, REFRESH_TOKEN.cookie.options as CookieOptions);
+    }
 
     @Public()
     @Post('/login')
@@ -28,10 +47,24 @@ export class AuthController {
         @Req() request: Request,
         @Res() response: Response
     ) {
-        console.log("login")
-        const authResponse = await this.authService.login(credentials, request, response)
+        const result = await this.userClient.login({
+            email: credentials.email ?? '',
+            password: credentials.password ?? '',
+            phone: credentials.phone ?? '',
+            googleId: credentials.googleId ?? '',
+            deviceInfo: request.headers['user-agent'] ?? 'unknown',
+            ipAddress: request.ip ?? 'unknown',
+        });
 
-        response.status(201).json(authResponse)
+        if (result.refreshToken) {
+            this.setRefreshTokenCookie(request, response, result.refreshToken);
+        }
+
+        response.status(201).json({
+            access_token: result.accessToken,
+            user: result.user,
+            refresh_token: result.refreshToken,
+        });
     }
 
     @Public()
@@ -41,9 +74,50 @@ export class AuthController {
         @Res() response: Response,
         @Req() request: Request
     ) {
-        const authResponse = await this.authService.register(dto, request, response, dto.inviteToken)
+        const result = await this.userClient.register({
+            email: dto.email ?? '',
+            password: dto.password ?? '',
+            firstName: dto.firstName ?? '',
+            lastName: dto.lastName ?? '',
+            phone: dto.phone ?? '',
+            googleId: dto.googleId ?? '',
+            inviteToken: dto.inviteToken ?? '',
+            deviceInfo: request.headers['user-agent'] ?? 'unknown',
+            ipAddress: request.ip ?? 'unknown',
+        });
 
-        response.status(201).json(authResponse)
+        if (result.refreshToken) {
+            this.setRefreshTokenCookie(request, response, result.refreshToken);
+        }
+
+        // Orchestrate role-specific profile creation (moved from AuthService)
+        if (result.user?.id && result.roles?.length) {
+            try {
+                if (result.roles.includes(Role.REPAIRER)) {
+                    await this.repairerService.create({ userId: result.user.id, city: '', specializations: [] });
+                } else if (result.roles.includes(Role.DEALER)) {
+                    await this.dealerService.createProfile({ userId: result.user.id });
+                }
+            } catch (error) {
+                console.error(`Failed to create role profile for user ${result.user.id}:`, error);
+            }
+        }
+
+        // Attach default avatar (moved from UserService)
+        if (result.user?.id) {
+            try {
+                const defaultAvatar = await this.imageService.findBlank(ImageTypeEnum.User);
+                await this.imageService.attachImage(defaultAvatar.id, { ownerId: result.user.id, ownerType: ImageTypeEnum.User });
+            } catch {
+                // Blank image not yet seeded - user is created without a default avatar
+            }
+        }
+
+        response.status(201).json({
+            access_token: result.accessToken,
+            user: result.user,
+            ...(process.env.NODE_ENV !== 'production' && { refresh_token: result.refreshToken }),
+        });
     }
 
     @Public()
@@ -52,9 +126,8 @@ export class AuthController {
         @Res() response: Response,
         @Body() dto: ConfirmMailDto
     ) {
-        const res = await this.authService.confirmEmail(dto.token)
-
-        response.status(200).json(res)
+        const res = await this.userClient.confirmEmail({ token: dto.token });
+        response.status(200).json(res);
     }
 
     @Public()
@@ -63,11 +136,8 @@ export class AuthController {
         @Body() dto: ResendConfirmMailDto,
         @Res() response: Response
     ) {
-        await this.authService.resendConfirmEmailToken(dto.email)
-
-        response.status(200).json({
-            message: "Email sent successfully"
-        })
+        await this.userClient.resendConfirmation({ email: dto.email });
+        response.status(200).json({ message: "Email sent successfully" });
     }
 
     @Public()
@@ -76,14 +146,15 @@ export class AuthController {
         @Req() request: Request,
         @Res() response: Response,
     ) {
-        const token = await this.authService.refreshAccessToken(request, response)
+        const refreshToken = request.cookies[REFRESH_TOKEN.cookie.name];
+        const token = await this.userClient.refreshAccessToken({ refreshToken: refreshToken ?? '' });
 
         return response
             .status(201)
             .set({
                 "Cache-Control": "no-store",
                 Pragma: "no-cache"
-            }).json(token)
+            }).json({ access_token: token.accessToken });
     }
 
     @RequiredRoles(...ALL_ROLES)
@@ -92,20 +163,19 @@ export class AuthController {
         @Req() request: Request,
         @Res() response: Response
     ) {
-        await this.authService.logout(request.cookies)
+        const refreshToken = request.cookies[REFRESH_TOKEN.cookie.name];
+        await this.userClient.logout({ refreshToken: refreshToken ?? '' });
 
         const expireCookieOptions = Object.assign(
             {},
             REFRESH_TOKEN.cookie.options,
-            {
-                expires: new Date(1),
-            }
+            { expires: new Date(1) }
         );
 
         return response
             .cookie(REFRESH_TOKEN.cookie.name, "", expireCookieOptions)
             .status(205)
-            .json({})
+            .json({});
     }
 
     @Public()
@@ -115,14 +185,24 @@ export class AuthController {
         @Req() request: Request,
         @Res() response: Response,
     ) {
-        // if (isProdEnv()) {
-        //     return response.status(404).json({ message: 'Not found' });
-        // }
         try {
-            const session = await this.authService.devSwitchAccount(body.refresh_token, request, response);
-            return response.status(200).json(session);
+            const result = await this.userClient.devSwitchAccount({
+                refreshToken: body.refresh_token,
+                deviceInfo: request.headers['user-agent'] ?? 'unknown',
+                ipAddress: request.ip ?? 'unknown',
+            });
+
+            if (result.refreshToken) {
+                this.setRefreshTokenCookie(request, response, result.refreshToken);
+            }
+
+            return response.status(200).json({
+                access_token: result.accessToken,
+                user: result.user,
+                refresh_token: result.refreshToken,
+            });
         } catch (err: any) {
-            const status = err?.status ?? err?.response?.status ?? 500;
+            const status = err?.httpStatus ?? err?.status ?? err?.response?.status ?? 500;
             return response.status(status).json({ message: err?.message ?? 'Dev switch failed' });
         }
     }
@@ -152,7 +232,8 @@ export class AuthController {
             if (!accessToken) {
                 throw AppErrors.unauthorized('Token not found');
             }
-            return await this.authService.findUserByAccessToken(accessToken);
+            const result = await this.userClient.findUserByAccessToken({ accessToken });
+            return result.user;
         } catch (error: any) {
             console.debug(error);
             throw AppErrors.unauthorized(error?.message);
