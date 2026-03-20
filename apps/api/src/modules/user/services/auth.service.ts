@@ -94,7 +94,8 @@ export class AuthService {
         return {
             access_token,
             user: toAuthUser(user),
-            ...(process.env.NODE_ENV !== 'production' && { refresh_token }),
+            // ...(process.env.NODE_ENV !== 'production' && { refresh_token }),
+            refresh_token,
         }
     }
 
