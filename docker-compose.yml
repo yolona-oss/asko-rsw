@@ -1,5 +1,16 @@
 services:
 
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.payment-service
+    container_name: asko-payment-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      PORT: 4100
+
   user-service:
     build:
       context: .

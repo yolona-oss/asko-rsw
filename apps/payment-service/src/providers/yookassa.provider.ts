@@ -1,0 +1,33 @@
+import { Injectable } from '@nestjs/common';
+import { AppConfig } from '../app.config';
+import {
+    PaymentProvider,
+    CreateProviderPaymentInput,
+    ProviderPaymentResult,
+    WebhookResult,
+    RefundResult,
+} from './payment-provider.interface';
+
+@Injectable()
+export class YookassaProvider implements PaymentProvider {
+    readonly name = 'yookassa';
+
+    constructor(private readonly appConfig: AppConfig) {}
+
+    async createPayment(_input: CreateProviderPaymentInput): Promise<ProviderPaymentResult> {
+        // TODO: integrate with YooKassa API
+        // const shopId = this.appConfig.payment.yookassa.shopId;
+        // const secret = this.appConfig.payment.yookassa.secret;
+        throw new Error('YooKassa provider not yet implemented');
+    }
+
+    async handleWebhook(_body: any): Promise<WebhookResult> {
+        // TODO: parse YooKassa webhook notification
+        throw new Error('YooKassa webhook not yet implemented');
+    }
+
+    async refund(_externalId: string, _amount?: number): Promise<RefundResult> {
+        // TODO: implement YooKassa refund
+        throw new Error('YooKassa refund not yet implemented');
+    }
+}

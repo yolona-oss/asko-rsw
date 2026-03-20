@@ -1,125 +1,420 @@
-# CLAUDE.md
+# CLOUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-ASKO repair management platform — a pnpm + Turborepo monorepo with a NestJS API, Next.js frontend, and shared packages.
+ASKO repair management platform — a pnpm + Turborepo monorepo with microservice architecture using NestJS, Next.js, gRPC, and shared packages.
+
+Main change:
+Auth, user management, and invitations are handled by a dedicated microservice (`apps/user-service`).
+Payment processing is handled by a dedicated microservice (`apps/payment-service`).
+gRPC contracts are stored in `packages/proto`.
+
+---
 
 ## Commands
 
 ### Root-level (from repo root)
+
 ```bash
-pnpm install                  # install all dependencies
-turbo run build               # build everything (respects dependency graph)
-turbo run typecheck           # type-check all packages
-turbo run lint                # lint all packages
-turbo run clean               # remove build artifacts
+pnpm install
+turbo run build
+turbo run typecheck
+turbo run lint
+turbo run clean
 ```
 
-### API (`apps/api`)
+---
+
+### API Gateway (`apps/api`)
+
+Main backend entrypoint.
+Works as REST gateway + WebSocket server.
+Communicates with microservices via gRPC.
+
 ```bash
-pnpm run start:dev            # dev server with hot reload (port 4000)
-pnpm run start:prod           # production server
-pnpm run build                # nest build → dist/
-pnpm run test                 # jest
-pnpm run test:watch           # jest --watch
-pnpm run test:cov             # jest --coverage
-pnpm run lint                 # eslint --fix
-pnpm run format               # prettier
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run test
+pnpm run lint
 ```
+
+---
+
+### User Service (`apps/user-service`)
+
+Microservice responsible for:
+
+* authentication
+* user management
+* invitations
+* JWT issuing
+* refresh tokens
+* password hashing
+* email verification
+
+Runs as NestJS microservice with gRPC transport.
+
+```bash
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run test
+pnpm run lint
+```
+
+---
+
+### Payment Service (`apps/payment-service`)
+
+Microservice responsible for:
+
+* payment processing
+* payment provider management (dummy, yookassa, tbank)
+* webhook handling from external providers
+* payment status management
+* payment lifecycle events
+
+Runs as standalone NestJS HTTP app.
+
+```bash
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run lint
+```
+
+---
 
 ### Web (`apps/web`)
+
 ```bash
-pnpm run dev                  # next dev with turbopack (port 3000)
-pnpm run build                # next build (standalone output)
-pnpm run typecheck            # tsc --noEmit
+pnpm run dev
+pnpm run build
+pnpm run typecheck
 ```
+
+---
 
 ### UI Package (`packages/ui`)
+
 ```bash
-pnpm run build                # tsc → dist/  (must rebuild after changes for consumers to pick them up)
+pnpm run build
 ```
+
+---
 
 ### Shared Package (`packages/shared`)
+
 ```bash
-pnpm run build                # tsc to both ESM and CJS
+pnpm run build
 ```
 
-### Database Migrations (`apps/api`)
-MikroORM CLI — config at `apps/api/src/mikro-orm.config.ts`, migrations in `apps/api/migrations/`.
+---
+
+### Proto Package (`packages/proto`)
+
+gRPC contracts shared between services.
+
+Package name: `@asko/proto`
+
+Contains:
+
+* .proto files
+* generated TS types
+* grpc constants
+* service names
+* message types
+
 ```bash
-npx mikro-orm migration:create   # create migration from entity changes
-npx mikro-orm migration:up       # run pending migrations
+pnpm run build
 ```
+
+---
+
+### Database migrations
+
+Only services that own DB use migrations.
+
+Example:
+
+apps/api → own DB tables
+apps/user-service → own DB tables
+apps/payment-service → own DB tables
+
+```bash
+npx mikro-orm migration:create
+npx mikro-orm migration:up
+```
+
+---
 
 ## Architecture
 
-### Monorepo Layout
+### Monorepo layout
+
 ```
-apps/api          — NestJS v11 backend (REST + WebSocket)
-apps/web          — Next.js v16 frontend (App Router, React 19)
-packages/shared   — Types, DTOs, constants, utilities (ESM + CJS dual build)
-packages/ui       — React component library (ESM, Tailwind v4)
+apps/api
+apps/user-service
+apps/payment-service
+apps/web
+
+packages/shared
+packages/ui
+packages/proto
 ```
 
-### Package Dependencies
-`@asko/web` → `@asko/ui` + `@asko/shared/client`
-`api` → `@asko/shared` (full, including server utils)
-`@asko/ui` → standalone (React peer dep only)
+---
 
-### Shared Package Exports
-- `@asko/shared` — full package (types only re-export from server)
-- `@asko/shared/client` — client-safe: types, constants, enums (no server code)
-- `@asko/shared/server` — server utilities (`getEnvFilePath`, `isProdEnv`, etc.)
+### Microservice rules
 
-### API (`apps/api`)
-- **Framework**: NestJS v11 with module-based architecture
-- **ORM**: MikroORM v6 with PostgreSQL driver
-- **Auth**: JWT RS256 (access + refresh tokens), Passport strategies
-- **Password hashing**: argon2
-- **Caching**: Redis (ioredis)
-- **File uploads**: Multistrategies via provider with signle interface: Cloudinary, Local. Have option to save URL to image from external service
-- **Payments**: multi-provider via PaymentModule
-- **Email**: Nodemailer (SMTP)
-- **Real-time**: Socket.io via `@nestjs/websockets`
-- **Path aliases**: `@entities/...` → `src/entities/`, `modules/...` → `src/modules/`, `common/...` → `src/common/`
-- **Entities**: ~23 MikroORM entities (User, RepairRequest, Device, Repairer, Review, DealerProfile, etc.)
-- **Media files**: Media files stored in Image entity and connects to object with ownerType and ownerId
-- **Env files**: `.env.dev` / `.env.prod` loaded based on `NODE_ENV`
-- **Configs**: Mapped environment variables stored in Injectable AppConfig object
-- **Pagination**: Pagination must be implemented with PaginationDto and PaginatedResponseDto from `@asko/shared`
+* API must NOT access user tables directly
+* API must call user-service via gRPC
+* user-service owns User entity
+* user-service owns auth logic
+* user-service owns invitations
+* user-service owns refresh tokens
+* API must NOT access payment tables directly
+* payment-service owns PaymentEntity
+* payment-service owns payment provider logic
+* payment-service owns webhook handling
+* payment-service emits events for domain side effects
 
-### Web (`apps/web`)
-- **Routing**: App Router with route groups — `(auth)`, `(account)`, `(landing)`, `(product)`
-- **Styling**: Tailwind CSS v4 with custom theme in `src/styles/globals.css`
-- **State**: Redux Toolkit for client state, React Query v5 for server state
-- **API client**: Axios (configured in `src/lib/api/client.ts`)
-- **API requests**: API client calls grouped in object like:
-```typescript
-export const adminApi = {
-  // Devices
-  getDevices(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get('/devices', { params });
-  },
-  getDevice(id: string) {
-    return api.get(`/devices/${id}`);
-  }
-}```
-- **Transpiles**: `@asko/shared` and `@asko/ui` via `next.config.ts`
-- **Output**: standalone (for Docker deployment)
+---
 
-### UI Package (`packages/ui`)
-- Built with plain TypeScript compilation (no bundler)
-- Components use Tailwind classes referencing theme tokens defined in the web app's `globals.css`
-- Uses a custom `cn()` utility (not clsx) for class merging
-- **Important**: After editing UI components, run `pnpm run build` in `packages/ui` before the web app can see changes (unless the web app's dev server handles transpilation)
+### Package dependencies
 
-## Key Conventions
+```
+web → ui + shared/client
+api → shared + proto
+user-service → shared + proto
+payment-service → shared
+proto → standalone
+ui → standalone
+shared → standalone
+```
 
-- **Language**: UI text is in Russian
-- **Module system**: ESM throughout (`"type": "module"` in all package.json files)
-- **TypeScript**: Strict mode, decorators enabled, ES2022 target
-- **Validation**: `class-validator` decorators on DTOs (server-side), password/name regex patterns in `packages/shared/src/constants/`
-- **Env vars**: Never committed; `.env.dev` and `.env.prod` are gitignored; see `.env.example` for required variables
-- **Docker**: Multi-stage builds using Turborepo pruning — `Dockerfile.api` and `Dockerfile.web` at repo root
+---
+
+## gRPC rules
+
+All gRPC definitions must be inside:
+
+```
+packages/proto/src/*.proto
+```
+
+Generated types must be exported from:
+
+```
+@asko/proto
+```
+
+Never duplicate DTOs between services.
+
+Always use proto types for gRPC communication.
+
+---
+
+## API (`apps/api`)
+
+Gateway service.
+
+Responsibilities:
+
+* REST API
+* WebSocket
+* Repairs
+* Certificates
+* Devices
+* Media
+* Reviews
+* Dealer profiles
+* Redis cache
+* File uploads
+
+Does NOT handle:
+
+* auth
+* users
+* invitations
+* payment processing (delegated to payment-service)
+
+Auth must be requested via gRPC from user-service.
+Payment operations must be requested from payment-service.
+
+---
+
+### API stack
+
+* NestJS v11
+* MikroORM v6
+* PostgreSQL
+* Redis
+* Socket.io
+* Nodemailer
+* PaymentModule
+* FileModule
+
+---
+
+### Env
+
+.env.dev
+.env.prod
+
+Loaded using AppConfig.
+
+---
+
+### Pagination
+
+Must use:
+
+```
+PaginationDto
+PaginatedResponseDto
+```
+
+from `@asko/shared`
+
+---
+
+## User Service (`apps/user-service`)
+
+Owns:
+
+* User entity
+* Auth
+* JWT
+* Refresh tokens
+* Invitations
+* Password hashing
+* Email confirmation
+
+Stack:
+
+* NestJS
+* MikroORM
+* PostgreSQL
+* gRPC transport
+* argon2
+* passport
+* jwt
+
+Service must expose gRPC endpoints.
+
+---
+
+## Web (`apps/web`)
+
+Next.js App Router.
+
+Uses API gateway only.
+
+Never calls microservices directly.
+
+Stack:
+
+* Next.js v16
+* React 19
+* Redux Toolkit
+* React Query v5
+* Tailwind v4
+* Axios
+
+API client located in:
+
+```
+src/lib/api/client.ts
+```
+
+---
+
+## UI (`packages/ui`)
+
+Component library.
+
+Rules:
+
+* Tailwind classes only
+* no CSS files
+* no styled-components
+* must build after change
+
+```bash
+pnpm run build
+```
+
+---
+
+## Shared (`packages/shared`)
+
+Contains:
+
+* DTOs
+* constants
+* enums
+* utils
+* regex patterns
+
+Exports:
+
+```
+@asko/shared
+@asko/shared/client
+@asko/shared/server
+```
+
+---
+
+## Proto (`packages/proto`)
+
+Contains:
+
+* proto files
+* generated types
+* grpc tokens
+* service names
+
+Used by:
+
+* api
+* user-service
+
+Never import entities through proto.
+
+Only transport types.
+
+---
+
+## Conventions
+
+* Language: Russian UI
+* TypeScript strict
+* ESM modules
+* decorators enabled
+* ES2022 target
+* class-validator for DTO
+* argon2 for passwords
+* JWT RS256
+* Redis optional
+* env not committed
+* docker uses turbo prune
+
+---
+
+## Docker
+
+Dockerfiles at root:
+
+```
+Dockerfile.api
+Dockerfile.web
+Dockerfile.user-service
+Dockerfile.payment-service
+```
+
+Use turborepo prune.
