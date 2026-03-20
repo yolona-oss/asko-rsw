@@ -17,6 +17,11 @@ export interface ICertificate {
     expiresAt: Date;
     purchaseReceiptUrl?: string;
     description?: string;
+    price?: number;
+    paid: boolean;
+    user?: import('./user/user.type').IUser;
+    userDevice?: import('./device.type').IUserDevice;
+    dealer?: import('./dealer.type').IDealerProfile;
     createdAt: Date;
 }
 

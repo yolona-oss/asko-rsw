@@ -1,102 +1,98 @@
+import type {
+  IRepairRequest,
+  IUserDevice,
+  ICertificate,
+  IWorkStep,
+  IDevice,
+  IAddressBook,
+  IRepairPayment,
+  IReview,
+  ListResponseDto,
+  CreateRepairRequestDto,
+  AddCertificateDto,
+  CreateAddressDto,
+  RegisterUserDeviceDto,
+  CreateReviewDto,
+  ProcessInvoiceResult,
+} from '@asko/shared/client';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 
 export const userApi = {
   getMyRequests(params?: { offset?: number; limit?: number }) {
-    return api.get('/repair-requests/my', { params });
+    return api.get<ListResponseDto<IRepairRequest>>('/repair-requests/my', { params });
   },
 
   getRepairRequest(id: string) {
-    return api.get(`/repair-requests/${id}`);
+    return api.get<IRepairRequest>(`/repair-requests/${id}`);
   },
 
-  createRepairRequest(data: {
-    userDeviceId: string;
-    description: string;
-    certificateId?: string;
-    preferredDate?: string;
-  }) {
-    return api.post('/repair-requests', data);
+  createRepairRequest(data: CreateRepairRequestDto) {
+    return api.post<IRepairRequest>('/repair-requests', data);
   },
 
   getMyDevices() {
-    return api.get('/user-devices');
+    return api.get<IUserDevice[]>('/user-devices');
   },
 
   getMyCertificates() {
-    return api.get('/certificates/my');
+    return api.get<ICertificate[]>('/certificates/my');
   },
 
   getCertificate(id: string) {
-    return api.get(`/certificates/${id}`);
+    return api.get<ICertificate>(`/certificates/${id}`);
   },
 
-  addCertificate(data: { userDeviceId: string; certificateNumber: string; expiresAt: string }) {
-    return api.post('/certificates/add', data);
+  addCertificate(data: AddCertificateDto) {
+    return api.post<ICertificate>('/certificates/add', data);
   },
 
   uploadImage: fileUploadApi.uploadImage,
   attachImage: fileUploadApi.attachImage,
 
   getWorkSteps(requestId: string) {
-    return api.get(`/repair-requests/${requestId}/steps`);
+    return api.get<IWorkStep[]>(`/repair-requests/${requestId}/steps`);
   },
 
   getDeviceCatalog(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get('/devices', { params });
+    return api.get<ListResponseDto<IDevice>>('/devices', { params });
   },
 
-  createAddress(data: {
-    country: string;
-    city: string;
-    street: string;
-    house: number;
-    building?: number;
-    floor?: number;
-    room?: number;
-    postalCode?: string;
-  }) {
-    return api.post('/address', data);
+  createAddress(data: CreateAddressDto) {
+    return api.post<IAddressBook>('/address', data);
   },
 
-  registerDevice(data: {
-    deviceId: string;
-    serialNumber: string;
-    addressId: string;
-    purchaseDate?: string;
-    warrantyUntil?: string;
-    notes?: string;
-  }) {
-    return api.post('/user-devices', data);
+  registerDevice(data: RegisterUserDeviceDto) {
+    return api.post<IUserDevice>('/user-devices', data);
   },
 
-  payRepairRequest(requestId: string, data: { amount: number; currency?: string }) {
-    return api.post(`/repair-requests/${requestId}/pay`, data);
+  payRepairRequest(requestId: string, _data?: { amount: number; currency?: string }) {
+    return api.post<ProcessInvoiceResult>(`/repair-requests/${requestId}/pay`);
   },
 
   dummyPay(requestId: string) {
-    return api.post(`/repair-requests/${requestId}/dummy-pay`);
+    return api.post<ProcessInvoiceResult>(`/repair-requests/${requestId}/dummy-pay`);
   },
 
   getRepairPayments(requestId: string) {
-    return api.get(`/repair-requests/${requestId}/payments`);
+    return api.get<IRepairPayment[]>(`/repair-requests/${requestId}/payments`);
   },
 
-  payCertificate(certId: string, data: { amount: number; currency?: string; provider?: string }) {
-    return api.post(`/certificates/${certId}/pay`, data);
+  payCertificate(certId: string, _data?: { amount: number; currency?: string; provider?: string }) {
+    return api.post<ProcessInvoiceResult>(`/certificates/${certId}/pay`);
   },
 
   dummyPayCertificate(certId: string) {
-    return api.post(`/certificates/${certId}/dummy-pay`);
+    return api.post<ProcessInvoiceResult>(`/certificates/${certId}/dummy-pay`);
   },
 
-  createReview(data: { repairRequestId: string; rating: number; comment?: string }) {
-    return api.post('/reviews', data);
+  createReview(data: CreateReviewDto) {
+    return api.post<IReview>('/reviews', data);
   },
 
   uploadReviewImage: fileUploadApi.uploadReviewImage,
 
   getMyReviews() {
-    return api.get('/reviews/my');
+    return api.get<IReview[]>('/reviews/my');
   },
 };

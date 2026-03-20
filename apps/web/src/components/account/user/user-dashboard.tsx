@@ -100,14 +100,14 @@ export function UserDashboard() {
         ]);
 
         const reqData = reqRes.data;
-        setRequestsCount(reqData.total ?? reqData.data?.length ?? 0);
+        setRequestsCount(reqData.total ?? 0);
         if (reqData.data?.length > 0) {
           const r = reqData.data[0];
           setLastRequest({ id: r.id, description: r.description, status: r.status });
         }
 
-        const certs = Array.isArray(certRes.data) ? certRes.data : certRes.data?.data ?? [];
-        setCertsCount(certs.filter((c: { status: string }) => c.status === 'active').length);
+        const certs = certRes.data;
+        setCertsCount(certs.filter((c) => c.status === 'active').length);
       } catch {
         // silently fail
       } finally {

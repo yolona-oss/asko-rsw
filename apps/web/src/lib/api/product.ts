@@ -1,54 +1,37 @@
+import type { IDevice, IImageAttachment, ListResponseDto } from '@asko/shared/client';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.png';
-
-export interface DeviceListItem {
-  id: string;
-  slug: string;
-  name: string;
-  type: string;
-  model: string;
-  brand: string;
-}
-
-export interface DeviceImage {
-  image: {
-    original: { secure_url: string };
-    thumbnail?: { secure_url: string };
-    medium?: { secure_url: string };
-    large?: { secure_url: string };
-  };
-  order: number;
-}
 
 export async function fetchDevices(page: number, limit: number) {
   const res = await fetch(
     `${API_URL}/devices?offset=${page}&limit=${limit}`,
     { next: { revalidate: 60 } },
   );
-  if (!res.ok) return { data: [] as DeviceListItem[], total: 0 };
-  return res.json() as Promise<{ data: DeviceListItem[]; total: number }>;
+  if (!res.ok) return { data: [] as IDevice[], total: 0 };
+  return res.json() as Promise<ListResponseDto<IDevice>>;
 }
 
-export async function fetchDevice(id: string) {
+export async function fetchDevice(id: string): Promise<IDevice | null> {
   const res = await fetch(`${API_URL}/devices/${id}`, { next: { revalidate: 60 } });
   if (!res.ok) return null;
   return res.json();
 }
 
-export async function fetchDeviceBySlug(slug: string) {
+export async function fetchDeviceBySlug(slug: string): Promise<IDevice | null> {
   const res = await fetch(`${API_URL}/devices/slug/${slug}`, { next: { revalidate: 60 } });
   if (!res.ok) return null;
   return res.json();
 }
 
-export async function fetchDeviceImages(id: string): Promise<DeviceImage[]> {
+export async function fetchDeviceImages(id: string): Promise<IImageAttachment[]> {
   const res = await fetch(`${API_URL}/devices/${id}/images`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   return res.json();
 }
 
-export async function fetchDeviceImagesBySlug(slug: string): Promise<DeviceImage[]> {
+export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttachment[]> {
   const res = await fetch(`${API_URL}/devices/slug/${slug}/images`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   return res.json();

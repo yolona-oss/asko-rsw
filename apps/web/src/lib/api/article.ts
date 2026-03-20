@@ -1,32 +1,17 @@
+import type { IArticle, IImageAttachment, ListResponseDto } from '@asko/shared/client';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
-export interface ArticleListItem {
-  id: string;
-  title: string;
-  slug: string;
-  text: string;
-  tags?: string[];
-}
-
-export interface ArticleImage {
-  image: {
-    original: { secure_url: string };
-    medium?: { secure_url: string };
-    large?: { secure_url: string };
-  };
-  order: number;
-}
 
 export async function fetchArticles(page: number, limit: number) {
   const res = await fetch(
     `${API_URL}/articles?offset=${page}&limit=${limit}`,
     { next: { revalidate: 60 } },
   );
-  if (!res.ok) return { data: [] as ArticleListItem[], total: 0 };
-  return res.json() as Promise<{ data: ArticleListItem[]; total: number }>;
+  if (!res.ok) return { data: [] as IArticle[], total: 0 };
+  return res.json() as Promise<ListResponseDto<IArticle>>;
 }
 
-export async function fetchArticle(slug: string): Promise<ArticleListItem | null> {
+export async function fetchArticle(slug: string): Promise<IArticle | null> {
   const res = await fetch(`${API_URL}/articles/${slug}`, {
     next: { revalidate: 60 },
   });
@@ -34,7 +19,7 @@ export async function fetchArticle(slug: string): Promise<ArticleListItem | null
   return res.json();
 }
 
-export async function fetchArticleImages(slug: string): Promise<ArticleImage[]> {
+export async function fetchArticleImages(slug: string): Promise<IImageAttachment[]> {
   const res = await fetch(`${API_URL}/articles/${slug}/images`, {
     next: { revalidate: 60 },
   });
@@ -49,11 +34,11 @@ export async function fetchArticlePreviewImage(slug: string): Promise<string | n
   return preview.image.medium?.secure_url ?? preview.image.original.secure_url;
 }
 
-export async function fetchOtherArticles(currentSlug: string): Promise<ArticleListItem[]> {
+export async function fetchOtherArticles(currentSlug: string): Promise<IArticle[]> {
   const res = await fetch(`${API_URL}/articles?limit=5&offset=1`, {
     next: { revalidate: 60 },
   });
   if (!res.ok) return [];
-  const { data } = (await res.json()) as { data: ArticleListItem[] };
+  const { data } = (await res.json()) as ListResponseDto<IArticle>;
   return data.filter((a) => a.slug !== currentSlug).slice(0, 4);
 }

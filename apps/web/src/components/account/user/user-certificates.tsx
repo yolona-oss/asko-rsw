@@ -522,9 +522,8 @@ function AddCertificateForm({
     userApi
       .getMyDevices()
       .then(({ data }) => {
-        const list = Array.isArray(data) ? data : data.data ?? [];
-        setDevices(list);
-        if (list.length > 0 && !deviceId) setDeviceId(list[0].id);
+        setDevices(data);
+        if (data.length > 0 && !deviceId) setDeviceId(data[0].id);
       })
       .catch(() => {})
       .finally(() => setLoadingDevices(false));
@@ -632,8 +631,7 @@ export function UserCertificates() {
     setLoading(true);
     try {
       const { data } = await userApi.getMyCertificates();
-      const list = Array.isArray(data) ? data : data.data ?? [];
-      setCertificates(list);
+      setCertificates(data);
     } catch {
       // silently fail
     } finally {
@@ -645,8 +643,7 @@ export function UserCertificates() {
     setLoadingDevices(true);
     try {
       const { data } = await userApi.getMyDevices();
-      const list = Array.isArray(data) ? data : data.data ?? [];
-      setDevices(list);
+      setDevices(data);
     } catch {
       // silently fail
     } finally {

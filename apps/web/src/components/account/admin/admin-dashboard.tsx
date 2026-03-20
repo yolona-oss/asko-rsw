@@ -40,10 +40,10 @@ export function AdminDashboard() {
         ]);
 
         setStats({
-          devices: devicesRes.data?.total ?? devicesRes.data?.data?.length ?? 0,
-          pending: pendingRes.data?.total ?? pendingRes.data?.data?.length ?? 0,
-          users: usersRes.data?.total ?? usersRes.data?.length ?? 0,
-          invitations: Array.isArray(invitationsRes.data) ? invitationsRes.data.length : 0,
+          devices: devicesRes.data?.total ?? 0,
+          pending: pendingRes.data?.total ?? 0,
+          users: usersRes.data?.overallCount ?? 0,
+          invitations: invitationsRes.data?.length ?? 0,
         });
       } catch {
         // silently fail

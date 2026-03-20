@@ -60,14 +60,14 @@ export function CreateRequest() {
           userApi.getMyCertificates(),
           userApi.getMyRequests({ limit: 100 }),
         ]);
-        const devList = Array.isArray(devRes.data) ? devRes.data : devRes.data.data ?? [];
+        const devList = devRes.data;
         setDevices(devList);
 
-        const certList = Array.isArray(certRes.data) ? certRes.data : certRes.data.data ?? [];
-        setCertificates(certList.filter((c: Certificate) => c.status === 'active'));
+        const certList = certRes.data;
+        setCertificates(certList.filter((c) => c.status === 'active'));
 
         // Determine which devices have active repair requests
-        const reqList: RepairRequest[] = Array.isArray(reqRes.data) ? reqRes.data : reqRes.data.data ?? [];
+        const reqList = reqRes.data.data;
         const activeDeviceIds = new Set<string>();
         for (const req of reqList) {
           if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {

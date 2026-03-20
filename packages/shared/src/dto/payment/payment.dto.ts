@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
 import { PaymentProviderType, PaymentTargetType } from '../../types/payment.type';
+import type { PaymentStatus } from '../../types/repair.type';
 
 export class CreatePaymentDto {
     @IsEnum(PaymentTargetType)
@@ -23,4 +24,17 @@ export class CreatePaymentDto {
 export class PaymentOptionsDto {
     providers!: PaymentProviderType[];
     defaultProvider!: PaymentProviderType;
+}
+
+export interface ProcessInvoiceResult {
+    paymentId: string;
+    status: PaymentStatus;
+    redirectUrl?: string;
+}
+
+export interface PaymentStatsDto {
+    confirmedTotal: number;
+    refundedTotal: number;
+    confirmedCount: number;
+    refundedCount: number;
 }

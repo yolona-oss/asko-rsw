@@ -11,3 +11,10 @@ export interface IImage {
     ownerType?: ImageTypeEnum;
     ownerId?: string;
 }
+
+export interface IImageAttachment {
+    id: string;
+    image: IImageObj;
+    order: number;
+    alt?: string;
+}

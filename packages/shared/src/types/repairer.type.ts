@@ -9,6 +9,7 @@ export interface IRepairer {
     latitude?: number;
     longitude?: number;
     lastLocationUpdate?: Date;
+    user?: import('./user/user.type').IUser;
     createdAt: Date;
     updatedAt: Date;
 }

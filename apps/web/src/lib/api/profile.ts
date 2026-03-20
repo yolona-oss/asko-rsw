@@ -1,14 +1,14 @@
-import type { UpdateUserDto } from '@asko/shared/client';
+import type { UpdateUserDto, IAuthUser } from '@asko/shared/client';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 
 export const profileApi = {
   getProfile() {
-    return api.get('/users/profile');
+    return api.get<IAuthUser>('/users/profile');
   },
 
   updateProfile(data: Partial<UpdateUserDto>) {
-    return api.put('/users/', data);
+    return api.put<IAuthUser>('/users/', data);
   },
 
   uploadAvatar: fileUploadApi.uploadAvatar,

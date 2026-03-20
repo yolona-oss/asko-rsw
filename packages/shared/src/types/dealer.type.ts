@@ -17,6 +17,8 @@ export interface IDealerProfile {
     companyName?: string;
     inn?: string;
     pointsBalance: number;
+    user?: import('./user/user.type').IUser;
+    clients?: IDealerClient[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -25,6 +27,7 @@ export interface IDealerClient {
     id: string;
     dealerId: string;
     clientUserId: string;
+    clientUser?: import('./user/user.type').IUser;
     createdAt: Date;
 }
 
@@ -43,6 +46,7 @@ export interface IPointsWithdrawal {
     dealerId: string;
     amount: number;
     status: WithdrawalStatus;
+    dealer?: IDealerProfile;
     requestedAt: Date;
     processedAt?: Date;
     processedBy?: string;

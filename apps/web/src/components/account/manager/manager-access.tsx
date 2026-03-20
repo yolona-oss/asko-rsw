@@ -19,17 +19,7 @@ import type { IRepairer } from '@asko/shared/client';
 
 type AccessTab = 'inactive' | 'active';
 
-interface RepairerWithUser extends IRepairer {
-  user?: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phone?: string;
-  };
-}
-
-function repairerName(r: RepairerWithUser): string {
+function repairerName(r: IRepairer): string {
   const full = [r.user?.firstName, r.user?.lastName].filter(Boolean).join(' ');
   return full || r.user?.email?.split('@')[0] || r.userId;
 }
@@ -51,7 +41,7 @@ function RepairerRow({
   onDeactivate,
   actionLoading,
 }: {
-  repairer: RepairerWithUser;
+  repairer: IRepairer;
   onActivate?: (id: string) => void;
   onDeactivate?: (id: string) => void;
   actionLoading: string | null;
@@ -124,7 +114,7 @@ const LIMIT = 20;
 
 export function ManagerAccess() {
   const [activeTab, setActiveTab] = useState<AccessTab>('inactive');
-  const [repairers, setRepairers] = useState<RepairerWithUser[]>([]);
+  const [repairers, setRepairers] = useState<IRepairer[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

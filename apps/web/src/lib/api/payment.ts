@@ -1,72 +1,46 @@
-import { PaginatedResponseDto } from '@asko/shared/client';
+import type {
+  PaginatedResponseDto,
+  PaymentOptionsDto,
+  CreatePaymentDto,
+  ProcessInvoiceResult,
+  PaymentStatsDto,
+  IRepairPayment,
+} from '@asko/shared/client';
 import { api } from './client';
 
-export interface PaymentOptions {
-  providers: string[];
-  defaultProvider: string;
-}
-
-export interface CreatePaymentParams {
-  targetType: 'repairRequest' | 'certificate';
-  targetId: string;
-  amount: number;
-  currency?: string;
-  provider?: string;
-}
-
-export interface CreatePaymentResult {
-  paymentId: string;
-  status: string;
-  redirectUrl?: string;
-}
-
-export interface PaymentRecord {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  provider?: string;
-  targetType?: string;
-  targetId?: string;
-  paidAt?: string;
-  createdAt: string;
-  user?: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-  };
-}
-
-export interface PaymentStats {
-  confirmedTotal: number;
-  refundedTotal: number;
-  confirmedCount: number;
-  refundedCount: number;
-}
+/** @deprecated Use `PaymentOptionsDto` from `@asko/shared/client` */
+export type PaymentOptions = PaymentOptionsDto;
+/** @deprecated Use `CreatePaymentDto` from `@asko/shared/client` */
+export type CreatePaymentParams = CreatePaymentDto;
+/** @deprecated Use `ProcessInvoiceResult` from `@asko/shared/client` */
+export type CreatePaymentResult = ProcessInvoiceResult;
+/** @deprecated Use `IRepairPayment` from `@asko/shared/client` */
+export type PaymentRecord = IRepairPayment;
+/** @deprecated Use `PaymentStatsDto` from `@asko/shared/client` */
+export type PaymentStats = PaymentStatsDto;
 
 export const paymentApi = {
   getOptions() {
-    return api.get<PaymentOptions>('/payment/options');
+    return api.get<PaymentOptionsDto>('/payment/options');
   },
 
-  createPayment(data: CreatePaymentParams) {
-    return api.post<CreatePaymentResult>('/payment/create', data);
+  createPayment(data: CreatePaymentDto) {
+    return api.post<ProcessInvoiceResult>('/payment/create', data);
   },
 
   listPayments(params?: { offset?: number; limit?: number; status?: string; provider?: string; search?: string }) {
-    return api.get<PaginatedResponseDto<PaymentRecord>>('/payment/list', { params });
+    return api.get<PaginatedResponseDto<IRepairPayment>>('/payment/list', { params });
   },
 
   getMyPayments(params?: { offset?: number; limit?: number; status?: string }) {
-    return api.get<PaginatedResponseDto<PaymentRecord>>('/payment/my', { params });
+    return api.get<PaginatedResponseDto<IRepairPayment>>('/payment/my', { params });
   },
 
   getStats() {
-    return api.get<PaymentStats>('/payment/stats');
+    return api.get<PaymentStatsDto>('/payment/stats');
   },
 
   getMyStats() {
-    return api.get<PaymentStats>('/payment/my/stats');
+    return api.get<PaymentStatsDto>('/payment/my/stats');
   },
 };

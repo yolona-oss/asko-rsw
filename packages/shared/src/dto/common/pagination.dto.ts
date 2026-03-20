@@ -20,6 +20,11 @@ export class PaginatedResponseDto<T> {
     overallCount: number
 }
 
+export interface ListResponseDto<T> {
+    data: T[];
+    total: number;
+}
+
 export const DefaultedPagination: PaginationDto = {
     offset: 1,
     limit: 10

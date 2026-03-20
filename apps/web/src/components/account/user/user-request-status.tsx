@@ -188,7 +188,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         userApi.getWorkSteps(requestId).catch(() => ({ data: [] })),
       ]);
       setRequest(reqRes.data);
-      const steps = Array.isArray(stepsRes.data) ? stepsRes.data : stepsRes.data?.data ?? [];
+      const steps: WorkStep[] = stepsRes.data;
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
 
       // Check if already reviewed

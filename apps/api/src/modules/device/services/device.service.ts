@@ -94,7 +94,7 @@ export class DeviceService {
                     brand: brandStr,
                     slug,
                     // NOTE USES RANDOMIZER FOR PRICE(MUST BE REMOVED IN RELEACE) used cause no device data provided by service customer and used own scraper
-                    price: product.price ?? randomInt(5),
+                    price: product.price ?? Math.floor(Math.random() * 200000) + 20000,
                     description: product.description,
                     specifications,
                     features,

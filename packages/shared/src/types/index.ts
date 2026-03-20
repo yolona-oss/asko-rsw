@@ -10,6 +10,7 @@ export * from './currency.type'
 export * from './review.type';
 export * from './week-schedule.type';
 
+export * from './article.type';
 export * from './device.type';
 export * from './repair.type';
 export * from './certificate.type';

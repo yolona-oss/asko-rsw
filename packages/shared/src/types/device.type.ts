@@ -16,10 +16,13 @@ export interface IDevice {
     type: DeviceType;
     model: string;
     brand: string;
+    slug: string;
+    price?: number;
     description?: string;
     specifications?: Record<string, any>;
+    features?: Record<string, any>;
     link?: string;
-    isFeatured?: boolean
+    isFeatured?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -33,5 +36,7 @@ export interface IUserDevice {
     purchaseDate?: Date;
     warrantyUntil?: Date;
     notes?: string;
+    device?: IDevice;
+    address?: import('./address-book.type').IAddressBook;
     createdAt: Date;
 }

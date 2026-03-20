@@ -43,6 +43,12 @@ export interface IRepairRequest {
     refuseReason?: string;
     rejectedRepairers?: string[];
     completionNote?: string;
+    user?: import('./user/user.type').IUser;
+    userDevice?: import('./device.type').IUserDevice;
+    repairer?: import('./repairer.type').IRepairer;
+    certificate?: import('./certificate.type').ICertificate;
+    workSteps?: IWorkStep[];
+    address?: import('./address-book.type').IAddressBook;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -61,12 +67,14 @@ export interface IWorkStep {
 
 export interface IRepairPayment {
     id: string;
-    repairRequestId: string;
     amount: number;
     currency: string;
     status: PaymentStatus;
     provider?: string;
     providerPaymentId?: string;
+    targetType?: string;
+    targetId?: string;
+    user?: { id: string; firstName?: string; lastName?: string; email?: string };
     paidAt?: Date;
     createdAt: Date;
 }
