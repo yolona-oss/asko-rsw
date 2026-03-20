@@ -223,8 +223,9 @@ export class RepairRequestService {
         await this.em.flush();
 
         // Create payment invoice for the user via PaymentModule
+        const userId = typeof request.user === 'object' ? request.user.id : String(request.user);
         await this.paymentService.createInvoice(
-            String(request.user),
+            userId,
             PaymentTargetType.REPAIR_REQUEST,
             request.id,
             dto.amount,
