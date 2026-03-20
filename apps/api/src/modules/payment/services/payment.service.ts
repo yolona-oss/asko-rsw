@@ -187,6 +187,18 @@ export class PaymentService {
 
     /** Create payment via selected provider (legacy / direct flow) */
     async createPayment(userId: string, dto: CreatePaymentDto) {
+        // If a PENDING invoice already exists for this target, reuse it
+        // instead of creating a duplicate record
+        const existingInvoice = await this.em.findOne(RepairPayment, {
+            targetType: dto.targetType,
+            targetId: dto.targetId,
+            status: PaymentStatus.PENDING,
+        });
+
+        if (existingInvoice) {
+            return this.processInvoice(userId, dto.targetType, dto.targetId, dto.provider);
+        }
+
         const providerType = dto.provider ?? this.defaultProvider;
         const provider = this.providers.get(providerType);
         if (!provider) throw AppErrors.badRequest(`Unknown payment provider: ${providerType}`);
