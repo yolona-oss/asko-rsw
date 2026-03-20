@@ -90,12 +90,6 @@ export const adminApi = {
   getCertificates(params?: { offset?: number; limit?: number; search?: string }) {
     return api.get<ListResponseDto<ICertificate>>('/certificates', { params });
   },
-  getPendingCertificates(params?: { offset?: number; limit?: number }) {
-    return api.get<ListResponseDto<ICertificate>>('/certificates/pending', { params });
-  },
-  approveCertificate(id: string) {
-    return api.post<ICertificate>(`/certificates/${id}/approve`);
-  },
   revokeCertificate(id: string) {
     return api.post<ICertificate>(`/certificates/${id}/revoke`);
   },

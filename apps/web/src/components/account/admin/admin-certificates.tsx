@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
-  Toggle,
   TabList,
   Tab,
   DataTable,
@@ -17,19 +16,19 @@ import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
 import { CertificateStatus, ICertificate } from '@asko/shared/client';
 
-type CertTab = 'pending_payment' | 'pending_approval' | 'active' | 'expired' | 'revoked';
+type CertTab = 'pending_payment' | 'validation_error' | 'active' | 'expired' | 'revoked';
 
 const TABS: { key: CertTab; label: string }[] = [
   { key: 'pending_payment', label: 'Ожидают оплаты' },
-  { key: 'pending_approval', label: 'Ожидающие' },
   { key: 'active', label: 'Активные' },
+  { key: 'validation_error', label: 'Ошибка валидации' },
   { key: 'expired', label: 'Истекшие' },
   { key: 'revoked', label: 'Отозванные' },
 ];
 
 const STATUS_COLORS: Record<CertTab, string> = {
   pending_payment: 'text-orange-600',
-  pending_approval: 'text-yellow-600',
+  validation_error: 'text-brand-red',
   active: 'text-green-600',
   expired: 'text-text-sub',
   revoked: 'text-brand-red',
@@ -37,7 +36,7 @@ const STATUS_COLORS: Record<CertTab, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.PENDING_APPROVAL]: 'Ожидает',
+  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
   [CertificateStatus.REVOKED]: 'Отозван',
@@ -49,14 +48,11 @@ function formatDate(date: Date | string) {
 
 function CertificateRow({
   cert,
-  onApprove,
   onRevoke,
 }: {
   cert: ICertificate;
-  onApprove: (id: string) => void;
   onRevoke: (id: string) => void;
 }) {
-  const showApprove = cert.status === CertificateStatus.PENDING_APPROVAL;
   const showRevoke = cert.status === CertificateStatus.ACTIVE;
   const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '-';
   const deviceName = cert.userDevice?.device?.name ?? '-';
@@ -90,11 +86,6 @@ function CertificateRow({
         <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
       </DataTableCell>
       <DataTableCell className="lg:w-[120px] lg:flex-shrink-0 lg:text-right">
-        {showApprove && (
-          <Button variant="success" size="sm" onClick={() => onApprove(cert.id)}>
-            Одобрить
-          </Button>
-        )}
         {showRevoke && (
           <Button variant="danger" size="sm" onClick={() => onRevoke(cert.id)}>
             Отозвать
@@ -106,8 +97,7 @@ function CertificateRow({
 }
 
 export function AdminCertificates() {
-  const [activeTab, setActiveTab] = useState<CertTab>('pending_approval');
-  const [autoVerify, setAutoVerify] = useState(false);
+  const [activeTab, setActiveTab] = useState<CertTab>('active');
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,15 +117,6 @@ export function AdminCertificates() {
     fetchCertificates();
   }, [fetchCertificates]);
 
-  const handleApprove = async (id: string) => {
-    try {
-      await adminApi.approveCertificate(id);
-      await fetchCertificates();
-    } catch {
-      // silently fail
-    }
-  };
-
   const handleRevoke = async (id: string) => {
     try {
       await adminApi.revokeCertificate(id);
@@ -152,13 +133,6 @@ export function AdminCertificates() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <PageHeader>Управление сертификатами</PageHeader>
       </div>
-
-      {/* Auto-verification toggle */}
-      <Toggle
-        checked={autoVerify}
-        onChange={setAutoVerify}
-        label="Авто-верификация"
-      />
 
       {/* Tabs */}
       <TabList>
@@ -199,7 +173,6 @@ export function AdminCertificates() {
                 <CertificateRow
                   key={cert.id}
                   cert={cert}
-                  onApprove={handleApprove}
                   onRevoke={handleRevoke}
                 />
               ))

@@ -1,6 +1,6 @@
 export enum CertificateStatus {
     PENDING_PAYMENT = 'pending_payment',
-    PENDING_APPROVAL = 'pending_approval',
+    VALIDATION_ERROR = 'validation_error',
     ACTIVE = 'active',
     EXPIRED = 'expired',
     REVOKED = 'revoked',

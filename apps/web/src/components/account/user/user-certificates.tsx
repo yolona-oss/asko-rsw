@@ -11,7 +11,7 @@ import { CertificateStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.PENDING_APPROVAL]: 'На проверке',
+  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
   [CertificateStatus.REVOKED]: 'Отозван',

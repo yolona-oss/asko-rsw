@@ -26,7 +26,7 @@ export class Certificate {
     certificateNumber!: string;
 
     @Enum({ items: () => CertificateStatus, nativeEnumName: 'certificate_status' })
-    status: CertificateStatus = CertificateStatus.PENDING_APPROVAL;
+    status: CertificateStatus = CertificateStatus.PENDING_PAYMENT;
 
     @Property({ type: 'datetime' })
     issuedAt: Date = new Date();

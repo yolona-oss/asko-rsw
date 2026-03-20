@@ -13,6 +13,7 @@ import {
 import { AppErrors } from 'common/error';
 import { DealerService } from 'modules/dealer/services/dealer.service';
 import { PaymentService } from 'modules/payment/services/payment.service';
+import { ExternalCertValidationService } from 'modules/device/services/external-cert-validation.service';
 
 /**
  * Calculate certificate price.
@@ -35,9 +36,8 @@ export class CertificateService {
         private readonly dealerService: DealerService,
         @Inject(forwardRef(() => PaymentService))
         private readonly paymentService: PaymentService,
+        private readonly externalCertValidation: ExternalCertValidationService,
     ) { }
-
-    // NOTE add handler for OFFLINE certificate purchasing with some ID and than eter that ID to get access to cert(just is NOT secure i think)
 
     /** User adds an existing certificate */
     async addCertificate(userId: string, dto: AddCertificateDto): Promise<Certificate> {
@@ -46,6 +46,23 @@ export class CertificateService {
 
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
         if (existing) throw AppErrors.dbEntityExists('Certificate number already registered');
+
+        // Validate serial number against external factory database
+        const serialNumber = userDevice.serialNumber;
+        try {
+            await this.externalCertValidation.externalFactorySerialNumberValidator(serialNumber);
+        } catch {
+            const cert = this.em.create(Certificate, {
+                user: userId,
+                userDevice: userDevice,
+                certificateNumber: dto.certificateNumber,
+                status: CertificateStatus.VALIDATION_ERROR,
+                issuedAt: new Date(),
+                expiresAt: new Date(dto.expiresAt),
+            });
+            await this.em.persistAndFlush(cert);
+            throw AppErrors.badRequest('Device serial number validation failed. Certificate marked with validation error.');
+        }
 
         const issuedAt = new Date();
         const expiresAt = new Date(dto.expiresAt);
@@ -84,6 +101,38 @@ export class CertificateService {
 
         const device = await this.em.findOne(Device, { id: dto.deviceId });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found in catalog');
+
+        // Validate serial number against external factory database
+        try {
+            await this.externalCertValidation.externalFactorySerialNumberValidator(dto.serialNumber);
+        } catch {
+            // Create address & device for tracking even on failure
+            const address = this.em.create(Address, {
+                country: dto.country, city: dto.city, street: dto.street,
+                house: dto.house, building: dto.building, floor: dto.floor,
+                room: dto.room, postalCode: dto.postalCode,
+            });
+            const userDevice = this.em.create(UserDevice, {
+                user: clientUser, device: device,
+                serialNumber: dto.serialNumber, address: address,
+            });
+            const cert = this.em.create(Certificate, {
+                user: dto.clientUserId,
+                userDevice: userDevice,
+                dealer: dealerProfile,
+                certificateNumber: generateCertificateNumber(),
+                status: CertificateStatus.VALIDATION_ERROR,
+                issuedAt: new Date(),
+                expiresAt: new Date(dto.expiresAt),
+                purchaseReceiptUrl: dto.purchaseReceiptUrl,
+                description: dto.description,
+            });
+            await this.em.persist(address);
+            await this.em.persist(userDevice);
+            await this.em.persist(cert);
+            await this.em.flush();
+            throw AppErrors.badRequest('Device serial number validation failed. Certificate marked with validation error.');
+        }
 
         // Create address for the device
         const address = this.em.create(Address, {
@@ -151,18 +200,21 @@ export class CertificateService {
         return cert;
     }
 
-    /** Admin approves a certificate. Awards dealer points if dealer-created. */
-    async approveCertificate(certId: string): Promise<Certificate> {
+    /**
+     * Mark certificate as paid - called by payment handler.
+     * After payment, certificate goes directly to ACTIVE (no admin approval needed).
+     * Awards dealer points if dealer-created.
+     */
+    async markPaid(certId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId }, { populate: ['dealer', 'user'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
-        if (cert.status !== CertificateStatus.PENDING_APPROVAL) {
-            throw AppErrors.badRequest('Certificate is not pending approval');
-        }
-        if (!cert.paid) {
-            throw AppErrors.badRequest('Certificate must be paid before activation');
-        }
+        if (cert.paid) throw AppErrors.badRequest('Certificate already paid');
 
-        cert.status = CertificateStatus.ACTIVE;
+        cert.paid = true;
+        // Move from PENDING_PAYMENT directly to ACTIVE
+        if (cert.status === CertificateStatus.PENDING_PAYMENT) {
+            cert.status = CertificateStatus.ACTIVE;
+        }
         await this.em.flush();
 
         // If dealer-created, award points based on certificate price
@@ -171,21 +223,6 @@ export class CertificateService {
             await this.dealerService.linkClientOnCertificateApproval(cert);
         }
 
-        return cert;
-    }
-
-    /** Mark certificate as paid - called by payment handler */
-    async markPaid(certId: string): Promise<Certificate> {
-        const cert = await this.em.findOne(Certificate, { id: certId });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
-        if (cert.paid) throw AppErrors.badRequest('Certificate already paid');
-
-        cert.paid = true;
-        // Move from PENDING_PAYMENT to PENDING_APPROVAL
-        if (cert.status === CertificateStatus.PENDING_PAYMENT) {
-            cert.status = CertificateStatus.PENDING_APPROVAL;
-        }
-        await this.em.flush();
         return cert;
     }
 
@@ -276,20 +313,5 @@ export class CertificateService {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['user', 'userDevice', 'userDevice.device', 'dealer'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
         return cert;
-    }
-
-    /** Find pending certificates (for admin approval queue) */
-    async findPending(pagination: PaginationDto): Promise<{ data: Certificate[]; total: number }> {
-        const [data, total] = await this.em.findAndCount(
-            Certificate,
-            { status: CertificateStatus.PENDING_APPROVAL },
-            {
-                limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
-                orderBy: { createdAt: 'ASC' },
-                populate: ['user', 'userDevice', 'userDevice.device', 'dealer'],
-            }
-        );
-        return { data, total };
     }
 }

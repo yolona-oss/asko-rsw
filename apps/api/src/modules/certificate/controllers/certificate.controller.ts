@@ -49,13 +49,6 @@ export class CertificateController {
         return this.certificateService.reassignCertificate(user.sub, id, dto.userDeviceId);
     }
 
-    /** Admin approves a certificate */
-    @RequiredRoles(...ADMIN_ROLES)
-    @Post(':id/approve')
-    async approve(@Param('id') id: string) {
-        return this.certificateService.approveCertificate(id);
-    }
-
     /** Admin revokes a certificate */
     @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/revoke')
@@ -96,13 +89,6 @@ export class CertificateController {
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
         return this.certificateService.findAll(pagination);
-    }
-
-    /** Admin: list pending certificates */
-    @RequiredRoles(...ADMIN_ROLES)
-    @Get('pending')
-    async findPending(@Query() pagination: PaginationDto) {
-        return this.certificateService.findPending(pagination);
     }
 
     /** Pay for a certificate */

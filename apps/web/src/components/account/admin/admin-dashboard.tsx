@@ -26,22 +26,22 @@ export function AdminDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
 
-  const [stats, setStats] = useState({ devices: 0, pending: 0, users: 0, invitations: 0 });
+  const [stats, setStats] = useState({ devices: 0, certificates: 0, users: 0, invitations: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [devicesRes, pendingRes, usersRes, invitationsRes] = await Promise.all([
+        const [devicesRes, certsRes, usersRes, invitationsRes] = await Promise.all([
           adminApi.getDevices({ limit: 1 }),
-          adminApi.getPendingCertificates({ limit: 1 }),
+          adminApi.getCertificates({ limit: 1 }),
           adminApi.getUsers({ limit: 1 }),
           adminApi.getInvitations(),
         ]);
 
         setStats({
           devices: devicesRes.data?.total ?? 0,
-          pending: pendingRes.data?.total ?? 0,
+          certificates: certsRes.data?.total ?? 0,
           users: usersRes.data?.overallCount ?? 0,
           invitations: invitationsRes.data?.length ?? 0,
         });
@@ -65,7 +65,7 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard title="Товары:" value={display(stats.devices)} href="/account/devices" />
-        <StatCard title="Ожидают проверки:" value={display(stats.pending)} href="/account/manage-certificates" />
+        <StatCard title="Сертификаты:" value={display(stats.certificates)} href="/account/manage-certificates" />
         <StatCard title="Активные пользователи:" value={display(stats.users)} href="/account/users" />
         <StatCard title="Приглашения:" value={display(stats.invitations)} href="/account/invitations" />
       </div>

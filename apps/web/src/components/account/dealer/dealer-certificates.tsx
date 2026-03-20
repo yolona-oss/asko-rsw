@@ -24,15 +24,15 @@ type StatusFilter = 'all' | CertificateStatus;
 const STATUS_TABS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Все' },
   { key: CertificateStatus.PENDING_PAYMENT, label: 'Ожидают оплаты' },
-  { key: CertificateStatus.PENDING_APPROVAL, label: 'Ожидающие' },
   { key: CertificateStatus.ACTIVE, label: 'Активные' },
+  { key: CertificateStatus.VALIDATION_ERROR, label: 'Ошибка валидации' },
   { key: CertificateStatus.EXPIRED, label: 'Истекшие' },
   { key: CertificateStatus.REVOKED, label: 'Отозванные' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.PENDING_APPROVAL]: 'Ожидает',
+  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
   [CertificateStatus.REVOKED]: 'Отозван',
@@ -40,7 +40,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'text-orange-600',
-  [CertificateStatus.PENDING_APPROVAL]: 'text-yellow-600',
+  [CertificateStatus.VALIDATION_ERROR]: 'text-brand-red',
   [CertificateStatus.ACTIVE]: 'text-green-600',
   [CertificateStatus.EXPIRED]: 'text-text-sub',
   [CertificateStatus.REVOKED]: 'text-brand-red',

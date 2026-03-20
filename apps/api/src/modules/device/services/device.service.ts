@@ -4,6 +4,7 @@ import { Device, UserDevice, Address } from 'entities';
 import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto, DeviceType, ImageTypeEnum } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { ImageService } from 'modules/file-upload/services/image.service';
+import { ExternalCertValidationService } from './external-cert-validation.service';
 
 import { slugify } from 'common/utils'
 import { randomInt } from 'crypto';
@@ -16,6 +17,7 @@ export class DeviceService {
     constructor(
         private readonly em: EntityManager,
         private readonly imageService: ImageService,
+        private readonly externalCertValidation: ExternalCertValidationService,
     ) { }
 
     private async generateUniqueSlug(brand: string, model: string): Promise<string> {
@@ -171,6 +173,9 @@ export class DeviceService {
     // ── User: device registration ──
 
     async registerUserDevice(userId: string, dto: RegisterUserDeviceDto): Promise<UserDevice> {
+        // Validate serial number against external factory database
+        await this.externalCertValidation.externalFactorySerialNumberValidator(dto.serialNumber);
+
         const device = await this.em.findOne(Device, { id: dto.deviceId });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found in catalog');
 
