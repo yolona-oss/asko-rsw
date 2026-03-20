@@ -9,7 +9,8 @@ import type {
   UpdateLocationDto,
   RefuseRequestDto,
   SetRepairPriceDto,
-  WorkStepStatus,
+  AddWorkStepDto,
+  UpdateWorkStepDto,
 } from '@asko/shared/client';
 import { api } from './client';
 
@@ -46,8 +47,24 @@ export const repairerApi = {
     return api.get<IWorkStep[]>(`/repair-requests/${requestId}/steps`);
   },
 
-  updateWorkStep(requestId: string, stepId: string, status: WorkStepStatus) {
-    return api.patch<IWorkStep>(`/repair-requests/${requestId}/steps/${stepId}`, { status });
+  addWorkStep(requestId: string, data: AddWorkStepDto) {
+    return api.post<IWorkStep>(`/repair-requests/${requestId}/steps`, data);
+  },
+
+  updateWorkStep(requestId: string, stepId: string, data: Partial<UpdateWorkStepDto>) {
+    return api.post<IWorkStep>(`/repair-requests/${requestId}/steps/${stepId}/update`, data);
+  },
+
+  completeWorkStep(requestId: string, stepId: string) {
+    return api.post<{ step: IWorkStep; requestCompleted: boolean }>(`/repair-requests/${requestId}/steps/${stepId}/complete`);
+  },
+
+  deleteWorkStep(requestId: string, stepId: string) {
+    return api.post<void>(`/repair-requests/${requestId}/steps/${stepId}/delete`);
+  },
+
+  lockWorkSteps(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/steps/lock`);
   },
 
   setRepairPrice(requestId: string, data: SetRepairPriceDto) {

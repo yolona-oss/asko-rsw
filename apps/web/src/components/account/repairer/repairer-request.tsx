@@ -25,12 +25,18 @@ function StepCircle({ status, index }: { status: WorkStepStatus; index: number }
       ? 'bg-green-600 text-white'
       : status === WorkStepStatus.IN_PROGRESS
         ? 'bg-amber-400 text-white'
-        : 'bg-[#E5E5E5] text-text-sub';
+        : status === WorkStepStatus.SKIPPED
+          ? 'bg-gray-400 text-white'
+          : 'bg-[#E5E5E5] text-text-sub';
   return (
     <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium ${bg}`}>
       {status === WorkStepStatus.COMPLETED ? (
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      ) : status === WorkStepStatus.SKIPPED ? (
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.689c0-.864.933-1.405 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.954l-7.108 4.061A1.125 1.125 0 013 16.811V8.69zM12.75 8.689c0-.864.933-1.405 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.954l-7.108 4.061a1.125 1.125 0 01-1.683-.977V8.69z" />
         </svg>
       ) : (
         index + 1
@@ -95,6 +101,16 @@ export function RepairerRequest() {
   const [priceSaving, setPriceSaving] = useState(false);
   const [priceError, setPriceError] = useState('');
   const [priceSuccess, setPriceSuccess] = useState(false);
+
+  // Add step modal
+  const [addStepOpen, setAddStepOpen] = useState(false);
+  const [addStepTitle, setAddStepTitle] = useState('');
+  const [addStepDescription, setAddStepDescription] = useState('');
+  const [addStepIsFinal, setAddStepIsFinal] = useState(false);
+  const [addStepLoading, setAddStepLoading] = useState(false);
+  const [addStepError, setAddStepError] = useState('');
+
+  const [lockLoading, setLockLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -169,13 +185,81 @@ export function RepairerRequest() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleStepUpdate = useCallback(async (stepId: string, status: WorkStepStatus) => {
+  // ── Step flow actions ──
+
+  const handleStepStart = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
-      await repairerApi.updateWorkStep(request.id, stepId, status);
-      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status } : s));
+      await repairerApi.updateWorkStep(request.id, stepId, { status: WorkStepStatus.IN_PROGRESS });
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.IN_PROGRESS } : s));
     } catch {}
   }, [request]);
+
+  const handleStepComplete = useCallback(async (stepId: string) => {
+    if (!request) return;
+    try {
+      const { data } = await repairerApi.completeWorkStep(request.id, stepId);
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.COMPLETED } : s));
+      if (data.requestCompleted) {
+        setRequest({ ...request, status: RepairRequestStatus.AWAITING_COMPLETION });
+      }
+    } catch {}
+  }, [request]);
+
+  const handleStepSkip = useCallback(async (stepId: string) => {
+    if (!request) return;
+    try {
+      await repairerApi.updateWorkStep(request.id, stepId, { status: WorkStepStatus.SKIPPED });
+      setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.SKIPPED } : s));
+    } catch {}
+  }, [request]);
+
+  const handleDeleteStep = useCallback(async (stepId: string) => {
+    if (!request) return;
+    try {
+      await repairerApi.deleteWorkStep(request.id, stepId);
+      setSteps((prev) => prev.filter((s) => s.id !== stepId));
+    } catch {}
+  }, [request]);
+
+  // ── Add step ──
+
+  const handleAddStep = async () => {
+    if (!request || !addStepTitle.trim()) return;
+    setAddStepLoading(true);
+    setAddStepError('');
+    try {
+      const { data } = await repairerApi.addWorkStep(request.id, {
+        title: addStepTitle.trim(),
+        description: addStepDescription.trim() || undefined,
+        isFinal: addStepIsFinal || undefined,
+      });
+      setSteps((prev) => [...prev, data]);
+      setAddStepOpen(false);
+      setAddStepTitle('');
+      setAddStepDescription('');
+      setAddStepIsFinal(false);
+    } catch {
+      setAddStepError('Не удалось добавить шаг');
+    } finally {
+      setAddStepLoading(false);
+    }
+  };
+
+  // ── Lock steps ──
+
+  const handleLockSteps = async () => {
+    if (!request) return;
+    setLockLoading(true);
+    try {
+      await repairerApi.lockWorkSteps(request.id);
+      setRequest({ ...request, stepsLocked: true });
+    } catch {
+      // handle error
+    } finally {
+      setLockLoading(false);
+    }
+  };
 
   const handleRefuse = async () => {
     if (!request || !refuseReason.trim()) return;
@@ -227,10 +311,15 @@ export function RepairerRequest() {
     );
   }
 
-  const finalStep = steps.find((s) => s.isFinal);
-  const isFinalInProgress = finalStep?.status === WorkStepStatus.IN_PROGRESS;
-
   const status = request.status as RepairRequestStatus;
+  const stepsLocked = !!request.stepsLocked;
+  const canEditSteps = !stepsLocked && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
+  const canControlFlow = stepsLocked && [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.ACCEPTED].includes(status);
+  const allStepsDone = steps.length > 0 && steps.every(
+    (s) => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED,
+  );
+  const canComplete = status === RepairRequestStatus.AWAITING_COMPLETION
+    || (stepsLocked && allStepsDone && status === RepairRequestStatus.IN_PROGRESS);
 
   return (
     <PageContainer>
@@ -448,7 +537,13 @@ export function RepairerRequest() {
 
       {/* Work steps */}
       <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium text-text-main">Шаги ремонта</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-text-main">Шаги ремонта</h2>
+          {stepsLocked && (
+            <Badge variant="neutral" className="text-xs">Заблокированы</Badge>
+          )}
+        </div>
+
         {steps.length === 0 ? (
           <p className="text-sm text-text-sub">Шаги не назначены</p>
         ) : (
@@ -469,55 +564,87 @@ export function RepairerRequest() {
                   {step.description && (
                     <p className="text-xs text-text-sub">{step.description}</p>
                   )}
-                  <div className="flex gap-3 mt-1">
-                    {step.status === WorkStepStatus.PENDING && (
-                      <button
-                        type="button"
-                        onClick={() => handleStepUpdate(step.id, WorkStepStatus.IN_PROGRESS)}
-                        className="text-xs text-brand-red hover:underline cursor-pointer"
-                      >
-                        Начать
-                      </button>
-                    )}
-                    {step.status === WorkStepStatus.IN_PROGRESS && !step.isFinal && (
-                      <>
+
+                  {/* Flow control buttons (only when locked and in progress) */}
+                  {(canControlFlow || status === RepairRequestStatus.IN_PROGRESS) && (
+                    <div className="flex gap-3 mt-1">
+                      {step.status === WorkStepStatus.PENDING && (
                         <button
                           type="button"
-                          onClick={() => handleStepUpdate(step.id, WorkStepStatus.COMPLETED)}
+                          onClick={() => handleStepStart(step.id)}
                           className="text-xs text-brand-red hover:underline cursor-pointer"
                         >
-                          Выполнено
+                          Начать
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleStepUpdate(step.id, WorkStepStatus.SKIPPED)}
-                          className="text-xs text-text-sub hover:underline cursor-pointer"
-                        >
-                          Пропустить
-                        </button>
-                      </>
-                    )}
-                    {step.status === WorkStepStatus.IN_PROGRESS && step.isFinal && (
+                      )}
+                      {step.status === WorkStepStatus.IN_PROGRESS && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleStepComplete(step.id)}
+                            className="text-xs text-brand-red hover:underline cursor-pointer"
+                          >
+                            Выполнено
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStepSkip(step.id)}
+                            className="text-xs text-text-sub hover:underline cursor-pointer"
+                          >
+                            Пропустить
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Delete button (only when not locked) */}
+                  {canEditSteps && (
+                    <div className="flex gap-3 mt-1">
                       <button
                         type="button"
-                        onClick={() => { setCompleteError(''); setCompleteOpen(true); }}
+                        onClick={() => handleDeleteStep(step.id)}
                         className="text-xs text-brand-red hover:underline cursor-pointer"
                       >
-                        Завершить работу
+                        Удалить
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {isFinalInProgress && (
+        {/* Add step button (only when not locked) */}
+        {canEditSteps && (
+          <Button
+            variant="secondary"
+            className="w-full lg:w-fit"
+            onClick={() => { setAddStepError(''); setAddStepTitle(''); setAddStepDescription(''); setAddStepIsFinal(false); setAddStepOpen(true); }}
+          >
+            Добавить шаг
+          </Button>
+        )}
+
+        {/* Lock steps button */}
+        {canEditSteps && steps.length > 0 && (
           <Button
             variant="primary"
             className="w-full lg:w-fit"
-            onClick={() => { setCompleteError(''); setCompleteOpen(true); }}
+            onClick={handleLockSteps}
+            disabled={lockLoading}
+          >
+            {lockLoading ? 'Блокировка...' : 'Зафиксировать шаги'}
+          </Button>
+        )}
+
+        {/* Complete work button */}
+        {canComplete && (
+          <Button
+            variant="primary"
+            className="w-full lg:w-fit"
+            onClick={() => { setCompleteError(''); setCompleteDescription(''); setCompleteFiles([]); setCompleteOpen(true); }}
           >
             Завершить работу
           </Button>
@@ -581,6 +708,50 @@ export function RepairerRequest() {
               {refuseLoading ? 'Отправка...' : 'Отклонить'}
             </Button>
             <Button variant="secondary" onClick={() => setRefuseOpen(false)}>
+              Отмена
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add step modal */}
+      <Modal open={addStepOpen} onClose={() => setAddStepOpen(false)} className="w-full max-w-md p-6">
+        <h2 className="text-base font-medium text-text-main mb-4">Добавить шаг ремонта</h2>
+        <div className="flex flex-col gap-4">
+          <FormField label="Название">
+            <Input
+              value={addStepTitle}
+              onChange={(e) => setAddStepTitle(e.target.value)}
+              placeholder="Название шага..."
+            />
+          </FormField>
+          <FormField label="Описание (необязательно)">
+            <Textarea
+              value={addStepDescription}
+              onChange={(e) => setAddStepDescription(e.target.value)}
+              placeholder="Описание шага..."
+              rows={3}
+            />
+          </FormField>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={addStepIsFinal}
+              onChange={(e) => setAddStepIsFinal(e.target.checked)}
+              className="w-4 h-4 accent-brand-red"
+            />
+            <span className="text-sm text-text-main">Финальный шаг</span>
+          </label>
+          {addStepError && <p className="text-sm text-brand-red">{addStepError}</p>}
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              onClick={handleAddStep}
+              disabled={!addStepTitle.trim() || addStepLoading}
+            >
+              {addStepLoading ? 'Добавление...' : 'Добавить'}
+            </Button>
+            <Button variant="secondary" onClick={() => setAddStepOpen(false)}>
               Отмена
             </Button>
           </div>

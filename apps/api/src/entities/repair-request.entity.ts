@@ -10,7 +10,7 @@ import { WorkStep } from './work-step.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'repairer' | 'manager' | 'certificate' | 'status' | 'preferredDate' | 'address' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'repairer' | 'manager' | 'certificate' | 'status' | 'preferredDate' | 'address' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'stepsLocked' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -59,6 +59,9 @@ export class RepairRequest {
 
     @Property({ type: 'text', nullable: true })
     completionNote?: string;
+
+    @Property({ type: 'boolean', default: false })
+    stepsLocked: boolean = false;
 
     @OneToMany(() => WorkStep, ws => ws.repairRequest)
     workSteps = new Collection<WorkStep>(this);

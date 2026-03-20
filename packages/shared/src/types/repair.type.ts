@@ -43,6 +43,7 @@ export interface IRepairRequest {
     refuseReason?: string;
     rejectedRepairers?: string[];
     completionNote?: string;
+    stepsLocked: boolean;
     user?: import('./user/user.type').IUser;
     userDevice?: import('./device.type').IUserDevice;
     repairer?: import('./repairer.type').IRepairer;

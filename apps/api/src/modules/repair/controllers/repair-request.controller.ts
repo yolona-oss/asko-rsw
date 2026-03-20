@@ -164,6 +164,12 @@ export class RepairRequestController {
     }
 
     @RequiredRoles(Role.REPAIRER)
+    @Post(':id/steps/lock')
+    async lockSteps(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.workStepService.lockSteps(user.sub, id);
+    }
+
+    @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/update')
     async updateStep(
         @JwtAuthUser() user: JwtPayload,
@@ -178,6 +184,12 @@ export class RepairRequestController {
     @Post(':id/steps/:stepId/complete')
     async completeStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.workStepService.completeStep(user.sub, id, stepId);
+    }
+
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/steps/:stepId/delete')
+    async deleteStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
+        return this.workStepService.deleteStep(user.sub, id, stepId);
     }
 
     @RequiredRoles(...ALL_ROLES)
