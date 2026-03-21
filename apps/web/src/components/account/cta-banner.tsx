@@ -42,21 +42,21 @@ export function CTABanner({ title, description, linkHref, linkLabel }: CTABanner
       {/* Appliance images - desktop only */}
       <div className="hidden lg:block absolute right-0 top-0 w-[430px] h-full">
         <Image
-          src="/images/cta-stove.png"
+          src="/images/cta-stove.webp"
           alt=""
           width={205}
           height={179}
           className="absolute left-0 top-[102px] opacity-64 blur-[0.55px]"
         />
         <Image
-          src="/images/cta-oven.png"
+          src="/images/cta-oven.webp"
           alt=""
           width={188}
           height={183}
           className="absolute left-[217px] top-[102px] opacity-64 blur-[0.55px] object-cover"
         />
         <Image
-          src="/images/cta-washing-machine.png"
+          src="/images/cta-washing-machine.webp"
           alt=""
           width={180}
           height={252}

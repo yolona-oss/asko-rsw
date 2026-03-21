@@ -21,7 +21,7 @@ export const fileUploadApi = {
   // Avatar
   uploadAvatar(file: Blob, userId: string) {
     const form = new FormData();
-    form.append('file', file, 'avatar.jpg');
+    form.append('file', file, 'avatar.webp');
     return api.post<IImage>(`/file-upload/image/upload/avatar/${userId}`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

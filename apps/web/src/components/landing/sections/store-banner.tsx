@@ -29,7 +29,7 @@ export function StoreBannerSection() {
 
           <div className="relative w-full aspect-[358/190] md:aspect-[1120/466] overflow-hidden flex items-end justify-center">
             <SkeletonImage
-              src="/images/1193d61dbf4fc3ce48ae2b59274b4402d2e0cf38.jpg"
+              src="/images/1193d61dbf4fc3ce48ae2b59274b4402d2e0cf38.webp"
               alt=""
               fill
               className="object-cover"

@@ -20,7 +20,7 @@ export function VipSection() {
   return (
     <section className="relative py-8 md:py-16 lg:py-24">
       <SkeletonImage
-        src="/images/b5b74734a8947326bb92bf563b03dd350fa5f2dc.jpg"
+        src="/images/b5b74734a8947326bb92bf563b03dd350fa5f2dc.webp"
         alt=""
         fill
         className="object-cover"

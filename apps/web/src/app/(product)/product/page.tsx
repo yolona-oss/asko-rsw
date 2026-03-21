@@ -56,7 +56,7 @@ export default async function ProductListPage({
                   >
                     <div className="relative aspect-square bg-gray-50">
                       <Image
-                        src={imgUrl ?? '/images/placeholder.png'}
+                        src={imgUrl ?? '/images/placeholder.webp'}
                         alt={device.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"

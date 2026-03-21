@@ -71,7 +71,7 @@ function CertificateCard({ cert, onPay }: { cert: Certificate; onPay?: (cert: Ce
   const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
   const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
 
-  const [deviceImageUrl, setDeviceImageUrl] = useState('/images/placeholder.png');
+  const [deviceImageUrl, setDeviceImageUrl] = useState('/images/placeholder.webp');
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

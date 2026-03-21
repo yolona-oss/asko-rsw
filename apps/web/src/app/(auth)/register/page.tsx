@@ -98,7 +98,7 @@ function RegisterForm() {
           {/* Background image */}
           <div className="absolute inset-0">
             <Image
-              src="/images/auth-img.png"
+              src="/images/auth-img.webp"
               alt=""
               fill
               className="object-cover"
@@ -353,7 +353,7 @@ function RegisterForm() {
           {/* Right: image */}
           <div className="absolute right-0 top-0 w-[551px] h-full flex flex-col justify-end items-center pb-10 overflow-hidden">
             <Image
-              src="/images/auth-img.png"
+              src="/images/auth-img.webp"
               alt=""
               fill
               className="object-cover"

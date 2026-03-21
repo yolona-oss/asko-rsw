@@ -100,7 +100,7 @@ export function FaqSection() {
 
             <div className="relative w-[548px] h-[616px] flex-shrink-0 overflow-hidden">
               <SkeletonImage
-                src="/images/1731b900ff4fac95565c50b611fe49f94d6da6dd.jpg"
+                src="/images/1731b900ff4fac95565c50b611fe49f94d6da6dd.webp"
                 alt="ASKO"
                 fill
                 className="object-cover brightness-[0.71]"

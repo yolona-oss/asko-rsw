@@ -9,7 +9,7 @@ export function CtaSection() {
   return (
     <section id="cta" className="relative">
       <SkeletonImage
-        src="/images/91a976b91feaec523511756feaddfcb4585e85ff.jpg"
+        src="/images/91a976b91feaec523511756feaddfcb4585e85ff.webp"
         alt=""
         fill
         className="object-cover"

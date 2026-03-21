@@ -278,7 +278,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
     if (fileRef.current) fileRef.current.value = '';
     setUploading(true);
     try {
-      const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+      const file = new File([blob], 'image.webp', { type: 'image/jpeg' });
       await adminApi.uploadArticleImage(articleId, file);
       await fetchImages();
     } catch {
@@ -384,7 +384,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
       <input
         ref={fileRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp"
+        accept=".webp,.webp,.webp,.webp"
         className="hidden"
         onChange={handleFileSelect}
       />

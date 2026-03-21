@@ -30,7 +30,7 @@ export function HeroSection() {
 
           <div className="relative w-full aspect-[358/159] md:aspect-[1120/486] overflow-hidden">
             <SkeletonImage
-              src="/images/hero-bg.png"
+              src="/images/hero-bg.webp"
               alt="Ремонт бытовой техники ASKO"
               fill
               className="object-cover"

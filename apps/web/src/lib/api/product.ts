@@ -2,7 +2,7 @@ import type { IDevice, IImageAttachment, ListResponseDto } from '@asko/shared/cl
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.png';
+export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.webp';
 
 export async function fetchDevices(page: number, limit: number) {
   const res = await fetch(
