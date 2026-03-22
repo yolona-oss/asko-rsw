@@ -29,7 +29,7 @@
         "incremental": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "types": ["jest", "node"],
+        "types": ["jest", "node", "multer"],
         "paths": {
             "@entities/*": ["entities/*"],
             "entities/*": ["entities/*"],
