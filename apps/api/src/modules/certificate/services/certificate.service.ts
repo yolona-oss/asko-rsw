@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
-import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Certificate, UserDevice, DealerProfile, Device, Address, DealerClient, User } from 'entities';
 import {
     AddCertificateDto,
@@ -39,7 +39,6 @@ export class CertificateService {
     ) { }
 
     /** User adds an existing certificate */
-    @CreateRequestContext()
     async addCertificate(userId: string, dto: AddCertificateDto): Promise<Certificate> {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId, user: userId }, { populate: ['device'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
@@ -92,7 +91,6 @@ export class CertificateService {
     }
 
     /** Dealer creates a certificate for a client's device */
-    @CreateRequestContext()
     async createCertificateByDealer(dealerUserId: string, dto: CreateCertificateDto): Promise<Certificate> {
         const dealerProfile = await this.em.findOne(DealerProfile, { user: dealerUserId });
         if (!dealerProfile) throw AppErrors.dbEntityNotFound('Dealer profile not found');
@@ -206,7 +204,6 @@ export class CertificateService {
      * After payment, certificate goes directly to ACTIVE (no admin approval needed).
      * Awards dealer points if dealer-created.
      */
-    @CreateRequestContext()
     async markPaid(certId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId }, { populate: ['dealer', 'user'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -229,7 +226,6 @@ export class CertificateService {
     }
 
     /** Calculate certificate price for a given device and expiry date */
-    @CreateRequestContext()
     async calculatePrice(userDeviceId: string, expiresAt: string): Promise<{ price: number }> {
         const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
@@ -239,7 +235,6 @@ export class CertificateService {
     }
 
     /** Admin revokes a certificate */
-    @CreateRequestContext()
     async revokeCertificate(certId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -249,7 +244,6 @@ export class CertificateService {
     }
 
     /** Reassign certificate to different device (only if no active repair uses it) */
-    @CreateRequestContext()
     async reassignCertificate(userId: string, certId: string, userDeviceId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId, user: userId });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -270,12 +264,10 @@ export class CertificateService {
         return cert;
     }
 
-    @CreateRequestContext()
     async findByUser(userId: string): Promise<Certificate[]> {
         return this.em.find(Certificate, { user: userId }, { populate: ['userDevice', 'userDevice.device'] });
     }
 
-    @CreateRequestContext()
     async findByDealer(dealerUserId: string, pagination?: PaginationDto, status?: CertificateStatus): Promise<{ data: Certificate[]; total: number }> {
         const dealer = await this.em.findOne(DealerProfile, { user: dealerUserId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
@@ -300,7 +292,6 @@ export class CertificateService {
         return { data, total };
     }
 
-    @CreateRequestContext()
     async findAll(pagination: PaginationDto): Promise<{ data: Certificate[]; total: number }> {
         const [data, total] = await this.em.findAndCount(
             Certificate,
@@ -317,7 +308,6 @@ export class CertificateService {
         return { data, total };
     }
 
-    @CreateRequestContext()
     async findById(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['user', 'userDevice', 'userDevice.device', 'dealer'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');

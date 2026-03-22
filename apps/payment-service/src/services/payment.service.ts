@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { PaymentEntity } from 'entities/payment.entity';
 import {
     CreatePaymentDto,
@@ -22,7 +22,7 @@ export class PaymentService {
         private readonly providerService: PaymentProviderService,
         private readonly domainService: PaymentDomainService,
         private readonly eventService: PaymentEventService,
-    ) {}
+    ) { }
 
     /** Return enabled providers to frontend */
     getOptions() {
@@ -30,6 +30,7 @@ export class PaymentService {
     }
 
     /** Create a PENDING payment invoice (no provider call). Used by setPrice, certificate creation. */
+    @CreateRequestContext()
     async createInvoice(
         userId: string,
         targetType: PaymentTargetType,
@@ -70,6 +71,7 @@ export class PaymentService {
     }
 
     /** Process an existing PENDING invoice — user pays via selected provider */
+    @CreateRequestContext()
     async processInvoice(
         userId: string,
         targetType: PaymentTargetType,
@@ -128,6 +130,7 @@ export class PaymentService {
     }
 
     /** Admin-initiated outgoing payment (e.g. dealer withdrawal payout) */
+    @CreateRequestContext()
     async processPayout(_adminUserId: string, dto: {
         targetType: PaymentTargetType;
         targetId: string;
@@ -163,6 +166,7 @@ export class PaymentService {
     }
 
     /** Create payment via selected provider (direct flow) */
+    @CreateRequestContext()
     async createPayment(userId: string, dto: CreatePaymentDto) {
         // If a PENDING invoice already exists for this target, reuse it
         const existingInvoice = await this.em.findOne(PaymentEntity, {
@@ -239,6 +243,7 @@ export class PaymentService {
     }
 
     /** Handle incoming webhook from provider */
+    @CreateRequestContext()
     async handleWebhook(providerType: string, body: any, headers?: Record<string, string>) {
         const provider = this.providerService.getProvider(providerType);
         if (!provider) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
@@ -289,6 +294,7 @@ export class PaymentService {
     }
 
     /** Refund a payment via the provider */
+    @CreateRequestContext()
     async refundPayment(paymentId: string): Promise<void> {
         const payment = await this.em.findOne(PaymentEntity, { id: paymentId });
         if (!payment) throw AppErrors.paymentNotFound();
@@ -320,11 +326,13 @@ export class PaymentService {
     }
 
     /** Get payments by target type and id */
+    @CreateRequestContext()
     async getPaymentsByTarget(targetType: string, targetId: string): Promise<PaymentEntity[]> {
         return this.em.find(PaymentEntity, { targetType, targetId }, { orderBy: { createdAt: 'DESC' } });
     }
 
     /** List all payments (for manager/admin) */
+    @CreateRequestContext()
     async listPayments(params: {
         status?: string;
         provider?: string;
@@ -346,6 +354,7 @@ export class PaymentService {
     }
 
     /** List payments for a specific user */
+    @CreateRequestContext()
     async listUserPayments(userId: string, params: {
         status?: string;
     }, pagination: PaginationDto): Promise<PaginatedResponseDto<PaymentEntity>> {
@@ -365,6 +374,7 @@ export class PaymentService {
     }
 
     /** Get payment statistics */
+    @CreateRequestContext()
     async getPaymentStats(userId?: string) {
         const baseWhere: FilterQuery<PaymentEntity> = userId ? { userId } : {};
 

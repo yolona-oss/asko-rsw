@@ -173,6 +173,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -412,6 +413,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -597,10 +599,11 @@
           "length": null,
           "precision": null,
           "scale": null,
-          "default": "'pending_approval'",
+          "default": "'pending_payment'",
           "comment": null,
           "enumItems": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -794,6 +797,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -1065,6 +1069,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -1273,6 +1278,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -1516,6 +1522,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -1862,6 +1869,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -2054,6 +2062,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -2333,6 +2342,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -2609,6 +2619,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -2838,6 +2849,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -3099,6 +3111,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -3361,6 +3374,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -3703,6 +3717,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -4216,6 +4231,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -4523,6 +4539,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -4792,6 +4809,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -5056,6 +5074,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -5417,6 +5436,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -5625,6 +5645,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -5926,6 +5947,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -6207,6 +6229,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -6388,6 +6411,7 @@
           "schema": "public",
           "items": [
             "pending_payment",
+            "validation_error",
             "pending_approval",
             "active",
             "expired",
@@ -6487,6 +6511,7 @@
       "schema": "public",
       "items": [
         "pending_payment",
+        "validation_error",
         "pending_approval",
         "active",
         "expired",
