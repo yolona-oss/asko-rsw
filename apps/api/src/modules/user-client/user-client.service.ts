@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
-import { ClientGrpc, RpcException } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
-import { AppError, AppErrors, AppErrorTypeEnum } from 'common/error';
+import { ClientGrpc } from '@nestjs/microservices';
+import { grpcCall } from 'common/grpc';
 
 import type {
     UserServiceClient,
@@ -35,25 +34,6 @@ import type {
     EmptyResponse,
 } from '@asko/proto';
 
-function fromGrpcError(error: any): never {
-    if (error?.code !== undefined && error?.message) {
-        const msg = error.details || error.message;
-        let appErrorType: AppErrorTypeEnum;
-        switch (error.code) {
-            case 5: appErrorType = AppErrorTypeEnum.DB_ENTITY_NOT_FOUND; break;   // NOT_FOUND
-            case 6: appErrorType = AppErrorTypeEnum.DB_ENTITY_EXISTS; break;       // ALREADY_EXISTS
-            case 3: appErrorType = AppErrorTypeEnum.INVALID_DATA; break;           // INVALID_ARGUMENT
-            case 16: appErrorType = AppErrorTypeEnum.UNAUTHORIZED; break;          // UNAUTHENTICATED
-            case 7: appErrorType = AppErrorTypeEnum.FORBIDDEN; break;              // PERMISSION_DENIED
-            case 8: appErrorType = AppErrorTypeEnum.TOO_MANY_REQUESTS; break;      // RESOURCE_EXHAUSTED
-            default: appErrorType = AppErrorTypeEnum.INTERNAL_ERROR; break;
-        }
-        throw new AppError(appErrorType, { message: msg });
-    }
-    if (error instanceof AppError) throw error;
-    throw AppErrors.internalError(error?.message ?? 'gRPC call failed');
-}
-
 @Injectable()
 export class UserClientService implements OnModuleInit {
     private userService!: UserServiceClient;
@@ -68,133 +48,91 @@ export class UserClientService implements OnModuleInit {
 
     // ─── Auth ────────────────────────────────────────────────────────────
 
-    async login(data: LoginRequest): Promise<AuthSessionResponse> {
-        try {
-            return await lastValueFrom(this.userService.login(data));
-        } catch (e) { fromGrpcError(e); }
+    login(data: LoginRequest): Promise<AuthSessionResponse> {
+        return grpcCall(this.userService.login(data));
     }
 
-    async register(data: RegisterRequest): Promise<RegisterResponse> {
-        try {
-            return await lastValueFrom(this.userService.register(data));
-        } catch (e) { fromGrpcError(e); }
+    register(data: RegisterRequest): Promise<RegisterResponse> {
+        return grpcCall(this.userService.register(data));
     }
 
-    async confirmEmail(data: ConfirmEmailRequest): Promise<ConfirmEmailResponse> {
-        try {
-            return await lastValueFrom(this.userService.confirmEmail(data));
-        } catch (e) { fromGrpcError(e); }
+    confirmEmail(data: ConfirmEmailRequest): Promise<ConfirmEmailResponse> {
+        return grpcCall(this.userService.confirmEmail(data));
     }
 
-    async resendConfirmation(data: ResendConfirmationRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.resendConfirmation(data));
-        } catch (e) { fromGrpcError(e); }
+    resendConfirmation(data: ResendConfirmationRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.resendConfirmation(data));
     }
 
-    async refreshAccessToken(data: RefreshTokenRequest): Promise<AccessTokenResponse> {
-        try {
-            return await lastValueFrom(this.userService.refreshAccessToken(data));
-        } catch (e) { fromGrpcError(e); }
+    refreshAccessToken(data: RefreshTokenRequest): Promise<AccessTokenResponse> {
+        return grpcCall(this.userService.refreshAccessToken(data));
     }
 
-    async logout(data: LogoutRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.logout(data));
-        } catch (e) { fromGrpcError(e); }
+    logout(data: LogoutRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.logout(data));
     }
 
-    async devSwitchAccount(data: DevSwitchRequest): Promise<AuthSessionResponse> {
-        try {
-            return await lastValueFrom(this.userService.devSwitchAccount(data));
-        } catch (e) { fromGrpcError(e); }
+    devSwitchAccount(data: DevSwitchRequest): Promise<AuthSessionResponse> {
+        return grpcCall(this.userService.devSwitchAccount(data));
     }
 
-    async findUserByAccessToken(data: FindByTokenRequest): Promise<AuthUserResponse> {
-        try {
-            return await lastValueFrom(this.userService.findUserByAccessToken(data));
-        } catch (e) { fromGrpcError(e); }
+    findUserByAccessToken(data: FindByTokenRequest): Promise<AuthUserResponse> {
+        return grpcCall(this.userService.findUserByAccessToken(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────
 
-    async findAllUsers(data: PaginationRequest): Promise<PaginatedUsersResponse> {
-        try {
-            return await lastValueFrom(this.userService.findAllUsers(data));
-        } catch (e) { fromGrpcError(e); }
+    findAllUsers(data: PaginationRequest): Promise<PaginatedUsersResponse> {
+        return grpcCall(this.userService.findAllUsers(data));
     }
 
-    async findUserById(data: UserIdRequest): Promise<UserResponse> {
-        try {
-            return await lastValueFrom(this.userService.findUserById(data));
-        } catch (e) { fromGrpcError(e); }
+    findUserById(data: UserIdRequest): Promise<UserResponse> {
+        return grpcCall(this.userService.findUserById(data));
     }
 
-    async deleteUser(data: UserIdRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.deleteUser(data));
-        } catch (e) { fromGrpcError(e); }
+    deleteUser(data: UserIdRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.deleteUser(data));
     }
 
-    async updateUser(data: UpdateUserRequest): Promise<UserResponse> {
-        try {
-            return await lastValueFrom(this.userService.updateUser(data));
-        } catch (e) { fromGrpcError(e); }
+    updateUser(data: UpdateUserRequest): Promise<UserResponse> {
+        return grpcCall(this.userService.updateUser(data));
     }
 
-    async changePassword(data: ChangePasswordRequest): Promise<UserResponse> {
-        try {
-            return await lastValueFrom(this.userService.changePassword(data));
-        } catch (e) { fromGrpcError(e); }
+    changePassword(data: ChangePasswordRequest): Promise<UserResponse> {
+        return grpcCall(this.userService.changePassword(data));
     }
 
-    async getProfile(data: UserIdRequest): Promise<UserResponse> {
-        try {
-            return await lastValueFrom(this.userService.getProfile(data));
-        } catch (e) { fromGrpcError(e); }
+    getProfile(data: UserIdRequest): Promise<UserResponse> {
+        return grpcCall(this.userService.getProfile(data));
     }
 
-    async setEmailConfirmed(data: UserIdRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.setEmailConfirmed(data));
-        } catch (e) { fromGrpcError(e); }
+    setEmailConfirmed(data: UserIdRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.setEmailConfirmed(data));
     }
 
-    async addRole(data: AddRoleRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.addRole(data));
-        } catch (e) { fromGrpcError(e); }
+    addRole(data: AddRoleRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.addRole(data));
     }
 
-    async removeRole(data: RemoveRoleRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.removeRole(data));
-        } catch (e) { fromGrpcError(e); }
+    removeRole(data: RemoveRoleRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.removeRole(data));
     }
 
     // ─── Invite ──────────────────────────────────────────────────────────
 
-    async createInvite(data: CreateInviteRequest): Promise<InviteCreatedResponse> {
-        try {
-            return await lastValueFrom(this.userService.createInvite(data));
-        } catch (e) { fromGrpcError(e); }
+    createInvite(data: CreateInviteRequest): Promise<InviteCreatedResponse> {
+        return grpcCall(this.userService.createInvite(data));
     }
 
-    async findAllInvites(): Promise<InviteListResponse> {
-        try {
-            return await lastValueFrom(this.userService.findAllInvites({}));
-        } catch (e) { fromGrpcError(e); }
+    findAllInvites(): Promise<InviteListResponse> {
+        return grpcCall(this.userService.findAllInvites({}));
     }
 
-    async checkInvite(data: InviteTokenRequest): Promise<InviteLinkResponse> {
-        try {
-            return await lastValueFrom(this.userService.checkInvite(data));
-        } catch (e) { fromGrpcError(e); }
+    checkInvite(data: InviteTokenRequest): Promise<InviteLinkResponse> {
+        return grpcCall(this.userService.checkInvite(data));
     }
 
-    async deleteInvite(data: InviteIdRequest): Promise<EmptyResponse> {
-        try {
-            return await lastValueFrom(this.userService.deleteInvite(data));
-        } catch (e) { fromGrpcError(e); }
+    deleteInvite(data: InviteIdRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.deleteInvite(data));
     }
 }
