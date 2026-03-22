@@ -16,13 +16,14 @@ COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY .npmrc .npmrc
 COPY tsconfig.json tsconfig.json
+RUN node -e "const p=require('./package.json'); delete p.devDependencies?.turbo; require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2))"
 RUN --mount=type=cache,id=pnpm,target=~/pnpm-store \
     pnpm install --frozen-lockfile
 
 # ---------- builder ----------
 FROM base AS builder
 COPY --from=deps /app ./
-RUN pnpm turbo run build --filter=@asko/web...
+RUN pnpm dlx turbo run build --filter=@asko/web...
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner
