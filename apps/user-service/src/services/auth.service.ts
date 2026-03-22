@@ -1,5 +1,4 @@
 import { Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
-import { Request, CookieOptions, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 
 import { AppConfig } from 'app.config';
@@ -10,15 +9,10 @@ import { EmailService } from 'common/email/email';
 import { AppError, AppErrors, AppErrorTypeEnum } from 'common/error';
 import { LoginThrottleService } from './login-throttle.service';
 import { InviteService } from './invite.service';
-import { RepairerService } from 'modules/repairer/services/repairer.service';
-import { DealerService } from 'modules/dealer/services/dealer.service';
 import Crypto from './crypto.service';
 import crypto from 'crypto'
 
-import ms from 'ms'
-
 import {
-    getHostUrl,
     toAuthUser,
     LoginCredentials,
     CreateUserDto,
@@ -29,7 +23,6 @@ import {
     JwtPayload,
     JwtRefreshPayload,
     Role,
-    REFRESH_TOKEN,
     DEFAULT_USER_ROLE,
     TokenType,
     AuthProvider
@@ -37,6 +30,18 @@ import {
 import { time } from 'utils';
 
 export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider' | 'username'>
+
+interface LoginParams extends LoginCredentials {
+    deviceInfo: string;
+    ipAddress: string;
+}
+
+interface RegisterParams {
+    dto: CreateUserDto;
+    inviteToken?: string;
+    deviceInfo: string;
+    ipAddress: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -46,17 +51,15 @@ export class AuthService {
         private readonly config: AppConfig,
         private readonly loginThrottle: LoginThrottleService,
         private readonly inviteService: InviteService,
-        private readonly repairerService: RepairerService,
-        private readonly dealerService: DealerService,
     ) { }
 
-    async login(params: LoginCredentials, request: Request, response: Response): Promise<IAuthSession> {
+    async login(params: LoginParams): Promise<IAuthSession> {
         if (params.email && params.password) {
-            return await this.credentialsLogin({ email: params.email, password: params.password }, request, response)
+            return await this.credentialsLogin(params as LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>)
         } else if (params.phone) {
-            return await this.OPTLogin({ phone: params.phone }, request, response)
+            return await this.OPTLogin(params as LoginParams & Required<Pick<LoginCredentials, 'phone'>>)
         } else if (params.googleId) {
-            return await this.GoogleLogin({ googleId: params.googleId }, request, response)
+            return await this.GoogleLogin(params as LoginParams & Required<Pick<LoginCredentials, 'googleId'>>)
         } else {
             throw AppErrors.badRequest('No valid login method provided')
         }
@@ -65,7 +68,7 @@ export class AuthService {
     /**
      * Login by email and password
      */
-    async credentialsLogin(params: Required<Pick<LoginCredentials, 'email' | 'password'>>, request: Request, response: Response): Promise<IAuthSession> {
+    async credentialsLogin(params: LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>): Promise<IAuthSession> {
         const lockSeconds = await this.loginThrottle.isLocked(params.email);
         if (lockSeconds > 0) {
             const minutes = Math.ceil(lockSeconds / 60);
@@ -86,44 +89,41 @@ export class AuthService {
             user.id,
             <Role[]>user.roles,
             { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: AuthProvider.EMAIL },
-            { deviceInfo: request.headers['user-agent'] ?? "unknown", ipAddress: request.ip ?? "unknown" }
+            { deviceInfo: params.deviceInfo, ipAddress: params.ipAddress }
         )
-
-        this.setRefreshTokenCookie(request, response, refresh_token)
 
         return {
             access_token,
-            user: toAuthUser(user),
-            // ...(process.env.NODE_ENV !== 'production' && { refresh_token }),
             refresh_token,
+            user: toAuthUser(user),
         }
     }
 
     /**
     * Login with one time password sended by sms service
     */
-    async OPTLogin(_: Required<Pick<LoginCredentials, 'phone'>>, __: Request, ___: Response): Promise<IAuthSession> {
+    async OPTLogin(_: LoginParams & Required<Pick<LoginCredentials, 'phone'>>): Promise<IAuthSession> {
         throw new NotImplementedException()
     }
 
-    async GoogleLogin(_: Required<Pick<LoginCredentials, 'googleId'>>, __: Request, ___: Response): Promise<IAuthSession> {
+    async GoogleLogin(_: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<IAuthSession> {
         throw new NotImplementedException()
     }
 
-    // TODO handle user removal if error occurend in next steps
-    async register(dto: CreateUserDto, request: Request, response: Response, inviteToken?: string): Promise<IAuthSession> {
+    async register(params: RegisterParams): Promise<IAuthSession & { roles: Role[] }> {
+        const { dto, inviteToken, deviceInfo, ipAddress } = params;
         if (dto.email && dto.password) {
-            return await this.emailPasswordRegister(dto, request, response, inviteToken)
+            return await this.emailPasswordRegister(dto, deviceInfo, ipAddress, inviteToken)
         } else if (dto.phone) {
-            return await this.OPTRegister(dto, request, response)
+            return await this.OPTRegister(dto, deviceInfo, ipAddress)
         } else if (dto.googleId) {
-            return await this.GoogleRegister(dto, request, response)
+            return await this.GoogleRegister(dto, deviceInfo, ipAddress)
         } else {
             throw AppErrors.badRequest('No valid registration method provided')
         }
     }
 
-    private async emailPasswordRegister(dto: CreateUserDto, request: Request, response: Response, inviteToken?: string): Promise<IAuthSession> {
+    private async emailPasswordRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string, inviteToken?: string): Promise<IAuthSession & { roles: Role[] }> {
         let roles: Role[] = [DEFAULT_USER_ROLE];
 
         if (inviteToken) {
@@ -135,32 +135,28 @@ export class AuthService {
         dto.roles = roles;
         const newUser = await this.userService.create(dto)
 
-        // Auto-create role-specific profile on invite registration
-        await this.createRoleProfile(newUser.id, roles);
-
         await this.sendEmailConfirmation(newUser);
 
         const { access_token, refresh_token } = await this.generateTokens(
             newUser.id,
             roles,
             { email: newUser.email, phone: newUser.phone, googleId: newUser.googleId, authProvider: AuthProvider.EMAIL },
-            { deviceInfo: request.headers['user-agent'] ?? "unknown", ipAddress: request.ip ?? "unknown" }
+            { deviceInfo, ipAddress }
         )
-
-        this.setRefreshTokenCookie(request, response, refresh_token)
 
         return {
             access_token,
+            refresh_token,
             user: toAuthUser(newUser),
-            ...(process.env.NODE_ENV !== 'production' && { refresh_token }),
+            roles,
         }
     }
 
-    private async OPTRegister(_: CreateUserDto, __: Request, ___: Response): Promise<IAuthSession> {
+    private async OPTRegister(_dto: CreateUserDto, _deviceInfo: string, _ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
         throw new NotImplementedException()
     }
 
-    private async GoogleRegister(_: CreateUserDto, __: Request, ___: Response): Promise<IAuthSession> {
+    private async GoogleRegister(_dto: CreateUserDto, _deviceInfo: string, _ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
         throw new NotImplementedException()
     }
 
@@ -219,18 +215,13 @@ export class AuthService {
         }
     }
 
-    async logout(cookies: any) {
-        const refresToken = cookies[REFRESH_TOKEN.cookie.name]
-
-        const rTknHash = Crypto.createTokenHash(refresToken)
-
+    async logout(refreshToken: string) {
+        const rTknHash = Crypto.createTokenHash(refreshToken)
         await this.userService.removeToken(rTknHash)
     }
 
-    async refreshAccessToken(request: Request, _: Response): Promise<IAccessToken> {
+    async refreshAccessToken(refreshToken: string): Promise<IAccessToken> {
         try {
-            const refreshToken = request.cookies[REFRESH_TOKEN.cookie.name];
-
             if (!refreshToken) {
                 throw new UnauthorizedException('Refresh token not found')
             }
@@ -264,7 +255,7 @@ export class AuthService {
         }
     }
 
-    async devSwitchAccount(refreshToken: string, request: Request, response: Response): Promise<IAuthSession> {
+    async devSwitchAccount(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<IAuthSession> {
         const rTknPayload = this.jwtService.verify<JwtRefreshPayload>(
             refreshToken,
             { publicKey: Buffer.from(this.config.jwt.refresh_token.public_key, 'base64').toString('utf-8') }
@@ -275,8 +266,6 @@ export class AuthService {
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found for this refresh token');
         }
-
-        this.setRefreshTokenCookie(request, response, refreshToken);
 
         const { access_token } = this.generateAccessToken(
             user.id,
@@ -300,30 +289,6 @@ export class AuthService {
             throw AppErrors.unauthorized('Invalid credentials');
         }
         return user;
-    }
-
-    private createRefreshTokenCookie(request: Request): {
-        name: string;
-        options: CookieOptions;
-    } | null {
-        const url = getHostUrl(request.headers);
-
-        if (!url) {
-            return null;
-        }
-
-        return {
-            name: REFRESH_TOKEN.cookie.name,
-            options: REFRESH_TOKEN.cookie.options,
-        };
-    }
-
-    private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
-        const cookie = this.createRefreshTokenCookie(request);
-        if (!cookie) {
-            throw new UnauthorizedException('You are unauthenticated!')
-        }
-        response.cookie(cookie.name, refreshToken, cookie.options);
     }
 
     async findUserByAccessToken(token: string): Promise<IAuthUser> {
@@ -393,18 +358,6 @@ export class AuthService {
         return {
             access_token,
             refresh_token
-        }
-    }
-
-    private async createRoleProfile(userId: string, roles: Role[]): Promise<void> {
-        try {
-            if (roles.includes(Role.REPAIRER)) {
-                await this.repairerService.create({ userId, city: '', specializations: [] });
-            } else if (roles.includes(Role.DEALER)) {
-                await this.dealerService.createProfile({ userId });
-            }
-        } catch (error) {
-            console.error(`Failed to create role profile for user ${userId}:`, error);
         }
     }
 
