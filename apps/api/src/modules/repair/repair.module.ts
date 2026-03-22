@@ -6,14 +6,14 @@ import { WorkStepService } from './services/work-step.service';
 import { RepairRequestController } from './controllers/repair-request.controller';
 import { NotificationModule } from '../notification/notification.module';
 import { FileUploadModule } from '../file-upload/file-upload.module';
-import { PaymentModule } from '../payment/payment.module';
+import { PaymentClientModule } from '../payment-client/payment-client.module';
 
 @Module({
     imports: [
         MikroOrmModule.forFeature([RepairRequest, WorkStep, RepairPayment, UserDevice, Certificate, Repairer]),
         NotificationModule,
         FileUploadModule,
-        PaymentModule,
+        PaymentClientModule,
     ],
     controllers: [RepairRequestController],
     providers: [RepairRequestService, WorkStepService],

@@ -1,4 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Certificate, UserDevice, DealerProfile, Device, Address, DealerClient, User } from 'entities';
 import {
@@ -12,7 +13,6 @@ import {
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { DealerService } from 'modules/dealer/services/dealer.service';
-import { PaymentService } from 'modules/payment/services/payment.service';
 import { ExternalCertValidationService } from 'modules/device/services/external-cert-validation.service';
 
 /**
@@ -34,8 +34,7 @@ export class CertificateService {
         private readonly em: EntityManager,
         @Inject(forwardRef(() => DealerService))
         private readonly dealerService: DealerService,
-        @Inject(forwardRef(() => PaymentService))
-        private readonly paymentService: PaymentService,
+        private readonly paymentService: PaymentClientService,
         private readonly externalCertValidation: ExternalCertValidationService,
     ) { }
 

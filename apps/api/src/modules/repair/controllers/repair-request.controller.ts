@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFil
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairRequestService } from '../services/repair-request.service';
 import { WorkStepService } from '../services/work-step.service';
-import { PaymentService } from 'modules/payment/services/payment.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -28,7 +28,7 @@ export class RepairRequestController {
     constructor(
         private readonly repairRequestService: RepairRequestService,
         private readonly workStepService: WorkStepService,
-        private readonly paymentService: PaymentService,
+        private readonly paymentService: PaymentClientService,
     ) {}
 
     // ── User endpoints ──

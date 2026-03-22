@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { DealerService } from '../services/dealer.service';
-import { PaymentService } from 'modules/payment/services/payment.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateDealerProfileDto,
     UpdateDealerProfileDto,
@@ -22,7 +22,7 @@ import { JwtAuthUser } from 'common/decorators/user.decorator';
 export class DealerController {
     constructor(
         private readonly dealerService: DealerService,
-        private readonly paymentService: PaymentService,
+        private readonly paymentService: PaymentClientService,
     ) {}
 
     // ── Admin ──

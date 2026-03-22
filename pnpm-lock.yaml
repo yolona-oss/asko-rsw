@@ -228,9 +228,18 @@ importers:
 
   apps/payment-service:
     dependencies:
+      '@asko/proto':
+        specifier: workspace:*
+        version: link:../../packages/proto
       '@asko/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@grpc/grpc-js':
+        specifier: ^1.12.6
+        version: 1.14.3
+      '@grpc/proto-loader':
+        specifier: ^0.7.15
+        version: 0.7.15
       '@mikro-orm/core':
         specifier: ^6.5.9
         version: 6.6.9
@@ -249,24 +258,12 @@ importers:
       '@nestjs/core':
         specifier: ^11.1.5
         version: 11.1.16(@nestjs/common@11.1.16(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.16)(@nestjs/websockets@11.1.16)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express':
+      '@nestjs/microservices':
         specifier: ^11.1.5
-        version: 11.1.16(@nestjs/common@11.1.16(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.16)
-      class-transformer:
-        specifier: ^0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: ^0.14.2
-        version: 0.14.4
-      compression:
-        specifier: ^1.8.1
-        version: 1.8.1
+        version: 11.1.17(@grpc/grpc-js@1.14.3)(@nestjs/common@11.1.16(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.16)(@nestjs/websockets@11.1.16)(ioredis@5.10.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
-      helmet:
-        specifier: ^8.1.0
-        version: 8.1.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -283,9 +280,6 @@ importers:
       '@nestjs/schematics':
         specifier: ^11.0.5
         version: 11.0.9(chokidar@4.0.3)(typescript@5.9.3)
-      '@types/compression':
-        specifier: ^1.7.5
-        version: 1.8.1
       '@types/node':
         specifier: ^24.1.0
         version: 24.12.0

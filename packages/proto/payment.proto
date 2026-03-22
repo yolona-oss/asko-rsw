@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package payment;
+
+service PaymentService {
+    // Payment operations
+    rpc GetOptions(EmptyRequest) returns (PaymentOptionsResponse);
+    rpc CreateInvoice(CreateInvoiceRequest) returns (PaymentResponse);
+    rpc ProcessInvoice(ProcessInvoiceRequest) returns (ProcessInvoiceResponse);
+    rpc CreatePayment(CreatePaymentRequest) returns (ProcessInvoiceResponse);
+    rpc ProcessPayout(ProcessPayoutRequest) returns (PayoutResponse);
+    rpc HandleWebhook(WebhookRequest) returns (WebhookResponse);
+    rpc RefundPayment(RefundPaymentRequest) returns (EmptyResponse);
+
+    // Queries
+    rpc GetPaymentsByTarget(GetPaymentsByTargetRequest) returns (PaymentListResponse);
+    rpc ListPayments(ListPaymentsRequest) returns (PaginatedPaymentsResponse);
+    rpc ListUserPayments(ListUserPaymentsRequest) returns (PaginatedPaymentsResponse);
+    rpc GetPaymentStats(GetPaymentStatsRequest) returns (PaymentStatsResponse);
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message EmptyRequest {}
+
+message CreateInvoiceRequest {
+    string userId = 1;
+    string targetType = 2;
+    string targetId = 3;
+    double amount = 4;
+    string currency = 5;
+}
+
+message ProcessInvoiceRequest {
+    string userId = 1;
+    string targetType = 2;
+    string targetId = 3;
+    string provider = 4;
+}
+
+message CreatePaymentRequest {
+    string userId = 1;
+    string targetType = 2;
+    string targetId = 3;
+    double amount = 4;
+    string currency = 5;
+    string provider = 6;
+}
+
+message ProcessPayoutRequest {
+    string adminUserId = 1;
+    string targetType = 2;
+    string targetId = 3;
+    double amount = 4;
+    string recipientUserId = 5;
+    string currency = 6;
+}
+
+message WebhookRequest {
+    string providerType = 1;
+    string body = 2;
+    map<string, string> headers = 3;
+}
+
+message RefundPaymentRequest {
+    string paymentId = 1;
+}
+
+message GetPaymentsByTargetRequest {
+    string targetType = 1;
+    string targetId = 2;
+}
+
+message ListPaymentsRequest {
+    string status = 1;
+    string provider = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+    string search = 5;
+}
+
+message ListUserPaymentsRequest {
+    string userId = 1;
+    string status = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message GetPaymentStatsRequest {
+    string userId = 1;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message EmptyResponse {}
+
+message PaymentOptionsResponse {
+    repeated string providers = 1;
+    string defaultProvider = 2;
+}
+
+message PaymentRecord {
+    string id = 1;
+    string userId = 2;
+    string targetType = 3;
+    string targetId = 4;
+    double amount = 5;
+    string currency = 6;
+    string status = 7;
+    string provider = 8;
+    string providerPaymentId = 9;
+    string paidAt = 10;
+    string createdAt = 11;
+    string updatedAt = 12;
+}
+
+message PaymentResponse {
+    PaymentRecord payment = 1;
+}
+
+message ProcessInvoiceResponse {
+    string paymentId = 1;
+    string status = 2;
+    string redirectUrl = 3;
+}
+
+message PayoutResponse {
+    string paymentId = 1;
+    string status = 2;
+}
+
+message WebhookResponse {
+    bool ok = 1;
+}
+
+message PaymentListResponse {
+    repeated PaymentRecord payments = 1;
+}
+
+message PaginatedPaymentsResponse {
+    repeated PaymentRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message PaymentStatsResponse {
+    double confirmedTotal = 1;
+    double refundedTotal = 2;
+    int32 confirmedCount = 3;
+    int32 refundedCount = 4;
+}

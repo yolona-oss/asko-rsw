@@ -16,7 +16,7 @@ import {
 import { AppErrors } from 'common/error';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
 import { ImageService } from 'modules/file-upload/services/image.service';
-import { PaymentService } from 'modules/payment/services/payment.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 
 @Injectable()
 export class RepairRequestService {
@@ -24,7 +24,7 @@ export class RepairRequestService {
         private readonly em: EntityManager,
         private readonly notificationService: NotificationService,
         private readonly imageService: ImageService,
-        private readonly paymentService: PaymentService,
+        private readonly paymentService: PaymentClientService,
     ) { }
 
     /** User creates a repair request */

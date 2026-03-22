@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, Headers } from '@nestjs/common';
-import { PaymentService } from '../services/payment.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { CreatePaymentDto, ALL_ROLES, STAFF_ROLES, JwtPayload } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -7,7 +7,7 @@ import { Public } from 'common/decorators/public.decorotor';
 
 @Controller('payment')
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) { }
+    constructor(private readonly paymentService: PaymentClientService) { }
 
     @RequiredRoles(...ALL_ROLES)
     @Get('options')

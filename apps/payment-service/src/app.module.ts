@@ -10,8 +10,7 @@ import { PaymentProviderService } from 'services/payment-provider.service';
 import { DummyProvider } from 'providers/dummy.provider';
 import { YookassaProvider } from 'providers/yookassa.provider';
 import { TbankProvider } from 'providers/tbank.provider';
-import { PaymentController } from 'controllers/payment.controller';
-import { WebhookController } from 'controllers/webhook.controller';
+import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
 
 @Module({
     imports: [
@@ -19,7 +18,7 @@ import { WebhookController } from 'controllers/webhook.controller';
         DatabaseModule,
         MikroOrmModule.forFeature([PaymentEntity]),
     ],
-    controllers: [PaymentController, WebhookController],
+    controllers: [PaymentGrpcController],
     providers: [
         PaymentService,
         PaymentDomainService,

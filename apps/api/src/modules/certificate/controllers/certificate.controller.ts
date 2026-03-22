@@ -15,13 +15,13 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
-import { PaymentService } from 'modules/payment/services/payment.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 
 @Controller('certificates')
 export class CertificateController {
     constructor(
         private readonly certificateService: CertificateService,
-        private readonly paymentService: PaymentService,
+        private readonly paymentService: PaymentClientService,
     ) {}
 
     /** User adds a certificate they purchased */

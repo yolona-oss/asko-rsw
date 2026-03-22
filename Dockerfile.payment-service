@@ -32,11 +32,12 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/payment-service/dist ./apps/payment-service/dist
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
+COPY --from=builder /app/packages/proto ./packages/proto
 
 COPY apps/payment-service/.env.prod ./apps/payment-service/.env.prod
 
 WORKDIR /app/apps/payment-service
 
-EXPOSE 4100
+EXPOSE 5001
 
 CMD ["node", "dist/main.js"]

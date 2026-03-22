@@ -77,7 +77,7 @@ Microservice responsible for:
 * payment status management
 * payment lifecycle events
 
-Runs as standalone NestJS HTTP app.
+Runs as NestJS microservice with gRPC transport.
 
 ```bash
 pnpm run start:dev
@@ -177,6 +177,7 @@ packages/proto
 * user-service owns invitations
 * user-service owns refresh tokens
 * API must NOT access payment tables directly
+* API must call payment-service via gRPC
 * payment-service owns PaymentEntity
 * payment-service owns payment provider logic
 * payment-service owns webhook handling
@@ -190,7 +191,7 @@ packages/proto
 web → ui + shared/client
 api → shared + proto
 user-service → shared + proto
-payment-service → shared
+payment-service → shared + proto
 proto → standalone
 ui → standalone
 shared → standalone
@@ -243,7 +244,7 @@ Does NOT handle:
 * payment processing (delegated to payment-service)
 
 Auth must be requested via gRPC from user-service.
-Payment operations must be requested from payment-service.
+Payment operations must be requested via gRPC from payment-service (PaymentClientModule/PaymentClientService).
 
 ---
 
@@ -255,7 +256,7 @@ Payment operations must be requested from payment-service.
 * Redis
 * Socket.io
 * Nodemailer
-* PaymentModule
+* PaymentClientModule (gRPC client to payment-service)
 * FileModule
 
 ---
@@ -305,6 +306,28 @@ Stack:
 * jwt
 
 Service must expose gRPC endpoints.
+
+---
+
+## Payment Service (`apps/payment-service`)
+
+Owns:
+
+* PaymentEntity
+* Payment providers (dummy, yookassa, tbank)
+* Payment status state machine
+* Webhook handling
+* Payment event emission
+
+Stack:
+
+* NestJS
+* MikroORM
+* PostgreSQL
+* gRPC transport
+
+Service must expose gRPC endpoints.
+API gateway calls payment-service via `PaymentClientModule`.
 
 ---
 
@@ -383,6 +406,7 @@ Used by:
 
 * api
 * user-service
+* payment-service
 
 Never import entities through proto.
 

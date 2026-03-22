@@ -9,7 +9,7 @@ services:
     network_mode: host
     environment:
       NODE_ENV: production
-      PORT: 4100
+      GRPC_PORT: 5001
 
   user-service:
     build:
@@ -31,9 +31,11 @@ services:
     network_mode: host
     depends_on:
       - user-service
+      - payment-service
     environment:
       NODE_ENV: production
       USER_SERVICE_URL: "localhost:5000"
+      PAYMENT_SERVICE_URL: "localhost:5001"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s
