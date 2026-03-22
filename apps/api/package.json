@@ -104,7 +104,7 @@
         "@types/crypto-js": "^4.2.2",
         "@types/express": "^5.0.3",
         "@types/jest": "^30.0.0",
-        "@types/multer": "^2.0.0",
+        "@types/multer": "^1.4.0",
         "@types/node": "^24.1.0",
         "@types/nodemailer": "^6.4.17",
         "jest": "^30.2.0",
