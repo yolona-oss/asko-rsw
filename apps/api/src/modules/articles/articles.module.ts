@@ -3,10 +3,10 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Article } from 'entities';
 import { ArticlesService } from './services/articles.service';
 import { ArticlesController } from './controllers/articles.controller';
-import { FileUploadModule } from 'modules/file-upload/file-upload.module';
+import { FileClientModule } from 'modules/file-client/file-client.module';
 
 @Module({
-    imports: [MikroOrmModule.forFeature([Article]), FileUploadModule],
+    imports: [MikroOrmModule.forFeature([Article]), FileClientModule],
     controllers: [ArticlesController],
     providers: [ArticlesService],
     exports: [ArticlesService],

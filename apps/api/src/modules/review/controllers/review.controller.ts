@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReviewService } from '../services/review.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -14,7 +14,7 @@ import { Public } from 'common/decorators/public.decorotor';
 export class ReviewController {
     constructor(
         private readonly reviewService: ReviewService,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
     ) { }
 
     /** User submits a review */
@@ -50,7 +50,7 @@ export class ReviewController {
         file: Express.Multer.File,
     ) {
         await this.reviewService.findUserReview(user.sub, id);
-        return this.imageService.uploadReviewImage(file, id);
+        return this.fileService.uploadReviewImage(file, id);
     }
 
     @RequiredRoles(...ALL_ROLES)
@@ -61,13 +61,13 @@ export class ReviewController {
         @Param('imageId') imageId: string,
     ) {
         await this.reviewService.findUserReview(user.sub, id);
-        return this.imageService.remove(imageId);
+        return this.fileService.remove(imageId);
     }
 
     @Public()
     @Get(':id/images')
     async findImages(@Param('id') id: string) {
-        return this.imageService.findAttachedImages(ImageTypeEnum.Review, id);
+        return this.fileService.findAttachedImages(ImageTypeEnum.Review, id);
     }
 
     @Public()

@@ -3,7 +3,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Device, UserDevice, Address } from 'entities';
 import { CreateDeviceDto, UpdateDeviceDto, RegisterUserDeviceDto, PaginationDto, DeviceType, ImageTypeEnum } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import { ExternalCertValidationService } from './external-cert-validation.service';
 
 import { slugify } from 'common/utils'
@@ -16,7 +16,7 @@ const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|gif|svg|avif)$/i;
 export class DeviceService {
     constructor(
         private readonly em: EntityManager,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
         private readonly externalCertValidation: ExternalCertValidationService,
     ) { }
 
@@ -109,7 +109,7 @@ export class DeviceService {
                     for (const url of product.images) {
                         if (typeof url !== 'string' || !IMAGE_EXTENSIONS.test(url)) continue;
                         try {
-                            await this.imageService.createFromUrl(url, ImageTypeEnum.Device, device.id, order++);
+                            await this.fileService.createFromUrl(url, ImageTypeEnum.Device, device.id, order++);
                         } catch {
                             console.error(`DeviceService::importDevices(): Cannot create image entitiy with static url entitiy`)
                         }

@@ -14,7 +14,7 @@ import {
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class RepairRequestService {
     constructor(
         private readonly em: EntityManager,
         private readonly notificationService: NotificationService,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
         private readonly paymentService: PaymentClientService,
     ) { }
 
@@ -273,7 +273,7 @@ export class RepairRequestService {
         // Upload completion images
         if (files && files.length > 0) {
             for (const file of files) {
-                await this.imageService.uploadRepairRequestImage(file, requestId);
+                await this.fileService.uploadRepairRequestImage(file, requestId);
             }
         }
 

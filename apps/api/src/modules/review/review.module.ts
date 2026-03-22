@@ -3,10 +3,10 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Review, RepairRequest, Repairer } from 'entities';
 import { ReviewService } from './services/review.service';
 import { ReviewController } from './controllers/review.controller';
-import { FileUploadModule } from 'modules/file-upload/file-upload.module';
+import { FileClientModule } from 'modules/file-client/file-client.module';
 
 @Module({
-    imports: [MikroOrmModule.forFeature([Review, RepairRequest, Repairer]), FileUploadModule],
+    imports: [MikroOrmModule.forFeature([Review, RepairRequest, Repairer]), FileClientModule],
     controllers: [ReviewController],
     providers: [ReviewService],
     exports: [ReviewService],

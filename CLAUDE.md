@@ -9,6 +9,7 @@ ASKO repair management platform — a pnpm + Turborepo monorepo with microservic
 Main change:
 Auth, user management, and invitations are handled by a dedicated microservice (`apps/user-service`).
 Payment processing is handled by a dedicated microservice (`apps/payment-service`).
+File uploads and image management are handled by a dedicated microservice (`apps/file-service`).
 gRPC contracts are stored in `packages/proto`.
 
 ---
@@ -88,6 +89,26 @@ pnpm run lint
 
 ---
 
+### File Service (`apps/file-service`)
+
+Microservice responsible for:
+
+* file uploads (cloudinary / local storage)
+* image processing (thumbnails, multiple sizes)
+* image entity management (CRUD, attach/unattach, reorder)
+* blank image seeding
+
+Runs as NestJS microservice with gRPC transport.
+
+```bash
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run lint
+```
+
+---
+
 ### Web (`apps/web`)
 
 ```bash
@@ -143,6 +164,7 @@ Example:
 apps/api → own DB tables
 apps/user-service → own DB tables
 apps/payment-service → own DB tables
+apps/file-service → own DB tables
 
 ```bash
 npx mikro-orm migration:create
@@ -159,6 +181,7 @@ npx mikro-orm migration:up
 apps/api
 apps/user-service
 apps/payment-service
+apps/file-service
 apps/web
 
 packages/shared
@@ -182,6 +205,11 @@ packages/proto
 * payment-service owns payment provider logic
 * payment-service owns webhook handling
 * payment-service emits events for domain side effects
+* API must NOT access image tables directly
+* API must call file-service via gRPC
+* file-service owns Image entity
+* file-service owns storage provider logic
+* file-service owns image processing
 
 ---
 
@@ -192,6 +220,7 @@ web → ui + shared/client
 api → shared + proto
 user-service → shared + proto
 payment-service → shared + proto
+file-service → shared + proto
 proto → standalone
 ui → standalone
 shared → standalone
@@ -242,9 +271,11 @@ Does NOT handle:
 * users
 * invitations
 * payment processing (delegated to payment-service)
+* file uploads / image management (delegated to file-service)
 
 Auth must be requested via gRPC from user-service.
 Payment operations must be requested via gRPC from payment-service (PaymentClientModule/PaymentClientService).
+File operations must be requested via gRPC from file-service (FileClientModule/FileClientService).
 
 ---
 
@@ -328,6 +359,28 @@ Stack:
 
 Service must expose gRPC endpoints.
 API gateway calls payment-service via `PaymentClientModule`.
+
+---
+
+## File Service (`apps/file-service`)
+
+Owns:
+
+* Image entity
+* Storage providers (cloudinary, local)
+* Image processing (thumbnails, sizes)
+* Blank image management
+
+Stack:
+
+* NestJS
+* MikroORM
+* PostgreSQL
+* gRPC transport
+* cloudinary
+
+Service must expose gRPC endpoints.
+API gateway calls file-service via `FileClientModule`.
 
 ---
 
@@ -439,6 +492,7 @@ Dockerfile.api
 Dockerfile.web
 Dockerfile.user-service
 Dockerfile.payment-service
+Dockerfile.file-service
 ```
 
 Use turborepo prune.

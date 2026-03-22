@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DeviceService } from '../services/device.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateDeviceDto,
     UpdateDeviceDto,
@@ -23,7 +23,7 @@ import { Public } from 'common/decorators/public.decorotor';
 export class DeviceController {
     constructor(
         private readonly deviceService: DeviceService,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
     ) {}
 
     // ── Admin: catalog management ──
@@ -78,7 +78,7 @@ export class DeviceController {
         file: Express.Multer.File,
     ) {
         await this.deviceService.findById(id);
-        return this.imageService.uploadDeviceImage(file, id);
+        return this.fileService.uploadDeviceImage(file, id);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
@@ -88,14 +88,14 @@ export class DeviceController {
         @Body() imageIds: string[],
     ) {
         await this.deviceService.findById(id);
-        return this.imageService.reorderByIds(ImageTypeEnum.Device, id, imageIds);
+        return this.fileService.reorderByIds(ImageTypeEnum.Device, id, imageIds);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Delete(':id/images/:imageId')
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
         await this.deviceService.findById(id);
-        return this.imageService.remove(imageId);
+        return this.fileService.remove(imageId);
     }
 
     // ── Public: browse catalog ──
@@ -116,7 +116,7 @@ export class DeviceController {
     @Get('slug/:slug/images')
     async findImagesBySlug(@Param('slug') slug: string) {
         const device = await this.deviceService.findBySlug(slug);
-        return this.imageService.findAttachedImages(ImageTypeEnum.Device, device.id);
+        return this.fileService.findAttachedImages(ImageTypeEnum.Device, device.id);
     }
 
     @Public()
@@ -129,7 +129,7 @@ export class DeviceController {
     @Get(':id/images')
     async findImages(@Param('id') id: string) {
         await this.deviceService.findById(id);
-        return this.imageService.findAttachedImages(ImageTypeEnum.Device, id);
+        return this.fileService.findAttachedImages(ImageTypeEnum.Device, id);
     }
 }
 

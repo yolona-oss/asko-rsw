@@ -1,0 +1,128 @@
+import { Observable } from 'rxjs';
+
+// ─── Common ────────────────────────────────────────────────────────────
+
+export interface FileData {
+    buffer: Uint8Array;
+    originalname: string;
+    mimetype: string;
+}
+
+// ─── Requests ──────────────────────────────────────────────────────────
+
+export interface UploadFileRequest {
+    file: FileData;
+    alt: string;
+}
+
+export interface UploadWithOwnerRequest {
+    file: FileData;
+    ownerId: string;
+}
+
+export interface UploadBlankRequest {
+    file: FileData;
+    type: string;
+}
+
+export interface CreateFromUrlRequest {
+    url: string;
+    ownerType: string;
+    ownerId: string;
+    order: number;
+}
+
+export interface ImageIdRequest {
+    id: string;
+}
+
+export interface AttachImageRequest {
+    imageId: string;
+    ownerType: string;
+    ownerId: string;
+}
+
+export interface FindAttachedRequest {
+    ownerType: string;
+    ownerId: string;
+}
+
+export interface CountAttachedRequest {
+    ownerId: string;
+    ownerType: string;
+}
+
+export interface FindBlankRequest {
+    blankType: string;
+}
+
+export interface ReorderItem {
+    id: string;
+    order: number;
+}
+
+export interface ReorderImagesRequest {
+    ownerType: string;
+    ownerId: string;
+    schema: ReorderItem[];
+}
+
+export interface ReorderByIdsRequest {
+    ownerType: string;
+    ownerId: string;
+    imageIds: string[];
+}
+
+// ─── Responses ─────────────────────────────────────────────────────────
+
+export interface EmptyFileResponse {}
+
+export interface ImageRecord {
+    id: string;
+    imageJson: string;
+    alt: string;
+    order: number;
+    ownerType: string;
+    ownerId: string;
+    blankType: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ImageResponse {
+    image: ImageRecord;
+}
+
+export interface ImageListResponse {
+    images: ImageRecord[];
+}
+
+export interface CountResponse {
+    count: number;
+}
+
+// ─── gRPC Service Interface ────────────────────────────────────────────
+
+export interface FileServiceClient {
+    upload(request: UploadFileRequest): Observable<ImageResponse>;
+    streamUpload(request: UploadFileRequest): Observable<ImageResponse>;
+    uploadUserAvatar(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadProductImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadDeviceImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadArticleImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadRepairRequestImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadReviewImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadBlankImage(request: UploadBlankRequest): Observable<ImageResponse>;
+
+    createFromUrl(request: CreateFromUrlRequest): Observable<ImageResponse>;
+
+    remove(request: ImageIdRequest): Observable<EmptyFileResponse>;
+    unattachImage(request: ImageIdRequest): Observable<EmptyFileResponse>;
+    attachImage(request: AttachImageRequest): Observable<ImageResponse>;
+    findAttachedImages(request: FindAttachedRequest): Observable<ImageListResponse>;
+    countAttached(request: CountAttachedRequest): Observable<CountResponse>;
+    findBlank(request: FindBlankRequest): Observable<ImageResponse>;
+
+    reorderImages(request: ReorderImagesRequest): Observable<EmptyFileResponse>;
+    reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;
+}

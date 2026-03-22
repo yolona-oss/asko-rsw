@@ -14,20 +14,20 @@ import {
     Put,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageService } from './../services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, Role, UploadImageDto } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 
 @Controller('file-upload/image')
 export class ImageUploadController {
     constructor(
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
     ) { }
 
     @Post('upload/stream')
     @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 8 * 1024 * 1024 }, }))
     async uploadStream(@UploadedFile() file: Express.Multer.File, dto: UploadImageDto) {
-        return this.imageService.streamUpload(file, dto);
+        return this.fileService.streamUpload(file, dto.alt);
     }
 
     @Post('upload')
@@ -44,7 +44,7 @@ export class ImageUploadController {
         file: Express.Multer.File,
         @Body() dto: UploadImageDto,
     ) {
-        return this.imageService.upload(file, dto);
+        return this.fileService.upload(file, dto.alt);
     }
 
     @Post('upload/avatar/:userId')
@@ -61,7 +61,7 @@ export class ImageUploadController {
         file: Express.Multer.File,
         @Param('userId') userId: string,
     ) {
-        return this.imageService.uploadUserAvatar(file, userId);
+        return this.fileService.uploadUserAvatar(file, userId);
     }
 
     @RequiredRoles(Role.SUPER_ADMIN)
@@ -80,17 +80,17 @@ export class ImageUploadController {
 
         @Param('type') type: ImageTypeEnum,
     ) {
-        return this.imageService.uploadBlankImage(file, type);
+        return this.fileService.uploadBlankImage(file, type);
     }
 
     @Delete('delete/:imageId')
     async remove(@Param('imageId') imageId: string) {
-        return this.imageService.remove(imageId);
+        return this.fileService.remove(imageId);
     }
 
     @Put('unattach/:imageId')
     async unattach(@Param('imageId') imageId: string) {
-        return this.imageService.unattachImage(imageId);
+        return this.fileService.unattachImage(imageId);
     }
 
     @Post('attach/:imageId')
@@ -98,7 +98,7 @@ export class ImageUploadController {
         @Param('imageId') imageId: string,
         @Body() dto: AttachImageDto,
     ) {
-        return this.imageService.attachImage(imageId, dto);
+        return this.fileService.attachImage(imageId, dto);
     }
 
     @Get('attached')
@@ -106,11 +106,11 @@ export class ImageUploadController {
         @Query('ownerType') ownerType: ImageTypeEnum,
         @Query('ownerId') ownerId: string,
     ) {
-        return this.imageService.findAttachedImages(ownerType, ownerId);
+        return this.fileService.findAttachedImages(ownerType, ownerId);
     }
 
     @Post('from-url')
     async createFromUrl(@Body() dto: CreateImageFromUrlDto) {
-        return this.imageService.createFromUrl(dto.url, dto.ownerType, dto.ownerId);
+        return this.fileService.createFromUrl(dto.url, dto.ownerType, dto.ownerId);
     }
 }

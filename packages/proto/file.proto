@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package file;
+
+service FileService {
+    // Upload operations
+    rpc Upload(UploadFileRequest) returns (ImageResponse);
+    rpc StreamUpload(UploadFileRequest) returns (ImageResponse);
+    rpc UploadUserAvatar(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadProductImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadDeviceImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadArticleImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadRepairRequestImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadReviewImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadBlankImage(UploadBlankRequest) returns (ImageResponse);
+
+    // URL operations
+    rpc CreateFromUrl(CreateFromUrlRequest) returns (ImageResponse);
+
+    // Management operations
+    rpc Remove(ImageIdRequest) returns (EmptyResponse);
+    rpc UnattachImage(ImageIdRequest) returns (EmptyResponse);
+    rpc AttachImage(AttachImageRequest) returns (ImageResponse);
+    rpc FindAttachedImages(FindAttachedRequest) returns (ImageListResponse);
+    rpc CountAttached(CountAttachedRequest) returns (CountResponse);
+    rpc FindBlank(FindBlankRequest) returns (ImageResponse);
+
+    // Reorder operations
+    rpc ReorderImages(ReorderImagesRequest) returns (EmptyResponse);
+    rpc ReorderByIds(ReorderByIdsRequest) returns (ImageListResponse);
+}
+
+// ─── Common ────────────────────────────────────────────────────────────
+
+message FileData {
+    bytes buffer = 1;
+    string originalname = 2;
+    string mimetype = 3;
+}
+
+// ─── Requests ──────────────────────────────────────────────────────────
+
+message UploadFileRequest {
+    FileData file = 1;
+    string alt = 2;
+}
+
+message UploadWithOwnerRequest {
+    FileData file = 1;
+    string ownerId = 2;
+}
+
+message UploadBlankRequest {
+    FileData file = 1;
+    string type = 2;
+}
+
+message CreateFromUrlRequest {
+    string url = 1;
+    string ownerType = 2;
+    string ownerId = 3;
+    int32 order = 4;
+}
+
+message ImageIdRequest {
+    string id = 1;
+}
+
+message AttachImageRequest {
+    string imageId = 1;
+    string ownerType = 2;
+    string ownerId = 3;
+}
+
+message FindAttachedRequest {
+    string ownerType = 1;
+    string ownerId = 2;
+}
+
+message CountAttachedRequest {
+    string ownerId = 1;
+    string ownerType = 2;
+}
+
+message FindBlankRequest {
+    string blankType = 1;
+}
+
+message ReorderImagesRequest {
+    string ownerType = 1;
+    string ownerId = 2;
+    repeated ReorderItem schema = 3;
+}
+
+message ReorderItem {
+    string id = 1;
+    int32 order = 2;
+}
+
+message ReorderByIdsRequest {
+    string ownerType = 1;
+    string ownerId = 2;
+    repeated string imageIds = 3;
+}
+
+// ─── Responses ─────────────────────────────────────────────────────────
+
+message EmptyResponse {}
+
+message ImageRecord {
+    string id = 1;
+    string imageJson = 2;
+    string alt = 3;
+    int32 order = 4;
+    string ownerType = 5;
+    string ownerId = 6;
+    string blankType = 7;
+    string createdAt = 8;
+    string updatedAt = 9;
+}
+
+message ImageResponse {
+    ImageRecord image = 1;
+}
+
+message ImageListResponse {
+    repeated ImageRecord images = 1;
+}
+
+message CountResponse {
+    int32 count = 1;
+}

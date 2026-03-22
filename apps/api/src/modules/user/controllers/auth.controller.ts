@@ -4,7 +4,7 @@ import { Request, Response } from 'express'
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { RepairerService } from 'modules/repairer/services/repairer.service';
 import { DealerService } from 'modules/dealer/services/dealer.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 
 import {
     ALL_ROLES,
@@ -29,7 +29,7 @@ export class AuthController {
         private readonly userClient: UserClientService,
         private readonly repairerService: RepairerService,
         private readonly dealerService: DealerService,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
     ) { }
 
     private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
@@ -106,8 +106,8 @@ export class AuthController {
         // Attach default avatar (moved from UserService)
         if (result.user?.id) {
             try {
-                const defaultAvatar = await this.imageService.findBlank(ImageTypeEnum.User);
-                await this.imageService.attachImage(defaultAvatar.id, { ownerId: result.user.id, ownerType: ImageTypeEnum.User });
+                const { image: defaultAvatar } = await this.fileService.findBlank(ImageTypeEnum.User);
+                await this.fileService.attachImage(defaultAvatar.id, { ownerId: result.user.id, ownerType: ImageTypeEnum.User });
             } catch {
                 // Blank image not yet seeded - user is created without a default avatar
             }

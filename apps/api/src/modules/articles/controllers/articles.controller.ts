@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ArticlesService } from '../services/articles.service';
-import { ImageService } from 'modules/file-upload/services/image.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateArticleDto,
     UpdateArticleDto,
@@ -19,7 +19,7 @@ import { Public } from 'common/decorators/public.decorotor';
 export class ArticlesController {
     constructor(
         private readonly articlesService: ArticlesService,
-        private readonly imageService: ImageService,
+        private readonly fileService: FileClientService,
     ) {}
 
     // ── Admin: CRUD ──
@@ -68,7 +68,7 @@ export class ArticlesController {
         file: Express.Multer.File,
     ) {
         await this.articlesService.findById(id);
-        return this.imageService.uploadArticleImage(file, id);
+        return this.fileService.uploadArticleImage(file, id);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
@@ -78,14 +78,14 @@ export class ArticlesController {
         @Body() imageIds: string[],
     ) {
         await this.articlesService.findById(id);
-        return this.imageService.reorderByIds(ImageTypeEnum.Article, id, imageIds);
+        return this.fileService.reorderByIds(ImageTypeEnum.Article, id, imageIds);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Delete(':id/images/:imageId')
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
         await this.articlesService.findById(id);
-        return this.imageService.remove(imageId);
+        return this.fileService.remove(imageId);
     }
 
     // ── Public ──
@@ -106,6 +106,6 @@ export class ArticlesController {
     @Get(':slug/images')
     async findImages(@Param('slug') slug: string) {
         const article = await this.articlesService.findBySlug(slug);
-        return this.imageService.findAttachedImages(ImageTypeEnum.Article, article.id);
+        return this.fileService.findAttachedImages(ImageTypeEnum.Article, article.id);
     }
 }
