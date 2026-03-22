@@ -188,7 +188,7 @@ export class CertificateService {
         await this.em.persist(cert);
         await this.em.flush();
 
-        // Create payment invoice for the client user via PaymentModule
+        // Create payment invoice for the client user via payment-service
         await this.paymentService.createInvoice(
             dto.clientUserId,
             PaymentTargetType.CERTIFICATE,

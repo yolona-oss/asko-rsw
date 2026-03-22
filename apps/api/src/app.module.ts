@@ -22,7 +22,6 @@ import { RepairerModule } from 'modules/repairer/repairer.module';
 import { DealerModule } from 'modules/dealer/dealer.module';
 import { ReviewModule } from 'modules/review/review.module';
 import { NotificationModule } from 'modules/notification/notification.module';
-import { PaymentModule } from 'modules/payment/payment.module';
 
 import { join } from 'path';
 import { CursorModule } from 'modules/cursor/cursor.module';
@@ -49,7 +48,6 @@ console.log("Images path: ", join(process.cwd(), 'images'))
         DealerModule,
         ReviewModule,
         NotificationModule,
-        PaymentModule,
 
         CursorModule,
         HealthModule,

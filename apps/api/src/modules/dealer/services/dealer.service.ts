@@ -22,7 +22,7 @@ function calculateDealerPoints(certificatePrice: number): number {
 
 @Injectable()
 export class DealerService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(private readonly em: EntityManager) { }
 
     /** Admin creates dealer profile for a user */
     async createProfile(dto: CreateDealerProfileDto): Promise<DealerProfile> {
@@ -219,7 +219,7 @@ export class DealerService {
         return withdrawal;
     }
 
-    /** Get withdrawal details for payout processing via PaymentModule */
+    /** Get withdrawal details for payout processing via payment-service */
     async getWithdrawalForPayout(withdrawalId: string): Promise<{ amount: number; dealerUserId: string }> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer', 'dealer.user'] });
         if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
