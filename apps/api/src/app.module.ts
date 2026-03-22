@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
+import { MikroOrmMiddleware } from '@mikro-orm/nestjs';
 
 import { AppConfig, AppConfigModule } from './app.config';
 
@@ -76,6 +77,8 @@ console.log("Images path: ", join(process.cwd(), 'images'))
 export class AppModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
+            .apply(MikroOrmMiddleware)
+            .forRoutes('*')
             .apply(LoggerMiddleware)
             .forRoutes('*');
     }
