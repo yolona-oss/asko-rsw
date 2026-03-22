@@ -1,5 +1,16 @@
 services:
 
+  file-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.file-service
+    container_name: asko-file-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5002
+
   payment-service:
     build:
       context: .
@@ -32,10 +43,12 @@ services:
     depends_on:
       - user-service
       - payment-service
+      - file-service
     environment:
       NODE_ENV: production
       USER_SERVICE_URL: "localhost:5000"
       PAYMENT_SERVICE_URL: "localhost:5001"
+      FILE_SERVICE_URL: "localhost:5002"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s
