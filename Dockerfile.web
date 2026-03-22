@@ -16,7 +16,6 @@ COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY .npmrc .npmrc
 COPY tsconfig.json tsconfig.json
-RUN node -e "const p=require('./package.json'); delete p.devDependencies?.turbo; require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2))"
 RUN --mount=type=cache,id=pnpm,target=~/pnpm-store \
     pnpm install --frozen-lockfile
 

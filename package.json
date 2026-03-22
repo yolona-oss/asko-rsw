@@ -5,14 +5,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:web": "turbo run build --filter=@asko/web",
+    "build:web": "pnpm dlx turbo run build --filter=@asko/web",
     "prod:web": "cd apps/web && pnpm run start",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean"
+    "lint": "pnpm dlx turbo run lint",
+    "typecheck": "pnpm dlx turbo run typecheck",
+    "clean": "pnpm dlx turbo run clean"
   },
   "devDependencies": {
-    "turbo": "^2",
     "typescript": "^5.8"
   },
   "engines": {
