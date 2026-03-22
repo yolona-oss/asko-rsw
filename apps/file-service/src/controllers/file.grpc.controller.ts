@@ -8,13 +8,11 @@ import { Readable } from 'stream';
 import type {
     UploadFileRequest,
     UploadWithOwnerRequest,
-    UploadBlankRequest,
     CreateFromUrlRequest,
     ImageIdRequest,
     AttachImageRequest,
     FindAttachedRequest,
     CountAttachedRequest,
-    FindBlankRequest,
     ReorderImagesRequest,
     ReorderByIdsRequest,
 } from '@asko/proto';
@@ -61,7 +59,6 @@ function entityToRecord(entity: Image) {
         order: entity.order,
         ownerType: entity.ownerType ?? '',
         ownerId: entity.ownerId ?? '',
-        blankType: entity.blankType ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
     };
@@ -145,15 +142,6 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    @GrpcMethod('FileService', 'UploadBlankImage')
-    async uploadBlankImage(data: UploadBlankRequest) {
-        try {
-            const file = toMulterFile(data.file);
-            const image = await this.imageService.uploadBlankImage(file, data.type as ImageTypeEnum);
-            return { image: entityToRecord(image) };
-        } catch (e) { throw toGrpcError(e); }
-    }
-
     // ─── URL operations ─────────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'CreateFromUrl')
@@ -218,14 +206,6 @@ export class FileGrpcController {
                 data.ownerType as ImageTypeEnum,
             );
             return { count };
-        } catch (e) { throw toGrpcError(e); }
-    }
-
-    @GrpcMethod('FileService', 'FindBlank')
-    async findBlank(data: FindBlankRequest) {
-        try {
-            const image = await this.imageService.findBlank(data.blankType as ImageTypeEnum);
-            return { image: entityToRecord(image) };
         } catch (e) { throw toGrpcError(e); }
     }
 

@@ -40,13 +40,6 @@ export class AppConfig {
         };
     }
 
-    get blankImages() {
-        return {
-            user: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_USER'),
-            product: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_PRODUCT'),
-            category: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_CATEGORY'),
-        };
-    }
 }
 
 @Global()

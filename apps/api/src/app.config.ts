@@ -129,13 +129,6 @@ export class AppConfig {
         return (this.configService.get<string>('FILE_STORAGE_MODE') ?? 'cloudinary') as 'cloudinary' | 'local';
     }
 
-    get blankImages() {
-        return {
-            user: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_USER'),
-            product: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_PRODUCT'),
-            category: this.configService.getOrThrow<string>('PATH_IMAGE_BLANK_CATEGORY'),
-        };
-    }
 }
 
 @Global()

@@ -167,33 +167,6 @@ describe('ImageService', () => {
         });
     });
 
-    describe('uploadBlankImage', () => {
-        it('should upload blank user image', async () => {
-            jest.spyOn(imgProcessor, 'processUserAvatar').mockResolvedValue(mockImageObj);
-
-            const result = await service.uploadBlankImage(mockFile, ImageTypeEnum.User);
-
-            expect(imgProcessor.processUserAvatar).toHaveBeenCalledWith(mockFile);
-            expect(result.image).toEqual(mockImageObj);
-            expect(result.blankType).toBe(ImageTypeEnum.User);
-        });
-
-        it('should upload blank product image', async () => {
-            jest.spyOn(imgProcessor, 'processProductImage').mockResolvedValue(mockImageObj);
-
-            const result = await service.uploadBlankImage(mockFile, ImageTypeEnum.Product);
-
-            expect(imgProcessor.processProductImage).toHaveBeenCalledWith(mockFile);
-            expect(result.blankType).toBe(ImageTypeEnum.Product);
-        });
-
-        it('should throw error for invalid image type', async () => {
-            await expect(
-                service.uploadBlankImage(mockFile, 'InvalidType' as ImageTypeEnum)
-            ).rejects.toThrow('Invalid image type');
-        });
-    });
-
     describe('reorderImages', () => {
         it('should reorder images successfully', async () => {
             const ownerType = ImageTypeEnum.Product;
@@ -385,60 +358,4 @@ describe('ImageService', () => {
         });
     });
 
-    describe('findBlank', () => {
-        it('should find blank image by type', async () => {
-            const blankType = ImageTypeEnum.User;
-            const image = new Image();
-
-            jest.spyOn(em, 'findOneOrFail').mockResolvedValue(image);
-
-            const result = await service.findBlank(blankType);
-
-            expect(result).toBe(image);
-            expect(em.findOneOrFail).toHaveBeenCalledWith(Image, { blankType });
-        });
-    });
-
-    describe('createBlank', () => {
-        it('should create blank image when none exists', async () => {
-            const blankType = ImageTypeEnum.Product;
-
-            jest.spyOn(em, 'findOne').mockResolvedValue(null);
-            jest.spyOn(imgProcessor, 'processProductImage').mockResolvedValue(mockImageObj);
-
-            await service.createBlank(mockFile, blankType);
-
-            expect(em.findOne).toHaveBeenCalledWith(Image, { blankType });
-            expect(imgProcessor.processProductImage).toHaveBeenCalledWith(mockFile);
-            expect(em.persistAndFlush).toHaveBeenCalled();
-        });
-
-        it('should throw error when blank already exists', async () => {
-            const blankType = ImageTypeEnum.Product;
-            const existingImage = new Image();
-
-            jest.spyOn(em, 'findOne').mockResolvedValue(existingImage);
-
-            await expect(service.createBlank(mockFile, blankType)).rejects.toThrow(
-                'Blank image already exists'
-            );
-        });
-    });
-
-    describe('updateBlank', () => {
-        it('should update existing blank image', async () => {
-            const blankType = ImageTypeEnum.Product;
-            const image = new Image();
-
-            jest.spyOn(em, 'findOneOrFail').mockResolvedValue(image);
-            jest.spyOn(imgProcessor, 'processProductImage').mockResolvedValue(mockImageObj);
-
-            await service.updateBlank(mockFile, blankType);
-
-            expect(em.findOneOrFail).toHaveBeenCalledWith(Image, { blankType });
-            expect(imgProcessor.processProductImage).toHaveBeenCalledWith(mockFile);
-            expect(image.image).toEqual(mockImageObj);
-            expect(em.persistAndFlush).toHaveBeenCalledWith(image);
-        });
-    });
 });

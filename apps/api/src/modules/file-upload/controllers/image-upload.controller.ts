@@ -15,8 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileClientService } from 'modules/file-client/file-client.service';
-import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, Role, UploadImageDto } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
+import { AttachImageDto, CreateImageFromUrlDto, ImageTypeEnum, UploadImageDto } from '@asko/shared';
 
 @Controller('file-upload/image')
 export class ImageUploadController {
@@ -64,25 +63,6 @@ export class ImageUploadController {
         return this.fileService.uploadUserAvatar(file, userId);
     }
 
-    @RequiredRoles(Role.SUPER_ADMIN)
-    @Post('upload/blank/:type')
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadBlankImage(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            })
-        )
-        file: Express.Multer.File,
-
-        @Param('type') type: ImageTypeEnum,
-    ) {
-        return this.fileService.uploadBlankImage(file, type);
-    }
-
     @Delete('delete/:imageId')
     async remove(@Param('imageId') imageId: string) {
         return this.fileService.remove(imageId);
@@ -98,7 +78,7 @@ export class ImageUploadController {
         @Param('imageId') imageId: string,
         @Body() dto: AttachImageDto,
     ) {
-        return this.fileService.attachImage(imageId, dto);
+        return this.fileService.attachImage(imageId, { ownerType: dto.ownerType as ImageTypeEnum, ownerId: dto.ownerId });
     }
 
     @Get('attached')

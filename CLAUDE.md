@@ -96,7 +96,6 @@ Microservice responsible for:
 * file uploads (cloudinary / local storage)
 * image processing (thumbnails, multiple sizes)
 * image entity management (CRUD, attach/unattach, reorder)
-* blank image seeding
 
 Runs as NestJS microservice with gRPC transport.
 
@@ -369,7 +368,6 @@ Owns:
 * Image entity
 * Storage providers (cloudinary, local)
 * Image processing (thumbnails, sizes)
-* Blank image management
 
 Stack:
 

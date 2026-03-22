@@ -12,7 +12,6 @@ service FileService {
     rpc UploadArticleImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadRepairRequestImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadReviewImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadBlankImage(UploadBlankRequest) returns (ImageResponse);
 
     // URL operations
     rpc CreateFromUrl(CreateFromUrlRequest) returns (ImageResponse);
@@ -23,7 +22,6 @@ service FileService {
     rpc AttachImage(AttachImageRequest) returns (ImageResponse);
     rpc FindAttachedImages(FindAttachedRequest) returns (ImageListResponse);
     rpc CountAttached(CountAttachedRequest) returns (CountResponse);
-    rpc FindBlank(FindBlankRequest) returns (ImageResponse);
 
     // Reorder operations
     rpc ReorderImages(ReorderImagesRequest) returns (EmptyResponse);
@@ -48,11 +46,6 @@ message UploadFileRequest {
 message UploadWithOwnerRequest {
     FileData file = 1;
     string ownerId = 2;
-}
-
-message UploadBlankRequest {
-    FileData file = 1;
-    string type = 2;
 }
 
 message CreateFromUrlRequest {
@@ -80,10 +73,6 @@ message FindAttachedRequest {
 message CountAttachedRequest {
     string ownerId = 1;
     string ownerType = 2;
-}
-
-message FindBlankRequest {
-    string blankType = 1;
 }
 
 message ReorderImagesRequest {
@@ -114,7 +103,6 @@ message ImageRecord {
     int32 order = 4;
     string ownerType = 5;
     string ownerId = 6;
-    string blankType = 7;
     string createdAt = 8;
     string updatedAt = 9;
 }

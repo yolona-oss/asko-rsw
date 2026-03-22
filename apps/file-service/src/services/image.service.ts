@@ -1,4 +1,4 @@
-import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
+import { EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
 import { ImageProcessingService } from "./image-processing.service";
 import { ImageTypeEnum } from "@asko/shared";
@@ -154,27 +154,6 @@ export class ImageService {
         return image;
     }
 
-    async uploadBlankImage(file: Express.Multer.File, type: ImageTypeEnum) {
-        let imageObj: ImageObj;
-
-        if (type === ImageTypeEnum.User) {
-            imageObj = await this.imgProcessor.processUserAvatar(file);
-        } else if (type === ImageTypeEnum.Product) {
-            imageObj = await this.imgProcessor.processProductImage(file);
-        } else {
-            throw AppErrors.badRequest('Invalid image type');
-        }
-
-        const image = new Image();
-
-        image.image = imageObj;
-        image.blankType = type;
-        image.order = 0;
-
-        await this.em.persistAndFlush(image);
-        return image;
-    }
-
     async reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]) {
         const targets = await this.findAttachedImages(ownerType, ownerId);
 
@@ -301,28 +280,4 @@ export class ImageService {
         );
     }
 
-    async findBlank(blankType: ImageTypeEnum) {
-        return await this.em.findOneOrFail(Image, { blankType });
-    }
-
-    @CreateRequestContext()
-    async createBlank(file: Express.Multer.File, blankType: ImageTypeEnum): Promise<void> {
-        const existing = await this.em.findOne(Image, { blankType });
-        if (existing) {
-            throw AppErrors.conflict('Blank image already exists');
-        }
-
-        const imageObj = await this.imgProcessor.processProductImage(file);
-        const image = new Image();
-        image.image = imageObj;
-        image.blankType = blankType;
-        await this.em.persistAndFlush(image);
-    }
-
-    async updateBlank(file: Express.Multer.File, blankType: ImageTypeEnum): Promise<void> {
-        const image = await this.em.findOneOrFail(Image, { blankType });
-        const imageObj = await this.imgProcessor.processProductImage(file);
-        image.image = imageObj;
-        await this.em.persistAndFlush(image);
-    }
 }

@@ -89,13 +89,6 @@ export class FileClientService implements OnModuleInit {
         }));
     }
 
-    uploadBlankImage(file: Express.Multer.File, type: ImageTypeEnum): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadBlankImage({
-            file: this.toFileData(file),
-            type,
-        }));
-    }
-
     // ─── URL operations ─────────────────────────────────────────────────
 
     createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<ImageResponse> {
@@ -131,10 +124,6 @@ export class FileClientService implements OnModuleInit {
 
     countAttached(ownerId: string, ownerType: ImageTypeEnum): Promise<CountResponse> {
         return grpcCall(this.fileService.countAttached({ ownerId, ownerType }));
-    }
-
-    findBlank(blankType: ImageTypeEnum): Promise<ImageResponse> {
-        return grpcCall(this.fileService.findBlank({ blankType }));
     }
 
     // ─── Reorder operations ─────────────────────────────────────────────

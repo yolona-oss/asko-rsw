@@ -4,8 +4,6 @@ import { Request, Response } from 'express'
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { RepairerService } from 'modules/repairer/services/repairer.service';
 import { DealerService } from 'modules/dealer/services/dealer.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
-
 import {
     ALL_ROLES,
     REFRESH_TOKEN,
@@ -16,7 +14,6 @@ import {
     extractToken,
     getHostUrl,
     Role,
-    ImageTypeEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
@@ -29,7 +26,6 @@ export class AuthController {
         private readonly userClient: UserClientService,
         private readonly repairerService: RepairerService,
         private readonly dealerService: DealerService,
-        private readonly fileService: FileClientService,
     ) { }
 
     private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
@@ -100,16 +96,6 @@ export class AuthController {
                 }
             } catch (error) {
                 console.error(`Failed to create role profile for user ${result.user.id}:`, error);
-            }
-        }
-
-        // Attach default avatar (moved from UserService)
-        if (result.user?.id) {
-            try {
-                const { image: defaultAvatar } = await this.fileService.findBlank(ImageTypeEnum.User);
-                await this.fileService.attachImage(defaultAvatar.id, { ownerId: result.user.id, ownerType: ImageTypeEnum.User });
-            } catch {
-                // Blank image not yet seeded - user is created without a default avatar
             }
         }
 

@@ -20,11 +20,6 @@ export interface UploadWithOwnerRequest {
     ownerId: string;
 }
 
-export interface UploadBlankRequest {
-    file: FileData;
-    type: string;
-}
-
 export interface CreateFromUrlRequest {
     url: string;
     ownerType: string;
@@ -50,10 +45,6 @@ export interface FindAttachedRequest {
 export interface CountAttachedRequest {
     ownerId: string;
     ownerType: string;
-}
-
-export interface FindBlankRequest {
-    blankType: string;
 }
 
 export interface ReorderItem {
@@ -84,7 +75,6 @@ export interface ImageRecord {
     order: number;
     ownerType: string;
     ownerId: string;
-    blankType: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -112,8 +102,6 @@ export interface FileServiceClient {
     uploadArticleImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadRepairRequestImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadReviewImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadBlankImage(request: UploadBlankRequest): Observable<ImageResponse>;
-
     createFromUrl(request: CreateFromUrlRequest): Observable<ImageResponse>;
 
     remove(request: ImageIdRequest): Observable<EmptyFileResponse>;
@@ -121,7 +109,6 @@ export interface FileServiceClient {
     attachImage(request: AttachImageRequest): Observable<ImageResponse>;
     findAttachedImages(request: FindAttachedRequest): Observable<ImageListResponse>;
     countAttached(request: CountAttachedRequest): Observable<CountResponse>;
-    findBlank(request: FindBlankRequest): Observable<ImageResponse>;
 
     reorderImages(request: ReorderImagesRequest): Observable<EmptyFileResponse>;
     reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;

@@ -13,9 +13,3 @@ export class UploadImageDto {
     @IsNumber()
     order?: number;
 }
-
-export class UploadBlackImageDto extends UploadImageDto {
-    @IsOptional()
-    @IsString()
-    blankType?: string;
-}

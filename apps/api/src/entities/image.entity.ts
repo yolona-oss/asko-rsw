@@ -5,7 +5,7 @@ import { v4 } from 'uuid';
 
 @Entity()
 export class Image {
-    [OptionalProps]?: 'altText' | 'order' | 'ownerType' | 'ownerId' | 'blankType' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'altText' | 'order' | 'ownerType' | 'ownerId' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey({ type: 'uuid' })
     id: string = v4();
@@ -24,9 +24,6 @@ export class Image {
 
     @Property({ nullable: true })
     ownerId?: string;
-
-    @Enum({ items: () => ImageTypeEnum, type: 'varchar', nullable: true })
-    blankType?: ImageTypeEnum;
 
     @Property()
     createdAt: Date = new Date();
