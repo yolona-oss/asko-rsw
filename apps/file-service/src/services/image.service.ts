@@ -1,4 +1,4 @@
-import { EntityManager } from "@mikro-orm/postgresql";
+import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
 import { ImageProcessingService } from "./image-processing.service";
 import { ImageTypeEnum } from "@asko/shared";
@@ -16,6 +16,7 @@ export class ImageService {
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     ) { }
 
+    @CreateRequestContext()
     async upload(file: Express.Multer.File, alt?: string) {
         const imageObj = await this.storage.uploadImage(file);
         const image = new Image();
@@ -28,6 +29,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async streamUpload(file: Express.Multer.File, alt?: string) {
         const imageObj = await this.storage.uploadStream(file.stream, file.mimetype);
         if (!imageObj) {
@@ -43,6 +45,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<Image> {
         const defaultEntry = {
             public_id: 'external',
@@ -67,6 +70,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadUserAvatar(file: Express.Multer.File, ownerId: string) {
         const existing = await this.em.find(Image, {
             ownerType: ImageTypeEnum.User,
@@ -89,6 +93,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadProductImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -102,6 +107,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadDeviceImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -115,6 +121,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadArticleImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -128,6 +135,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -141,6 +149,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
         const imageObj = await this.imgProcessor.processProductImage(file);
         const image = new Image();
@@ -154,6 +163,7 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]) {
         const targets = await this.findAttachedImages(ownerType, ownerId);
 
@@ -205,6 +215,7 @@ export class ImageService {
         await this.em.persistAndFlush(targets);
     }
 
+    @CreateRequestContext()
     async reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]) {
         const images = await this.findAttachedImages(ownerType, ownerId);
         const map = new Map(images.map(img => [img.id, img]));
@@ -220,6 +231,7 @@ export class ImageService {
         return this.findAttachedImages(ownerType, ownerId);
     }
 
+    @CreateRequestContext()
     async remove(id: string) {
         const image = await this.em.findOne(Image, { id });
         if (!image) {
@@ -228,6 +240,7 @@ export class ImageService {
         await this.em.removeAndFlush(image);
     }
 
+    @CreateRequestContext()
     async unattachImage(imageId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
 
@@ -253,6 +266,7 @@ export class ImageService {
         await this.em.persistAndFlush(image);
     }
 
+    @CreateRequestContext()
     async attachImage(imageId: string, ownerType: ImageTypeEnum, ownerId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
         if (!image) {
@@ -267,10 +281,12 @@ export class ImageService {
         return image;
     }
 
+    @CreateRequestContext()
     async countAttached(ownerId: string, ownerType: ImageTypeEnum) {
         return await this.em.count(Image, { ownerId, ownerType });
     }
 
+    @CreateRequestContext()
     async findAttachedImages(ownerType: ImageTypeEnum, ownerId: string) {
         return await this.em.find(Image,
             { ownerType, ownerId },
