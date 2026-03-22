@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { RepairRequest, UserDevice, Certificate, Repairer, RepairPayment } from 'entities';
+import { RepairRequest, UserDevice, Certificate, Repairer } from 'entities';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -8,7 +8,6 @@ import {
     RequestRefundDto,
     RepairRequestStatus,
     CertificateStatus,
-    PaymentStatus,
     PaymentTargetType,
     PaginationDto,
     SetRepairPriceDto,
@@ -100,12 +99,11 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.REFUNDED;
 
-        // Refund via payment provider
-        const payment = await this.em.findOne(RepairPayment, {
-            targetType: 'repairRequest', targetId: requestId, status: PaymentStatus.PAID,
-        });
-        if (payment) {
-            await this.paymentService.refundPayment(payment.id);
+        // Refund via payment-service gRPC
+        const { payments } = await this.paymentService.getPaymentsByTarget('repairRequest', requestId);
+        const paidPayment = payments?.find(p => p.status === 'paid');
+        if (paidPayment) {
+            await this.paymentService.refundPayment(paidPayment.id);
         }
 
         await this.em.flush();
