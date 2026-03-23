@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package certificate;
+
+service CertificateService {
+    rpc AddCertificate(CertAddCertificateRequest) returns (CertificateResponse);
+    rpc CreateByDealer(CertCreateByDealerRequest) returns (CertificateResponse);
+    rpc MarkPaid(CertMarkPaidRequest) returns (CertificateResponse);
+    rpc RevokeCertificate(CertRevokeRequest) returns (CertificateResponse);
+    rpc ReassignCertificate(CertReassignRequest) returns (CertificateResponse);
+    rpc CalculatePrice(CertCalculatePriceRequest) returns (CertPriceResponse);
+    rpc FindById(CertFindByIdRequest) returns (CertificateResponse);
+    rpc FindByUser(CertFindByUserRequest) returns (CertificateListResponse);
+    rpc FindByDealer(CertFindByDealerRequest) returns (PaginatedCertificatesResponse);
+    rpc FindAll(CertFindAllRequest) returns (PaginatedCertificatesResponse);
+    rpc ValidateCertificate(CertValidateRequest) returns (CertValidateResponse);
+}
+
+// ─── Records ────────────────────────────────────────────────────────────
+
+message CertificateRecord {
+    string id = 1;
+    string userId = 2;
+    string userDeviceId = 3;
+    string dealerId = 4;
+    string certificateNumber = 5;
+    string status = 6;
+    string issuedAt = 7;
+    string expiresAt = 8;
+    double price = 9;
+    bool paid = 10;
+    string purchaseReceiptUrl = 11;
+    string description = 12;
+    string createdAt = 13;
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message CertAddCertificateRequest {
+    string userId = 1;
+    string userDeviceId = 2;
+    string certificateNumber = 3;
+    string expiresAt = 4;
+}
+
+message CertCreateByDealerRequest {
+    string clientUserId = 1;
+    string userDeviceId = 2;
+    string dealerId = 3;
+    string expiresAt = 4;
+    string purchaseReceiptUrl = 5;
+    string description = 6;
+    string serialNumber = 7;
+}
+
+message CertMarkPaidRequest {
+    string id = 1;
+}
+
+message CertRevokeRequest {
+    string id = 1;
+}
+
+message CertReassignRequest {
+    string userId = 1;
+    string certId = 2;
+    string userDeviceId = 3;
+}
+
+message CertCalculatePriceRequest {
+    string userDeviceId = 1;
+    string expiresAt = 2;
+}
+
+message CertFindByIdRequest {
+    string id = 1;
+}
+
+message CertFindByUserRequest {
+    string userId = 1;
+}
+
+message CertFindByDealerRequest {
+    string dealerId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    string search = 4;
+    string status = 5;
+}
+
+message CertFindAllRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message CertValidateRequest {
+    string certificateNumber = 1;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message CertificateResponse {
+    CertificateRecord certificate = 1;
+}
+
+message CertificateListResponse {
+    repeated CertificateRecord certificates = 1;
+}
+
+message PaginatedCertificatesResponse {
+    repeated CertificateRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message CertPriceResponse {
+    double price = 1;
+}
+
+message CertValidateResponse {
+    bool valid = 1;
+    CertificateRecord certificate = 2;
+}

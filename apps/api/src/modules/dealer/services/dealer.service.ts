@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, User, Certificate, UserDevice } from 'entities';
+import { DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, User } from 'entities';
 import {
     CreateDealerProfileDto,
     UpdateDealerProfileDto,
@@ -9,11 +9,11 @@ import {
     ProcessWithdrawalDto,
     PointsTransactionType,
     WithdrawalStatus,
-    CertificateStatus,
     Role,
     PaginationDto,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { DeviceClientService } from 'modules/device-client/device-client.service';
 
 /** Points = certificatePrice * 0.03, rounded to nearest integer */
 function calculateDealerPoints(certificatePrice: number): number {
@@ -22,7 +22,10 @@ function calculateDealerPoints(certificatePrice: number): number {
 
 @Injectable()
 export class DealerService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(
+        private readonly em: EntityManager,
+        private readonly deviceClient: DeviceClientService,
+    ) { }
 
     /** Admin creates dealer profile for a user */
     async createProfile(dto: CreateDealerProfileDto): Promise<DealerProfile> {
@@ -80,12 +83,9 @@ export class DealerService {
         return client;
     }
 
-    /** Auto-link client when certificate is approved (called from certificate approval) */
-    async linkClientOnCertificateApproval(certificate: Certificate): Promise<void> {
-        if (!certificate.dealer) return;
-
-        const dealerId = certificate.dealer.id;
-        const clientUserId = certificate.user.id;
+    /** Auto-link client when certificate is approved (called from gateway orchestration) */
+    async linkClientOnCertificateApproval(dealerId: string, clientUserId: string): Promise<void> {
+        if (!dealerId) return;
 
         const existing = await this.em.findOne(DealerClient, { dealer: dealerId, clientUser: clientUserId });
         if (!existing) {
@@ -98,13 +98,13 @@ export class DealerService {
     }
 
     /** Award points to dealer when certificate approved. Points = certificatePrice * 0.03 */
-    async awardPointsForCertificate(certificate: Certificate): Promise<void> {
-        if (!certificate.dealer) return;
+    async awardPointsForCertificate(dealerId: string, certificatePrice: number, certificateNumber: string): Promise<void> {
+        if (!dealerId) return;
 
-        const dealer = await this.em.findOne(DealerProfile, { id: certificate.dealer.id });
+        const dealer = await this.em.findOne(DealerProfile, { id: dealerId });
         if (!dealer) return;
 
-        const points = calculateDealerPoints(certificate.price ?? 0);
+        const points = calculateDealerPoints(certificatePrice);
         if (points <= 0) return;
 
         dealer.pointsBalance += points;
@@ -113,7 +113,7 @@ export class DealerService {
             dealer: dealer,
             type: PointsTransactionType.EARNED,
             amount: points,
-            reason: `Certificate ${certificate.certificateNumber} approved (price: ${certificate.price})`,
+            reason: `Certificate ${certificateNumber} approved (price: ${certificatePrice})`,
         });
         await this.em.persist(transaction);
         await this.em.flush();
@@ -137,9 +137,9 @@ export class DealerService {
         return users.map((u) => ({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email }));
     }
 
-    /** Get a user's devices (for certificate wizard) */
-    async getUserDevicesForCertificate(userId: string): Promise<UserDevice[]> {
-        return this.em.find(UserDevice, { user: userId }, { populate: ['device'] });
+    /** Get a user's devices (for certificate wizard) - delegates to device-service */
+    async getUserDevicesForCertificate(userId: string) {
+        return this.deviceClient.getUserDevices(userId);
     }
 
     /** Dealer gets points history */

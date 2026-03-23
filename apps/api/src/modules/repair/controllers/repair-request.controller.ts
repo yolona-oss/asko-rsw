@@ -1,8 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { RepairRequestService } from '../services/repair-request.service';
-import { WorkStepService } from '../services/work-step.service';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
+import { NotificationService } from 'modules/notification/services/common-notification.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -26,9 +27,10 @@ import { JwtAuthUser } from 'common/decorators/user.decorator';
 @Controller('repair-requests')
 export class RepairRequestController {
     constructor(
-        private readonly repairRequestService: RepairRequestService,
-        private readonly workStepService: WorkStepService,
+        private readonly repairClient: RepairClientService,
         private readonly paymentService: PaymentClientService,
+        private readonly notificationService: NotificationService,
+        private readonly fileService: FileClientService,
     ) {}
 
     // ── User endpoints ──
@@ -36,28 +38,28 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairRequestDto) {
-        return this.repairRequestService.create(user.sub, dto);
+        return this.repairClient.createRequest(user.sub, dto);
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.repairRequestService.findByUser(user.sub, pagination);
+        return this.repairClient.findByUser(user.sub, pagination);
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/cancel')
     async cancel(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.repairRequestService.cancel(user.sub, id);
+        return this.repairClient.cancelRequest(user.sub, id);
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/request-refund')
     async requestRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RequestRefundDto) {
-        return this.repairRequestService.requestRefund(user.sub, id, dto);
+        return this.repairClient.requestRefund(user.sub, id, dto.reason);
     }
 
-    // ── Payment endpoints ──
+    // ── Payment endpoints (stay in gateway using PaymentClientService directly) ──
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
@@ -91,25 +93,25 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.repairRequestService.findAll(pagination);
+        return this.repairClient.findAll(pagination);
     }
 
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        return this.repairRequestService.assignRepairer(user.sub, id, dto);
+        return this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
     }
 
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
     async approveRefund(@Param('id') id: string) {
-        return this.repairRequestService.approveRefund(id);
+        return this.repairClient.approveRefund(id);
     }
 
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
     async denyRefund(@Param('id') id: string) {
-        return this.repairRequestService.denyRefund(id);
+        return this.repairClient.denyRefund(id);
     }
 
     // ── Repairer endpoints ──
@@ -117,31 +119,31 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.repairRequestService.findByRepairer(user.sub, pagination);
+        return this.repairClient.findByRepairer(user.sub, pagination);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/accept')
     async accept(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.repairRequestService.acceptRequest(user.sub, id);
+        return this.repairClient.acceptRequest(user.sub, id);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
-        return this.repairRequestService.refuseRequest(user.sub, id, dto);
+        return this.repairClient.refuseRequest(user.sub, id, dto.reason);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/start')
     async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.repairRequestService.startWork(user.sub, id);
+        return this.repairClient.startWork(user.sub, id);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/set-price')
     async setPrice(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
-        return this.repairRequestService.setPrice(user.sub, id, dto);
+        return this.repairClient.setPrice(user.sub, id, dto.amount);
     }
 
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
@@ -152,7 +154,24 @@ export class RepairRequestController {
         @Body('description') description?: string,
         @UploadedFiles() files?: Express.Multer.File[],
     ) {
-        return this.repairRequestService.complete(id, description, files);
+        const result = await this.repairClient.complete(id, description);
+
+        // Upload completion images (gateway handles file uploads)
+        if (files && files.length > 0) {
+            for (const file of files) {
+                await this.fileService.uploadRepairRequestImage(file, id);
+            }
+        }
+
+        // Notify user about completion
+        if (result.request) {
+            this.notificationService.notifyRepairCompleted(result.request.userId, {
+                type: 'repair_completed',
+                requestId: result.request.id,
+            });
+        }
+
+        return result;
     }
 
     // ── Work steps ──
@@ -160,13 +179,13 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps')
     async addStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddWorkStepDto) {
-        return this.workStepService.addStep(user.sub, id, dto);
+        return this.repairClient.addStep(user.sub, id, dto);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/lock')
     async lockSteps(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        return this.workStepService.lockSteps(user.sub, id);
+        return this.repairClient.lockSteps(user.sub, id);
     }
 
     @RequiredRoles(Role.REPAIRER)
@@ -177,25 +196,25 @@ export class RepairRequestController {
         @Param('stepId') stepId: string,
         @Body() dto: UpdateWorkStepDto,
     ) {
-        return this.workStepService.updateStep(user.sub, id, stepId, dto);
+        return this.repairClient.updateStep(user.sub, id, stepId, dto);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/complete')
     async completeStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
-        return this.workStepService.completeStep(user.sub, id, stepId);
+        return this.repairClient.completeStep(user.sub, id, stepId);
     }
 
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/delete')
     async deleteStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
-        return this.workStepService.deleteStep(user.sub, id, stepId);
+        return this.repairClient.deleteStep(user.sub, id, stepId);
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/steps')
     async getSteps(@Param('id') id: string) {
-        return this.workStepService.getSteps(id);
+        return this.repairClient.getSteps(id);
     }
 
     // ── Get by ID (any authenticated user) ──
@@ -203,6 +222,6 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.repairRequestService.findById(id);
+        return this.repairClient.findById(id);
     }
 }

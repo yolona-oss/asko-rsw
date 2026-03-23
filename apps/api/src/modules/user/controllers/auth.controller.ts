@@ -2,7 +2,7 @@ import { Res, Body, Controller, Post, NotImplementedException, Req, Get } from '
 import { Request, Response } from 'express'
 
 import { UserClientService } from 'modules/user-client/user-client.service';
-import { RepairerService } from 'modules/repairer/services/repairer.service';
+import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
 import { DealerService } from 'modules/dealer/services/dealer.service';
 import {
     ALL_ROLES,
@@ -24,7 +24,7 @@ import { CookieOptions } from 'express';
 export class AuthController {
     constructor(
         private readonly userClient: UserClientService,
-        private readonly repairerService: RepairerService,
+        private readonly repairerClient: RepairerClientService,
         private readonly dealerService: DealerService,
     ) { }
 
@@ -90,7 +90,7 @@ export class AuthController {
         if (result.user?.id && result.roles?.length) {
             try {
                 if (result.roles.includes(Role.REPAIRER)) {
-                    await this.repairerService.create({ userId: result.user.id, city: '', specializations: [] });
+                    await this.repairerClient.createRepairer(result.user.id, '', []);
                 } else if (result.roles.includes(Role.DEALER)) {
                     await this.dealerService.createProfile({ userId: result.user.id });
                 }

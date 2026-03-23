@@ -1,5 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { CertificateService } from '../services/certificate.service';
+import { Body, Controller, Get, Inject, Param, Post, Query, forwardRef } from '@nestjs/common';
+import { CertificateClientService } from 'modules/certificate-client/certificate-client.service';
+import { DeviceClientService } from 'modules/device-client/device-client.service';
+import { DealerService } from 'modules/dealer/services/dealer.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     AddCertificateDto,
     CreateCertificateDto,
@@ -15,27 +18,73 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
-import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 
 @Controller('certificates')
 export class CertificateController {
     constructor(
-        private readonly certificateService: CertificateService,
+        private readonly certificateClient: CertificateClientService,
+        private readonly deviceClient: DeviceClientService,
         private readonly paymentService: PaymentClientService,
+        @Inject(forwardRef(() => DealerService))
+        private readonly dealerService: DealerService,
     ) {}
 
     /** User adds a certificate they purchased */
     @RequiredRoles(...ALL_ROLES)
     @Post('add')
     async addCertificate(@JwtAuthUser() user: JwtPayload, @Body() dto: AddCertificateDto) {
-        return this.certificateService.addCertificate(user.sub, dto);
+        return this.certificateClient.addCertificate(user.sub, {
+            userDeviceId: dto.userDeviceId,
+            certificateNumber: dto.certificateNumber,
+            expiresAt: dto.expiresAt,
+        });
     }
 
     /** Dealer creates a certificate for a client */
     @RequiredRoles(Role.DEALER)
     @Post('create')
     async createByDealer(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateCertificateDto) {
-        return this.certificateService.createCertificateByDealer(user.sub, dto);
+        // Resolve dealer profile to get dealerId
+        const dealerProfile = await this.dealerService.getProfile(user.sub);
+
+        // Create address via device-service
+        const addressRes = await this.deviceClient.createAddress({
+            country: dto.country,
+            city: dto.city,
+            street: dto.street,
+            house: dto.house,
+            building: dto.building,
+            floor: dto.floor,
+            room: dto.room,
+            postalCode: dto.postalCode,
+        });
+
+        // Create UserDevice for the client via device-service
+        const userDeviceRes = await this.deviceClient.registerUserDevice(dto.clientUserId, {
+            deviceId: dto.deviceId,
+            serialNumber: dto.serialNumber,
+            addressId: addressRes.address.id,
+        });
+
+        // Link client to dealer
+        try {
+            await this.dealerService.addClient(user.sub, { clientUserId: dto.clientUserId });
+        } catch {
+            // Ignore if already linked
+        }
+
+        // Create certificate via certificate-service
+        const result = await this.certificateClient.createByDealer({
+            clientUserId: dto.clientUserId,
+            userDeviceId: userDeviceRes.userDevice.id,
+            dealerId: dealerProfile.id,
+            expiresAt: dto.expiresAt,
+            serialNumber: dto.serialNumber,
+            purchaseReceiptUrl: dto.purchaseReceiptUrl,
+            description: dto.description,
+        });
+
+        return result;
     }
 
     /** Reassign certificate to different device */
@@ -46,14 +95,14 @@ export class CertificateController {
         @Param('id') id: string,
         @Body() dto: AssignCertificateDto,
     ) {
-        return this.certificateService.reassignCertificate(user.sub, id, dto.userDeviceId);
+        return this.certificateClient.reassignCertificate(user.sub, id, dto.userDeviceId);
     }
 
     /** Admin revokes a certificate */
     @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/revoke')
     async revoke(@Param('id') id: string) {
-        return this.certificateService.revokeCertificate(id);
+        return this.certificateClient.revokeCertificate(id);
     }
 
     /** Calculate certificate price before purchase */
@@ -63,14 +112,14 @@ export class CertificateController {
         @Query('userDeviceId') userDeviceId: string,
         @Query('expiresAt') expiresAt: string,
     ) {
-        return this.certificateService.calculatePrice(userDeviceId, expiresAt);
+        return this.certificateClient.calculatePrice(userDeviceId, expiresAt);
     }
 
     /** User gets their certificates */
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
-        return this.certificateService.findByUser(user.sub);
+        return this.certificateClient.findByUser(user.sub);
     }
 
     /** Dealer gets certificates they created */
@@ -81,14 +130,16 @@ export class CertificateController {
         @Query() pagination: PaginationDto,
         @Query('status') status?: CertificateStatus,
     ) {
-        return this.certificateService.findByDealer(user.sub, pagination, status);
+        // Resolve dealer profile to get dealerId
+        const dealerProfile = await this.dealerService.getProfile(user.sub);
+        return this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
     }
 
     /** Admin: list all certificates */
     @RequiredRoles(...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.certificateService.findAll(pagination);
+        return this.certificateClient.findAll(pagination);
     }
 
     /** Pay for a certificate */
@@ -124,6 +175,6 @@ export class CertificateController {
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.certificateService.findById(id);
+        return this.certificateClient.findById(id);
     }
 }

@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Repairer, User } from 'entities';
-import { RepairerService } from './services/repairer.service';
+import { RepairerClientModule } from 'modules/repairer-client/repairer-client.module';
 import { RepairerController } from './controllers/repairer.controller';
-import { RepairModule } from '../repair/repair.module';
 
 @Module({
-    imports: [MikroOrmModule.forFeature([Repairer, User]), RepairModule],
+    imports: [RepairerClientModule],
     controllers: [RepairerController],
-    providers: [RepairerService],
-    exports: [RepairerService],
+    exports: [RepairerClientModule],
 })
 export class RepairerModule {}

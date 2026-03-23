@@ -1,5 +1,49 @@
 services:
 
+  device-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.device-service
+    container_name: asko-device-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5003
+
+  certificate-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.certificate-service
+    container_name: asko-certificate-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5004
+
+  repairer-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.repairer-service
+    container_name: asko-repairer-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5005
+
+  repair-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.repair-service
+    container_name: asko-repair-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5006
+
   file-service:
     build:
       context: .
@@ -44,11 +88,19 @@ services:
       - user-service
       - payment-service
       - file-service
+      - device-service
+      - certificate-service
+      - repairer-service
+      - repair-service
     environment:
       NODE_ENV: production
       USER_SERVICE_URL: "localhost:5000"
       PAYMENT_SERVICE_URL: "localhost:5001"
       FILE_SERVICE_URL: "localhost:5002"
+      DEVICE_SERVICE_URL: "localhost:5003"
+      CERTIFICATE_SERVICE_URL: "localhost:5004"
+      REPAIRER_SERVICE_URL: "localhost:5005"
+      REPAIR_SERVICE_URL: "localhost:5006"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s

@@ -44,6 +44,22 @@ export class AppConfig {
         return this.configService.get<string>('FILE_SERVICE_URL') ?? 'localhost:5002';
     }
 
+    get deviceServiceUrl(): string {
+        return this.configService.get<string>('DEVICE_SERVICE_URL') ?? 'localhost:5003';
+    }
+
+    get certificateServiceUrl(): string {
+        return this.configService.get<string>('CERTIFICATE_SERVICE_URL') ?? 'localhost:5004';
+    }
+
+    get repairerServiceUrl(): string {
+        return this.configService.get<string>('REPAIRER_SERVICE_URL') ?? 'localhost:5005';
+    }
+
+    get repairServiceUrl(): string {
+        return this.configService.get<string>('REPAIR_SERVICE_URL') ?? 'localhost:5006';
+    }
+
     get database() {
         return {
             host: this.configService.getOrThrow<string>('DATABASE_HOST'),

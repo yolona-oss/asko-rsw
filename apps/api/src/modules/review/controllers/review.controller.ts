@@ -3,7 +3,7 @@ import {
     UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ReviewService } from '../services/review.service';
+import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
@@ -13,25 +13,29 @@ import { Public } from 'common/decorators/public.decorotor';
 @Controller('reviews')
 export class ReviewController {
     constructor(
-        private readonly reviewService: ReviewService,
+        private readonly repairerClient: RepairerClientService,
         private readonly fileService: FileClientService,
-    ) { }
+    ) {}
 
-    /** User submits a review */
     @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateReviewDto) {
-        return this.reviewService.create(user.sub, dto);
+        // TODO: Phase 4 - call repairClient.findById(dto.repairRequestId) to get repairerId
+        // and validate repair is COMPLETED before creating review
+        return this.repairerClient.createReview(
+            dto.repairRequestId,
+            user.sub,
+            '', // repairerId - will be resolved from repair-service in Phase 4
+            dto.rating,
+            dto.comment,
+        );
     }
 
-    /** User gets own reviews */
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
-        return this.reviewService.findByUser(user.sub);
+        return this.repairerClient.findReviewsByUser(user.sub);
     }
-
-    // ── Review images ──
 
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/images')
@@ -49,7 +53,7 @@ export class ReviewController {
         )
         file: Express.Multer.File,
     ) {
-        await this.reviewService.findUserReview(user.sub, id);
+        await this.repairerClient.findUserReview(user.sub, id);
         return this.fileService.uploadReviewImage(file, id);
     }
 
@@ -60,7 +64,7 @@ export class ReviewController {
         @Param('id') id: string,
         @Param('imageId') imageId: string,
     ) {
-        await this.reviewService.findUserReview(user.sub, id);
+        await this.repairerClient.findUserReview(user.sub, id);
         return this.fileService.remove(imageId);
     }
 
@@ -73,13 +77,12 @@ export class ReviewController {
     @Public()
     @Get('rating/repairer/:repairerId')
     async findRepairerRating(@Param('repairerId') repairerId: string) {
-        return await this.reviewService.findRepairerRating(repairerId);
+        return this.repairerClient.getRepairerRating(repairerId);
     }
 
-    /** Public: get reviews for a repairer */
     @Public()
     @Get('repairer/:repairerId')
     async findByRepairer(@Param('repairerId') repairerId: string, @Query() pagination: PaginationDto) {
-        return this.reviewService.findByRepairer(repairerId, pagination);
+        return this.repairerClient.findReviewsByRepairer(repairerId, pagination);
     }
 }

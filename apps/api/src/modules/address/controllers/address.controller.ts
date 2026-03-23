@@ -1,25 +1,28 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { AddressService } from './../services/address.service';
+import { DeviceClientService } from 'modules/device-client/device-client.service';
 import { ALL_ROLES, CreateAddressDto } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 
 @Controller('address')
 export class AddressController {
-    constructor(private readonly addressService: AddressService) { }
+    constructor(private readonly deviceClient: DeviceClientService) {}
 
     @RequiredRoles(...ALL_ROLES)
     @Post()
-    create(@Body() dto: CreateAddressDto) {
-        return this.addressService.create(dto);
+    async create(@Body() dto: CreateAddressDto) {
+        const result = await this.deviceClient.createAddress(dto);
+        return result.address;
     }
 
     @Get()
-    findAll() {
-        return this.addressService.findAll();
+    async findAll() {
+        const result = await this.deviceClient.findAllAddresses();
+        return result.addresses;
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.addressService.findOne(id);
+    async findOne(@Param('id') id: string) {
+        const result = await this.deviceClient.findAddressById(id);
+        return result.address;
     }
 }

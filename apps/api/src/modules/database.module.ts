@@ -5,26 +5,18 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import {
     Article,
-    RepairRequest,
-    Review,
     WSchedule,
     Employee,
-    Certificate,
     Cursor,
     PointsTransaction,
     PointsWithdrawal,
-    UserDevice,
     InvitationLink,
     UserAddress,
     Session,
     User,
     DealerProfile,
-    Address,
     DealerClient,
-    WorkStep,
     Image,
-    Device,
-    Repairer
 } from 'entities'
 import path from "path";
 import { isProdEnv } from "@asko/shared";
@@ -51,26 +43,18 @@ import { readFileSync } from "fs";
                     // },
                     entities: [
                         Article,
-                        RepairRequest,
-                        Review,
                         WSchedule,
                         Employee,
-                        Certificate,
                         Cursor,
                         PointsTransaction,
                         PointsWithdrawal,
-                        UserDevice,
                         InvitationLink,
                         UserAddress,
                         Session,
                         User,
                         DealerProfile,
-                        Address,
                         DealerClient,
-                        WorkStep,
                         Image,
-                        Device,
-                        Repairer
                     ],
                     migrations: {
                         path: path.join(process.cwd(), 'migrations'),

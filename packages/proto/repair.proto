@@ -1,0 +1,246 @@
+syntax = "proto3";
+
+package repair;
+
+service RepairService {
+    // Repair request lifecycle
+    rpc CreateRequest(RepairCreateRequest) returns (RepairRequestResponse);
+    rpc CancelRequest(RepairCancelRequest) returns (RepairRequestResponse);
+    rpc RequestRefund(RepairRequestRefundRequest) returns (RepairRequestResponse);
+    rpc AssignRepairer(RepairAssignRepairerRequest) returns (RepairRequestResponse);
+    rpc AcceptRequest(RepairAcceptRequest) returns (RepairRequestResponse);
+    rpc RefuseRequest(RepairRefuseRequest) returns (RepairRequestResponse);
+    rpc StartWork(RepairStartWorkRequest) returns (RepairRequestResponse);
+    rpc SetPrice(RepairSetPriceRequest) returns (RepairRequestResponse);
+    rpc MarkAwaitingCompletion(RepairMarkAwaitingCompletionRequest) returns (RepairEmptyResponse);
+    rpc Complete(RepairCompleteRequest) returns (RepairRequestResponse);
+    rpc ApproveRefund(RepairApproveRefundRequest) returns (RepairRequestResponse);
+    rpc DenyRefund(RepairDenyRefundRequest) returns (RepairRequestResponse);
+
+    // Work steps
+    rpc AddStep(RepairAddStepRequest) returns (WorkStepResponse);
+    rpc UpdateStep(RepairUpdateStepRequest) returns (WorkStepResponse);
+    rpc CompleteStep(RepairCompleteStepRequest) returns (CompleteStepResponse);
+    rpc DeleteStep(RepairDeleteStepRequest) returns (RepairEmptyResponse);
+    rpc LockSteps(RepairLockStepsRequest) returns (RepairRequestResponse);
+    rpc GetSteps(RepairGetStepsRequest) returns (WorkStepListResponse);
+
+    // Queries
+    rpc FindById(RepairFindByIdRequest) returns (RepairRequestResponse);
+    rpc FindByUser(RepairFindByUserRequest) returns (PaginatedRepairRequestsResponse);
+    rpc FindByRepairer(RepairFindByRepairerRequest) returns (PaginatedRepairRequestsResponse);
+    rpc FindByRepairerFiltered(RepairFindByRepairerFilteredRequest) returns (PaginatedRepairRequestsResponse);
+    rpc FindActiveByRepairer(RepairFindActiveByRepairerRequest) returns (RepairRequestResponse);
+    rpc FindAll(RepairFindAllRequest) returns (PaginatedRepairRequestsResponse);
+    rpc CheckActiveForDevice(RepairCheckActiveForDeviceRequest) returns (RepairCheckActiveResponse);
+}
+
+// ─── Records ────────────────────────────────────────────────────────────
+
+message RepairRequestRecord {
+    string id = 1;
+    string userId = 2;
+    string userDeviceId = 3;
+    string repairerId = 4;
+    string managerId = 5;
+    string certificateId = 6;
+    string addressId = 7;
+    string status = 8;
+    string description = 9;
+    string preferredDate = 10;
+    double totalCost = 11;
+    bool refundRequested = 12;
+    string refundReason = 13;
+    string refuseReason = 14;
+    string rejectedRepairers = 15;
+    string completionNote = 16;
+    bool stepsLocked = 17;
+    string createdAt = 18;
+    string updatedAt = 19;
+}
+
+message WorkStepRecord {
+    string id = 1;
+    string repairRequestId = 2;
+    string title = 3;
+    string description = 4;
+    string status = 5;
+    int32 order = 6;
+    bool isFinal = 7;
+    string createdAt = 8;
+    string updatedAt = 9;
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message RepairCreateRequest {
+    string userId = 1;
+    string userDeviceId = 2;
+    string description = 3;
+    string certificateId = 4;
+    string preferredDate = 5;
+}
+
+message RepairCancelRequest {
+    string userId = 1;
+    string requestId = 2;
+}
+
+message RepairRequestRefundRequest {
+    string userId = 1;
+    string requestId = 2;
+    string reason = 3;
+}
+
+message RepairAssignRepairerRequest {
+    string managerId = 1;
+    string requestId = 2;
+    string repairerId = 3;
+}
+
+message RepairAcceptRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairRefuseRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string reason = 3;
+}
+
+message RepairStartWorkRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairSetPriceRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    double amount = 3;
+}
+
+message RepairMarkAwaitingCompletionRequest {
+    string requestId = 1;
+}
+
+message RepairCompleteRequest {
+    string requestId = 1;
+    string description = 2;
+}
+
+message RepairApproveRefundRequest {
+    string requestId = 1;
+}
+
+message RepairDenyRefundRequest {
+    string requestId = 1;
+}
+
+message RepairAddStepRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string title = 3;
+    string description = 4;
+    int32 order = 5;
+    bool isFinal = 6;
+}
+
+message RepairUpdateStepRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string stepId = 3;
+    string title = 4;
+    string description = 5;
+    string status = 6;
+}
+
+message RepairCompleteStepRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string stepId = 3;
+}
+
+message RepairDeleteStepRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string stepId = 3;
+}
+
+message RepairLockStepsRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairGetStepsRequest {
+    string requestId = 1;
+}
+
+message RepairFindByIdRequest {
+    string id = 1;
+}
+
+message RepairFindByUserRequest {
+    string userId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message RepairFindByRepairerRequest {
+    string repairerUserId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message RepairFindByRepairerFilteredRequest {
+    string repairerUserId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    string status = 4;
+}
+
+message RepairFindActiveByRepairerRequest {
+    string repairerUserId = 1;
+}
+
+message RepairFindAllRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+}
+
+message RepairCheckActiveForDeviceRequest {
+    string userDeviceId = 1;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message RepairEmptyResponse {}
+
+message RepairRequestResponse {
+    RepairRequestRecord request = 1;
+}
+
+message PaginatedRepairRequestsResponse {
+    repeated RepairRequestRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message WorkStepResponse {
+    WorkStepRecord step = 1;
+}
+
+message WorkStepListResponse {
+    repeated WorkStepRecord steps = 1;
+}
+
+message CompleteStepResponse {
+    WorkStepRecord step = 1;
+    bool requestCompleted = 2;
+}
+
+message RepairCheckActiveResponse {
+    bool hasActive = 1;
+    RepairRequestRecord request = 2;
+}
