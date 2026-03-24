@@ -39,11 +39,10 @@ export class UsersController {
     @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
     async getAllUsers(@Query() pagination: PaginationDto = {}) {
-        const docs = await this.userClient.findAllUsers({
+        return this.userClient.findAllUsers({
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 10,
         });
-        return { ...docs, data: docs.data ?? [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)

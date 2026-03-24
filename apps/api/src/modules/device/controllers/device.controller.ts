@@ -197,8 +197,7 @@ export class DeviceController {
     @Get()
     @ApiOkResponse({ type: PaginatedDevicesResponseDto })
     async findAll(@Query() pagination: PaginationDto) {
-        const result = await this.deviceClient.findAllDevices(pagination);
-        return { ...result, data: result.data ?? [] };
+        return this.deviceClient.findAllDevices(pagination);
     }
 
     @Public()

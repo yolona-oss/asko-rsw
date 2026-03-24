@@ -69,8 +69,7 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        const result = await this.repairClient.findByUser(user.sub, pagination);
-        return { ...result, data: result.data ?? [] };
+        return this.repairClient.findByUser(user.sub, pagination);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -125,8 +124,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        const result = await this.repairClient.findAll(pagination);
-        return { ...result, data: result.data ?? [] };
+        return this.repairClient.findAll(pagination);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -167,8 +165,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        const result = await this.repairClient.findByRepairer(user.sub, pagination);
-        return { ...result, data: result.data ?? [] };
+        return this.repairClient.findByRepairer(user.sub, pagination);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })

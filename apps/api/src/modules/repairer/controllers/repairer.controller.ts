@@ -57,8 +57,7 @@ export class RepairerController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        const result = await this.repairerClient.findAllRepairers(pagination);
-        return { ...result, data: result.data ?? [] };
+        return this.repairerClient.findAllRepairers(pagination);
     }
 
     // NOTE: These endpoints will be wired to RepairClientService in Phase 4

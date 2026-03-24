@@ -47,11 +47,10 @@ export class PaymentController {
         @Query('provider') provider?: string,
         @Query('search') search?: string,
     ) {
-        const result = await this.paymentService.listPayments(
+        return this.paymentService.listPayments(
             { status, provider },
             { offset, limit, search },
         );
-        return { ...result, data: result.data ?? [] };
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })
@@ -70,12 +69,11 @@ export class PaymentController {
         @Query('limit') limit?: number,
         @Query('status') status?: string,
     ) {
-        const result = await this.paymentService.listUserPayments(
+        return this.paymentService.listUserPayments(
             user.sub,
             { status },
             { offset, limit },
         );
-        return { ...result, data: result.data ?? [] };
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })

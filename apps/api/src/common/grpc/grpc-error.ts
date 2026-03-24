@@ -20,9 +20,50 @@ export function fromGrpcError(error: any): never {
     throw AppErrors.internalError(error?.message ?? 'gRPC call failed');
 }
 
+/**
+ * Fields that are `repeated` in proto and arrive as `undefined` when empty
+ * due to protobuf3 default value omission. Normalized to `[]`.
+ */
+const ARRAY_FIELDS = new Set([
+    // paginated responses
+    'data',
+    // list responses
+    'images', 'parts', 'steps', 'certificates', 'reviews', 'clients',
+    'withdrawals', 'invites', 'userDevices', 'addresses', 'payments',
+    'repairers', 'devices',
+    // entity array fields
+    'roles', 'providers', 'specializations', 'tags',
+    'workSteps', 'brokenParts', 'rejectedRepairers',
+]);
+
+function normalizeGrpcResponse<T>(data: T): T {
+    if (data === null || data === undefined || typeof data !== 'object' || Array.isArray(data)) {
+        return data;
+    }
+
+    const obj = data as Record<string, any>;
+    for (const key of Object.keys(obj)) {
+        if (obj[key] === undefined && ARRAY_FIELDS.has(key)) {
+            obj[key] = [];
+        }
+        // one level deep: normalize nested objects (e.g. wrapped entities like { request: { brokenParts: undefined } })
+        if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+            const nested = obj[key] as Record<string, any>;
+            for (const nk of Object.keys(nested)) {
+                if (nested[nk] === undefined && ARRAY_FIELDS.has(nk)) {
+                    nested[nk] = [];
+                }
+            }
+        }
+    }
+
+    return data;
+}
+
 export async function grpcCall<T>(observable: Observable<T>): Promise<T> {
     try {
-        return await lastValueFrom(observable);
+        const result = await lastValueFrom(observable);
+        return normalizeGrpcResponse(result);
     } catch (e) {
         fromGrpcError(e);
     }
