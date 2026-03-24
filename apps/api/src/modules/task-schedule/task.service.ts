@@ -15,7 +15,7 @@ export class TasksService {
     // TODO move to user-service
     @Cron(CronExpression.EVERY_HOUR)
     async cleanupExpiredSessions() {
-        const now = new Date();
+        // const now = new Date();
         // const deleted = await this.em.nativeDelete(Session, {
         //     expiresAt: { $lt: now },
         // });
@@ -28,6 +28,6 @@ export class TasksService {
     @Cron(CronExpression.EVERY_10_SECONDS)
     async handleStaleCursors() {
         // this.logger.debug('Cleaning up stale cursors...');
-        await this.cursorService.cleanupStaleCursors();
+        // await this.cursorService.cleanupStaleCursors();
     }
 }
