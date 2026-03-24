@@ -5,13 +5,7 @@ import path from 'path';
 import {
     Article,
     WSchedule,
-    Employee,
     Cursor,
-    InvitationLink,
-    UserAddress,
-    Session,
-    User,
-    Image,
 } from '@entities/index'
 
 import { AppConfig } from 'app.config';
@@ -41,13 +35,7 @@ const config = defineConfig<PostgreSqlDriver>({
     entities: [
         Article,
         WSchedule,
-        Employee,
         Cursor,
-        InvitationLink,
-        UserAddress,
-        Session,
-        User,
-        Image,
     ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),

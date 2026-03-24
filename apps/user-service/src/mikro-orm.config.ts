@@ -3,20 +3,7 @@ import { config as dotenvConfig } from 'dotenv';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
-import {
-    Device,
-    Address,
-    UserDevice,
-    Certificate,
-    Repairer,
-    Review,
-    RepairRequest,
-    WorkStep,
-    DealerProfile,
-    DealerClient,
-    PointsTransaction,
-    PointsWithdrawal,
-} from 'entities';
+import { User, Session, InvitationLink, UserAddress } from 'entities';
 
 dotenvConfig({ path: path.join(process.cwd(), '.env') });
 
@@ -27,20 +14,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: process.env.DATABASE_DB_NAME,
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT || '5432'),
-    entities: [
-        Device,
-        Address,
-        UserDevice,
-        Certificate,
-        Repairer,
-        Review,
-        RepairRequest,
-        WorkStep,
-        DealerProfile,
-        DealerClient,
-        PointsTransaction,
-        PointsWithdrawal,
-    ],
+    entities: [User, Session, InvitationLink, UserAddress],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

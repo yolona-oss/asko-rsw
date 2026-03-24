@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Session } from '@entities/auth/session.entity';
 import { CursorService } from 'modules/cursor/cursor.service';
 
 @Injectable()
@@ -13,16 +12,17 @@ export class TasksService {
         private readonly cursorService: CursorService
     ) { }
 
+    // TODO move to user-service
     @Cron(CronExpression.EVERY_HOUR)
     async cleanupExpiredSessions() {
         const now = new Date();
-        const deleted = await this.em.nativeDelete(Session, {
-            expiresAt: { $lt: now },
-        });
+        // const deleted = await this.em.nativeDelete(Session, {
+        //     expiresAt: { $lt: now },
+        // });
 
-        if (deleted > 0) {
-            this.logger.log(`Cleaned up ${deleted} expired session(s)`);
-        }
+        // if (deleted > 0) {
+        //     this.logger.log(`Cleaned up ${deleted} expired session(s)`);
+        // }
     }
 
     @Cron(CronExpression.EVERY_10_SECONDS)

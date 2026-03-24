@@ -492,6 +492,9 @@ importers:
       '@grpc/proto-loader':
         specifier: ^0.7.15
         version: 0.7.15
+      '@mikro-orm/cli':
+        specifier: ^6.5.9
+        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
       '@mikro-orm/core':
         specifier: ^6.5.9
         version: 6.6.9

@@ -6,13 +6,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import {
     Article,
     WSchedule,
-    Employee,
     Cursor,
-    InvitationLink,
-    UserAddress,
-    Session,
-    User,
-    Image,
 } from 'entities'
 import path from "path";
 import { isProdEnv } from "@asko/shared";
@@ -40,13 +34,7 @@ import { readFileSync } from "fs";
                     entities: [
                         Article,
                         WSchedule,
-                        Employee,
                         Cursor,
-                        InvitationLink,
-                        UserAddress,
-                        Session,
-                        User,
-                        Image,
                     ],
                     migrations: {
                         path: path.join(process.cwd(), 'migrations'),
