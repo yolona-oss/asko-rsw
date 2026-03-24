@@ -117,6 +117,8 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
     }
   };
 
+  console.log(images)
+
   return (
     <div className="flex flex-col gap-3 max-w-[500px]">
       {images.length > 0 && (

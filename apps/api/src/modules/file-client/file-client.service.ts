@@ -5,6 +5,7 @@ import { ImageTypeEnum } from '@asko/shared';
 
 import type {
     FileServiceClient,
+    ImageRecord,
     ImageResponse,
     ImageListResponse,
     CountResponse,
@@ -31,87 +32,115 @@ export class FileClientService implements OnModuleInit {
         };
     }
 
+    /** Parse imageJson from gRPC string to object for REST responses */
+    private parseRecord(record: ImageRecord): ImageRecord & { imageJson: any } {
+        try {
+            return { ...record, imageJson: JSON.parse(record.imageJson) };
+        } catch {
+            return record as any;
+        }
+    }
+
+    private parseImageResponse(res: ImageResponse) {
+        return { image: this.parseRecord(res.image) };
+    }
+
+    private parseImageListResponse(res: ImageListResponse) {
+        return { images: (res.images ?? []).map((r) => this.parseRecord(r)) };
+    }
+
     // ─── Upload operations ──────────────────────────────────────────────
 
-    upload(file: Express.Multer.File, alt?: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.upload({
+    async upload(file: Express.Multer.File, alt?: string) {
+        const res = await grpcCall(this.fileService.upload({
             file: this.toFileData(file),
             alt: alt ?? '',
         }));
+        return this.parseImageResponse(res);
     }
 
-    streamUpload(file: Express.Multer.File, alt?: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.streamUpload({
+    async streamUpload(file: Express.Multer.File, alt?: string) {
+        const res = await grpcCall(this.fileService.streamUpload({
             file: this.toFileData(file),
             alt: alt ?? '',
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadUserAvatar(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadUserAvatar({
+    async uploadUserAvatar(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadUserAvatar({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadProductImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadProductImage({
+    async uploadProductImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadProductImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadDeviceImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadDeviceImage({
+    async uploadDeviceImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadDeviceImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadArticleImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadArticleImage({
+    async uploadArticleImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadArticleImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadRepairRequestImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadRepairRequestImage({
+    async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadRepairRequestImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadReviewImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadReviewImage({
+    async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadReviewImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadDevicePartImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadDevicePartImage({
+    async uploadDevicePartImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadDevicePartImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    uploadBrokenPartImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
-        return grpcCall(this.fileService.uploadBrokenPartImage({
+    async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadBrokenPartImage({
             file: this.toFileData(file),
             ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
     // ─── URL operations ─────────────────────────────────────────────────
 
-    createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<ImageResponse> {
-        return grpcCall(this.fileService.createFromUrl({
+    async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number) {
+        const res = await grpcCall(this.fileService.createFromUrl({
             url,
             ownerType: ownerType ?? '',
             ownerId: ownerId ?? '',
             order: order ?? 0,
         }));
+        return this.parseImageResponse(res);
     }
 
     // ─── Management operations ──────────────────────────────────────────
@@ -124,16 +153,18 @@ export class FileClientService implements OnModuleInit {
         return grpcCall(this.fileService.unattachImage({ id: imageId }));
     }
 
-    attachImage(imageId: string, dto: { ownerType: ImageTypeEnum; ownerId: string }): Promise<ImageResponse> {
-        return grpcCall(this.fileService.attachImage({
+    async attachImage(imageId: string, dto: { ownerType: ImageTypeEnum; ownerId: string }) {
+        const res = await grpcCall(this.fileService.attachImage({
             imageId,
             ownerType: dto.ownerType,
             ownerId: dto.ownerId,
         }));
+        return this.parseImageResponse(res);
     }
 
-    findAttachedImages(ownerType: ImageTypeEnum, ownerId: string): Promise<ImageListResponse> {
-        return grpcCall(this.fileService.findAttachedImages({ ownerType, ownerId }));
+    async findAttachedImages(ownerType: ImageTypeEnum, ownerId: string) {
+        const res = await grpcCall(this.fileService.findAttachedImages({ ownerType, ownerId }));
+        return this.parseImageListResponse(res);
     }
 
     countAttached(ownerId: string, ownerType: ImageTypeEnum): Promise<CountResponse> {
@@ -146,7 +177,8 @@ export class FileClientService implements OnModuleInit {
         return grpcCall(this.fileService.reorderImages({ ownerType, ownerId, schema }));
     }
 
-    reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]): Promise<ImageListResponse> {
-        return grpcCall(this.fileService.reorderByIds({ ownerType, ownerId, imageIds }));
+    async reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]) {
+        const res = await grpcCall(this.fileService.reorderByIds({ ownerType, ownerId, imageIds }));
+        return this.parseImageListResponse(res);
     }
 }
