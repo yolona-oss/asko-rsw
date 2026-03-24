@@ -63,7 +63,7 @@ function StatCard({
 interface RequestSummary {
   id: string;
   description: string;
-  status: string;
+  status: RepairRequestStatus;
 }
 
 export function UserDashboard() {
@@ -103,11 +103,11 @@ export function UserDashboard() {
         setRequestsCount(reqData.overallCount ?? 0);
         if (reqData.data?.length > 0) {
           const r = reqData.data[0];
-          setLastRequest({ id: r.id, description: r.description, status: r.status });
+          setLastRequest({ id: r.id, description: r.description, status: r.status as RepairRequestStatus });
         }
 
-        const certs = certRes.data;
-        setCertsCount(certs.filter((c) => c.status === 'active').length);
+        const certs = certRes.data ?? [];
+        setCertsCount(certs.filter((c: any) => c.status === 'active').length);
       } catch {
         // silently fail
       } finally {

@@ -10,7 +10,7 @@ import { RepairRequestStatus } from '@asko/shared/client';
 
 const POLL_INTERVAL = 15_000;
 
-const TERMINAL_STATUSES: string[] = [
+const TERMINAL_STATUSES = [
   RepairRequestStatus.COMPLETED,
   RepairRequestStatus.CANCELLED,
   RepairRequestStatus.REFUNDED,
@@ -39,7 +39,7 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Средства возвращены.',
 };
 
-function getStepIndex(status: string): number {
+function getStepIndex(status: RepairRequestStatus): number {
   const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));
   return idx >= 0 ? idx : 0;
 }
@@ -110,7 +110,7 @@ interface WorkStep {
   id: string;
   title: string;
   description?: string;
-  status: string;
+  status: RepairRequestStatus;
   order: number;
   isFinal: boolean;
   createdAt: Date | string;
@@ -119,7 +119,7 @@ interface WorkStep {
 
 interface RepairRequest {
   id: string;
-  status: string;
+  status: RepairRequestStatus;
   description: string;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -189,8 +189,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         userApi.getWorkSteps(requestId).catch(() => ({ data: [] })),
         userApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
-      setRequest(reqRes.data);
-      const steps: WorkStep[] = stepsRes.data;
+      setRequest(reqRes.data as unknown as RepairRequest);
+      const steps = (stepsRes.data ?? []) as unknown as WorkStep[];
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
       const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
       setBrokenParts(parts);

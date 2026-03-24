@@ -58,7 +58,7 @@ const STATUS_LABELS: Record<string, string> = {
 interface RepairRequest {
   id: string;
   description: string;
-  status: string;
+  status: RepairRequestStatus;
   user?: { firstName?: string; lastName?: string };
   address?: { city?: string; street?: string };
   userDevice?: { device?: { name?: string } };
@@ -119,7 +119,7 @@ export function ManagerRequests() {
     async function fetchRequests() {
       try {
         const { data } = await managerApi.getRepairRequests({ limit: 100 });
-        setRequests(data.data ?? []);
+        setRequests((data.data ?? []) as unknown as RepairRequest[]);
       } catch {
         // silently fail
       } finally {

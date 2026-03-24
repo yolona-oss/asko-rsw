@@ -26,7 +26,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
   const fetchImages = async () => {
     try {
       const { data } = await adminApi.getDeviceImages(deviceId);
-      setImages(data.images);
+      setImages(data.images ?? []);
     } catch {
       // silently fail
     }

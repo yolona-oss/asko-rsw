@@ -38,7 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 interface RepairRequest {
   id: string;
-  status: string;
+  status: RepairRequestStatus;
   description: string;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -84,7 +84,7 @@ export function UserRequests() {
     async function fetchRequests() {
       try {
         const { data } = await userApi.getMyRequests({ limit: 50 });
-        setRequests(data.data ?? []);
+        setRequests((data.data ?? []) as unknown as RepairRequest[]);
       } catch {
         // silently fail
       } finally {

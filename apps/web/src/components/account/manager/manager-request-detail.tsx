@@ -62,7 +62,7 @@ const PART_STATUS_OPTIONS = [
 
 interface RepairRequestDetail {
   id: string;
-  status: string;
+  status: RepairRequestStatus;
   description: string;
   createdAt: Date | string;
   rejectedRepairers?: string[];
@@ -103,12 +103,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     async function fetchData() {
       try {
         const { data: req } = await managerApi.getRepairRequest(requestId);
-        setRequest(req);
+        setRequest(req as unknown as RepairRequestDetail);
         setSelectedRepairer(req.repairer?.id ?? '');
 
         // Fetch available repairers
         const { data: repData } = await managerApi.getRepairers({ limit: 100 });
-        const list = repData.data ?? repData ?? [];
+        const list = repData.data ?? [];
         setRepairers(list);
 
         // Fetch request photos
@@ -146,7 +146,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     try {
       await managerApi.assignRepairer(request.id, selectedRepairer);
       const { data: updated } = await managerApi.getRepairRequest(requestId);
-      setRequest(updated);
+      setRequest(updated as unknown as RepairRequestDetail);
     } catch {
       // silently fail
     } finally {
