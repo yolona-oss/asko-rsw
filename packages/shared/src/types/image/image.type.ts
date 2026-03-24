@@ -14,7 +14,7 @@ export interface IImage {
 
 export interface IImageAttachment {
     id: string;
-    image: IImageObj;
+    imageJson: IImageObj;
     order: number;
     alt?: string;
 }

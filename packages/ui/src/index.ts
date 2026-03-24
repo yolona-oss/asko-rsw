@@ -76,3 +76,9 @@ export type { StackProps } from './components/stack';
 
 export { Section } from './components/section';
 export type { SectionProps } from './components/section';
+
+export { KeyValueEditor, kvToRecord, recordToKV } from './components/key-value-editor';
+export type { KeyValueEditorProps, KVPair } from './components/key-value-editor';
+
+export { CropModal } from './components/crop-modal';
+export type { CropModalProps, CropShape } from './components/crop-modal';

@@ -13,7 +13,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import { IArticle } from '@asko/shared';
+import { IArticle } from '@asko/shared/client';
 
 function ArticleRow({
   article,

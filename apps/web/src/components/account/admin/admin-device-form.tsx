@@ -1,311 +1,20 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button, Modal, Input, Select, Textarea, FormField } from '@asko/ui';
+import { Button, Input, Select, Textarea, FormField, KeyValueEditor, kvToRecord, recordToKV, CropModal } from '@asko/ui';
+import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import type { DeviceType } from '@asko/shared/client';
-
-interface KVPair {
-  key: string;
-  value: string;
-}
-
-function KeyValueEditor({
-  pairs,
-  onChange,
-}: {
-  pairs: KVPair[];
-  onChange: (pairs: KVPair[]) => void;
-}) {
-  const updatePair = (index: number, field: 'key' | 'value', val: string) => {
-    const next = pairs.map((p, i) => (i === index ? { ...p, [field]: val } : p));
-    onChange(next);
-  };
-
-  const removePair = (index: number) => {
-    onChange(pairs.filter((_, i) => i !== index));
-  };
-
-  const addPair = () => {
-    onChange([...pairs, { key: '', value: '' }]);
-  };
-
-  return (
-    <div className="flex flex-col gap-2 max-w-[500px]">
-      {pairs.map((pair, i) => (
-        <div key={i} className="flex gap-2 items-center">
-          <Input
-            type="text"
-            placeholder="Ключ"
-            value={pair.key}
-            onChange={(e) => updatePair(i, 'key', e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="text"
-            placeholder="Значение"
-            value={pair.value}
-            onChange={(e) => updatePair(i, 'value', e.target.value)}
-            className="flex-1"
-          />
-          <Button variant="danger" size="sm" onClick={() => removePair(i)}>
-            &times;
-          </Button>
-        </div>
-      ))}
-      <Button variant="secondary" size="sm" onClick={addPair} className="self-start">
-        + Добавить
-      </Button>
-    </div>
-  );
-}
-
-function kvToRecord(pairs: KVPair[]): Record<string, string> | undefined {
-  const filtered = pairs.filter((p) => p.key.trim());
-  if (filtered.length === 0) return undefined;
-  const obj: Record<string, string> = {};
-  for (const p of filtered) {
-    obj[p.key.trim()] = p.value;
-  }
-  return obj;
-}
-
-function recordToKV(obj?: Record<string, any> | null): KVPair[] {
-  if (!obj || typeof obj !== 'object') return [];
-  return Object.entries(obj).map(([key, value]) => ({
-    key,
-    value: String(value ?? ''),
-  }));
-}
-
-interface DeviceImage {
-  id: string;
-  image: {
-    original: { secure_url: string };
-    thumbnail?: { secure_url: string };
-  };
-  order: number;
-}
+import type { DeviceType, IImageAttachment } from '@asko/shared/client';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const CROP_CONTAINER = 420;
-const CROP_OUTPUT_W = 800;
-const CROP_OUTPUT_H = 600;
-const MIN_SCALE = 0.2;
-const MAX_SCALE = 4;
-
-function ImageCropModal({
-  imageSrc,
-  onConfirm,
-  onCancel,
-}: {
-  imageSrc: string;
-  onConfirm: (blob: Blob) => void;
-  onCancel: () => void;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
-  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 });
-  const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-  const cropW = 360;
-  const cropH = 270;
-
-  const dragging = useRef(false);
-  const lastPointer = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const img = new window.Image();
-    img.onload = () => {
-      imgRef.current = img;
-      setImgNatural({ w: img.naturalWidth, h: img.naturalHeight });
-      const fitScale = Math.max(cropW / img.naturalWidth, cropH / img.naturalHeight);
-      setScale(fitScale);
-      setOffset({ x: 0, y: 0 });
-    };
-    img.src = imageSrc;
-  }, [imageSrc]);
-
-  const clampOffset = useCallback(
-    (ox: number, oy: number, s: number) => {
-      if (!imgNatural.w) return { x: ox, y: oy };
-      const maxX = (imgNatural.w * s) / 2 - cropW / 2;
-      const maxY = (imgNatural.h * s) / 2 - cropH / 2;
-      return {
-        x: Math.max(-Math.max(0, maxX), Math.min(Math.max(0, maxX), ox)),
-        y: Math.max(-Math.max(0, maxY), Math.min(Math.max(0, maxY), oy)),
-      };
-    },
-    [imgNatural],
-  );
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    dragging.current = true;
-    lastPointer.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const dx = e.clientX - lastPointer.current.x;
-    const dy = e.clientY - lastPointer.current.y;
-    lastPointer.current = { x: e.clientX, y: e.clientY };
-    setOffset((prev) => clampOffset(prev.x + dx, prev.y + dy, scale));
-  };
-
-  const handlePointerUp = () => {
-    dragging.current = false;
-  };
-
-  const handleWheel = useCallback(
-    (e: WheelEvent) => {
-      e.preventDefault();
-      setScale((prev) => {
-        const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, prev - e.deltaY * 0.001));
-        setOffset((o) => clampOffset(o.x, o.y, next));
-        return next;
-      });
-    },
-    [clampOffset],
-  );
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, [handleWheel]);
-
-  const handleConfirm = () => {
-    const img = imgRef.current;
-    if (!img) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = CROP_OUTPUT_W;
-    canvas.height = CROP_OUTPUT_H;
-    const ctx = canvas.getContext('2d')!;
-
-    const srcCenterX = img.naturalWidth / 2 - offset.x / scale;
-    const srcCenterY = img.naturalHeight / 2 - offset.y / scale;
-    const srcW = cropW / scale;
-    const srcH = cropH / scale;
-
-    ctx.drawImage(
-      img,
-      srcCenterX - srcW / 2,
-      srcCenterY - srcH / 2,
-      srcW,
-      srcH,
-      0,
-      0,
-      CROP_OUTPUT_W,
-      CROP_OUTPUT_H,
-    );
-
-    canvas.toBlob(
-      (blob) => {
-        if (blob) onConfirm(blob);
-      },
-      'image/jpeg',
-      0.92,
-    );
-  };
-
-  if (!imgNatural.w) return null;
-
-  return (
-    <Modal open onClose={onCancel} className="flex flex-col items-center gap-4 p-6 w-[480px] max-w-[95vw]">
-      <h3 className="text-base font-medium text-text-main">Обрезка изображения</h3>
-
-      <div
-        ref={containerRef}
-        className="relative select-none touch-none overflow-hidden rounded-sm bg-black/20"
-        style={{ width: CROP_CONTAINER, height: CROP_CONTAINER * (cropH / cropW), cursor: 'grab' }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
-        <img
-          src={imageSrc}
-          alt=""
-          draggable={false}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            width: imgNatural.w * scale,
-            height: imgNatural.h * scale,
-            transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
-            pointerEvents: 'none',
-            maxWidth: 'none',
-          }}
-        />
-
-        <svg
-          className="absolute inset-0 pointer-events-none"
-          width={CROP_CONTAINER}
-          height={CROP_CONTAINER * (cropH / cropW)}
-          viewBox={`0 0 ${CROP_CONTAINER} ${CROP_CONTAINER * (cropH / cropW)}`}
-        >
-          <defs>
-            <mask id="crop-rect-mask">
-              <rect width={CROP_CONTAINER} height={CROP_CONTAINER * (cropH / cropW)} fill="white" />
-              <rect
-                x={(CROP_CONTAINER - cropW) / 2}
-                y={(CROP_CONTAINER * (cropH / cropW) - cropH) / 2}
-                width={cropW}
-                height={cropH}
-                fill="black"
-              />
-            </mask>
-          </defs>
-          <rect
-            width={CROP_CONTAINER}
-            height={CROP_CONTAINER * (cropH / cropW)}
-            fill="rgba(0,0,0,0.55)"
-            mask="url(#crop-rect-mask)"
-          />
-          <rect
-            x={(CROP_CONTAINER - cropW) / 2}
-            y={(CROP_CONTAINER * (cropH / cropW) - cropH) / 2}
-            width={cropW}
-            height={cropH}
-            fill="none"
-            stroke="white"
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-            opacity={0.7}
-          />
-        </svg>
-      </div>
-
-      <p className="text-xs text-text-sub text-center">
-        Перетащите для перемещения, прокрутите для масштабирования
-      </p>
-
-      <div className="flex gap-4 w-full">
-        <Button variant="secondary" onClick={onCancel} fullWidth>
-          Отмена
-        </Button>
-        <Button onClick={handleConfirm} fullWidth>
-          Сохранить
-        </Button>
-      </div>
-    </Modal>
-  );
-}
 
 function DeviceImages({ deviceId }: { deviceId: string }) {
-  const [images, setImages] = useState<DeviceImage[]>([]);
+  const [images, setImages] = useState<IImageAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -422,7 +131,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
               className="relative group border border-gray-200 rounded-sm overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
-                src={img.image.thumbnail?.secure_url ?? img.image.original.secure_url}
+                src={img.imageJson.thumbnail?.secure_url ?? img.imageJson.original.secure_url}
                 alt=""
                 width={150}
                 height={150}
@@ -462,10 +171,15 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
       {error && <p className="text-xs text-brand-red">{error}</p>}
 
       {cropSrc && (
-        <ImageCropModal
+        <CropModal
           imageSrc={cropSrc}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
+          shape="rectangle"
+          outputWidth={800}
+          outputHeight={600}
+          cropWidth={360}
+          cropHeight={270}
         />
       )}
     </div>

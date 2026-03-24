@@ -8,6 +8,7 @@ import { PaymentModal } from '@/components/account/user/payment-modal';
 import { userApi } from '@/lib/api/user';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { CertificateStatus } from '@asko/shared/client';
+import { ICertificate } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
@@ -16,26 +17,6 @@ const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.EXPIRED]: 'Истек',
   [CertificateStatus.REVOKED]: 'Отозван',
 };
-
-interface Certificate {
-  id: string;
-  certificateNumber: string;
-  status: CertificateStatus;
-  issuedAt: Date | string;
-  expiresAt: Date | string;
-  description?: string;
-  price?: number;
-  paid?: boolean;
-  userDevice?: {
-    device?: {
-      id?: string;
-      name?: string;
-      brand?: string;
-      model?: string;
-      description?: string;
-    };
-  };
-}
 
 function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
@@ -59,7 +40,7 @@ function FileTextIcon() {
   );
 }
 
-function CertificateCard({ cert, onPay }: { cert: Certificate; onPay?: (cert: Certificate) => void }) {
+function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: ICertificate) => void }) {
   const isActive = cert.status === CertificateStatus.ACTIVE;
   const isPendingPayment = cert.status === CertificateStatus.PENDING_PAYMENT;
   const device = cert.userDevice?.device;
@@ -80,10 +61,10 @@ function CertificateCard({ cert, onPay }: { cert: Certificate; onPay?: (cert: Ce
       const images = Array.isArray(data) ? data : [];
       if (images.length > 0) {
         const img = images[0];
-        const url = img.image?.medium?.secure_url ?? img.image?.original?.secure_url;
+        const url = img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url;
         if (url) setDeviceImageUrl(url);
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [device?.id]);
 
   const handleExportPdf = useCallback(() => {
@@ -184,7 +165,7 @@ function CertificateCard({ cert, onPay }: { cert: Certificate; onPay?: (cert: Ce
                 <span className={
                   isActive ? 'text-green-600 font-medium'
                     : isPendingPayment ? 'text-orange-600 font-medium'
-                    : 'text-text-sub font-medium'
+                      : 'text-text-sub font-medium'
                 }>
                   {STATUS_LABELS[cert.status] ?? cert.status}
                 </span>
@@ -345,7 +326,7 @@ function AddDeviceForm({
         setCatalog(list);
         if (list.length > 0 && !deviceId) setDeviceId(list[0].id);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingCatalog(false));
   }, [open]);
 
@@ -506,7 +487,7 @@ function AddCertificateForm({
 }: {
   open: boolean;
   onClose: () => void;
-  onSuccess: (cert: Certificate) => void;
+  onSuccess: (cert: ICertificate) => void;
 }) {
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
@@ -525,7 +506,7 @@ function AddCertificateForm({
         setDevices(data);
         if (data.length > 0 && !deviceId) setDeviceId(data[0].id);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingDevices(false));
   }, [open]);
 
@@ -610,15 +591,15 @@ function AddCertificateForm({
 }
 
 export function UserCertificates() {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
-  const [paymentCert, setPaymentCert] = useState<Certificate | null>(null);
+  const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
 
-  const handlePay = (cert: Certificate) => {
+  const handlePay = (cert: ICertificate) => {
     setPaymentCert(cert);
   };
 

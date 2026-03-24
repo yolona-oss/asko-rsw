@@ -27,11 +27,11 @@ export default async function ArticlePage({
   // Second image (order 1) is main hero, fallback to first
   const mainImage =
     sortedImages.length > 1
-      ? sortedImages[1].image.large?.secure_url ??
-      sortedImages[1].image.original.secure_url
+      ? sortedImages[1].imageJson.large?.secure_url ??
+      sortedImages[1].imageJson.original.secure_url
       : sortedImages[0]
-        ? sortedImages[0].image.large?.secure_url ??
-        sortedImages[0].image.original.secure_url
+        ? sortedImages[0].imageJson.large?.secure_url ??
+        sortedImages[0].imageJson.original.secure_url
         : null;
 
   // Split text into paragraphs

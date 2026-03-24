@@ -31,7 +31,7 @@ export async function fetchArticlePreviewImage(slug: string): Promise<string | n
   const images = await fetchArticleImages(slug);
   if (!images.length) return null;
   const preview = images.sort((a, b) => a.order - b.order)[0];
-  return preview.image.medium?.secure_url ?? preview.image.original.secure_url;
+  return preview.imageJson.medium?.secure_url ?? preview.imageJson.original.secure_url;
 }
 
 export async function fetchOtherArticles(currentSlug: string): Promise<IArticle[]> {
