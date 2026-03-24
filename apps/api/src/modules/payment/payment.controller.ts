@@ -36,10 +36,11 @@ export class PaymentController {
         @Query('provider') provider?: string,
         @Query('search') search?: string,
     ) {
-        return this.paymentService.listPayments(
+        const result = await this.paymentService.listPayments(
             { status, provider },
             { offset, limit, search },
         );
+        return { ...result, data: result.data ?? [] };
     }
 
     @RequiredRoles(...ALL_ROLES)
@@ -56,11 +57,12 @@ export class PaymentController {
         @Query('limit') limit?: number,
         @Query('status') status?: string,
     ) {
-        return this.paymentService.listUserPayments(
+        const result = await this.paymentService.listUserPayments(
             user.sub,
             { status },
             { offset, limit },
         );
+        return { ...result, data: result.data ?? [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)

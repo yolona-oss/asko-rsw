@@ -98,7 +98,7 @@ export function AdminUsers() {
     async function fetchUsers() {
       try {
         const { data } = await adminApi.getUsers({ limit: 200 });
-        setUsers(data.data);
+        setUsers(data.data ?? []);
       } catch (e: any) {
         console.error(e)
       } finally {

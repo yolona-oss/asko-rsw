@@ -24,7 +24,8 @@ export async function fetchArticleImages(slug: string): Promise<IImageAttachment
     next: { revalidate: 60 },
   });
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  return data.images ?? [];
 }
 
 export async function fetchArticlePreviewImage(slug: string): Promise<string | null> {

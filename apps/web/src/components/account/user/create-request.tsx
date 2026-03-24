@@ -72,7 +72,7 @@ export function CreateRequest() {
         setCertificates(certList.filter((c) => c.status === 'active'));
 
         // Determine which devices have active repair requests
-        const reqList = reqRes.data.data;
+        const reqList = reqRes.data.data ?? [];
         const activeDeviceIds = new Set<string>();
         for (const req of reqList) {
           if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {

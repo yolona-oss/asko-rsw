@@ -38,13 +38,15 @@ export class DealerController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.dealerClient.findAllDealers(pagination);
+        const result = await this.dealerClient.findAllDealers(pagination);
+        return { ...result, data: result.data ?? [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Get('withdrawals/all')
     async getAllWithdrawals(@Query() pagination: PaginationDto) {
-        return this.dealerClient.getAllWithdrawals(pagination);
+        const result = await this.dealerClient.getAllWithdrawals(pagination);
+        return { ...result, data: result.data ?? [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)
@@ -116,7 +118,8 @@ export class DealerController {
     @RequiredRoles(Role.DEALER)
     @Get('points')
     async getPointsHistory(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.dealerClient.getPointsHistory(user.sub, pagination);
+        const result = await this.dealerClient.getPointsHistory(user.sub, pagination);
+        return { ...result, data: result.data ?? [] };
     }
 
     @RequiredRoles(Role.DEALER)

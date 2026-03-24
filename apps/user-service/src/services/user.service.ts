@@ -35,7 +35,7 @@ export class UserService {
     async findAll(dto: PaginationDto,
         relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
-        const offset = dto.offset ?? 1
+        const offset = dto.offset ?? 0
         const limit = dto.limit ?? 10
 
         const [entities, overallCount] = await this.em.findAndCount(User, {}, {

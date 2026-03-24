@@ -83,6 +83,7 @@ export class ReviewController {
     @Public()
     @Get('repairer/:repairerId')
     async findByRepairer(@Param('repairerId') repairerId: string, @Query() pagination: PaginationDto) {
-        return this.repairerClient.findReviewsByRepairer(repairerId, pagination);
+        const result = await this.repairerClient.findReviewsByRepairer(repairerId, pagination);
+        return { ...result, data: result.data ?? [] };
     }
 }

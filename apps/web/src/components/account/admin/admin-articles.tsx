@@ -65,7 +65,7 @@ export function AdminArticles() {
   const fetchArticles = async () => {
     try {
       const { data } = await adminApi.getArticles({ limit: 100 });
-      setArticles(data.data);
+      setArticles(data.data ?? []);
     } catch {
       // silently fail
     } finally {

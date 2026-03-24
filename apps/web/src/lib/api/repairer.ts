@@ -24,11 +24,11 @@ export const repairerApi = {
   },
 
   getActiveRequest() {
-    return api.get<IRepairRequest | null>('/repairers/requests/active');
+    return api.get<IRepairRequest | null>('/repair-requests/active');
   },
 
   getAssignedRequests(params?: { offset?: number; limit?: number; status?: string }) {
-    return api.get<ListResponseDto<IRepairRequest>>('/repairers/requests', { params });
+    return api.get<ListResponseDto<IRepairRequest>>('/repair-requests/assigned', { params });
   },
 
   acceptRequest(requestId: string) {
@@ -118,7 +118,7 @@ export const repairerApi = {
   },
 
   getBrokenPartImages(requestId: string, partId: string) {
-    return api.get<any[]>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
+    return api.get<{ images: any[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
   },
 
   getDevices() {

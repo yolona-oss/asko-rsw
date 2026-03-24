@@ -131,14 +131,16 @@ export class CertificateController {
     ) {
         // Resolve dealer profile to get dealerId
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
-        return this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
+        const result = await this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
+        return { ...result, data: result.data ?? [] };
     }
 
     /** Admin: list all certificates */
     @RequiredRoles(...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.certificateClient.findAll(pagination);
+        const result = await this.certificateClient.findAll(pagination);
+        return { ...result, data: result.data ?? [] };
     }
 
     /** Pay for a certificate */

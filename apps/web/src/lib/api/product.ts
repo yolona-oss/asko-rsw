@@ -28,13 +28,15 @@ export async function fetchDeviceBySlug(slug: string): Promise<IDevice | null> {
 export async function fetchDeviceImages(id: string): Promise<IImageAttachment[]> {
   const res = await fetch(`${API_URL}/devices/${id}/images`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  return data.images ?? [];
 }
 
 export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttachment[]> {
   const res = await fetch(`${API_URL}/devices/slug/${slug}/images`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  return data.images ?? [];
 }
 
 export async function fetchFirstDeviceImage(deviceId: string): Promise<string> {

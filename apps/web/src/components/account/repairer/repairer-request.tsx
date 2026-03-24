@@ -213,7 +213,7 @@ export function RepairerRequest() {
         if (parts.length > 0) {
           const imgPromises = parts.map((p: any) =>
             repairerApi.getBrokenPartImages(data.id, p.id)
-              .then(({ data: imgs }) => ({ id: p.id, images: Array.isArray(imgs) ? imgs : [] }))
+              .then(({ data: imgs }) => ({ id: p.id, images: imgs.images ?? [] }))
               .catch(() => ({ id: p.id, images: [] })),
           );
           const imgResults = await Promise.all(imgPromises);

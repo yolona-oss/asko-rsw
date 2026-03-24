@@ -84,7 +84,7 @@ export function UserRequests() {
     async function fetchRequests() {
       try {
         const { data } = await userApi.getMyRequests({ limit: 50 });
-        setRequests(data.data);
+        setRequests(data.data ?? []);
       } catch {
         // silently fail
       } finally {

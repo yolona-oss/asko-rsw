@@ -105,7 +105,7 @@ export function AdminCertificates() {
     setLoading(true);
     try {
       const { data } = await adminApi.getCertificates({ limit: 200 });
-      setCertificates(data.data);
+      setCertificates(data.data ?? []);
     } catch {
       // silently fail
     } finally {

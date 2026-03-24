@@ -32,7 +32,7 @@ export const fileUploadApi = {
       const { data } = await api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
         params: { ownerType: 'user', ownerId: userId },
       });
-      const images = Array.isArray(data) ? data : [];
+      const images = data.images ?? [];
       if (images.length === 0) return null;
       return images[0].imageJson?.thumbnail?.secure_url
         ?? images[0].imageJson?.original?.secure_url

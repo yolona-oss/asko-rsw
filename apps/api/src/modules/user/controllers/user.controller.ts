@@ -34,13 +34,13 @@ export class UsersController {
     @Get('/')
     async getAllUsers(
         @Res() response: Response,
-        @Body() pagination: PaginationDto = {}
+        @Query() pagination: PaginationDto = {}
     ) {
         const docs = await this.userClient.findAllUsers({
-            offset: pagination.offset ?? 1,
+            offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 10,
         });
-        response.json(docs);
+        response.json({ ...docs, data: docs.data ?? [] });
     }
 
     @RequiredRoles(...ADMIN_ROLES)

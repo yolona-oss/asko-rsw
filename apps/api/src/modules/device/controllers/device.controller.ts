@@ -165,7 +165,8 @@ export class DeviceController {
     @Public()
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.deviceClient.findAllDevices(pagination);
+        const result = await this.deviceClient.findAllDevices(pagination);
+        return { ...result, data: result.data ?? [] };
     }
 
     @Public()
