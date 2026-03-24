@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
-import { Address, User } from "..";
+import { User } from "..";
 
 @Entity()
 export class UserAddress {
@@ -9,14 +9,14 @@ export class UserAddress {
     @ManyToOne(() => User)
     user!: User;
 
-    @ManyToOne(() => Address)
-    address!: Address;
+    @Property()
+    addressId!: string;
 
     @Property({ default: false })
     isPrimary: boolean = false;
 
-    constructor(user: User, address: Address) {
+    constructor(user: User, addressId: string) {
         this.user = user;
-        this.address = address;
+        this.addressId = addressId;
     }
 }

@@ -2,7 +2,7 @@ import { Entity, PrimaryKey, Property, OneToMany, Unique, Collection, Cascade, O
 import { v4 as uuid } from 'uuid';
 import { DEFAULT_USER_ROLE, Role, AuthProvider } from '@asko/shared';
 
-import { Session, Employee, Address } from 'entities'
+import { Session, Employee } from 'entities'
 import { UserAddress } from './user-address.entity';
 
 export type UserPopulateHints = "sessions" | "addresses" | "roles" | "employeeAssignments"

@@ -25,7 +25,7 @@ export class RepairRequestService {
 
         // Check if there's already an active repair request for this device
         const activeRequest = await this.em.findOne(RepairRequest, {
-            userDeviceId: dto.userDeviceId,
+            userDevice: dto.userDeviceId,
             status: {
                 $nin: [
                     RepairRequestStatus.COMPLETED,
@@ -39,29 +39,33 @@ export class RepairRequestService {
             throw AppErrors.conflict('Для этого устройства уже существует активная заявка на ремонт');
         }
 
-        let certificateId: string | undefined;
+        let certificate: Certificate | undefined;
         if (dto.certificateId) {
-            const certificate = await this.em.findOne(Certificate, { id: dto.certificateId });
-            if (!certificate) throw AppErrors.dbEntityNotFound('Certificate not found');
-            if (certificate.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
-            if (certificate.status !== CertificateStatus.ACTIVE) {
+            const cert = await this.em.findOne(Certificate, { id: dto.certificateId });
+            if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+            if (cert.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+            if (cert.status !== CertificateStatus.ACTIVE) {
                 throw AppErrors.badRequest('Certificate is not active');
             }
-            if (new Date() > certificate.expiresAt) {
+            if (new Date() > cert.expiresAt) {
                 throw AppErrors.badRequest('Certificate has expired');
             }
-            certificateId = certificate.id;
+            certificate = cert;
         }
 
-        const addressId = userDevice.address ? (typeof userDevice.address === 'object' ? userDevice.address.id : String(userDevice.address)) : undefined;
+        const addressRef = userDevice.address
+            ? (typeof userDevice.address === 'object'
+                ? this.em.getReference(Address, userDevice.address.id)
+                : this.em.getReference(Address, String(userDevice.address)))
+            : undefined;
 
         const request = this.em.create(RepairRequest, {
             userId,
-            userDeviceId: dto.userDeviceId,
-            certificateId,
+            userDevice,
+            certificate,
             description: dto.description,
             preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
-            addressId: addressId || undefined,
+            address: addressRef,
             status: RepairRequestStatus.PENDING,
         });
         await this.em.persistAndFlush(request);
@@ -132,7 +136,7 @@ export class RepairRequestService {
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
-        request.repairerId = repairerId;
+        request.repairer = this.em.getReference(Repairer, repairerId);
         request.managerId = managerId;
         request.status = RepairRequestStatus.ASSIGNED;
         await this.em.flush();
@@ -144,7 +148,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.status !== RepairRequestStatus.ASSIGNED) {
             throw AppErrors.badRequest('Request is not in ASSIGNED status');
@@ -160,7 +164,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.status !== RepairRequestStatus.ASSIGNED) {
             throw AppErrors.badRequest('Request is not in ASSIGNED status');
@@ -172,7 +176,7 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.PAID;
         request.refuseReason = reason;
-        request.repairerId = undefined;
+        request.repairer = undefined;
         await this.em.flush();
 
         return request;
@@ -183,7 +187,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.status !== RepairRequestStatus.ACCEPTED) {
             throw AppErrors.badRequest('Request must be ACCEPTED first');
@@ -199,7 +203,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (![RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.COMPLETED].includes(request.status)) {
             throw AppErrors.badRequest('Price can only be set when request is in progress or completed');
@@ -244,15 +248,21 @@ export class RepairRequestService {
         }
 
         // Update repairer stats directly (same DB)
-        if (request.repairerId) {
-            const repairer = await this.em.findOne(Repairer, { id: request.repairerId });
+        const repairerId = request.repairer
+            ? (typeof request.repairer === 'object' ? request.repairer.id : String(request.repairer))
+            : undefined;
+        if (repairerId) {
+            const repairer = await this.em.findOne(Repairer, { id: repairerId });
             if (repairer) {
                 repairer.completedRepairs += 1;
 
                 // Update repairer last location from address if available
-                if (request.addressId) {
+                const addressId = request.address
+                    ? (typeof request.address === 'object' ? request.address.id : String(request.address))
+                    : undefined;
+                if (addressId) {
                     try {
-                        const address = await this.em.findOne(Address, { id: request.addressId });
+                        const address = await this.em.findOne(Address, { id: addressId });
                         if (address) {
                             // Placeholder coords -- gateway handles real geolocation
                             repairer.lastLocationUpdate = new Date();
@@ -303,7 +313,7 @@ export class RepairRequestService {
         return this.em.findOne(
             RepairRequest,
             {
-                repairerId: repairer.id,
+                repairer: repairer.id,
                 status: {
                     $in: [
                         RepairRequestStatus.ASSIGNED,
@@ -321,7 +331,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const where: Record<string, any> = { repairerId: repairer.id };
+        const where: Record<string, any> = { repairer: repairer.id };
         if (status) where.status = status;
 
         const [data, total] = await this.em.findAndCount(
@@ -343,7 +353,7 @@ export class RepairRequestService {
 
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
-            { repairerId: repairer.id },
+            { repairer: repairer.id },
             {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
@@ -380,7 +390,7 @@ export class RepairRequestService {
 
     async checkActiveForDevice(userDeviceId: string): Promise<{ hasActive: boolean; request?: RepairRequest }> {
         const request = await this.em.findOne(RepairRequest, {
-            userDeviceId,
+            userDevice: userDeviceId,
             status: {
                 $nin: [
                     RepairRequestStatus.COMPLETED,

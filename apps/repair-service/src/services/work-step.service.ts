@@ -139,7 +139,7 @@ export class WorkStepService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
         return { repairer, request };

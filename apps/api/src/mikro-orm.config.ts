@@ -4,26 +4,14 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import {
     Article,
-    RepairRequest,
-    Review,
     WSchedule,
     Employee,
-    Certificate,
     Cursor,
-    PointsTransaction,
-    PointsWithdrawal,
-    UserDevice,
     InvitationLink,
     UserAddress,
     Session,
     User,
-    DealerProfile,
-    Address,
-    DealerClient,
-    WorkStep,
     Image,
-    Device,
-    Repairer
 } from '@entities/index'
 
 import { AppConfig } from 'app.config';
@@ -52,26 +40,14 @@ const config = defineConfig<PostgreSqlDriver>({
     // },
     entities: [
         Article,
-        RepairRequest,
-        Review,
         WSchedule,
         Employee,
-        Certificate,
         Cursor,
-        PointsTransaction,
-        PointsWithdrawal,
-        UserDevice,
         InvitationLink,
         UserAddress,
         Session,
         User,
-        DealerProfile,
-        Address,
-        DealerClient,
-        WorkStep,
         Image,
-        Device,
-        Repairer
     ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
