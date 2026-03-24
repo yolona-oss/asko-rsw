@@ -4,7 +4,7 @@ import { ImageTypeEnum } from "./enum/image-type.enum";
 export interface IImage {
     id: string;
 
-    images: IImageObj;
+    imageJson: IImageObj;
     order: number;
     alt?: string;
 

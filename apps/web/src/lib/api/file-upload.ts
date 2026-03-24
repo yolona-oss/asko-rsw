@@ -34,8 +34,8 @@ export const fileUploadApi = {
       });
       const images = Array.isArray(data) ? data : [];
       if (images.length === 0) return null;
-      return images[0].images?.thumbnail?.secure_url
-        ?? images[0].images?.original?.secure_url
+      return images[0].imageJson?.thumbnail?.secure_url
+        ?? images[0].imageJson?.original?.secure_url
         ?? null;
     } catch {
       return null;
