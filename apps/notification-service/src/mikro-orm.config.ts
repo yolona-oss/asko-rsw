@@ -1,10 +1,14 @@
 import 'tsconfig-paths/register';
+import { config as dotenvConfig } from 'dotenv';
+import { getEnvFilePath } from '@asko/shared';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import { NotificationEntity } from 'entities/notification.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
+
+dotenvConfig({ path: getEnvFilePath(), override: true });
 
 const configService = new ConfigService();
 const appConfig = new AppConfig(configService);

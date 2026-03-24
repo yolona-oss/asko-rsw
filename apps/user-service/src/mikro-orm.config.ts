@@ -1,11 +1,12 @@
 import 'tsconfig-paths/register';
 import { config as dotenvConfig } from 'dotenv';
+import { getEnvFilePath } from '@asko/shared';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import { User, Session, InvitationLink, UserAddress } from 'entities';
 
-dotenvConfig({ path: path.join(process.cwd(), '.env') });
+dotenvConfig({ path: getEnvFilePath(), override: true });
 
 const config = defineConfig<PostgreSqlDriver>({
     driver: PostgreSqlDriver,

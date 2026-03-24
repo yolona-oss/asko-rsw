@@ -18,8 +18,6 @@ config.json
 .env
 .env.prod
 .env.production
-.env.dev
-.env.development
 s
 tmp/
 build/

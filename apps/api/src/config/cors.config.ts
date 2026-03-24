@@ -4,9 +4,9 @@ const allowlist = process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3
 
 export const corsOptions = {
     origin: function(origin: any, callback: any) {
-        // if (isDevEnv()) {
-        //     return callback(null, true);
-        // }
+        if (isDevEnv()) {
+            return callback(null, true);
+        }
 
         if (!origin) {
             return callback(null, true);
