@@ -2,8 +2,20 @@ import 'tsconfig-paths/register';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
-import { RepairRequest } from 'entities/repair-request.entity';
-import { WorkStep } from 'entities/work-step.entity';
+import {
+    Device,
+    Address,
+    UserDevice,
+    Certificate,
+    Repairer,
+    Review,
+    RepairRequest,
+    WorkStep,
+    DealerProfile,
+    DealerClient,
+    PointsTransaction,
+    PointsWithdrawal,
+} from 'entities';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 
@@ -17,7 +29,20 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [RepairRequest, WorkStep],
+    entities: [
+        Device,
+        Address,
+        UserDevice,
+        Certificate,
+        Repairer,
+        Review,
+        RepairRequest,
+        WorkStep,
+        DealerProfile,
+        DealerClient,
+        PointsTransaction,
+        PointsWithdrawal,
+    ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

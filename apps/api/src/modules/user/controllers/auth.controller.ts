@@ -3,7 +3,7 @@ import { Request, Response } from 'express'
 
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
-import { DealerService } from 'modules/dealer/services/dealer.service';
+import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
 import {
     ALL_ROLES,
     REFRESH_TOKEN,
@@ -25,7 +25,7 @@ export class AuthController {
     constructor(
         private readonly userClient: UserClientService,
         private readonly repairerClient: RepairerClientService,
-        private readonly dealerService: DealerService,
+        private readonly dealerClient: DealerClientService,
     ) { }
 
     private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
@@ -92,7 +92,7 @@ export class AuthController {
                 if (result.roles.includes(Role.REPAIRER)) {
                     await this.repairerClient.createRepairer(result.user.id, '', []);
                 } else if (result.roles.includes(Role.DEALER)) {
-                    await this.dealerService.createProfile({ userId: result.user.id });
+                    await this.dealerClient.createProfile(result.user.id, {});
                 }
             } catch (error) {
                 console.error(`Failed to create role profile for user ${result.user.id}:`, error);

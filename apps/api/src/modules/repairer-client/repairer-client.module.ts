@@ -15,7 +15,7 @@ import { RepairerClientService } from './repairer-client.service';
                     options: {
                         package: 'repairer',
                         protoPath: join(process.cwd(), '../../packages/proto/repairer.proto'),
-                        url: config.repairerServiceUrl,
+                        url: config.repairServiceUrl,
                     },
                 }),
             },

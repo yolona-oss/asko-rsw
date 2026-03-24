@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { WorkStep } from 'entities/work-step.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
+import { Repairer } from 'entities/repairer.entity';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { RepairerClientService } from 'modules/repairer-client.service';
 import { RepairRequestService } from './repair-request.service';
 
 const MIN_STEPS_TO_LOCK = 1;
@@ -13,7 +13,6 @@ const MIN_STEPS_TO_LOCK = 1;
 export class WorkStepService {
     constructor(
         private readonly em: EntityManager,
-        private readonly repairerClient: RepairerClientService,
         private readonly repairRequestService: RepairRequestService,
     ) {}
 
@@ -135,9 +134,9 @@ export class WorkStepService {
         return this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'ASC' } });
     }
 
-    /** Resolve repairer + request, reusable across methods */
+    /** Resolve repairer + request directly via EntityManager */
     private async resolveRepairerRequest(repairerUserId: string, requestId: string) {
-        const { repairer } = await this.repairerClient.findByUserId(repairerUserId);
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairerId: repairer.id });

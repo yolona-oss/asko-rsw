@@ -38,6 +38,6 @@ COPY apps/repair-service/.env.prod ./apps/repair-service/.env.prod
 
 WORKDIR /app/apps/repair-service
 
-EXPOSE 5006
+EXPOSE 5003
 
 CMD ["node", "dist/main.js"]

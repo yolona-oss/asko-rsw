@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Inject, Param, Post, Query, forwardRef } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CertificateClientService } from 'modules/certificate-client/certificate-client.service';
 import { DeviceClientService } from 'modules/device-client/device-client.service';
-import { DealerService } from 'modules/dealer/services/dealer.service';
+import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     AddCertificateDto,
@@ -25,8 +25,7 @@ export class CertificateController {
         private readonly certificateClient: CertificateClientService,
         private readonly deviceClient: DeviceClientService,
         private readonly paymentService: PaymentClientService,
-        @Inject(forwardRef(() => DealerService))
-        private readonly dealerService: DealerService,
+        private readonly dealerClient: DealerClientService,
     ) {}
 
     /** User adds a certificate they purchased */
@@ -45,7 +44,7 @@ export class CertificateController {
     @Post('create')
     async createByDealer(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateCertificateDto) {
         // Resolve dealer profile to get dealerId
-        const dealerProfile = await this.dealerService.getProfile(user.sub);
+        const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
 
         // Create address via device-service
         const addressRes = await this.deviceClient.createAddress({
@@ -68,7 +67,7 @@ export class CertificateController {
 
         // Link client to dealer
         try {
-            await this.dealerService.addClient(user.sub, { clientUserId: dto.clientUserId });
+            await this.dealerClient.addClient(user.sub, dto.clientUserId);
         } catch {
             // Ignore if already linked
         }
@@ -131,7 +130,7 @@ export class CertificateController {
         @Query('status') status?: CertificateStatus,
     ) {
         // Resolve dealer profile to get dealerId
-        const dealerProfile = await this.dealerService.getProfile(user.sub);
+        const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
         return this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
     }
 

@@ -2,8 +2,20 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
-import { RepairRequest } from 'entities/repair-request.entity';
-import { WorkStep } from 'entities/work-step.entity';
+import {
+    Device,
+    Address,
+    UserDevice,
+    Certificate,
+    Repairer,
+    Review,
+    RepairRequest,
+    WorkStep,
+    DealerProfile,
+    DealerClient,
+    PointsTransaction,
+    PointsWithdrawal,
+} from 'entities';
 import { isProdEnv } from '@asko/shared';
 
 @Module({
@@ -17,7 +29,20 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [RepairRequest, WorkStep],
+                    entities: [
+                        Device,
+                        Address,
+                        UserDevice,
+                        Certificate,
+                        Repairer,
+                        Review,
+                        RepairRequest,
+                        WorkStep,
+                        DealerProfile,
+                        DealerClient,
+                        PointsTransaction,
+                        PointsWithdrawal,
+                    ],
                     debug: !isProdEnv(),
                 };
             },

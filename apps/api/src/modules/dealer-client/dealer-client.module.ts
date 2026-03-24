@@ -2,26 +2,26 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { AppConfig } from 'app.config';
-import { CertificateClientService } from './certificate-client.service';
+import { DealerClientService } from './dealer-client.service';
 
 @Module({
     imports: [
         ClientsModule.registerAsync([
             {
-                name: 'CERTIFICATE_PACKAGE',
+                name: 'DEALER_PACKAGE',
                 inject: [AppConfig],
                 useFactory: (config: AppConfig) => ({
                     transport: Transport.GRPC,
                     options: {
-                        package: 'certificate',
-                        protoPath: join(process.cwd(), '../../packages/proto/certificate.proto'),
+                        package: 'dealer',
+                        protoPath: join(process.cwd(), '../../packages/proto/dealer.proto'),
                         url: config.repairServiceUrl,
                     },
                 }),
             },
         ]),
     ],
-    providers: [CertificateClientService],
-    exports: [CertificateClientService],
+    providers: [DealerClientService],
+    exports: [DealerClientService],
 })
-export class CertificateClientModule {}
+export class DealerClientModule {}

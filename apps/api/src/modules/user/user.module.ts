@@ -6,7 +6,7 @@ import { InviteController } from './controllers/invite.controller';
 
 import { UserClientModule } from 'modules/user-client/user-client.module';
 import { RepairerModule } from 'modules/repairer/repairer.module';
-import { DealerModule } from 'modules/dealer/dealer.module';
+import { DealerClientModule } from 'modules/dealer-client/dealer-client.module';
 
 @Module({
     controllers: [
@@ -17,7 +17,7 @@ import { DealerModule } from 'modules/dealer/dealer.module';
     imports: [
         UserClientModule,
         RepairerModule,
-        DealerModule,
+        DealerClientModule,
     ],
 })
 export class UserModule {}

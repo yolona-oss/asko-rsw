@@ -15,7 +15,7 @@ import { DeviceClientService } from './device-client.service';
                     options: {
                         package: 'device',
                         protoPath: join(process.cwd(), '../../packages/proto/device.proto'),
-                        url: config.deviceServiceUrl,
+                        url: config.repairServiceUrl,
                     },
                 }),
             },

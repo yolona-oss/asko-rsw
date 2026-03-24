@@ -1,15 +1,15 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CertificateController } from './controllers/certificate.controller';
 import { CertificateClientModule } from 'modules/certificate-client/certificate-client.module';
 import { DeviceClientModule } from 'modules/device-client/device-client.module';
-import { DealerModule } from 'modules/dealer/dealer.module';
+import { DealerClientModule } from 'modules/dealer-client/dealer-client.module';
 import { PaymentClientModule } from 'modules/payment-client/payment-client.module';
 
 @Module({
     imports: [
         CertificateClientModule,
         DeviceClientModule,
-        forwardRef(() => DealerModule),
+        DealerClientModule,
         PaymentClientModule,
     ],
     controllers: [CertificateController],

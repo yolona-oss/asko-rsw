@@ -1,2 +1,12 @@
+export { Device } from './device.entity';
+export { Address } from './address.entity';
+export { UserDevice } from './user-device.entity';
+export { Certificate } from './certificate.entity';
+export { Repairer } from './repairer.entity';
+export { Review } from './review.entity';
 export { RepairRequest } from './repair-request.entity';
 export { WorkStep } from './work-step.entity';
+export { DealerProfile } from './dealer-profile.entity';
+export { DealerClient } from './dealer-client.entity';
+export { PointsTransaction } from './points-transaction.entity';
+export { PointsWithdrawal } from './points-withdrawal.entity';

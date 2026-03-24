@@ -1,0 +1,186 @@
+syntax = "proto3";
+
+package dealer;
+
+service DealerService {
+    rpc CreateProfile(CreateDealerProfileRequest) returns (DealerProfileResponse);
+    rpc UpdateProfile(UpdateDealerProfileRequest) returns (DealerProfileResponse);
+    rpc GetProfile(DealerGetByUserIdRequest) returns (DealerProfileResponse);
+    rpc AddClient(AddClientRequest) returns (DealerClientResponse);
+    rpc LinkClientOnCertificateApproval(LinkClientRequest) returns (DealerEmptyResponse);
+    rpc AwardPointsForCertificate(AwardPointsRequest) returns (DealerEmptyResponse);
+    rpc GetClients(DealerGetByUserIdRequest) returns (DealerClientListResponse);
+    rpc GetUserDevicesForCertificate(DealerGetByUserIdRequest) returns (DealerUserDeviceListResponse);
+    rpc GetPointsHistory(DealerPointsHistoryRequest) returns (PaginatedPointsResponse);
+    rpc RequestWithdrawal(RequestWithdrawalRequest) returns (WithdrawalResponse);
+    rpc ProcessWithdrawal(ProcessWithdrawalRequest) returns (WithdrawalResponse);
+    rpc GetWithdrawals(DealerGetByUserIdRequest) returns (WithdrawalListResponse);
+    rpc GetAllWithdrawals(DealerPaginationRequest) returns (PaginatedWithdrawalsResponse);
+    rpc GetWithdrawalForPayout(DealerFindByIdRequest) returns (WithdrawalPayoutResponse);
+    rpc CompleteWithdrawal(DealerFindByIdRequest) returns (DealerEmptyResponse);
+    rpc FindAllDealers(DealerPaginationRequest) returns (PaginatedDealersResponse);
+}
+
+// ─── Records ────────────────────────────────────────────────────────────
+
+message DealerProfileRecord {
+    string id = 1;
+    string userId = 2;
+    string companyName = 3;
+    string inn = 4;
+    int32 pointsBalance = 5;
+    string createdAt = 6;
+    string updatedAt = 7;
+}
+
+message DealerClientRecord {
+    string id = 1;
+    string dealerId = 2;
+    string clientUserId = 3;
+    string createdAt = 4;
+}
+
+message PointsTransactionRecord {
+    string id = 1;
+    string dealerId = 2;
+    string type = 3;
+    int32 amount = 4;
+    string reason = 5;
+    string repairRequestId = 6;
+    string createdAt = 7;
+}
+
+message WithdrawalRecord {
+    string id = 1;
+    string dealerId = 2;
+    int32 amount = 3;
+    string status = 4;
+    string requestedAt = 5;
+    string processedAt = 6;
+    string processedByUserId = 7;
+}
+
+message UserDeviceRecord {
+    string id = 1;
+    string userId = 2;
+    string deviceId = 3;
+    string serialNumber = 4;
+    string deviceName = 5;
+    string deviceModel = 6;
+    string deviceBrand = 7;
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message CreateDealerProfileRequest {
+    string userId = 1;
+    string companyName = 2;
+    string inn = 3;
+}
+
+message UpdateDealerProfileRequest {
+    string userId = 1;
+    string companyName = 2;
+    string inn = 3;
+}
+
+message DealerGetByUserIdRequest {
+    string userId = 1;
+}
+
+message AddClientRequest {
+    string dealerUserId = 1;
+    string clientUserId = 2;
+}
+
+message LinkClientRequest {
+    string dealerId = 1;
+    string clientUserId = 2;
+}
+
+message AwardPointsRequest {
+    string dealerId = 1;
+    double certificatePrice = 2;
+    string certificateNumber = 3;
+}
+
+message DealerPointsHistoryRequest {
+    string userId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message RequestWithdrawalRequest {
+    string userId = 1;
+    int32 amount = 2;
+}
+
+message ProcessWithdrawalRequest {
+    string withdrawalId = 1;
+    string adminUserId = 2;
+    string status = 3;
+}
+
+message DealerPaginationRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message DealerFindByIdRequest {
+    string id = 1;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message DealerEmptyResponse {}
+
+message DealerProfileResponse {
+    DealerProfileRecord profile = 1;
+}
+
+message DealerClientResponse {
+    DealerClientRecord client = 1;
+}
+
+message DealerClientListResponse {
+    repeated DealerClientRecord clients = 1;
+}
+
+message DealerUserDeviceListResponse {
+    repeated UserDeviceRecord devices = 1;
+}
+
+message PaginatedPointsResponse {
+    repeated PointsTransactionRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message WithdrawalResponse {
+    WithdrawalRecord withdrawal = 1;
+}
+
+message WithdrawalListResponse {
+    repeated WithdrawalRecord withdrawals = 1;
+}
+
+message PaginatedWithdrawalsResponse {
+    repeated WithdrawalRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message WithdrawalPayoutResponse {
+    int32 amount = 1;
+    string dealerUserId = 2;
+}
+
+message PaginatedDealersResponse {
+    repeated DealerProfileRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
