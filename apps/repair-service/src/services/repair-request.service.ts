@@ -8,17 +8,19 @@ import { Address } from 'entities/address.entity';
 import { RepairRequestStatus, CertificateStatus, PaymentTargetType } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { PaymentClientService } from 'modules/payment-client.service';
+import { BrokenPartService } from './broken-part.service';
 
 @Injectable()
 export class RepairRequestService {
     constructor(
         private readonly em: EntityManager,
         private readonly paymentClient: PaymentClientService,
+        private readonly brokenPartService: BrokenPartService,
     ) {}
 
     /** User creates a repair request */
     @CreateRequestContext()
-    async create(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string }): Promise<RepairRequest> {
+    async create(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string; brokenParts?: { devicePartId?: string; name?: string; note?: string }[] }): Promise<RepairRequest> {
         // Validate user device directly
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['address'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
@@ -70,6 +72,11 @@ export class RepairRequestService {
             status: RepairRequestStatus.PENDING,
         });
         await this.em.persistAndFlush(request);
+
+        if (dto.brokenParts && dto.brokenParts.length > 0) {
+            await this.brokenPartService.addBrokenPartsOnCreate(request.id, dto.brokenParts);
+        }
+
         return request;
     }
 

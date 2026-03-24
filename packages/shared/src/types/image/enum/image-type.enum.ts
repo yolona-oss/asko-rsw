@@ -7,4 +7,6 @@ export enum ImageTypeEnum {
     RepairRequest = "repair_request",
     Certificate = "certificate",
     Review = "review",
+    DevicePart = "device_part",
+    BrokenPart = "broken_part",
 }

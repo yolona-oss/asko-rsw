@@ -3,9 +3,11 @@ import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { RepairRequestService } from 'services/repair-request.service';
 import { WorkStepService } from 'services/work-step.service';
+import { BrokenPartService } from 'services/broken-part.service';
 import { AppError } from 'common/error';
 import type { RepairRequest } from 'entities/repair-request.entity';
 import type { WorkStep } from 'entities/work-step.entity';
+import type { BrokenPart } from 'entities/broken-part.entity';
 
 // Import request types from proto interfaces
 import type {
@@ -34,6 +36,11 @@ import type {
     RepairFindActiveByRepairerRequest,
     RepairFindAllRequest,
     RepairCheckActiveForDeviceRequest,
+    RepairAddBrokenPartRequest,
+    RepairUpdateBrokenPartRequest,
+    RepairUpdateBrokenPartStatusRequest,
+    RepairDeleteBrokenPartRequest,
+    RepairGetBrokenPartsRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -77,6 +84,19 @@ function requestToRecord(entity: RepairRequest) {
     };
 }
 
+function brokenPartToRecord(entity: BrokenPart) {
+    return {
+        id: entity.id,
+        repairRequestId: typeof entity.repairRequest === 'object' ? entity.repairRequest.id : String(entity.repairRequest),
+        devicePartId: entity.devicePart ? (typeof entity.devicePart === 'object' ? entity.devicePart.id : String(entity.devicePart)) : '',
+        name: entity.name,
+        status: entity.status,
+        note: entity.note ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
 function stepToRecord(entity: WorkStep) {
     return {
         id: entity.id,
@@ -96,6 +116,7 @@ export class RepairGrpcController {
     constructor(
         private readonly repairRequestService: RepairRequestService,
         private readonly workStepService: WorkStepService,
+        private readonly brokenPartService: BrokenPartService,
     ) {}
 
     // ── Repair request lifecycle ──
@@ -103,11 +124,17 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'CreateRequest')
     async createRequest(data: RepairCreateRequest) {
         try {
+            const brokenParts = data.brokenParts?.map(bp => ({
+                devicePartId: bp.devicePartId || undefined,
+                name: bp.name || undefined,
+                note: bp.note || undefined,
+            }));
             const request = await this.repairRequestService.create(data.userId, {
                 userDeviceId: data.userDeviceId,
                 description: data.description,
                 certificateId: data.certificateId || undefined,
                 preferredDate: data.preferredDate || undefined,
+                brokenParts,
             });
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
@@ -257,6 +284,59 @@ export class RepairGrpcController {
         try {
             const steps = await this.workStepService.getSteps(data.requestId);
             return { steps: steps.map(stepToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ── Broken parts ──
+
+    @GrpcMethod('RepairService', 'AddBrokenPart')
+    async addBrokenPart(data: RepairAddBrokenPartRequest) {
+        try {
+            const part = await this.brokenPartService.addBrokenPart(data.requestId, {
+                devicePartId: data.devicePartId || undefined,
+                name: data.name || undefined,
+                note: data.note || undefined,
+            });
+            return { part: brokenPartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'UpdateBrokenPart')
+    async updateBrokenPart(data: RepairUpdateBrokenPartRequest) {
+        try {
+            const part = await this.brokenPartService.updateBrokenPart(data.requestId, data.partId, {
+                name: data.name || undefined,
+                note: data.note,
+            });
+            return { part: brokenPartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'UpdateBrokenPartStatus')
+    async updateBrokenPartStatus(data: RepairUpdateBrokenPartStatusRequest) {
+        try {
+            const part = await this.brokenPartService.updateBrokenPartStatus(
+                data.requestId,
+                data.partId,
+                data.status as any,
+            );
+            return { part: brokenPartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'DeleteBrokenPart')
+    async deleteBrokenPart(data: RepairDeleteBrokenPartRequest) {
+        try {
+            await this.brokenPartService.deleteBrokenPart(data.requestId, data.partId);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'GetBrokenParts')
+    async getBrokenParts(data: RepairGetBrokenPartsRequest) {
+        try {
+            const parts = await this.brokenPartService.getBrokenParts(data.requestId);
+            return { parts: parts.map(brokenPartToRecord) };
         } catch (e) { throw toGrpcError(e); }
     }
 

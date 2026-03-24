@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { Device, UserDevice, Address } from 'entities';
+import { Device, UserDevice, Address, DevicePart } from 'entities';
 import { DeviceType } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
@@ -231,6 +231,50 @@ export class DeviceService {
         const userDevice = await this.em.findOne(UserDevice, { id, userId });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
         await this.em.removeAndFlush(userDevice);
+    }
+
+    // ── Device parts catalog ───────────────────────────────────────────
+
+    @CreateRequestContext()
+    async createDevicePart(deviceId: string, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
+        const device = await this.em.findOne(Device, { id: deviceId });
+        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+
+        const part = this.em.create(DevicePart, {
+            device,
+            name: dto.name,
+            partNumber: dto.partNumber,
+            price: dto.price,
+            description: dto.description,
+        });
+        await this.em.persistAndFlush(part);
+        return part;
+    }
+
+    @CreateRequestContext()
+    async updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
+        const part = await this.em.findOne(DevicePart, { id: partId });
+        if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
+
+        if (dto.name) part.name = dto.name;
+        if (dto.partNumber !== undefined) part.partNumber = dto.partNumber;
+        if (dto.price !== undefined) part.price = dto.price;
+        if (dto.description !== undefined) part.description = dto.description;
+
+        await this.em.flush();
+        return part;
+    }
+
+    @CreateRequestContext()
+    async deleteDevicePart(partId: string): Promise<void> {
+        const part = await this.em.findOne(DevicePart, { id: partId });
+        if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
+        await this.em.removeAndFlush(part);
+    }
+
+    @CreateRequestContext()
+    async getDeviceParts(deviceId: string): Promise<DevicePart[]> {
+        return this.em.find(DevicePart, { device: deviceId }, { orderBy: { name: 'ASC' } });
     }
 
     @CreateRequestContext()

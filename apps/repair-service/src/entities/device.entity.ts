@@ -1,6 +1,7 @@
-import { Entity, PrimaryKey, Property, Enum, OptionalProps } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, Enum, OneToMany, Collection, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 import { DeviceType } from '@asko/shared';
+import { DevicePart } from './device-part.entity';
 
 @Entity()
 export class Device {
@@ -38,6 +39,9 @@ export class Device {
 
     @Property({ type: 'boolean', default: false, nullable: true })
     isFeatured?: boolean;
+
+    @OneToMany(() => DevicePart, dp => dp.device)
+    parts = new Collection<DevicePart>(this);
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

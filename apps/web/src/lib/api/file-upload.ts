@@ -84,6 +84,40 @@ export const fileUploadApi = {
     return api.put<void>(`/articles/${articleId}/images/reorder`, imageIds);
   },
 
+  // Device part images
+  getDevicePartImages(deviceId: string, partId: string) {
+    return api.get<IImageAttachment[]>(`/devices/${deviceId}/parts/${partId}/images`);
+  },
+
+  uploadDevicePartImage(deviceId: string, partId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<IImage>(`/devices/${deviceId}/parts/${partId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteDevicePartImage(deviceId: string, partId: string, imageId: string) {
+    return api.delete<void>(`/devices/${deviceId}/parts/${partId}/images/${imageId}`);
+  },
+
+  // Broken part images
+  getBrokenPartImages(requestId: string, partId: string) {
+    return api.get<IImageAttachment[]>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
+  },
+
+  uploadBrokenPartImage(requestId: string, partId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<IImage>(`/repair-requests/${requestId}/broken-parts/${partId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteBrokenPartImage(requestId: string, partId: string, imageId: string) {
+    return api.post<void>(`/repair-requests/${requestId}/broken-parts/${partId}/images/${imageId}/delete`);
+  },
+
   // Review images
   uploadReviewImage(reviewId: string, file: File) {
     const formData = new FormData();

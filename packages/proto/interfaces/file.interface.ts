@@ -102,6 +102,8 @@ export interface FileServiceClient {
     uploadArticleImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadRepairRequestImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadReviewImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadDevicePartImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadBrokenPartImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     createFromUrl(request: CreateFromUrlRequest): Observable<ImageResponse>;
 
     remove(request: ImageIdRequest): Observable<EmptyFileResponse>;

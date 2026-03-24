@@ -142,6 +142,24 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
+    @GrpcMethod('FileService', 'UploadDevicePartImage')
+    async uploadDevicePartImage(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const image = await this.imageService.uploadDevicePartImage(file, data.ownerId);
+            return { image: entityToRecord(image) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadBrokenPartImage')
+    async uploadBrokenPartImage(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const image = await this.imageService.uploadBrokenPartImage(file, data.ownerId);
+            return { image: entityToRecord(image) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
     // ─── URL operations ─────────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'CreateFromUrl')

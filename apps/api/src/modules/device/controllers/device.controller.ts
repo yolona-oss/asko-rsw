@@ -8,10 +8,13 @@ import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateDeviceDto,
     UpdateDeviceDto,
+    CreateDevicePartDto,
+    UpdateDevicePartDto,
     RegisterUserDeviceDto,
     PaginationDto,
     ALL_ROLES,
     ADMIN_ROLES,
+    Role,
     JwtPayload,
     ImageTypeEnum,
 } from '@asko/shared';
@@ -95,6 +98,65 @@ export class DeviceController {
     @Delete(':id/images/:imageId')
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
         await this.deviceClient.findDeviceById(id);
+        return this.fileService.remove(imageId);
+    }
+
+    // ── Admin: device parts catalog ──
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post(':id/parts')
+    async createPart(@Param('id') id: string, @Body() dto: CreateDevicePartDto) {
+        return this.deviceClient.createDevicePart(id, dto);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Patch(':id/parts/:partId')
+    async updatePart(@Param('id') _id: string, @Param('partId') partId: string, @Body() dto: UpdateDevicePartDto) {
+        return this.deviceClient.updateDevicePart(partId, dto);
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Delete(':id/parts/:partId')
+    async removePart(@Param('id') _id: string, @Param('partId') partId: string) {
+        await this.deviceClient.deleteDevicePart(partId);
+        return { message: 'Device part deleted' };
+    }
+
+    @Public()
+    @Get(':id/parts')
+    async findParts(@Param('id') id: string) {
+        return this.deviceClient.getDeviceParts(id);
+    }
+
+    // ── Admin/Manager: device part images ──
+
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/parts/:partId/images')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadPartImage(
+        @Param('partId') partId: string,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+    ) {
+        return this.fileService.uploadDevicePartImage(file, partId);
+    }
+
+    @Public()
+    @Get(':id/parts/:partId/images')
+    async findPartImages(@Param('partId') partId: string) {
+        return this.fileService.findAttachedImages(ImageTypeEnum.DevicePart, partId);
+    }
+
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Delete(':id/parts/:partId/images/:imageId')
+    async removePartImage(@Param('imageId') imageId: string) {
         return this.fileService.remove(imageId);
     }
 

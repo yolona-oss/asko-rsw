@@ -89,6 +89,20 @@ export class FileClientService implements OnModuleInit {
         }));
     }
 
+    uploadDevicePartImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
+        return grpcCall(this.fileService.uploadDevicePartImage({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+    }
+
+    uploadBrokenPartImage(file: Express.Multer.File, ownerId: string): Promise<ImageResponse> {
+        return grpcCall(this.fileService.uploadBrokenPartImage({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+    }
+
     // ─── URL operations ─────────────────────────────────────────────────
 
     createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<ImageResponse> {

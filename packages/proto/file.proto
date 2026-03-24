@@ -12,6 +12,8 @@ service FileService {
     rpc UploadArticleImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadRepairRequestImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadReviewImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadDevicePartImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadBrokenPartImage(UploadWithOwnerRequest) returns (ImageResponse);
 
     // URL operations
     rpc CreateFromUrl(CreateFromUrlRequest) returns (ImageResponse);

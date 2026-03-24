@@ -50,6 +50,14 @@ export const userApi = {
   uploadImage: fileUploadApi.uploadImage,
   attachImage: fileUploadApi.attachImage,
 
+  getBrokenParts(requestId: string) {
+    return api.get<{ parts: any[] }>(`/repair-requests/${requestId}/broken-parts`);
+  },
+
+  getDeviceParts(deviceId: string) {
+    return api.get<{ parts: any[] }>(`/devices/${deviceId}/parts`);
+  },
+
   getWorkSteps(requestId: string) {
     return api.get<IWorkStep[]>(`/repair-requests/${requestId}/steps`);
   },

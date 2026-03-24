@@ -27,6 +27,17 @@ export interface IDevice {
     updatedAt: Date;
 }
 
+export interface IDevicePart {
+    id: string;
+    deviceId: string;
+    name: string;
+    partNumber?: string;
+    price?: number;
+    description?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface IUserDevice {
     id: string;
     userId: string;

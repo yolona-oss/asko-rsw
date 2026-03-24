@@ -23,6 +23,12 @@ service DeviceService {
     rpc RemoveUserDevice(RemoveUserDeviceRequest) returns (EmptyResponse);
     rpc FindUserDeviceById(FindByIdRequest) returns (UserDeviceResponse);
 
+    // Device parts catalog
+    rpc CreateDevicePart(CreateDevicePartRequest) returns (DevicePartResponse);
+    rpc UpdateDevicePart(UpdateDevicePartRequest) returns (DevicePartResponse);
+    rpc DeleteDevicePart(DeleteDevicePartRequest) returns (EmptyResponse);
+    rpc GetDeviceParts(GetDevicePartsRequest) returns (DevicePartListResponse);
+
     // Address
     rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
     rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
@@ -103,6 +109,30 @@ message RemoveUserDeviceRequest {
     string id = 2;
 }
 
+message CreateDevicePartRequest {
+    string deviceId = 1;
+    string name = 2;
+    string partNumber = 3;
+    double price = 4;
+    string description = 5;
+}
+
+message UpdateDevicePartRequest {
+    string id = 1;
+    string name = 2;
+    string partNumber = 3;
+    double price = 4;
+    string description = 5;
+}
+
+message DeleteDevicePartRequest {
+    string id = 1;
+}
+
+message GetDevicePartsRequest {
+    string deviceId = 1;
+}
+
 message CreateAddressRequest {
     string country = 1;
     string city = 2;
@@ -175,6 +205,25 @@ message AddressResponse {
 
 message AddressListResponse {
     repeated AddressRecord addresses = 1;
+}
+
+message DevicePartRecord {
+    string id = 1;
+    string deviceId = 2;
+    string name = 3;
+    string partNumber = 4;
+    double price = 5;
+    string description = 6;
+    string createdAt = 7;
+    string updatedAt = 8;
+}
+
+message DevicePartResponse {
+    DevicePartRecord part = 1;
+}
+
+message DevicePartListResponse {
+    repeated DevicePartRecord parts = 1;
 }
 
 message UserDeviceRecord {

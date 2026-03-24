@@ -6,6 +6,7 @@ import { Repairer } from './repairer.entity';
 import { Certificate } from './certificate.entity';
 import { Address } from './address.entity';
 import { WorkStep } from './work-step.entity';
+import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
@@ -64,6 +65,9 @@ export class RepairRequest {
 
     @OneToMany(() => WorkStep, ws => ws.repairRequest)
     workSteps = new Collection<WorkStep>(this);
+
+    @OneToMany(() => BrokenPart, bp => bp.repairRequest)
+    brokenParts = new Collection<BrokenPart>(this);
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

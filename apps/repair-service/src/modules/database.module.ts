@@ -15,6 +15,8 @@ import {
     DealerClient,
     PointsTransaction,
     PointsWithdrawal,
+    DevicePart,
+    BrokenPart,
 } from 'entities';
 import { isProdEnv } from '@asko/shared';
 
@@ -42,6 +44,8 @@ import { isProdEnv } from '@asko/shared';
                         DealerClient,
                         PointsTransaction,
                         PointsWithdrawal,
+                        DevicePart,
+                        BrokenPart,
                     ],
                     debug: !isProdEnv(),
                 };

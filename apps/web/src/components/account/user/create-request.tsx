@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Select, Textarea, FormField } from '@asko/ui';
+import { Button, Select, Textarea, FormField, Input } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
 
 interface UserDevice {
   id: string;
-  device?: { name?: string; model?: string };
+  device?: { id?: string; name?: string; model?: string };
   serialNumber?: string;
 }
 
@@ -48,6 +48,11 @@ export function CreateRequest() {
   const [certificateId, setCertificateId] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
+
+  const [deviceParts, setDeviceParts] = useState<any[]>([]);
+  const [selectedParts, setSelectedParts] = useState<{ devicePartId?: string; name: string }[]>([]);
+  const [customPartName, setCustomPartName] = useState('');
+  const [showCustomPartInput, setShowCustomPartInput] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -89,10 +94,33 @@ export function CreateRequest() {
     (c) => !userDeviceId || c.userDevice?.id === userDeviceId,
   );
 
-  // Reset certificate when device changes
+  // Reset certificate and broken parts when device changes
   useEffect(() => {
     setCertificateId('');
+    setSelectedParts([]);
+    setDeviceParts([]);
+    setCustomPartName('');
+    setShowCustomPartInput(false);
   }, [userDeviceId]);
+
+  // Fetch device parts catalog when device changes
+  useEffect(() => {
+    if (!userDeviceId) return;
+    const selectedDevice = devices.find((d) => d.id === userDeviceId);
+    const deviceId = selectedDevice?.device?.id;
+    if (!deviceId) return;
+
+    let cancelled = false;
+    userApi.getDeviceParts(deviceId).then((res) => {
+      if (!cancelled) {
+        setDeviceParts(res.data?.parts ?? []);
+      }
+    }).catch(() => {
+      if (!cancelled) setDeviceParts([]);
+    });
+
+    return () => { cancelled = true; };
+  }, [userDeviceId, devices]);
 
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -131,10 +159,15 @@ export function CreateRequest() {
     setSubmitting(true);
     try {
       // 1. Create the repair request
+      const brokenParts = selectedParts.map((sp) => ({
+        ...(sp.devicePartId ? { devicePartId: sp.devicePartId } : {}),
+        name: sp.name,
+      }));
       const { data: request } = await userApi.createRepairRequest({
         userDeviceId,
         description: description.trim(),
         ...(certificateId ? { certificateId } : {}),
+        ...(brokenParts.length > 0 ? { brokenParts } : {}),
       });
 
       // 2. Upload and attach images
@@ -215,6 +248,113 @@ export function CreateRequest() {
                 </option>
               ))}
             </Select>
+          </FormField>
+        )}
+
+        {/* Broken parts selection */}
+        {userDeviceId && (
+          <FormField label="Неисправные запчасти (необязательно)" variant="bold">
+            {/* Catalog parts checkboxes */}
+            {deviceParts.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {deviceParts.map((part) => {
+                  const isChecked = selectedParts.some((sp) => sp.devicePartId === part.id);
+                  const label = part.partNumber
+                    ? `${part.name} (${part.partNumber})`
+                    : part.name;
+                  return (
+                    <label key={part.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          if (isChecked) {
+                            setSelectedParts((prev) => prev.filter((sp) => sp.devicePartId !== part.id));
+                          } else {
+                            setSelectedParts((prev) => [...prev, { devicePartId: part.id, name: part.name }]);
+                          }
+                        }}
+                        className="w-4 h-4 accent-brand-main"
+                      />
+                      <span className="text-text-main">{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Custom parts chips */}
+            {selectedParts.filter((sp) => !sp.devicePartId).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedParts
+                  .filter((sp) => !sp.devicePartId)
+                  .map((sp, idx) => (
+                    <span
+                      key={`custom-${idx}`}
+                      className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-bg-alt border border-border-light rounded-sm"
+                    >
+                      {sp.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedParts((prev) =>
+                            prev.filter((p) => !(p.name === sp.name && !p.devicePartId)),
+                          )
+                        }
+                        className="ml-1 text-text-sub hover:text-text-main cursor-pointer"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+              </div>
+            )}
+
+            {/* Add custom part */}
+            {showCustomPartInput ? (
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  placeholder="Название запчасти"
+                  value={customPartName}
+                  onChange={(e) => setCustomPartName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const trimmed = customPartName.trim();
+                      if (trimmed) {
+                        setSelectedParts((prev) => [...prev, { name: trimmed }]);
+                        setCustomPartName('');
+                      }
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const trimmed = customPartName.trim();
+                    if (trimmed) {
+                      setSelectedParts((prev) => [...prev, { name: trimmed }]);
+                      setCustomPartName('');
+                    }
+                  }}
+                  className="flex items-center justify-center w-9 h-9 text-lg font-medium border border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowCustomPartInput(true)}
+                className="flex items-center gap-2 mt-2 text-sm font-medium text-text-sub hover:text-text-main transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Добавить свою запчасть
+              </button>
+            )}
           </FormField>
         )}
 

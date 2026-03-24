@@ -1,5 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+    Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles,
+    UploadedFile, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
+} from '@nestjs/common';
+import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
@@ -12,12 +15,15 @@ import {
     AddWorkStepDto,
     UpdateWorkStepDto,
     SetRepairPriceDto,
+    AddBrokenPartDto,
+    UpdateBrokenPartDto,
+    UpdateBrokenPartStatusDto,
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
+    ImageTypeEnum,
     ALL_ROLES,
     ADMIN_ROLES,
-    STAFF_ROLES,
     Role,
     JwtPayload,
 } from '@asko/shared';
@@ -215,6 +221,85 @@ export class RepairRequestController {
     @Get(':id/steps')
     async getSteps(@Param('id') id: string) {
         return this.repairClient.getSteps(id);
+    }
+
+    // ── Broken parts ──
+
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts')
+    async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
+        return this.repairClient.addBrokenPart(user.sub, id, dto);
+    }
+
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts/:partId/update')
+    async updateBrokenPart(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Param('partId') partId: string,
+        @Body() dto: UpdateBrokenPartDto,
+    ) {
+        return this.repairClient.updateBrokenPart(user.sub, id, partId, dto);
+    }
+
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts/:partId/status')
+    async updateBrokenPartStatus(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Param('partId') partId: string,
+        @Body() dto: UpdateBrokenPartStatusDto,
+    ) {
+        return this.repairClient.updateBrokenPartStatus(user.sub, id, partId, dto.status);
+    }
+
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts/:partId/delete')
+    async deleteBrokenPart(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Param('partId') partId: string,
+    ) {
+        await this.repairClient.deleteBrokenPart(user.sub, id, partId);
+        return {};
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Get(':id/broken-parts')
+    async getBrokenParts(@Param('id') id: string) {
+        return this.repairClient.getBrokenParts(id);
+    }
+
+    // ── Broken part images ──
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/broken-parts/:partId/images')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadBrokenPartImage(
+        @Param('partId') partId: string,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+    ) {
+        return this.fileService.uploadBrokenPartImage(file, partId);
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Get(':id/broken-parts/:partId/images')
+    async findBrokenPartImages(@Param('partId') partId: string) {
+        return this.fileService.findAttachedImages(ImageTypeEnum.BrokenPart, partId);
+    }
+
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts/:partId/images/:imageId/delete')
+    async removeBrokenPartImage(@Param('imageId') imageId: string) {
+        return this.fileService.remove(imageId);
     }
 
     // ── Get by ID (any authenticated user) ──

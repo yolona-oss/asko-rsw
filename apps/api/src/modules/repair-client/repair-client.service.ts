@@ -11,6 +11,8 @@ import type {
     CompleteStepResponse,
     RepairEmptyResponse,
     RepairCheckActiveResponse,
+    BrokenPartResponse,
+    BrokenPartListResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -27,13 +29,18 @@ export class RepairClientService implements OnModuleInit {
 
     // ── Repair request lifecycle ──
 
-    createRequest(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string }): Promise<RepairRequestResponse> {
+    createRequest(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string; brokenParts?: { devicePartId?: string; name?: string; note?: string }[] }): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.createRequest({
             userId,
             userDeviceId: dto.userDeviceId,
             description: dto.description,
             certificateId: dto.certificateId ?? '',
             preferredDate: dto.preferredDate ?? '',
+            brokenParts: dto.brokenParts?.map(bp => ({
+                devicePartId: bp.devicePartId ?? '',
+                name: bp.name ?? '',
+                note: bp.note ?? '',
+            })) ?? [],
         }));
     }
 
@@ -119,6 +126,49 @@ export class RepairClientService implements OnModuleInit {
 
     getSteps(requestId: string): Promise<WorkStepListResponse> {
         return grpcCall(this.repairService.getSteps({ requestId }));
+    }
+
+    // ── Broken parts ──
+
+    addBrokenPart(userId: string, requestId: string, dto: { devicePartId?: string; name?: string; note?: string }): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.addBrokenPart({
+            userId,
+            requestId,
+            devicePartId: dto.devicePartId ?? '',
+            name: dto.name ?? '',
+            note: dto.note ?? '',
+        }));
+    }
+
+    updateBrokenPart(userId: string, requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.updateBrokenPart({
+            userId,
+            requestId,
+            partId,
+            name: dto.name ?? '',
+            note: dto.note ?? '',
+        }));
+    }
+
+    updateBrokenPartStatus(userId: string, requestId: string, partId: string, status: string): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.updateBrokenPartStatus({
+            userId,
+            requestId,
+            partId,
+            status,
+        }));
+    }
+
+    deleteBrokenPart(userId: string, requestId: string, partId: string): Promise<RepairEmptyResponse> {
+        return grpcCall(this.repairService.deleteBrokenPart({
+            userId,
+            requestId,
+            partId,
+        }));
+    }
+
+    getBrokenParts(requestId: string): Promise<BrokenPartListResponse> {
+        return grpcCall(this.repairService.getBrokenParts({ requestId }));
     }
 
     // ── Queries ──

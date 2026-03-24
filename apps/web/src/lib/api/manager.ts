@@ -38,6 +38,27 @@ export const managerApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/assign`, { repairerId } satisfies AssignRepairerDto);
   },
 
+  // Broken parts
+  getBrokenParts(requestId: string) {
+    return api.get<{ parts: any[] }>(`/repair-requests/${requestId}/broken-parts`);
+  },
+
+  addBrokenPart(requestId: string, data: { devicePartId?: string; name?: string; note?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts`, data);
+  },
+
+  updateBrokenPart(requestId: string, partId: string, data: { name?: string; note?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
+  },
+
+  updateBrokenPartStatus(requestId: string, partId: string, status: string) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/status`, { status });
+  },
+
+  deleteBrokenPart(requestId: string, partId: string) {
+    return api.post<void>(`/repair-requests/${requestId}/broken-parts/${partId}/delete`);
+  },
+
   getRepairersInCity(city: string) {
     return api.get<IRepairer[]>(`/repairers/city/${city}`);
   },

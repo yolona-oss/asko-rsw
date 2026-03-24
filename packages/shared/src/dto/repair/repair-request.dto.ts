@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber } from 'class-validator';
-import { RepairRequestStatus, WorkStepStatus } from '../../types/repair.type';
+import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsArray } from 'class-validator';
+import { RepairRequestStatus, WorkStepStatus, BrokenPartStatus } from '../../types/repair.type';
 
 export class CreateRepairRequestDto {
     @IsString()
@@ -15,6 +15,10 @@ export class CreateRepairRequestDto {
     @IsOptional()
     @IsDateString()
     preferredDate?: string;
+
+    @IsOptional()
+    @IsArray()
+    brokenParts?: AddBrokenPartDto[];
 }
 
 export class UpdateRepairRequestDto {
@@ -83,4 +87,33 @@ export class UpdateWorkStepDto {
     @IsOptional()
     @IsEnum(WorkStepStatus)
     status?: WorkStepStatus;
+}
+
+export class AddBrokenPartDto {
+    @IsOptional()
+    @IsString()
+    devicePartId?: string;
+
+    @IsOptional()
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class UpdateBrokenPartDto {
+    @IsOptional()
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class UpdateBrokenPartStatusDto {
+    @IsEnum(BrokenPartStatus)
+    status!: BrokenPartStatus;
 }

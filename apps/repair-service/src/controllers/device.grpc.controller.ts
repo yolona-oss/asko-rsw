@@ -8,6 +8,8 @@ import type { Device } from 'entities/device.entity';
 import type { UserDevice } from 'entities/user-device.entity';
 import type { Address } from 'entities/address.entity';
 
+import type { DevicePart } from 'entities/device-part.entity';
+
 import type {
     CreateDeviceRequest,
     UpdateDeviceRequest,
@@ -21,6 +23,10 @@ import type {
     GetUserDeviceRequest,
     RemoveUserDeviceRequest,
     CreateAddressRequest,
+    CreateDevicePartRequest,
+    UpdateDevicePartRequest,
+    DeleteDevicePartRequest,
+    GetDevicePartsRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -69,6 +75,19 @@ function addressToRecord(entity: Address) {
         floor: parseInt(entity.floor ?? '') || 0,
         room: parseInt(entity.apartment ?? '') || 0,
         postalCode: '',
+    };
+}
+
+function devicePartToRecord(entity: DevicePart) {
+    return {
+        id: entity.id,
+        deviceId: typeof entity.device === 'object' ? entity.device.id : String(entity.device),
+        name: entity.name,
+        partNumber: entity.partNumber ?? '',
+        price: entity.price ?? 0,
+        description: entity.description ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
     };
 }
 
@@ -249,6 +268,50 @@ export class DeviceGrpcController {
         try {
             const userDevice = await this.deviceService.findUserDeviceById(data.id);
             return { userDevice: userDeviceToRecord(userDevice) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ── Device parts ──
+
+    @GrpcMethod('DeviceService', 'CreateDevicePart')
+    async createDevicePart(data: CreateDevicePartRequest) {
+        try {
+            const part = await this.deviceService.createDevicePart(data.deviceId, {
+                name: data.name,
+                partNumber: data.partNumber || undefined,
+                price: data.price || undefined,
+                description: data.description || undefined,
+            });
+            return { part: devicePartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'UpdateDevicePart')
+    async updateDevicePart(data: UpdateDevicePartRequest) {
+        try {
+            const part = await this.deviceService.updateDevicePart(data.id, {
+                name: data.name || undefined,
+                partNumber: data.partNumber,
+                price: data.price,
+                description: data.description,
+            });
+            return { part: devicePartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'DeleteDevicePart')
+    async deleteDevicePart(data: DeleteDevicePartRequest) {
+        try {
+            await this.deviceService.deleteDevicePart(data.id);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'GetDeviceParts')
+    async getDeviceParts(data: GetDevicePartsRequest) {
+        try {
+            const parts = await this.deviceService.getDeviceParts(data.deviceId);
+            return { parts: parts.map(devicePartToRecord) };
         } catch (e) { throw toGrpcError(e); }
     }
 

@@ -43,6 +43,23 @@ export const adminApi = {
   deleteDeviceImage: fileUploadApi.deleteDeviceImage,
   reorderDeviceImages: fileUploadApi.reorderDeviceImages,
 
+  // Device parts
+  getDeviceParts(deviceId: string) {
+    return api.get<{ parts: any[] }>(`/devices/${deviceId}/parts`);
+  },
+  createDevicePart(deviceId: string, data: { name: string; partNumber?: string; price?: number; description?: string }) {
+    return api.post<{ part: any }>(`/devices/${deviceId}/parts`, data);
+  },
+  updateDevicePart(deviceId: string, partId: string, data: { name?: string; partNumber?: string; price?: number; description?: string }) {
+    return api.patch<{ part: any }>(`/devices/${deviceId}/parts/${partId}`, data);
+  },
+  deleteDevicePart(deviceId: string, partId: string) {
+    return api.delete<void>(`/devices/${deviceId}/parts/${partId}`);
+  },
+  getDevicePartImages: fileUploadApi.getDevicePartImages,
+  uploadDevicePartImage: fileUploadApi.uploadDevicePartImage,
+  deleteDevicePartImage: fileUploadApi.deleteDevicePartImage,
+
   // Articles
   getArticles(params?: { offset?: number; limit?: number; search?: string }) {
     return api.get<ListResponseDto<IArticle>>('/articles', { params });

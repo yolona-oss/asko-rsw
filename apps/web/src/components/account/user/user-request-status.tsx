@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Textarea } from '@asko/ui';
+import { Badge, Button, Textarea } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
@@ -166,6 +166,7 @@ function WorkStepCard({ step }: { step: WorkStep }) {
 export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequest | null>(null);
   const [workSteps, setWorkSteps] = useState<WorkStep[]>([]);
+  const [brokenParts, setBrokenParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -183,13 +184,16 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [reqRes, stepsRes] = await Promise.all([
+      const [reqRes, stepsRes, partsRes] = await Promise.all([
         userApi.getRepairRequest(requestId),
         userApi.getWorkSteps(requestId).catch(() => ({ data: [] })),
+        userApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
       setRequest(reqRes.data);
       const steps: WorkStep[] = stepsRes.data;
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
+      const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
+      setBrokenParts(parts);
 
       // Check if already reviewed
       if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
@@ -361,6 +365,46 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             {workSteps.map((step) => (
               <WorkStepCard key={step.id} step={step} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Broken parts */}
+      {brokenParts.length > 0 && (
+        <div className="flex flex-col gap-4 max-w-lg mt-6">
+          <h3 className="text-lg font-medium text-text-main">Запчасти</h3>
+          <div className="flex flex-col gap-2">
+            {brokenParts.map((part: any, idx: number) => {
+              const statusLabels: Record<string, string> = {
+                added: 'Добавлена',
+                ordered: 'Заказана',
+                shipped: 'Доставляется',
+                replaced: 'Заменена',
+              };
+              const statusVariants: Record<string, 'warning' | 'info' | 'success' | 'neutral'> = {
+                added: 'warning',
+                ordered: 'info',
+                shipped: 'info',
+                replaced: 'success',
+              };
+              const label = statusLabels[part.status] ?? part.status;
+              const variant = statusVariants[part.status] ?? 'neutral';
+
+              return (
+                <div
+                  key={part.id ?? idx}
+                  className="flex items-center justify-between gap-3 p-4 rounded-sm border border-border-light bg-white"
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-sm font-medium text-text-main">{part.name}</span>
+                    {part.note && (
+                      <span className="text-xs text-text-sub">{part.note}</span>
+                    )}
+                  </div>
+                  <Badge variant={variant} className="flex-shrink-0">{label}</Badge>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

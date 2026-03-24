@@ -19,6 +19,13 @@ export enum WorkStepStatus {
     SKIPPED = 'skipped',
 }
 
+export enum BrokenPartStatus {
+    ADDED = 'added',
+    ORDERED = 'ordered',
+    SHIPPED = 'shipped',
+    REPLACED = 'replaced',
+}
+
 export enum PaymentStatus {
     PENDING = 'pending',
     PAID = 'paid',
@@ -49,6 +56,7 @@ export interface IRepairRequest {
     repairer?: import('./repairer.type').IRepairer;
     certificate?: import('./certificate.type').ICertificate;
     workSteps?: IWorkStep[];
+    brokenParts?: IBrokenPart[];
     address?: import('./address-book.type').IAddressBook;
     createdAt: Date;
     updatedAt: Date;
@@ -62,6 +70,17 @@ export interface IWorkStep {
     status: WorkStepStatus;
     order: number;
     isFinal: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IBrokenPart {
+    id: string;
+    repairRequestId: string;
+    devicePartId?: string;
+    name: string;
+    status: BrokenPartStatus;
+    note?: string;
     createdAt: Date;
     updatedAt: Date;
 }

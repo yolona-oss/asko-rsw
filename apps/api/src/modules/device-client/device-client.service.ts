@@ -13,6 +13,8 @@ import type {
     DevicePriceResponse,
     ImportDevicesResponse,
     DeleteAllResponse,
+    DevicePartResponse,
+    DevicePartListResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -121,6 +123,36 @@ export class DeviceClientService implements OnModuleInit {
 
     findUserDeviceById(id: string): Promise<UserDeviceResponse> {
         return grpcCall(this.deviceService.findUserDeviceById({ id }));
+    }
+
+    // ── Device parts ──
+
+    createDevicePart(deviceId: string, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePartResponse> {
+        return grpcCall(this.deviceService.createDevicePart({
+            deviceId,
+            name: dto.name,
+            partNumber: dto.partNumber ?? '',
+            price: dto.price ?? 0,
+            description: dto.description ?? '',
+        }));
+    }
+
+    updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePartResponse> {
+        return grpcCall(this.deviceService.updateDevicePart({
+            id: partId,
+            name: dto.name ?? '',
+            partNumber: dto.partNumber ?? '',
+            price: dto.price ?? 0,
+            description: dto.description ?? '',
+        }));
+    }
+
+    deleteDevicePart(partId: string): Promise<void> {
+        return grpcCall(this.deviceService.deleteDevicePart({ id: partId })).then(() => undefined);
+    }
+
+    getDeviceParts(deviceId: string): Promise<DevicePartListResponse> {
+        return grpcCall(this.deviceService.getDeviceParts({ deviceId }));
     }
 
     // ── Address ──

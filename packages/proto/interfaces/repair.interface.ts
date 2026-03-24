@@ -24,6 +24,23 @@ export interface RepairRequestRecord {
     updatedAt: string;
 }
 
+export interface BrokenPartRecord {
+    id: string;
+    repairRequestId: string;
+    devicePartId: string;
+    name: string;
+    status: string;
+    note: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface BrokenPartInput {
+    devicePartId: string;
+    name: string;
+    note: string;
+}
+
 export interface WorkStepRecord {
     id: string;
     repairRequestId: string;
@@ -44,6 +61,7 @@ export interface RepairCreateRequest {
     description: string;
     certificateId: string;
     preferredDate: string;
+    brokenParts: BrokenPartInput[];
 }
 
 export interface RepairCancelRequest {
@@ -141,6 +159,39 @@ export interface RepairGetStepsRequest {
     requestId: string;
 }
 
+export interface RepairAddBrokenPartRequest {
+    userId: string;
+    requestId: string;
+    devicePartId: string;
+    name: string;
+    note: string;
+}
+
+export interface RepairUpdateBrokenPartRequest {
+    userId: string;
+    requestId: string;
+    partId: string;
+    name: string;
+    note: string;
+}
+
+export interface RepairUpdateBrokenPartStatusRequest {
+    userId: string;
+    requestId: string;
+    partId: string;
+    status: string;
+}
+
+export interface RepairDeleteBrokenPartRequest {
+    userId: string;
+    requestId: string;
+    partId: string;
+}
+
+export interface RepairGetBrokenPartsRequest {
+    requestId: string;
+}
+
 export interface RepairFindByIdRequest {
     id: string;
 }
@@ -205,6 +256,14 @@ export interface CompleteStepResponse {
     requestCompleted: boolean;
 }
 
+export interface BrokenPartResponse {
+    part: BrokenPartRecord;
+}
+
+export interface BrokenPartListResponse {
+    parts: BrokenPartRecord[];
+}
+
 export interface RepairCheckActiveResponse {
     hasActive: boolean;
     request: RepairRequestRecord;
@@ -234,6 +293,13 @@ export interface RepairServiceClient {
     deleteStep(request: RepairDeleteStepRequest): Observable<RepairEmptyResponse>;
     lockSteps(request: RepairLockStepsRequest): Observable<RepairRequestResponse>;
     getSteps(request: RepairGetStepsRequest): Observable<WorkStepListResponse>;
+
+    // Broken parts
+    addBrokenPart(request: RepairAddBrokenPartRequest): Observable<BrokenPartResponse>;
+    updateBrokenPart(request: RepairUpdateBrokenPartRequest): Observable<BrokenPartResponse>;
+    updateBrokenPartStatus(request: RepairUpdateBrokenPartStatusRequest): Observable<BrokenPartResponse>;
+    deleteBrokenPart(request: RepairDeleteBrokenPartRequest): Observable<RepairEmptyResponse>;
+    getBrokenParts(request: RepairGetBrokenPartsRequest): Observable<BrokenPartListResponse>;
 
     // Queries
     findById(request: RepairFindByIdRequest): Observable<RepairRequestResponse>;

@@ -17,6 +17,8 @@ import {
     DealerClient,
     PointsTransaction,
     PointsWithdrawal,
+    DevicePart,
+    BrokenPart,
 } from 'entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
@@ -32,6 +34,7 @@ import { ReviewService } from 'services/review.service';
 import { RepairRequestService } from 'services/repair-request.service';
 import { WorkStepService } from 'services/work-step.service';
 import { DealerService } from 'services/dealer.service';
+import { BrokenPartService } from 'services/broken-part.service';
 
 @Module({
     imports: [
@@ -50,6 +53,8 @@ import { DealerService } from 'services/dealer.service';
             DealerClient,
             PointsTransaction,
             PointsWithdrawal,
+            DevicePart,
+            BrokenPart,
         ]),
         PaymentClientModule,
         FileClientModule,
@@ -70,6 +75,7 @@ import { DealerService } from 'services/dealer.service';
         ReviewService,
         RepairRequestService,
         WorkStepService,
+        BrokenPartService,
         DealerService,
     ],
 })

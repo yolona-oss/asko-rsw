@@ -164,6 +164,34 @@ export class ImageService {
     }
 
     @CreateRequestContext()
+    async uploadDevicePartImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.DevicePart;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.DevicePart);
+
+        await this.em.persistAndFlush(image);
+        return image;
+    }
+
+    @CreateRequestContext()
+    async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string) {
+        const imageObj = await this.imgProcessor.processProductImage(file);
+        const image = new Image();
+
+        image.image = imageObj;
+        image.ownerType = ImageTypeEnum.BrokenPart;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ImageTypeEnum.BrokenPart);
+
+        await this.em.persistAndFlush(image);
+        return image;
+    }
+
+    @CreateRequestContext()
     async reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]) {
         const targets = await this.findAttachedImages(ownerType, ownerId);
 

@@ -88,6 +88,39 @@ export const repairerApi = {
     return api.get<PaginatedResponseDto<IReview>>(`/reviews/repairer/${repairerId}`);
   },
 
+  // Broken parts
+  getBrokenParts(requestId: string) {
+    return api.get<{ parts: any[] }>(`/repair-requests/${requestId}/broken-parts`);
+  },
+
+  addBrokenPart(requestId: string, data: { devicePartId?: string; name?: string; note?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts`, data);
+  },
+
+  updateBrokenPart(requestId: string, partId: string, data: { name?: string; note?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
+  },
+
+  updateBrokenPartStatus(requestId: string, partId: string, status: string) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/status`, { status });
+  },
+
+  deleteBrokenPart(requestId: string, partId: string) {
+    return api.post<void>(`/repair-requests/${requestId}/broken-parts/${partId}/delete`);
+  },
+
+  uploadBrokenPartImage(requestId: string, partId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<any>(`/repair-requests/${requestId}/broken-parts/${partId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  getBrokenPartImages(requestId: string, partId: string) {
+    return api.get<any[]>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
+  },
+
   getDevices() {
     return api.get<ListResponseDto<IDevice>>('/devices');
   },

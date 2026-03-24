@@ -25,6 +25,13 @@ service RepairService {
     rpc LockSteps(RepairLockStepsRequest) returns (RepairRequestResponse);
     rpc GetSteps(RepairGetStepsRequest) returns (WorkStepListResponse);
 
+    // Broken parts
+    rpc AddBrokenPart(RepairAddBrokenPartRequest) returns (BrokenPartResponse);
+    rpc UpdateBrokenPart(RepairUpdateBrokenPartRequest) returns (BrokenPartResponse);
+    rpc UpdateBrokenPartStatus(RepairUpdateBrokenPartStatusRequest) returns (BrokenPartResponse);
+    rpc DeleteBrokenPart(RepairDeleteBrokenPartRequest) returns (RepairEmptyResponse);
+    rpc GetBrokenParts(RepairGetBrokenPartsRequest) returns (BrokenPartListResponse);
+
     // Queries
     rpc FindById(RepairFindByIdRequest) returns (RepairRequestResponse);
     rpc FindByUser(RepairFindByUserRequest) returns (PaginatedRepairRequestsResponse);
@@ -59,6 +66,23 @@ message RepairRequestRecord {
     string updatedAt = 19;
 }
 
+message BrokenPartRecord {
+    string id = 1;
+    string repairRequestId = 2;
+    string devicePartId = 3;
+    string name = 4;
+    string status = 5;
+    string note = 6;
+    string createdAt = 7;
+    string updatedAt = 8;
+}
+
+message BrokenPartInput {
+    string devicePartId = 1;
+    string name = 2;
+    string note = 3;
+}
+
 message WorkStepRecord {
     string id = 1;
     string repairRequestId = 2;
@@ -79,6 +103,7 @@ message RepairCreateRequest {
     string description = 3;
     string certificateId = 4;
     string preferredDate = 5;
+    repeated BrokenPartInput brokenParts = 6;
 }
 
 message RepairCancelRequest {
@@ -176,6 +201,39 @@ message RepairGetStepsRequest {
     string requestId = 1;
 }
 
+message RepairAddBrokenPartRequest {
+    string userId = 1;
+    string requestId = 2;
+    string devicePartId = 3;
+    string name = 4;
+    string note = 5;
+}
+
+message RepairUpdateBrokenPartRequest {
+    string userId = 1;
+    string requestId = 2;
+    string partId = 3;
+    string name = 4;
+    string note = 5;
+}
+
+message RepairUpdateBrokenPartStatusRequest {
+    string userId = 1;
+    string requestId = 2;
+    string partId = 3;
+    string status = 4;
+}
+
+message RepairDeleteBrokenPartRequest {
+    string userId = 1;
+    string requestId = 2;
+    string partId = 3;
+}
+
+message RepairGetBrokenPartsRequest {
+    string requestId = 1;
+}
+
 message RepairFindByIdRequest {
     string id = 1;
 }
@@ -238,6 +296,14 @@ message WorkStepListResponse {
 message CompleteStepResponse {
     WorkStepRecord step = 1;
     bool requestCompleted = 2;
+}
+
+message BrokenPartResponse {
+    BrokenPartRecord part = 1;
+}
+
+message BrokenPartListResponse {
+    repeated BrokenPartRecord parts = 1;
 }
 
 message RepairCheckActiveResponse {

@@ -72,6 +72,30 @@ export interface RemoveUserDeviceRequest {
     id: string;
 }
 
+export interface CreateDevicePartRequest {
+    deviceId: string;
+    name: string;
+    partNumber: string;
+    price: number;
+    description: string;
+}
+
+export interface UpdateDevicePartRequest {
+    id: string;
+    name: string;
+    partNumber: string;
+    price: number;
+    description: string;
+}
+
+export interface DeleteDevicePartRequest {
+    id: string;
+}
+
+export interface GetDevicePartsRequest {
+    deviceId: string;
+}
+
 export interface CreateAddressRequest {
     country: string;
     city: string;
@@ -144,6 +168,25 @@ export interface AddressListResponse {
     addresses: AddressRecord[];
 }
 
+export interface DevicePartRecord {
+    id: string;
+    deviceId: string;
+    name: string;
+    partNumber: string;
+    price: number;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DevicePartResponse {
+    part: DevicePartRecord;
+}
+
+export interface DevicePartListResponse {
+    parts: DevicePartRecord[];
+}
+
 export interface UserDeviceRecord {
     id: string;
     userId: string;
@@ -191,6 +234,12 @@ export interface DeviceServiceClient {
     getUserDevice(request: GetUserDeviceRequest): Observable<UserDeviceResponse>;
     removeUserDevice(request: RemoveUserDeviceRequest): Observable<EmptyDeviceResponse>;
     findUserDeviceById(request: FindByIdRequest): Observable<UserDeviceResponse>;
+
+    // Device parts
+    createDevicePart(request: CreateDevicePartRequest): Observable<DevicePartResponse>;
+    updateDevicePart(request: UpdateDevicePartRequest): Observable<DevicePartResponse>;
+    deleteDevicePart(request: DeleteDevicePartRequest): Observable<EmptyDeviceResponse>;
+    getDeviceParts(request: GetDevicePartsRequest): Observable<DevicePartListResponse>;
 
     // Address
     createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
