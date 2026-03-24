@@ -16,7 +16,7 @@ async function generate() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    const outPath = path.resolve(__dirname, '..', 'openapi.json');
+    const outPath = path.resolve(process.cwd(), 'openapi.json');
     fs.writeFileSync(outPath, JSON.stringify(document, null, 2));
     console.log(`OpenAPI spec written to ${outPath}`);
 

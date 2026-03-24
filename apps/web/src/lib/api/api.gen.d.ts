@@ -957,6 +957,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** User adds a certificate they purchased */
         post: operations["CertificateController_addCertificate"];
         delete?: never;
         options?: never;
@@ -973,6 +974,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Dealer creates a certificate for a client */
         post: operations["CertificateController_createByDealer"];
         delete?: never;
         options?: never;
@@ -989,6 +991,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Reassign certificate to different device */
         post: operations["CertificateController_reassign"];
         delete?: never;
         options?: never;
@@ -1005,6 +1008,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Admin revokes a certificate */
         post: operations["CertificateController_revoke"];
         delete?: never;
         options?: never;
@@ -1019,6 +1023,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Calculate certificate price before purchase */
         get: operations["CertificateController_calculatePrice"];
         put?: never;
         post?: never;
@@ -1035,6 +1040,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** User gets their certificates */
         get: operations["CertificateController_findMy"];
         put?: never;
         post?: never;
@@ -1051,6 +1057,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Dealer gets certificates they created */
         get: operations["CertificateController_findDealerCerts"];
         put?: never;
         post?: never;
@@ -1067,6 +1074,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Admin: list all certificates */
         get: operations["CertificateController_findAll"];
         put?: never;
         post?: never;
@@ -1085,6 +1093,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Pay for a certificate */
         post: operations["CertificateController_pay"];
         delete?: never;
         options?: never;
@@ -1101,6 +1110,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Dummy pay for a certificate (testing) */
         post: operations["CertificateController_dummyPay"];
         delete?: never;
         options?: never;
@@ -1115,6 +1125,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get payments for a certificate */
         get: operations["CertificateController_getPayments"];
         put?: never;
         post?: never;
@@ -2089,172 +2100,510 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreateWScheduleDto: Record<string, never>;
-        WScheduleResponseDto: Record<string, never>;
+        WScheduleResponseDto: {
+            id: string;
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+            isActive: boolean;
+        };
         CreateAddressDto: Record<string, never>;
-        AddressResponseDto: Record<string, never>;
-        AddressRecordDto: Record<string, never>;
+        AddressRecordDto: {
+            id: string;
+            country: string;
+            city: string;
+            street: string;
+            house: number;
+            building: number;
+            floor: number;
+            room: number;
+            postalCode: string;
+        };
+        AddressResponseDto: {
+            address: components["schemas"]["AddressRecordDto"];
+        };
         AddressListResponseDto: {
             addresses: components["schemas"]["AddressRecordDto"][];
         };
-        ImageResponseDto: Record<string, never>;
+        ImageRecordDto: {
+            id: string;
+            imageJson: string;
+            alt: string;
+            order: number;
+            ownerType: string;
+            ownerId: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        ImageResponseDto: {
+            image: components["schemas"]["ImageRecordDto"];
+        };
         UploadImageDto: Record<string, never>;
         EmptyResponseDto: Record<string, never>;
         AttachImageDto: Record<string, never>;
-        ImageRecordDto: Record<string, never>;
         ImageListResponseDto: {
             images: components["schemas"]["ImageRecordDto"][];
         };
         CreateImageFromUrlDto: Record<string, never>;
-        UserResponseDto: Record<string, never>;
+        UserResponseDto: {
+            emailVerified?: boolean;
+            phoneVerified?: boolean;
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: string[];
+            roles: string[];
+            createdAt: string;
+            updatedAt: string;
+        };
         PaginatedUsersResponseDto: {
             data: components["schemas"]["UserResponseDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         ChangePasswordDto: Record<string, never>;
         LoginCredentials: Record<string, never>;
-        AuthSessionResponseDto: Record<string, never>;
+        AuthUserDto: {
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: string[];
+            roles: string[];
+            createdAt: string;
+            updatedAt: string;
+        };
+        AuthSessionResponseDto: {
+            access_token: string;
+            user: components["schemas"]["AuthUserDto"];
+            refresh_token?: string;
+        };
         CreateUserDto: Record<string, never>;
         ConfirmMailDto: Record<string, never>;
-        ConfirmEmailResponseDto: Record<string, never>;
+        ConfirmEmailResponseDto: {
+            message: string;
+        };
         ResendConfirmMailDto: Record<string, never>;
-        MessageResponseDto: Record<string, never>;
-        AccessTokenResponseDto: Record<string, never>;
-        AuthUserDto: Record<string, never>;
+        MessageResponseDto: {
+            message: string;
+        };
+        AccessTokenResponseDto: {
+            access_token: string;
+        };
         CreateInvitationLinkDto: Record<string, never>;
-        InviteCreatedResponseDto: Record<string, never>;
-        InviteLinkResponseDto: Record<string, never>;
+        InviteLinkResponseDto: {
+            id: string;
+            token: string;
+            role: string;
+            ttl: number;
+            used: boolean;
+            expiresAt: string;
+            createdAt: string;
+        };
+        InviteCreatedResponseDto: {
+            invite: components["schemas"]["InviteLinkResponseDto"];
+            link: string;
+        };
         CreateRepairerDto: Record<string, never>;
-        RepairerResponseDto: Record<string, never>;
+        RepairerRecordDto: {
+            id: string;
+            userId: string;
+            specializations: string[];
+            city: string;
+            isActive: boolean;
+            completedRepairs: number;
+            latitude: number;
+            longitude: number;
+            lastLocationUpdate: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        RepairerResponseDto: {
+            repairer: components["schemas"]["RepairerRecordDto"];
+        };
         UpdateRepairerDto: Record<string, never>;
         UpdateLocationDto: Record<string, never>;
-        RepairerRecordDto: Record<string, never>;
         PaginatedRepairersResponseDto: {
             data: components["schemas"]["RepairerRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         RepairerListResponseDto: {
             repairers: components["schemas"]["RepairerRecordDto"][];
         };
         CreateArticleDto: Record<string, never>;
-        ArticleResponseDto: Record<string, never>;
+        ArticleResponseDto: {
+            id: string;
+            title: string;
+            slug: string;
+            text: string;
+            tags: string[];
+            createdAt: string;
+            updatedAt: string;
+        };
         UpdateArticleDto: Record<string, never>;
-        DeleteCountResponseDto: Record<string, never>;
+        DeleteCountResponseDto: {
+            message: string;
+            count: number;
+        };
         PaginatedArticlesResponseDto: {
             data: components["schemas"]["ArticleResponseDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         CreateDeviceDto: Record<string, never>;
-        DeviceRecordDto: Record<string, never>;
-        ImportDevicesResponseDto: Record<string, never>;
+        DeviceRecordDto: {
+            id: string;
+            name: string;
+            type: string;
+            model: string;
+            brand: string;
+            price: number;
+            description: string;
+            specifications: string;
+            features: string;
+            slug: string;
+            isFeatured: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        ImportDevicesResponseDto: {
+            importedCount: number;
+        };
         UpdateDeviceDto: Record<string, never>;
         CreateDevicePartDto: Record<string, never>;
-        DevicePartResponseDto: Record<string, never>;
+        DevicePartRecordDto: {
+            id: string;
+            deviceId: string;
+            name: string;
+            partNumber: string;
+            price: number;
+            description: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        DevicePartResponseDto: {
+            part: components["schemas"]["DevicePartRecordDto"];
+        };
         UpdateDevicePartDto: Record<string, never>;
-        DevicePartRecordDto: Record<string, never>;
         DevicePartListResponseDto: {
             parts: components["schemas"]["DevicePartRecordDto"][];
         };
         PaginatedDevicesResponseDto: {
             data: components["schemas"]["DeviceRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         RegisterUserDeviceDto: Record<string, never>;
-        UserDeviceRecordDto: Record<string, never>;
+        UserDeviceRecordDto: {
+            id: string;
+            userId: string;
+            deviceId: string;
+            serialNumber: string;
+            addressId: string;
+            purchaseDate: string;
+            warrantyUntil: string;
+            notes: string;
+            createdAt: string;
+            device: components["schemas"]["DeviceRecordDto"];
+            address: components["schemas"]["AddressRecordDto"];
+        };
         UserDeviceListResponseDto: {
             userDevices: components["schemas"]["UserDeviceRecordDto"][];
         };
         AddCertificateDto: Record<string, never>;
-        CertificateResponseDto: Record<string, never>;
+        CertificateRecordDto: {
+            id: string;
+            userId: string;
+            userDeviceId: string;
+            dealerId: string;
+            certificateNumber: string;
+            status: string;
+            issuedAt: string;
+            expiresAt: string;
+            price: number;
+            paid: boolean;
+            purchaseReceiptUrl: string;
+            description: string;
+            createdAt: string;
+        };
+        CertificateResponseDto: {
+            certificate: components["schemas"]["CertificateRecordDto"];
+        };
         CreateCertificateDto: Record<string, never>;
         AssignCertificateDto: Record<string, never>;
-        CertPriceResponseDto: Record<string, never>;
-        CertificateRecordDto: Record<string, never>;
+        CertPriceResponseDto: {
+            price: number;
+        };
         CertificateListResponseDto: {
             certificates: components["schemas"]["CertificateRecordDto"][];
         };
         PaginatedCertificatesResponseDto: {
             data: components["schemas"]["CertificateRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
-        ProcessInvoiceResponseDto: Record<string, never>;
-        PaymentRecordDto: Record<string, never>;
+        ProcessInvoiceResponseDto: {
+            paymentId: string;
+            status: string;
+            redirectUrl?: string;
+        };
+        PaymentRecordDto: {
+            id: string;
+            userId: string;
+            targetType: string;
+            targetId: string;
+            amount: number;
+            currency: string;
+            status: string;
+            provider: string;
+            providerPaymentId: string;
+            paidAt: string;
+            createdAt: string;
+            updatedAt: string;
+        };
         PaymentListResponseDto: {
             payments: components["schemas"]["PaymentRecordDto"][];
         };
         CreateRepairRequestDto: Record<string, never>;
-        RepairRequestResponseDto: Record<string, never>;
-        RepairRequestRecordDto: Record<string, never>;
+        RepairRequestRecordDto: {
+            id: string;
+            userId: string;
+            userDeviceId: string;
+            repairerId: string;
+            managerId: string;
+            certificateId: string;
+            addressId: string;
+            status: string;
+            description: string;
+            preferredDate: string;
+            totalCost: number;
+            refundRequested: boolean;
+            refundReason: string;
+            refuseReason: string;
+            rejectedRepairers: string;
+            completionNote: string;
+            stepsLocked: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        RepairRequestResponseDto: {
+            request: components["schemas"]["RepairRequestRecordDto"];
+        };
         PaginatedRepairRequestsResponseDto: {
             data: components["schemas"]["RepairRequestRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         RequestRefundDto: Record<string, never>;
         AssignRepairerDto: Record<string, never>;
         RefuseRequestDto: Record<string, never>;
         SetRepairPriceDto: Record<string, never>;
         AddWorkStepDto: Record<string, never>;
-        WorkStepResponseDto: Record<string, never>;
+        WorkStepRecordDto: {
+            id: string;
+            repairRequestId: string;
+            title: string;
+            description: string;
+            status: string;
+            order: number;
+            isFinal: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        WorkStepResponseDto: {
+            step: components["schemas"]["WorkStepRecordDto"];
+        };
         UpdateWorkStepDto: Record<string, never>;
-        CompleteStepResponseDto: Record<string, never>;
-        WorkStepRecordDto: Record<string, never>;
+        CompleteStepResponseDto: {
+            step: components["schemas"]["WorkStepRecordDto"];
+            requestCompleted: boolean;
+        };
         WorkStepListResponseDto: {
             steps: components["schemas"]["WorkStepRecordDto"][];
         };
         AddBrokenPartDto: Record<string, never>;
-        BrokenPartResponseDto: Record<string, never>;
+        BrokenPartRecordDto: {
+            id: string;
+            repairRequestId: string;
+            devicePartId: string;
+            name: string;
+            status: string;
+            note: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        BrokenPartResponseDto: {
+            part: components["schemas"]["BrokenPartRecordDto"];
+        };
         UpdateBrokenPartDto: Record<string, never>;
         UpdateBrokenPartStatusDto: Record<string, never>;
-        BrokenPartRecordDto: Record<string, never>;
         BrokenPartListResponseDto: {
             parts: components["schemas"]["BrokenPartRecordDto"][];
         };
-        NotificationRecordDto: Record<string, never>;
+        NotificationRecordDto: {
+            id: string;
+            userId: string;
+            type: string;
+            title: string;
+            body: string;
+            targetType: string;
+            targetId: string;
+            metadata: string;
+            isRead: boolean;
+            readAt: string;
+            createdAt: string;
+        };
         PaginatedNotificationsResponseDto: {
             data: components["schemas"]["NotificationRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
-        UnreadCountResponseDto: Record<string, never>;
+        UnreadCountResponseDto: {
+            count: number;
+        };
         CreateDealerProfileDto: Record<string, never>;
-        DealerProfileResponseDto: Record<string, never>;
-        DealerProfileRecordDto: Record<string, never>;
+        DealerProfileRecordDto: {
+            id: string;
+            userId: string;
+            companyName: string;
+            inn: string;
+            pointsBalance: number;
+            createdAt: string;
+            updatedAt: string;
+        };
+        DealerProfileResponseDto: {
+            profile: components["schemas"]["DealerProfileRecordDto"];
+        };
         PaginatedDealersResponseDto: {
             data: components["schemas"]["DealerProfileRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
-        WithdrawalRecordDto: Record<string, never>;
+        WithdrawalRecordDto: {
+            id: string;
+            dealerId: string;
+            amount: number;
+            status: string;
+            requestedAt: string;
+            processedAt: string;
+            processedByUserId: string;
+        };
         PaginatedWithdrawalsResponseDto: {
             data: components["schemas"]["WithdrawalRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         ProcessWithdrawalDto: Record<string, never>;
-        WithdrawalResponseDto: Record<string, never>;
-        PayoutResponseDto: Record<string, never>;
+        WithdrawalResponseDto: {
+            withdrawal: components["schemas"]["WithdrawalRecordDto"];
+        };
+        PayoutResponseDto: {
+            paymentId: string;
+            status: string;
+        };
         UpdateDealerProfileDto: Record<string, never>;
-        DealerClientRecordDto: Record<string, never>;
+        DealerClientRecordDto: {
+            id: string;
+            dealerId: string;
+            clientUserId: string;
+            createdAt: string;
+        };
         DealerClientListResponseDto: {
             clients: components["schemas"]["DealerClientRecordDto"][];
         };
-        DealerUserDeviceRecordDto: Record<string, never>;
+        DealerUserDeviceRecordDto: {
+            id: string;
+            userId: string;
+            deviceId: string;
+            serialNumber: string;
+            deviceName: string;
+            deviceModel: string;
+            deviceBrand: string;
+        };
         DealerUserDeviceListResponseDto: {
             devices: components["schemas"]["DealerUserDeviceRecordDto"][];
         };
         AddDealerClientDto: Record<string, never>;
-        DealerClientResponseDto: Record<string, never>;
-        PointsTransactionRecordDto: Record<string, never>;
+        DealerClientResponseDto: {
+            client: components["schemas"]["DealerClientRecordDto"];
+        };
+        PointsTransactionRecordDto: {
+            id: string;
+            dealerId: string;
+            type: string;
+            amount: number;
+            reason: string;
+            repairRequestId: string;
+            createdAt: string;
+        };
         PaginatedPointsResponseDto: {
             data: components["schemas"]["PointsTransactionRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
         RequestPointsWithdrawalDto: Record<string, never>;
         WithdrawalListResponseDto: {
             withdrawals: components["schemas"]["WithdrawalRecordDto"][];
         };
         CreateReviewDto: Record<string, never>;
-        ReviewResponseDto: Record<string, never>;
-        ReviewRecordDto: Record<string, never>;
+        ReviewRecordDto: {
+            id: string;
+            repairRequestId: string;
+            userId: string;
+            repairerId: string;
+            rating: number;
+            comment: string;
+            createdAt: string;
+        };
+        ReviewResponseDto: {
+            review: components["schemas"]["ReviewRecordDto"];
+        };
         ReviewListResponseDto: {
             reviews: components["schemas"]["ReviewRecordDto"][];
         };
-        RatingResponseDto: Record<string, never>;
+        RatingResponseDto: {
+            average: number;
+            count: number;
+        };
         PaginatedReviewsResponseDto: {
             data: components["schemas"]["ReviewRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
-        PaymentOptionsResponseDto: Record<string, never>;
+        PaymentOptionsResponseDto: {
+            providers: string[];
+            defaultProvider: string;
+        };
         CreatePaymentDto: Record<string, never>;
         PaginatedPaymentsResponseDto: {
             data: components["schemas"]["PaymentRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
         };
-        PaymentStatsResponseDto: Record<string, never>;
+        PaymentStatsResponseDto: {
+            confirmedTotal: number;
+            refundedTotal: number;
+            confirmedCount: number;
+            refundedCount: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -2753,6 +3102,12 @@ export interface operations {
                     "application/json": components["schemas"]["ConfirmEmailResponseDto"];
                 };
             };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_resendConfirmation: {
@@ -2775,6 +3130,12 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MessageResponseDto"];
                 };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2806,6 +3167,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             205: {
                 headers: {
                     [name: string]: unknown;
@@ -2832,6 +3199,12 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AuthSessionResponseDto"];
                 };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4927,6 +5300,14 @@ export interface operations {
                     "application/json": components["schemas"]["EmptyResponseDto"];
                 };
             };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
         };
     };
     NotificationController_markAllAsRead: {
@@ -4944,6 +5325,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };
