@@ -99,8 +99,8 @@ export function AdminUsers() {
       try {
         const { data } = await adminApi.getUsers({ limit: 200 });
         setUsers(data.data);
-      } catch {
-        // silently fail
+      } catch (e: any) {
+        console.error(e)
       } finally {
         setLoading(false);
       }

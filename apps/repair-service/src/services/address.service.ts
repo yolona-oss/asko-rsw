@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Address } from 'entities/address.entity';
 import { AppErrors } from 'common/error';
 
@@ -7,6 +7,7 @@ import { AppErrors } from 'common/error';
 export class AddressService {
     constructor(private readonly em: EntityManager) {}
 
+    @CreateRequestContext()
     async create(userId: string, dto: {
         city: string;
         street: string;
@@ -32,10 +33,12 @@ export class AddressService {
         return address;
     }
 
+    @CreateRequestContext()
     async findAll(userId: string): Promise<Address[]> {
         return this.em.find(Address, { userId }, { orderBy: { createdAt: 'DESC' } });
     }
 
+    @CreateRequestContext()
     async findById(id: string): Promise<Address> {
         const address = await this.em.findOne(Address, { id });
         if (!address) throw AppErrors.dbEntityNotFound('Address not found');

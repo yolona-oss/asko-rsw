@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Repairer } from 'entities/repairer.entity';
 import { AppErrors } from 'common/error';
 
@@ -7,6 +7,7 @@ import { AppErrors } from 'common/error';
 export class RepairerService {
     constructor(private readonly em: EntityManager) {}
 
+    @CreateRequestContext()
     async create(userId: string, city: string, specializations: string[] = []): Promise<Repairer> {
         const existing = await this.em.findOne(Repairer, { userId });
         if (existing) throw AppErrors.dbEntityExists('Repairer profile already exists');
@@ -20,6 +21,7 @@ export class RepairerService {
         return repairer;
     }
 
+    @CreateRequestContext()
     async update(id: string, dto: {
         city?: string;
         specializations?: string[];
@@ -36,6 +38,7 @@ export class RepairerService {
         return repairer;
     }
 
+    @CreateRequestContext()
     async updateLocation(userId: string, latitude: number, longitude: number): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
@@ -48,12 +51,14 @@ export class RepairerService {
         return repairer;
     }
 
+    @CreateRequestContext()
     async getMyProfile(userId: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
         return repairer;
     }
 
+    @CreateRequestContext()
     async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Repairer[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
@@ -73,22 +78,26 @@ export class RepairerService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findById(id: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { id });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         return repairer;
     }
 
+    @CreateRequestContext()
     async findByUserId(userId: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         return repairer;
     }
 
+    @CreateRequestContext()
     async findActiveInCity(city: string): Promise<Repairer[]> {
         return this.em.find(Repairer, { city, isActive: true });
     }
 
+    @CreateRequestContext()
     async incrementCompleted(id: string): Promise<void> {
         const repairer = await this.em.findOne(Repairer, { id });
         if (!repairer) return;
@@ -96,6 +105,7 @@ export class RepairerService {
         await this.em.flush();
     }
 
+    @CreateRequestContext()
     async updateLastLocation(id: string, latitude: number, longitude: number): Promise<void> {
         const repairer = await this.em.findOne(Repairer, { id });
         if (!repairer) return;

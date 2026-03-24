@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Certificate } from 'entities/certificate.entity';
 import { UserDevice } from 'entities/user-device.entity';
 import { Device } from 'entities/device.entity';
@@ -26,6 +26,7 @@ export class CertificateService {
     ) {}
 
     /** User adds an existing certificate (e.g. received with product) */
+    @CreateRequestContext()
     async addCertificate(userId: string, dto: {
         userDeviceId: string;
         certificateNumber: string;
@@ -52,6 +53,7 @@ export class CertificateService {
     }
 
     /** Dealer creates a certificate for a client */
+    @CreateRequestContext()
     async createByDealer(dto: {
         clientUserId: string;
         userDeviceId: string;
@@ -101,6 +103,7 @@ export class CertificateService {
     }
 
     /** Mark certificate as paid -> ACTIVE. Also award dealer points if applicable. */
+    @CreateRequestContext()
     async markPaid(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['dealer'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -124,6 +127,7 @@ export class CertificateService {
     }
 
     /** Admin revokes a certificate */
+    @CreateRequestContext()
     async revokeCertificate(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -137,6 +141,7 @@ export class CertificateService {
     }
 
     /** User reassigns certificate to a different device */
+    @CreateRequestContext()
     async reassignCertificate(userId: string, certId: string, userDeviceId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
@@ -155,6 +160,7 @@ export class CertificateService {
     }
 
     /** Calculate price for a certificate (no DB write) */
+    @CreateRequestContext()
     async calculatePrice(userDeviceId: string, expiresAt: string): Promise<{ price: number; devicePrice: number; years: number }> {
         const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
@@ -170,12 +176,14 @@ export class CertificateService {
 
     // ── Queries ─────────────────────────────────────────────────────────
 
+    @CreateRequestContext()
     async findById(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['userDevice', 'userDevice.device', 'dealer'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
         return cert;
     }
 
+    @CreateRequestContext()
     async findByUser(userId: string): Promise<Certificate[]> {
         return this.em.find(Certificate, { userId }, {
             populate: ['userDevice', 'userDevice.device', 'dealer'],
@@ -183,6 +191,7 @@ export class CertificateService {
         });
     }
 
+    @CreateRequestContext()
     async findByDealer(dealerId: string, pagination: { offset?: number; limit?: number; search?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = { dealer: dealerId };
         if (status) where.status = status;
@@ -204,6 +213,7 @@ export class CertificateService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
@@ -224,6 +234,7 @@ export class CertificateService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async validateCertificate(certificateNumber: string): Promise<{ valid: boolean; certificate?: Certificate; reason?: string }> {
         const cert = await this.em.findOne(Certificate, { certificateNumber }, {
             populate: ['userDevice', 'userDevice.device'],

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { RepairRequest } from 'entities/repair-request.entity';
 import { UserDevice } from 'entities/user-device.entity';
 import { Certificate } from 'entities/certificate.entity';
@@ -17,6 +17,7 @@ export class RepairRequestService {
     ) {}
 
     /** User creates a repair request */
+    @CreateRequestContext()
     async create(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string }): Promise<RepairRequest> {
         // Validate user device directly
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['address'] });
@@ -73,6 +74,7 @@ export class RepairRequestService {
     }
 
     /** User requests refund */
+    @CreateRequestContext()
     async requestRefund(userId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -89,6 +91,7 @@ export class RepairRequestService {
     }
 
     /** Manager approves refund */
+    @CreateRequestContext()
     async approveRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -110,6 +113,7 @@ export class RepairRequestService {
     }
 
     /** Manager denies refund */
+    @CreateRequestContext()
     async denyRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -124,6 +128,7 @@ export class RepairRequestService {
     }
 
     /** Manager assigns repairer to request */
+    @CreateRequestContext()
     async assignRepairer(managerId: string, requestId: string, repairerId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -144,6 +149,7 @@ export class RepairRequestService {
     }
 
     /** Repairer accepts assigned request */
+    @CreateRequestContext()
     async acceptRequest(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -160,6 +166,7 @@ export class RepairRequestService {
     }
 
     /** Repairer refuses assigned request - reverts to PAID so manager can re-assign */
+    @CreateRequestContext()
     async refuseRequest(repairerUserId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -183,6 +190,7 @@ export class RepairRequestService {
     }
 
     /** Repairer starts working on request */
+    @CreateRequestContext()
     async startWork(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -199,6 +207,7 @@ export class RepairRequestService {
     }
 
     /** Repairer sets or updates repair price */
+    @CreateRequestContext()
     async setPrice(repairerUserId: string, requestId: string, amount: number): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -224,6 +233,7 @@ export class RepairRequestService {
     }
 
     /** Mark request as awaiting completion (last step done) */
+    @CreateRequestContext()
     async markAwaitingCompletion(requestId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) return;
@@ -232,6 +242,7 @@ export class RepairRequestService {
     }
 
     /** Complete the request with optional description */
+    @CreateRequestContext()
     async complete(requestId: string, description?: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -279,6 +290,7 @@ export class RepairRequestService {
     }
 
     /** User cancels request */
+    @CreateRequestContext()
     async cancel(userId: string, requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -292,6 +304,7 @@ export class RepairRequestService {
 
     // ── Queries ──
 
+    @CreateRequestContext()
     async findByUser(userId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
@@ -306,6 +319,7 @@ export class RepairRequestService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findActiveByRepairer(repairerUserId: string): Promise<RepairRequest | null> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -327,6 +341,7 @@ export class RepairRequestService {
         );
     }
 
+    @CreateRequestContext()
     async findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -347,6 +362,7 @@ export class RepairRequestService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
@@ -364,6 +380,7 @@ export class RepairRequestService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findAll(pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
@@ -378,6 +395,7 @@ export class RepairRequestService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findById(id: string): Promise<RepairRequest> {
         const request = await this.em.findOne(
             RepairRequest,
@@ -388,6 +406,7 @@ export class RepairRequestService {
         return request;
     }
 
+    @CreateRequestContext()
     async checkActiveForDevice(userDeviceId: string): Promise<{ hasActive: boolean; request?: RepairRequest }> {
         const request = await this.em.findOne(RepairRequest, {
             userDevice: userDeviceId,

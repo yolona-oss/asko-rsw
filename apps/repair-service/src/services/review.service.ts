@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Review } from 'entities/review.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import { Repairer } from 'entities/repairer.entity';
@@ -10,6 +10,7 @@ import { AppErrors } from 'common/error';
 export class ReviewService {
     constructor(private readonly em: EntityManager) {}
 
+    @CreateRequestContext()
     async create(dto: {
         repairRequestId: string;
         userId: string;
@@ -54,6 +55,7 @@ export class ReviewService {
         return review;
     }
 
+    @CreateRequestContext()
     async findByRepairer(repairerId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: Review[]; total: number }> {
         const limit = pagination.limit ?? 20;
         const offset = ((pagination.offset ?? 1) - 1) * limit;
@@ -71,6 +73,7 @@ export class ReviewService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findRepairerRating(repairerId: string): Promise<{ average: number; count: number }> {
         const reviews = await this.em.find(Review, { repairer: repairerId });
         if (reviews.length === 0) return { average: 0, count: 0 };
@@ -82,6 +85,7 @@ export class ReviewService {
         };
     }
 
+    @CreateRequestContext()
     async findByUser(userId: string): Promise<Review[]> {
         return this.em.find(Review, { userId }, {
             orderBy: { createdAt: 'DESC' },
@@ -89,6 +93,7 @@ export class ReviewService {
         });
     }
 
+    @CreateRequestContext()
     async findUserReview(userId: string, reviewId: string): Promise<Review> {
         const review = await this.em.findOne(Review, { id: reviewId, userId }, {
             populate: ['repairer', 'repairRequest'],

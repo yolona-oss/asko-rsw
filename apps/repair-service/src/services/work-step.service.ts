@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WorkStep } from 'entities/work-step.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import { Repairer } from 'entities/repairer.entity';
@@ -17,6 +17,7 @@ export class WorkStepService {
     ) {}
 
     /** Repairer adds a work step to request */
+    @CreateRequestContext()
     async addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; order?: number; isFinal?: boolean }): Promise<WorkStep> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
@@ -44,6 +45,7 @@ export class WorkStepService {
     }
 
     /** Repairer deletes a work step (only when not locked) */
+    @CreateRequestContext()
     async deleteStep(repairerUserId: string, requestId: string, stepId: string): Promise<void> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
@@ -58,6 +60,7 @@ export class WorkStepService {
     }
 
     /** Repairer updates a work step */
+    @CreateRequestContext()
     async updateStep(repairerUserId: string, requestId: string, stepId: string, dto: { title?: string; description?: string; status?: string }): Promise<WorkStep> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
@@ -80,6 +83,7 @@ export class WorkStepService {
     }
 
     /** Repairer locks work steps — no more adding/editing/deleting */
+    @CreateRequestContext()
     async lockSteps(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
@@ -98,6 +102,7 @@ export class WorkStepService {
     }
 
     /** Repairer completes a work step. If all steps done -> request moves to AWAITING_COMPLETION */
+    @CreateRequestContext()
     async completeStep(repairerUserId: string, requestId: string, stepId: string): Promise<{ step: WorkStep; requestCompleted: boolean }> {
         await this.resolveRepairerRequest(repairerUserId, requestId);
 
@@ -130,6 +135,7 @@ export class WorkStepService {
     }
 
     /** Get all steps for a request */
+    @CreateRequestContext()
     async getSteps(requestId: string): Promise<WorkStep[]> {
         return this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'ASC' } });
     }

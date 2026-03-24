@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, UserDevice, Address } from 'entities';
 import { DeviceType } from '@asko/shared';
 import { AppErrors } from 'common/error';
@@ -25,6 +25,7 @@ export class DeviceService {
 
     // ── Device catalog (admin) ──────────────────────────────────────────
 
+    @CreateRequestContext()
     async createDevice(dto: {
         name: string;
         type: string;
@@ -58,6 +59,7 @@ export class DeviceService {
         return device;
     }
 
+    @CreateRequestContext()
     async importDevices(products: Record<string, any>[]): Promise<{ imported: number; skipped: number }> {
         let imported = 0;
         let skipped = 0;
@@ -94,6 +96,7 @@ export class DeviceService {
         return { imported, skipped };
     }
 
+    @CreateRequestContext()
     async updateDevice(id: string, dto: {
         name?: string;
         type?: string;
@@ -124,12 +127,14 @@ export class DeviceService {
         return device;
     }
 
+    @CreateRequestContext()
     async deleteDevice(id: string): Promise<void> {
         const device = await this.em.findOne(Device, { id });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         await this.em.removeAndFlush(device);
     }
 
+    @CreateRequestContext()
     async deleteAllDevices(): Promise<{ deletedCount: number }> {
         const count = await this.em.count(Device);
         await this.em.nativeDelete(Device, {});
@@ -138,6 +143,7 @@ export class DeviceService {
 
     // ── Device catalog (public queries) ─────────────────────────────────
 
+    @CreateRequestContext()
     async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Device[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
@@ -159,12 +165,14 @@ export class DeviceService {
         return { data, total };
     }
 
+    @CreateRequestContext()
     async findById(id: string): Promise<Device> {
         const device = await this.em.findOne(Device, { id });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         return device;
     }
 
+    @CreateRequestContext()
     async findBySlug(slug: string): Promise<Device> {
         const device = await this.em.findOne(Device, { slug });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
@@ -173,6 +181,7 @@ export class DeviceService {
 
     // ── User devices ────────────────────────────────────────────────────
 
+    @CreateRequestContext()
     async registerUserDevice(userId: string, dto: {
         deviceId: string;
         serialNumber: string;
@@ -200,6 +209,7 @@ export class DeviceService {
         return userDevice;
     }
 
+    @CreateRequestContext()
     async getUserDevices(userId: string): Promise<UserDevice[]> {
         return this.em.find(UserDevice, { userId }, {
             populate: ['device', 'address'],
@@ -207,6 +217,7 @@ export class DeviceService {
         });
     }
 
+    @CreateRequestContext()
     async getUserDevice(userId: string, id: string): Promise<UserDevice> {
         const userDevice = await this.em.findOne(UserDevice, { id, userId }, {
             populate: ['device', 'address'],
@@ -215,12 +226,14 @@ export class DeviceService {
         return userDevice;
     }
 
+    @CreateRequestContext()
     async removeUserDevice(userId: string, id: string): Promise<void> {
         const userDevice = await this.em.findOne(UserDevice, { id, userId });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
         await this.em.removeAndFlush(userDevice);
     }
 
+    @CreateRequestContext()
     async findUserDeviceById(id: string): Promise<UserDevice> {
         const userDevice = await this.em.findOne(UserDevice, { id }, {
             populate: ['device', 'address'],
