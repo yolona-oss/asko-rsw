@@ -25,7 +25,7 @@ export default async function ProductListPage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
 
-  const { data: devices, total } = await fetchDevices(page, LIMIT);
+  const { data: devices, overallCount: total } = await fetchDevices(page, LIMIT);
   const totalPages = Math.ceil(total / LIMIT);
 
   const imageMap = new Map<string, string | null>();

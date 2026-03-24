@@ -5,7 +5,7 @@ export class ArticleResponseDto {
     title: string;
     slug: string;
     text: string;
-    tags: string[];
+    tags?: string[];
     createdAt: string;
     updatedAt: string;
 }

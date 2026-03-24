@@ -1,5 +1,5 @@
 import { Role } from '@asko/shared/client';
-import type { IAuthUser } from '@asko/shared/client';
+import type { IAuthUser } from '@/lib/api/types';
 
 export type UserRole = 'user' | 'dealer' | 'manager' | 'admin' | 'repairer';
 export type LoadingStage = 'skeleton' | 'partial' | 'loaded';

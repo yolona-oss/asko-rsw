@@ -17,7 +17,8 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
 import { adminApi } from '@/lib/api/admin';
-import { Role, type IInvitationLink } from '@asko/shared/client';
+import { Role } from '@asko/shared/client';
+import type { IInvitationLink } from '@/lib/api/types';
 
 // Admin role is intentionally excluded - admin accounts require direct provisioning
 const ROLE_OPTIONS = [

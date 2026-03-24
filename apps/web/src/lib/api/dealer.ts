@@ -1,15 +1,19 @@
 import type {
+  CreateCertificateDto,
+  RequestPointsWithdrawalDto,
+  IUser,
+} from '@asko/shared/client';
+import type {
   IDealerProfile,
   IDealerClient,
   IPointsTransaction,
   ICertificate,
   IDevice,
   IPointsWithdrawal,
-  IUser,
-  ListResponseDto,
-  CreateCertificateDto,
-  RequestPointsWithdrawalDto,
-} from '@asko/shared/client';
+  PaginatedPoints,
+  PaginatedCertificates,
+  PaginatedDevices,
+} from './types';
 import { api } from './client';
 
 /** @deprecated Use `Pick<IUser, 'id' | 'firstName' | 'lastName' | 'email'>` from `@asko/shared/client` */
@@ -29,15 +33,15 @@ export const dealerApi = {
   },
 
   getPointsHistory(params?: { offset?: number; limit?: number }) {
-    return api.get<ListResponseDto<IPointsTransaction>>('/dealers/points', { params });
+    return api.get<PaginatedPoints>('/dealers/points', { params });
   },
 
   getCertificates(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
-    return api.get<ListResponseDto<ICertificate>>('/certificates/dealer', { params });
+    return api.get<PaginatedCertificates>('/certificates/dealer', { params });
   },
 
   getDeviceCatalog(params?: { offset?: number; limit?: number }) {
-    return api.get<ListResponseDto<IDevice>>('/devices', { params });
+    return api.get<PaginatedDevices>('/devices', { params });
   },
 
   createCertificate(data: CreateCertificateDto) {

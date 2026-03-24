@@ -40,8 +40,8 @@ export function AdminDashboard() {
         ]);
 
         setStats({
-          devices: devicesRes.data?.total ?? 0,
-          certificates: certsRes.data?.total ?? 0,
+          devices: devicesRes.data?.overallCount ?? 0,
+          certificates: certsRes.data?.overallCount ?? 0,
           users: usersRes.data?.overallCount ?? 0,
           invitations: invitationsRes.data?.length ?? 0,
         });

@@ -62,7 +62,7 @@ const PART_STATUS_OPTIONS = [
 
 interface RepairRequestDetail {
   id: string;
-  status: RepairRequestStatus;
+  status: string;
   description: string;
   createdAt: Date | string;
   rejectedRepairers?: string[];

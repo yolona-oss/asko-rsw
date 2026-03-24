@@ -1,17 +1,20 @@
 import type {
-  PaginatedResponseDto,
-  ListResponseDto,
-  IReview,
-  IRepairer,
-  IRepairRequest,
-  IWorkStep,
-  IDevice,
   UpdateLocationDto,
   RefuseRequestDto,
   SetRepairPriceDto,
   AddWorkStepDto,
   UpdateWorkStepDto,
 } from '@asko/shared/client';
+import type {
+  PaginatedReviews,
+  PaginatedRepairRequests,
+  PaginatedDevices,
+  IReview,
+  IRepairer,
+  IRepairRequest,
+  IWorkStep,
+  IDevice,
+} from './types';
 import { api } from './client';
 
 export const repairerApi = {
@@ -28,7 +31,7 @@ export const repairerApi = {
   },
 
   getAssignedRequests(params?: { offset?: number; limit?: number; status?: string }) {
-    return api.get<ListResponseDto<IRepairRequest>>('/repair-requests/assigned', { params });
+    return api.get<PaginatedRepairRequests>('/repair-requests/assigned', { params });
   },
 
   acceptRequest(requestId: string) {
@@ -85,7 +88,7 @@ export const repairerApi = {
   },
 
   getRepairerReviews(repairerId: string) {
-    return api.get<PaginatedResponseDto<IReview>>(`/reviews/repairer/${repairerId}`);
+    return api.get<PaginatedReviews>(`/reviews/repairer/${repairerId}`);
   },
 
   // Broken parts
@@ -122,7 +125,7 @@ export const repairerApi = {
   },
 
   getDevices() {
-    return api.get<ListResponseDto<IDevice>>('/devices');
+    return api.get<PaginatedDevices>('/devices');
   },
 
   getDevice(deviceId: string) {

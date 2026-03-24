@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthUserDto } from './auth.response.dto';
 
 export class RepairerRecordDto {
     id: string;
@@ -6,10 +7,12 @@ export class RepairerRecordDto {
     specializations: string[];
     city: string;
     isActive: boolean;
+    rating?: number;
     completedRepairs: number;
-    latitude: number;
-    longitude: number;
-    lastLocationUpdate: string;
+    latitude?: number;
+    longitude?: number;
+    lastLocationUpdate?: string;
+    user?: AuthUserDto;
     createdAt: string;
     updatedAt: string;
 }

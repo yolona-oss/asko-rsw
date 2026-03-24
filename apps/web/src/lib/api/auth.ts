@@ -1,4 +1,5 @@
-import type { IAuthSession, IAuthUser, LoginCredentials, CreateUserDto } from '@asko/shared/client';
+import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
+import type { IAuthSession, IAuthUser } from './types';
 import { api } from './client';
 
 export const authApi = {

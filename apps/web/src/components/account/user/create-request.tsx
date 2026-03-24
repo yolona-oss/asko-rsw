@@ -6,6 +6,7 @@ import { Button, Select, Textarea, FormField, Input } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { userApi } from '@/lib/api/user';
+import type { ICertificate, IRepairRequest } from '@/lib/api/types';
 
 interface UserDevice {
   id: string;
@@ -13,19 +14,9 @@ interface UserDevice {
   serialNumber?: string;
 }
 
-interface Certificate {
-  id: string;
-  certificateNumber: string;
-  status: string;
-  expiresAt: Date | string;
-  userDevice?: { id: string };
-}
+type Certificate = ICertificate;
 
-interface RepairRequest {
-  id: string;
-  status: string;
-  userDevice?: { id: string };
-}
+type RepairRequest = IRepairRequest;
 
 interface UploadedImage {
   id: string;

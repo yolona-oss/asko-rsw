@@ -18,6 +18,7 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { dealerApi } from '@/lib/api/dealer';
 import { CertificateStatus } from '@asko/shared/client';
+import type { ICertificate } from '@/lib/api/types';
 
 type StatusFilter = 'all' | CertificateStatus;
 
@@ -54,18 +55,9 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'certificateNumber', label: 'По номеру' },
 ];
 
-interface Certificate {
-  id: string;
-  certificateNumber: string;
-  status: CertificateStatus;
-  issuedAt: Date | string;
-  expiresAt: Date | string;
-  createdAt: Date | string;
-  user?: { firstName?: string; lastName?: string; email?: string };
-  userDevice?: { device?: { name?: string } };
-}
+type Certificate = ICertificate;
 
-function formatDate(dateStr: Date | string) {
+function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -98,7 +90,7 @@ export function DealerCertificates() {
       const { data } = await dealerApi.getCertificates(params);
       const list = data.data ?? (Array.isArray(data) ? data : []);
       setCertificates(list);
-      setTotal(data.total ?? list.length);
+      setTotal(data.overallCount ?? list.length);
     } catch {
       // silently fail
     } finally {

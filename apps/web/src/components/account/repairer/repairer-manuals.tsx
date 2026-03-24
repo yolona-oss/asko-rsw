@@ -6,7 +6,7 @@ import { repairerApi } from '@/lib/api/repairer';
 import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import type { IDevice } from '@asko/shared/client';
+import type { IDevice } from '@/lib/api/types';
 
 const DEVICE_TYPE_LABEL: Record<string, string> = {
   washing_machine: 'Стиральная машина',

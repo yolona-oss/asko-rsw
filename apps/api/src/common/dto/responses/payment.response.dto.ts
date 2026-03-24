@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthUserDto } from './auth.response.dto';
 
 export class PaymentRecordDto {
     id: string;
@@ -8,11 +9,12 @@ export class PaymentRecordDto {
     amount: number;
     currency: string;
     status: string;
-    provider: string;
-    providerPaymentId: string;
-    paidAt: string;
+    provider?: string;
+    providerPaymentId?: string;
+    user?: AuthUserDto;
+    paidAt?: string;
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
 }
 
 export class PaymentListResponseDto {

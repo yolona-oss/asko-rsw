@@ -38,7 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 interface RepairRequest {
   id: string;
-  status: RepairRequestStatus;
+  status: string;
   description: string;
   createdAt: Date | string;
   updatedAt: Date | string;

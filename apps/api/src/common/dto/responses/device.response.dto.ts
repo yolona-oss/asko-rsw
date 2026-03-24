@@ -6,10 +6,10 @@ export class AddressRecordDto {
     city: string;
     street: string;
     house: number;
-    building: number;
-    floor: number;
-    room: number;
-    postalCode: string;
+    building?: number;
+    floor?: number;
+    room?: number;
+    postalCode?: string;
 }
 
 export class DeviceRecordDto {
@@ -18,12 +18,13 @@ export class DeviceRecordDto {
     type: string;
     model: string;
     brand: string;
-    price: number;
-    description: string;
-    specifications: string;
-    features: string;
     slug: string;
-    isFeatured: boolean;
+    price?: number;
+    description?: string;
+    specifications?: Record<string, any>;
+    features?: Record<string, any>;
+    link?: string;
+    isFeatured?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -40,9 +41,9 @@ export class DevicePartRecordDto {
     id: string;
     deviceId: string;
     name: string;
-    partNumber: string;
-    price: number;
-    description: string;
+    partNumber?: string;
+    price?: number;
+    description?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -62,12 +63,12 @@ export class UserDeviceRecordDto {
     deviceId: string;
     serialNumber: string;
     addressId: string;
-    purchaseDate: string;
-    warrantyUntil: string;
-    notes: string;
+    purchaseDate?: string;
+    warrantyUntil?: string;
+    notes?: string;
     createdAt: string;
-    device: DeviceRecordDto;
-    address: AddressRecordDto;
+    device?: DeviceRecordDto;
+    address?: AddressRecordDto;
 }
 
 export class UserDeviceResponseDto {

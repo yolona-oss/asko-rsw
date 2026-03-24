@@ -4819,11 +4819,7 @@
           "country",
           "city",
           "street",
-          "house",
-          "building",
-          "floor",
-          "room",
-          "postalCode"
+          "house"
         ]
       },
       "AddressResponseDto": {
@@ -4851,6 +4847,73 @@
           "addresses"
         ]
       },
+      "CloudinaryImageDto": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "format": {
+            "type": "string"
+          },
+          "resource_type": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "secure_url": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_id",
+          "version",
+          "signature",
+          "width",
+          "height",
+          "format",
+          "resource_type",
+          "url",
+          "secure_url",
+          "original_filename"
+        ]
+      },
+      "ImageObjDto": {
+        "type": "object",
+        "properties": {
+          "original": {
+            "$ref": "#/components/schemas/CloudinaryImageDto"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/CloudinaryImageDto"
+          },
+          "medium": {
+            "$ref": "#/components/schemas/CloudinaryImageDto"
+          },
+          "large": {
+            "$ref": "#/components/schemas/CloudinaryImageDto"
+          }
+        },
+        "required": [
+          "original"
+        ]
+      },
       "ImageRecordDto": {
         "type": "object",
         "properties": {
@@ -4858,7 +4921,7 @@
             "type": "string"
           },
           "imageJson": {
-            "type": "string"
+            "$ref": "#/components/schemas/ImageObjDto"
           },
           "alt": {
             "type": "string"
@@ -4882,12 +4945,7 @@
         "required": [
           "id",
           "imageJson",
-          "alt",
-          "order",
-          "ownerType",
-          "ownerId",
-          "createdAt",
-          "updatedAt"
+          "order"
         ]
       },
       "ImageResponseDto": {
@@ -5209,6 +5267,9 @@
           "isActive": {
             "type": "boolean"
           },
+          "rating": {
+            "type": "number"
+          },
           "completedRepairs": {
             "type": "number"
           },
@@ -5220,6 +5281,9 @@
           },
           "lastLocationUpdate": {
             "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
           },
           "createdAt": {
             "type": "string"
@@ -5235,9 +5299,6 @@
           "city",
           "isActive",
           "completedRepairs",
-          "latitude",
-          "longitude",
-          "lastLocationUpdate",
           "createdAt",
           "updatedAt"
         ]
@@ -5338,7 +5399,6 @@
           "title",
           "slug",
           "text",
-          "tags",
           "createdAt",
           "updatedAt"
         ]
@@ -5410,6 +5470,9 @@
           "brand": {
             "type": "string"
           },
+          "slug": {
+            "type": "string"
+          },
           "price": {
             "type": "number"
           },
@@ -5417,12 +5480,12 @@
             "type": "string"
           },
           "specifications": {
-            "type": "string"
+            "type": "object"
           },
           "features": {
-            "type": "string"
+            "type": "object"
           },
-          "slug": {
+          "link": {
             "type": "string"
           },
           "isFeatured": {
@@ -5441,12 +5504,7 @@
           "type",
           "model",
           "brand",
-          "price",
-          "description",
-          "specifications",
-          "features",
           "slug",
-          "isFeatured",
           "createdAt",
           "updatedAt"
         ]
@@ -5502,9 +5560,6 @@
           "id",
           "deviceId",
           "name",
-          "partNumber",
-          "price",
-          "description",
           "createdAt",
           "updatedAt"
         ]
@@ -5611,12 +5666,7 @@
           "deviceId",
           "serialNumber",
           "addressId",
-          "purchaseDate",
-          "warrantyUntil",
-          "notes",
-          "createdAt",
-          "device",
-          "address"
+          "createdAt"
         ]
       },
       "UserDeviceListResponseDto": {
@@ -5636,6 +5686,74 @@
       "AddCertificateDto": {
         "type": "object",
         "properties": {}
+      },
+      "DealerClientRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dealerId": {
+            "type": "string"
+          },
+          "clientUserId": {
+            "type": "string"
+          },
+          "clientUser": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dealerId",
+          "clientUserId",
+          "createdAt"
+        ]
+      },
+      "DealerProfileRecordDto": {
+        "type": "object",
+        "properties": {
+          "clients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DealerClientRecordDto"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "inn": {
+            "type": "string"
+          },
+          "pointsBalance": {
+            "type": "number"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "pointsBalance",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "CertificateRecordDto": {
         "type": "object",
@@ -5664,17 +5782,26 @@
           "expiresAt": {
             "type": "string"
           },
+          "purchaseReceiptUrl": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
           "price": {
             "type": "number"
           },
           "paid": {
             "type": "boolean"
           },
-          "purchaseReceiptUrl": {
-            "type": "string"
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
           },
-          "description": {
-            "type": "string"
+          "userDevice": {
+            "$ref": "#/components/schemas/UserDeviceRecordDto"
+          },
+          "dealer": {
+            "$ref": "#/components/schemas/DealerProfileRecordDto"
           },
           "createdAt": {
             "type": "string"
@@ -5684,15 +5811,11 @@
           "id",
           "userId",
           "userDeviceId",
-          "dealerId",
           "certificateNumber",
           "status",
           "issuedAt",
           "expiresAt",
-          "price",
           "paid",
-          "purchaseReceiptUrl",
-          "description",
           "createdAt"
         ]
       },
@@ -5814,6 +5937,9 @@
           "providerPaymentId": {
             "type": "string"
           },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
           "paidAt": {
             "type": "string"
           },
@@ -5832,11 +5958,7 @@
           "amount",
           "currency",
           "status",
-          "provider",
-          "providerPaymentId",
-          "paidAt",
-          "createdAt",
-          "updatedAt"
+          "createdAt"
         ]
       },
       "PaymentListResponseDto": {
@@ -5857,9 +5979,100 @@
         "type": "object",
         "properties": {}
       },
+      "WorkStepRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "repairRequestId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "repairRequestId",
+          "title",
+          "status",
+          "order",
+          "isFinal",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BrokenPartRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "repairRequestId": {
+            "type": "string"
+          },
+          "devicePartId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "repairRequestId",
+          "name",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "RepairRequestRecordDto": {
         "type": "object",
         "properties": {
+          "workSteps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkStepRecordDto"
+            }
+          },
+          "brokenParts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrokenPartRecordDto"
+            }
+          },
           "id": {
             "type": "string"
           },
@@ -5903,13 +6116,31 @@
             "type": "string"
           },
           "rejectedRepairers": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "completionNote": {
             "type": "string"
           },
           "stepsLocked": {
             "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "userDevice": {
+            "$ref": "#/components/schemas/UserDeviceRecordDto"
+          },
+          "repairer": {
+            "$ref": "#/components/schemas/RepairerRecordDto"
+          },
+          "certificate": {
+            "$ref": "#/components/schemas/CertificateRecordDto"
+          },
+          "address": {
+            "$ref": "#/components/schemas/AddressRecordDto"
           },
           "createdAt": {
             "type": "string"
@@ -5922,19 +6153,9 @@
           "id",
           "userId",
           "userDeviceId",
-          "repairerId",
-          "managerId",
-          "certificateId",
-          "addressId",
           "status",
           "description",
-          "preferredDate",
-          "totalCost",
           "refundRequested",
-          "refundReason",
-          "refuseReason",
-          "rejectedRepairers",
-          "completionNote",
           "stepsLocked",
           "createdAt",
           "updatedAt"
@@ -5997,49 +6218,6 @@
         "type": "object",
         "properties": {}
       },
-      "WorkStepRecordDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "repairRequestId": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "order": {
-            "type": "number"
-          },
-          "isFinal": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "repairRequestId",
-          "title",
-          "description",
-          "status",
-          "order",
-          "isFinal",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
       "WorkStepResponseDto": {
         "type": "object",
         "properties": {
@@ -6087,45 +6265,6 @@
       "AddBrokenPartDto": {
         "type": "object",
         "properties": {}
-      },
-      "BrokenPartRecordDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "repairRequestId": {
-            "type": "string"
-          },
-          "devicePartId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "note": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "repairRequestId",
-          "devicePartId",
-          "name",
-          "status",
-          "note",
-          "createdAt",
-          "updatedAt"
-        ]
       },
       "BrokenPartResponseDto": {
         "type": "object",
@@ -6203,11 +6342,7 @@
           "type",
           "title",
           "body",
-          "targetType",
-          "targetId",
-          "metadata",
           "isRead",
-          "readAt",
           "createdAt"
         ]
       },
@@ -6251,41 +6386,6 @@
       "CreateDealerProfileDto": {
         "type": "object",
         "properties": {}
-      },
-      "DealerProfileRecordDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string"
-          },
-          "companyName": {
-            "type": "string"
-          },
-          "inn": {
-            "type": "string"
-          },
-          "pointsBalance": {
-            "type": "number"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "userId",
-          "companyName",
-          "inn",
-          "pointsBalance",
-          "createdAt",
-          "updatedAt"
-        ]
       },
       "DealerProfileResponseDto": {
         "type": "object",
@@ -6354,9 +6454,7 @@
           "dealerId",
           "amount",
           "status",
-          "requestedAt",
-          "processedAt",
-          "processedByUserId"
+          "requestedAt"
         ]
       },
       "PaginatedWithdrawalsResponseDto": {
@@ -6418,29 +6516,6 @@
       "UpdateDealerProfileDto": {
         "type": "object",
         "properties": {}
-      },
-      "DealerClientRecordDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "dealerId": {
-            "type": "string"
-          },
-          "clientUserId": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "dealerId",
-          "clientUserId",
-          "createdAt"
-        ]
       },
       "DealerClientListResponseDto": {
         "type": "object",
@@ -6551,7 +6626,6 @@
           "type",
           "amount",
           "reason",
-          "repairRequestId",
           "createdAt"
         ]
       },
@@ -6634,7 +6708,6 @@
           "userId",
           "repairerId",
           "rating",
-          "comment",
           "createdAt"
         ]
       },

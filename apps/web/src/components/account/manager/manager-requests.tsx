@@ -58,7 +58,7 @@ const STATUS_LABELS: Record<string, string> = {
 interface RepairRequest {
   id: string;
   description: string;
-  status: RepairRequestStatus;
+  status: string;
   user?: { firstName?: string; lastName?: string };
   address?: { city?: string; street?: string };
   userDevice?: { device?: { name?: string } };

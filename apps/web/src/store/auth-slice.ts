@@ -1,7 +1,7 @@
 'use client';
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { IAuthUser } from '@asko/shared/client';
+import type { IAuthUser } from '@/lib/api/types';
 
 export interface AuthState {
   accessToken: string | null;

@@ -1,4 +1,4 @@
-import type { IDevice, IImageAttachment, ListResponseDto } from '@asko/shared/client';
+import type { IDevice, IImageAttachment, PaginatedDevices } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -9,8 +9,8 @@ export async function fetchDevices(page: number, limit: number) {
     `${API_URL}/devices?offset=${page}&limit=${limit}`,
     { next: { revalidate: 60 } },
   );
-  if (!res.ok) return { data: [] as IDevice[], total: 0 };
-  return res.json() as Promise<ListResponseDto<IDevice>>;
+  if (!res.ok) return { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
+  return res.json() as Promise<PaginatedDevices>;
 }
 
 export async function fetchDevice(id: string): Promise<IDevice | null> {

@@ -51,7 +51,7 @@ export function RepairerHistory() {
     repairerApi.getAssignedRequests({ offset, limit: LIMIT })
       .then(({ data }) => {
         setRequests(data?.data ?? []);
-        setTotal(data?.total ?? 0);
+        setTotal(data?.overallCount ?? 0);
       })
       .catch(() => { })
       .finally(() => setLoading(false));

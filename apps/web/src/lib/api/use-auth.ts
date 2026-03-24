@@ -7,7 +7,8 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
 import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
-import type { LoginCredentials, CreateUserDto, IAuthSession } from '@asko/shared/client';
+import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
+import type { IAuthSession } from './types';
 import { DEV_ACCOUNT_SWITCHER } from '@/lib/dev/constants';
 import { saveDevAccount } from '@/lib/dev/dev-accounts';
 

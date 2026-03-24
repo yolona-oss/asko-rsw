@@ -6,7 +6,7 @@ import { repairerApi } from '@/lib/api/repairer';
 import { Card, Button, Modal, Textarea, FormField, Toggle } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import type { IDevice } from '@asko/shared/client';
+import type { IDevice } from '@/lib/api/types';
 
 export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
   const [device, setDevice] = useState<IDevice | null>(null);

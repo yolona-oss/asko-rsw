@@ -15,7 +15,7 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
 import { managerApi } from '@/lib/api/manager';
-import type { IRepairer } from '@asko/shared/client';
+import type { IRepairer } from '@/lib/api/types';
 
 type AccessTab = 'inactive' | 'active';
 
@@ -135,7 +135,7 @@ export function ManagerAccess() {
     managerApi.getRepairers({ offset: page, limit: LIMIT, search: debouncedSearch || undefined })
       .then(({ data }) => {
         setRepairers(data?.data ?? []);
-        setTotal(data?.total ?? 0);
+        setTotal(data?.overallCount ?? 0);
       })
       .catch(() => setError('Не удалось загрузить данные'))
       .finally(() => setLoading(false));

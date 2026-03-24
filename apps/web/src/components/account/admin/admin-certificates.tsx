@@ -14,7 +14,8 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import { CertificateStatus, ICertificate } from '@asko/shared/client';
+import { CertificateStatus } from '@asko/shared/client';
+import type { ICertificate } from '@/lib/api/types';
 
 type CertTab = 'pending_payment' | 'validation_error' | 'active' | 'expired' | 'revoked';
 

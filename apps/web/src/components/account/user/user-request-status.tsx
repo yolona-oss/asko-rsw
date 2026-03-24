@@ -10,7 +10,7 @@ import { RepairRequestStatus } from '@asko/shared/client';
 
 const POLL_INTERVAL = 15_000;
 
-const TERMINAL_STATUSES = [
+const TERMINAL_STATUSES: string[] = [
   RepairRequestStatus.COMPLETED,
   RepairRequestStatus.CANCELLED,
   RepairRequestStatus.REFUNDED,
@@ -39,7 +39,7 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Средства возвращены.',
 };
 
-function getStepIndex(status: RepairRequestStatus): number {
+function getStepIndex(status: string): number {
   const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));
   return idx >= 0 ? idx : 0;
 }
@@ -119,7 +119,7 @@ interface WorkStep {
 
 interface RepairRequest {
   id: string;
-  status: RepairRequestStatus;
+  status: string;
   description: string;
   createdAt: Date | string;
   updatedAt: Date | string;

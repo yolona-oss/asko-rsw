@@ -7,7 +7,7 @@ import { Button, Input, Textarea, FormField, CropModal } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import { IImageAttachment } from '@asko/shared/client';
+import type { IImageAttachment } from '@/lib/api/types';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;

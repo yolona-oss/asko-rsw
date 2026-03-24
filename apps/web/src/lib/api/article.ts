@@ -1,4 +1,4 @@
-import type { IArticle, IImageAttachment, ListResponseDto } from '@asko/shared/client';
+import type { IArticle, IImageAttachment, PaginatedArticles } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -7,8 +7,8 @@ export async function fetchArticles(page: number, limit: number) {
     `${API_URL}/articles?offset=${page}&limit=${limit}`,
     { next: { revalidate: 60 } },
   );
-  if (!res.ok) return { data: [] as IArticle[], total: 0 };
-  return res.json() as Promise<ListResponseDto<IArticle>>;
+  if (!res.ok) return { data: [] as IArticle[], overallCount: 0, offset: 0, limit };
+  return res.json() as Promise<PaginatedArticles>;
 }
 
 export async function fetchArticle(slug: string): Promise<IArticle | null> {
@@ -40,6 +40,6 @@ export async function fetchOtherArticles(currentSlug: string): Promise<IArticle[
     next: { revalidate: 60 },
   });
   if (!res.ok) return [];
-  const { data } = (await res.json()) as ListResponseDto<IArticle>;
+  const { data } = (await res.json()) as PaginatedArticles;
   return data.filter((a) => a.slug !== currentSlug).slice(0, 4);
 }

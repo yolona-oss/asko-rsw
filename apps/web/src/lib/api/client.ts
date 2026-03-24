@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { IAccessToken } from '@asko/shared/client';
+import type { IAccessToken } from './types';
 import { store } from '@/store';
 import { setAccessToken, logout } from '@/store/auth-slice';
 

@@ -2114,10 +2114,10 @@ export interface components {
             city: string;
             street: string;
             house: number;
-            building: number;
-            floor: number;
-            room: number;
-            postalCode: string;
+            building?: number;
+            floor?: number;
+            room?: number;
+            postalCode?: string;
         };
         AddressResponseDto: {
             address: components["schemas"]["AddressRecordDto"];
@@ -2125,15 +2125,33 @@ export interface components {
         AddressListResponseDto: {
             addresses: components["schemas"]["AddressRecordDto"][];
         };
+        CloudinaryImageDto: {
+            public_id: string;
+            version: number;
+            signature: string;
+            width: number;
+            height: number;
+            format: string;
+            resource_type: string;
+            url: string;
+            secure_url: string;
+            original_filename: string;
+        };
+        ImageObjDto: {
+            original: components["schemas"]["CloudinaryImageDto"];
+            thumbnail?: components["schemas"]["CloudinaryImageDto"];
+            medium?: components["schemas"]["CloudinaryImageDto"];
+            large?: components["schemas"]["CloudinaryImageDto"];
+        };
         ImageRecordDto: {
             id: string;
-            imageJson: string;
-            alt: string;
+            imageJson: components["schemas"]["ImageObjDto"];
+            alt?: string;
             order: number;
-            ownerType: string;
-            ownerId: string;
-            createdAt: string;
-            updatedAt: string;
+            ownerType?: string;
+            ownerId?: string;
+            createdAt?: string;
+            updatedAt?: string;
         };
         ImageResponseDto: {
             image: components["schemas"]["ImageRecordDto"];
@@ -2217,10 +2235,12 @@ export interface components {
             specializations: string[];
             city: string;
             isActive: boolean;
+            rating?: number;
             completedRepairs: number;
-            latitude: number;
-            longitude: number;
-            lastLocationUpdate: string;
+            latitude?: number;
+            longitude?: number;
+            lastLocationUpdate?: string;
+            user?: components["schemas"]["AuthUserDto"];
             createdAt: string;
             updatedAt: string;
         };
@@ -2244,7 +2264,7 @@ export interface components {
             title: string;
             slug: string;
             text: string;
-            tags: string[];
+            tags?: string[];
             createdAt: string;
             updatedAt: string;
         };
@@ -2266,12 +2286,13 @@ export interface components {
             type: string;
             model: string;
             brand: string;
-            price: number;
-            description: string;
-            specifications: string;
-            features: string;
             slug: string;
-            isFeatured: boolean;
+            price?: number;
+            description?: string;
+            specifications?: Record<string, never>;
+            features?: Record<string, never>;
+            link?: string;
+            isFeatured?: boolean;
             createdAt: string;
             updatedAt: string;
         };
@@ -2284,9 +2305,9 @@ export interface components {
             id: string;
             deviceId: string;
             name: string;
-            partNumber: string;
-            price: number;
-            description: string;
+            partNumber?: string;
+            price?: number;
+            description?: string;
             createdAt: string;
             updatedAt: string;
         };
@@ -2310,30 +2331,51 @@ export interface components {
             deviceId: string;
             serialNumber: string;
             addressId: string;
-            purchaseDate: string;
-            warrantyUntil: string;
-            notes: string;
+            purchaseDate?: string;
+            warrantyUntil?: string;
+            notes?: string;
             createdAt: string;
-            device: components["schemas"]["DeviceRecordDto"];
-            address: components["schemas"]["AddressRecordDto"];
+            device?: components["schemas"]["DeviceRecordDto"];
+            address?: components["schemas"]["AddressRecordDto"];
         };
         UserDeviceListResponseDto: {
             userDevices: components["schemas"]["UserDeviceRecordDto"][];
         };
         AddCertificateDto: Record<string, never>;
+        DealerClientRecordDto: {
+            id: string;
+            dealerId: string;
+            clientUserId: string;
+            clientUser?: components["schemas"]["AuthUserDto"];
+            createdAt: string;
+        };
+        DealerProfileRecordDto: {
+            clients?: components["schemas"]["DealerClientRecordDto"][];
+            id: string;
+            userId: string;
+            companyName?: string;
+            inn?: string;
+            pointsBalance: number;
+            user?: components["schemas"]["AuthUserDto"];
+            createdAt: string;
+            updatedAt: string;
+        };
         CertificateRecordDto: {
             id: string;
             userId: string;
             userDeviceId: string;
-            dealerId: string;
+            dealerId?: string;
             certificateNumber: string;
             status: string;
             issuedAt: string;
             expiresAt: string;
-            price: number;
+            purchaseReceiptUrl?: string;
+            description?: string;
+            price?: number;
             paid: boolean;
-            purchaseReceiptUrl: string;
-            description: string;
+            user?: components["schemas"]["AuthUserDto"];
+            userDevice?: components["schemas"]["UserDeviceRecordDto"];
+            dealer?: components["schemas"]["DealerProfileRecordDto"];
             createdAt: string;
         };
         CertificateResponseDto: {
@@ -2366,34 +2408,63 @@ export interface components {
             amount: number;
             currency: string;
             status: string;
-            provider: string;
-            providerPaymentId: string;
-            paidAt: string;
+            provider?: string;
+            providerPaymentId?: string;
+            user?: components["schemas"]["AuthUserDto"];
+            paidAt?: string;
             createdAt: string;
-            updatedAt: string;
+            updatedAt?: string;
         };
         PaymentListResponseDto: {
             payments: components["schemas"]["PaymentRecordDto"][];
         };
         CreateRepairRequestDto: Record<string, never>;
+        WorkStepRecordDto: {
+            id: string;
+            repairRequestId: string;
+            title: string;
+            description?: string;
+            status: string;
+            order: number;
+            isFinal: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        BrokenPartRecordDto: {
+            id: string;
+            repairRequestId: string;
+            devicePartId?: string;
+            name: string;
+            status: string;
+            note?: string;
+            createdAt: string;
+            updatedAt: string;
+        };
         RepairRequestRecordDto: {
+            workSteps?: components["schemas"]["WorkStepRecordDto"][];
+            brokenParts?: components["schemas"]["BrokenPartRecordDto"][];
             id: string;
             userId: string;
             userDeviceId: string;
-            repairerId: string;
-            managerId: string;
-            certificateId: string;
-            addressId: string;
+            repairerId?: string;
+            managerId?: string;
+            certificateId?: string;
+            addressId?: string;
             status: string;
             description: string;
-            preferredDate: string;
-            totalCost: number;
+            preferredDate?: string;
+            totalCost?: number;
             refundRequested: boolean;
-            refundReason: string;
-            refuseReason: string;
-            rejectedRepairers: string;
-            completionNote: string;
+            refundReason?: string;
+            refuseReason?: string;
+            rejectedRepairers?: string[];
+            completionNote?: string;
             stepsLocked: boolean;
+            user?: components["schemas"]["AuthUserDto"];
+            userDevice?: components["schemas"]["UserDeviceRecordDto"];
+            repairer?: components["schemas"]["RepairerRecordDto"];
+            certificate?: components["schemas"]["CertificateRecordDto"];
+            address?: components["schemas"]["AddressRecordDto"];
             createdAt: string;
             updatedAt: string;
         };
@@ -2411,17 +2482,6 @@ export interface components {
         RefuseRequestDto: Record<string, never>;
         SetRepairPriceDto: Record<string, never>;
         AddWorkStepDto: Record<string, never>;
-        WorkStepRecordDto: {
-            id: string;
-            repairRequestId: string;
-            title: string;
-            description: string;
-            status: string;
-            order: number;
-            isFinal: boolean;
-            createdAt: string;
-            updatedAt: string;
-        };
         WorkStepResponseDto: {
             step: components["schemas"]["WorkStepRecordDto"];
         };
@@ -2434,16 +2494,6 @@ export interface components {
             steps: components["schemas"]["WorkStepRecordDto"][];
         };
         AddBrokenPartDto: Record<string, never>;
-        BrokenPartRecordDto: {
-            id: string;
-            repairRequestId: string;
-            devicePartId: string;
-            name: string;
-            status: string;
-            note: string;
-            createdAt: string;
-            updatedAt: string;
-        };
         BrokenPartResponseDto: {
             part: components["schemas"]["BrokenPartRecordDto"];
         };
@@ -2458,11 +2508,11 @@ export interface components {
             type: string;
             title: string;
             body: string;
-            targetType: string;
-            targetId: string;
-            metadata: string;
+            targetType?: string;
+            targetId?: string;
+            metadata?: string;
             isRead: boolean;
-            readAt: string;
+            readAt?: string;
             createdAt: string;
         };
         PaginatedNotificationsResponseDto: {
@@ -2475,15 +2525,6 @@ export interface components {
             count: number;
         };
         CreateDealerProfileDto: Record<string, never>;
-        DealerProfileRecordDto: {
-            id: string;
-            userId: string;
-            companyName: string;
-            inn: string;
-            pointsBalance: number;
-            createdAt: string;
-            updatedAt: string;
-        };
         DealerProfileResponseDto: {
             profile: components["schemas"]["DealerProfileRecordDto"];
         };
@@ -2499,8 +2540,8 @@ export interface components {
             amount: number;
             status: string;
             requestedAt: string;
-            processedAt: string;
-            processedByUserId: string;
+            processedAt?: string;
+            processedByUserId?: string;
         };
         PaginatedWithdrawalsResponseDto: {
             data: components["schemas"]["WithdrawalRecordDto"][];
@@ -2517,12 +2558,6 @@ export interface components {
             status: string;
         };
         UpdateDealerProfileDto: Record<string, never>;
-        DealerClientRecordDto: {
-            id: string;
-            dealerId: string;
-            clientUserId: string;
-            createdAt: string;
-        };
         DealerClientListResponseDto: {
             clients: components["schemas"]["DealerClientRecordDto"][];
         };
@@ -2548,7 +2583,7 @@ export interface components {
             type: string;
             amount: number;
             reason: string;
-            repairRequestId: string;
+            repairRequestId?: string;
             createdAt: string;
         };
         PaginatedPointsResponseDto: {
@@ -2568,7 +2603,7 @@ export interface components {
             userId: string;
             repairerId: string;
             rating: number;
-            comment: string;
+            comment?: string;
             createdAt: string;
         };
         ReviewResponseDto: {

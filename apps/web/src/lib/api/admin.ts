@@ -4,21 +4,25 @@ import type {
   UpdateDeviceDto,
   CreateArticleDto,
   UpdateArticleDto,
+} from '@asko/shared/client';
+import type {
   IDevice,
   IArticle,
   IInvitationLink,
   IAuthUser,
   ICertificate,
-  PaginatedResponseDto,
-  ListResponseDto,
-} from '@asko/shared/client';
+  PaginatedDevices,
+  PaginatedArticles,
+  PaginatedUsers,
+  PaginatedCertificates,
+} from './types';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 
 export const adminApi = {
   // Devices
   getDevices(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<IDevice>>('/devices', { params });
+    return api.get<PaginatedDevices>('/devices', { params });
   },
   getDevice(id: string) {
     return api.get<IDevice>(`/devices/${id}`);
@@ -62,7 +66,7 @@ export const adminApi = {
 
   // Articles
   getArticles(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<IArticle>>('/articles', { params });
+    return api.get<PaginatedArticles>('/articles', { params });
   },
   getArticle(id: string) {
     return api.get<IArticle>(`/articles/${id}`);
@@ -97,7 +101,7 @@ export const adminApi = {
 
   // Users
   getUsers(params?: { page?: number; limit?: number }) {
-    return api.get<PaginatedResponseDto<IAuthUser>>('/users/', { params });
+    return api.get<PaginatedUsers>('/users/', { params });
   },
   deleteUser(id: string) {
     return api.delete<void>('/users/delete', { params: { userId: id } });
@@ -105,7 +109,7 @@ export const adminApi = {
 
   // Certificates
   getCertificates(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<ICertificate>>('/certificates', { params });
+    return api.get<PaginatedCertificates>('/certificates', { params });
   },
   revokeCertificate(id: string) {
     return api.post<ICertificate>(`/certificates/${id}/revoke`);

@@ -6,7 +6,7 @@ export class ReviewRecordDto {
     userId: string;
     repairerId: string;
     rating: number;
-    comment: string;
+    comment?: string;
     createdAt: string;
 }
 

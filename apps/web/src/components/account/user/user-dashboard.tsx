@@ -63,7 +63,7 @@ function StatCard({
 interface RequestSummary {
   id: string;
   description: string;
-  status: RepairRequestStatus;
+  status: string;
 }
 
 export function UserDashboard() {
@@ -100,7 +100,7 @@ export function UserDashboard() {
         ]);
 
         const reqData = reqRes.data;
-        setRequestsCount(reqData.total ?? 0);
+        setRequestsCount(reqData.overallCount ?? 0);
         if (reqData.data?.length > 0) {
           const r = reqData.data[0];
           setLastRequest({ id: r.id, description: r.description, status: r.status });

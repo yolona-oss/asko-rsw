@@ -13,7 +13,7 @@ export default async function ArticlesListPage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
 
-  const { data: articles, total } = await fetchArticles(page, LIMIT);
+  const { data: articles, overallCount: total } = await fetchArticles(page, LIMIT);
   const totalPages = Math.ceil(total / LIMIT);
 
   const imageMap = new Map<string, string | null>();

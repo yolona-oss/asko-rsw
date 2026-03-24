@@ -8,7 +8,8 @@ import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import type { DeviceType, IImageAttachment, IDevicePart } from '@asko/shared/client';
+import type { DeviceType } from '@asko/shared/client';
+import type { IImageAttachment, IDevicePart } from '@/lib/api/types';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;

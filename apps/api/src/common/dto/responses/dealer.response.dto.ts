@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthUserDto } from './auth.response.dto';
 
 export class DealerProfileRecordDto {
     id: string;
     userId: string;
-    companyName: string;
-    inn: string;
+    companyName?: string;
+    inn?: string;
     pointsBalance: number;
+    user?: AuthUserDto;
+    @ApiProperty({ type: () => [DealerClientRecordDto] })
+    clients?: DealerClientRecordDto[];
     createdAt: string;
     updatedAt: string;
 }
@@ -26,6 +30,7 @@ export class DealerClientRecordDto {
     id: string;
     dealerId: string;
     clientUserId: string;
+    clientUser?: AuthUserDto;
     createdAt: string;
 }
 
@@ -59,7 +64,7 @@ export class PointsTransactionRecordDto {
     type: string;
     amount: number;
     reason: string;
-    repairRequestId: string;
+    repairRequestId?: string;
     createdAt: string;
 }
 
@@ -77,8 +82,8 @@ export class WithdrawalRecordDto {
     amount: number;
     status: string;
     requestedAt: string;
-    processedAt: string;
-    processedByUserId: string;
+    processedAt?: string;
+    processedByUserId?: string;
 }
 
 export class WithdrawalResponseDto {

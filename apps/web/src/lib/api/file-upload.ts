@@ -1,4 +1,4 @@
-import type { IImage, IImageAttachment } from '@asko/shared/client';
+import type { IImage, IImageAttachment } from './types';
 import { api } from './client';
 
 export const fileUploadApi = {

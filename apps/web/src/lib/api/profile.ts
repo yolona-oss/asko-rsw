@@ -1,4 +1,5 @@
-import type { UpdateUserDto, IAuthUser } from '@asko/shared/client';
+import type { UpdateUserDto } from '@asko/shared/client';
+import type { IAuthUser } from './types';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 

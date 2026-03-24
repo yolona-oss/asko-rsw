@@ -8,7 +8,7 @@ import { PaymentModal } from '@/components/account/user/payment-modal';
 import { userApi } from '@/lib/api/user';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { CertificateStatus } from '@asko/shared/client';
-import { ICertificate } from '@asko/shared/client';
+import type { ICertificate } from '@/lib/api/types';
 
 const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',

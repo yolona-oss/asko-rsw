@@ -1,16 +1,19 @@
 import type {
-  IRepairer,
-  IRepairRequest,
-  ListResponseDto,
   CreateRepairerDto,
   UpdateRepairerDto,
   AssignRepairerDto,
 } from '@asko/shared/client';
+import type {
+  IRepairer,
+  IRepairRequest,
+  PaginatedRepairers,
+  PaginatedRepairRequests,
+} from './types';
 import { api } from './client';
 
 export const managerApi = {
   getRepairers(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<IRepairer>>('/repairers', { params });
+    return api.get<PaginatedRepairers>('/repairers', { params });
   },
 
   getRepairer(id: string) {
@@ -27,7 +30,7 @@ export const managerApi = {
 
   // Repair requests
   getRepairRequests(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<IRepairRequest>>('/repair-requests', { params });
+    return api.get<PaginatedRepairRequests>('/repair-requests', { params });
   },
 
   getRepairRequest(id: string) {

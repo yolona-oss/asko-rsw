@@ -1,4 +1,11 @@
 import type {
+  CreateRepairRequestDto,
+  AddCertificateDto,
+  CreateAddressDto,
+  RegisterUserDeviceDto,
+  CreateReviewDto,
+} from '@asko/shared/client';
+import type {
   IRepairRequest,
   IUserDevice,
   ICertificate,
@@ -7,20 +14,16 @@ import type {
   IAddressBook,
   IRepairPayment,
   IReview,
-  ListResponseDto,
-  CreateRepairRequestDto,
-  AddCertificateDto,
-  CreateAddressDto,
-  RegisterUserDeviceDto,
-  CreateReviewDto,
+  PaginatedRepairRequests,
+  PaginatedDevices,
   ProcessInvoiceResult,
-} from '@asko/shared/client';
+} from './types';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 
 export const userApi = {
   getMyRequests(params?: { offset?: number; limit?: number }) {
-    return api.get<ListResponseDto<IRepairRequest>>('/repair-requests/my', { params });
+    return api.get<PaginatedRepairRequests>('/repair-requests/my', { params });
   },
 
   getRepairRequest(id: string) {
@@ -63,7 +66,7 @@ export const userApi = {
   },
 
   getDeviceCatalog(params?: { offset?: number; limit?: number; search?: string }) {
-    return api.get<ListResponseDto<IDevice>>('/devices', { params });
+    return api.get<PaginatedDevices>('/devices', { params });
   },
 
   createAddress(data: CreateAddressDto) {

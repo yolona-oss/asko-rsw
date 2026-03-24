@@ -1,18 +1,24 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthUserDto } from './auth.response.dto';
+import { UserDeviceRecordDto } from './device.response.dto';
+import { DealerProfileRecordDto } from './dealer.response.dto';
 
 export class CertificateRecordDto {
     id: string;
     userId: string;
     userDeviceId: string;
-    dealerId: string;
+    dealerId?: string;
     certificateNumber: string;
     status: string;
     issuedAt: string;
     expiresAt: string;
-    price: number;
+    purchaseReceiptUrl?: string;
+    description?: string;
+    price?: number;
     paid: boolean;
-    purchaseReceiptUrl: string;
-    description: string;
+    user?: AuthUserDto;
+    userDevice?: UserDeviceRecordDto;
+    dealer?: DealerProfileRecordDto;
     createdAt: string;
 }
 

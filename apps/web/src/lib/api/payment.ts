@@ -1,11 +1,11 @@
+import type { CreatePaymentDto } from '@asko/shared/client';
 import type {
-  PaginatedResponseDto,
+  PaginatedPayments,
   PaymentOptionsDto,
-  CreatePaymentDto,
   ProcessInvoiceResult,
   PaymentStatsDto,
   IRepairPayment,
-} from '@asko/shared/client';
+} from './types';
 import { api } from './client';
 
 /** @deprecated Use `PaymentOptionsDto` from `@asko/shared/client` */
@@ -29,11 +29,11 @@ export const paymentApi = {
   },
 
   listPayments(params?: { offset?: number; limit?: number; status?: string; provider?: string; search?: string }) {
-    return api.get<PaginatedResponseDto<IRepairPayment>>('/payment/list', { params });
+    return api.get<PaginatedPayments>('/payment/list', { params });
   },
 
   getMyPayments(params?: { offset?: number; limit?: number; status?: string }) {
-    return api.get<PaginatedResponseDto<IRepairPayment>>('/payment/my', { params });
+    return api.get<PaginatedPayments>('/payment/my', { params });
   },
 
   getStats() {

@@ -14,7 +14,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import type { IAuthUser } from '@asko/shared/client';
+import type { IAuthUser } from '@/lib/api/types';
 
 type UserTab = 'all' | 'user' | 'dealer' | 'manager' | 'repairer';
 

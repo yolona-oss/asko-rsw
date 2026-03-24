@@ -6,11 +6,11 @@ export class NotificationRecordDto {
     type: string;
     title: string;
     body: string;
-    targetType: string;
-    targetId: string;
-    metadata: string;
+    targetType?: string;
+    targetId?: string;
+    metadata?: string;
     isRead: boolean;
-    readAt: string;
+    readAt?: string;
     createdAt: string;
 }
 
