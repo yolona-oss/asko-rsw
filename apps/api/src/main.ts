@@ -43,16 +43,16 @@ async function bootstrap() {
         }),
     );
 
-    if (!isProdEnv()) {
-        const swaggerConfig = new DocumentBuilder()
-            .setTitle('docs title')
-            .setDescription('docs decription')
-            .setVersion('1.0')
-            .addBearerAuth()
-            .build();
-        const document = SwaggerModule.createDocument(app, swaggerConfig);
-        SwaggerModule.setup('doc', app, document);
-    }
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('ASKO Repair Service API')
+        .setDescription('API gateway for the ASKO repair management platform')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('doc', app, document, {
+        jsonDocumentUrl: '/doc/openapi.json',
+    });
 
     app.enableShutdownHooks();
 

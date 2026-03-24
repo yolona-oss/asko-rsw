@@ -8,7 +8,7 @@ import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
-import type { DeviceType, IImageAttachment } from '@asko/shared/client';
+import type { DeviceType, IImageAttachment, IDevicePart } from '@asko/shared/client';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -186,14 +186,6 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
   );
 }
 
-interface DevicePart {
-  id: string;
-  name: string;
-  partNumber?: string;
-  price?: number;
-  description?: string;
-}
-
 interface PartFormData {
   name: string;
   partNumber: string;
@@ -209,7 +201,7 @@ const EMPTY_PART_FORM: PartFormData = {
 };
 
 function DeviceParts({ deviceId }: { deviceId: string }) {
-  const [parts, setParts] = useState<DevicePart[]>([]);
+  const [parts, setParts] = useState<IDevicePart[]>([]);
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -290,7 +282,7 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
     }
   };
 
-  const startEdit = (part: DevicePart) => {
+  const startEdit = (part: IDevicePart) => {
     setAdding(false);
     setEditingId(part.id);
     setForm({

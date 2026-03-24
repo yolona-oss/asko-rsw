@@ -1,5 +1,4 @@
 import {
-    Res,
     Query,
     Body,
     Controller,
@@ -7,7 +6,7 @@ import {
     Delete,
     Put,
 } from '@nestjs/common';
-import { Response } from 'express'
+import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 
 import { UserClientService } from 'modules/user-client/user-client.service';
 
@@ -22,7 +21,13 @@ import {
     ALL_ROLES,
     ADMIN_ROLES
 } from '@asko/shared';
+import {
+    PaginatedUsersResponseDto,
+    EmptyResponseDto,
+    UserResponseDto,
+} from 'common/dto/responses';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
 
@@ -31,36 +36,32 @@ export class UsersController {
     ) { }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
-    async getAllUsers(
-        @Res() response: Response,
-        @Query() pagination: PaginationDto = {}
-    ) {
+    async getAllUsers(@Query() pagination: PaginationDto = {}) {
         const docs = await this.userClient.findAllUsers({
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 10,
         });
-        response.json({ ...docs, data: docs.data ?? [] });
+        return { ...docs, data: docs.data ?? [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('/delete')
-    async deleteUserById(
-        @Query('userId') id: string,
-        @Res() response: Response
-    ) {
+    async deleteUserById(@Query('userId') id: string) {
         await this.userClient.deleteUser({ id });
-        response.status(200).json({});
+        return {};
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: UserResponseDto })
     @Put('/')
     async updateUserById(
         @JwtAuthUser() user: IAuthUser,
         @Body() data: Partial<UpdateUserDto>,
-        @Res() response: Response
     ) {
-        const doc = await this.userClient.updateUser({
+        return this.userClient.updateUser({
             id: user.id,
             name: data.name ?? '',
             email: data.email ?? '',
@@ -69,31 +70,26 @@ export class UsersController {
             addressId: data.addressId ?? '',
             currentPassword: data.password ?? '',
         });
-        response.status(200).json(doc);
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: UserResponseDto })
     @Put('/password')
     async changePassword(
         @JwtAuthUser() user: IAuthUser,
         @Body() data: ChangePasswordDto,
-        @Res() response: Response
     ) {
-        const doc = await this.userClient.changePassword({
+        return this.userClient.changePassword({
             id: user.id,
             oldPassword: data.oldPassword,
             newPassword: data.newPassword,
         });
-        response.status(200).json(doc);
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: UserResponseDto })
     @Get('/profile')
-    async getUserById(
-        @JwtAuthUser() user: IAuthUser,
-        @Res() response: Response
-    ) {
-        const doc = await this.userClient.getProfile({ id: user.id });
-        response.status(200).json(doc);
+    async getUserById(@JwtAuthUser() user: IAuthUser) {
+        return this.userClient.getProfile({ id: user.id });
     }
 }

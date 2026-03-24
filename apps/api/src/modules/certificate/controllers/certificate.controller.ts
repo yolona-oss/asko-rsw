@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/certificate-client/certificate-client.service';
 import { DeviceClientService } from 'modules/device-client/device-client.service';
 import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
@@ -18,7 +19,16 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+import {
+    CertificateResponseDto,
+    CertPriceResponseDto,
+    CertificateListResponseDto,
+    PaginatedCertificatesResponseDto,
+    ProcessInvoiceResponseDto,
+    PaymentListResponseDto,
+} from 'common/dto/responses';
 
+@ApiTags('Certificates')
 @Controller('certificates')
 export class CertificateController {
     constructor(
@@ -29,6 +39,7 @@ export class CertificateController {
     ) {}
 
     /** User adds a certificate they purchased */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post('add')
     async addCertificate(@JwtAuthUser() user: JwtPayload, @Body() dto: AddCertificateDto) {
@@ -40,6 +51,7 @@ export class CertificateController {
     }
 
     /** Dealer creates a certificate for a client */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
     @RequiredRoles(Role.DEALER)
     @Post('create')
     async createByDealer(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateCertificateDto) {
@@ -87,6 +99,7 @@ export class CertificateController {
     }
 
     /** Reassign certificate to different device */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/reassign')
     async reassign(
@@ -98,6 +111,7 @@ export class CertificateController {
     }
 
     /** Admin revokes a certificate */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
     @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/revoke')
     async revoke(@Param('id') id: string) {
@@ -105,6 +119,7 @@ export class CertificateController {
     }
 
     /** Calculate certificate price before purchase */
+    @ApiOkResponse({ type: CertPriceResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('calculate-price')
     async calculatePrice(
@@ -115,6 +130,7 @@ export class CertificateController {
     }
 
     /** User gets their certificates */
+    @ApiOkResponse({ type: CertificateListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
@@ -122,6 +138,7 @@ export class CertificateController {
     }
 
     /** Dealer gets certificates they created */
+    @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
     @RequiredRoles(Role.DEALER)
     @Get('dealer')
     async findDealerCerts(
@@ -136,6 +153,7 @@ export class CertificateController {
     }
 
     /** Admin: list all certificates */
+    @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
     @RequiredRoles(...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
@@ -144,6 +162,7 @@ export class CertificateController {
     }
 
     /** Pay for a certificate */
+    @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
     async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -155,6 +174,7 @@ export class CertificateController {
     }
 
     /** Dummy pay for a certificate (testing) */
+    @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -167,12 +187,14 @@ export class CertificateController {
     }
 
     /** Get payments for a certificate */
+    @ApiOkResponse({ type: PaymentListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('certificate', id);
     }
 
+    @ApiOkResponse({ type: CertificateResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {

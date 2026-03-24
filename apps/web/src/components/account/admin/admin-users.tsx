@@ -14,6 +14,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { adminApi } from '@/lib/api/admin';
+import type { IAuthUser } from '@asko/shared/client';
 
 type UserTab = 'all' | 'user' | 'dealer' | 'manager' | 'repairer';
 
@@ -35,22 +36,12 @@ const ROLE_LABELS: Record<string, string> = {
   operator: 'Оператор',
 };
 
-interface UserEntry {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  roles: string[];
-  createdAt: Date | string;
-}
-
 function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function UserRow({ user, onDelete }: { user: UserEntry; onDelete: (id: string) => void }) {
+function UserRow({ user, onDelete }: { user: IAuthUser; onDelete: (id: string) => void }) {
   const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
 
   return (
@@ -91,7 +82,7 @@ function UserRow({ user, onDelete }: { user: UserEntry; onDelete: (id: string) =
 
 export function AdminUsers() {
   const [activeTab, setActiveTab] = useState<UserTab>('all');
-  const [users, setUsers] = useState<UserEntry[]>([]);
+  const [users, setUsers] = useState<IAuthUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

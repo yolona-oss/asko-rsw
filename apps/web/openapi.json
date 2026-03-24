@@ -1,0 +1,5428 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/schedule": {
+      "post": {
+        "operationId": "WScheduleController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WScheduleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Work Schedule"
+        ]
+      },
+      "get": {
+        "operationId": "WScheduleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WScheduleResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Work Schedule"
+        ]
+      }
+    },
+    "/schedule/{id}": {
+      "get": {
+        "operationId": "WScheduleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WScheduleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Work Schedule"
+        ]
+      }
+    },
+    "/schedule/{id}/occurrences": {
+      "get": {
+        "operationId": "WScheduleController_getOccurrences",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Next schedule occurrences"
+          }
+        },
+        "tags": [
+          "Work Schedule"
+        ]
+      }
+    },
+    "/address": {
+      "post": {
+        "operationId": "AddressController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      },
+      "get": {
+        "operationId": "AddressController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      }
+    },
+    "/address/{id}": {
+      "get": {
+        "operationId": "AddressController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      }
+    },
+    "/file-upload/image/upload/stream": {
+      "post": {
+        "operationId": "ImageUploadController_uploadStream",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/upload": {
+      "post": {
+        "operationId": "ImageUploadController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/upload/avatar/{userId}": {
+      "post": {
+        "operationId": "ImageUploadController_uploadUserAvatar",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/delete/{imageId}": {
+      "delete": {
+        "operationId": "ImageUploadController_remove",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/unattach/{imageId}": {
+      "put": {
+        "operationId": "ImageUploadController_unattach",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/attach/{imageId}": {
+      "post": {
+        "operationId": "ImageUploadController_attach",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/attached": {
+      "get": {
+        "operationId": "ImageUploadController_listAttached",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/image/from-url": {
+      "post": {
+        "operationId": "ImageUploadController_createFromUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateImageFromUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_getAllUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "operationId": "UsersController_updateUserById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/delete": {
+      "delete": {
+        "operationId": "UsersController_deleteUserById",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/password": {
+      "put": {
+        "operationId": "UsersController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "operationId": "UsersController_getUserById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginCredentials"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/confirm-email": {
+      "post": {
+        "operationId": "AuthController_confirmEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmEmailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/resend-confirmation": {
+      "post": {
+        "operationId": "AuthController_resendConfirmation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendConfirmMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshAccessToken",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "205": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/dev-switch": {
+      "post": {
+        "operationId": "AuthController_devSwitch",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/master-logout": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "operationId": "AuthController_findSessionUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/invite": {
+      "post": {
+        "operationId": "InviteController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCreatedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Invitations"
+        ]
+      },
+      "get": {
+        "operationId": "InviteController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteLinkResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/invite/check/{token}": {
+      "get": {
+        "operationId": "InviteController_checkInvite",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteLinkResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/invite/{id}": {
+      "delete": {
+        "operationId": "InviteController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/repairers": {
+      "post": {
+        "operationId": "RepairerController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      },
+      "get": {
+        "operationId": "RepairerController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/{id}": {
+      "patch": {
+        "operationId": "RepairerController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      },
+      "get": {
+        "operationId": "RepairerController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/location": {
+      "post": {
+        "operationId": "RepairerController_updateLocation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/me": {
+      "get": {
+        "operationId": "RepairerController_getMyProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/city/{city}": {
+      "get": {
+        "operationId": "RepairerController_findByCity",
+        "parameters": [
+          {
+            "name": "city",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/articles": {
+      "post": {
+        "operationId": "ArticlesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArticleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "get": {
+        "operationId": "ArticlesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedArticlesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}": {
+      "patch": {
+        "operationId": "ArticlesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArticleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "delete": {
+        "operationId": "ArticlesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/all": {
+      "delete": {
+        "operationId": "ArticlesController_removeAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/images": {
+      "post": {
+        "operationId": "ArticlesController_uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/images/reorder": {
+      "put": {
+        "operationId": "ArticlesController_reorderImages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/images/{imageId}": {
+      "delete": {
+        "operationId": "ArticlesController_removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{slug}": {
+      "get": {
+        "operationId": "ArticlesController_findOne",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{slug}/images": {
+      "get": {
+        "operationId": "ArticlesController_findImages",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/devices": {
+      "post": {
+        "operationId": "DeviceController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "get": {
+        "operationId": "DeviceController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedDevicesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/import": {
+      "post": {
+        "operationId": "DeviceController_importDevices",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportDevicesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}": {
+      "patch": {
+        "operationId": "DeviceController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "delete": {
+        "operationId": "DeviceController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "get": {
+        "operationId": "DeviceController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/all": {
+      "delete": {
+        "operationId": "DeviceController_removeAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/images": {
+      "post": {
+        "operationId": "DeviceController_uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "get": {
+        "operationId": "DeviceController_findImages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/images/reorder": {
+      "put": {
+        "operationId": "DeviceController_reorderImages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/images/{imageId}": {
+      "delete": {
+        "operationId": "DeviceController_removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/parts": {
+      "post": {
+        "operationId": "DeviceController_createPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDevicePartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "get": {
+        "operationId": "DeviceController_findParts",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePartListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/parts/{partId}": {
+      "patch": {
+        "operationId": "DeviceController_updatePart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDevicePartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "delete": {
+        "operationId": "DeviceController_removePart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/parts/{partId}/images": {
+      "post": {
+        "operationId": "DeviceController_uploadPartImage",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      },
+      "get": {
+        "operationId": "DeviceController_findPartImages",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/{id}/parts/{partId}/images/{imageId}": {
+      "delete": {
+        "operationId": "DeviceController_removePartImage",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/slug/{slug}": {
+      "get": {
+        "operationId": "DeviceController_findBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/devices/slug/{slug}/images": {
+      "get": {
+        "operationId": "DeviceController_findImagesBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/user-devices": {
+      "post": {
+        "operationId": "UserDeviceController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User Devices"
+        ]
+      },
+      "get": {
+        "operationId": "UserDeviceController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeviceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User Devices"
+        ]
+      }
+    },
+    "/user-devices/{id}": {
+      "get": {
+        "operationId": "UserDeviceController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User Devices"
+        ]
+      },
+      "delete": {
+        "operationId": "UserDeviceController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User Devices"
+        ]
+      }
+    },
+    "/certificates/add": {
+      "post": {
+        "operationId": "CertificateController_addCertificate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCertificateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/create": {
+      "post": {
+        "operationId": "CertificateController_createByDealer",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCertificateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/reassign": {
+      "post": {
+        "operationId": "CertificateController_reassign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCertificateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/revoke": {
+      "post": {
+        "operationId": "CertificateController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/calculate-price": {
+      "get": {
+        "operationId": "CertificateController_calculatePrice",
+        "parameters": [
+          {
+            "name": "userDeviceId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expiresAt",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertPriceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/my": {
+      "get": {
+        "operationId": "CertificateController_findMy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/dealer": {
+      "get": {
+        "operationId": "CertificateController_findDealerCerts",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCertificatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates": {
+      "get": {
+        "operationId": "CertificateController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCertificatesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/pay": {
+      "post": {
+        "operationId": "CertificateController_pay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessInvoiceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/dummy-pay": {
+      "post": {
+        "operationId": "CertificateController_dummyPay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessInvoiceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/payments": {
+      "get": {
+        "operationId": "CertificateController_getPayments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}": {
+      "get": {
+        "operationId": "CertificateController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/repair-requests": {
+      "post": {
+        "operationId": "RepairRequestController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRepairRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      },
+      "get": {
+        "operationId": "RepairRequestController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairRequestsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/my": {
+      "get": {
+        "operationId": "RepairRequestController_findMy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairRequestsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/cancel": {
+      "post": {
+        "operationId": "RepairRequestController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/request-refund": {
+      "post": {
+        "operationId": "RepairRequestController_requestRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/pay": {
+      "post": {
+        "operationId": "RepairRequestController_pay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessInvoiceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/dummy-pay": {
+      "post": {
+        "operationId": "RepairRequestController_dummyPay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessInvoiceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/payments": {
+      "get": {
+        "operationId": "RepairRequestController_getPayments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/assign": {
+      "post": {
+        "operationId": "RepairRequestController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/approve-refund": {
+      "post": {
+        "operationId": "RepairRequestController_approveRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/deny-refund": {
+      "post": {
+        "operationId": "RepairRequestController_denyRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/active": {
+      "get": {
+        "operationId": "RepairRequestController_findActive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/assigned": {
+      "get": {
+        "operationId": "RepairRequestController_findAssigned",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairRequestsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/accept": {
+      "post": {
+        "operationId": "RepairRequestController_accept",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/refuse": {
+      "post": {
+        "operationId": "RepairRequestController_refuse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefuseRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/start": {
+      "post": {
+        "operationId": "RepairRequestController_start",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/set-price": {
+      "post": {
+        "operationId": "RepairRequestController_setPrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRepairPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/complete": {
+      "post": {
+        "operationId": "RepairRequestController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps": {
+      "post": {
+        "operationId": "RepairRequestController_addStep",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWorkStepDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkStepResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      },
+      "get": {
+        "operationId": "RepairRequestController_getSteps",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkStepListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps/lock": {
+      "post": {
+        "operationId": "RepairRequestController_lockSteps",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps/{stepId}/update": {
+      "post": {
+        "operationId": "RepairRequestController_updateStep",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stepId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkStepDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkStepResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps/{stepId}/complete": {
+      "post": {
+        "operationId": "RepairRequestController_completeStep",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stepId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteStepResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps/{stepId}/delete": {
+      "post": {
+        "operationId": "RepairRequestController_deleteStep",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stepId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts": {
+      "post": {
+        "operationId": "RepairRequestController_addBrokenPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBrokenPartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      },
+      "get": {
+        "operationId": "RepairRequestController_getBrokenParts",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/update": {
+      "post": {
+        "operationId": "RepairRequestController_updateBrokenPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrokenPartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/status": {
+      "post": {
+        "operationId": "RepairRequestController_updateBrokenPartStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrokenPartStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/delete": {
+      "post": {
+        "operationId": "RepairRequestController_deleteBrokenPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/images": {
+      "post": {
+        "operationId": "RepairRequestController_uploadBrokenPartImage",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      },
+      "get": {
+        "operationId": "RepairRequestController_findBrokenPartImages",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/images/{imageId}/delete": {
+      "post": {
+        "operationId": "RepairRequestController_removeBrokenPartImage",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}": {
+      "get": {
+        "operationId": "RepairRequestController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "NotificationController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "unreadOnly",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedNotificationsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationController_unreadCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationController_markAsRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationController_markAllAsRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/{id}": {
+      "delete": {
+        "operationId": "NotificationController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/dealers": {
+      "post": {
+        "operationId": "DealerController_createProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDealerProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      },
+      "get": {
+        "operationId": "DealerController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedDealersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals/all": {
+      "get": {
+        "operationId": "DealerController_getAllWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedWithdrawalsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals/{id}/process": {
+      "post": {
+        "operationId": "DealerController_processWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessWithdrawalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals/{id}/approve": {
+      "post": {
+        "operationId": "DealerController_approveWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals/{id}/reject": {
+      "post": {
+        "operationId": "DealerController_rejectWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals/{id}/mark-paid": {
+      "post": {
+        "operationId": "DealerController_markPaid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/profile": {
+      "get": {
+        "operationId": "DealerController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      },
+      "patch": {
+        "operationId": "DealerController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDealerProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/clients": {
+      "get": {
+        "operationId": "DealerController_getClients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerClientListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      },
+      "post": {
+        "operationId": "DealerController_addClient",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddDealerClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerClientResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/user-devices/{userId}": {
+      "get": {
+        "operationId": "DealerController_getUserDevices",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealerUserDeviceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/points": {
+      "get": {
+        "operationId": "DealerController_getPointsHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPointsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdraw": {
+      "post": {
+        "operationId": "DealerController_requestWithdrawal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPointsWithdrawalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/withdrawals": {
+      "get": {
+        "operationId": "DealerController_getWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/reviews": {
+      "post": {
+        "operationId": "ReviewController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/my": {
+      "get": {
+        "operationId": "ReviewController_findMy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/{id}/images": {
+      "post": {
+        "operationId": "ReviewController_uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      },
+      "get": {
+        "operationId": "ReviewController_findImages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/{id}/images/{imageId}": {
+      "delete": {
+        "operationId": "ReviewController_removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/rating/repairer/{repairerId}": {
+      "get": {
+        "operationId": "ReviewController_findRepairerRating",
+        "parameters": [
+          {
+            "name": "repairerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/repairer/{repairerId}": {
+      "get": {
+        "operationId": "ReviewController_findByRepairer",
+        "parameters": [
+          {
+            "name": "repairerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedReviewsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Health check status"
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/payment/options": {
+      "get": {
+        "operationId": "PaymentController_getOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentOptionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/create": {
+      "post": {
+        "operationId": "PaymentController_createPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessInvoiceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/list": {
+      "get": {
+        "operationId": "PaymentController_listPayments",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPaymentsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/my/stats": {
+      "get": {
+        "operationId": "PaymentController_getMyStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/my": {
+      "get": {
+        "operationId": "PaymentController_getMyPayments",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPaymentsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/stats": {
+      "get": {
+        "operationId": "PaymentController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "ASKO Repair Service API",
+    "description": "API gateway for the ASKO repair management platform",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateWScheduleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WScheduleResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateAddressDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddressResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddressRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddressListResponseDto": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddressRecordDto"
+            }
+          }
+        },
+        "required": [
+          "addresses"
+        ]
+      },
+      "ImageResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UploadImageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "EmptyResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AttachImageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ImageRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ImageListResponseDto": {
+        "type": "object",
+        "properties": {
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageRecordDto"
+            }
+          }
+        },
+        "required": [
+          "images"
+        ]
+      },
+      "CreateImageFromUrlDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedUsersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoginCredentials": {
+        "type": "object",
+        "properties": {}
+      },
+      "AuthSessionResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfirmMailDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfirmEmailResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResendConfirmMailDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "MessageResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AccessTokenResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateInvitationLinkDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "InviteCreatedResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "InviteLinkResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRepairerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepairerResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRepairerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLocationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepairerRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedRepairersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepairerRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RepairerListResponseDto": {
+        "type": "object",
+        "properties": {
+          "repairers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepairerRecordDto"
+            }
+          }
+        },
+        "required": [
+          "repairers"
+        ]
+      },
+      "CreateArticleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ArticleResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateArticleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DeleteCountResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedArticlesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CreateDeviceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DeviceRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ImportDevicesResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDeviceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDevicePartDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DevicePartResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDevicePartDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DevicePartRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DevicePartListResponseDto": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevicePartRecordDto"
+            }
+          }
+        },
+        "required": [
+          "parts"
+        ]
+      },
+      "PaginatedDevicesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RegisterUserDeviceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UserDeviceRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UserDeviceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "userDevices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDeviceRecordDto"
+            }
+          }
+        },
+        "required": [
+          "userDevices"
+        ]
+      },
+      "AddCertificateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CertificateResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCertificateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignCertificateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CertPriceResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CertificateRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CertificateListResponseDto": {
+        "type": "object",
+        "properties": {
+          "certificates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CertificateRecordDto"
+            }
+          }
+        },
+        "required": [
+          "certificates"
+        ]
+      },
+      "PaginatedCertificatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CertificateRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ProcessInvoiceResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaymentRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaymentListResponseDto": {
+        "type": "object",
+        "properties": {
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRecordDto"
+            }
+          }
+        },
+        "required": [
+          "payments"
+        ]
+      },
+      "CreateRepairRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepairRequestResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepairRequestRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedRepairRequestsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepairRequestRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RequestRefundDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignRepairerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RefuseRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SetRepairPriceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddWorkStepDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WorkStepResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWorkStepDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CompleteStepResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WorkStepRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WorkStepListResponseDto": {
+        "type": "object",
+        "properties": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkStepRecordDto"
+            }
+          }
+        },
+        "required": [
+          "steps"
+        ]
+      },
+      "AddBrokenPartDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BrokenPartResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateBrokenPartDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateBrokenPartStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BrokenPartRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BrokenPartListResponseDto": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrokenPartRecordDto"
+            }
+          }
+        },
+        "required": [
+          "parts"
+        ]
+      },
+      "NotificationRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedNotificationsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "UnreadCountResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDealerProfileDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerProfileResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerProfileRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedDealersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DealerProfileRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "WithdrawalRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedWithdrawalsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WithdrawalRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ProcessWithdrawalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WithdrawalResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PayoutResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDealerProfileDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerClientRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerClientListResponseDto": {
+        "type": "object",
+        "properties": {
+          "clients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DealerClientRecordDto"
+            }
+          }
+        },
+        "required": [
+          "clients"
+        ]
+      },
+      "DealerUserDeviceRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerUserDeviceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DealerUserDeviceRecordDto"
+            }
+          }
+        },
+        "required": [
+          "devices"
+        ]
+      },
+      "AddDealerClientDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DealerClientResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PointsTransactionRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedPointsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PointsTransactionRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RequestPointsWithdrawalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "WithdrawalListResponseDto": {
+        "type": "object",
+        "properties": {
+          "withdrawals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WithdrawalRecordDto"
+            }
+          }
+        },
+        "required": [
+          "withdrawals"
+        ]
+      },
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReviewResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReviewRecordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReviewListResponseDto": {
+        "type": "object",
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRecordDto"
+            }
+          }
+        },
+        "required": [
+          "reviews"
+        ]
+      },
+      "RatingResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedReviewsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PaymentOptionsResponseDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedPaymentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRecordDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PaymentStatsResponseDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+}

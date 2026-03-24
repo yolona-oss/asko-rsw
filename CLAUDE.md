@@ -29,6 +29,14 @@ turbo run lint
 turbo run clean
 ```
 
+### Scripts
+
+```bash
+./scripts/build.sh          # Full monorepo build in dependency order
+./scripts/dev.sh             # Start all services in dev mode (excluding web)
+./scripts/openapi.sh         # Regenerate OpenAPI spec + frontend types
+```
+
 ---
 
 ### API Gateway (`apps/api`)
@@ -43,6 +51,7 @@ pnpm run start:prod
 pnpm run build
 pnpm run test
 pnpm run lint
+pnpm run openapi:generate   # Generate openapi.json from controllers
 ```
 
 ---
@@ -159,6 +168,7 @@ pnpm run lint
 pnpm run dev
 pnpm run build
 pnpm run typecheck
+pnpm run api:generate        # Generate TS types from openapi.json
 ```
 
 ---
@@ -346,6 +356,43 @@ Delegates to microservices via gRPC:
 * Socket.io
 * Nodemailer
 * gRPC clients to all microservices
+* @nestjs/swagger (OpenAPI documentation)
+
+---
+
+### OpenAPI / Swagger
+
+The API gateway uses `@nestjs/swagger` with the CLI plugin for automatic OpenAPI spec generation.
+
+Configuration:
+
+* Swagger CLI plugin enabled in `apps/api/nest-cli.json` (`classValidatorShim`, `introspectComments`)
+* Swagger UI available at `/doc` (all environments)
+* OpenAPI JSON spec at `/doc/openapi.json`
+* Standalone spec generator: `apps/api/src/generate-openapi.ts`
+
+Response DTOs:
+
+* Located in `apps/api/src/common/dto/responses/`
+* Mirror proto `*Record` interfaces as classes for Swagger schema generation
+* CLI plugin auto-adds `@ApiProperty()` to typed class properties in `*.dto.ts` files
+* Manual `@ApiProperty({ type: [RecordDto] })` only needed on array properties in paginated responses
+
+Rules for controllers:
+
+* Every controller must have `@ApiTags('...')` for grouping
+* Every endpoint must have a response decorator:
+  * `@ApiOkResponse({ type: X })` for GET, PUT, PATCH, DELETE
+  * `@ApiCreatedResponse({ type: X })` for POST
+  * `@ApiResponse({ status: N, type: X })` for controllers using `@Res()`
+* Response DTO must match what the controller actually returns (some unwrap gRPC wrappers)
+* Avoid `@Res()` in controllers — it prevents Swagger auto-detection of return types
+
+When adding a new endpoint:
+
+1. Create or reuse a response DTO class in `apps/api/src/common/dto/responses/`
+2. Add the appropriate `@ApiOkResponse`/`@ApiCreatedResponse` decorator
+3. Run `./scripts/openapi.sh` to regenerate the spec and frontend types
 
 ---
 
@@ -359,6 +406,13 @@ Loaded using AppConfig.
 ---
 
 ### Pagination
+
+All paginated gRPC responses may omit the `data` field when the array is empty (protobuf3 default behavior). Controllers must normalize:
+
+```typescript
+const result = await this.someClient.findAll(pagination);
+return { ...result, data: result.data ?? [] };
+```
 
 Must use:
 
@@ -506,12 +560,43 @@ Stack:
 * Redux Toolkit
 * React Query v5
 * Tailwind v4
-* Axios
+* Axios (legacy client)
+* openapi-fetch (typed client)
 
-API client located in:
+### API clients
+
+Legacy axios client (used by existing code):
 
 ```
 src/lib/api/client.ts
+```
+
+Typed openapi-fetch client (for new code):
+
+```
+src/lib/api/openapi-client.ts
+```
+
+Generated OpenAPI types:
+
+```
+src/lib/api/api.gen.d.ts     # auto-generated, do not edit
+```
+
+### Generating API types
+
+After changing backend endpoints or response types:
+
+```bash
+./scripts/openapi.sh
+```
+
+Or manually:
+
+```bash
+cd apps/api && pnpm run openapi:generate
+cp apps/api/openapi.json apps/web/openapi.json
+cd apps/web && pnpm run api:generate
 ```
 
 ---
@@ -537,18 +622,19 @@ pnpm run build
 
 Contains:
 
-* DTOs
+* DTOs (request validation)
 * constants
 * enums
 * utils
 * regex patterns
+* type interfaces (API contract types)
 
 Exports:
 
 ```
-@asko/shared
-@asko/shared/client
-@asko/shared/server
+@asko/shared           # full export (backend services)
+@asko/shared/client    # client-safe export (web app)
+@asko/shared/server    # server-only export
 ```
 
 ---

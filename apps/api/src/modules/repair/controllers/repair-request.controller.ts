@@ -2,6 +2,7 @@ import {
     Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles,
     UploadedFile, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
+import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
@@ -29,7 +30,23 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+import {
+    RepairRequestResponseDto,
+    RepairRequestRecordDto,
+    PaginatedRepairRequestsResponseDto,
+    WorkStepResponseDto,
+    WorkStepListResponseDto,
+    CompleteStepResponseDto,
+    BrokenPartResponseDto,
+    BrokenPartListResponseDto,
+    EmptyResponseDto,
+    ProcessInvoiceResponseDto,
+    PaymentListResponseDto,
+    ImageRecordDto,
+    ImageListResponseDto,
+} from 'common/dto/responses';
 
+@ApiTags('Repair Requests')
 @Controller('repair-requests')
 export class RepairRequestController {
     constructor(
@@ -41,12 +58,14 @@ export class RepairRequestController {
 
     // ── User endpoints ──
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairRequestDto) {
         return this.repairClient.createRequest(user.sub, dto);
     }
 
+    @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
@@ -54,12 +73,14 @@ export class RepairRequestController {
         return { ...result, data: result.data ?? [] };
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/cancel')
     async cancel(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.cancelRequest(user.sub, id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/request-refund')
     async requestRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RequestRefundDto) {
@@ -68,6 +89,7 @@ export class RepairRequestController {
 
     // ── Payment endpoints (stay in gateway using PaymentClientService directly) ──
 
+    @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
     async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -78,6 +100,7 @@ export class RepairRequestController {
         );
     }
 
+    @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -89,6 +112,7 @@ export class RepairRequestController {
         );
     }
 
+    @ApiOkResponse({ type: PaymentListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
@@ -97,6 +121,7 @@ export class RepairRequestController {
 
     // ── Manager endpoints ──
 
+    @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
@@ -104,18 +129,21 @@ export class RepairRequestController {
         return { ...result, data: result.data ?? [] };
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         return this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
     async approveRefund(@Param('id') id: string) {
         return this.repairClient.approveRefund(id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
     async denyRefund(@Param('id') id: string) {
@@ -124,6 +152,7 @@ export class RepairRequestController {
 
     // ── Repairer endpoints ──
 
+    @ApiOkResponse({ type: RepairRequestRecordDto })
     @RequiredRoles(Role.REPAIRER)
     @Get('active')
     async findActive(@JwtAuthUser() user: JwtPayload) {
@@ -134,6 +163,7 @@ export class RepairRequestController {
         }
     }
 
+    @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
@@ -141,30 +171,35 @@ export class RepairRequestController {
         return { ...result, data: result.data ?? [] };
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/accept')
     async accept(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.acceptRequest(user.sub, id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
         return this.repairClient.refuseRequest(user.sub, id, dto.reason);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/start')
     async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.startWork(user.sub, id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/set-price')
     async setPrice(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
         return this.repairClient.setPrice(user.sub, id, dto.amount);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/complete')
     @UseInterceptors(FilesInterceptor('files', 10))
@@ -195,18 +230,21 @@ export class RepairRequestController {
 
     // ── Work steps ──
 
+    @ApiCreatedResponse({ type: WorkStepResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps')
     async addStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddWorkStepDto) {
         return this.repairClient.addStep(user.sub, id, dto);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/lock')
     async lockSteps(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.lockSteps(user.sub, id);
     }
 
+    @ApiCreatedResponse({ type: WorkStepResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/update')
     async updateStep(
@@ -218,18 +256,21 @@ export class RepairRequestController {
         return this.repairClient.updateStep(user.sub, id, stepId, dto);
     }
 
+    @ApiCreatedResponse({ type: CompleteStepResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/complete')
     async completeStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.completeStep(user.sub, id, stepId);
     }
 
+    @ApiCreatedResponse({ type: EmptyResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/steps/:stepId/delete')
     async deleteStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.deleteStep(user.sub, id, stepId);
     }
 
+    @ApiOkResponse({ type: WorkStepListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/steps')
     async getSteps(@Param('id') id: string) {
@@ -238,12 +279,14 @@ export class RepairRequestController {
 
     // ── Broken parts ──
 
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts')
     async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, id, dto);
     }
 
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
@@ -255,6 +298,7 @@ export class RepairRequestController {
         return this.repairClient.updateBrokenPart(user.sub, id, partId, dto);
     }
 
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/status')
     async updateBrokenPartStatus(
@@ -266,6 +310,7 @@ export class RepairRequestController {
         return this.repairClient.updateBrokenPartStatus(user.sub, id, partId, dto.status);
     }
 
+    @ApiCreatedResponse({ type: EmptyResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/delete')
     async deleteBrokenPart(
@@ -277,6 +322,7 @@ export class RepairRequestController {
         return {};
     }
 
+    @ApiOkResponse({ type: BrokenPartListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/broken-parts')
     async getBrokenParts(@Param('id') id: string) {
@@ -285,6 +331,7 @@ export class RepairRequestController {
 
     // ── Broken part images ──
 
+    @ApiCreatedResponse({ type: ImageRecordDto })
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/broken-parts/:partId/images')
     @UseInterceptors(FileInterceptor('file'))
@@ -303,12 +350,14 @@ export class RepairRequestController {
         return this.fileService.uploadBrokenPartImage(file, partId);
     }
 
+    @ApiOkResponse({ type: ImageListResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id/broken-parts/:partId/images')
     async findBrokenPartImages(@Param('partId') partId: string) {
         return this.fileService.findAttachedImages(ImageTypeEnum.BrokenPart, partId);
     }
 
+    @ApiCreatedResponse({ type: EmptyResponseDto })
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/images/:imageId/delete')
     async removeBrokenPartImage(@Param('imageId') imageId: string) {
@@ -317,6 +366,7 @@ export class RepairRequestController {
 
     // ── Get by ID (any authenticated user) ──
 
+    @ApiOkResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {

@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { ApiTags, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 
 import { UserClientService } from 'modules/user-client/user-client.service';
 
@@ -7,50 +7,51 @@ import { ADMIN_ROLES, CreateInvitationLinkDto, IAuthUser } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+import {
+    InviteCreatedResponseDto,
+    InviteLinkResponseDto,
+    MessageResponseDto,
+} from 'common/dto/responses';
 
+@ApiTags('Invitations')
 @Controller('invite')
 export class InviteController {
     constructor(private readonly userClient: UserClientService) {}
 
     @RequiredRoles(...ADMIN_ROLES)
+    @ApiCreatedResponse({ type: InviteCreatedResponseDto })
     @Post('/')
     async create(
         @Body() dto: CreateInvitationLinkDto,
         @JwtAuthUser() user: IAuthUser,
-        @Res() response: Response,
     ) {
-        const result = await this.userClient.createInvite({
+        return this.userClient.createInvite({
             role: dto.role,
             ttl: dto.ttl ?? 0,
             creatorId: user.id,
         });
-        response.status(201).json(result);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @ApiOkResponse({ type: [InviteLinkResponseDto] })
     @Get('/')
-    async findAll(@Res() response: Response) {
-        const invites = await this.userClient.findAllInvites();
-        response.status(200).json(invites.invites);
+    async findAll() {
+        const result = await this.userClient.findAllInvites();
+        return result.invites ?? [];
     }
 
     @Public()
+    @ApiOkResponse({ type: InviteLinkResponseDto })
     @Get('/check/:token')
-    async checkInvite(
-        @Param('token') token: string,
-        @Res() response: Response,
-    ) {
-        const invite = await this.userClient.checkInvite({ token });
-        response.status(200).json(invite);
+    async checkInvite(@Param('token') token: string) {
+        return this.userClient.checkInvite({ token });
     }
 
     @RequiredRoles(...ADMIN_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
     @Delete('/:id')
-    async remove(
-        @Param('id') id: string,
-        @Res() response: Response,
-    ) {
+    async remove(@Param('id') id: string) {
         await this.userClient.deleteInvite({ id });
-        response.status(200).json({ message: 'Invitation deleted' });
+        return { message: 'Invitation deleted' };
     }
 }

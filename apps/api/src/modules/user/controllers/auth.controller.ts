@@ -1,4 +1,5 @@
 import { Res, Body, Controller, Post, NotImplementedException, Req, Get } from '@nestjs/common';
+import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express'
 
 import { UserClientService } from 'modules/user-client/user-client.service';
@@ -19,7 +20,16 @@ import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
 import { AppErrors } from 'common/error';
 import { CookieOptions } from 'express';
+import {
+    AuthSessionResponseDto,
+    ConfirmEmailResponseDto,
+    MessageResponseDto,
+    AccessTokenResponseDto,
+    EmptyResponseDto,
+    AuthUserDto,
+} from 'common/dto/responses';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -37,6 +47,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 201, type: AuthSessionResponseDto })
     @Post('/login')
     async login(
         @Body() credentials: LoginCredentials,
@@ -64,6 +75,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 201, type: AuthSessionResponseDto })
     @Post('/signup')
     async signup(
         @Body() dto: CreateUserDto,
@@ -107,6 +119,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 200, type: ConfirmEmailResponseDto })
     @Post('/confirm-email')
     async confirmEmail(
         @Res() response: Response,
@@ -117,6 +130,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 200, type: MessageResponseDto })
     @Post('/resend-confirmation')
     async resendConfirmation(
         @Body() dto: ResendConfirmMailDto,
@@ -127,6 +141,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 201, type: AccessTokenResponseDto })
     @Post('/refresh')
     async refreshAccessToken(
         @Req() request: Request,
@@ -144,6 +159,7 @@ export class AuthController {
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @ApiResponse({ status: 205, type: EmptyResponseDto })
     @Post('/logout')
     async logout(
         @Req() request: Request,
@@ -165,6 +181,7 @@ export class AuthController {
     }
 
     @Public()
+    @ApiResponse({ status: 200, type: AuthSessionResponseDto })
     @Post('/dev-switch')
     async devSwitch(
         @Body() body: { refresh_token: string },
@@ -211,6 +228,7 @@ export class AuthController {
         throw new NotImplementedException()
     }
 
+    @ApiOkResponse({ type: AuthUserDto })
     @Get('session')
     async findSessionUser(@Req() request: Request) {
         try {
