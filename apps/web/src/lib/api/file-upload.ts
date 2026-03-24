@@ -29,7 +29,7 @@ export const fileUploadApi = {
 
   async getAvatarUrl(userId: string): Promise<string | null> {
     try {
-      const { data } = await api.get<IImage[]>('/file-upload/image/attached', {
+      const { data } = await api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
         params: { ownerType: 'user', ownerId: userId },
       });
       const images = Array.isArray(data) ? data : [];
@@ -44,7 +44,7 @@ export const fileUploadApi = {
 
   // Device images
   getDeviceImages(deviceId: string) {
-    return api.get<IImageAttachment[]>(`/devices/${deviceId}/images`);
+    return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/images`);
   },
 
   uploadDeviceImage(deviceId: string, file: File) {
@@ -65,7 +65,7 @@ export const fileUploadApi = {
 
   // Article images
   getArticleImages(articleId: string) {
-    return api.get<IImageAttachment[]>(`/articles/${articleId}/images`);
+    return api.get<{ images: IImageAttachment[] }>(`/articles/${articleId}/images`);
   },
 
   uploadArticleImage(articleId: string, file: File) {
@@ -86,7 +86,7 @@ export const fileUploadApi = {
 
   // Device part images
   getDevicePartImages(deviceId: string, partId: string) {
-    return api.get<IImageAttachment[]>(`/devices/${deviceId}/parts/${partId}/images`);
+    return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/parts/${partId}/images`);
   },
 
   uploadDevicePartImage(deviceId: string, partId: string, file: File) {
@@ -103,7 +103,7 @@ export const fileUploadApi = {
 
   // Broken part images
   getBrokenPartImages(requestId: string, partId: string) {
-    return api.get<IImageAttachment[]>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
+    return api.get<{ images: IImageAttachment[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
   },
 
   uploadBrokenPartImage(requestId: string, partId: string, file: File) {

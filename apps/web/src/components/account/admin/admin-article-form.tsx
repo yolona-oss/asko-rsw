@@ -24,7 +24,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
   const fetchImages = async () => {
     try {
       const { data } = await adminApi.getArticleImages(articleId);
-      setImages((data).sort((a, b) => a.order - b.order));
+      setImages((data.images).sort((a, b) => a.order - b.order));
     } catch {
       // silently fail
     }
