@@ -25,20 +25,6 @@ export class AppConfig {
             url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
         };
     }
-
-    get payment() {
-        return {
-            defaultProvider: this.configService.get<string>('PAYMENT_DEFAULT_PROVIDER') ?? 'dummy',
-            yookassa: {
-                shopId: this.configService.get<string>('YOOKASSA_SHOP_ID'),
-                secret: this.configService.get<string>('YOOKASSA_SECRET'),
-            },
-            tbank: {
-                terminal: this.configService.get<string>('TBANK_TERMINAL'),
-                password: this.configService.get<string>('TBANK_PASSWORD'),
-            },
-        };
-    }
 }
 
 @Global()

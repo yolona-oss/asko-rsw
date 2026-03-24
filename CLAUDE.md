@@ -1,4 +1,4 @@
-# CLOUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -6,11 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ASKO repair management platform — a pnpm + Turborepo monorepo with microservice architecture using NestJS, Next.js, gRPC, and shared packages.
 
-Main change:
-Auth, user management, and invitations are handled by a dedicated microservice (`apps/user-service`).
-Payment processing is handled by a dedicated microservice (`apps/payment-service`).
-File uploads and image management are handled by a dedicated microservice (`apps/file-service`).
+Microservices:
+Auth, user management, and invitations are handled by `apps/user-service`.
+Payment processing is handled by `apps/payment-service`.
+File uploads and image management are handled by `apps/file-service`.
+Repairs, dealers, devices, certificates, repairers, and reviews are handled by `apps/repair-service`.
+Notifications are handled by `apps/notification-service` (gRPC + RabbitMQ hybrid).
 gRPC contracts are stored in `packages/proto`.
+RabbitMQ is used for async event-driven communication between services.
 
 ---
 
@@ -62,7 +65,6 @@ Runs as NestJS microservice with gRPC transport.
 pnpm run start:dev
 pnpm run start:prod
 pnpm run build
-pnpm run test
 pnpm run lint
 ```
 
@@ -96,6 +98,49 @@ Microservice responsible for:
 * file uploads (cloudinary / local storage)
 * image processing (thumbnails, multiple sizes)
 * image entity management (CRUD, attach/unattach, reorder)
+
+Runs as NestJS microservice with gRPC transport.
+
+```bash
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run lint
+```
+
+---
+
+### Notification Service (`apps/notification-service`)
+
+Microservice responsible for:
+
+* notification persistence and CRUD
+* RabbitMQ event consumption (payment, repair events)
+* notification lifecycle (create, list, mark read, delete)
+
+Runs as NestJS hybrid microservice with gRPC + RabbitMQ transport.
+
+```bash
+pnpm run start:dev
+pnpm run start:prod
+pnpm run build
+pnpm run lint
+```
+
+---
+
+### Repair Service (`apps/repair-service`)
+
+Microservice responsible for:
+
+* repairs and repair requests
+* dealers and dealer profiles
+* devices and user devices
+* certificates
+* repairers
+* reviews
+* points transactions and withdrawals
+* work steps
 
 Runs as NestJS microservice with gRPC transport.
 
@@ -142,11 +187,9 @@ Package name: `@asko/proto`
 
 Contains:
 
-* .proto files
-* generated TS types
-* grpc constants
-* service names
-* message types
+* .proto files (user, payment, file, repair, dealer, device, certificate, repairer)
+* generated TS interfaces
+* grpc constants (proto paths, package names, service names)
 
 ```bash
 pnpm run build
@@ -158,12 +201,14 @@ pnpm run build
 
 Only services that own DB use migrations.
 
-Example:
-
-apps/api → own DB tables
+```
+apps/api → own DB tables (article, cursor, wschedule)
 apps/user-service → own DB tables
 apps/payment-service → own DB tables
 apps/file-service → own DB tables
+apps/repair-service → own DB tables
+apps/notification-service → own DB tables
+```
 
 ```bash
 npx mikro-orm migration:create
@@ -181,6 +226,8 @@ apps/api
 apps/user-service
 apps/payment-service
 apps/file-service
+apps/repair-service
+apps/notification-service
 apps/web
 
 packages/shared
@@ -209,6 +256,17 @@ packages/proto
 * file-service owns Image entity
 * file-service owns storage provider logic
 * file-service owns image processing
+* API must NOT access repair/dealer/device/certificate/repairer/review tables directly
+* API must call repair-service via gRPC
+* repair-service owns Repair, Dealer, Device, Certificate, Repairer, Review entities
+* repair-service owns repair workflow logic
+* repair-service owns dealer profiles
+* repair-service owns points transactions
+* API must NOT access notification tables directly
+* API must call notification-service via gRPC
+* notification-service owns Notification entity
+* notification-service consumes events from RabbitMQ
+* payment-service publishes events to RabbitMQ
 
 ---
 
@@ -220,6 +278,8 @@ api → shared + proto
 user-service → shared + proto
 payment-service → shared + proto
 file-service → shared + proto
+repair-service → shared + proto
+notification-service → shared + proto
 proto → standalone
 ui → standalone
 shared → standalone
@@ -234,6 +294,8 @@ All gRPC definitions must be inside:
 ```
 packages/proto/src/*.proto
 ```
+
+Proto files: user, payment, file, repair, dealer, device, certificate, repairer.
 
 Generated types must be exported from:
 
@@ -255,26 +317,23 @@ Responsibilities:
 
 * REST API
 * WebSocket
-* Repairs
-* Certificates
-* Devices
-* Media
-* Reviews
-* Dealer profiles
 * Redis cache
-* File uploads
+* Notifications
+* Task scheduling
+* Articles
+* Work schedules
 
-Does NOT handle:
+Delegates to microservices via gRPC:
 
-* auth
-* users
-* invitations
-* payment processing (delegated to payment-service)
-* file uploads / image management (delegated to file-service)
-
-Auth must be requested via gRPC from user-service.
-Payment operations must be requested via gRPC from payment-service (PaymentClientModule/PaymentClientService).
-File operations must be requested via gRPC from file-service (FileClientModule/FileClientService).
+* auth / users / invitations → user-service (UserClientModule)
+* payments → payment-service (PaymentClientModule)
+* file uploads / images → file-service (FileClientModule)
+* repairs → repair-service (RepairClientModule)
+* dealers → repair-service (DealerClientModule)
+* devices → repair-service (DeviceClientModule)
+* certificates → repair-service (CertificateClientModule)
+* repairers → repair-service (RepairerClientModule)
+* notifications → notification-service (NotificationClientModule)
 
 ---
 
@@ -286,8 +345,7 @@ File operations must be requested via gRPC from file-service (FileClientModule/F
 * Redis
 * Socket.io
 * Nodemailer
-* PaymentClientModule (gRPC client to payment-service)
-* FileModule
+* gRPC clients to all microservices
 
 ---
 
@@ -382,6 +440,57 @@ API gateway calls file-service via `FileClientModule`.
 
 ---
 
+## Repair Service (`apps/repair-service`)
+
+Owns:
+
+* RepairRequest entity
+* DealerProfile / DealerClient entities
+* Device / UserDevice entities
+* Certificate entity
+* Repairer entity
+* Review entity
+* PointsTransaction / PointsWithdrawal entities
+* WorkStep entity
+* Address entity
+
+Stack:
+
+* NestJS
+* MikroORM
+* PostgreSQL
+* gRPC transport
+
+Service must expose gRPC endpoints.
+API gateway calls repair-service via `RepairClientModule`, `DealerClientModule`, `DeviceClientModule`, `CertificateClientModule`, `RepairerClientModule`.
+
+---
+
+## Notification Service (`apps/notification-service`)
+
+Owns:
+
+* Notification entity
+
+Hybrid transport:
+
+* gRPC — CRUD (create, list, mark read, delete, unread count)
+* RabbitMQ — event consumption (payment.paid, payment.failed, repair.status_changed, etc.)
+
+Stack:
+
+* NestJS
+* MikroORM
+* PostgreSQL
+* gRPC transport
+* RabbitMQ transport
+
+Service must expose gRPC endpoints.
+API gateway calls notification-service via `NotificationClientModule`.
+Consumes events published by payment-service and repair-service via RabbitMQ.
+
+---
+
 ## Web (`apps/web`)
 
 Next.js App Router.
@@ -458,6 +567,9 @@ Used by:
 * api
 * user-service
 * payment-service
+* file-service
+* repair-service
+* notification-service
 
 Never import entities through proto.
 
@@ -491,6 +603,10 @@ Dockerfile.web
 Dockerfile.user-service
 Dockerfile.payment-service
 Dockerfile.file-service
+Dockerfile.repair-service
+Dockerfile.notification-service
 ```
+
+docker-compose.yml also includes `rabbitmq` service (rabbitmq:3-management-alpine).
 
 Use turborepo prune.

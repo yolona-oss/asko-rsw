@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package notification;
+
+service NotificationService {
+    rpc CreateNotification(CreateNotificationRequest) returns (NotificationResponse);
+    rpc ListUserNotifications(ListUserNotificationsRequest) returns (PaginatedNotificationsResponse);
+    rpc MarkAsRead(MarkAsReadRequest) returns (EmptyNotificationResponse);
+    rpc MarkAllAsRead(MarkAllAsReadRequest) returns (EmptyNotificationResponse);
+    rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse);
+    rpc DeleteNotification(DeleteNotificationRequest) returns (EmptyNotificationResponse);
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message CreateNotificationRequest {
+    string userId = 1;
+    string type = 2;
+    string title = 3;
+    string body = 4;
+    string targetType = 5;
+    string targetId = 6;
+    string metadata = 7;
+}
+
+message ListUserNotificationsRequest {
+    string userId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    bool unreadOnly = 4;
+}
+
+message MarkAsReadRequest {
+    string notificationId = 1;
+    string userId = 2;
+}
+
+message MarkAllAsReadRequest {
+    string userId = 1;
+}
+
+message GetUnreadCountRequest {
+    string userId = 1;
+}
+
+message DeleteNotificationRequest {
+    string notificationId = 1;
+    string userId = 2;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message EmptyNotificationResponse {}
+
+message NotificationRecord {
+    string id = 1;
+    string userId = 2;
+    string type = 3;
+    string title = 4;
+    string body = 5;
+    string targetType = 6;
+    string targetId = 7;
+    string metadata = 8;
+    bool isRead = 9;
+    string readAt = 10;
+    string createdAt = 11;
+}
+
+message NotificationResponse {
+    NotificationRecord notification = 1;
+}
+
+message PaginatedNotificationsResponse {
+    repeated NotificationRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message UnreadCountResponse {
+    int32 count = 1;
+}

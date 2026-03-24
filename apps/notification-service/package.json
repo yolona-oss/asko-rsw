@@ -1,7 +1,7 @@
 {
-    "name": "payment-service",
+    "name": "notification-service",
     "version": "1.0.0",
-    "description": "Payment gRPC microservice",
+    "description": "Notification gRPC + RabbitMQ microservice",
     "private": true,
     "license": "UNLICENSED",
     "scripts": {

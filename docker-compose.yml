@@ -1,5 +1,28 @@
 services:
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: asko-rabbitmq
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      RABBITMQ_DEFAULT_USER: asko
+      RABBITMQ_DEFAULT_PASS: asko_rmq_pass
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.notification-service
+    container_name: asko-notification-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - rabbitmq
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5004
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
+
   repair-service:
     build:
       context: .
@@ -29,9 +52,12 @@ services:
     container_name: asko-payment-service
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      - rabbitmq
     environment:
       NODE_ENV: production
       GRPC_PORT: 5001
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
   user-service:
     build:
@@ -56,12 +82,14 @@ services:
       - payment-service
       - file-service
       - repair-service
+      - notification-service
     environment:
       NODE_ENV: production
       USER_SERVICE_URL: "localhost:5000"
       PAYMENT_SERVICE_URL: "localhost:5001"
       FILE_SERVICE_URL: "localhost:5002"
       REPAIR_SERVICE_URL: "localhost:5003"
+      NOTIFICATION_SERVICE_URL: "localhost:5004"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s

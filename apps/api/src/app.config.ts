@@ -48,6 +48,10 @@ export class AppConfig {
         return this.configService.get<string>('REPAIR_SERVICE_URL') ?? 'localhost:5003';
     }
 
+    get notificationServiceUrl(): string {
+        return this.configService.get<string>('NOTIFICATION_SERVICE_URL') ?? 'localhost:5004';
+    }
+
     get database() {
         return {
             host: this.configService.getOrThrow<string>('DATABASE_HOST'),

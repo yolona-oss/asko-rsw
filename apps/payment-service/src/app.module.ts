@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { AppConfigModule } from './app.config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { PaymentEntity } from 'entities/payment.entity';
 import { PaymentService } from 'services/payment.service';
@@ -17,6 +18,20 @@ import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
         AppConfigModule,
         DatabaseModule,
         MikroOrmModule.forFeature([PaymentEntity]),
+        ClientsModule.registerAsync([
+            {
+                name: 'EVENTS_SERVICE',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'notification_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
+        ]),
     ],
     controllers: [PaymentGrpcController],
     providers: [

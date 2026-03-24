@@ -17,3 +17,4 @@ export * from './certificate.type';
 export * from './dealer.type';
 export * from './repairer.type';
 export * from './payment.type';
+export * from './notification.type';

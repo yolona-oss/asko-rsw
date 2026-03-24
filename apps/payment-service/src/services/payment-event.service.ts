@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 export enum PaymentEventType {
     PAYMENT_CREATED = 'payment.created',
@@ -22,10 +23,17 @@ export interface PaymentEvent {
 }
 
 @Injectable()
-export class PaymentEventService {
+export class PaymentEventService implements OnModuleInit {
+    constructor(
+        @Inject('EVENTS_SERVICE') private readonly rmqClient: ClientProxy,
+    ) {}
+
+    async onModuleInit() {
+        await this.rmqClient.connect();
+    }
+
     async emit(event: PaymentEvent): Promise<void> {
-        // Phase 1: console.log
-        // Phase 2: Publish to RabbitMQ exchange
         console.log(`[PaymentEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
     }
 }
