@@ -9,6 +9,9 @@ import {
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -56,11 +59,40 @@ function ArticleRow({
   );
 }
 
+function ArticleCard({
+  article,
+  onDelete,
+}: {
+  article: IArticle;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-3">
+      <p className="text-sm font-medium text-text-main">{article.title}</p>
+      <p className="text-xs text-text-sub">{article.slug}</p>
+      {article.tags && article.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {article.tags.map((tag) => (
+            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-100 text-text-sub rounded-sm">{tag}</span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2 pt-1">
+        <Link href={`/account/articles/${article.id}`}>
+          <Button variant="secondary" size="sm">Изменить</Button>
+        </Link>
+        <Button variant="danger" size="sm" onClick={() => onDelete(article.id)}>Удалить</Button>
+      </div>
+    </div>
+  );
+}
+
 export function AdminArticles() {
   const [articles, setArticles] = useState<IArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
+  const [view, setView] = useState('table');
 
   const fetchArticles = async () => {
     try {
@@ -101,8 +133,13 @@ export function AdminArticles() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <PageHeader>Статьи</PageHeader>
+        <ViewSwitcher
+          views={[VIEW_TABLE, VIEW_CARD]}
+          activeView={view}
+          onViewChange={setView}
+        />
       </div>
 
       <div className="flex items-start gap-2">
@@ -158,7 +195,7 @@ export function AdminArticles() {
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : (
+      ) : view === 'table' ? (
         <>
           <DataTableHeader>
             <div className="flex-1">Название</div>
@@ -177,6 +214,16 @@ export function AdminArticles() {
             ))}
           </DataTable>
         </>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {articles.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
       )}
     </PageContainer>
   );

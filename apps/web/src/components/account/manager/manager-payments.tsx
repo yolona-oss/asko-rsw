@@ -1,8 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Badge, Select } from '@asko/ui';
-import type { BadgeVariant } from '@asko/ui';
+import {
+  Badge,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataSearch,
+  DataFilter,
+} from '@asko/ui';
+import type { BadgeVariant, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { paymentApi, type PaymentRecord, type PaymentStats } from '@/lib/api/payment';
@@ -28,6 +35,33 @@ const PROVIDER_LABELS: Record<string, string> = {
   card: 'Карта',
 };
 
+const FILTERS: FilterDefinition[] = [
+  {
+    key: 'status',
+    label: 'Статус',
+    type: 'select',
+    options: [
+      { value: '', label: 'Все' },
+      { value: 'paid', label: 'Подтверждён' },
+      { value: 'pending', label: 'Ожидание' },
+      { value: 'refunded', label: 'Возвращён' },
+      { value: 'failed', label: 'Ошибка' },
+    ],
+  },
+  {
+    key: 'provider',
+    label: 'Способ',
+    type: 'select',
+    options: [
+      { value: '', label: 'Все' },
+      { value: 'dummy', label: 'Тестовая' },
+      { value: 'yookassa', label: 'ЮKassa' },
+      { value: 'tbank', label: 'Т-Банк' },
+      { value: 'card', label: 'Карта' },
+    ],
+  },
+];
+
 function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', {
@@ -51,9 +85,9 @@ export function ManagerPayments() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [providerFilter, setProviderFilter] = useState('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: '', provider: '' });
   const [page, setPage] = useState(0);
+  const [view, setView] = useState('table');
   const pageSize = 20;
 
   useEffect(() => {
@@ -63,8 +97,8 @@ export function ManagerPayments() {
           paymentApi.listPayments({
             offset: page * pageSize,
             limit: pageSize,
-            status: statusFilter || undefined,
-            provider: providerFilter || undefined,
+            status: filterValues.status || undefined,
+            provider: filterValues.provider || undefined,
             search: search || undefined,
           }),
           paymentApi.getStats(),
@@ -81,18 +115,21 @@ export function ManagerPayments() {
     }
     setLoading(true);
     fetchData();
-  }, [page, statusFilter, providerFilter, search]);
+  }, [page, filterValues, search]);
 
   const totalPages = Math.ceil(total / pageSize);
   const showFrom = total > 0 ? page * pageSize + 1 : 0;
   const showTo = Math.min((page + 1) * pageSize, total);
 
-  // Debounced search
-  const [searchInput, setSearchInput] = useState('');
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(0);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(0);
+  };
 
   return (
     <PageContainer>
@@ -114,145 +151,118 @@ export function ManagerPayments() {
         </div>
       </div>
 
-      {/* Search + Create button */}
+      {/* Search + View Switcher */}
       <div className="flex flex-col lg:flex-row gap-3">
-        <div className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => { setSearchInput(e.target.value); setPage(0); }}
-            placeholder="Поиск по ID или плательщику"
-            className="w-full border border-border-light pl-10 pr-4 py-2.5 text-sm text-text-main placeholder:text-text-sub focus:outline-none focus:border-text-sub"
-          />
-        </div>
+        <DataSearch
+          value={search}
+          onChange={handleSearch}
+          placeholder="Поиск по ID или плательщику"
+          className="flex-1"
+        />
+        <ViewSwitcher
+          views={[VIEW_TABLE, VIEW_CARD]}
+          activeView={view}
+          onViewChange={setView}
+        />
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 text-sm overflow-x-auto">
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="font-medium text-text-main">Статус:</span>
-          <Select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-            className="py-1 text-sm min-w-[100px]"
-          >
-            <option value="">Все</option>
-            <option value="paid">Подтверждён</option>
-            <option value="pending">Ожидание</option>
-            <option value="refunded">Возвращён</option>
-            <option value="failed">Ошибка</option>
-          </Select>
-        </div>
-        <div className="w-px h-6 bg-border-light flex-shrink-0" />
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="font-medium text-text-main">Способ:</span>
-          <Select
-            value={providerFilter}
-            onChange={(e) => { setProviderFilter(e.target.value); setPage(0); }}
-            className="py-1 text-sm min-w-[100px]"
-          >
-            <option value="">Все</option>
-            <option value="dummy">Тестовая</option>
-            <option value="yookassa">ЮKassa</option>
-            <option value="tbank">Т-Банк</option>
-            <option value="card">Карта</option>
-          </Select>
-        </div>
-      </div>
+      <DataFilter
+        filters={FILTERS}
+        values={filterValues}
+        onChange={handleFilterChange}
+      />
 
-      {/* Desktop table */}
+      {/* Data */}
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
       ) : payments.length === 0 ? (
         <p className="text-sm text-text-sub">Платежи не найдены</p>
       ) : (
         <>
-          {/* Desktop view */}
-          <div className="hidden lg:block bg-white border border-border-light overflow-hidden">
-            {/* Header */}
-            <div className="grid grid-cols-[80px_1fr_110px_100px_110px_140px_100px] bg-[#f6f6f8] border-b border-border-light px-5 py-2 text-sm text-text-main">
-              <span>ID</span>
-              <span>Плательщик</span>
-              <span>Сумма</span>
-              <span>Способ</span>
-              <span>Статус</span>
-              <span>Дата платежа</span>
-              <span>Действия</span>
-            </div>
-            {/* Rows */}
-            {payments.map((p) => (
-              <div
-                key={p.id}
-                className="grid grid-cols-[80px_1fr_110px_100px_110px_140px_100px] px-5 py-3 border-b border-border-light items-center text-sm"
-              >
-                <span className="font-medium text-text-main">#{p.id.slice(0, 4)}</span>
-                <span className="text-text-main">{payerName(p.user)}</span>
-                <span>
-                  <Badge
-                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                    className="text-xs"
-                  >
-                    +{formatAmount(p.amount)} ₽
-                  </Badge>
-                </span>
-                <span className="text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}</span>
-                <span>
-                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                    {STATUS_LABELS[p.status] ?? p.status}
-                  </Badge>
-                </span>
-                <span className="text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</span>
-                <button
-                  type="button"
-                  className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1"
-                >
-                  Подробнее
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
+          {view === 'table' ? (
+            <div className="bg-white border border-border-light overflow-hidden">
+              {/* Header */}
+              <div className="hidden lg:grid grid-cols-[80px_1fr_110px_100px_110px_140px_100px] bg-[#f6f6f8] border-b border-border-light px-5 py-2 text-sm text-text-main">
+                <span>ID</span>
+                <span>Плательщик</span>
+                <span>Сумма</span>
+                <span>Способ</span>
+                <span>Статус</span>
+                <span>Дата платежа</span>
+                <span>Действия</span>
               </div>
-            ))}
-          </div>
-
-          {/* Mobile view */}
-          <div className="flex flex-col gap-4 lg:hidden">
-            {payments.map((p) => (
-              <div key={p.id} className="bg-white border border-border-light p-5 flex flex-col gap-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-lg font-medium text-text-main">{payerName(p.user)}</p>
-                    <p className="text-sm text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                  </div>
-                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                    {STATUS_LABELS[p.status] ?? p.status}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Badge
-                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                  >
-                    +{formatAmount(p.amount)} ₽
-                  </Badge>
-                  <span className="text-sm text-text-main">
-                    {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}
+              {/* Rows */}
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex flex-col gap-2 lg:grid lg:grid-cols-[80px_1fr_110px_100px_110px_140px_100px] px-5 py-3 border-b border-border-light items-start lg:items-center text-sm"
+                >
+                  <span className="font-medium text-text-main">#{p.id.slice(0, 4)}</span>
+                  <span className="text-text-main">{payerName(p.user)}</span>
+                  <span>
+                    <Badge
+                      variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                      className="text-xs"
+                    >
+                      +{formatAmount(p.amount)} ₽
+                    </Badge>
                   </span>
+                  <span className="text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}</span>
+                  <span>
+                    <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+                      {STATUS_LABELS[p.status] ?? p.status}
+                    </Badge>
+                  </span>
+                  <span className="text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</span>
+                  <button
+                    type="button"
+                    className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1"
+                  >
+                    Подробнее
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="text-[#1855a4] font-medium text-base flex items-center gap-1 cursor-pointer"
-                >
-                  Подробнее
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {payments.map((p) => (
+                <div key={p.id} className="bg-white border border-border-light p-5 flex flex-col gap-4 rounded-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-lg font-medium text-text-main">{payerName(p.user)}</p>
+                      <p className="text-sm text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                    </div>
+                    <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+                      {STATUS_LABELS[p.status] ?? p.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge
+                      variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                    >
+                      +{formatAmount(p.amount)} ₽
+                    </Badge>
+                    <span className="text-sm text-text-main">
+                      {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-[#1855a4] font-medium text-base flex items-center gap-1 cursor-pointer"
+                  >
+                    Подробнее
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           <div className="flex items-center justify-between text-sm text-text-sub">

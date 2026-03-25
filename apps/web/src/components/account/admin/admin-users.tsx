@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Button, Select } from '@asko/ui';
+import { Button, Select, DataSearch, DataFilter } from '@asko/ui';
+import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
@@ -423,14 +424,8 @@ export function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
   const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 400);
-    return () => clearTimeout(t);
-  }, [search]);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -485,13 +480,25 @@ export function AdminUsers() {
     });
   };
 
+  const STATUS_FILTER_DEF: FilterDefinition = {
+    key: 'status',
+    label: 'Статус',
+    type: 'select',
+    options: [
+      { value: 'all', label: 'Все' },
+      { value: 'active', label: 'Активен' },
+      { value: 'disabled', label: 'Заблокирован' },
+    ],
+  };
+
   // Filter: tab → role, then search, then status
+  const statusFilter = filterValues.status as StatusFilter;
   const filteredUsers = users.filter((u) => {
     if (!u.roles.includes(activeTab)) return false;
     if (statusFilter === 'active' && (u as any).isActive === false) return false;
     if (statusFilter === 'disabled' && (u as any).isActive !== false) return false;
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
+    if (search) {
+      const q = search.toLowerCase();
       const name = [u.firstName, u.lastName].join(' ').toLowerCase();
       const phone = (u.phone ?? '').toLowerCase();
       const email = (u.email ?? '').toLowerCase();
@@ -524,60 +531,19 @@ export function AdminUsers() {
 
       {/* Search + Filters + Invite button */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        {/* Search input */}
-        <div className="relative lg:w-[320px] flex-shrink-0">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 text-[#737373]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск"
-            className="w-full h-[42px] border border-[#e5e5e5] bg-white pl-11 pr-3 text-sm text-text-main placeholder:text-[#737373] focus:outline-none focus:border-text-sub shadow-xs"
+        <DataSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Поиск"
+          className="lg:w-[320px] flex-shrink-0"
+        />
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[STATUS_FILTER_DEF]}
+            values={filterValues}
+            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
           />
-        </div>
-
-        {/* Filter bar */}
-        <div className="flex-1 flex items-center h-[42px] border border-[#e5e5e5] bg-white overflow-hidden">
-          {/* Статус filter */}
-          <div className="flex items-center gap-2 px-5 h-full">
-            <span className="text-sm font-medium text-[#323232] whitespace-nowrap">Статус:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="text-sm text-[#323232] bg-transparent border-none outline-none cursor-pointer appearance-none pr-4"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23323232\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right center' }}
-            >
-              <option value="all">Все</option>
-              <option value="active">Активен</option>
-              <option value="disabled">Заблокирован</option>
-            </select>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0" />
-
-          {/* Район filter */}
-          <div className="flex items-center gap-2 px-5 h-full">
-            <span className="text-sm font-medium text-[#323232] whitespace-nowrap">Район:</span>
-            <select
-              className="text-sm text-[#323232] bg-transparent border-none outline-none cursor-pointer appearance-none pr-4"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23323232\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right center' }}
-              defaultValue="all"
-            >
-              <option value="all">Все</option>
-            </select>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0" />
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Invite button */}
-          <div className="px-3 flex-shrink-0">
+          <div className="ml-auto flex-shrink-0">
             <InviteDropdown />
           </div>
         </div>

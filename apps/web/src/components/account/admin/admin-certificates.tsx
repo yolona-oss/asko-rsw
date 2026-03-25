@@ -3,14 +3,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
-  TabList,
-  Tab,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
   DataTableEmpty,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataFilter,
 } from '@asko/ui';
+import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { certificateApi } from '@/lib/api/certificate';
@@ -19,13 +22,18 @@ import type { ICertificate } from '@/lib/api/types';
 
 type CertTab = 'pending_payment' | 'validation_error' | 'active' | 'expired' | 'revoked';
 
-const TABS: { key: CertTab; label: string }[] = [
-  { key: 'pending_payment', label: 'Ожидают оплаты' },
-  { key: 'active', label: 'Активные' },
-  { key: 'validation_error', label: 'Ошибка валидации' },
-  { key: 'expired', label: 'Истекшие' },
-  { key: 'revoked', label: 'Отозванные' },
-];
+const STATUS_FILTER: FilterDefinition = {
+  key: 'status',
+  label: '',
+  type: 'tabs',
+  options: [
+    { value: 'active', label: 'Активные' },
+    { value: 'pending_payment', label: 'Ожидают оплаты' },
+    { value: 'validation_error', label: 'Ошибка валидации' },
+    { value: 'expired', label: 'Истекшие' },
+    { value: 'revoked', label: 'Отозванные' },
+  ],
+};
 
 const STATUS_COLORS: Record<CertTab, string> = {
   pending_payment: 'text-orange-600',
@@ -97,10 +105,62 @@ function CertificateRow({
   );
 }
 
+function CertificateCard({
+  cert,
+  onRevoke,
+}: {
+  cert: ICertificate;
+  onRevoke: (id: string) => void;
+}) {
+  const showRevoke = cert.status === CertificateStatus.ACTIVE;
+  const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '-';
+  const deviceName = cert.userDevice?.device?.name ?? '-';
+  const dealerName = cert.dealer?.companyName
+    || [cert.dealer?.user?.lastName, cert.dealer?.user?.firstName].filter(Boolean).join(' ')
+    || '-';
+
+  return (
+    <div className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+        <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status as CertTab] ?? 'text-text-main'}`}>
+          {STATUS_LABELS[cert.status] ?? cert.status}
+        </span>
+      </div>
+      <div className="flex flex-col gap-1 text-sm">
+        <div className="flex justify-between">
+          <span className="text-text-sub">Пользователь</span>
+          <span className="text-text-main">{userName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Устройство</span>
+          <span className="text-text-main">{deviceName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Дилер</span>
+          <span className="text-text-main">{dealerName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Действие</span>
+          <span className="text-text-main">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
+        </div>
+      </div>
+      {showRevoke && (
+        <div className="pt-1">
+          <Button variant="danger" size="sm" onClick={() => onRevoke(cert.id)}>
+            Отозвать
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminCertificates() {
-  const [activeTab, setActiveTab] = useState<CertTab>('active');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'active' });
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('table');
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
@@ -127,32 +187,30 @@ export function AdminCertificates() {
     }
   };
 
-  const filteredCerts = certificates.filter((c) => c.status === activeTab);
+  const filteredCerts = certificates.filter((c) => c.status === filterValues.status);
 
   return (
     <PageContainer>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <PageHeader>Управление сертификатами</PageHeader>
+        <ViewSwitcher
+          views={[VIEW_TABLE, VIEW_CARD]}
+          activeView={view}
+          onViewChange={setView}
+        />
       </div>
 
-      {/* Tabs */}
-      <TabList>
-        {TABS.map((tab) => (
-          <Tab
-            key={tab.key}
-            active={activeTab === tab.key}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
+      {/* Status filter tabs */}
+      <DataFilter
+        filters={[STATUS_FILTER]}
+        values={filterValues}
+        onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+      />
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : (
+      ) : view === 'table' ? (
         <>
-          {/* Desktop table header */}
           <DataTableHeader>
             <div className="w-[140px] flex-shrink-0">Номер</div>
             <div className="flex-1 px-4">Пользователь</div>
@@ -180,6 +238,20 @@ export function AdminCertificates() {
             )}
           </DataTable>
         </>
+      ) : (
+        filteredCerts.length === 0 ? (
+          <p className="text-sm text-text-sub text-center py-8">Нет сертификатов в этой категории</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCerts.map((cert) => (
+              <CertificateCard
+                key={cert.id}
+                cert={cert}
+                onRevoke={handleRevoke}
+              />
+            ))}
+          </div>
+        )
       )}
     </PageContainer>
   );

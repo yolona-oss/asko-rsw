@@ -9,6 +9,9 @@ import {
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -69,6 +72,34 @@ function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string
   );
 }
 
+function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
+  return (
+    <div className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-2">
+      <p className="text-sm font-medium text-text-main">{device.name}</p>
+      <div className="flex flex-col gap-1 text-sm">
+        <div className="flex justify-between">
+          <span className="text-text-sub">Тип</span>
+          <span className="text-text-main">{TYPE_LABELS[device.type] ?? device.type}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Модель</span>
+          <span className="text-text-main">{device.model}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Бренд</span>
+          <span className="text-text-main">{device.brand}</span>
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Link href={`/account/devices/${device.id}`}>
+          <Button variant="secondary" size="sm">Изменить</Button>
+        </Link>
+        <Button variant="danger" size="sm" onClick={() => onDelete(device.id)}>Удалить</Button>
+      </div>
+    </div>
+  );
+}
+
 export function AdminDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +107,7 @@ export function AdminDevices() {
   const [importing, setImporting] = useState(false);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
+  const [view, setView] = useState('table');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,8 +190,13 @@ export function AdminDevices() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <PageHeader>Товары</PageHeader>
+        <ViewSwitcher
+          views={[VIEW_TABLE, VIEW_CARD]}
+          activeView={view}
+          onViewChange={setView}
+        />
       </div>
 
       <div className="flex items-start gap-2">
@@ -281,7 +318,7 @@ export function AdminDevices() {
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : (
+      ) : view === 'table' ? (
         <>
           <DataTableHeader>
             <div className="w-35 flex-shrink-0">Название</div>
@@ -297,6 +334,12 @@ export function AdminDevices() {
             ))}
           </DataTable>
         </>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {devices.map((device) => (
+            <DeviceCard key={device.id} device={device} onDelete={handleDelete} />
+          ))}
+        </div>
       )}
     </PageContainer>
   );

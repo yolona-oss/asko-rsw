@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Badge, Button, TabList, Tab } from '@asko/ui';
-import type { BadgeVariant } from '@asko/ui';
+import {
+  Card,
+  Badge,
+  Button,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataFilter,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+} from '@asko/ui';
+import type { BadgeVariant, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -11,12 +23,17 @@ import { RepairRequestStatus } from '@asko/shared/client';
 
 type TabKey = 'active' | 'all' | 'paused' | 'completed';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'active', label: 'Активная' },
-  { key: 'paused', label: 'Приостановленные' },
-  { key: 'all', label: 'Все' },
-  { key: 'completed', label: 'Завершенные' },
-];
+const TAB_FILTER: FilterDefinition = {
+  key: 'tab',
+  label: '',
+  type: 'tabs',
+  options: [
+    { value: 'active', label: 'Активная' },
+    { value: 'paused', label: 'Приостановленные' },
+    { value: 'all', label: 'Все' },
+    { value: 'completed', label: 'Завершенные' },
+  ],
+};
 
 const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.ASSIGNED]: 'warning',
@@ -96,13 +113,58 @@ function RequestCard({ request, highlight }: { request: RepairRequest; highlight
   );
 }
 
+function RequestTableRow({ request, highlight }: { request: RepairRequest; highlight?: boolean }) {
+  const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Клиент';
+  const deviceName = request.userDevice?.device?.name || request.description;
+
+  return (
+    <DataTableRow className={highlight ? 'bg-brand-red/5' : undefined}>
+      <DataTableCell mobileLabel="Клиент:" className="lg:w-[180px] lg:flex-shrink-0">
+        <p className="text-sm font-medium text-text-main">{userName}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+        <p className="text-sm text-text-main truncate">{deviceName}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Город:" className="lg:w-[120px] lg:px-4">
+        <p className="text-sm text-text-main">{request.address?.city ?? '—'}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Статус:" className="lg:w-[160px] lg:px-4">
+        <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
+          {STATUS_LABELS[request.status] ?? request.status}
+        </Badge>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Стоимость:" className="lg:w-[100px] lg:px-4">
+        <p className="text-sm text-text-main">
+          {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '—'}
+        </p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">
+        <p className="text-sm text-text-main">{formatDate(request.createdAt)}</p>
+      </DataTableCell>
+      <DataTableCell className="lg:w-[120px] lg:flex-shrink-0 lg:text-right">
+        <Link
+          href={`/account/requests/${request.id}`}
+          className="text-sm text-text-main hover:text-brand-red transition-colors flex items-center gap-1"
+        >
+          Открыть
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </Link>
+      </DataTableCell>
+    </DataTableRow>
+  );
+}
+
 export function RepairerRequests() {
-  const [activeTab, setActiveTab] = useState<TabKey>('active');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'active' });
+  const activeTab = filterValues.tab as TabKey;
   const [activeRequest, setActiveRequest] = useState<RepairRequest | null>(null);
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('card');
 
   // Fetch active request once
   useEffect(() => {
@@ -135,27 +197,41 @@ export function RepairerRequests() {
   }, [activeTab, page]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  // For the "active" tab, show active request prominently + rest of list
   const showActiveHighlight = activeTab === 'active' || activeTab === 'all';
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
 
   return (
     <PageContainer>
-      <PageHeader>Мои заявки</PageHeader>
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader>Мои заявки</PageHeader>
+        <ViewSwitcher
+          views={[VIEW_CARD, VIEW_TABLE]}
+          activeView={view}
+          onViewChange={setView}
+        />
+      </div>
 
-      <TabList>
-        {TABS.map((tab) => (
-          <Tab key={tab.key} active={activeTab === tab.key} onClick={() => { setActiveTab(tab.key); setPage(1); }}>
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
+      <DataFilter
+        filters={[TAB_FILTER]}
+        values={filterValues}
+        onChange={handleFilterChange}
+      />
 
       {/* Active request highlight */}
       {activeTab === 'active' && activeRequest && (
         <div className="mb-2">
           <p className="text-sm font-bold text-text-main mb-2">Текущая активная заявка</p>
-          <RequestCard request={activeRequest} highlight />
+          {view === 'card' ? (
+            <RequestCard request={activeRequest} highlight />
+          ) : (
+            <DataTable>
+              <RequestTableRow request={activeRequest} highlight />
+            </DataTable>
+          )}
         </div>
       )}
 
@@ -170,7 +246,7 @@ export function RepairerRequests() {
             <p className="text-sm text-text-sub">Загрузка...</p>
           ) : requests.length === 0 ? (
             <p className="text-sm text-text-sub">Нет заявок</p>
-          ) : (
+          ) : view === 'card' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {requests.map((req) => (
                 <RequestCard
@@ -180,6 +256,27 @@ export function RepairerRequests() {
                 />
               ))}
             </div>
+          ) : (
+            <>
+              <DataTableHeader>
+                <div className="w-[180px] flex-shrink-0">Клиент</div>
+                <div className="flex-1 px-4">Устройство</div>
+                <div className="w-[120px] px-4">Город</div>
+                <div className="w-[160px] px-4">Статус</div>
+                <div className="w-[100px] px-4">Стоимость</div>
+                <div className="w-[140px] px-4">Дата</div>
+                <div className="w-[120px] flex-shrink-0" />
+              </DataTableHeader>
+              <DataTable>
+                {requests.map((req) => (
+                  <RequestTableRow
+                    key={req.id}
+                    request={req}
+                    highlight={showActiveHighlight && activeRequest?.id === req.id}
+                  />
+                ))}
+              </DataTable>
+            </>
           )}
 
           {totalPages > 1 && (

@@ -4,16 +4,19 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
-  Input,
   Select,
-  TabList,
-  Tab,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
   DataTableEmpty,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataSearch,
+  DataFilter,
 } from '@asko/ui';
+import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { certificateApi } from '@/lib/api/certificate';
@@ -67,15 +70,24 @@ function formatDate(dateStr: string) {
 
 const PAGE_SIZE = 10;
 
+const STATUS_FILTER_DEF: FilterDefinition = {
+  key: 'status',
+  label: '',
+  type: 'tabs',
+  options: STATUS_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
+};
+
 export function DealerCertificates() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
   const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [view, setView] = useState('table');
+
+  const statusFilter = filterValues.status as StatusFilter;
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
@@ -107,10 +119,6 @@ export function DealerCertificates() {
     setPage(1);
   }, [statusFilter, search]);
 
-  const handleSearch = () => {
-    setSearch(searchInput);
-  };
-
   const sorted = [...certificates].sort((a, b) => {
     if (sortField === 'certificateNumber') return a.certificateNumber.localeCompare(b.certificateNumber);
     const dateA = new Date(a[sortField]).getTime();
@@ -124,38 +132,33 @@ export function DealerCertificates() {
     <PageContainer>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <PageHeader>Сертификаты</PageHeader>
-        <Link href="/account/certificates/create">
-          <Button variant="primary" size="sm">Создать сертификат</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <ViewSwitcher
+            views={[VIEW_TABLE, VIEW_CARD]}
+            activeView={view}
+            onViewChange={setView}
+          />
+          <Link href="/account/certificates/create">
+            <Button variant="primary" size="sm">Создать сертификат</Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <TabList>
-        {STATUS_TABS.map((tab) => (
-          <Tab
-            key={tab.key}
-            active={statusFilter === tab.key}
-            onClick={() => setStatusFilter(tab.key)}
-          >
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
+      {/* Status filter tabs */}
+      <DataFilter
+        filters={[STATUS_FILTER_DEF]}
+        values={filterValues}
+        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
+      />
 
       {/* Search + Sort controls */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex gap-2 flex-1">
-          <Input
-            placeholder="Поиск по номеру..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1"
-          />
-          <Button variant="secondary" size="sm" onClick={handleSearch}>
-            Найти
-          </Button>
-        </div>
+        <DataSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Поиск по номеру..."
+          className="flex-1"
+        />
         <Select
           value={sortField}
           onChange={(e) => setSortField(e.target.value as SortField)}
@@ -171,51 +174,78 @@ export function DealerCertificates() {
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
-          <DataTableHeader>
-            <div className="w-[140px] flex-shrink-0">Номер</div>
-            <div className="flex-1 px-4">Клиент</div>
-            <div className="flex-1 px-4">Устройство</div>
-            <div className="w-[100px] px-4">Статус</div>
-            <div className="w-[100px] px-4">Выдан</div>
-            <div className="w-[100px] px-4">Истекает</div>
-          </DataTableHeader>
+          {view === 'table' ? (
+            <>
+              <DataTableHeader>
+                <div className="w-[140px] flex-shrink-0">Номер</div>
+                <div className="flex-1 px-4">Клиент</div>
+                <div className="flex-1 px-4">Устройство</div>
+                <div className="w-[100px] px-4">Статус</div>
+                <div className="w-[100px] px-4">Выдан</div>
+                <div className="w-[100px] px-4">Истекает</div>
+              </DataTableHeader>
 
-          <DataTable>
-            {sorted.length === 0 ? (
-              <DataTableEmpty>Нет сертификатов</DataTableEmpty>
-            ) : (
-              sorted.map((cert) => {
+              <DataTable>
+                {sorted.length === 0 ? (
+                  <DataTableEmpty>Нет сертификатов</DataTableEmpty>
+                ) : (
+                  sorted.map((cert) => {
+                    const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
+                      || cert.user?.email || '-';
+                    const deviceName = cert.userDevice?.device?.name ?? '-';
+
+                    return (
+                      <DataTableRow key={cert.id}>
+                        <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
+                          <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+                        </DataTableCell>
+                        <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
+                          <p className="text-sm text-text-main">{clientName}</p>
+                        </DataTableCell>
+                        <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+                          <p className="text-sm text-text-main">{deviceName}</p>
+                        </DataTableCell>
+                        <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
+                          <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+                            {STATUS_LABELS[cert.status] ?? cert.status}
+                          </span>
+                        </DataTableCell>
+                        <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
+                          <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
+                        </DataTableCell>
+                        <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
+                          <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
+                        </DataTableCell>
+                      </DataTableRow>
+                    );
+                  })
+                )}
+              </DataTable>
+            </>
+          ) : sorted.length === 0 ? (
+            <p className="text-sm text-text-sub text-center py-8">Нет сертификатов</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sorted.map((cert) => {
                 const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
                   || cert.user?.email || '-';
                 const deviceName = cert.userDevice?.device?.name ?? '-';
-
                 return (
-                  <DataTableRow key={cert.id}>
-                    <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
+                  <div key={cert.id} className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
-                    </DataTableCell>
-                    <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
-                      <p className="text-sm text-text-main">{clientName}</p>
-                    </DataTableCell>
-                    <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
-                      <p className="text-sm text-text-main">{deviceName}</p>
-                    </DataTableCell>
-                    <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
-                      <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+                      <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
                         {STATUS_LABELS[cert.status] ?? cert.status}
                       </span>
-                    </DataTableCell>
-                    <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
-                      <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
-                    </DataTableCell>
-                    <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
-                      <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
-                    </DataTableCell>
-                  </DataTableRow>
+                    </div>
+                    <p className="text-sm text-text-main">{clientName}</p>
+                    <p className="text-sm text-text-sub">{deviceName}</p>
+                    <p className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</p>
+                  </div>
                 );
-              })
-            )}
-          </DataTable>
+              })}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

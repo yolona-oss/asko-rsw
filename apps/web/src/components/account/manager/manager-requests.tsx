@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, TabList, Tab, Badge, Button } from '@asko/ui';
+import { Card, Badge, Button, ViewSwitcher, VIEW_TABLE, VIEW_CARD, DataFilter, DataTable, DataTableHeader, DataTableRow, DataTableCell } from '@asko/ui';
+import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -152,16 +153,58 @@ function RequestCardItem({ request, convInfo, currentUserId }: { request: Repair
   );
 }
 
+const TAB_FILTER: FilterDefinition = {
+  key: 'tab',
+  label: '',
+  type: 'tabs',
+  options: TABS.map((tab) => ({ value: tab.key, label: tab.label })),
+};
+
+function RequestTableRow({ request, convInfo, currentUserId }: { request: RepairRequest; convInfo?: ConversationInfo; currentUserId: string }) {
+  const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
+  const deviceName = request.userDevice?.device?.name || request.description;
+  const tabKey = STATUS_MAP[request.status] ?? 'pending';
+
+  return (
+    <Link href={`/account/requests/${request.id}`} className="contents">
+      <DataTableRow className="hover:bg-gray-50 transition-colors cursor-pointer">
+        <DataTableCell mobileLabel="Клиент:" className="lg:w-[180px] lg:flex-shrink-0">
+          <p className="text-sm font-medium text-text-main">{userName}</p>
+        </DataTableCell>
+        <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+          <p className="text-sm text-text-main truncate">{deviceName}</p>
+        </DataTableCell>
+        <DataTableCell mobileLabel="Город:" className="lg:w-[120px] lg:px-4">
+          <p className="text-sm text-text-main">{request.address?.city ?? '—'}</p>
+        </DataTableCell>
+        <DataTableCell mobileLabel="Статус:" className="lg:w-[160px] lg:px-4">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}>
+            {STATUS_LABELS[request.status] ?? request.status}
+          </span>
+        </DataTableCell>
+        <DataTableCell mobileLabel="Чат:" className="lg:w-[140px] lg:px-4">
+          {request.conversationId && <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />}
+        </DataTableCell>
+        <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">
+          <p className="text-sm text-text-main">{formatDate(request.createdAt)}</p>
+        </DataTableCell>
+      </DataTableRow>
+    </Link>
+  );
+}
+
 export function ManagerRequests() {
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
-  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'all' });
+  const activeTab = filterValues.tab as TabKey;
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [convInfoMap, setConvInfoMap] = useState<Record<string, ConversationInfo>>({});
+  const [view, setView] = useState('card');
 
   useEffect(() => {
     async function fetchRequests() {
@@ -211,29 +254,27 @@ export function ManagerRequests() {
 
   return (
     <PageContainer>
-      <PageHeader>
-        Заявки на обслуживание
-      </PageHeader>
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader>Заявки на обслуживание</PageHeader>
+        <ViewSwitcher
+          views={[VIEW_CARD, VIEW_TABLE]}
+          activeView={view}
+          onViewChange={setView}
+        />
+      </div>
 
-      {/* Tabs */}
-      <TabList>
-        {TABS.map((tab) => (
-          <Tab
-            key={tab.key}
-            active={activeTab === tab.key}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
+      <DataFilter
+        filters={[TAB_FILTER]}
+        values={filterValues}
+        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
+      />
 
-      {/* Request cards grid */}
+      {/* Request data */}
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
       ) : filteredRequests.length === 0 ? (
         <p className="text-sm text-text-sub">Нет заявок</p>
-      ) : (
+      ) : view === 'card' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRequests.map((req) => (
             <RequestCardItem
@@ -244,6 +285,27 @@ export function ManagerRequests() {
             />
           ))}
         </div>
+      ) : (
+        <>
+          <DataTableHeader>
+            <div className="w-[180px] flex-shrink-0">Клиент</div>
+            <div className="flex-1 px-4">Устройство</div>
+            <div className="w-[120px] px-4">Город</div>
+            <div className="w-[160px] px-4">Статус</div>
+            <div className="w-[140px] px-4">Чат</div>
+            <div className="w-[140px] px-4">Дата</div>
+          </DataTableHeader>
+          <DataTable>
+            {filteredRequests.map((req) => (
+              <RequestTableRow
+                key={req.id}
+                request={req}
+                convInfo={convInfoMap[req.id]}
+                currentUserId={currentUserId}
+              />
+            ))}
+          </DataTable>
+        </>
       )}
 
       {/* Pagination */}
