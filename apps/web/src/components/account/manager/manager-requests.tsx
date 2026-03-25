@@ -297,14 +297,19 @@ export function ManagerRequests() {
 
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={handleSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px]" />
+        <DataSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Поиск"
+          className="lg:w-[320px] flex-shrink-0"
+        />
         <div className="flex-1 flex items-center gap-3">
           <DataFilter
             filters={[TAB_FILTER]}
             values={filterValues}
-            onChange={handleFilterChange}
+            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
           />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+          <div className="ml-auto flex-shrink-0 flex items-center gap-3">
             <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
           </div>
         </div>
