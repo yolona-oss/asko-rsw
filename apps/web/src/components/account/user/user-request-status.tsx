@@ -20,7 +20,6 @@ const TERMINAL_STATUSES = [
 
 const STEPS = [
   { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING] },
-  { key: 'payment', label: 'Оплата', statuses: [RepairRequestStatus.PAID] },
   { key: 'choosing', label: 'Назначение\nмастера', statuses: [RepairRequestStatus.ASSIGNED, RepairRequestStatus.REFUSED] },
   { key: 'traveling', label: 'Мастер\nвыехал', statuses: [RepairRequestStatus.ACCEPTED] },
   { key: 'repair', label: 'Ремонт', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.PAUSED, RepairRequestStatus.AWAITING_COMPLETION] },
@@ -198,7 +197,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
         repairRequestApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
-      setRequest(reqRes.data as unknown as RepairRequest);
+      setRequest(((reqRes.data as any).request ?? reqRes.data) as unknown as RepairRequest);
       const steps = (stepsRes.data ?? []) as unknown as WorkStep[];
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
       const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
@@ -372,7 +371,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       />
 
       {/* Progress steps */}
-      <div className="flex items-start mt-6 overflow-x-auto pb-6 -mx-4 px-4 lg:mx-0 lg:px-0">
+      <div className="flex items-start mt-6 pb-6 -mx-4 px-4 lg:mx-0 lg:px-0">
         {STEPS.map((step, idx) => {
           const isActive = idx === currentStepIdx;
           const isCompleted = idx < currentStepIdx;

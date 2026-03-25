@@ -118,7 +118,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await repairRequestApi.getOne(requestId);
+        const { data: res } = await repairRequestApi.getOne(requestId);
+        const data = (res as any).request ?? res;
         setRequest(data);
         if (data.totalCost) setPriceValue(String(data.totalCost));
 

@@ -168,14 +168,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: req } = await repairRequestApi.getOne(requestId);
+        const { data: res } = await repairRequestApi.getOne(requestId);
+        const req = (res as any).request ?? res;
         setRequest(req as unknown as RepairRequestDetail);
         setSelectedRepairer(req.repairer?.id ?? '');
 
         // Check if manager is attached to chat
-        if ((req as any).conversationId) {
+        if (req.conversationId) {
           try {
-            const { data: conv } = await chatApi.getConversation((req as any).conversationId);
+            const { data: conv } = await chatApi.getConversation(req.conversationId);
             setChatAttached(conv.conversation.participants.some((p: any) => p.userId === authUser?.id));
           } catch { /* not a participant */ }
         }
@@ -210,8 +211,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       } else {
         await repairRequestApi.assign(request.id, selectedRepairer);
       }
-      const { data: updated } = await repairRequestApi.getOne(requestId);
-      setRequest(updated as unknown as RepairRequestDetail);
+      const { data: updatedRes } = await repairRequestApi.getOne(requestId);
+      setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetail);
     } catch {} finally {
       setAssigning(false);
     }
