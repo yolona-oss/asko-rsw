@@ -15,7 +15,6 @@ import {
   DataTableHeader,
   DataTableRow,
   DataTableCell,
-  DataTableEmpty,
   DataTableFooter,
 } from '@asko/ui';
 import type { FilterDefinition, FilterValues } from '@asko/ui';
