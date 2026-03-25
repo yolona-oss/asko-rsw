@@ -7,14 +7,16 @@ import { Repairer } from 'entities/repairer.entity';
 import { Address } from 'entities/address.entity';
 import { RepairRequestStatus, CertificateStatus, PaymentTargetType } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { PaymentClientService } from 'modules/payment-client.service';
+import { PaymentCommandService } from 'modules/payment-command.service';
+import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
 import { BrokenPartService } from './broken-part.service';
 
 @Injectable()
 export class RepairRequestService {
     constructor(
         private readonly em: EntityManager,
-        private readonly paymentClient: PaymentClientService,
+        private readonly paymentCommandService: PaymentCommandService,
+        private readonly repairEventService: RepairEventService,
         private readonly brokenPartService: BrokenPartService,
     ) {}
 
@@ -77,6 +79,14 @@ export class RepairRequestService {
             await this.brokenPartService.addBrokenPartsOnCreate(request.id, dto.brokenParts);
         }
 
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId,
+            newStatus: RepairRequestStatus.PENDING,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -90,10 +100,21 @@ export class RepairRequestService {
             throw AppErrors.badRequest('Cannot request refund for this request');
         }
 
+        const oldStatus = request.status;
         request.refundRequested = true;
         request.refundReason = reason;
         request.status = RepairRequestStatus.REFUND_REQUESTED;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.REFUND_REQUESTED,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -107,15 +128,20 @@ export class RepairRequestService {
         }
 
         request.status = RepairRequestStatus.REFUNDED;
-
-        // Refund via payment-service gRPC (external)
-        const { payments } = await this.paymentClient.getPaymentsByTarget('repairRequest', requestId);
-        const paidPayment = payments?.find(p => p.status === 'paid');
-        if (paidPayment) {
-            await this.paymentClient.refundPayment(paidPayment.id);
-        }
-
         await this.em.flush();
+
+        // Refund via payment-service RabbitMQ (fire-and-forget)
+        await this.paymentCommandService.emitRefundTarget('repairRequest', requestId);
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus: RepairRequestStatus.REFUND_REQUESTED,
+            newStatus: RepairRequestStatus.REFUNDED,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -131,6 +157,16 @@ export class RepairRequestService {
         request.refundRequested = false;
         request.status = RepairRequestStatus.PAID; // revert to paid
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus: RepairRequestStatus.REFUND_REQUESTED,
+            newStatus: RepairRequestStatus.PAID,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -148,10 +184,22 @@ export class RepairRequestService {
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
+        const oldStatus = request.status;
         request.repairer = this.em.getReference(Repairer, repairerId);
         request.managerId = managerId;
         request.status = RepairRequestStatus.ASSIGNED;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.ASSIGNED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.ASSIGNED,
+            repairerId,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -169,6 +217,16 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.ACCEPTED;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus: RepairRequestStatus.ASSIGNED,
+            newStatus: RepairRequestStatus.ACCEPTED,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -193,6 +251,15 @@ export class RepairRequestService {
         request.repairer = undefined;
         await this.em.flush();
 
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus: RepairRequestStatus.ASSIGNED,
+            newStatus: RepairRequestStatus.PAID,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -210,6 +277,16 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.IN_PROGRESS;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus: RepairRequestStatus.ACCEPTED,
+            newStatus: RepairRequestStatus.IN_PROGRESS,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -228,8 +305,8 @@ export class RepairRequestService {
         request.totalCost = amount;
         await this.em.flush();
 
-        // Create payment invoice for the user via payment-service (external)
-        await this.paymentClient.createInvoice(
+        // Create payment invoice via payment-service RabbitMQ (fire-and-forget)
+        await this.paymentCommandService.emitCreateInvoice(
             request.userId,
             PaymentTargetType.REPAIR_REQUEST,
             request.id,
@@ -244,8 +321,18 @@ export class RepairRequestService {
     async markAwaitingCompletion(requestId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) return;
+        const oldStatus = request.status;
         request.status = RepairRequestStatus.AWAITING_COMPLETION;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.AWAITING_COMPLETION,
+            timestamp: new Date(),
+        });
     }
 
     /** Complete the request with optional description */
@@ -253,6 +340,7 @@ export class RepairRequestService {
     async complete(requestId: string, description?: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        const oldStatus = request.status;
         if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
             throw AppErrors.badRequest('Request is not in a completable status');
         }
@@ -293,6 +381,16 @@ export class RepairRequestService {
         }
 
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.COMPLETED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.COMPLETED,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 
@@ -304,8 +402,19 @@ export class RepairRequestService {
         if ([RepairRequestStatus.COMPLETED, RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION].includes(request.status)) {
             throw AppErrors.badRequest('Cannot cancel request in current status');
         }
+        const oldStatus = request.status;
         request.status = RepairRequestStatus.CANCELLED;
         await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.CANCELLED,
+            timestamp: new Date(),
+        });
+
         return request;
     }
 

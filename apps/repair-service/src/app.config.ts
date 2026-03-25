@@ -15,8 +15,11 @@ export class AppConfig {
             pass: this.configService.getOrThrow<string>('DATABASE_PASS'),
         };
     }
-    get paymentServiceUrl(): string { return this.configService.get<string>('PAYMENT_SERVICE_URL') ?? 'localhost:5001'; }
-    get fileServiceUrl(): string { return this.configService.get<string>('FILE_SERVICE_URL') ?? 'localhost:5002'; }
+    get rabbitmq() {
+        return {
+            url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
+        };
+    }
 }
 
 @Global()

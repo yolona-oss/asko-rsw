@@ -13,6 +13,7 @@ import { DummyProvider } from 'providers/dummy.provider';
 import { YookassaProvider } from 'providers/yookassa.provider';
 import { TbankProvider } from 'providers/tbank.provider';
 import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
+import { RepairCommandConsumer } from 'consumers/repair-command.consumer';
 
 @Module({
     imports: [
@@ -35,7 +36,7 @@ import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
             },
         ]),
     ],
-    controllers: [PaymentGrpcController],
+    controllers: [PaymentGrpcController, RepairCommandConsumer],
     providers: [
         PaymentService,
         PaymentDomainService,

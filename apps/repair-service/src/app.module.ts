@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MetricsModule } from '@asko/observability';
-import { AppConfigModule } from './app.config';
+import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
-import { PaymentClientModule } from 'modules/payment-client.module';
-import { FileClientModule } from 'modules/file-client.module';
+import { RepairEventService } from 'modules/repair-event.service';
+import { PaymentCommandService } from 'modules/payment-command.service';
 import {
     Device,
     Address,
@@ -58,8 +59,32 @@ import { BrokenPartService } from 'services/broken-part.service';
             DevicePart,
             BrokenPart,
         ]),
-        PaymentClientModule,
-        FileClientModule,
+        ClientsModule.registerAsync([
+            {
+                name: 'REPAIR_EVENTS',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'notification_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
+            {
+                name: 'PAYMENT_COMMANDS',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'payment_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
+        ]),
     ],
     controllers: [
         DeviceGrpcController,
@@ -79,6 +104,8 @@ import { BrokenPartService } from 'services/broken-part.service';
         WorkStepService,
         BrokenPartService,
         DealerService,
+        RepairEventService,
+        PaymentCommandService,
     ],
 })
 export class AppModule {}

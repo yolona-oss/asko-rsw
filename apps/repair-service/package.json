@@ -16,6 +16,8 @@
         "@asko/observability": "workspace:*",
         "@asko/shared": "workspace:*",
         "@asko/proto": "workspace:*",
+        "amqp-connection-manager": "^4.1.14",
+        "amqplib": "^0.10.4",
         "@grpc/grpc-js": "^1.12.6",
         "@grpc/proto-loader": "^0.7.15",
         "@mikro-orm/core": "^6.5.9",

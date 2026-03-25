@@ -10,7 +10,7 @@ import {
     generateCertificateNumber,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { PaymentClientService } from 'modules/payment-client.service';
+import { PaymentCommandService } from 'modules/payment-command.service';
 
 /** Certificate price = device price * years * 0.05. Minimum 1000. */
 function calculateCertificatePrice(devicePrice: number, years: number): number {
@@ -22,7 +22,7 @@ function calculateCertificatePrice(devicePrice: number, years: number): number {
 export class CertificateService {
     constructor(
         private readonly em: EntityManager,
-        private readonly paymentClient: PaymentClientService,
+        private readonly paymentCommandService: PaymentCommandService,
     ) {}
 
     /** User adds an existing certificate (e.g. received with product) */
@@ -91,8 +91,8 @@ export class CertificateService {
         });
         await this.em.persistAndFlush(cert);
 
-        // Create payment invoice
-        await this.paymentClient.createInvoice(
+        // Create payment invoice via payment-service RabbitMQ (fire-and-forget)
+        await this.paymentCommandService.emitCreateInvoice(
             dto.clientUserId,
             PaymentTargetType.CERTIFICATE,
             cert.id,
