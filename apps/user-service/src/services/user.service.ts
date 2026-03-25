@@ -328,8 +328,8 @@ export class UserService {
                     { lastName: { $ilike: `%${query}%` } },
                 ],
             })
-        if (!isPrivileged) {                                                                                                                │
-            qb.andWhere(`u.preferences IS NOT NULL AND u.preferences->'chat'->>'searchable' = 'true'`)                                      │
+        if (!isPrivileged) {
+            qb.andWhere(`u.preferences IS NOT NULL AND u.preferences->'chat'->>'searchable' = 'true'`)
         }
 
         qb.limit(limit)
