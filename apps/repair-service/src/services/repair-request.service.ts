@@ -91,6 +91,29 @@ export class RepairRequestService {
         return request;
     }
 
+    /** Mark repair request as paid after payment confirmation */
+    @CreateRequestContext()
+    async markPaid(requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        assertTransition(request.status, RepairRequestStatus.PAID);
+
+        const oldStatus = request.status;
+        request.status = RepairRequestStatus.PAID;
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.PAID,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
     /** User requests refund */
     @CreateRequestContext()
     async requestRefund(userId: string, requestId: string, reason: string): Promise<RepairRequest> {

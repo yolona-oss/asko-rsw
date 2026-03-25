@@ -47,10 +47,13 @@ services:
     container_name: asko-repair-service
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      - rabbitmq
     environment:
       NODE_ENV: production
       GRPC_PORT: 5003
       METRICS_PORT: 9103
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
   file-service:
     build:

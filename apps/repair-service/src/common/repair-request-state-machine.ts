@@ -9,6 +9,7 @@ type TransitionRule =
     | { from?: never; notFrom: readonly Status[] };
 
 export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
+    [S.PAID]:                { from: [S.PENDING] },
     [S.ASSIGNED]:            { from: [S.PENDING, S.PAID] },
     [S.ACCEPTED]:            { from: [S.ASSIGNED] },
     [S.IN_PROGRESS]:         { from: [S.ACCEPTED] },

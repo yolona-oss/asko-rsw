@@ -25,19 +25,26 @@ export interface PaymentEvent {
 @Injectable()
 export class PaymentEventService implements OnModuleInit {
     constructor(
-        @Inject('EVENTS_SERVICE') private readonly rmqClient: ClientProxy,
+        @Inject('EVENTS_SERVICE') private readonly notificationClient: ClientProxy,
+        @Inject('REPAIR_EVENTS_SERVICE') private readonly repairClient: ClientProxy,
     ) {}
 
     async onModuleInit() {
         try {
-            await this.rmqClient.connect();
+            await this.notificationClient.connect();
         } catch (e) {
-            console.error('[PaymentEventService] Failed to connect to RabbitMQ, will retry on first emit:', e);
+            console.error('[PaymentEventService] Failed to connect to notification RabbitMQ, will retry on first emit:', e);
+        }
+        try {
+            await this.repairClient.connect();
+        } catch (e) {
+            console.error('[PaymentEventService] Failed to connect to repair RabbitMQ, will retry on first emit:', e);
         }
     }
 
     async emit(event: PaymentEvent): Promise<void> {
         console.log(`[PaymentEvent] ${event.type}`, JSON.stringify(event));
-        this.rmqClient.emit(event.type, event);
+        this.notificationClient.emit(event.type, event);
+        this.repairClient.emit(event.type, event);
     }
 }

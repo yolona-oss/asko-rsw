@@ -34,6 +34,18 @@ import { RepairCommandConsumer } from 'consumers/repair-command.consumer';
                     },
                 }),
             },
+            {
+                name: 'REPAIR_EVENTS_SERVICE',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'repair_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
         ]),
     ],
     controllers: [PaymentGrpcController, RepairCommandConsumer],

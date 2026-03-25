@@ -27,6 +27,7 @@ import { CertificateGrpcController } from 'controllers/certificate.grpc.controll
 import { RepairerGrpcController } from 'controllers/repairer.grpc.controller';
 import { RepairGrpcController } from 'controllers/repair.grpc.controller';
 import { DealerGrpcController } from 'controllers/dealer.grpc.controller';
+import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { DeviceService } from 'services/device.service';
 import { AddressService } from 'services/address.service';
 import { ExternalCertValidationService } from 'services/external-cert-validation.service';
@@ -92,6 +93,7 @@ import { BrokenPartService } from 'services/broken-part.service';
         RepairerGrpcController,
         RepairGrpcController,
         DealerGrpcController,
+        PaymentEventConsumer,
     ],
     providers: [
         DeviceService,
