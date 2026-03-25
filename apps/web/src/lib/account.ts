@@ -44,6 +44,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/invitations', label: 'Приглашения', icon: 'invite' },
     { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },
+    { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   user: [
@@ -51,6 +52,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
     { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
+    { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   dealer: [
@@ -58,6 +60,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/certificates', label: 'Сертификаты', icon: 'certificate' },
     { href: '/account/certificates/create', label: 'Новый Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
+    { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   manager: [
@@ -65,6 +68,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
     { href: '/account/access', label: 'Доступы', icon: 'clients' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
+    { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   repairer: [
@@ -72,6 +76,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account/requests', label: 'Заявка', icon: 'wrench' },
     { href: '/account/history', label: 'История', icon: 'history' },
     { href: '/account/man', label: 'Мануалы', icon: 'manual' },
+    { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
 };

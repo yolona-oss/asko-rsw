@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
 import { ChatGateway } from '../gateways/chat.gateway';
+import { ChatPrivacyService } from '../services/chat-privacy.service';
 import {
     ConversationResponseDto,
     PaginatedConversationsResponseDto,
@@ -20,6 +22,8 @@ export class ChatController {
     constructor(
         private readonly chatClient: ChatClientService,
         private readonly chatGateway: ChatGateway,
+        private readonly userClient: UserClientService,
+        private readonly chatPrivacy: ChatPrivacyService,
     ) {}
 
     // ─── Conversations ────────────────────────────────────────────────
@@ -31,6 +35,16 @@ export class ChatController {
         @Body() body: { type: string; name?: string; participantIds: string[] },
     ) {
         const userId = req.user?.id;
+        const userRoles: string[] = req.user?.roles ?? [];
+
+        // Privacy check: verify each participant accepts conversations
+        for (const participantId of body.participantIds) {
+            const allowed = await this.chatPrivacy.canCreateConversation(userRoles, participantId);
+            if (!allowed) {
+                throw new ForbiddenException('Пользователь не принимает новые чаты');
+            }
+        }
+
         return this.chatClient.createConversation(
             userId, body.type, body.name ?? '', body.participantIds,
         );
@@ -179,5 +193,25 @@ export class ChatController {
     @Post('presence/bulk')
     async getBulkPresence(@Body() body: { userIds: string[] }) {
         return this.chatClient.getBulkPresence(body.userIds);
+    }
+
+    // ─── User Search ─────────────────────────────────────────────────
+
+    @ApiOkResponse()
+    @Get('search-users')
+    async searchUsers(
+        @Req() req: any,
+        @Query('q') query: string,
+        @Query('limit') limit?: string,
+    ) {
+        const userId = req.user?.id;
+        const userRoles: string[] = req.user?.roles ?? [];
+        const result = await this.userClient.searchUsersForChat({
+            query: query || '',
+            requesterId: userId,
+            requesterRoles: userRoles,
+            limit: limit ? parseInt(limit) : 20,
+        });
+        return { users: result.users ?? [] };
     }
 }

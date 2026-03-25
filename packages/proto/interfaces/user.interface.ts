@@ -89,6 +89,7 @@ export interface UpdateUserRequest {
     password: string;
     addressId: string;
     currentPassword: string;
+    preferencesJson: string;
 }
 
 export interface ChangePasswordRequest {
@@ -155,6 +156,7 @@ export interface AuthUser {
     roles: string[];
     createdAt: string;
     updatedAt: string;
+    preferencesJson: string;
 }
 
 export interface UserResponse {
@@ -170,6 +172,7 @@ export interface UserResponse {
     phoneVerified: boolean;
     createdAt: string;
     updatedAt: string;
+    preferencesJson: string;
 }
 
 export interface PaginatedUsersResponse {
@@ -184,6 +187,26 @@ export interface EmptyResponse {}
 
 export interface AuthUserResponse {
     user: AuthUser;
+}
+
+// ─── Chat User Search ─────────────────────────────────────────────────────────
+
+export interface SearchUsersForChatRequest {
+    query: string;
+    requesterId: string;
+    requesterRoles: string[];
+    limit: number;
+}
+
+export interface ChatUserResult {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
+export interface SearchUsersForChatResponse {
+    users: ChatUserResult[];
 }
 
 // ─── gRPC Service Interface ─────────────────────────────────────────────────
@@ -212,4 +235,6 @@ export interface UserServiceClient {
     findAllInvites(request: EmptyRequest): Observable<InviteListResponse>;
     checkInvite(request: InviteTokenRequest): Observable<InviteLinkResponse>;
     deleteInvite(request: InviteIdRequest): Observable<EmptyResponse>;
+
+    searchUsersForChat(request: SearchUsersForChatRequest): Observable<SearchUsersForChatResponse>;
 }

@@ -2,6 +2,11 @@ import { AuthProvider } from "../../dto/auth/enums/auth-provider.enum";
 import { Role } from "./../roles.type";
 import { IUserAddress } from "./user-address.type";
 
+export interface ChatPreferences {
+    acceptConversations: boolean;
+    searchable: boolean;
+}
+
 export interface IUser {
     id: string;
     firstName?: string;

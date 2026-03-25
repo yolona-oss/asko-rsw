@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/api/use-auth';
 import { profileApi } from '@/lib/api/profile';
 import { AvatarCropModal } from './avatar-crop-modal';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
-import { Button, Input, FormField } from '@asko/ui';
+import { Button, Input, FormField, Toggle } from '@asko/ui';
 
 export function ProfileForm() {
   const { user } = useAccount();
@@ -21,6 +21,10 @@ export function ProfileForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [loaded, setLoaded] = useState(false);
+
+  // Chat preferences
+  const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
+  const [chatSearchable, setChatSearchable] = useState(false);
 
   // Avatar state
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -43,6 +47,14 @@ export function ProfileForm() {
         setLastName(data.lastName ?? '');
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
+        // Load chat preferences
+        const prefs = (data as any).preferencesJson
+          ? JSON.parse((data as any).preferencesJson)
+          : (data as any).preferences;
+        if (prefs?.chat) {
+          setChatAcceptConversations(prefs.chat.acceptConversations ?? false);
+          setChatSearchable(prefs.chat.searchable ?? false);
+        }
       }),
       profileApi.getAvatarUrl(authUser.id).then((url) => {
         if (url) setAvatarPreview(url);
@@ -114,7 +126,13 @@ export function ProfileForm() {
         name: [firstName, lastName].filter(Boolean).join(' '),
         email: email || undefined,
         phone: phone || undefined,
-      });
+        preferences: {
+          chat: {
+            acceptConversations: chatAcceptConversations,
+            searchable: chatSearchable,
+          },
+        },
+      } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });
       setMessage({ type: 'success', text: 'Профиль сохранён' });
     } catch {
@@ -233,6 +251,25 @@ export function ProfileForm() {
           <FormField label="Телефон">
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+7 (999) 123-45-67" />
           </FormField>
+        </div>
+
+        {/* Chat privacy */}
+        <div className="h-px bg-border-light" />
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-medium text-text-main">Чат</p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-text-main">Другие пользователи могут начинать со мной чат</p>
+              <p className="text-xs text-text-sub/60 mt-0.5">Администраторы и менеджеры могут писать вам в любом случае</p>
+            </div>
+            <Toggle checked={chatAcceptConversations} onChange={setChatAcceptConversations} />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-text-main">Показывать меня в поиске чата</p>
+            </div>
+            <Toggle checked={chatSearchable} onChange={setChatSearchable} />
+          </div>
         </div>
 
         {/* Message + Save */}

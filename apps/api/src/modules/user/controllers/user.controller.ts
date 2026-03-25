@@ -9,6 +9,7 @@ import {
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 
 import { UserClientService } from 'modules/user-client/user-client.service';
+import { ChatPrivacyService } from 'modules/chat/services/chat-privacy.service';
 
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -33,6 +34,7 @@ export class UsersController {
 
     constructor(
         private readonly userClient: UserClientService,
+        private readonly chatPrivacy: ChatPrivacyService,
     ) { }
 
     @RequiredRoles(...ADMIN_ROLES)
@@ -60,7 +62,7 @@ export class UsersController {
         @JwtAuthUser() user: IAuthUser,
         @Body() data: Partial<UpdateUserDto>,
     ) {
-        return this.userClient.updateUser({
+        const result = await this.userClient.updateUser({
             id: user.id,
             name: data.name ?? '',
             email: data.email ?? '',
@@ -68,7 +70,18 @@ export class UsersController {
             password: data.password ?? '',
             addressId: data.addressId ?? '',
             currentPassword: data.password ?? '',
+            preferencesJson: data.preferences ? JSON.stringify(data.preferences) : '',
         });
+
+        // Update Redis cache if chat preferences changed
+        if (data.preferences?.chat) {
+            await this.chatPrivacy.setChatPreferences(user.id, {
+                acceptConversations: data.preferences.chat.acceptConversations ?? false,
+                searchable: data.preferences.chat.searchable ?? false,
+            });
+        }
+
+        return result;
     }
 
     @RequiredRoles(...ALL_ROLES)

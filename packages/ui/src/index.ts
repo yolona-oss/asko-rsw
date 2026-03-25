@@ -82,3 +82,6 @@ export type { KeyValueEditorProps, KVPair } from './components/key-value-editor'
 
 export { CropModal } from './components/crop-modal';
 export type { CropModalProps, CropShape } from './components/crop-modal';
+
+export { Avatar } from './components/avatar';
+export type { AvatarProps, AvatarSize } from './components/avatar';

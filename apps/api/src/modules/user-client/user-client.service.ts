@@ -32,6 +32,8 @@ import type {
     InviteIdRequest,
     InviteTokenRequest,
     EmptyResponse,
+    SearchUsersForChatRequest,
+    SearchUsersForChatResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -134,5 +136,11 @@ export class UserClientService implements OnModuleInit {
 
     deleteInvite(data: InviteIdRequest): Promise<EmptyResponse> {
         return grpcCall(this.userService.deleteInvite(data));
+    }
+
+    // ─── Chat ──────────────────────────────────────────────────────────
+
+    searchUsersForChat(data: SearchUsersForChatRequest): Promise<SearchUsersForChatResponse> {
+        return grpcCall(this.userService.searchUsersForChat(data));
     }
 }

@@ -37,6 +37,8 @@ import type {
     InviteTokenRequest,
     EmptyRequest,
     EmptyResponse,
+    SearchUsersForChatRequest,
+    SearchUsersForChatResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -73,6 +75,23 @@ function userToResponse(user: any): UserResponse {
         phoneVerified: user.phoneVerified ?? false,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
+        preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
+    };
+}
+
+function userToAuthUser(user: any) {
+    return {
+        id: user.id,
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        email: user.email ?? '',
+        phone: user.phone ?? '',
+        googleId: user.googleId ?? '',
+        providers: user.providers ?? [],
+        roles: user.roles ?? [],
+        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
+        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
+        preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
     };
 }
 
@@ -100,18 +119,7 @@ export class UserGrpcController {
             return {
                 accessToken: result.access_token,
                 refreshToken: result.refresh_token ?? '',
-                user: {
-                    id: result.user.id,
-                    firstName: result.user.firstName ?? '',
-                    lastName: result.user.lastName ?? '',
-                    email: result.user.email ?? '',
-                    phone: result.user.phone ?? '',
-                    googleId: result.user.googleId ?? '',
-                    providers: result.user.providers ?? [],
-                    roles: result.user.roles ?? [],
-                    createdAt: result.user.createdAt instanceof Date ? result.user.createdAt.toISOString() : String(result.user.createdAt ?? ''),
-                    updatedAt: result.user.updatedAt instanceof Date ? result.user.updatedAt.toISOString() : String(result.user.updatedAt ?? ''),
-                },
+                user: userToAuthUser(result.user),
             };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -135,18 +143,7 @@ export class UserGrpcController {
             return {
                 accessToken: result.access_token,
                 refreshToken: result.refresh_token ?? '',
-                user: {
-                    id: result.user.id,
-                    firstName: result.user.firstName ?? '',
-                    lastName: result.user.lastName ?? '',
-                    email: result.user.email ?? '',
-                    phone: result.user.phone ?? '',
-                    googleId: result.user.googleId ?? '',
-                    providers: result.user.providers ?? [],
-                    roles: result.user.roles ?? [],
-                    createdAt: result.user.createdAt instanceof Date ? result.user.createdAt.toISOString() : String(result.user.createdAt ?? ''),
-                    updatedAt: result.user.updatedAt instanceof Date ? result.user.updatedAt.toISOString() : String(result.user.updatedAt ?? ''),
-                },
+                user: userToAuthUser(result.user),
                 roles: result.roles ?? [],
             };
         } catch (e) { throw toGrpcError(e); }
@@ -195,18 +192,7 @@ export class UserGrpcController {
             return {
                 accessToken: result.access_token,
                 refreshToken: result.refresh_token ?? '',
-                user: {
-                    id: result.user.id,
-                    firstName: result.user.firstName ?? '',
-                    lastName: result.user.lastName ?? '',
-                    email: result.user.email ?? '',
-                    phone: result.user.phone ?? '',
-                    googleId: result.user.googleId ?? '',
-                    providers: result.user.providers ?? [],
-                    roles: result.user.roles ?? [],
-                    createdAt: result.user.createdAt instanceof Date ? result.user.createdAt.toISOString() : String(result.user.createdAt ?? ''),
-                    updatedAt: result.user.updatedAt instanceof Date ? result.user.updatedAt.toISOString() : String(result.user.updatedAt ?? ''),
-                },
+                user: userToAuthUser(result.user),
             };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -216,18 +202,7 @@ export class UserGrpcController {
         try {
             const user = await this.authService.findUserByAccessToken(data.accessToken);
             return {
-                user: {
-                    id: user.id,
-                    firstName: user.firstName ?? '',
-                    lastName: user.lastName ?? '',
-                    email: user.email ?? '',
-                    phone: user.phone ?? '',
-                    googleId: user.googleId ?? '',
-                    providers: user.providers ?? [],
-                    roles: user.roles ?? [],
-                    createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
-                    updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
-                },
+                user: userToAuthUser(user),
             };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -273,6 +248,9 @@ export class UserGrpcController {
             if (data.phone) updateDto.phone = data.phone;
             if (data.password) updateDto.password = data.password;
             if (data.addressId) updateDto.addressId = data.addressId;
+            if (data.preferencesJson) {
+                try { updateDto.preferences = JSON.parse(data.preferencesJson); } catch {}
+            }
 
             const user = await this.userService.updateSafe(data.id, updateDto, data.currentPassword || undefined);
             return userToResponse(user);
@@ -387,6 +365,28 @@ export class UserGrpcController {
         try {
             await this.inviteService.remove(data.id);
             return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Chat ─────────────────────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'SearchUsersForChat')
+    async searchUsersForChat(data: SearchUsersForChatRequest): Promise<SearchUsersForChatResponse> {
+        try {
+            const users = await this.userService.searchUsersForChat(
+                data.query,
+                data.requesterId,
+                data.requesterRoles ?? [],
+                data.limit || 20,
+            );
+            return {
+                users: users.map(u => ({
+                    id: u.id,
+                    firstName: u.firstName ?? '',
+                    lastName: u.lastName ?? '',
+                    email: u.email ?? '',
+                })),
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 }

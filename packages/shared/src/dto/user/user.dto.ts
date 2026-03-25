@@ -54,4 +54,7 @@ export class UpdateUserDto {
     @IsOptional()
     @IsString()
     password?: string;
+
+    @IsOptional()
+    preferences?: Record<string, any>;
 }

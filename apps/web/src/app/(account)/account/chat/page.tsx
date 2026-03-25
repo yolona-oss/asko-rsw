@@ -1,0 +1,31 @@
+'use client';
+
+import { useAccount } from '@/components/account/account-provider';
+import { ChatLayout } from '@/components/chat/chat-layout';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
+import { SkeletonBlock } from '@/components/account/skeleton';
+
+function ChatSkeleton() {
+  return (
+    <PageContainer>
+      <SkeletonBlock className="h-8 w-32" />
+      <SkeletonBlock className="h-[calc(100vh-180px)] w-full" />
+    </PageContainer>
+  );
+}
+
+export default function ChatPage() {
+  const { stage, user } = useAccount();
+
+  if (stage === 'skeleton' || !user) {
+    return <ChatSkeleton />;
+  }
+
+  return (
+    <PageContainer>
+      <PageHeader>Чат</PageHeader>
+      <ChatLayout currentUserId={user.id} />
+    </PageContainer>
+  );
+}

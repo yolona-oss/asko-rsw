@@ -249,6 +249,13 @@ export class UserService {
             }
         }
 
+        if ((newUserInfo as any).preferences) {
+            user.preferences = {
+                ...(user.preferences ?? {}),
+                ...(newUserInfo as any).preferences,
+            }
+        }
+
         await this.em.persistAndFlush(user)
 
         return user
@@ -298,6 +305,44 @@ export class UserService {
         }
         user.roles = user.roles.filter(r => r !== role)
         await this.em.persistAndFlush(user)
+    }
+
+    @CreateRequestContext()
+    async searchUsersForChat(
+        query: string,
+        requesterId: string,
+        requesterRoles: string[],
+        limit: number = 20,
+    ): Promise<Pick<User, 'id' | 'firstName' | 'lastName' | 'email'>[]> {
+        const isPrivileged = requesterRoles.some(r =>
+            r === Role.SUPER_ADMIN || r === Role.ADMIN || r === Role.MANAGER,
+        )
+
+        const qb = this.em.createQueryBuilder(User, 'u')
+            .select(['u.id', 'u.firstName', 'u.lastName', 'u.email'])
+            .where({ id: { $ne: requesterId } })
+            .andWhere({
+                $or: [
+                    { email: { $ilike: `%${query}%` } },
+                    { firstName: { $ilike: `%${query}%` } },
+                    { lastName: { $ilike: `%${query}%` } },
+                ],
+            })
+
+        if (!isPrivileged) {
+            qb.andWhere({
+                $and: [
+                    { preferences: { $ne: null } },
+                    { [`preferences->>'chat'`]: { $ne: null } },
+                ],
+            })
+            // Use raw where for JSONB path query
+            qb.andWhere(`u.preferences->'chat'->>'searchable' = 'true'`)
+        }
+
+        qb.limit(limit)
+
+        return await qb.getResult()
     }
 
     private checkPasswordStrenth(password: string) {
