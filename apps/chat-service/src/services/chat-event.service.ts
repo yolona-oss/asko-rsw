@@ -3,10 +3,13 @@ import { ClientProxy } from '@nestjs/microservices';
 
 export enum ChatEventType {
     CHAT_MESSAGE = 'chat.message',
+    CONVERSATION_CREATED = 'chat.conversation_created',
+    PARTICIPANT_ADDED = 'chat.participant_added',
+    PARTICIPANT_REMOVED = 'chat.participant_removed',
 }
 
-export interface ChatEvent {
-    type: ChatEventType;
+export interface ChatMessageEvent {
+    type: ChatEventType.CHAT_MESSAGE;
     conversationId: string;
     messageId: string;
     senderId: string;
@@ -17,6 +20,30 @@ export interface ChatEvent {
     conversationName: string;
     timestamp: Date;
 }
+
+export interface ChatConversationCreatedEvent {
+    type: ChatEventType.CONVERSATION_CREATED;
+    conversationId: string;
+    conversationName: string;
+    conversationType: string;
+    creatorId: string;
+    /** Participants (excluding creator) who should be notified */
+    recipientIds: string[];
+    timestamp: Date;
+}
+
+export interface ChatParticipantEvent {
+    type: ChatEventType.PARTICIPANT_ADDED | ChatEventType.PARTICIPANT_REMOVED;
+    conversationId: string;
+    conversationName: string;
+    /** The user who was added/removed */
+    targetUserId: string;
+    /** The user who performed the action */
+    actorId: string;
+    timestamp: Date;
+}
+
+export type ChatEvent = ChatMessageEvent | ChatConversationCreatedEvent | ChatParticipantEvent;
 
 @Injectable()
 export class ChatEventService implements OnModuleInit {

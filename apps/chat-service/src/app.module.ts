@@ -13,6 +13,7 @@ import { MessageService } from 'services/message.service';
 import { PresenceService } from 'services/presence.service';
 import { ChatEventService } from 'services/chat-event.service';
 import { ChatGrpcController } from 'controllers/chat.grpc.controller';
+import { NotificationEventConsumer } from 'consumers/notification-event.consumer';
 
 @Module({
     imports: [
@@ -37,6 +38,7 @@ import { ChatGrpcController } from 'controllers/chat.grpc.controller';
     ],
     controllers: [
         ChatGrpcController,
+        NotificationEventConsumer,
     ],
     providers: [
         ConversationService,

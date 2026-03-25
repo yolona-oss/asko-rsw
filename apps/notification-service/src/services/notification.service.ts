@@ -3,12 +3,14 @@ import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/pos
 import { NotificationEntity } from 'entities/notification.entity';
 import { AppErrors } from 'common/error';
 import { NotificationPushService } from './notification-push.service';
+import { NotificationEventPublisher } from './notification-event.publisher';
 
 @Injectable()
 export class NotificationService {
     constructor(
         private readonly em: EntityManager,
         private readonly pushService: NotificationPushService,
+        private readonly eventPublisher: NotificationEventPublisher,
     ) {}
 
     @CreateRequestContext()
@@ -32,9 +34,9 @@ export class NotificationService {
         });
         await this.em.persistAndFlush(notification);
 
-        // Push real-time to frontend via Redis → API gateway WebSocket
-        this.pushService.pushToUser(userId, {
+        const notificationPayload = {
             id: notification.id,
+            userId: notification.userId,
             type: notification.type,
             title: notification.title,
             body: notification.body,
@@ -43,7 +45,15 @@ export class NotificationService {
             metadata: notification.metadata ? JSON.stringify(notification.metadata) : '',
             isRead: false,
             createdAt: notification.createdAt.toISOString(),
-        }).catch(e => console.error('[NotificationService] Push failed:', e));
+        };
+
+        // Push real-time to frontend via Redis → API gateway WebSocket
+        this.pushService.pushToUser(userId, notificationPayload)
+            .catch(e => console.error('[NotificationService] Push failed:', e));
+
+        // Forward to chat-service via RabbitMQ
+        this.eventPublisher.publishCreated(notificationPayload)
+            .catch(e => console.error('[NotificationService] Event publish failed:', e));
 
         return notification;
     }

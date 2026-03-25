@@ -5,10 +5,14 @@ import { ConversationParticipant } from 'entities/conversation-participant.entit
 import { Message } from 'entities/message.entity';
 import { AppErrors } from 'common/error';
 import { ConversationType, ParticipantRole } from '@asko/shared';
+import { ChatEventService, ChatEventType } from './chat-event.service';
 
 @Injectable()
 export class ConversationService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly chatEventService: ChatEventService,
+    ) {}
 
     @CreateRequestContext()
     async createConversation(
@@ -59,6 +63,20 @@ export class ConversationService {
 
         await this.em.flush();
         await this.em.populate(conversation, ['participants']);
+
+        // Emit conversation created event
+        const recipientIds = participantIds.filter(id => id !== creatorId);
+        if (recipientIds.length > 0) {
+            this.chatEventService.emit({
+                type: ChatEventType.CONVERSATION_CREATED,
+                conversationId: conversation.id,
+                conversationName: conversation.name ?? '',
+                conversationType: convType,
+                creatorId,
+                recipientIds,
+                timestamp: new Date(),
+            }).catch(e => console.error('[ConversationService] Failed to emit conversation_created:', e));
+        }
 
         return conversation;
     }
@@ -133,10 +151,23 @@ export class ConversationService {
             role: ParticipantRole.MEMBER,
         });
         await this.em.persistAndFlush(participant);
+
+        // Emit participant added event
+        this.chatEventService.emit({
+            type: ChatEventType.PARTICIPANT_ADDED,
+            conversationId,
+            conversationName: conversation.name ?? '',
+            targetUserId: userId,
+            actorId: addedBy,
+            timestamp: new Date(),
+        }).catch(e => console.error('[ConversationService] Failed to emit participant_added:', e));
     }
 
     @CreateRequestContext()
     async removeParticipant(conversationId: string, userId: string, removedBy: string): Promise<void> {
+        const conversation = await this.em.findOne(Conversation, { id: conversationId });
+        if (!conversation) throw AppErrors.conversationNotFound();
+
         await this.assertParticipant(conversationId, removedBy);
 
         const participant = await this.em.findOne(ConversationParticipant, {
@@ -146,6 +177,16 @@ export class ConversationService {
         if (!participant) throw AppErrors.participantNotFound();
 
         await this.em.removeAndFlush(participant);
+
+        // Emit participant removed event
+        this.chatEventService.emit({
+            type: ChatEventType.PARTICIPANT_REMOVED,
+            conversationId,
+            conversationName: conversation.name ?? '',
+            targetUserId: userId,
+            actorId: removedBy,
+            timestamp: new Date(),
+        }).catch(e => console.error('[ConversationService] Failed to emit participant_removed:', e));
     }
 
     @CreateRequestContext()

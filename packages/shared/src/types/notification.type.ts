@@ -7,6 +7,9 @@ export enum NotificationType {
     PAYMENT_REFUNDED = 'payment_refunded',
     CERTIFICATE_ISSUED = 'certificate_issued',
     CHAT_MESSAGE = 'chat_message',
+    CHAT_CONVERSATION_CREATED = 'chat_conversation_created',
+    CHAT_PARTICIPANT_ADDED = 'chat_participant_added',
+    CHAT_PARTICIPANT_REMOVED = 'chat_participant_removed',
     MESSAGE = 'message',
     SYSTEM = 'system',
 }

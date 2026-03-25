@@ -41,6 +41,18 @@ const NOTIFICATION_TYPE_CONFIG: Record<string, {
   },
   chat_message: {
     icon: 'chat',
+    href: (n) => n.targetId ? `/account/chat?conversation=${n.targetId}` : undefined as any,
+  },
+  chat_conversation_created: {
+    icon: 'chat',
+    href: (n) => n.targetId ? `/account/chat?conversation=${n.targetId}` : undefined as any,
+  },
+  chat_participant_added: {
+    icon: 'chat',
+    href: (n) => n.targetId ? `/account/chat?conversation=${n.targetId}` : undefined as any,
+  },
+  chat_participant_removed: {
+    icon: 'chat',
   },
   message: { icon: 'message' },
   system: { icon: 'system' },
