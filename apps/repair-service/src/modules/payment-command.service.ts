@@ -30,7 +30,11 @@ export class PaymentCommandService implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
-        await this.rmqClient.connect();
+        try {
+            await this.rmqClient.connect();
+        } catch (e) {
+            console.error('[PaymentCommandService] Failed to connect to RabbitMQ, will retry on first emit:', e);
+        }
     }
 
     async emitCreateInvoice(

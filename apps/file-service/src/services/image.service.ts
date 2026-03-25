@@ -21,7 +21,11 @@ export class ImageService implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
-        await this.rmqClient.connect();
+        try {
+            await this.rmqClient.connect();
+        } catch (e) {
+            console.error('[ImageService] Failed to connect to RabbitMQ, will retry on first emit:', e);
+        }
     }
 
     private emitResize(image: Image): void {
