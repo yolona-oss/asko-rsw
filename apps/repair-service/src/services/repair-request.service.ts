@@ -7,6 +7,7 @@ import { Repairer } from 'entities/repairer.entity';
 import { Address } from 'entities/address.entity';
 import { RepairRequestStatus, CertificateStatus, PaymentTargetType } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { assertTransition, assertActionTransition, canTransition } from 'common/repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
 import { BrokenPartService } from './broken-part.service';
@@ -96,9 +97,7 @@ export class RepairRequestService {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
-        if (request.status === RepairRequestStatus.COMPLETED || request.status === RepairRequestStatus.REFUNDED) {
-            throw AppErrors.badRequest('Cannot request refund for this request');
-        }
+        assertTransition(request.status, RepairRequestStatus.REFUND_REQUESTED);
 
         const oldStatus = request.status;
         request.refundRequested = true;
@@ -123,9 +122,7 @@ export class RepairRequestService {
     async approveRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.REFUND_REQUESTED) {
-            throw AppErrors.badRequest('No refund request pending');
-        }
+        assertTransition(request.status, RepairRequestStatus.REFUNDED);
 
         request.status = RepairRequestStatus.REFUNDED;
         await this.em.flush();
@@ -150,9 +147,7 @@ export class RepairRequestService {
     async denyRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.REFUND_REQUESTED) {
-            throw AppErrors.badRequest('No refund request pending');
-        }
+        assertActionTransition('denyRefund', request.status);
 
         request.refundRequested = false;
         request.status = RepairRequestStatus.PAID; // revert to paid
@@ -175,9 +170,7 @@ export class RepairRequestService {
     async assignRepairer(managerId: string, requestId: string, repairerId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (![RepairRequestStatus.PENDING, RepairRequestStatus.PAID].includes(request.status)) {
-            throw AppErrors.badRequest('Request must be in PENDING or PAID status to assign a repairer');
-        }
+        assertTransition(request.status, RepairRequestStatus.ASSIGNED);
 
         // Validate repairer directly
         const repairer = await this.em.findOne(Repairer, { id: repairerId });
@@ -211,9 +204,7 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.ASSIGNED) {
-            throw AppErrors.badRequest('Request is not in ASSIGNED status');
-        }
+        assertTransition(request.status, RepairRequestStatus.ACCEPTED);
 
         request.status = RepairRequestStatus.ACCEPTED;
         await this.em.flush();
@@ -238,9 +229,7 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.ASSIGNED) {
-            throw AppErrors.badRequest('Request is not in ASSIGNED status');
-        }
+        assertActionTransition('refuse', request.status);
 
         // Track rejected repairer
         if (!request.rejectedRepairers) request.rejectedRepairers = [];
@@ -271,9 +260,7 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.ACCEPTED) {
-            throw AppErrors.badRequest('Request must be ACCEPTED first');
-        }
+        assertTransition(request.status, RepairRequestStatus.IN_PROGRESS);
 
         request.status = RepairRequestStatus.IN_PROGRESS;
         await this.em.flush();
@@ -321,6 +308,7 @@ export class RepairRequestService {
     async markAwaitingCompletion(requestId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) return;
+        if (!canTransition(request.status, RepairRequestStatus.AWAITING_COMPLETION)) return;
         const oldStatus = request.status;
         request.status = RepairRequestStatus.AWAITING_COMPLETION;
         await this.em.flush();
@@ -341,9 +329,7 @@ export class RepairRequestService {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         const oldStatus = request.status;
-        if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
-            throw AppErrors.badRequest('Request is not in a completable status');
-        }
+        assertTransition(request.status, RepairRequestStatus.COMPLETED);
         if (!request.totalCost) {
             throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
         }
@@ -399,9 +385,7 @@ export class RepairRequestService {
     async cancel(userId: string, requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if ([RepairRequestStatus.COMPLETED, RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION].includes(request.status)) {
-            throw AppErrors.badRequest('Cannot cancel request in current status');
-        }
+        assertTransition(request.status, RepairRequestStatus.CANCELLED);
         const oldStatus = request.status;
         request.status = RepairRequestStatus.CANCELLED;
         await this.em.flush();
