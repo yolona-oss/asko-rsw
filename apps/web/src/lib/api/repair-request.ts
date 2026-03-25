@@ -54,6 +54,22 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/start`);
   },
 
+  reassign(requestId: string, repairerId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/reassign`, { repairerId } satisfies AssignRepairerDto);
+  },
+
+  acceptChat(requestId: string) {
+    return api.post(`/repair-requests/${requestId}/chat/accept`);
+  },
+
+  detachChat(requestId: string) {
+    return api.post(`/repair-requests/${requestId}/chat/detach`);
+  },
+
+  getPaused(params?: { offset?: number; limit?: number }) {
+    return api.get<PaginatedRepairRequests>('/repair-requests/paused', { params });
+  },
+
   refuse(requestId: string, reason: string) {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/refuse`, { reason } satisfies RefuseRequestDto);
   },

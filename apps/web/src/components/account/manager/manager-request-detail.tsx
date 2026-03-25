@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge, Button, Input, Select } from '@asko/ui';
@@ -9,8 +9,15 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
+import { chatApi } from '@/lib/api/chat';
 import { api } from '@/lib/api/client';
+import { useAuth } from '@/lib/api/use-auth';
+import { useChatSocket } from '@/lib/hooks/use-chat-socket';
+import { MessageList } from '@/components/chat/message-list';
+import { MessageInput } from '@/components/chat/message-input';
+import { TypingIndicator } from '@/components/chat/typing-indicator';
 import { RepairRequestStatus, BrokenPartStatus } from '@asko/shared/client';
+import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 
 const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PENDING]: 'warning',
@@ -18,6 +25,7 @@ const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.ASSIGNED]: 'warning',
   [RepairRequestStatus.ACCEPTED]: 'warning',
   [RepairRequestStatus.IN_PROGRESS]: 'info',
+  [RepairRequestStatus.PAUSED]: 'warning',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'info',
   [RepairRequestStatus.COMPLETED]: 'neutral',
   [RepairRequestStatus.CANCELLED]: 'error',
@@ -32,6 +40,7 @@ const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.PAUSED]: 'Приостановлена',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
   [RepairRequestStatus.COMPLETED]: 'Завершена',
   [RepairRequestStatus.CANCELLED]: 'Отменена',
@@ -68,6 +77,7 @@ interface RepairRequestDetail {
   createdAt: Date | string;
   rejectedRepairers?: string[];
   refuseReason?: string;
+  conversationId?: string;
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
   address?: { city?: string; street?: string; building?: number; apartment?: string };
@@ -87,7 +97,82 @@ function formatDate(dateStr: Date | string) {
   });
 }
 
+// ── Inline chat widget ──
+
+function RequestChat({ conversationId, currentUserId }: { conversationId: string; currentUserId: string }) {
+  const [conversation, setConversation] = useState<ChatConversation | null>(null);
+  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
+  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const socketActions = useChatSocket({
+    onNewMessage: useCallback((message: ChatMessage) => {
+      if (message.conversationId === conversationId) {
+        setRealtimeMessages(prev => [...prev, message]);
+      }
+    }, [conversationId]),
+    onUserTyping: useCallback((data: { userId: string; conversationId: string }) => {
+      if (data.conversationId !== conversationId || data.userId === currentUserId) return;
+      setTypingUsers(prev => { const m = new Map(prev); m.set(data.userId, data.conversationId); return m; });
+      const existing = typingTimers.current.get(data.userId);
+      if (existing) clearTimeout(existing);
+      typingTimers.current.set(data.userId, setTimeout(() => {
+        setTypingUsers(prev => { const m = new Map(prev); m.delete(data.userId); return m; });
+      }, 3000));
+    }, [conversationId, currentUserId]),
+    onUserStopTyping: useCallback((data: { userId: string }) => {
+      setTypingUsers(prev => { const m = new Map(prev); m.delete(data.userId); return m; });
+    }, []),
+  });
+
+  useEffect(() => {
+    chatApi.getConversation(conversationId).then(({ data }) => setConversation(data.conversation)).catch(() => {});
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (!conversation) return;
+    socketActions.joinConversation(conversationId);
+    return () => { socketActions.leaveConversation(conversationId); };
+  }, [conversation, conversationId, socketActions]);
+
+  const typingNames: string[] = [];
+  typingUsers.forEach((convId, userId) => {
+    if (convId === conversationId && userId !== currentUserId) typingNames.push('Пользователь');
+  });
+
+  if (!conversation) return <p className="text-xs text-text-sub p-4">Загрузка чата...</p>;
+
+  const isParticipant = conversation.participants.some(p => p.userId === currentUserId);
+  if (!isParticipant) {
+    return <p className="text-sm text-text-sub p-4">Вы не подключены к этому чату. Нажмите «Принять чат» чтобы присоединиться.</p>;
+  }
+
+  return (
+    <div className="flex flex-col h-[400px]">
+      <MessageList
+        conversationId={conversationId}
+        currentUserId={currentUserId}
+        isGroup
+        realtimeMessages={realtimeMessages}
+        participantNames={{}}
+      />
+      <TypingIndicator userNames={typingNames} />
+      <MessageInput
+        conversationId={conversationId}
+        onMessageSent={() => {}}
+        onTyping={() => socketActions.emitTyping(conversationId)}
+        onStopTyping={() => socketActions.emitStopTyping(conversationId)}
+      />
+    </div>
+  );
+}
+
+// ── Main component ──
+
 export function ManagerRequestDetail({ requestId }: { requestId: string }) {
+  const { user: authUser } = useAuth();
+  const currentUserId = authUser?.id ?? '';
+
   const [request, setRequest] = useState<RepairRequestDetail | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
   const [selectedRepairer, setSelectedRepairer] = useState('');
@@ -99,6 +184,9 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [newPartName, setNewPartName] = useState('');
   const [newPartNote, setNewPartNote] = useState('');
   const [addingPart, setAddingPart] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatAttached, setChatAttached] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -107,12 +195,17 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         setRequest(req as unknown as RepairRequestDetail);
         setSelectedRepairer(req.repairer?.id ?? '');
 
-        // Fetch available repairers
-        const { data: repData } = await repairerApi.getAll({ limit: 100 });
-        const list = repData.data ?? [];
-        setRepairers(list);
+        // Check if manager is attached to chat
+        if ((req as any).conversationId) {
+          try {
+            const { data: conv } = await chatApi.getConversation((req as any).conversationId);
+            setChatAttached(conv.conversation.participants.some((p: any) => p.userId === authUser?.id));
+          } catch { /* not a participant */ }
+        }
 
-        // Fetch request photos
+        const { data: repData } = await repairerApi.getAll({ limit: 100 });
+        setRepairers(repData.data ?? []);
+
         try {
           const { data: images } = await api.get('/file-upload/image/attached', {
             params: { ownerType: 'repair_request', ownerId: requestId },
@@ -121,37 +214,57 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
             .filter(Boolean);
           setPhotos(urls);
-        } catch {
-          // no photos
-        }
+        } catch {}
 
-        // Fetch broken parts
         try {
           const { data: partsData } = await repairRequestApi.getBrokenParts(requestId);
           setBrokenParts(partsData.parts ?? []);
-        } catch {
-          // no broken parts
-        }
-      } catch {
-        // silently fail
-      } finally {
+        } catch {}
+      } catch {} finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [requestId]);
+  }, [requestId, authUser?.id]);
 
   const handleAssign = async () => {
     if (!selectedRepairer || !request) return;
     setAssigning(true);
     try {
-      await repairRequestApi.assign(request.id, selectedRepairer);
+      const isReassign = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
+      if (isReassign) {
+        await repairRequestApi.reassign(request.id, selectedRepairer);
+      } else {
+        await repairRequestApi.assign(request.id, selectedRepairer);
+      }
       const { data: updated } = await repairRequestApi.getOne(requestId);
       setRequest(updated as unknown as RepairRequestDetail);
-    } catch {
-      // silently fail
-    } finally {
+    } catch {} finally {
       setAssigning(false);
+    }
+  };
+
+  const handleAcceptChat = async () => {
+    if (!request?.conversationId) return;
+    setChatLoading(true);
+    try {
+      await repairRequestApi.acceptChat(request.id);
+      setChatAttached(true);
+      setChatOpen(true);
+    } catch {} finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleDetachChat = async () => {
+    if (!request?.conversationId) return;
+    setChatLoading(true);
+    try {
+      await repairRequestApi.detachChat(request.id);
+      setChatAttached(false);
+      setChatOpen(false);
+    } catch {} finally {
+      setChatLoading(false);
     }
   };
 
@@ -167,14 +280,10 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         name: newPartName.trim(),
         note: newPartNote.trim() || undefined,
       });
-      if (data.part) {
-        setBrokenParts((prev) => [...prev, data.part]);
-      }
+      if (data.part) setBrokenParts((prev) => [...prev, data.part]);
       setNewPartName('');
       setNewPartNote('');
-    } catch {
-      // silently fail
-    } finally {
+    } catch {} finally {
       setAddingPart(false);
     }
   };
@@ -182,21 +291,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const handlePartStatusChange = async (partId: string, newStatus: string) => {
     try {
       await repairRequestApi.updateBrokenPartStatus(requestId, partId, newStatus);
-      setBrokenParts((prev) =>
-        prev.map((p) => (p.id === partId ? { ...p, status: newStatus } : p)),
-      );
-    } catch {
-      // silently fail
-    }
+      setBrokenParts((prev) => prev.map((p) => (p.id === partId ? { ...p, status: newStatus } : p)));
+    } catch {}
   };
 
   const handleDeletePart = async (partId: string) => {
     try {
       await repairRequestApi.deleteBrokenPart(requestId, partId);
       setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
-    } catch {
-      // silently fail
-    }
+    } catch {}
   };
 
   if (loading) {
@@ -294,15 +397,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             </div>
           )}
 
-          {/* Master assignment */}
-          {canAssign && (
+          {/* Master assignment / reassignment */}
+          {canAssign && !isTerminal && (
             <div>
               <p className="text-sm font-bold text-text-main mb-2">
                 {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
               </p>
               {isAssigned && (
                 <p className="text-xs text-text-sub mb-2">
-                  При смене исполнителя заявка перейдёт в статус «Новая».
+                  При смене исполнителя заявка перейдёт в статус «Назначена».
                 </p>
               )}
               <div className="flex items-center gap-2">
@@ -326,9 +429,43 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                   disabled={!selectedRepairer || assigning}
                   className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
                 >
-                  {assigning ? 'Назначение...' : 'Назначить'}
+                  {assigning ? 'Назначение...' : isAssigned ? 'Переназначить' : 'Назначить'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Chat section */}
+          {request.conversationId && !isTerminal && (
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <p className="text-sm font-bold text-text-main">Чат по заявке</p>
+                <div className="flex gap-2">
+                  {!chatAttached ? (
+                    <Button variant="primary" size="sm" onClick={handleAcceptChat} disabled={chatLoading}>
+                      {chatLoading ? 'Подключение...' : 'Принять чат'}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setChatOpen(!chatOpen)}
+                      >
+                        {chatOpen ? 'Свернуть' : 'Развернуть'}
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={handleDetachChat} disabled={chatLoading}>
+                        {chatLoading ? '...' : 'Отключиться'}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              {chatOpen && chatAttached && request.conversationId && (
+                <div className="border border-border-main rounded-sm overflow-hidden">
+                  <RequestChat conversationId={request.conversationId} currentUserId={currentUserId} />
+                </div>
+              )}
             </div>
           )}
 
@@ -432,7 +569,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         {photos.length > 0 && (
           <div className="lg:w-[360px] flex-shrink-0">
             <p className="text-sm font-bold text-text-main mb-3">Фото клиента</p>
-            {/* Main photo */}
             <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
               {photos[mainPhoto] && (
                 <Image
@@ -446,7 +582,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 />
               )}
             </div>
-            {/* Thumbnails */}
             <div className="flex gap-2 mt-2">
               {photos.map((photo, idx) => (
                 <button

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, TabList, Tab } from '@asko/ui';
+import { Card, TabList, Tab, Badge, Button } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { chatApi } from '@/lib/api/chat';
+import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 type TabKey = 'all' | 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
@@ -25,6 +27,7 @@ const STATUS_MAP: Record<string, TabKey> = {
   [RepairRequestStatus.ASSIGNED]: 'assigned',
   [RepairRequestStatus.ACCEPTED]: 'assigned',
   [RepairRequestStatus.IN_PROGRESS]: 'in_progress',
+  [RepairRequestStatus.PAUSED]: 'in_progress',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'in_progress',
   [RepairRequestStatus.COMPLETED]: 'completed',
   [RepairRequestStatus.CANCELLED]: 'cancelled',
@@ -47,6 +50,7 @@ const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.PAUSED]: 'Приостановлена',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
   [RepairRequestStatus.COMPLETED]: 'Завершена',
   [RepairRequestStatus.CANCELLED]: 'Отменена',
@@ -55,14 +59,22 @@ const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Возвращено',
 };
 
+const PAGE_SIZE = 12;
+
 interface RepairRequest {
   id: string;
   description: string;
   status: RepairRequestStatus;
+  conversationId?: string;
   user?: { firstName?: string; lastName?: string };
   address?: { city?: string; street?: string };
   userDevice?: { device?: { name?: string } };
   createdAt: Date | string;
+}
+
+interface ConversationInfo {
+  unreadCount: number;
+  participantUserIds: string[];
 }
 
 function formatDate(dateStr: Date | string) {
@@ -70,7 +82,32 @@ function formatDate(dateStr: Date | string) {
   return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function RequestCardItem({ request }: { request: RepairRequest }) {
+function ChatStatusBadges({ convInfo, currentUserId }: { convInfo?: ConversationInfo; currentUserId: string }) {
+  if (!convInfo) return null;
+
+  const iAmIn = convInfo.participantUserIds.includes(currentUserId);
+  // Check if any non-creator manager is attached (participantUserIds length > 1 means someone besides creator joined)
+  const hasManager = convInfo.participantUserIds.length > 1;
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {convInfo.unreadCount > 0 && (
+        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-brand-red text-white text-[10px] font-bold">
+          {convInfo.unreadCount > 99 ? '99+' : convInfo.unreadCount}
+        </span>
+      )}
+      {iAmIn ? (
+        <Badge variant="success" className="text-[10px] py-0 px-1.5">подключен</Badge>
+      ) : hasManager ? (
+        <Badge variant="warning" className="text-[10px] py-0 px-1.5">другой менеджер</Badge>
+      ) : (
+        <Badge variant="error" className="text-[10px] py-0 px-1.5">ожидает менеджера</Badge>
+      )}
+    </div>
+  );
+}
+
+function RequestCardItem({ request, convInfo, currentUserId }: { request: RepairRequest; convInfo?: ConversationInfo; currentUserId: string }) {
   const tabKey = STATUS_MAP[request.status] ?? 'pending';
   const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
   const deviceName = request.userDevice?.device?.name || request.description;
@@ -78,13 +115,18 @@ function RequestCardItem({ request }: { request: RepairRequest }) {
 
   return (
     <Card padding="none" className="p-5 flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-xs text-text-sub">
-        <span>{formatDate(request.createdAt)}</span>
-        {location && (
-          <>
-            <span>&bull;</span>
-            <span>{location}</span>
-          </>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs text-text-sub">
+          <span>{formatDate(request.createdAt)}</span>
+          {location && (
+            <>
+              <span>&bull;</span>
+              <span>{location}</span>
+            </>
+          )}
+        </div>
+        {request.conversationId && (
+          <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
         )}
       </div>
       <p className="text-sm font-medium text-text-main">{userName}</p>
@@ -111,27 +153,61 @@ function RequestCardItem({ request }: { request: RepairRequest }) {
 }
 
 export function ManagerRequests() {
+  const { user: authUser } = useAuth();
+  const currentUserId = authUser?.id ?? '';
+
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [convInfoMap, setConvInfoMap] = useState<Record<string, ConversationInfo>>({});
 
   useEffect(() => {
     async function fetchRequests() {
+      setLoading(true);
       try {
-        const { data } = await repairRequestApi.getAll({ limit: 100 });
-        setRequests((data.data ?? []) as unknown as RepairRequest[]);
-      } catch {
-        // silently fail
-      } finally {
+        const { data } = await repairRequestApi.getAll({ offset: page, limit: PAGE_SIZE });
+        const items = (data.data ?? []) as unknown as RepairRequest[];
+        setRequests(items);
+        setTotal(data.overallCount ?? 0);
+
+        // Fetch conversation info for requests that have conversations
+        const withConv = items.filter(r => r.conversationId);
+        if (withConv.length > 0) {
+          const infoMap: Record<string, ConversationInfo> = {};
+          await Promise.all(withConv.map(async (r) => {
+            try {
+              const { data: conv } = await chatApi.getConversation(r.conversationId!);
+              infoMap[r.id] = {
+                unreadCount: conv.conversation.unreadCount ?? 0,
+                participantUserIds: conv.conversation.participants.map((p: any) => p.userId),
+              };
+            } catch {
+              // Manager may not be a participant — just check participants list
+              try {
+                const { data: parts } = await chatApi.listParticipants(r.conversationId!);
+                infoMap[r.id] = {
+                  unreadCount: 0,
+                  participantUserIds: (parts.participants ?? []).map((p: any) => p.userId),
+                };
+              } catch {}
+            }
+          }));
+          setConvInfoMap(infoMap);
+        }
+      } catch {} finally {
         setLoading(false);
       }
     }
     fetchRequests();
-  }, []);
+  }, [page]);
 
   const filteredRequests = activeTab === 'all'
     ? requests
     : requests.filter((r) => STATUS_MAP[r.status] === activeTab);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -160,8 +236,38 @@ export function ManagerRequests() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRequests.map((req) => (
-            <RequestCardItem key={req.id} request={req} />
+            <RequestCardItem
+              key={req.id}
+              request={req}
+              convInfo={convInfoMap[req.id]}
+              currentUserId={currentUserId}
+            />
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
+            Назад
+          </Button>
+          <span className="text-sm text-text-sub">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Далее
+          </Button>
         </div>
       )}
     </PageContainer>
