@@ -13,8 +13,8 @@ import { RepairerClientService } from './repairer-client.service';
                 useFactory: (config: AppConfig) => ({
                     transport: Transport.GRPC,
                     options: {
-                        package: 'repairer',
-                        protoPath: join(process.cwd(), '../../packages/proto/repairer.proto'),
+                        package: 'repair',
+                        protoPath: join(process.cwd(), '../../packages/proto/repair.proto'),
                         url: config.repairServiceUrl,
                     },
                 }),

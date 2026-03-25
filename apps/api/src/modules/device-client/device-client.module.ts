@@ -13,8 +13,8 @@ import { DeviceClientService } from './device-client.service';
                 useFactory: (config: AppConfig) => ({
                     transport: Transport.GRPC,
                     options: {
-                        package: 'device',
-                        protoPath: join(process.cwd(), '../../packages/proto/device.proto'),
+                        package: 'repair',
+                        protoPath: join(process.cwd(), '../../packages/proto/repair.proto'),
                         url: config.repairServiceUrl,
                     },
                 }),

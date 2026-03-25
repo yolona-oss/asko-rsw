@@ -2,6 +2,78 @@ syntax = "proto3";
 
 package repair;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Services
+// ═══════════════════════════════════════════════════════════════════════════
+
+service DeviceService {
+    // Device catalog (admin)
+    rpc CreateDevice(CreateDeviceRequest) returns (DeviceResponse);
+    rpc UpdateDevice(UpdateDeviceRequest) returns (DeviceResponse);
+    rpc DeleteDevice(DeleteDeviceRequest) returns (EmptyResponse);
+    rpc DeleteAllDevices(EmptyRequest) returns (DeleteAllResponse);
+    rpc ImportDevices(ImportDevicesRequest) returns (ImportDevicesResponse);
+
+    // Device catalog (public)
+    rpc FindAllDevices(FindAllDevicesRequest) returns (PaginatedDevicesResponse);
+    rpc FindDeviceBySlug(FindBySlugRequest) returns (DeviceResponse);
+    rpc FindDeviceById(FindByIdRequest) returns (DeviceResponse);
+    rpc GetDevicePrice(FindByIdRequest) returns (DevicePriceResponse);
+
+    // User devices
+    rpc RegisterUserDevice(RegisterUserDeviceRequest) returns (UserDeviceResponse);
+    rpc GetUserDevices(GetUserDevicesRequest) returns (UserDeviceListResponse);
+    rpc GetUserDevice(GetUserDeviceRequest) returns (UserDeviceResponse);
+    rpc RemoveUserDevice(RemoveUserDeviceRequest) returns (EmptyResponse);
+    rpc FindUserDeviceById(FindByIdRequest) returns (UserDeviceResponse);
+
+    // Device parts catalog
+    rpc CreateDevicePart(CreateDevicePartRequest) returns (DevicePartResponse);
+    rpc UpdateDevicePart(UpdateDevicePartRequest) returns (DevicePartResponse);
+    rpc DeleteDevicePart(DeleteDevicePartRequest) returns (EmptyResponse);
+    rpc GetDeviceParts(GetDevicePartsRequest) returns (DevicePartListResponse);
+
+    // Address
+    rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
+    rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
+    rpc FindAllAddresses(EmptyRequest) returns (AddressListResponse);
+}
+
+service CertificateService {
+    rpc AddCertificate(CertAddCertificateRequest) returns (CertificateResponse);
+    rpc CreateByDealer(CertCreateByDealerRequest) returns (CertificateResponse);
+    rpc MarkPaid(CertMarkPaidRequest) returns (CertificateResponse);
+    rpc RevokeCertificate(CertRevokeRequest) returns (CertificateResponse);
+    rpc ReassignCertificate(CertReassignRequest) returns (CertificateResponse);
+    rpc CalculatePrice(CertCalculatePriceRequest) returns (CertPriceResponse);
+    rpc FindById(CertFindByIdRequest) returns (CertificateResponse);
+    rpc FindByUser(CertFindByUserRequest) returns (CertificateListResponse);
+    rpc FindByDealer(CertFindByDealerRequest) returns (PaginatedCertificatesResponse);
+    rpc FindAll(CertFindAllRequest) returns (PaginatedCertificatesResponse);
+    rpc ValidateCertificate(CertValidateRequest) returns (CertValidateResponse);
+}
+
+service RepairerService {
+    // Repairer CRUD
+    rpc CreateRepairer(CreateRepairerRequest) returns (RepairerResponse);
+    rpc UpdateRepairer(UpdateRepairerRequest) returns (RepairerResponse);
+    rpc UpdateLocation(UpdateLocationRequest) returns (RepairerResponse);
+    rpc GetMyProfile(GetByUserIdRequest) returns (RepairerResponse);
+    rpc FindAllRepairers(FindAllRepairersRequest) returns (PaginatedRepairersResponse);
+    rpc FindRepairerById(FindByIdRequest) returns (RepairerResponse);
+    rpc FindByUserId(GetByUserIdRequest) returns (RepairerResponse);
+    rpc FindActiveInCity(FindInCityRequest) returns (RepairerListResponse);
+    rpc IncrementCompleted(FindByIdRequest) returns (EmptyRepairerResponse);
+    rpc UpdateLastLocation(UpdateLastLocationRequest) returns (EmptyRepairerResponse);
+
+    // Reviews
+    rpc CreateReview(CreateReviewRequest) returns (ReviewResponse);
+    rpc FindReviewsByRepairer(FindReviewsByRepairerRequest) returns (PaginatedReviewsResponse);
+    rpc GetRepairerRating(FindByIdRequest) returns (RatingResponse);
+    rpc FindReviewsByUser(GetByUserIdRequest) returns (ReviewListResponse);
+    rpc FindUserReview(FindUserReviewRequest) returns (ReviewResponse);
+}
+
 service RepairService {
     // Repair request lifecycle
     rpc CreateRequest(RepairCreateRequest) returns (RepairRequestResponse);
@@ -42,7 +114,492 @@ service RepairService {
     rpc CheckActiveForDevice(RepairCheckActiveForDeviceRequest) returns (RepairCheckActiveResponse);
 }
 
-// ─── Records ────────────────────────────────────────────────────────────
+service DealerService {
+    rpc CreateProfile(CreateDealerProfileRequest) returns (DealerProfileResponse);
+    rpc UpdateProfile(UpdateDealerProfileRequest) returns (DealerProfileResponse);
+    rpc GetProfile(DealerGetByUserIdRequest) returns (DealerProfileResponse);
+    rpc AddClient(AddClientRequest) returns (DealerClientResponse);
+    rpc LinkClientOnCertificateApproval(LinkClientRequest) returns (DealerEmptyResponse);
+    rpc AwardPointsForCertificate(AwardPointsRequest) returns (DealerEmptyResponse);
+    rpc GetClients(DealerGetByUserIdRequest) returns (DealerClientListResponse);
+    rpc GetUserDevicesForCertificate(DealerGetByUserIdRequest) returns (DealerUserDeviceListResponse);
+    rpc GetPointsHistory(DealerPointsHistoryRequest) returns (PaginatedPointsResponse);
+    rpc RequestWithdrawal(RequestWithdrawalRequest) returns (WithdrawalResponse);
+    rpc ProcessWithdrawal(ProcessWithdrawalRequest) returns (WithdrawalResponse);
+    rpc GetWithdrawals(DealerGetByUserIdRequest) returns (WithdrawalListResponse);
+    rpc GetAllWithdrawals(DealerPaginationRequest) returns (PaginatedWithdrawalsResponse);
+    rpc GetWithdrawalForPayout(DealerFindByIdRequest) returns (WithdrawalPayoutResponse);
+    rpc CompleteWithdrawal(DealerFindByIdRequest) returns (DealerEmptyResponse);
+    rpc FindAllDealers(DealerPaginationRequest) returns (PaginatedDealersResponse);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Common Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message FindByIdRequest {
+    string id = 1;
+}
+
+message EmptyRequest {}
+
+message EmptyResponse {}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Device Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Device Requests ───────────────────────────────────────────────────────
+
+message CreateDeviceRequest {
+    string name = 1;
+    string type = 2;
+    string model = 3;
+    string brand = 4;
+    string description = 5;
+    string specifications = 6;
+    string features = 7;
+}
+
+message UpdateDeviceRequest {
+    string id = 1;
+    string name = 2;
+    string type = 3;
+    string model = 4;
+    string brand = 5;
+    double price = 6;
+    string description = 7;
+    string specifications = 8;
+    string features = 9;
+    string slug = 10;
+    bool isFeatured = 11;
+}
+
+message DeleteDeviceRequest {
+    string id = 1;
+}
+
+message ImportDevicesRequest {
+    string productsJson = 1;
+}
+
+message FindAllDevicesRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message FindBySlugRequest {
+    string slug = 1;
+}
+
+message RegisterUserDeviceRequest {
+    string userId = 1;
+    string deviceId = 2;
+    string serialNumber = 3;
+    string addressId = 4;
+    string purchaseDate = 5;
+    string warrantyUntil = 6;
+    string notes = 7;
+}
+
+message GetUserDevicesRequest {
+    string userId = 1;
+}
+
+message GetUserDeviceRequest {
+    string userId = 1;
+    string id = 2;
+}
+
+message RemoveUserDeviceRequest {
+    string userId = 1;
+    string id = 2;
+}
+
+message CreateDevicePartRequest {
+    string deviceId = 1;
+    string name = 2;
+    string partNumber = 3;
+    double price = 4;
+    string description = 5;
+}
+
+message UpdateDevicePartRequest {
+    string id = 1;
+    string name = 2;
+    string partNumber = 3;
+    double price = 4;
+    string description = 5;
+}
+
+message DeleteDevicePartRequest {
+    string id = 1;
+}
+
+message GetDevicePartsRequest {
+    string deviceId = 1;
+}
+
+message CreateAddressRequest {
+    string country = 1;
+    string city = 2;
+    string street = 3;
+    int32 house = 4;
+    int32 building = 5;
+    int32 floor = 6;
+    int32 room = 7;
+    string postalCode = 8;
+}
+
+// ─── Device Responses ──────────────────────────────────────────────────────
+
+message DeleteAllResponse {
+    int32 deletedCount = 1;
+}
+
+message ImportDevicesResponse {
+    int32 importedCount = 1;
+}
+
+message DeviceRecord {
+    string id = 1;
+    string name = 2;
+    string type = 3;
+    string model = 4;
+    string brand = 5;
+    double price = 6;
+    string description = 7;
+    string specifications = 8;
+    string features = 9;
+    string slug = 10;
+    bool isFeatured = 11;
+    string createdAt = 12;
+    string updatedAt = 13;
+}
+
+message DeviceResponse {
+    DeviceRecord device = 1;
+}
+
+message DevicePriceResponse {
+    double price = 1;
+}
+
+message PaginatedDevicesResponse {
+    repeated DeviceRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message AddressRecord {
+    string id = 1;
+    string country = 2;
+    string city = 3;
+    string street = 4;
+    int32 house = 5;
+    int32 building = 6;
+    int32 floor = 7;
+    int32 room = 8;
+    string postalCode = 9;
+}
+
+message AddressResponse {
+    AddressRecord address = 1;
+}
+
+message AddressListResponse {
+    repeated AddressRecord addresses = 1;
+}
+
+message DevicePartRecord {
+    string id = 1;
+    string deviceId = 2;
+    string name = 3;
+    string partNumber = 4;
+    double price = 5;
+    string description = 6;
+    string createdAt = 7;
+    string updatedAt = 8;
+}
+
+message DevicePartResponse {
+    DevicePartRecord part = 1;
+}
+
+message DevicePartListResponse {
+    repeated DevicePartRecord parts = 1;
+}
+
+message UserDeviceRecord {
+    string id = 1;
+    string userId = 2;
+    string deviceId = 3;
+    string serialNumber = 4;
+    string addressId = 5;
+    string purchaseDate = 6;
+    string warrantyUntil = 7;
+    string notes = 8;
+    string createdAt = 9;
+    DeviceRecord device = 10;
+    AddressRecord address = 11;
+}
+
+message UserDeviceResponse {
+    UserDeviceRecord userDevice = 1;
+}
+
+message UserDeviceListResponse {
+    repeated UserDeviceRecord userDevices = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Certificate Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Certificate Records ───────────────────────────────────────────────────
+
+message CertificateRecord {
+    string id = 1;
+    string userId = 2;
+    string userDeviceId = 3;
+    string dealerId = 4;
+    string certificateNumber = 5;
+    string status = 6;
+    string issuedAt = 7;
+    string expiresAt = 8;
+    double price = 9;
+    bool paid = 10;
+    string purchaseReceiptUrl = 11;
+    string description = 12;
+    string createdAt = 13;
+}
+
+// ─── Certificate Requests ──────────────────────────────────────────────────
+
+message CertAddCertificateRequest {
+    string userId = 1;
+    string userDeviceId = 2;
+    string certificateNumber = 3;
+    string expiresAt = 4;
+}
+
+message CertCreateByDealerRequest {
+    string clientUserId = 1;
+    string userDeviceId = 2;
+    string dealerId = 3;
+    string expiresAt = 4;
+    string purchaseReceiptUrl = 5;
+    string description = 6;
+    string serialNumber = 7;
+}
+
+message CertMarkPaidRequest {
+    string id = 1;
+}
+
+message CertRevokeRequest {
+    string id = 1;
+}
+
+message CertReassignRequest {
+    string userId = 1;
+    string certId = 2;
+    string userDeviceId = 3;
+}
+
+message CertCalculatePriceRequest {
+    string userDeviceId = 1;
+    string expiresAt = 2;
+}
+
+message CertFindByIdRequest {
+    string id = 1;
+}
+
+message CertFindByUserRequest {
+    string userId = 1;
+}
+
+message CertFindByDealerRequest {
+    string dealerId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    string search = 4;
+    string status = 5;
+}
+
+message CertFindAllRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message CertValidateRequest {
+    string certificateNumber = 1;
+}
+
+// ─── Certificate Responses ─────────────────────────────────────────────────
+
+message CertificateResponse {
+    CertificateRecord certificate = 1;
+}
+
+message CertificateListResponse {
+    repeated CertificateRecord certificates = 1;
+}
+
+message PaginatedCertificatesResponse {
+    repeated CertificateRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message CertPriceResponse {
+    double price = 1;
+}
+
+message CertValidateResponse {
+    bool valid = 1;
+    CertificateRecord certificate = 2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Repairer Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Repairer Records ──────────────────────────────────────────────────────
+
+message RepairerRecord {
+    string id = 1;
+    string userId = 2;
+    repeated string specializations = 3;
+    string city = 4;
+    bool isActive = 5;
+    int32 completedRepairs = 6;
+    double latitude = 7;
+    double longitude = 8;
+    string lastLocationUpdate = 9;
+    string createdAt = 10;
+    string updatedAt = 11;
+}
+
+message ReviewRecord {
+    string id = 1;
+    string repairRequestId = 2;
+    string userId = 3;
+    string repairerId = 4;
+    int32 rating = 5;
+    string comment = 6;
+    string createdAt = 7;
+}
+
+// ─── Repairer Requests ─────────────────────────────────────────────────────
+
+message CreateRepairerRequest {
+    string userId = 1;
+    string city = 2;
+    repeated string specializations = 3;
+}
+
+message UpdateRepairerRequest {
+    string id = 1;
+    string city = 2;
+    repeated string specializations = 3;
+    bool isActive = 4;
+}
+
+message UpdateLocationRequest {
+    string userId = 1;
+    double latitude = 2;
+    double longitude = 3;
+}
+
+message UpdateLastLocationRequest {
+    string id = 1;
+    double latitude = 2;
+    double longitude = 3;
+}
+
+message GetByUserIdRequest {
+    string userId = 1;
+}
+
+message FindAllRepairersRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message FindInCityRequest {
+    string city = 1;
+}
+
+message CreateReviewRequest {
+    string repairRequestId = 1;
+    string userId = 2;
+    string repairerId = 3;
+    int32 rating = 4;
+    string comment = 5;
+}
+
+message FindReviewsByRepairerRequest {
+    string repairerId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message FindUserReviewRequest {
+    string userId = 1;
+    string reviewId = 2;
+}
+
+// ─── Repairer Responses ────────────────────────────────────────────────────
+
+message EmptyRepairerResponse {}
+
+message RepairerResponse {
+    RepairerRecord repairer = 1;
+}
+
+message RepairerListResponse {
+    repeated RepairerRecord repairers = 1;
+}
+
+message PaginatedRepairersResponse {
+    repeated RepairerRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message ReviewResponse {
+    ReviewRecord review = 1;
+}
+
+message ReviewListResponse {
+    repeated ReviewRecord reviews = 1;
+}
+
+message PaginatedReviewsResponse {
+    repeated ReviewRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message RatingResponse {
+    double average = 1;
+    int32 count = 2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Repair Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Repair Records ────────────────────────────────────────────────────────
 
 message RepairRequestRecord {
     string id = 1;
@@ -95,7 +652,7 @@ message WorkStepRecord {
     string updatedAt = 9;
 }
 
-// ─── Requests ───────────────────────────────────────────────────────────
+// ─── Repair Requests ───────────────────────────────────────────────────────
 
 message RepairCreateRequest {
     string userId = 1;
@@ -270,7 +827,7 @@ message RepairCheckActiveForDeviceRequest {
     string userDeviceId = 1;
 }
 
-// ─── Responses ──────────────────────────────────────────────────────────
+// ─── Repair Responses ──────────────────────────────────────────────────────
 
 message RepairEmptyResponse {}
 
@@ -309,4 +866,172 @@ message BrokenPartListResponse {
 message RepairCheckActiveResponse {
     bool hasActive = 1;
     RepairRequestRecord request = 2;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Dealer Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Dealer Records ────────────────────────────────────────────────────────
+
+message DealerProfileRecord {
+    string id = 1;
+    string userId = 2;
+    string companyName = 3;
+    string inn = 4;
+    int32 pointsBalance = 5;
+    string createdAt = 6;
+    string updatedAt = 7;
+}
+
+message DealerClientRecord {
+    string id = 1;
+    string dealerId = 2;
+    string clientUserId = 3;
+    string createdAt = 4;
+}
+
+message PointsTransactionRecord {
+    string id = 1;
+    string dealerId = 2;
+    string type = 3;
+    int32 amount = 4;
+    string reason = 5;
+    string repairRequestId = 6;
+    string createdAt = 7;
+}
+
+message WithdrawalRecord {
+    string id = 1;
+    string dealerId = 2;
+    int32 amount = 3;
+    string status = 4;
+    string requestedAt = 5;
+    string processedAt = 6;
+    string processedByUserId = 7;
+}
+
+message DealerUserDeviceRecord {
+    string id = 1;
+    string userId = 2;
+    string deviceId = 3;
+    string serialNumber = 4;
+    string deviceName = 5;
+    string deviceModel = 6;
+    string deviceBrand = 7;
+}
+
+// ─── Dealer Requests ───────────────────────────────────────────────────────
+
+message CreateDealerProfileRequest {
+    string userId = 1;
+    string companyName = 2;
+    string inn = 3;
+}
+
+message UpdateDealerProfileRequest {
+    string userId = 1;
+    string companyName = 2;
+    string inn = 3;
+}
+
+message DealerGetByUserIdRequest {
+    string userId = 1;
+}
+
+message AddClientRequest {
+    string dealerUserId = 1;
+    string clientUserId = 2;
+}
+
+message LinkClientRequest {
+    string dealerId = 1;
+    string clientUserId = 2;
+}
+
+message AwardPointsRequest {
+    string dealerId = 1;
+    double certificatePrice = 2;
+    string certificateNumber = 3;
+}
+
+message DealerPointsHistoryRequest {
+    string userId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message RequestWithdrawalRequest {
+    string userId = 1;
+    int32 amount = 2;
+}
+
+message ProcessWithdrawalRequest {
+    string withdrawalId = 1;
+    string adminUserId = 2;
+    string status = 3;
+}
+
+message DealerPaginationRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+}
+
+message DealerFindByIdRequest {
+    string id = 1;
+}
+
+// ─── Dealer Responses ──────────────────────────────────────────────────────
+
+message DealerEmptyResponse {}
+
+message DealerProfileResponse {
+    DealerProfileRecord profile = 1;
+}
+
+message DealerClientResponse {
+    DealerClientRecord client = 1;
+}
+
+message DealerClientListResponse {
+    repeated DealerClientRecord clients = 1;
+}
+
+message DealerUserDeviceListResponse {
+    repeated DealerUserDeviceRecord devices = 1;
+}
+
+message PaginatedPointsResponse {
+    repeated PointsTransactionRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message WithdrawalResponse {
+    WithdrawalRecord withdrawal = 1;
+}
+
+message WithdrawalListResponse {
+    repeated WithdrawalRecord withdrawals = 1;
+}
+
+message PaginatedWithdrawalsResponse {
+    repeated WithdrawalRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message WithdrawalPayoutResponse {
+    int32 amount = 1;
+    string dealerUserId = 2;
+}
+
+message PaginatedDealersResponse {
+    repeated DealerProfileRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
 }

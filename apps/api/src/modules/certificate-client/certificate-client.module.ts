@@ -13,8 +13,8 @@ import { CertificateClientService } from './certificate-client.service';
                 useFactory: (config: AppConfig) => ({
                     transport: Transport.GRPC,
                     options: {
-                        package: 'certificate',
-                        protoPath: join(process.cwd(), '../../packages/proto/certificate.proto'),
+                        package: 'repair',
+                        protoPath: join(process.cwd(), '../../packages/proto/repair.proto'),
                         url: config.repairServiceUrl,
                     },
                 }),
