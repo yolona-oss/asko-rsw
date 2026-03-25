@@ -1,20 +1,36 @@
 import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
+import { ClientProxy } from "@nestjs/microservices";
 import { ImageProcessingService } from "./image-processing.service";
 import { ImageTypeEnum } from "@asko/shared";
 import { Image } from 'entities/image.entity';
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
+import { AppConfig } from "app.config";
 import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
 import 'multer';
 
 @Injectable()
-export class ImageService {
+export class ImageService implements OnModuleInit {
     constructor(
         private readonly em: EntityManager,
         private readonly imgProcessor: ImageProcessingService,
+        private readonly config: AppConfig,
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+        @Inject('IMAGE_EVENTS') private readonly rmqClient: ClientProxy,
     ) { }
+
+    async onModuleInit() {
+        await this.rmqClient.connect();
+    }
+
+    private emitResize(image: Image): void {
+        if (this.config.fileStorageMode !== 'local') return;
+        this.rmqClient.emit('image.resize', {
+            imageId: image.id,
+            originalPublicId: image.image.original.public_id,
+        });
+    }
 
     @CreateRequestContext()
     async upload(file: Express.Multer.File, alt?: string) {
@@ -90,6 +106,7 @@ export class ImageService {
         image.order = 0;
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -104,6 +121,7 @@ export class ImageService {
         image.order = 0;
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -118,6 +136,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Device);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -132,6 +151,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Article);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -146,6 +166,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.RepairRequest);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -160,6 +181,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Review);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -174,6 +196,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.DevicePart);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 
@@ -188,6 +211,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ImageTypeEnum.BrokenPart);
 
         await this.em.persistAndFlush(image);
+        this.emitResize(image);
         return image;
     }
 

@@ -41,9 +41,14 @@ services:
     container_name: asko-file-service
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      - rabbitmq
+    volumes:
+      - images-data:/app/apps/file-service/images
     environment:
       NODE_ENV: production
       GRPC_PORT: 5002
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
   payment-service:
     build:
@@ -83,6 +88,8 @@ services:
       - file-service
       - repair-service
       - notification-service
+    volumes:
+      - images-data:/app/apps/api/images
     environment:
       NODE_ENV: production
       USER_SERVICE_URL: "localhost:5000"
@@ -115,3 +122,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  images-data:

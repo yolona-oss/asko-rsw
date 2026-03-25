@@ -32,6 +32,12 @@ export class AppConfig {
         return this.configService.getOrThrow<string>('SERVER_URL');
     }
 
+    get rabbitmq() {
+        return {
+            url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
+        };
+    }
+
     get cloudinary() {
         return {
             resolve_name: this.configService.getOrThrow<string>('CLOUDINARY_RESOLVE_NAME'),
