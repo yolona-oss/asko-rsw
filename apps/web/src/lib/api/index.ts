@@ -9,3 +9,4 @@ export { userApi } from './user';
 export { dealerApi } from './dealer';
 export { fileUploadApi } from './file-upload';
 export { paymentApi } from './payment';
+export { notificationApi } from './notification';
