@@ -1,0 +1,836 @@
+{
+  "namespaces": [
+    "public"
+  ],
+  "name": "public",
+  "tables": [
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "conversation_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "direct",
+            "group"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "conversation_type"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "creator_id": {
+          "name": "creator_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "conversation",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "creator_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "conversation_creator_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "conversation_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "conversation_type": {
+          "name": "conversation_type",
+          "schema": "public",
+          "items": [
+            "direct",
+            "group"
+          ]
+        },
+        "message_type": {
+          "name": "message_type",
+          "schema": "public",
+          "items": [
+            "text",
+            "image",
+            "video",
+            "system"
+          ]
+        },
+        "participant_role": {
+          "name": "participant_role",
+          "schema": "public",
+          "items": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        },
+        "presence_status": {
+          "name": "presence_status",
+          "schema": "public",
+          "items": [
+            "online",
+            "offline"
+          ]
+        },
+        "user_activity": {
+          "name": "user_activity",
+          "schema": "public",
+          "items": [
+            "idle",
+            "typing",
+            "uploading_image",
+            "uploading_video"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "role": {
+          "name": "role",
+          "type": "participant_role",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'member'",
+          "comment": null,
+          "enumItems": [
+            "owner",
+            "admin",
+            "member"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "participant_role"
+        },
+        "last_read_message_id": {
+          "name": "last_read_message_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "conversation_participant",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "conversation_participant_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "conversation_participant_user_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "conversation_participant_conversation_id_foreign": {
+          "columnNames": [
+            "conversation_id"
+          ],
+          "constraintName": "conversation_participant_conversation_id_foreign",
+          "localTableName": "public.conversation_participant",
+          "referencedTableName": "public.conversation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "conversation_type": {
+          "name": "conversation_type",
+          "schema": "public",
+          "items": [
+            "direct",
+            "group"
+          ]
+        },
+        "message_type": {
+          "name": "message_type",
+          "schema": "public",
+          "items": [
+            "text",
+            "image",
+            "video",
+            "system"
+          ]
+        },
+        "participant_role": {
+          "name": "participant_role",
+          "schema": "public",
+          "items": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        },
+        "presence_status": {
+          "name": "presence_status",
+          "schema": "public",
+          "items": [
+            "online",
+            "offline"
+          ]
+        },
+        "user_activity": {
+          "name": "user_activity",
+          "schema": "public",
+          "items": [
+            "idle",
+            "typing",
+            "uploading_image",
+            "uploading_video"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "message_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "text",
+            "image",
+            "video",
+            "system"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "message_type"
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "attachment_json": {
+          "name": "attachment_json",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "is_edited": {
+          "name": "is_edited",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "message",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "message_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "sender_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "message_sender_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "message_conversation_id_foreign": {
+          "columnNames": [
+            "conversation_id"
+          ],
+          "constraintName": "message_conversation_id_foreign",
+          "localTableName": "public.message",
+          "referencedTableName": "public.conversation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "conversation_type": {
+          "name": "conversation_type",
+          "schema": "public",
+          "items": [
+            "direct",
+            "group"
+          ]
+        },
+        "message_type": {
+          "name": "message_type",
+          "schema": "public",
+          "items": [
+            "text",
+            "image",
+            "video",
+            "system"
+          ]
+        },
+        "participant_role": {
+          "name": "participant_role",
+          "schema": "public",
+          "items": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        },
+        "presence_status": {
+          "name": "presence_status",
+          "schema": "public",
+          "items": [
+            "online",
+            "offline"
+          ]
+        },
+        "user_activity": {
+          "name": "user_activity",
+          "schema": "public",
+          "items": [
+            "idle",
+            "typing",
+            "uploading_image",
+            "uploading_video"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "status": {
+          "name": "status",
+          "type": "presence_status",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'offline'",
+          "comment": null,
+          "enumItems": [
+            "online",
+            "offline"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "presence_status"
+        },
+        "activity": {
+          "name": "activity",
+          "type": "user_activity",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'idle'",
+          "comment": null,
+          "enumItems": [
+            "idle",
+            "typing",
+            "uploading_image",
+            "uploading_video"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "user_activity"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "user_presence",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "user_presence_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "user_presence_user_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "conversation_type": {
+          "name": "conversation_type",
+          "schema": "public",
+          "items": [
+            "direct",
+            "group"
+          ]
+        },
+        "message_type": {
+          "name": "message_type",
+          "schema": "public",
+          "items": [
+            "text",
+            "image",
+            "video",
+            "system"
+          ]
+        },
+        "participant_role": {
+          "name": "participant_role",
+          "schema": "public",
+          "items": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        },
+        "presence_status": {
+          "name": "presence_status",
+          "schema": "public",
+          "items": [
+            "online",
+            "offline"
+          ]
+        },
+        "user_activity": {
+          "name": "user_activity",
+          "schema": "public",
+          "items": [
+            "idle",
+            "typing",
+            "uploading_image",
+            "uploading_video"
+          ]
+        }
+      },
+      "comment": null
+    }
+  ],
+  "nativeEnums": {
+    "conversation_type": {
+      "name": "conversation_type",
+      "schema": "public",
+      "items": [
+        "direct",
+        "group"
+      ]
+    },
+    "message_type": {
+      "name": "message_type",
+      "schema": "public",
+      "items": [
+        "text",
+        "image",
+        "video",
+        "system"
+      ]
+    },
+    "participant_role": {
+      "name": "participant_role",
+      "schema": "public",
+      "items": [
+        "owner",
+        "admin",
+        "member"
+      ]
+    },
+    "presence_status": {
+      "name": "presence_status",
+      "schema": "public",
+      "items": [
+        "online",
+        "offline"
+      ]
+    },
+    "user_activity": {
+      "name": "user_activity",
+      "schema": "public",
+      "items": [
+        "idle",
+        "typing",
+        "uploading_image",
+        "uploading_video"
+      ]
+    }
+  }
+}
