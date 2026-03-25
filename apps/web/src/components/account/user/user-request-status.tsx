@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Textarea } from '@asko/ui';
+import { Button, Textarea } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
+import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import { RepairRequestStatus } from '@asko/shared/client';
@@ -20,24 +21,25 @@ const TERMINAL_STATUSES = [
 const STEPS = [
   { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING] },
   { key: 'payment', label: 'Оплата', statuses: [RepairRequestStatus.PAID] },
-  { key: 'choosing', label: 'Выбор\nмастера', statuses: [RepairRequestStatus.ASSIGNED] },
+  { key: 'choosing', label: 'Назначение\nмастера', statuses: [RepairRequestStatus.ASSIGNED, RepairRequestStatus.REFUSED] },
   { key: 'traveling', label: 'Мастер\nвыехал', statuses: [RepairRequestStatus.ACCEPTED] },
-  { key: 'done', label: 'Ремонт\nвыполнен', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION] },
+  { key: 'repair', label: 'Ремонт', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.PAUSED, RepairRequestStatus.AWAITING_COMPLETION] },
   { key: 'completed', label: 'Завершено', statuses: [RepairRequestStatus.COMPLETED] },
 ] as const;
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку. Ожидайте назначения мастера и оценки стоимости ремонта.',
+  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку. Ожидайте оценки стоимости ремонта.',
   [RepairRequestStatus.PAID]: 'Оплата получена. Ожидайте назначения мастера.',
   [RepairRequestStatus.ASSIGNED]: 'Мастер назначен и скоро свяжется с вами для согласования времени визита.',
   [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку и выехал к вам.',
   [RepairRequestStatus.IN_PROGRESS]: 'Мастер работает над ремонтом вашего устройства.',
+  [RepairRequestStatus.PAUSED]: 'Ремонт временно приостановлен. Мастер вернётся к работе позже.',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ремонт почти завершён, ожидайте подтверждения.',
   [RepairRequestStatus.COMPLETED]: 'Ремонт успешно завершён. Спасибо за обращение!',
   [RepairRequestStatus.CANCELLED]: 'Заявка отменена.',
   [RepairRequestStatus.REFUSED]: 'Мастер отказался от заявки. Мы подберём нового специалиста.',
-  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос на возврат средств отправлен.',
-  [RepairRequestStatus.REFUNDED]: 'Средства возвращены.',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос на возврат средств отправлен. Ожидайте решения.',
+  [RepairRequestStatus.REFUNDED]: 'Средства возвращены на ваш счёт.',
 };
 
 function getStepIndex(status: RepairRequestStatus): number {
@@ -62,15 +64,20 @@ function StepCircle({
   isFuture: boolean;
 }) {
   let circleClass = 'border-2 border-[#E8E8E8] bg-white text-text-sub';
-  if (isActive) circleClass = 'bg-green-600 text-white shadow-[0_0_0_6px_rgba(34,197,94,0.15)]';
+  if (isActive) circleClass = 'bg-green-600 text-white';
   else if (isCompleted) circleClass = 'bg-green-600 text-white';
 
   return (
     <div className={`flex flex-col items-center gap-2 flex-shrink-0 ${isFuture ? 'opacity-40 blur-[0.5px]' : ''}`}>
-      <div
-        className={`w-20 h-20 lg:w-[100px] lg:h-[100px] rounded-full flex items-center justify-center text-xs lg:text-sm font-medium text-center px-2 leading-tight whitespace-pre-line transition-all duration-500 ${circleClass}`}
-      >
-        {label}
+      <div className="relative">
+        {isActive && (
+          <div className="absolute inset-0 rounded-full bg-green-600/30 animate-ping" />
+        )}
+        <div
+          className={`relative w-20 h-20 lg:w-[100px] lg:h-[100px] rounded-full flex items-center justify-center text-xs lg:text-sm font-medium text-center px-2 leading-tight whitespace-pre-line transition-all duration-500 ${circleClass}`}
+        >
+          {label}
+        </div>
       </div>
     </div>
   );
@@ -168,6 +175,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequest | null>(null);
   const [workSteps, setWorkSteps] = useState<WorkStep[]>([]);
   const [brokenParts, setBrokenParts] = useState<any[]>([]);
+  const [partImages, setPartImages] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -195,6 +203,17 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
       const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
       setBrokenParts(parts);
+
+      if (parts.length > 0) {
+        const imgResults = await Promise.all(parts.map((p: any) =>
+          repairRequestApi.getBrokenPartImages(requestId, p.id)
+            .then(({ data: imgs }) => ({ id: p.id, images: imgs.images ?? [] }))
+            .catch(() => ({ id: p.id, images: [] })),
+        ));
+        const imgMap: Record<string, any[]> = {};
+        imgResults.forEach((r) => { imgMap[r.id] = r.images; });
+        setPartImages(imgMap);
+      }
 
       // Check if already reviewed
       if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
@@ -286,9 +305,24 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   }
 
   const currentStepIdx = getStepIndex(request.status);
-  const stepLabel = STEPS[currentStepIdx]?.label.replace('\n', ' ') ?? request.status;
   const description = STATUS_DESCRIPTIONS[request.status] ?? '';
   const isTerminal = TERMINAL_STATUSES.includes(request.status);
+
+  const STATUS_TITLES: Record<string, string> = {
+    [RepairRequestStatus.PENDING]: 'Заявка создана',
+    [RepairRequestStatus.PAID]: 'Оплата получена',
+    [RepairRequestStatus.ASSIGNED]: 'Назначение мастера',
+    [RepairRequestStatus.ACCEPTED]: 'Мастер в пути',
+    [RepairRequestStatus.IN_PROGRESS]: 'Ремонт в процессе',
+    [RepairRequestStatus.PAUSED]: 'Ремонт приостановлен',
+    [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
+    [RepairRequestStatus.COMPLETED]: 'Ремонт завершён',
+    [RepairRequestStatus.CANCELLED]: 'Заявка отменена',
+    [RepairRequestStatus.REFUSED]: 'Поиск нового мастера',
+    [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос возврата',
+    [RepairRequestStatus.REFUNDED]: 'Средства возвращены',
+  };
+  const statusTitle = STATUS_TITLES[request.status] ?? request.status;
 
   return (
     <PageContainer>
@@ -297,7 +331,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       {/* Status info */}
       <div className="flex flex-col gap-1 max-w-lg">
         <h2 className="text-2xl lg:text-[28px] font-medium tracking-[-0.01em] text-text-main">
-          {stepLabel}
+          {statusTitle}
         </h2>
         <span className="text-sm text-text-sub">{formatDate(request.updatedAt)}</span>
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-3">
@@ -372,41 +406,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* Broken parts */}
       {brokenParts.length > 0 && (
-        <div className="flex flex-col gap-4 max-w-lg mt-6">
-          <h3 className="text-lg font-medium text-text-main">Запчасти</h3>
-          <div className="flex flex-col gap-2">
-            {brokenParts.map((part: any, idx: number) => {
-              const statusLabels: Record<string, string> = {
-                added: 'Добавлена',
-                ordered: 'Заказана',
-                shipped: 'Доставляется',
-                replaced: 'Заменена',
-              };
-              const statusVariants: Record<string, 'warning' | 'info' | 'success' | 'neutral'> = {
-                added: 'warning',
-                ordered: 'info',
-                shipped: 'info',
-                replaced: 'success',
-              };
-              const label = statusLabels[part.status] ?? part.status;
-              const variant = statusVariants[part.status] ?? 'neutral';
-
-              return (
-                <div
-                  key={part.id ?? idx}
-                  className="flex items-center justify-between gap-3 p-4 rounded-sm border border-border-light bg-white"
-                >
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="text-sm font-medium text-text-main">{part.name}</span>
-                    {part.note && (
-                      <span className="text-xs text-text-sub">{part.note}</span>
-                    )}
-                  </div>
-                  <Badge variant={variant} className="flex-shrink-0">{label}</Badge>
-                </div>
-              );
-            })}
-          </div>
+        <div className="max-w-lg mt-6">
+          <BrokenPartsView parts={brokenParts} partImages={partImages} />
         </div>
       )}
 

@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge, Button, Input, Select } from '@asko/ui';
+import { Badge, Button, Select } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
+import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
@@ -16,7 +17,7 @@ import { useChatSocket } from '@/lib/hooks/use-chat-socket';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
-import { RepairRequestStatus, BrokenPartStatus } from '@asko/shared/client';
+import { RepairRequestStatus } from '@asko/shared/client';
 import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 
 const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
@@ -49,26 +50,6 @@ const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Возвращено',
 };
 
-const PART_STATUS_LABELS: Record<string, string> = {
-  [BrokenPartStatus.ADDED]: 'Добавлена',
-  [BrokenPartStatus.ORDERED]: 'Заказана',
-  [BrokenPartStatus.SHIPPED]: 'Доставляется',
-  [BrokenPartStatus.REPLACED]: 'Заменена',
-};
-
-const PART_STATUS_VARIANT: Record<string, BadgeVariant> = {
-  [BrokenPartStatus.ADDED]: 'warning',
-  [BrokenPartStatus.ORDERED]: 'info',
-  [BrokenPartStatus.SHIPPED]: 'info',
-  [BrokenPartStatus.REPLACED]: 'success',
-};
-
-const PART_STATUS_OPTIONS = [
-  { value: BrokenPartStatus.ADDED, label: 'Добавлена' },
-  { value: BrokenPartStatus.ORDERED, label: 'Заказана' },
-  { value: BrokenPartStatus.SHIPPED, label: 'Доставляется' },
-  { value: BrokenPartStatus.REPLACED, label: 'Заменена' },
-];
 
 interface RepairRequestDetail {
   id: string;
@@ -180,10 +161,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-  const [brokenParts, setBrokenParts] = useState<any[]>([]);
-  const [newPartName, setNewPartName] = useState('');
-  const [newPartNote, setNewPartNote] = useState('');
-  const [addingPart, setAddingPart] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatAttached, setChatAttached] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
@@ -216,10 +193,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           setPhotos(urls);
         } catch {}
 
-        try {
-          const { data: partsData } = await repairRequestApi.getBrokenParts(requestId);
-          setBrokenParts(partsData.parts ?? []);
-        } catch {}
       } catch {} finally {
         setLoading(false);
       }
@@ -271,36 +244,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const isTerminal = request?.status === RepairRequestStatus.COMPLETED
     || request?.status === RepairRequestStatus.CANCELLED
     || request?.status === RepairRequestStatus.REFUNDED;
-
-  const handleAddPart = async () => {
-    if (!newPartName.trim()) return;
-    setAddingPart(true);
-    try {
-      const { data } = await repairRequestApi.addBrokenPart(requestId, {
-        name: newPartName.trim(),
-        note: newPartNote.trim() || undefined,
-      });
-      if (data.part) setBrokenParts((prev) => [...prev, data.part]);
-      setNewPartName('');
-      setNewPartNote('');
-    } catch {} finally {
-      setAddingPart(false);
-    }
-  };
-
-  const handlePartStatusChange = async (partId: string, newStatus: string) => {
-    try {
-      await repairRequestApi.updateBrokenPartStatus(requestId, partId, newStatus);
-      setBrokenParts((prev) => prev.map((p) => (p.id === partId ? { ...p, status: newStatus } : p)));
-    } catch {}
-  };
-
-  const handleDeletePart = async (partId: string) => {
-    try {
-      await repairRequestApi.deleteBrokenPart(requestId, partId);
-      setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
-    } catch {}
-  };
 
   if (loading) {
     return (
@@ -470,89 +413,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           )}
 
           {/* Broken parts */}
-          <div>
-            <p className="text-sm font-bold text-text-main mb-2">Запчасти</p>
-
-            {brokenParts.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {brokenParts.map((part) => (
-                  <div
-                    key={part.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 border border-border-main rounded-sm"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-main truncate">{part.name}</p>
-                      {part.note && (
-                        <p className="text-xs text-text-sub truncate">{part.note}</p>
-                      )}
-                    </div>
-                    <Badge
-                      variant={PART_STATUS_VARIANT[part.status] ?? 'neutral'}
-                      className="self-start sm:self-auto text-xs"
-                    >
-                      {PART_STATUS_LABELS[part.status] ?? part.status}
-                    </Badge>
-                    {!isTerminal && (
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={part.status}
-                          onChange={(e) => handlePartStatusChange(part.id, e.target.value)}
-                          className="text-xs py-1"
-                        >
-                          {PART_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </Select>
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePart(part.id)}
-                          className="text-text-sub hover:text-red-600 transition-colors cursor-pointer"
-                          aria-label="Удалить запчасть"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-text-sub">Запчасти не добавлены</p>
-            )}
-
-            {!isTerminal && (
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2 mt-3">
-                <div className="flex-1 w-full sm:w-auto">
-                  <Input
-                    placeholder="Название запчасти"
-                    value={newPartName}
-                    onChange={(e) => setNewPartName(e.target.value)}
-                    className="text-sm"
-                  />
-                </div>
-                <div className="flex-1 w-full sm:w-auto">
-                  <Input
-                    placeholder="Примечание (необязательно)"
-                    value={newPartNote}
-                    onChange={(e) => setNewPartNote(e.target.value)}
-                    className="text-sm"
-                  />
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleAddPart}
-                  disabled={!newPartName.trim() || addingPart}
-                >
-                  {addingPart ? 'Добавление...' : 'Добавить'}
-                </Button>
-              </div>
-            )}
-          </div>
+          {!isTerminal && <BrokenPartsEditor requestId={requestId} />}
 
           <Link
             href="/account/requests"

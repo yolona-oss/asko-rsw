@@ -11,6 +11,7 @@ import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 
 // ── Constants ──
 
@@ -21,13 +22,6 @@ const STEP_STATUS_LABEL: Record<WorkStepStatus, string> = {
   [WorkStepStatus.SKIPPED]: 'Пропущен',
 };
 
-const BROKEN_PART_STATUS_LABEL: Record<string, string> = {
-  added: 'Добавлена', ordered: 'Заказана', shipped: 'Доставляется', replaced: 'Заменена',
-};
-const BROKEN_PART_STATUS_VARIANT: Record<string, BadgeVariant> = {
-  added: 'warning', ordered: 'info', shipped: 'info', replaced: 'success',
-};
-const BROKEN_PART_STATUSES = ['added', 'ordered', 'shipped', 'replaced'] as const;
 
 const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PENDING]: 'warning',
@@ -117,14 +111,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [addStepError, setAddStepError] = useState('');
   const [lockLoading, setLockLoading] = useState(false);
 
-  // Broken parts
-  const [brokenParts, setBrokenParts] = useState<any[]>([]);
-  const [addPartName, setAddPartName] = useState('');
-  const [addPartNote, setAddPartNote] = useState('');
-  const [addPartLoading, setAddPartLoading] = useState(false);
-  const [addPartError, setAddPartError] = useState('');
-  const [partImages, setPartImages] = useState<Record<string, any[]>>({});
-  const partFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data fetch ──
@@ -136,7 +122,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         setRequest(data);
         if (data.totalCost) setPriceValue(String(data.totalCost));
 
-        const [stepsRes, , partsRes] = await Promise.all([
+        const [stepsRes] = await Promise.all([
           repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
           api.get('/file-upload/image/attached', {
             params: { ownerType: 'repair_request', ownerId: requestId },
@@ -146,22 +132,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               .filter(Boolean);
             setPhotos(urls);
           }).catch(() => {}),
-          repairRequestApi.getBrokenParts(requestId).then(r => r.data).catch(() => ({ parts: [] as any[] })),
         ]);
         setSteps(stepsRes.data ?? []);
-        const parts = Array.isArray(partsRes?.parts) ? partsRes.parts : [];
-        setBrokenParts(parts);
-
-        if (parts.length > 0) {
-          const imgResults = await Promise.all(parts.map((p: any) =>
-            repairRequestApi.getBrokenPartImages(requestId, p.id)
-              .then(({ data: imgs }) => ({ id: p.id, images: imgs.images ?? [] }))
-              .catch(() => ({ id: p.id, images: [] })),
-          ));
-          const imgMap: Record<string, any[]> = {};
-          imgResults.forEach((r) => { imgMap[r.id] = r.images; });
-          setPartImages(imgMap);
-        }
       } catch {} finally {
         setLoading(false);
       }
@@ -297,43 +269,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     catch {} finally { setLockLoading(false); }
   };
 
-  // ── Broken parts actions ──
-
-  const handleAddBrokenPart = async () => {
-    if (!request || !addPartName.trim()) return;
-    setAddPartLoading(true); setAddPartError('');
-    try {
-      const { data } = await repairRequestApi.addBrokenPart(request.id, { name: addPartName.trim(), note: addPartNote.trim() || undefined });
-      setBrokenParts((prev) => [...prev, data.part ?? data]);
-      setAddPartName(''); setAddPartNote('');
-    } catch { setAddPartError('Не удалось добавить запчасть'); }
-    finally { setAddPartLoading(false); }
-  };
-
-  const handleUpdatePartStatus = useCallback(async (partId: string, newStatus: string) => {
-    if (!request) return;
-    try {
-      await repairRequestApi.updateBrokenPartStatus(request.id, partId, newStatus);
-      setBrokenParts((prev) => prev.map((p) => p.id === partId ? { ...p, status: newStatus } : p));
-    } catch {}
-  }, [request]);
-
-  const handleDeleteBrokenPart = useCallback(async (partId: string) => {
-    if (!request) return;
-    try {
-      await repairRequestApi.deleteBrokenPart(request.id, partId);
-      setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
-      setPartImages((prev) => { const next = { ...prev }; delete next[partId]; return next; });
-    } catch {}
-  }, [request]);
-
-  const handleUploadPartImage = useCallback(async (partId: string, file: File) => {
-    if (!request) return;
-    try {
-      const { data } = await repairRequestApi.uploadBrokenPartImage(request.id, partId, file);
-      setPartImages((prev) => ({ ...prev, [partId]: [...(prev[partId] ?? []), data] }));
-    } catch {}
-  }, [request]);
 
   // ── Render ──
 
@@ -512,75 +447,11 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       </div>
 
       {/* ── Broken parts ── */}
-      <Card className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium text-text-main">Запчасти</h2>
-        {brokenParts.length === 0 && <p className="text-sm text-text-sub">Запчасти не добавлены</p>}
-        {brokenParts.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {brokenParts.map((part: any) => {
-              const images = partImages[part.id] ?? [];
-              return (
-                <div key={part.id} className="flex flex-col gap-2 p-4 rounded-sm border border-border-light bg-white">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-medium text-text-main">{part.name}</span>
-                      {part.note && <span className="text-xs text-text-sub">{part.note}</span>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant={BROKEN_PART_STATUS_VARIANT[part.status] ?? 'neutral'}>{BROKEN_PART_STATUS_LABEL[part.status] ?? part.status}</Badge>
-                      {!isTerminal && (
-                        <button type="button" onClick={() => handleDeleteBrokenPart(part.id)} className="text-text-sub hover:text-brand-red transition-colors cursor-pointer" title="Удалить">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {!isTerminal && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-sub">Статус:</span>
-                      <Select value={part.status} onChange={(e) => handleUpdatePartStatus(part.id, e.target.value)} className="text-xs py-1 px-2 w-auto">
-                        {BROKEN_PART_STATUSES.map((s) => <option key={s} value={s}>{BROKEN_PART_STATUS_LABEL[s]}</option>)}
-                      </Select>
-                    </div>
-                  )}
-                  {/* Part images */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {images.map((img: any, imgIdx: number) => {
-                      const src = img.image?.thumbnail?.secure_url ?? img.image?.small?.secure_url ?? img.image?.original?.secure_url ?? img.url;
-                      if (!src) return null;
-                      return (
-                        <div key={img.id ?? imgIdx} className="relative w-14 h-14 rounded-sm overflow-hidden border border-border-light">
-                          <Image src={src} alt="" fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        </div>
-                      );
-                    })}
-                    {!isTerminal && (
-                      <>
-                        <input ref={(el) => { partFileRefs.current[part.id] = el; }} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUploadPartImage(part.id, file); e.target.value = ''; }} />
-                        <button type="button" onClick={() => partFileRefs.current[part.id]?.click()} className="w-14 h-14 rounded-sm border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer" title="Добавить фото">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {!isTerminal && !isPaused && (
-          <div className="flex flex-col gap-3 pt-2 border-t border-border-light">
-            <p className="text-sm font-medium text-text-main">Добавить запчасть</p>
-            <FormField label="Название"><Input value={addPartName} onChange={(e) => setAddPartName(e.target.value)} placeholder="Название запчасти..." /></FormField>
-            <FormField label="Примечание (необязательно)"><Textarea value={addPartNote} onChange={(e) => setAddPartNote(e.target.value)} placeholder="Примечание..." rows={2} /></FormField>
-            {addPartError && <p className="text-sm text-brand-red">{addPartError}</p>}
-            <Button variant="secondary" className="w-full lg:w-fit" onClick={handleAddBrokenPart} disabled={!addPartName.trim() || addPartLoading}>
-              {addPartLoading ? 'Добавление...' : 'Добавить запчасть'}
-            </Button>
-          </div>
-        )}
-      </Card>
+      {!isTerminal && (
+        <Card className="flex flex-col gap-4">
+          <BrokenPartsEditor requestId={requestId} />
+        </Card>
+      )}
 
       {/* ── Work steps ── */}
       <Card className="flex flex-col gap-4">
