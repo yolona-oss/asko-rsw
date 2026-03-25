@@ -70,6 +70,14 @@ export const repairRequestApi = {
     return api.get<PaginatedRepairRequests>('/repair-requests/paused', { params });
   },
 
+  pause(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/pause`);
+  },
+
+  resume(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/resume`);
+  },
+
   refuse(requestId: string, reason: string) {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/refuse`, { reason } satisfies RefuseRequestDto);
   },
