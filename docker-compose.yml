@@ -172,6 +172,8 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SERVER_HTTP_PORT: 3001
+      GF_SERVER_ROOT_URL: "https://109.69.63.136/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
 
 volumes:
   images-data:
