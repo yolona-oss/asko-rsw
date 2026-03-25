@@ -57,14 +57,13 @@ function Step1({
   onChange: (d: Partial<FormData>) => void;
 }) {
   const [emailQuery, setEmailQuery] = useState('');
-  const [results, setResults] = useState<SearchedUser[]>([]);
+  const [results, setResults] = useState<SearchedUser | null>();
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SearchedUser | null>(null);
 
   useEffect(() => {
-    if (data.clientUserId && results.length > 0) {
-      const found = results.find((u) => u.id === data.clientUserId);
-      if (found) setSelectedUser(found);
+    if (data.clientUserId && results) {
+      setSelectedUser(results);
     }
   }, []);
 
@@ -72,10 +71,10 @@ function Step1({
     if (emailQuery.length < 3) return;
     setSearching(true);
     try {
-      const { data: users } = await dealerApi.searchUser(emailQuery);
-      setResults(users);
+      const { data: user } = await dealerApi.searchUser(emailQuery);
+      setResults(user);
     } catch {
-      setResults([]);
+      setResults(null);
     } finally {
       setSearching(false);
     }
@@ -102,31 +101,27 @@ function Step1({
         </div>
       </FormField>
 
-      {results.length > 0 && (
-        <div className="flex flex-col gap-1 max-w-[500px]">
-          {results.map((user) => {
-            const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || user.email || user.id;
-            const isSelected = selectedUser?.id === user.id;
-            return (
-              <button
-                key={user.id}
-                type="button"
-                onClick={() => handleSelect(user)}
-                className={`text-left px-4 py-2.5 text-sm rounded-sm border transition-colors ${
-                  isSelected
-                    ? 'border-brand-red bg-brand-red/5 text-text-main'
-                    : 'border-border-light hover:border-text-sub text-text-main'
+      {results && (() => {
+        const name = [results.lastName, results.firstName].filter(Boolean).join(' ') || results.email || results.id;
+        const isSelected = selectedUser?.id === results.id;
+        return (
+          <div className="flex flex-col gap-1 max-w-[500px]">
+            <button
+              type="button"
+              onClick={() => handleSelect(results)}
+              className={`text-left px-4 py-2.5 text-sm rounded-sm border transition-colors ${isSelected
+                ? 'border-brand-red bg-brand-red/5 text-text-main'
+                : 'border-border-light hover:border-text-sub text-text-main'
                 }`}
-              >
-                <span className="font-medium">{name}</span>
-                {user.email && <span className="text-text-sub ml-2">{user.email}</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
+            >
+              <span className="font-medium">{name}</span>
+              {results.email && <span className="text-text-sub ml-2">{results.email}</span>}
+            </button>
+          </div>
+        );
+      })()}
 
-      {results.length === 0 && !searching && emailQuery.length >= 3 && (
+      {results === null && !searching && (
         <p className="text-sm text-text-sub">Пользователь не найден</p>
       )}
 
@@ -296,7 +291,7 @@ export function CertificateWizard() {
         const list = Array.isArray(res) ? res : res.data ?? [];
         setCatalog(list);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingCatalog(false));
   }, []);
 
