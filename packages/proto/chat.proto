@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package chat;
+
+service ChatService {
+    // ─── Conversations ────────────────────────────────────────────────
+    rpc CreateConversation(CreateConversationRequest) returns (ConversationResponse);
+    rpc GetConversation(GetConversationRequest) returns (ConversationResponse);
+    rpc ListUserConversations(ListUserConversationsRequest) returns (PaginatedConversationsResponse);
+    rpc DeleteConversation(DeleteConversationRequest) returns (EmptyChatResponse);
+
+    // ─── Participants ─────────────────────────────────────────────────
+    rpc AddParticipant(AddParticipantRequest) returns (EmptyChatResponse);
+    rpc RemoveParticipant(RemoveParticipantRequest) returns (EmptyChatResponse);
+    rpc ListParticipants(ListParticipantsRequest) returns (ParticipantListResponse);
+
+    // ─── Messages ─────────────────────────────────────────────────────
+    rpc SendMessage(SendMessageRequest) returns (MessageResponse);
+    rpc ListMessages(ListMessagesRequest) returns (PaginatedMessagesResponse);
+    rpc UpdateMessage(UpdateMessageRequest) returns (MessageResponse);
+    rpc DeleteMessage(DeleteMessageRequest) returns (EmptyChatResponse);
+    rpc MarkAsRead(MarkAsReadRequest) returns (EmptyChatResponse);
+    rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse);
+
+    // ─── Presence ─────────────────────────────────────────────────────
+    rpc UpdatePresence(UpdatePresenceRequest) returns (EmptyChatResponse);
+    rpc GetPresence(GetPresenceRequest) returns (PresenceResponse);
+    rpc GetBulkPresence(GetBulkPresenceRequest) returns (BulkPresenceResponse);
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+message CreateConversationRequest {
+    string creatorId = 1;
+    string type = 2;           // direct | group
+    string name = 3;
+    repeated string participantIds = 4;
+}
+
+message GetConversationRequest {
+    string conversationId = 1;
+    string userId = 2;
+}
+
+message ListUserConversationsRequest {
+    string userId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message DeleteConversationRequest {
+    string conversationId = 1;
+    string userId = 2;
+}
+
+message AddParticipantRequest {
+    string conversationId = 1;
+    string userId = 2;
+    string addedBy = 3;
+}
+
+message RemoveParticipantRequest {
+    string conversationId = 1;
+    string userId = 2;
+    string removedBy = 3;
+}
+
+message ListParticipantsRequest {
+    string conversationId = 1;
+}
+
+message SendMessageRequest {
+    string conversationId = 1;
+    string senderId = 2;
+    string type = 3;           // text | image | video | system
+    string text = 4;
+    string attachmentJson = 5;
+}
+
+message ListMessagesRequest {
+    string conversationId = 1;
+    string userId = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+    string beforeId = 5;
+}
+
+message UpdateMessageRequest {
+    string messageId = 1;
+    string userId = 2;
+    string text = 3;
+}
+
+message DeleteMessageRequest {
+    string messageId = 1;
+    string userId = 2;
+}
+
+message MarkAsReadRequest {
+    string conversationId = 1;
+    string userId = 2;
+    string messageId = 3;
+}
+
+message GetUnreadCountRequest {
+    string userId = 1;
+}
+
+message UpdatePresenceRequest {
+    string userId = 1;
+    string status = 2;         // online | offline
+    string activity = 3;       // idle | typing | uploading_image | uploading_video
+    string conversationId = 4;
+}
+
+message GetPresenceRequest {
+    string userId = 1;
+}
+
+message GetBulkPresenceRequest {
+    repeated string userIds = 1;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+message EmptyChatResponse {}
+
+message ConversationRecord {
+    string id = 1;
+    string type = 2;
+    string name = 3;
+    string creatorId = 4;
+    repeated ParticipantRecord participants = 5;
+    MessageRecord lastMessage = 6;
+    int32 unreadCount = 7;
+    string createdAt = 8;
+    string updatedAt = 9;
+}
+
+message ConversationResponse {
+    ConversationRecord conversation = 1;
+}
+
+message PaginatedConversationsResponse {
+    repeated ConversationRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message ParticipantRecord {
+    string id = 1;
+    string userId = 2;
+    string conversationId = 3;
+    string role = 4;
+    string lastReadMessageId = 5;
+    string joinedAt = 6;
+}
+
+message ParticipantListResponse {
+    repeated ParticipantRecord participants = 1;
+}
+
+message MessageRecord {
+    string id = 1;
+    string conversationId = 2;
+    string senderId = 3;
+    string type = 4;
+    string text = 5;
+    string attachmentJson = 6;
+    bool isEdited = 7;
+    string createdAt = 8;
+    string updatedAt = 9;
+}
+
+message MessageResponse {
+    MessageRecord message = 1;
+}
+
+message PaginatedMessagesResponse {
+    repeated MessageRecord data = 1;
+    int32 overallCount = 2;
+    int32 offset = 3;
+    int32 limit = 4;
+}
+
+message UnreadCountResponse {
+    int32 count = 1;
+}
+
+message PresenceRecord {
+    string userId = 1;
+    string status = 2;
+    string activity = 3;
+    string conversationId = 4;
+    string lastSeenAt = 5;
+}
+
+message PresenceResponse {
+    PresenceRecord presence = 1;
+}
+
+message BulkPresenceResponse {
+    repeated PresenceRecord presences = 1;
+}

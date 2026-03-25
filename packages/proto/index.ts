@@ -7,6 +7,7 @@ export * from './interfaces/certificate.interface';
 export * from './interfaces/repair.interface';
 export * from './interfaces/dealer.interface';
 export * from './interfaces/notification.interface';
+export * from './interfaces/chat.interface';
 
 import { join } from 'path';
 
@@ -45,3 +46,7 @@ export const DEALER_SERVICE_NAME = 'DealerService';
 export const NOTIFICATION_PROTO_PATH = join(__dirname, 'notification.proto');
 export const NOTIFICATION_PACKAGE_NAME = 'notification';
 export const NOTIFICATION_SERVICE_NAME = 'NotificationService';
+
+export const CHAT_PROTO_PATH = join(__dirname, 'chat.proto');
+export const CHAT_PACKAGE_NAME = 'chat';
+export const CHAT_SERVICE_NAME = 'ChatService';

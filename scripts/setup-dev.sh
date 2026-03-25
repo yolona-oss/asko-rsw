@@ -40,6 +40,7 @@ DATABASES=(
   "asko_rws_files_db"
   "asko_rws_db"
   "asko_rws_notify_db"
+  "asko_rws_chat_db"
 )
 
 # Create user if not exists
@@ -80,6 +81,7 @@ run_migration "payment-service"
 run_migration "file-service"
 run_migration "repair-service"
 run_migration "notification-service"
+run_migration "chat-service"
 
 echo ""
 echo "=== Dev setup complete ==="
@@ -90,6 +92,7 @@ echo "  payment-service    -> localhost:5001"
 echo "  file-service       -> localhost:5002"
 echo "  repair-service     -> localhost:5003"
 echo "  notification-service -> localhost:5004"
+echo "  chat-service       -> localhost:5005"
 echo "  api                -> localhost:4000"
 echo "  web                -> localhost:3000"
 echo ""

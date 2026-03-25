@@ -30,7 +30,7 @@ const ARRAY_FIELDS = new Set([
     // list responses
     'images', 'videos', 'parts', 'steps', 'certificates', 'reviews', 'clients',
     'withdrawals', 'invites', 'userDevices', 'addresses', 'payments',
-    'repairers', 'devices',
+    'repairers', 'devices', 'participants', 'presences',
     // entity array fields
     'roles', 'providers', 'specializations', 'tags',
     'workSteps', 'brokenParts', 'rejectedRepairers',

@@ -7,6 +7,7 @@ import { NotificationService } from 'services/notification.service';
 import { NotificationGrpcController } from 'controllers/notification.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { RepairEventConsumer } from 'consumers/repair-event.consumer';
+import { ChatEventConsumer } from 'consumers/chat-event.consumer';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { RepairEventConsumer } from 'consumers/repair-event.consumer';
         NotificationGrpcController,
         PaymentEventConsumer,
         RepairEventConsumer,
+        ChatEventConsumer,
     ],
     providers: [
         NotificationService,

@@ -14,3 +14,4 @@ export * from './notification.response.dto';
 export * from './article.response.dto';
 export * from './invite.response.dto';
 export * from './wschedule.response.dto';
+export * from './chat.response.dto';

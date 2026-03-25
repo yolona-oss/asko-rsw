@@ -6,6 +6,7 @@ export enum NotificationType {
     PAYMENT_FAILED = 'payment_failed',
     PAYMENT_REFUNDED = 'payment_refunded',
     CERTIFICATE_ISSUED = 'certificate_issued',
+    CHAT_MESSAGE = 'chat_message',
     MESSAGE = 'message',
     SYSTEM = 'system',
 }
@@ -14,5 +15,6 @@ export enum NotificationTargetType {
     REPAIR_REQUEST = 'repairRequest',
     PAYMENT = 'payment',
     CERTIFICATE = 'certificate',
+    CONVERSATION = 'conversation',
     SYSTEM = 'system',
 }

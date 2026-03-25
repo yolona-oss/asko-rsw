@@ -9,6 +9,20 @@ services:
       RABBITMQ_DEFAULT_USER: asko
       RABBITMQ_DEFAULT_PASS: asko_rmq_pass
 
+  chat-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.chat-service
+    container_name: asko-chat-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - rabbitmq
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5005
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
+
   notification-service:
     build:
       context: .
@@ -88,6 +102,7 @@ services:
       - file-service
       - repair-service
       - notification-service
+      - chat-service
     volumes:
       - images-data:/app/apps/api/images
     environment:
@@ -97,6 +112,7 @@ services:
       FILE_SERVICE_URL: "localhost:5002"
       REPAIR_SERVICE_URL: "localhost:5003"
       NOTIFICATION_SERVICE_URL: "localhost:5004"
+      CHAT_SERVICE_URL: "localhost:5005"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s

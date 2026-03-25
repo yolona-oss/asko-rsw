@@ -19,3 +19,4 @@ export * from './dealer.type';
 export * from './repairer.type';
 export * from './payment.type';
 export * from './notification.type';
+export * from './chat.type';
