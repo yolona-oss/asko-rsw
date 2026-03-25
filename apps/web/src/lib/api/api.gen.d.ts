@@ -212,6 +212,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/file-upload/video/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/upload/repair-request/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_uploadRepairRequestVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/upload/review/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_uploadReviewVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/upload/device/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_uploadDeviceVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/upload/article/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_uploadArticleVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/delete/{videoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["VideoUploadController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/unattach/{videoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["VideoUploadController_unattach"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/attach/{videoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VideoUploadController_attach"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/video/attached": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VideoUploadController_listAttached"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users": {
         parameters: {
             query?: never;
@@ -500,39 +644,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/repairers": {
+    "/chat/conversations": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["RepairerController_findAll"];
+        get: operations["ChatController_listConversations"];
         put?: never;
-        post: operations["RepairerController_create"];
+        post: operations["ChatController_createConversation"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/repairers/{id}": {
+    "/chat/conversations/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["RepairerController_findOne"];
+        get: operations["ChatController_getConversation"];
         put?: never;
         post?: never;
+        delete: operations["ChatController_deleteConversation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversations/{id}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChatController_listParticipants"];
+        put?: never;
+        post: operations["ChatController_addParticipant"];
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["RepairerController_update"];
+        patch?: never;
         trace?: never;
     };
-    "/repairers/location": {
+    "/chat/conversations/{id}/participants/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -541,21 +701,53 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["RepairerController_updateLocation"];
-        delete?: never;
+        post?: never;
+        delete: operations["ChatController_removeParticipant"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/repairers/me": {
+    "/chat/conversations/{id}/messages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["RepairerController_getMyProfile"];
+        get: operations["ChatController_listMessages"];
+        put?: never;
+        post: operations["ChatController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ChatController_updateMessage"];
+        post?: never;
+        delete: operations["ChatController_deleteMessage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChatController_getUnreadCount"];
         put?: never;
         post?: never;
         delete?: never;
@@ -564,14 +756,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/repairers/city/{city}": {
+    "/chat/presence/{userId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["RepairerController_findByCity"];
+        get: operations["ChatController_getPresence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/presence/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChatController_getBulkPresence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/search-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChatController_searchUsers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1311,6 +1535,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/chat/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_acceptChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/chat/detach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_detachChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_reassign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/paused": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairRequestController_findPaused"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/active": {
         parameters: {
             query?: never;
@@ -1369,6 +1657,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["RepairRequestController_refuse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_resume"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1695,6 +2015,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repairers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairerController_findAll"];
+        put?: never;
+        post: operations["RepairerController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repairers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairerController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["RepairerController_update"];
+        trace?: never;
+    };
+    "/repairers/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairerController_updateLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repairers/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairerController_getMyProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repairers/city/{city}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairerController_findByCity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dealers": {
         parameters: {
             query?: never;
@@ -1785,6 +2185,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["DealerController_markPaid"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dealers/search-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DealerController_searchUser"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2163,6 +2579,32 @@ export interface components {
             images: components["schemas"]["ImageRecordDto"][];
         };
         CreateImageFromUrlDto: Record<string, never>;
+        VideoMetadataDto: {
+            public_id: string;
+            format: string;
+            resource_type: string;
+            url: string;
+            secure_url: string;
+            original_filename: string;
+            duration?: number;
+            size?: number;
+        };
+        VideoRecordDto: {
+            id: string;
+            videoJson: components["schemas"]["VideoMetadataDto"];
+            order: number;
+            ownerType?: string;
+            ownerId?: string;
+            createdAt?: string;
+            updatedAt?: string;
+        };
+        VideoResponseDto: {
+            video: components["schemas"]["VideoRecordDto"];
+        };
+        AttachVideoDto: Record<string, never>;
+        VideoListResponseDto: {
+            videos: components["schemas"]["VideoRecordDto"][];
+        };
         UserResponseDto: {
             emailVerified?: boolean;
             phoneVerified?: boolean;
@@ -2228,35 +2670,72 @@ export interface components {
             invite: components["schemas"]["InviteLinkResponseDto"];
             link: string;
         };
-        CreateRepairerDto: Record<string, never>;
-        RepairerRecordDto: {
+        ParticipantRecordDto: {
             id: string;
             userId: string;
-            specializations: string[];
-            city: string;
-            isActive: boolean;
-            rating?: number;
-            completedRepairs: number;
-            latitude?: number;
-            longitude?: number;
-            lastLocationUpdate?: string;
-            user?: components["schemas"]["AuthUserDto"];
+            conversationId: string;
+            role: string;
+            lastReadMessageId?: string;
+            joinedAt: string;
+        };
+        ChatMessageRecordDto: {
+            id: string;
+            conversationId: string;
+            senderId: string;
+            type: string;
+            text?: string;
+            attachmentJson?: string;
+            isEdited: boolean;
             createdAt: string;
             updatedAt: string;
         };
-        RepairerResponseDto: {
-            repairer: components["schemas"]["RepairerRecordDto"];
+        ConversationRecordDto: {
+            participants: components["schemas"]["ParticipantRecordDto"][];
+            id: string;
+            type: string;
+            name?: string;
+            creatorId: string;
+            lastMessage?: components["schemas"]["ChatMessageRecordDto"];
+            unreadCount: number;
+            createdAt: string;
+            updatedAt: string;
         };
-        UpdateRepairerDto: Record<string, never>;
-        UpdateLocationDto: Record<string, never>;
-        PaginatedRepairersResponseDto: {
-            data: components["schemas"]["RepairerRecordDto"][];
+        ConversationResponseDto: {
+            conversation: components["schemas"]["ConversationRecordDto"];
+        };
+        PaginatedConversationsResponseDto: {
+            data: components["schemas"]["ConversationRecordDto"][];
             overallCount: number;
             offset: number;
             limit: number;
         };
-        RepairerListResponseDto: {
-            repairers: components["schemas"]["RepairerRecordDto"][];
+        ParticipantListResponseDto: {
+            participants: components["schemas"]["ParticipantRecordDto"][];
+        };
+        ChatMessageResponseDto: {
+            message: components["schemas"]["ChatMessageRecordDto"];
+        };
+        PaginatedMessagesResponseDto: {
+            data: components["schemas"]["ChatMessageRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
+        };
+        ChatUnreadCountResponseDto: {
+            count: number;
+        };
+        PresenceRecordDto: {
+            userId: string;
+            status: string;
+            activity: string;
+            conversationId?: string;
+            lastSeenAt: string;
+        };
+        PresenceResponseDto: {
+            presence: components["schemas"]["PresenceRecordDto"];
+        };
+        BulkPresenceResponseDto: {
+            presences: components["schemas"]["PresenceRecordDto"][];
         };
         CreateArticleDto: Record<string, never>;
         ArticleResponseDto: {
@@ -2440,6 +2919,21 @@ export interface components {
             createdAt: string;
             updatedAt: string;
         };
+        RepairerRecordDto: {
+            id: string;
+            userId: string;
+            specializations: string[];
+            city: string;
+            isActive: boolean;
+            rating?: number;
+            completedRepairs: number;
+            latitude?: number;
+            longitude?: number;
+            lastLocationUpdate?: string;
+            user?: components["schemas"]["AuthUserDto"];
+            createdAt: string;
+            updatedAt: string;
+        };
         RepairRequestRecordDto: {
             workSteps?: components["schemas"]["WorkStepRecordDto"][];
             brokenParts?: components["schemas"]["BrokenPartRecordDto"][];
@@ -2523,6 +3017,21 @@ export interface components {
         };
         UnreadCountResponseDto: {
             count: number;
+        };
+        CreateRepairerDto: Record<string, never>;
+        RepairerResponseDto: {
+            repairer: components["schemas"]["RepairerRecordDto"];
+        };
+        UpdateRepairerDto: Record<string, never>;
+        UpdateLocationDto: Record<string, never>;
+        PaginatedRepairersResponseDto: {
+            data: components["schemas"]["RepairerRecordDto"][];
+            overallCount: number;
+            offset: number;
+            limit: number;
+        };
+        RepairerListResponseDto: {
+            repairers: components["schemas"]["RepairerRecordDto"][];
         };
         CreateDealerProfileDto: Record<string, never>;
         DealerProfileResponseDto: {
@@ -2969,6 +3478,198 @@ export interface operations {
             };
         };
     };
+    VideoUploadController_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_uploadRepairRequestVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_uploadReviewVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_uploadDeviceVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_uploadArticleVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                videoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_unattach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                videoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_attach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                videoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachVideoDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    VideoUploadController_listAttached: {
+        parameters: {
+            query: {
+                ownerType: string;
+                ownerId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoListResponseDto"];
+                };
+            };
+        };
+    };
     UsersController_getAllUsers: {
         parameters: {
             query?: never;
@@ -3397,9 +4098,12 @@ export interface operations {
             };
         };
     };
-    RepairerController_findAll: {
+    ChatController_listConversations: {
         parameters: {
-            query?: never;
+            query: {
+                offset: string;
+                limit: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3411,35 +4115,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedRepairersResponseDto"];
+                    "application/json": components["schemas"]["PaginatedConversationsResponseDto"];
                 };
             };
         };
     };
-    RepairerController_create: {
+    ChatController_createConversation: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRepairerDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerResponseDto"];
+                    "application/json": components["schemas"]["ConversationResponseDto"];
                 };
             };
         };
     };
-    RepairerController_findOne: {
+    ChatController_getConversation: {
         parameters: {
             query?: never;
             header?: never;
@@ -3455,12 +4155,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerResponseDto"];
+                    "application/json": components["schemas"]["ConversationResponseDto"];
                 };
             };
         };
     };
-    RepairerController_update: {
+    ChatController_deleteConversation: {
         parameters: {
             query?: never;
             header?: never;
@@ -3469,46 +4169,171 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateRepairerDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerResponseDto"];
+                    "application/json": components["schemas"]["EmptyResponseDto"];
                 };
             };
         };
     };
-    RepairerController_updateLocation: {
+    ChatController_listParticipants: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateLocationDto"];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParticipantListResponseDto"];
+                };
             };
         };
+    };
+    ChatController_addParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerResponseDto"];
+                    "application/json": components["schemas"]["EmptyResponseDto"];
                 };
             };
         };
     };
-    RepairerController_getMyProfile: {
+    ChatController_removeParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    ChatController_listMessages: {
+        parameters: {
+            query: {
+                offset: string;
+                limit: string;
+                beforeId: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedMessagesResponseDto"];
+                };
+            };
+        };
+    };
+    ChatController_sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessageResponseDto"];
+                };
+            };
+        };
+    };
+    ChatController_updateMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessageResponseDto"];
+                };
+            };
+        };
+    };
+    ChatController_deleteMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    ChatController_getUnreadCount: {
         parameters: {
             query?: never;
             header?: never;
@@ -3522,17 +4347,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerResponseDto"];
+                    "application/json": components["schemas"]["ChatUnreadCountResponseDto"];
                 };
             };
         };
     };
-    RepairerController_findByCity: {
+    ChatController_getPresence: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                city: string;
+                userId: string;
             };
             cookie?: never;
         };
@@ -3543,8 +4368,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RepairerListResponseDto"];
+                    "application/json": components["schemas"]["PresenceResponseDto"];
                 };
+            };
+        };
+    };
+    ChatController_getBulkPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPresenceResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    ChatController_searchUsers: {
+        parameters: {
+            query: {
+                q: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4782,6 +5654,92 @@ export interface operations {
             };
         };
     };
+    RepairRequestController_acceptChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_detachChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_reassign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRepairerDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_findPaused: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRepairRequestsResponseDto"];
+                };
+            };
+        };
+    };
     RepairRequestController_findActive: {
         parameters: {
             query?: never;
@@ -4855,6 +5813,48 @@ export interface operations {
                 "application/json": components["schemas"]["RefuseRequestDto"];
             };
         };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {
@@ -5393,6 +6393,157 @@ export interface operations {
             };
         };
     };
+    RepairerController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRepairersResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRepairerDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRepairerDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_updateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLocationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_getMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerResponseDto"];
+                };
+            };
+        };
+    };
+    RepairerController_findByCity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                city: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairerListResponseDto"];
+                };
+            };
+        };
+    };
     DealerController_findAll: {
         parameters: {
             query?: never;
@@ -5538,6 +6689,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PayoutResponseDto"];
+                };
+            };
+        };
+    };
+    DealerController_searchUser: {
+        parameters: {
+            query: {
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
                 };
             };
         };

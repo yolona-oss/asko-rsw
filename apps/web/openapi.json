@@ -438,6 +438,285 @@
         ]
       }
     },
+    "/file-upload/video/upload": {
+      "post": {
+        "operationId": "VideoUploadController_upload",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/upload/repair-request/{ownerId}": {
+      "post": {
+        "operationId": "VideoUploadController_uploadRepairRequestVideo",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/upload/review/{ownerId}": {
+      "post": {
+        "operationId": "VideoUploadController_uploadReviewVideo",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/upload/device/{ownerId}": {
+      "post": {
+        "operationId": "VideoUploadController_uploadDeviceVideo",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/upload/article/{ownerId}": {
+      "post": {
+        "operationId": "VideoUploadController_uploadArticleVideo",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/delete/{videoId}": {
+      "delete": {
+        "operationId": "VideoUploadController_remove",
+        "parameters": [
+          {
+            "name": "videoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/unattach/{videoId}": {
+      "put": {
+        "operationId": "VideoUploadController_unattach",
+        "parameters": [
+          {
+            "name": "videoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/attach/{videoId}": {
+      "post": {
+        "operationId": "VideoUploadController_attach",
+        "parameters": [
+          {
+            "name": "videoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachVideoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
+    "/file-upload/video/attached": {
+      "get": {
+        "operationId": "VideoUploadController_listAttached",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Video Upload"
+        ]
+      }
+    },
     "/users": {
       "get": {
         "operationId": "UsersController_getAllUsers",
@@ -935,97 +1214,66 @@
         ]
       }
     },
-    "/repairers": {
+    "/chat/conversations": {
       "post": {
-        "operationId": "RepairerController_create",
+        "operationId": "ChatController_createConversation",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRepairerDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RepairerResponseDto"
+                  "$ref": "#/components/schemas/ConversationResponseDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Repairers"
+          "Chat"
         ]
       },
       "get": {
-        "operationId": "RepairerController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedRepairersResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Repairers"
-        ]
-      }
-    },
-    "/repairers/{id}": {
-      "patch": {
-        "operationId": "RepairerController_update",
+        "operationId": "ChatController_listConversations",
         "parameters": [
           {
-            "name": "id",
+            "name": "offset",
             "required": true,
-            "in": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRepairerDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RepairerResponseDto"
+                  "$ref": "#/components/schemas/PaginatedConversationsResponseDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Repairers"
+          "Chat"
         ]
-      },
+      }
+    },
+    "/chat/conversations/{id}": {
       "get": {
-        "operationId": "RepairerController_findOne",
+        "operationId": "ChatController_getConversation",
         "parameters": [
           {
             "name": "id",
@@ -1042,75 +1290,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RepairerResponseDto"
+                  "$ref": "#/components/schemas/ConversationResponseDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Repairers"
+          "Chat"
         ]
-      }
-    },
-    "/repairers/location": {
-      "post": {
-        "operationId": "RepairerController_updateLocation",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLocationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepairerResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Repairers"
-        ]
-      }
-    },
-    "/repairers/me": {
-      "get": {
-        "operationId": "RepairerController_getMyProfile",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RepairerResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Repairers"
-        ]
-      }
-    },
-    "/repairers/city/{city}": {
-      "get": {
-        "operationId": "RepairerController_findByCity",
+      },
+      "delete": {
+        "operationId": "ChatController_deleteConversation",
         "parameters": [
           {
-            "name": "city",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -1124,14 +1318,363 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RepairerListResponseDto"
+                  "$ref": "#/components/schemas/EmptyResponseDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Repairers"
+          "Chat"
+        ]
+      }
+    },
+    "/chat/conversations/{id}/participants": {
+      "get": {
+        "operationId": "ChatController_listParticipants",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParticipantListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      },
+      "post": {
+        "operationId": "ChatController_addParticipant",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/conversations/{id}/participants/{userId}": {
+      "delete": {
+        "operationId": "ChatController_removeParticipant",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/conversations/{id}/messages": {
+      "post": {
+        "operationId": "ChatController_sendMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      },
+      "get": {
+        "operationId": "ChatController_listMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "beforeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedMessagesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/messages/{id}": {
+      "put": {
+        "operationId": "ChatController_updateMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatMessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      },
+      "delete": {
+        "operationId": "ChatController_deleteMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/unread-count": {
+      "get": {
+        "operationId": "ChatController_getUnreadCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUnreadCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/presence/{userId}": {
+      "get": {
+        "operationId": "ChatController_getPresence",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresenceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/presence/bulk": {
+      "post": {
+        "operationId": "ChatController_getBulkPresence",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPresenceResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ]
+      }
+    },
+    "/chat/search-users": {
+      "get": {
+        "operationId": "ChatController_searchUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Chat"
         ]
       }
     },
@@ -2897,6 +3440,127 @@
         ]
       }
     },
+    "/repair-requests/{id}/chat/accept": {
+      "post": {
+        "operationId": "RepairRequestController_acceptChat",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/chat/detach": {
+      "post": {
+        "operationId": "RepairRequestController_detachChat",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/reassign": {
+      "post": {
+        "operationId": "RepairRequestController_reassign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/paused": {
+      "get": {
+        "operationId": "RepairRequestController_findPaused",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairRequestsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/active": {
       "get": {
         "operationId": "RepairRequestController_findActive",
@@ -2992,6 +3656,66 @@
             }
           }
         },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/pause": {
+      "post": {
+        "operationId": "RepairRequestController_pause",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/resume": {
+      "post": {
+        "operationId": "RepairRequestController_resume",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "",
@@ -3819,6 +4543,206 @@
         ]
       }
     },
+    "/repairers": {
+      "post": {
+        "operationId": "RepairerController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      },
+      "get": {
+        "operationId": "RepairerController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/{id}": {
+      "patch": {
+        "operationId": "RepairerController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRepairerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      },
+      "get": {
+        "operationId": "RepairerController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/location": {
+      "post": {
+        "operationId": "RepairerController_updateLocation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/me": {
+      "get": {
+        "operationId": "RepairerController_getMyProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
+    "/repairers/city/{city}": {
+      "get": {
+        "operationId": "RepairerController_findByCity",
+        "parameters": [
+          {
+            "name": "city",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairerListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
     "/dealers": {
       "post": {
         "operationId": "DealerController_createProfile",
@@ -4010,6 +4934,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PayoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Dealers"
+        ]
+      }
+    },
+    "/dealers/search-user": {
+      "get": {
+        "operationId": "DealerController_searchUser",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
                 }
               }
             }
@@ -4989,6 +5943,103 @@
         "type": "object",
         "properties": {}
       },
+      "VideoMetadataDto": {
+        "type": "object",
+        "properties": {
+          "public_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "resource_type": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "secure_url": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "size": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "public_id",
+          "format",
+          "resource_type",
+          "url",
+          "secure_url",
+          "original_filename"
+        ]
+      },
+      "VideoRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "videoJson": {
+            "$ref": "#/components/schemas/VideoMetadataDto"
+          },
+          "order": {
+            "type": "number"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "videoJson",
+          "order"
+        ]
+      },
+      "VideoResponseDto": {
+        "type": "object",
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/VideoRecordDto"
+          }
+        },
+        "required": [
+          "video"
+        ]
+      },
+      "AttachVideoDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VideoListResponseDto": {
+        "type": "object",
+        "properties": {
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoRecordDto"
+            }
+          }
+        },
+        "required": [
+          "videos"
+        ]
+      },
       "UserResponseDto": {
         "type": "object",
         "properties": {
@@ -5242,11 +6293,7 @@
           "link"
         ]
       },
-      "CreateRepairerDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "RepairerRecordDto": {
+      "ParticipantRecordDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -5255,35 +6302,50 @@
           "userId": {
             "type": "string"
           },
-          "specializations": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "city": {
+          "conversationId": {
             "type": "string"
           },
-          "isActive": {
+          "role": {
+            "type": "string"
+          },
+          "lastReadMessageId": {
+            "type": "string"
+          },
+          "joinedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "conversationId",
+          "role",
+          "joinedAt"
+        ]
+      },
+      "ChatMessageRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "attachmentJson": {
+            "type": "string"
+          },
+          "isEdited": {
             "type": "boolean"
-          },
-          "rating": {
-            "type": "number"
-          },
-          "completedRepairs": {
-            "type": "number"
-          },
-          "latitude": {
-            "type": "number"
-          },
-          "longitude": {
-            "type": "number"
-          },
-          "lastLocationUpdate": {
-            "type": "string"
-          },
-          "user": {
-            "$ref": "#/components/schemas/AuthUserDto"
           },
           "createdAt": {
             "type": "string"
@@ -5294,41 +6356,76 @@
         },
         "required": [
           "id",
-          "userId",
-          "specializations",
-          "city",
-          "isActive",
-          "completedRepairs",
+          "conversationId",
+          "senderId",
+          "type",
+          "isEdited",
           "createdAt",
           "updatedAt"
         ]
       },
-      "RepairerResponseDto": {
+      "ConversationRecordDto": {
         "type": "object",
         "properties": {
-          "repairer": {
-            "$ref": "#/components/schemas/RepairerRecordDto"
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParticipantRecordDto"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "creatorId": {
+            "type": "string"
+          },
+          "lastMessage": {
+            "$ref": "#/components/schemas/ChatMessageRecordDto"
+          },
+          "unreadCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
           }
         },
         "required": [
-          "repairer"
+          "participants",
+          "id",
+          "type",
+          "creatorId",
+          "unreadCount",
+          "createdAt",
+          "updatedAt"
         ]
       },
-      "UpdateRepairerDto": {
+      "ConversationResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationRecordDto"
+          }
+        },
+        "required": [
+          "conversation"
+        ]
       },
-      "UpdateLocationDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "PaginatedRepairersResponseDto": {
+      "PaginatedConversationsResponseDto": {
         "type": "object",
         "properties": {
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RepairerRecordDto"
+              "$ref": "#/components/schemas/ConversationRecordDto"
             }
           },
           "overallCount": {
@@ -5348,18 +6445,117 @@
           "limit"
         ]
       },
-      "RepairerListResponseDto": {
+      "ParticipantListResponseDto": {
         "type": "object",
         "properties": {
-          "repairers": {
+          "participants": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RepairerRecordDto"
+              "$ref": "#/components/schemas/ParticipantRecordDto"
             }
           }
         },
         "required": [
-          "repairers"
+          "participants"
+        ]
+      },
+      "ChatMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/ChatMessageRecordDto"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "PaginatedMessagesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageRecordDto"
+            }
+          },
+          "overallCount": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "overallCount",
+          "offset",
+          "limit"
+        ]
+      },
+      "ChatUnreadCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "PresenceRecordDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "activity": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "lastSeenAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "status",
+          "activity",
+          "lastSeenAt"
+        ]
+      },
+      "PresenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "presence": {
+            "$ref": "#/components/schemas/PresenceRecordDto"
+          }
+        },
+        "required": [
+          "presence"
+        ]
+      },
+      "BulkPresenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "presences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresenceRecordDto"
+            }
+          }
+        },
+        "required": [
+          "presences"
         ]
       },
       "CreateArticleDto": {
@@ -6058,6 +7254,63 @@
           "updatedAt"
         ]
       },
+      "RepairerRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "specializations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "city": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "completedRepairs": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "lastLocationUpdate": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "specializations",
+          "city",
+          "isActive",
+          "completedRepairs",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "RepairRequestRecordDto": {
         "type": "object",
         "properties": {
@@ -6381,6 +7634,69 @@
         },
         "required": [
           "count"
+        ]
+      },
+      "CreateRepairerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RepairerResponseDto": {
+        "type": "object",
+        "properties": {
+          "repairer": {
+            "$ref": "#/components/schemas/RepairerRecordDto"
+          }
+        },
+        "required": [
+          "repairer"
+        ]
+      },
+      "UpdateRepairerDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLocationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PaginatedRepairersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepairerRecordDto"
+            }
+          },
+          "overallCount": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "overallCount",
+          "offset",
+          "limit"
+        ]
+      },
+      "RepairerListResponseDto": {
+        "type": "object",
+        "properties": {
+          "repairers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepairerRecordDto"
+            }
+          }
+        },
+        "required": [
+          "repairers"
         ]
       },
       "CreateDealerProfileDto": {
