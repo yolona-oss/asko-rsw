@@ -4,6 +4,7 @@ import { AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { NotificationEntity } from 'entities/notification.entity';
 import { NotificationService } from 'services/notification.service';
+import { NotificationPushService } from 'services/notification-push.service';
 import { NotificationGrpcController } from 'controllers/notification.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { RepairEventConsumer } from 'consumers/repair-event.consumer';
@@ -23,6 +24,7 @@ import { ChatEventConsumer } from 'consumers/chat-event.consumer';
     ],
     providers: [
         NotificationService,
+        NotificationPushService,
     ],
 })
 export class AppModule {}

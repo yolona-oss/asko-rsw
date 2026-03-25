@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { NotificationEntity } from 'entities/notification.entity';
 import { AppErrors } from 'common/error';
+import { NotificationPushService } from './notification-push.service';
 
 @Injectable()
 export class NotificationService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly pushService: NotificationPushService,
+    ) {}
 
     @CreateRequestContext()
     async createNotification(
@@ -27,6 +31,20 @@ export class NotificationService {
             metadata,
         });
         await this.em.persistAndFlush(notification);
+
+        // Push real-time to frontend via Redis → API gateway WebSocket
+        this.pushService.pushToUser(userId, {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            body: notification.body,
+            targetType: notification.targetType ?? '',
+            targetId: notification.targetId ?? '',
+            metadata: notification.metadata ? JSON.stringify(notification.metadata) : '',
+            isRead: false,
+            createdAt: notification.createdAt.toISOString(),
+        }).catch(e => console.error('[NotificationService] Push failed:', e));
+
         return notification;
     }
 

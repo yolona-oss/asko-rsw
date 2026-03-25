@@ -25,6 +25,10 @@ export class AppConfig {
             url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
         };
     }
+
+    get redisUrl(): string {
+        return this.configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379';
+    }
 }
 
 @Global()

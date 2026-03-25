@@ -14,6 +14,7 @@ import { ValidationPipe, } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { isProdEnv } from '@asko/shared';
 import { urlencoded } from 'express';
+import { RedisIoAdapter } from './common/adapters/redis-io.adapter';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -54,8 +55,13 @@ async function bootstrap() {
         jsonDocumentUrl: '/doc/openapi.json',
     });
 
-    app.enableShutdownHooks();
+    // Socket.io Redis adapter — enables cross-pod WebSocket communication
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisIoAdapter = new RedisIoAdapter(app, redisUrl);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
 
+    app.enableShutdownHooks();
 
     const port = process.env.PORT || 4000
     app.listen(port,
