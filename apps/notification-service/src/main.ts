@@ -3,9 +3,12 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AppConfig } from './app.config';
+import { PinoLogger, MetricsService, createMetricsServer } from '@asko/observability';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const logger = new PinoLogger('notification-service');
+
+    const app = await NestFactory.create(AppModule, { logger });
     const config = app.get(AppConfig);
 
     // gRPC transport for CRUD operations
@@ -30,8 +33,12 @@ async function bootstrap() {
     });
 
     await app.startAllMicroservices();
-    console.log(`Notification gRPC microservice is running on port ${process.env.GRPC_PORT || 5004}`);
-    console.log(`Notification RabbitMQ consumer is connected`);
+
+    const metricsService = app.get(MetricsService);
+    createMetricsServer(metricsService, parseInt(process.env.METRICS_PORT || '9104'));
+
+    logger.log(`Notification gRPC microservice is running on port ${process.env.GRPC_PORT || 5004}`);
+    logger.log(`Notification RabbitMQ consumer is connected`);
 }
 
 bootstrap();

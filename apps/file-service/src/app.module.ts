@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { Image } from 'entities/image.entity';
@@ -18,6 +19,7 @@ import { ImageResizeConsumer } from 'consumers/image-resize.consumer';
 @Module({
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'file-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([Image, Video]),
         ClientsModule.registerAsync([

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { Conversation } from 'entities/conversation.entity';
@@ -16,6 +17,7 @@ import { ChatGrpcController } from 'controllers/chat.grpc.controller';
 @Module({
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'chat-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([Conversation, ConversationParticipant, Message, UserPresence]),
         ClientsModule.registerAsync([

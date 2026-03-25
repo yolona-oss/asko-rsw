@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { PaymentEntity } from 'entities/payment.entity';
@@ -16,6 +17,7 @@ import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
 @Module({
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'payment-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([PaymentEntity]),
         ClientsModule.registerAsync([

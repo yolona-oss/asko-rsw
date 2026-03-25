@@ -26,23 +26,29 @@ fi
 #   4. services + api  (depend on shared + proto)
 
 echo ""
-echo "=== 1/4 Building @asko/shared ==="
+echo "=== 1/5 Building @asko/shared ==="
 pnpm --filter @asko/shared run build
 
 echo ""
-echo "=== 2/4 Building @asko/proto ==="
+echo "=== 2/5 Building @asko/proto ==="
 pnpm --filter @asko/proto run build
 
 echo ""
-echo "=== 3/4 Building @asko/ui ==="
+echo "=== 3/5 Building @asko/observability ==="
+pnpm --filter @asko/observability run build
+
+echo ""
+echo "=== 4/5 Building @asko/ui ==="
 pnpm --filter @asko/ui run build
 
 echo ""
-echo "=== 4/4 Building services + api ==="
+echo "=== 5/5 Building services + api ==="
 pnpm --filter user-service run build
 pnpm --filter payment-service run build
 pnpm --filter file-service run build
 pnpm --filter repair-service run build
+pnpm --filter notification-service run build
+pnpm --filter chat-service run build
 pnpm --filter api run build
 
 echo ""

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { MetricsModule } from '@asko/observability';
 import { AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { PaymentClientModule } from 'modules/payment-client.module';
@@ -39,6 +40,7 @@ import { BrokenPartService } from 'services/broken-part.service';
 @Module({
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'repair-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([
             Device,

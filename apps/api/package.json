@@ -22,6 +22,7 @@
         "openapi:generate": "nest build && cross-env NODE_ENV=dev node dist/src/generate-openapi.js"
     },
     "dependencies": {
+        "@asko/observability": "workspace:*",
         "@asko/proto": "workspace:*",
         "@asko/shared": "workspace:*",
         "@grpc/grpc-js": "^1.12.6",

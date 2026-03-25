@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["localhost:4000"]
+    metrics_path: /metrics
+
+  - job_name: "user-service"
+    static_configs:
+      - targets: ["localhost:9100"]
+    metrics_path: /metrics
+
+  - job_name: "payment-service"
+    static_configs:
+      - targets: ["localhost:9101"]
+    metrics_path: /metrics
+
+  - job_name: "file-service"
+    static_configs:
+      - targets: ["localhost:9102"]
+    metrics_path: /metrics
+
+  - job_name: "repair-service"
+    static_configs:
+      - targets: ["localhost:9103"]
+    metrics_path: /metrics
+
+  - job_name: "notification-service"
+    static_configs:
+      - targets: ["localhost:9104"]
+    metrics_path: /metrics
+
+  - job_name: "chat-service"
+    static_configs:
+      - targets: ["localhost:9105"]
+    metrics_path: /metrics

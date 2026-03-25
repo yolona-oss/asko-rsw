@@ -32,12 +32,13 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/file-service/dist ./apps/file-service/dist
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
+COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
 COPY --from=builder /app/packages/proto ./packages/proto
 
 COPY apps/file-service/.env.prod ./apps/file-service/.env.prod
 
 WORKDIR /app/apps/file-service
 
-EXPOSE 5002
+EXPOSE 5002 9102
 
 CMD ["node", "dist/main.js"]

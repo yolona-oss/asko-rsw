@@ -1,6 +1,7 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 
 import { UserService } from 'services/user.service';
@@ -26,6 +27,7 @@ import { DatabaseModule } from 'modules/database.module';
     ],
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'user-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([
             User,

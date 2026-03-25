@@ -12,13 +12,15 @@ import { corsOptions } from './config/cors.config';
 import { helmetOptions } from './config/helmet.config';
 import { ValidationPipe, } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { isProdEnv } from '@asko/shared';
 import { urlencoded } from 'express';
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter';
+import { PinoLogger, MetricsService } from '@asko/observability';
 
 async function bootstrap() {
+    const logger = new PinoLogger('api');
+
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-        logger: isProdEnv() ? ['error', 'warn'] : ['error', 'warn', 'debug', 'log', 'verbose'],
+        logger,
         rawBody: true,
         bufferLogs: true
     });
@@ -31,7 +33,6 @@ async function bootstrap() {
 
     app.useGlobalFilters(new GlobalExceptionFilter())
     app.enableCors(corsOptions)
-    // app.enableShutdownHooks(['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGKILL'])
 
     app.useGlobalPipes(
         new ValidationPipe({
@@ -61,12 +62,25 @@ async function bootstrap() {
     await redisIoAdapter.connectToRedis();
     app.useWebSocketAdapter(redisIoAdapter);
 
+    // Prometheus metrics endpoint (bypasses NestJS guards)
+    const metricsService = app.get(MetricsService);
+    const expressApp = app.getHttpAdapter().getInstance();
+    expressApp.get('/metrics', async (_req: any, res: any) => {
+        try {
+            const metrics = await metricsService.getMetrics();
+            res.set('Content-Type', metricsService.getContentType());
+            res.end(metrics);
+        } catch {
+            res.status(500).end('Error collecting metrics');
+        }
+    });
+
     app.enableShutdownHooks();
 
     const port = process.env.PORT || 4000
     app.listen(port,
         async () => {
-            console.log(`Application is running on: ${await app.getUrl()}`);
+            logger.log(`Application is running on: ${await app.getUrl()}`);
         });
 }
 

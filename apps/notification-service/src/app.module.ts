@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { MetricsModule } from '@asko/observability';
 import { AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { NotificationEntity } from 'entities/notification.entity';
@@ -13,6 +14,7 @@ import { ChatEventConsumer } from 'consumers/chat-event.consumer';
 @Module({
     imports: [
         AppConfigModule,
+        MetricsModule.register({ serviceName: 'notification-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([NotificationEntity]),
     ],

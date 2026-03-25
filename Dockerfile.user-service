@@ -32,12 +32,13 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/user-service/dist ./apps/user-service/dist
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
+COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
 COPY --from=builder /app/packages/proto ./packages/proto
 
 COPY apps/user-service/.env.prod ./apps/user-service/.env.prod
 
 WORKDIR /app/apps/user-service
 
-EXPOSE 5000
+EXPOSE 5000 9100
 
 CMD ["node", "dist/src/main.js"]
