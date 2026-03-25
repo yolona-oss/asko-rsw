@@ -3,8 +3,8 @@ import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express'
 
 import { UserClientService } from 'modules/user-client/user-client.service';
-import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
-import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
+import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import {
     ALL_ROLES,
     REFRESH_TOKEN,

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DeviceClientModule } from 'modules/device-client/device-client.module';
+import { RepairClientModule } from 'modules/repair-client/repair-client.module';
 import { AddressController } from './controllers/address.controller';
 
 @Module({
-    imports: [DeviceClientModule],
+    imports: [RepairClientModule],
     controllers: [AddressController],
-    exports: [DeviceClientModule],
+    exports: [RepairClientModule],
 })
 export class AddressModule {}

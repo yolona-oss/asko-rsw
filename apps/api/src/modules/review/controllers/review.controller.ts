@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';

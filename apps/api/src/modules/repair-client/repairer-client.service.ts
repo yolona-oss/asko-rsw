@@ -19,7 +19,7 @@ export class RepairerClientService implements OnModuleInit {
     private repairerService!: RepairerServiceClient;
 
     constructor(
-        @Inject('REPAIRER_PACKAGE') private readonly client: ClientGrpc,
+        @Inject('REPAIR_PACKAGE') private readonly client: ClientGrpc,
     ) {}
 
     onModuleInit() {

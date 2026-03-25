@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { DeviceClientService } from 'modules/device-client/device-client.service';
+import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateDeviceDto,

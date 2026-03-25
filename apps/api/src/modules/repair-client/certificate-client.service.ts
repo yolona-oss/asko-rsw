@@ -16,7 +16,7 @@ export class CertificateClientService implements OnModuleInit {
     private certificateService!: CertificateServiceClient;
 
     constructor(
-        @Inject('CERTIFICATE_PACKAGE') private readonly client: ClientGrpc,
+        @Inject('REPAIR_PACKAGE') private readonly client: ClientGrpc,
     ) {}
 
     onModuleInit() {

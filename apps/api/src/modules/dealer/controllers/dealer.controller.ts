@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
+import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateDealerProfileDto,

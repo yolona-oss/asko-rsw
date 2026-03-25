@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { DeviceClientService } from 'modules/device-client/device-client.service';
+import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { ALL_ROLES, CreateAddressDto } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'common/dto/responses';

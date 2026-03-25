@@ -5,8 +5,7 @@ import { AuthController } from './controllers/auth.controller';
 import { InviteController } from './controllers/invite.controller';
 
 import { UserClientModule } from 'modules/user-client/user-client.module';
-import { RepairerModule } from 'modules/repairer/repairer.module';
-import { DealerClientModule } from 'modules/dealer-client/dealer-client.module';
+import { RepairClientModule } from 'modules/repair-client/repair-client.module';
 import { ChatModule } from 'modules/chat/chat.module';
 
 @Module({
@@ -17,8 +16,7 @@ import { ChatModule } from 'modules/chat/chat.module';
     ],
     imports: [
         UserClientModule,
-        RepairerModule,
-        DealerClientModule,
+        RepairClientModule,
         ChatModule,
     ],
 })

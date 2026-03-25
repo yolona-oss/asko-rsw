@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { CertificateClientService } from 'modules/certificate-client/certificate-client.service';
-import { DeviceClientService } from 'modules/device-client/device-client.service';
-import { DealerClientService } from 'modules/dealer-client/dealer-client.service';
+import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
+import { DeviceClientService } from 'modules/repair-client/device-client.service';
+import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     AddCertificateDto,

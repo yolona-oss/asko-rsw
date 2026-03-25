@@ -22,7 +22,7 @@ export class DeviceClientService implements OnModuleInit {
     private deviceService!: DeviceServiceClient;
 
     constructor(
-        @Inject('DEVICE_PACKAGE') private readonly client: ClientGrpc,
+        @Inject('REPAIR_PACKAGE') private readonly client: ClientGrpc,
     ) {}
 
     onModuleInit() {

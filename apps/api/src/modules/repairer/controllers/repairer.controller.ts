@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { RepairerClientService } from 'modules/repairer-client/repairer-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import {
     CreateRepairerDto,
     UpdateRepairerDto,

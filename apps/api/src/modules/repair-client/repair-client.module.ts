@@ -3,6 +3,10 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { AppConfig } from 'app.config';
 import { RepairClientService } from './repair-client.service';
+import { DeviceClientService } from './device-client.service';
+import { CertificateClientService } from './certificate-client.service';
+import { RepairerClientService } from './repairer-client.service';
+import { DealerClientService } from './dealer-client.service';
 
 @Module({
     imports: [
@@ -21,7 +25,19 @@ import { RepairClientService } from './repair-client.service';
             },
         ]),
     ],
-    providers: [RepairClientService],
-    exports: [RepairClientService],
+    providers: [
+        RepairClientService,
+        DeviceClientService,
+        CertificateClientService,
+        RepairerClientService,
+        DealerClientService,
+    ],
+    exports: [
+        RepairClientService,
+        DeviceClientService,
+        CertificateClientService,
+        RepairerClientService,
+        DealerClientService,
+    ],
 })
 export class RepairClientModule {}
