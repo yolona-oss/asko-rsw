@@ -7,7 +7,8 @@ import { Badge, Button, Input, Select } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { managerApi } from '@/lib/api/manager';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { repairerApi } from '@/lib/api/repairer';
 import { api } from '@/lib/api/client';
 import { RepairRequestStatus, BrokenPartStatus } from '@asko/shared/client';
 
@@ -102,12 +103,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: req } = await managerApi.getRepairRequest(requestId);
+        const { data: req } = await repairRequestApi.getOne(requestId);
         setRequest(req as unknown as RepairRequestDetail);
         setSelectedRepairer(req.repairer?.id ?? '');
 
         // Fetch available repairers
-        const { data: repData } = await managerApi.getRepairers({ limit: 100 });
+        const { data: repData } = await repairerApi.getAll({ limit: 100 });
         const list = repData.data ?? [];
         setRepairers(list);
 
@@ -126,7 +127,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
         // Fetch broken parts
         try {
-          const { data: partsData } = await managerApi.getBrokenParts(requestId);
+          const { data: partsData } = await repairRequestApi.getBrokenParts(requestId);
           setBrokenParts(partsData.parts ?? []);
         } catch {
           // no broken parts
@@ -144,8 +145,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!selectedRepairer || !request) return;
     setAssigning(true);
     try {
-      await managerApi.assignRepairer(request.id, selectedRepairer);
-      const { data: updated } = await managerApi.getRepairRequest(requestId);
+      await repairRequestApi.assign(request.id, selectedRepairer);
+      const { data: updated } = await repairRequestApi.getOne(requestId);
       setRequest(updated as unknown as RepairRequestDetail);
     } catch {
       // silently fail
@@ -162,7 +163,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!newPartName.trim()) return;
     setAddingPart(true);
     try {
-      const { data } = await managerApi.addBrokenPart(requestId, {
+      const { data } = await repairRequestApi.addBrokenPart(requestId, {
         name: newPartName.trim(),
         note: newPartNote.trim() || undefined,
       });
@@ -180,7 +181,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
   const handlePartStatusChange = async (partId: string, newStatus: string) => {
     try {
-      await managerApi.updateBrokenPartStatus(requestId, partId, newStatus);
+      await repairRequestApi.updateBrokenPartStatus(requestId, partId, newStatus);
       setBrokenParts((prev) =>
         prev.map((p) => (p.id === partId ? { ...p, status: newStatus } : p)),
       );
@@ -191,7 +192,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
   const handleDeletePart = async (partId: string) => {
     try {
-      await managerApi.deleteBrokenPart(requestId, partId);
+      await repairRequestApi.deleteBrokenPart(requestId, partId);
       setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
     } catch {
       // silently fail

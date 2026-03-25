@@ -16,7 +16,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { dealerApi } from '@/lib/api/dealer';
+import { certificateApi } from '@/lib/api/certificate';
 import { CertificateStatus } from '@asko/shared/client';
 import type { ICertificate } from '@/lib/api/types';
 
@@ -87,7 +87,7 @@ export function DealerCertificates() {
       if (statusFilter !== 'all') params.status = statusFilter;
       if (search) params.search = search;
 
-      const { data } = await dealerApi.getCertificates(params);
+      const { data } = await certificateApi.getDealer(params);
       const list = data.data ?? (Array.isArray(data) ? data : []);
       setCertificates(list);
       setTotal(data.overallCount ?? list.length);

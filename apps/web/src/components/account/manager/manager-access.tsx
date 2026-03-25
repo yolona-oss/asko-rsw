@@ -14,7 +14,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
-import { managerApi } from '@/lib/api/manager';
+import { repairerApi } from '@/lib/api/repairer';
 import type { IRepairer } from '@/lib/api/types';
 
 type AccessTab = 'inactive' | 'active';
@@ -132,7 +132,7 @@ export function ManagerAccess() {
   const fetchRepairers = useCallback(() => {
     setLoading(true);
     setError('');
-    managerApi.getRepairers({ offset: page, limit: LIMIT, search: debouncedSearch || undefined })
+    repairerApi.getAll({ offset: page, limit: LIMIT, search: debouncedSearch || undefined })
       .then(({ data }) => {
         setRepairers(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);
@@ -155,7 +155,7 @@ export function ManagerAccess() {
   const handleActivate = async (id: string) => {
     setActionLoading(id);
     try {
-      await managerApi.updateRepairer(id, { isActive: true });
+      await repairerApi.update(id, { isActive: true });
       setRepairers((prev) => prev.map((r) => r.id === id ? { ...r, isActive: true } : r));
     } catch {
       setError('Не удалось активировать мастера');
@@ -167,7 +167,7 @@ export function ManagerAccess() {
   const handleDeactivate = async (id: string) => {
     setActionLoading(id);
     try {
-      await managerApi.updateRepairer(id, { isActive: false });
+      await repairerApi.update(id, { isActive: false });
       setRepairers((prev) => prev.map((r) => r.id === id ? { ...r, isActive: false } : r));
     } catch {
       setError('Не удалось деактивировать мастера');

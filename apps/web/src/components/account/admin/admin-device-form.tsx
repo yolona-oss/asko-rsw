@@ -7,7 +7,7 @@ import { Button, Input, Select, Textarea, FormField, KeyValueEditor, kvToRecord,
 import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { deviceApi } from '@/lib/api/device';
 import type { DeviceType } from '@asko/shared/client';
 import type { IImageAttachment, IDevicePart } from '@/lib/api/types';
 
@@ -25,7 +25,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
 
   const fetchImages = async () => {
     try {
-      const { data } = await adminApi.getDeviceImages(deviceId);
+      const { data } = await deviceApi.getImages(deviceId);
       setImages(data.images ?? []);
     } catch {
       // silently fail
@@ -62,7 +62,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
     setUploading(true);
     try {
       const file = new File([blob], 'image.webp', { type: 'image/jpeg' });
-      await adminApi.uploadDeviceImage(deviceId, file);
+      await deviceApi.uploadImage(deviceId, file);
       await fetchImages();
     } catch {
       setError('Ошибка загрузки изображения');
@@ -79,7 +79,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
 
   const handleDelete = async (imageId: string) => {
     try {
-      await adminApi.deleteDeviceImage(deviceId, imageId);
+      await deviceApi.deleteImage(deviceId, imageId);
       setImages((prev) => prev.filter((img) => img.id !== imageId));
     } catch {
       setError('Ошибка удаления изображения');
@@ -111,7 +111,7 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
     setImages(reordered);
 
     try {
-      await adminApi.reorderDeviceImages(deviceId, reordered.map((img) => img.id));
+      await deviceApi.reorderImages(deviceId, reordered.map((img) => img.id));
     } catch {
       await fetchImages();
     }
@@ -213,7 +213,7 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
 
   const fetchParts = async () => {
     try {
-      const { data } = await adminApi.getDeviceParts(deviceId);
+      const { data } = await deviceApi.getParts(deviceId);
       setParts(data.parts ?? []);
     } catch {
       // silently fail
@@ -239,7 +239,7 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
     setSubmitting(true);
     setError('');
     try {
-      await adminApi.createDevicePart(deviceId, {
+      await deviceApi.createPart(deviceId, {
         name: form.name.trim(),
         partNumber: form.partNumber.trim() || undefined,
         price: form.price ? Number(form.price) : undefined,
@@ -259,7 +259,7 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
     setSubmitting(true);
     setError('');
     try {
-      await adminApi.updateDevicePart(deviceId, partId, {
+      await deviceApi.updatePart(deviceId, partId, {
         name: form.name.trim(),
         partNumber: form.partNumber.trim() || undefined,
         price: form.price ? Number(form.price) : undefined,
@@ -277,7 +277,7 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
   const handleDelete = async (partId: string) => {
     setError('');
     try {
-      await adminApi.deleteDevicePart(deviceId, partId);
+      await deviceApi.deletePart(deviceId, partId);
       setParts((prev) => prev.filter((p) => p.id !== partId));
       if (editingId === partId) resetForm();
     } catch {
@@ -468,8 +468,8 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
 
   useEffect(() => {
     if (!deviceId) return;
-    adminApi
-      .getDevice(deviceId)
+    deviceApi
+      .getOne(deviceId)
       .then(({ data: device }) => {
         setData({
           name: device.name ?? '',
@@ -506,9 +506,9 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
       };
 
       if (isEdit) {
-        await adminApi.updateDevice(deviceId, payload);
+        await deviceApi.update(deviceId, payload);
       } else {
-        await adminApi.createDevice(payload);
+        await deviceApi.create(payload);
       }
 
       router.push('/account/devices');

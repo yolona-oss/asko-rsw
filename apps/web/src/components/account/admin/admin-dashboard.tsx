@@ -6,7 +6,10 @@ import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { deviceApi } from '@/lib/api/device';
+import { certificateApi } from '@/lib/api/certificate';
+import { usersApi } from '@/lib/api/users';
+import { invitationApi } from '@/lib/api/invitation';
 
 function StatCard({ title, value, href }: { title: string; value: number | string; href: string }) {
   return (
@@ -33,10 +36,10 @@ export function AdminDashboard() {
     async function fetchData() {
       try {
         const [devicesRes, certsRes, usersRes, invitationsRes] = await Promise.all([
-          adminApi.getDevices({ limit: 1 }),
-          adminApi.getCertificates({ limit: 1 }),
-          adminApi.getUsers({ limit: 1 }),
-          adminApi.getInvitations(),
+          deviceApi.getAll({ limit: 1 }),
+          certificateApi.getAll({ limit: 1 }),
+          usersApi.getAll({ limit: 1 }),
+          invitationApi.getAll(),
         ]);
 
         setStats({

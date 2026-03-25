@@ -5,7 +5,8 @@ import { Badge, Button, Textarea } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
-import { userApi } from '@/lib/api/user';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { reviewApi } from '@/lib/api/review';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const POLL_INTERVAL = 15_000;
@@ -185,9 +186,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const fetchData = useCallback(async () => {
     try {
       const [reqRes, stepsRes, partsRes] = await Promise.all([
-        userApi.getRepairRequest(requestId),
-        userApi.getWorkSteps(requestId).catch(() => ({ data: [] })),
-        userApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
+        repairRequestApi.getOne(requestId),
+        repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
+        repairRequestApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
       setRequest(reqRes.data as unknown as RepairRequest);
       const steps = (stepsRes.data ?? []) as unknown as WorkStep[];
@@ -198,7 +199,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       // Check if already reviewed
       if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
         try {
-          const { data: myReviews } = await userApi.getMyReviews();
+          const { data: myReviews } = await reviewApi.getMy();
           const reviews = Array.isArray(myReviews) ? myReviews : [];
           const reviewed = reviews.some(
             (r: any) => r.repairRequest?.id === requestId || r.repairRequestId === requestId,
@@ -241,7 +242,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
     setReviewSubmitting(true);
     setReviewError('');
     try {
-      const { data: review } = await userApi.createReview({
+      const { data: review } = await reviewApi.create({
         repairRequestId: requestId,
         rating: reviewRating,
         comment: reviewComment.trim() || undefined,
@@ -249,7 +250,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       // Upload review images
       for (const file of reviewFiles) {
         try {
-          await userApi.uploadReviewImage(review.id, file);
+          await reviewApi.uploadImage(review.id, file);
         } catch {
           // continue
         }

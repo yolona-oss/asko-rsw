@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { repairerApi } from '@/lib/api/repairer';
+import { repairRequestApi } from '@/lib/api/repair-request';
 import { api } from '@/lib/api/client';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input, Select } from '@asko/ui';
@@ -143,7 +143,7 @@ export function RepairerRequest() {
     if (!request) return;
     setActionLoading(true);
     try {
-      await repairerApi.acceptRequest(request.id);
+      await repairRequestApi.accept(request.id);
       setRequest({ ...request, status: RepairRequestStatus.ACCEPTED });
     } catch {
       // handle error
@@ -156,7 +156,7 @@ export function RepairerRequest() {
     if (!request) return;
     setActionLoading(true);
     try {
-      await repairerApi.startWork(request.id);
+      await repairRequestApi.start(request.id);
       setRequest({ ...request, status: RepairRequestStatus.IN_PROGRESS });
     } catch {
       // handle error
@@ -176,7 +176,7 @@ export function RepairerRequest() {
     setPriceError('');
     setPriceSuccess(false);
     try {
-      await repairerApi.setRepairPrice(request.id, { amount });
+      await repairRequestApi.setPrice(request.id, { amount });
       setRequest({ ...request, totalCost: amount });
       setPriceSuccess(true);
     } catch {
@@ -187,14 +187,14 @@ export function RepairerRequest() {
   };
 
   useEffect(() => {
-    repairerApi.getActiveRequest()
+    repairRequestApi.getActive()
       .then(async ({ data }) => {
         if (!data) { setLoading(false); return; }
         setRequest(data);
         if (data.totalCost) setPriceValue(String(data.totalCost));
 
         const [stepsRes, , partsRes] = await Promise.all([
-          repairerApi.getWorkSteps(data.id).catch(() => ({ data: [] })),
+          repairRequestApi.getSteps(data.id).catch(() => ({ data: [] })),
           api.get('/file-upload/image/attached', {
             params: { ownerType: 'repair_request', ownerId: data.id },
           }).then(({ data: images }) => {
@@ -203,7 +203,7 @@ export function RepairerRequest() {
               .filter(Boolean);
             setPhotos(urls);
           }).catch(() => {}),
-          repairerApi.getBrokenParts(data.id).then(r => r.data).catch(() => ({ parts: [] as any[] })),
+          repairRequestApi.getBrokenParts(data.id).then(r => r.data).catch(() => ({ parts: [] as any[] })),
         ]);
         setSteps(stepsRes.data ?? []);
         const parts = Array.isArray(partsRes?.parts) ? partsRes.parts : [];
@@ -212,7 +212,7 @@ export function RepairerRequest() {
         // Load images for each broken part
         if (parts.length > 0) {
           const imgPromises = parts.map((p: any) =>
-            repairerApi.getBrokenPartImages(data.id, p.id)
+            repairRequestApi.getBrokenPartImages(data.id, p.id)
               .then(({ data: imgs }) => ({ id: p.id, images: imgs.images ?? [] }))
               .catch(() => ({ id: p.id, images: [] })),
           );
@@ -231,7 +231,7 @@ export function RepairerRequest() {
   const handleStepStart = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
-      await repairerApi.updateWorkStep(request.id, stepId, { status: WorkStepStatus.IN_PROGRESS });
+      await repairRequestApi.updateStep(request.id, stepId, { status: WorkStepStatus.IN_PROGRESS });
       setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.IN_PROGRESS } : s));
     } catch {}
   }, [request]);
@@ -239,7 +239,7 @@ export function RepairerRequest() {
   const handleStepComplete = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
-      const { data } = await repairerApi.completeWorkStep(request.id, stepId);
+      const { data } = await repairRequestApi.completeStep(request.id, stepId);
       setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.COMPLETED } : s));
       if (data.requestCompleted) {
         setRequest({ ...request, status: RepairRequestStatus.AWAITING_COMPLETION });
@@ -250,7 +250,7 @@ export function RepairerRequest() {
   const handleStepSkip = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
-      await repairerApi.updateWorkStep(request.id, stepId, { status: WorkStepStatus.SKIPPED });
+      await repairRequestApi.updateStep(request.id, stepId, { status: WorkStepStatus.SKIPPED });
       setSteps((prev) => prev.map((s) => s.id === stepId ? { ...s, status: WorkStepStatus.SKIPPED } : s));
     } catch {}
   }, [request]);
@@ -258,7 +258,7 @@ export function RepairerRequest() {
   const handleDeleteStep = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
-      await repairerApi.deleteWorkStep(request.id, stepId);
+      await repairRequestApi.deleteStep(request.id, stepId);
       setSteps((prev) => prev.filter((s) => s.id !== stepId));
     } catch {}
   }, [request]);
@@ -270,7 +270,7 @@ export function RepairerRequest() {
     setAddPartLoading(true);
     setAddPartError('');
     try {
-      const { data } = await repairerApi.addBrokenPart(request.id, {
+      const { data } = await repairRequestApi.addBrokenPart(request.id, {
         name: addPartName.trim(),
         note: addPartNote.trim() || undefined,
       });
@@ -288,7 +288,7 @@ export function RepairerRequest() {
   const handleUpdatePartStatus = useCallback(async (partId: string, newStatus: string) => {
     if (!request) return;
     try {
-      const { data } = await repairerApi.updateBrokenPartStatus(request.id, partId, newStatus);
+      const { data } = await repairRequestApi.updateBrokenPartStatus(request.id, partId, newStatus);
       const updated = data.part ?? data;
       setBrokenParts((prev) => prev.map((p) => p.id === partId ? { ...p, ...updated, status: newStatus } : p));
     } catch {}
@@ -297,7 +297,7 @@ export function RepairerRequest() {
   const handleDeleteBrokenPart = useCallback(async (partId: string) => {
     if (!request) return;
     try {
-      await repairerApi.deleteBrokenPart(request.id, partId);
+      await repairRequestApi.deleteBrokenPart(request.id, partId);
       setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
       setPartImages((prev) => {
         const next = { ...prev };
@@ -310,7 +310,7 @@ export function RepairerRequest() {
   const handleUploadPartImage = useCallback(async (partId: string, file: File) => {
     if (!request) return;
     try {
-      const { data } = await repairerApi.uploadBrokenPartImage(request.id, partId, file);
+      const { data } = await repairRequestApi.uploadBrokenPartImage(request.id, partId, file);
       const newImage = data;
       setPartImages((prev) => ({
         ...prev,
@@ -326,7 +326,7 @@ export function RepairerRequest() {
     setAddStepLoading(true);
     setAddStepError('');
     try {
-      const { data } = await repairerApi.addWorkStep(request.id, {
+      const { data } = await repairRequestApi.addStep(request.id, {
         title: addStepTitle.trim(),
         description: addStepDescription.trim() || undefined,
         isFinal: addStepIsFinal || undefined,
@@ -349,7 +349,7 @@ export function RepairerRequest() {
     if (!request) return;
     setLockLoading(true);
     try {
-      await repairerApi.lockWorkSteps(request.id);
+      await repairRequestApi.lockSteps(request.id);
       setRequest({ ...request, stepsLocked: true });
     } catch {
       // handle error
@@ -363,7 +363,7 @@ export function RepairerRequest() {
     setRefuseLoading(true);
     setRefuseError('');
     try {
-      await repairerApi.refuseRequest(request.id, refuseReason);
+      await repairRequestApi.refuse(request.id, refuseReason);
       setRequest(null);
       setRefuseOpen(false);
     } catch {
@@ -378,7 +378,7 @@ export function RepairerRequest() {
     setCompleteLoading(true);
     setCompleteError('');
     try {
-      await repairerApi.completeWork(request.id, completeDescription, completeFiles);
+      await repairRequestApi.complete(request.id, completeDescription, completeFiles);
       setRequest(null);
       setCompleteOpen(false);
     } catch {

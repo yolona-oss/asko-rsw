@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from './account-provider';
 import { useAuth } from '@/lib/api/use-auth';
-import { profileApi } from '@/lib/api/profile';
+import { usersApi } from '@/lib/api/users';
 import { AvatarCropModal } from './avatar-crop-modal';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
 import { Button, Input, FormField, Toggle } from '@asko/ui';
@@ -42,7 +42,7 @@ export function ProfileForm() {
   if (!profileLoaded.current && authUser) {
     profileLoaded.current = true;
     Promise.all([
-      profileApi.getProfile().then(({ data }) => {
+      usersApi.getProfile().then(({ data }) => {
         setFirstName(data.firstName ?? '');
         setLastName(data.lastName ?? '');
         setEmail(data.email ?? '');
@@ -56,7 +56,7 @@ export function ProfileForm() {
           setChatSearchable(prefs.chat.searchable ?? false);
         }
       }),
-      profileApi.getAvatarUrl(authUser.id).then((url) => {
+      usersApi.getAvatarUrl(authUser.id).then((url) => {
         if (url) setAvatarPreview(url);
       }),
     ]).finally(() => setLoaded(true));
@@ -105,7 +105,7 @@ export function ProfileForm() {
 
     try {
       setUploadingAvatar(true);
-      await profileApi.uploadAvatar(blob, authUser.id);
+      await usersApi.uploadAvatar(blob, authUser.id);
       queryClient.invalidateQueries({ queryKey: ['user-avatar'] });
       setMessage({ type: 'success', text: 'Аватар обновлён' });
     } catch {
@@ -122,7 +122,7 @@ export function ProfileForm() {
     setSaving(true);
     setMessage(null);
     try {
-      await profileApi.updateProfile({
+      await usersApi.updateProfile({
         name: [firstName, lastName].filter(Boolean).join(' '),
         email: email || undefined,
         phone: phone || undefined,

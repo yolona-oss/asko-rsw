@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useMemo, type ReactNode
 import { useQuery } from '@tanstack/react-query';
 import type { AccountUser, LoadingStage } from '@/lib/account';
 import { useAuth, useSession } from '@/lib/api/use-auth';
-import { profileApi } from '@/lib/api/profile';
+import { usersApi } from '@/lib/api/users';
 
 interface AccountContextType {
   stage: LoadingStage;
@@ -26,7 +26,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   const { data: avatarUrl } = useQuery({
     queryKey: ['user-avatar', sessionUser?.id],
-    queryFn: () => profileApi.getAvatarUrl(sessionUser!.id),
+    queryFn: () => usersApi.getAvatarUrl(sessionUser!.id),
     enabled: !!sessionUser?.id,
     staleTime: 5 * 60 * 1000,
   });

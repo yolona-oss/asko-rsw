@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, TabList, Tab } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { managerApi } from '@/lib/api/manager';
+import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 type TabKey = 'all' | 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
@@ -118,7 +118,7 @@ export function ManagerRequests() {
   useEffect(() => {
     async function fetchRequests() {
       try {
-        const { data } = await managerApi.getRepairRequests({ limit: 100 });
+        const { data } = await repairRequestApi.getAll({ limit: 100 });
         setRequests((data.data ?? []) as unknown as RepairRequest[]);
       } catch {
         // silently fail

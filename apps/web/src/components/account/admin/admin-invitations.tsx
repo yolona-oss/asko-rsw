@@ -16,7 +16,7 @@ import {
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
-import { adminApi } from '@/lib/api/admin';
+import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';
 
@@ -170,7 +170,7 @@ export function AdminInvitations() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    adminApi.getInvitations()
+    invitationApi.getAll()
       .then(({ data }) => setInvitations(Array.isArray(data) ? data : []))
       .catch(() => setError('Не удалось загрузить приглашения'))
       .finally(() => setLoading(false));
@@ -181,7 +181,7 @@ export function AdminInvitations() {
     setCreating(true);
     setCreateError('');
     try {
-      const { data } = await adminApi.createInvitation({
+      const { data } = await invitationApi.create({
         role: role as Role,
         ttl: ttl !== '' ? ttl : undefined,
       });
@@ -200,7 +200,7 @@ export function AdminInvitations() {
   const handleDelete = async (id: string) => {
     setDeleteLoading(id);
     try {
-      await adminApi.deleteInvitation(id);
+      await invitationApi.delete(id);
       setInvitations((prev) => prev.filter((inv) => inv.id !== id));
       setNewLinks((prev) => { const n = { ...prev }; delete n[id]; return n; });
     } catch {

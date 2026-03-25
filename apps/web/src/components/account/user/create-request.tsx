@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Button, Select, Textarea, FormField, Input } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { userApi } from '@/lib/api/user';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { userDeviceApi } from '@/lib/api/user-device';
+import { certificateApi } from '@/lib/api/certificate';
+import { deviceApi } from '@/lib/api/device';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import type { ICertificate, IRepairRequest } from '@/lib/api/types';
 
 interface UserDevice {
@@ -52,9 +56,9 @@ export function CreateRequest() {
     async function fetchData() {
       try {
         const [devRes, certRes, reqRes] = await Promise.all([
-          userApi.getMyDevices(),
-          userApi.getMyCertificates(),
-          userApi.getMyRequests({ limit: 100 }),
+          userDeviceApi.getMy(),
+          certificateApi.getMy(),
+          repairRequestApi.getMy({ limit: 100 }),
         ]);
         const devList = devRes.data;
         setDevices(devList);
@@ -102,7 +106,7 @@ export function CreateRequest() {
     if (!deviceId) return;
 
     let cancelled = false;
-    userApi.getDeviceParts(deviceId).then((res) => {
+    deviceApi.getParts(deviceId).then((res) => {
       if (!cancelled) {
         setDeviceParts(res.data?.parts ?? []);
       }
@@ -154,7 +158,7 @@ export function CreateRequest() {
         ...(sp.devicePartId ? { devicePartId: sp.devicePartId } : {}),
         name: sp.name,
       }));
-      const { data: request } = await userApi.createRepairRequest({
+      const { data: request } = await repairRequestApi.create({
         userDeviceId,
         description: description.trim(),
         ...(certificateId ? { certificateId } : {}),
@@ -164,8 +168,8 @@ export function CreateRequest() {
       // 2. Upload and attach images
       for (const img of images) {
         try {
-          const { data: uploaded } = await userApi.uploadImage(img.file);
-          await userApi.attachImage(uploaded.id, 'repair_request', request.id);
+          const { data: uploaded } = await fileUploadApi.uploadImage(img.file);
+          await fileUploadApi.attachImage(uploaded.id, 'repair_request', request.id);
         } catch {
           // continue even if single image fails
         }

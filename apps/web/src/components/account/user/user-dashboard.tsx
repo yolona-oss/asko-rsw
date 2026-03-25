@@ -9,7 +9,8 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { CTABanner } from '@/components/account/cta-banner';
 import { PaymentModal } from '@/components/account/user/payment-modal';
-import { userApi } from '@/lib/api/user';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { certificateApi } from '@/lib/api/certificate';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import type { RepairRequestStatus } from '@asko/shared/client';
 
@@ -94,8 +95,8 @@ export function UserDashboard() {
     async function fetchData() {
       try {
         const [reqRes, certRes] = await Promise.all([
-          userApi.getMyRequests({ offset: 1, limit: 1 }),
-          userApi.getMyCertificates(),
+          repairRequestApi.getMy({ offset: 1, limit: 1 }),
+          certificateApi.getMy(),
           fetchPendingPayments(),
         ]);
 

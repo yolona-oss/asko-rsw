@@ -12,7 +12,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { articleApi } from '@/lib/api/article';
 import type { IArticle } from '@/lib/api/types';
 
 function ArticleRow({
@@ -64,7 +64,7 @@ export function AdminArticles() {
 
   const fetchArticles = async () => {
     try {
-      const { data } = await adminApi.getArticles({ limit: 100 });
+      const { data } = await articleApi.getAll({ limit: 100 });
       setArticles(data.data ?? []);
     } catch {
       // silently fail
@@ -79,7 +79,7 @@ export function AdminArticles() {
 
   const handleDelete = async (id: string) => {
     try {
-      await adminApi.deleteArticle(id);
+      await articleApi.delete(id);
       setArticles((prev) => prev.filter((a) => a.id !== id));
     } catch {
       // silently fail
@@ -89,7 +89,7 @@ export function AdminArticles() {
   const handleDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      await adminApi.deleteAllArticles();
+      await articleApi.deleteAll();
       setArticles([]);
     } catch {
       // silently fail

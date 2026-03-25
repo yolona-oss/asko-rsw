@@ -5,8 +5,10 @@ import { Button, Input, FormField, Select, Modal, SerialNumberInput } from '@ask
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
-import { userApi } from '@/lib/api/user';
-import { fileUploadApi } from '@/lib/api/file-upload';
+import { certificateApi } from '@/lib/api/certificate';
+import { userDeviceApi } from '@/lib/api/user-device';
+import { addressApi } from '@/lib/api/address';
+import { deviceApi } from '@/lib/api/device';
 import { CertificateStatus } from '@asko/shared/client';
 import type { ICertificate } from '@/lib/api/types';
 
@@ -57,7 +59,7 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
 
   useEffect(() => {
     if (!device?.id) return;
-    fileUploadApi.getDeviceImages(device.id).then(({ data }) => {
+    deviceApi.getImages(device.id).then(({ data }) => {
       const images = Array.isArray(data) ? data : [];
       if (images.length > 0) {
         const img = images[0];
@@ -319,8 +321,8 @@ function AddDeviceForm({
   useEffect(() => {
     if (!open) return;
     setLoadingCatalog(true);
-    userApi
-      .getDeviceCatalog({ limit: 200 })
+    deviceApi
+      .getAll({ limit: 200 })
       .then(({ data }) => {
         const list = Array.isArray(data) ? data : data.data ?? [];
         setCatalog(list);
@@ -336,7 +338,7 @@ function AddDeviceForm({
     setSubmitting(true);
     setError('');
     try {
-      const { data: address } = await userApi.createAddress({
+      const { data: address } = await addressApi.create({
         country: 'Россия',
         city,
         street,
@@ -345,7 +347,7 @@ function AddDeviceForm({
         ...(floor ? { floor: Number(floor) } : {}),
         ...(room ? { room: Number(room) } : {}),
       });
-      await userApi.registerDevice({
+      await userDeviceApi.register({
         deviceId,
         serialNumber: serialNumber.trim(),
         addressId: address.id,
@@ -500,8 +502,8 @@ function AddCertificateForm({
   useEffect(() => {
     if (!open) return;
     setLoadingDevices(true);
-    userApi
-      .getMyDevices()
+    userDeviceApi
+      .getMy()
       .then(({ data }) => {
         setDevices(data);
         if (data.length > 0 && !deviceId) setDeviceId(data[0].id);
@@ -516,7 +518,7 @@ function AddCertificateForm({
     setSubmitting(true);
     setError('');
     try {
-      const { data: newCert } = await userApi.addCertificate({
+      const { data: newCert } = await certificateApi.add({
         userDeviceId: deviceId,
         certificateNumber: certNumber.trim(),
         expiresAt,
@@ -611,7 +613,7 @@ export function UserCertificates() {
   const fetchCertificates = async () => {
     setLoading(true);
     try {
-      const { data } = await userApi.getMyCertificates();
+      const { data } = await certificateApi.getMy();
       setCertificates(data);
     } catch {
       // silently fail
@@ -623,7 +625,7 @@ export function UserCertificates() {
   const fetchDevices = async () => {
     setLoadingDevices(true);
     try {
-      const { data } = await userApi.getMyDevices();
+      const { data } = await userDeviceApi.getMy();
       setDevices(data);
     } catch {
       // silently fail

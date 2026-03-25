@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Button, Input, Textarea, FormField, CropModal } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { articleApi } from '@/lib/api/article';
 import type { IImageAttachment } from '@/lib/api/types';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -23,7 +23,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
 
   const fetchImages = async () => {
     try {
-      const { data } = await adminApi.getArticleImages(articleId);
+      const { data } = await articleApi.getImages(articleId);
       setImages((data.images).sort((a, b) => a.order - b.order));
     } catch {
       // silently fail
@@ -60,7 +60,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
     setUploading(true);
     try {
       const file = new File([blob], 'image.webp', { type: 'image/jpeg' });
-      await adminApi.uploadArticleImage(articleId, file);
+      await articleApi.uploadImage(articleId, file);
       await fetchImages();
     } catch {
       setError('Ошибка загрузки изображения');
@@ -77,7 +77,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
 
   const handleDelete = async (imageId: string) => {
     try {
-      await adminApi.deleteArticleImage(articleId, imageId);
+      await articleApi.deleteImage(articleId, imageId);
       setImages((prev) => prev.filter((img) => img.id !== imageId));
     } catch {
       setError('Ошибка удаления изображения');
@@ -109,7 +109,7 @@ function ArticleImages({ articleId }: { articleId: string }) {
     setImages(reordered);
 
     try {
-      await adminApi.reorderArticleImages(articleId, reordered.map((img) => img.id));
+      await articleApi.reorderImages(articleId, reordered.map((img) => img.id));
     } catch {
       await fetchImages();
     }
@@ -215,7 +215,7 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
     if (!isEdit) return;
     (async () => {
       try {
-        const { data: article } = await adminApi.getArticle(articleId);
+        const { data: article } = await articleApi.getOne(articleId);
         setTitle(article.title ?? '');
         setText(article.text ?? '');
         setTagsInput((article.tags ?? []).join(', '));
@@ -238,9 +238,9 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
       const data = { title, text, tags };
 
       if (isEdit) {
-        await adminApi.updateArticle(articleId, data);
+        await articleApi.update(articleId, data);
       } else {
-        await adminApi.createArticle(data);
+        await articleApi.create(data);
       }
       router.push('/account/articles');
     } catch {

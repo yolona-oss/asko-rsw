@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button, Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { userApi } from '@/lib/api/user';
+import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -83,7 +83,7 @@ export function UserRequests() {
   useEffect(() => {
     async function fetchRequests() {
       try {
-        const { data } = await userApi.getMyRequests({ limit: 50 });
+        const { data } = await repairRequestApi.getMy({ limit: 50 });
         setRequests((data.data ?? []) as unknown as RepairRequest[]);
       } catch {
         // silently fail

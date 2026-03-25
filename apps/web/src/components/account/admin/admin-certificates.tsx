@@ -13,7 +13,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { certificateApi } from '@/lib/api/certificate';
 import { CertificateStatus } from '@asko/shared/client';
 import type { ICertificate } from '@/lib/api/types';
 
@@ -105,7 +105,7 @@ export function AdminCertificates() {
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await adminApi.getCertificates({ limit: 200 });
+      const { data } = await certificateApi.getAll({ limit: 200 });
       setCertificates(data.data ?? []);
     } catch {
       // silently fail
@@ -120,7 +120,7 @@ export function AdminCertificates() {
 
   const handleRevoke = async (id: string) => {
     try {
-      await adminApi.revokeCertificate(id);
+      await certificateApi.revoke(id);
       await fetchCertificates();
     } catch {
       // silently fail

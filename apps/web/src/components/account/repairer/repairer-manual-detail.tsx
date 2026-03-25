@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { repairerApi } from '@/lib/api/repairer';
+import { deviceApi } from '@/lib/api/device';
 import { Card, Button, Modal, Textarea, FormField, Toggle } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -20,7 +20,7 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
   const [noteError, setNoteError] = useState('');
 
   useEffect(() => {
-    repairerApi.getDevice(deviceId)
+    deviceApi.getOne(deviceId)
       .then(({ data }) => setDevice(data))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -31,7 +31,7 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
     setNoteSaving(true);
     setNoteError('');
     try {
-      await repairerApi.addNote(deviceId, noteContent, noteIsPublic);
+      await deviceApi.addNote(deviceId, noteContent, noteIsPublic);
       setNoteSuccess(true);
       setNoteContent('');
       setNoteIsPublic(false);

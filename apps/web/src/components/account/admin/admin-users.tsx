@@ -13,7 +13,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
 
 type UserTab = 'all' | 'user' | 'dealer' | 'manager' | 'repairer';
@@ -88,7 +88,7 @@ export function AdminUsers() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const { data } = await adminApi.getUsers({ limit: 200 });
+        const { data } = await usersApi.getAll({ limit: 200 });
         setUsers(data.data ?? []);
       } catch (e: any) {
         console.error(e)
@@ -101,7 +101,7 @@ export function AdminUsers() {
 
   const handleDelete = async (id: string) => {
     try {
-      await adminApi.deleteUser(id);
+      await usersApi.delete(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
     } catch {
       // silently fail

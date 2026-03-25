@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { repairerApi } from '@/lib/api/repairer';
+import { deviceApi } from '@/lib/api/device';
 import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -25,7 +25,7 @@ export function RepairerManuals() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    repairerApi.getDevices()
+    deviceApi.getAll()
       .then(({ data }) => setDevices(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false));

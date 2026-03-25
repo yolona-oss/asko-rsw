@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount } from '@/components/account/account-provider';
-import { repairerApi } from '@/lib/api/repairer';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { reviewApi } from '@/lib/api/review';
 import { Card, Badge, Button } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -41,14 +42,14 @@ export function RepairerHistory() {
 
   useEffect(() => {
     if (!user) return;
-    repairerApi.getRepairerRating(user.id)
+    reviewApi.getRating(user.id)
       .then(({ data }) => setRating(data))
       .catch(() => { });
   }, [user]);
 
   useEffect(() => {
     setLoading(true);
-    repairerApi.getAssignedRequests({ offset, limit: LIMIT })
+    repairRequestApi.getAssigned({ offset, limit: LIMIT })
       .then(({ data }) => {
         setRequests(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);

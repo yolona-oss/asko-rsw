@@ -12,7 +12,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { adminApi } from '@/lib/api/admin';
+import { deviceApi } from '@/lib/api/device';
 
 const TYPE_LABELS: Record<string, string> = {
   washing_machine: 'Стиральная машина',
@@ -99,7 +99,7 @@ export function AdminDevices() {
       for (let i = 0; i < products.length; i += CHUNK) {
         const batch = products.slice(i, i + CHUNK);
         try {
-          const { data } = await adminApi.importDevices(batch);
+          const { data } = await deviceApi.importDevices(batch);
           status.done += data.created;
           status.errors.push(...data.errors);
         } catch (err: any) {
@@ -121,7 +121,7 @@ export function AdminDevices() {
 
   const fetchDevices = async () => {
     try {
-      const { data } = await adminApi.getDevices({ limit: 100 });
+      const { data } = await deviceApi.getAll({ limit: 100 });
       setDevices(data.data ?? []);
     } catch {
       // silently fail
@@ -136,7 +136,7 @@ export function AdminDevices() {
 
   const handleDelete = async (id: string) => {
     try {
-      await adminApi.deleteDevice(id);
+      await deviceApi.delete(id);
       setDevices((prev) => prev.filter((d) => d.id !== id));
     } catch {
       // silently fail
@@ -146,7 +146,7 @@ export function AdminDevices() {
   const handleDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      await adminApi.deleteAllDevices();
+      await deviceApi.deleteAll();
       setDevices([]);
     } catch {
       // silently fail

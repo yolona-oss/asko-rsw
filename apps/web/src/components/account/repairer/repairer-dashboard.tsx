@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { displayName, getGreeting } from '@/lib/account';
 import { repairerApi } from '@/lib/api/repairer';
+import { repairRequestApi } from '@/lib/api/repair-request';
 import { Card, Button, Badge } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -60,11 +61,11 @@ export function RepairerDashboard() {
   }, [sendLocation]);
 
   useEffect(() => {
-    repairerApi.getActiveRequest()
+    repairRequestApi.getActive()
       .then(({ data }) => setActiveRequest(data ?? null))
       .catch(() => setActiveRequest(null));
 
-    repairerApi.getAssignedRequests({ status: 'completed', limit: 1 })
+    repairRequestApi.getAssigned({ status: 'completed', limit: 1 })
       .then(({ data }) => setCompletedCount(data?.overallCount ?? 0))
       .catch(() => setCompletedCount(0));
   }, []);
