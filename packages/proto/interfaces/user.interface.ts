@@ -76,6 +76,10 @@ export interface UserIdRequest {
     id: string;
 }
 
+export interface FindByEmailRequest {
+    email: string;
+}
+
 export interface PaginationRequest {
     offset: number;
     limit: number;
@@ -223,6 +227,7 @@ export interface UserServiceClient {
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;
+    findUserByEmail(request: FindByEmailRequest): Observable<UserResponse>;
     deleteUser(request: UserIdRequest): Observable<EmptyResponse>;
     updateUser(request: UpdateUserRequest): Observable<UserResponse>;
     changePassword(request: ChangePasswordRequest): Observable<UserResponse>;

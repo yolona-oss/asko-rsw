@@ -22,6 +22,7 @@ import type {
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
+    FindByEmailRequest,
     PaginationRequest,
     PaginatedUsersResponse,
     UpdateUserRequest,
@@ -227,6 +228,15 @@ export class UserGrpcController {
         try {
             const user = await this.userService.findById(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
+            return userToResponse(user);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'FindUserByEmail')
+    async findUserByEmail(data: FindByEmailRequest): Promise<UserResponse> {
+        try {
+            const user = await this.userService.findByEmail(data.email);
+            if (!user) throw new RpcException({ code: status.NOT_FOUND, message: 'User not found' });
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
     }

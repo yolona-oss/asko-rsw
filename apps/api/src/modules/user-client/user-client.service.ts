@@ -92,6 +92,10 @@ export class UserClientService implements OnModuleInit {
         return grpcCall(this.userService.findUserById(data));
     }
 
+    findUserByEmail(email: string): Promise<UserResponse> {
+        return grpcCall(this.userService.findUserByEmail({ email }));
+    }
+
     deleteUser(data: UserIdRequest): Promise<EmptyResponse> {
         return grpcCall(this.userService.deleteUser(data));
     }

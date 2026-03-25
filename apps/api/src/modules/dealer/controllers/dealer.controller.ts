@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateDealerProfileDto,
@@ -17,6 +18,7 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { UserResponseDto } from 'common/dto/responses/user.response.dto';
 import {
     DealerProfileResponseDto,
     PaginatedDealersResponseDto,
@@ -35,6 +37,7 @@ import {
 export class DealerController {
     constructor(
         private readonly dealerClient: DealerClientService,
+        private readonly userClient: UserClientService,
         private readonly paymentService: PaymentClientService,
     ) {}
 
@@ -103,6 +106,13 @@ export class DealerController {
     }
 
     // ── Dealer ──
+
+    @ApiOkResponse({ type: UserResponseDto })
+    @RequiredRoles(Role.DEALER)
+    @Get('search-user')
+    async searchUser(@Query('email') email: string) {
+        return this.userClient.findUserByEmail(email);
+    }
 
     @ApiOkResponse({ type: DealerProfileResponseDto })
     @RequiredRoles(Role.DEALER)

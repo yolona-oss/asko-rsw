@@ -78,6 +78,10 @@ message UserIdRequest {
     string id = 1;
 }
 
+message FindByEmailRequest {
+    string email = 1;
+}
+
 message PaginationRequest {
     int32 offset = 1;
     int32 limit = 2;
@@ -236,6 +240,9 @@ service UserService {
     rpc FindAllInvites(EmptyRequest) returns (InviteListResponse);
     rpc CheckInvite(InviteTokenRequest) returns (InviteLinkResponse);
     rpc DeleteInvite(InviteIdRequest) returns (EmptyResponse);
+
+    // Search
+    rpc FindUserByEmail(FindByEmailRequest) returns (UserResponse);
 
     // Chat
     rpc SearchUsersForChat(SearchUsersForChatRequest) returns (SearchUsersForChatResponse);
