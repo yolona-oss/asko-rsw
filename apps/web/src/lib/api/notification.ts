@@ -7,11 +7,11 @@ export const notificationApi = {
   },
 
   unreadCount() {
-    return api.get<UnreadCount>('/notifications/unread-count');
+    return api.get<UnreadCount>('/notifications/unread-count', { _silent: true } as any);
   },
 
   markAsRead(id: string) {
-    return api.post(`/notifications/${id}/read`);
+    return api.post(`/notifications/${id}/read`, null, { _silent: true } as any);
   },
 
   markAllAsRead() {

@@ -39,7 +39,8 @@ export const usersApi = {
     try {
       const { data } = await api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
         params: { ownerType: 'user', ownerId: userId },
-      });
+        _silent: true,
+      } as any);
       const images = data.images ?? [];
       if (images.length === 0) return null;
       return images[0].imageJson?.thumbnail?.secure_url

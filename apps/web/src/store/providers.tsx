@@ -6,6 +6,7 @@ import { useState, useEffect, createContext, type ReactNode } from 'react';
 import { store, useAppDispatch, useAppSelector } from './index';
 import { setCredentials } from './auth-slice';
 import { authApi } from '@/lib/api/auth';
+import { ErrorModal } from '@/components/error-modal';
 
 /** true once the initial silent-refresh attempt has settled */
 export const AuthReadyContext = createContext(false);
@@ -69,6 +70,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <AuthGate>{children}</AuthGate>
+        <ErrorModal />
       </QueryClientProvider>
     </Provider>
   );

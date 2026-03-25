@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { IAccessToken } from './types';
 import { store } from '@/store';
 import { setAccessToken, logout } from '@/store/auth-slice';
+import { errorStore, extractErrorMessage } from '../error-store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -54,6 +55,15 @@ api.interceptors.response.use(
       }
 
       store.dispatch(logout());
+    }
+
+    // Global error modal — skip auth endpoints, 401s, and silent requests
+    if (
+      error.response?.status !== 401 &&
+      !original?.url?.startsWith('/auth/') &&
+      !(original as any)?._silent
+    ) {
+      errorStore.show(extractErrorMessage(error));
     }
 
     return Promise.reject(error);
