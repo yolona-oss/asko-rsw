@@ -5,6 +5,7 @@ import {
     CreatePaymentDto,
     ALL_ROLES,
     ADMIN_ROLES,
+    Role,
     JwtPayload,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
@@ -38,7 +39,7 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @Get('list')
     async listPayments(
         @Query('offset') offset?: number,
@@ -77,7 +78,7 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @Get('stats')
     async getStats() {
         return this.paymentService.getPaymentStats();
