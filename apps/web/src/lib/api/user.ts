@@ -34,12 +34,14 @@ export const userApi = {
     return api.post<IRepairRequest>('/repair-requests', data);
   },
 
-  getMyDevices() {
-    return api.get<IUserDevice[]>('/user-devices');
+  async getMyDevices() {
+    const { data } = await api.get<{ userDevices: IUserDevice[] }>('/user-devices');
+    return { data: (data?.userDevices ?? []) as IUserDevice[] };
   },
 
-  getMyCertificates() {
-    return api.get<ICertificate[]>('/certificates/my');
+  async getMyCertificates() {
+    const { data } = await api.get<{ certificates: ICertificate[] }>('/certificates/my');
+    return { data: (data?.certificates ?? []) as ICertificate[] };
   },
 
   getCertificate(id: string) {
