@@ -133,14 +133,13 @@ export function AdminArticles() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Статьи</PageHeader>
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
-      </div>
+      <PageHeader>Статьи</PageHeader>
+
+      <ViewSwitcher
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       <div className="flex items-start gap-2">
         <Link

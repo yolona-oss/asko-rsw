@@ -130,18 +130,17 @@ export function DealerCertificates() {
 
   return (
     <PageContainer>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader>Сертификаты</PageHeader>
-        <div className="flex items-center gap-3">
-          <ViewSwitcher
-            views={[VIEW_TABLE, VIEW_CARD]}
-            activeView={view}
-            onViewChange={setView}
-          />
-          <Link href="/account/certificates/create">
-            <Button variant="primary" size="sm">Создать сертификат</Button>
-          </Link>
-        </div>
+      <PageHeader>Сертификаты</PageHeader>
+
+      <div className="flex items-center justify-between gap-4">
+        <ViewSwitcher
+          views={[VIEW_TABLE, VIEW_CARD]}
+          activeView={view}
+          onViewChange={setView}
+        />
+        <Link href="/account/certificates/create">
+          <Button variant="primary" size="sm">Создать сертификат</Button>
+        </Link>
       </div>
 
       {/* Status filter tabs */}

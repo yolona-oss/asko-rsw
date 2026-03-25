@@ -132,18 +132,17 @@ export function UserRequests() {
 
   return (
     <PageContainer>
+      <PageHeader>Мои заявки</PageHeader>
+
       <div className="flex items-center justify-between gap-4">
-        <PageHeader>Мои заявки</PageHeader>
-        <div className="flex items-center gap-3">
-          <ViewSwitcher
-            views={[VIEW_CARD, VIEW_TABLE]}
-            activeView={view}
-            onViewChange={setView}
-          />
-          <Link href="/account/requests/create">
-            <Button variant="primary">Создать заявку</Button>
-          </Link>
-        </div>
+        <ViewSwitcher
+          views={[VIEW_CARD, VIEW_TABLE]}
+          activeView={view}
+          onViewChange={setView}
+        />
+        <Link href="/account/requests/create">
+          <Button variant="primary">Создать заявку</Button>
+        </Link>
       </div>
 
       {loading ? (

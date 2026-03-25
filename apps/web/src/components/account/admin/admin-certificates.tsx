@@ -191,14 +191,13 @@ export function AdminCertificates() {
 
   return (
     <PageContainer>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader>Управление сертификатами</PageHeader>
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
-      </div>
+      <PageHeader>Управление сертификатами</PageHeader>
+
+      <ViewSwitcher
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       {/* Status filter tabs */}
       <DataFilter

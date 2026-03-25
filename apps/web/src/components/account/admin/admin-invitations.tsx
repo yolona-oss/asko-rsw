@@ -258,14 +258,13 @@ export function AdminInvitations() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Приглашения</PageHeader>
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
-      </div>
+      <PageHeader>Приглашения</PageHeader>
+
+      <ViewSwitcher
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       {/* Create form */}
       <Card className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">

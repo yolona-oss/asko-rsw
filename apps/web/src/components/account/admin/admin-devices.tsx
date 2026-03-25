@@ -190,14 +190,13 @@ export function AdminDevices() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Товары</PageHeader>
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
-      </div>
+      <PageHeader>Товары</PageHeader>
+
+      <ViewSwitcher
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       <div className="flex items-start gap-2">
         <Link

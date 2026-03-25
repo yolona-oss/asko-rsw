@@ -254,14 +254,13 @@ export function ManagerRequests() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Заявки на обслуживание</PageHeader>
-        <ViewSwitcher
-          views={[VIEW_CARD, VIEW_TABLE]}
-          activeView={view}
-          onViewChange={setView}
-        />
-      </div>
+      <PageHeader>Заявки на обслуживание</PageHeader>
+
+      <ViewSwitcher
+        views={[VIEW_CARD, VIEW_TABLE]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       <DataFilter
         filters={[TAB_FILTER]}
