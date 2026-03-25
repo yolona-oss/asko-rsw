@@ -562,6 +562,7 @@ export interface RepairRequestRecord {
     stepsLocked: boolean;
     createdAt: string;
     updatedAt: string;
+    statusBeforePause: string;
 }
 
 export interface BrokenPartRecord {
@@ -658,6 +659,28 @@ export interface RepairApproveRefundRequest {
 
 export interface RepairDenyRefundRequest {
     requestId: string;
+}
+
+export interface RepairPauseRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
+export interface RepairResumeRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
+export interface RepairReassignRepairerRequest {
+    managerId: string;
+    requestId: string;
+    newRepairerId: string;
+}
+
+export interface RepairFindPausedByRepairerRequest {
+    repairerUserId: string;
+    offset: number;
+    limit: number;
 }
 
 export interface RepairAddStepRequest {
@@ -825,6 +848,9 @@ export interface RepairServiceClient {
     complete(request: RepairCompleteRequest): Observable<RepairRequestResponse>;
     approveRefund(request: RepairApproveRefundRequest): Observable<RepairRequestResponse>;
     denyRefund(request: RepairDenyRefundRequest): Observable<RepairRequestResponse>;
+    pauseRequest(request: RepairPauseRequest): Observable<RepairRequestResponse>;
+    resumeRequest(request: RepairResumeRequest): Observable<RepairRequestResponse>;
+    reassignRepairer(request: RepairReassignRepairerRequest): Observable<RepairRequestResponse>;
 
     // Work steps
     addStep(request: RepairAddStepRequest): Observable<WorkStepResponse>;
@@ -847,6 +873,7 @@ export interface RepairServiceClient {
     findByRepairer(request: RepairFindByRepairerRequest): Observable<PaginatedRepairRequestsResponse>;
     findByRepairerFiltered(request: RepairFindByRepairerFilteredRequest): Observable<PaginatedRepairRequestsResponse>;
     findActiveByRepairer(request: RepairFindActiveByRepairerRequest): Observable<RepairRequestResponse>;
+    findPausedByRepairer(request: RepairFindPausedByRepairerRequest): Observable<PaginatedRepairRequestsResponse>;
     findAll(request: RepairFindAllRequest): Observable<PaginatedRepairRequestsResponse>;
     checkActiveForDevice(request: RepairCheckActiveForDeviceRequest): Observable<RepairCheckActiveResponse>;
 }

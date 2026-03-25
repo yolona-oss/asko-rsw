@@ -12,6 +12,7 @@ export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
     [S.ASSIGNED]:            { from: [S.PENDING, S.PAID] },
     [S.ACCEPTED]:            { from: [S.ASSIGNED] },
     [S.IN_PROGRESS]:         { from: [S.ACCEPTED] },
+    [S.PAUSED]:              { from: [S.ACCEPTED, S.IN_PROGRESS] },
     [S.AWAITING_COMPLETION]: { from: [S.IN_PROGRESS, S.ACCEPTED] },
     [S.COMPLETED]:           { from: [S.IN_PROGRESS, S.AWAITING_COMPLETION] },
     [S.REFUND_REQUESTED]:    { notFrom: [S.COMPLETED, S.REFUNDED] },
@@ -22,6 +23,8 @@ export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
 export const REPAIR_ACTION_TRANSITIONS = {
     refuse:     { from: [S.ASSIGNED] as readonly Status[], to: S.PAID },
     denyRefund: { from: [S.REFUND_REQUESTED] as readonly Status[], to: S.PAID },
+    resume:     { from: [S.PAUSED] as readonly Status[] },
+    reassign:   { from: [S.ACCEPTED, S.PAUSED] as readonly Status[], to: S.ASSIGNED },
 } as const;
 
 export function canTransition(currentStatus: Status, targetStatus: Status): boolean {

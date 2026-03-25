@@ -148,7 +148,21 @@ export class RepairRequestController {
         return this.repairClient.denyRefund(id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/reassign')
+    async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
+        return this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
+    }
+
     // ── Repairer endpoints ──
+
+    @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Get('paused')
+    async findPaused(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
+        return this.repairClient.findPausedByRepairer(user.sub, pagination);
+    }
 
     @ApiOkResponse({ type: RepairRequestRecordDto })
     @RequiredRoles(Role.REPAIRER)
@@ -180,6 +194,20 @@ export class RepairRequestController {
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
         return this.repairClient.refuseRequest(user.sub, id, dto.reason);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/pause')
+    async pause(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.pauseRequest(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/resume')
+    async resume(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.resumeRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })

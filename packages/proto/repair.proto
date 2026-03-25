@@ -88,6 +88,9 @@ service RepairService {
     rpc Complete(RepairCompleteRequest) returns (RepairRequestResponse);
     rpc ApproveRefund(RepairApproveRefundRequest) returns (RepairRequestResponse);
     rpc DenyRefund(RepairDenyRefundRequest) returns (RepairRequestResponse);
+    rpc PauseRequest(RepairPauseRequest) returns (RepairRequestResponse);
+    rpc ResumeRequest(RepairResumeRequest) returns (RepairRequestResponse);
+    rpc ReassignRepairer(RepairReassignRepairerRequest) returns (RepairRequestResponse);
 
     // Work steps
     rpc AddStep(RepairAddStepRequest) returns (WorkStepResponse);
@@ -110,6 +113,7 @@ service RepairService {
     rpc FindByRepairer(RepairFindByRepairerRequest) returns (PaginatedRepairRequestsResponse);
     rpc FindByRepairerFiltered(RepairFindByRepairerFilteredRequest) returns (PaginatedRepairRequestsResponse);
     rpc FindActiveByRepairer(RepairFindActiveByRepairerRequest) returns (RepairRequestResponse);
+    rpc FindPausedByRepairer(RepairFindPausedByRepairerRequest) returns (PaginatedRepairRequestsResponse);
     rpc FindAll(RepairFindAllRequest) returns (PaginatedRepairRequestsResponse);
     rpc CheckActiveForDevice(RepairCheckActiveForDeviceRequest) returns (RepairCheckActiveResponse);
 }
@@ -621,6 +625,7 @@ message RepairRequestRecord {
     bool stepsLocked = 17;
     string createdAt = 18;
     string updatedAt = 19;
+    string statusBeforePause = 20;
 }
 
 message BrokenPartRecord {
@@ -717,6 +722,28 @@ message RepairApproveRefundRequest {
 
 message RepairDenyRefundRequest {
     string requestId = 1;
+}
+
+message RepairPauseRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairResumeRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairReassignRepairerRequest {
+    string managerId = 1;
+    string requestId = 2;
+    string newRepairerId = 3;
+}
+
+message RepairFindPausedByRepairerRequest {
+    string repairerUserId = 1;
+    int32 offset = 2;
+    int32 limit = 3;
 }
 
 message RepairAddStepRequest {

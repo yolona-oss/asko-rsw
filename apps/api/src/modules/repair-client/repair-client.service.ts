@@ -88,6 +88,18 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.denyRefund({ requestId }));
     }
 
+    pauseRequest(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.pauseRequest({ repairerUserId, requestId }));
+    }
+
+    resumeRequest(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.resumeRequest({ repairerUserId, requestId }));
+    }
+
+    reassignRepairer(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.reassignRepairer({ managerId, requestId, newRepairerId }));
+    }
+
     // ── Work steps ──
 
     addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; order?: number; isFinal?: boolean }): Promise<WorkStepResponse> {
@@ -204,6 +216,14 @@ export class RepairClientService implements OnModuleInit {
 
     findActiveByRepairer(repairerUserId: string): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.findActiveByRepairer({ repairerUserId }));
+    }
+
+    findPausedByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+        return grpcCall(this.repairService.findPausedByRepairer({
+            repairerUserId,
+            offset: pagination.offset ?? 0,
+            limit: pagination.limit ?? 20,
+        }));
     }
 
     findAll(pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {

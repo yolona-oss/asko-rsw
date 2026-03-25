@@ -36,6 +36,10 @@ import type {
     RepairFindActiveByRepairerRequest,
     RepairFindAllRequest,
     RepairCheckActiveForDeviceRequest,
+    RepairPauseRequest,
+    RepairResumeRequest,
+    RepairReassignRepairerRequest,
+    RepairFindPausedByRepairerRequest,
     RepairAddBrokenPartRequest,
     RepairUpdateBrokenPartRequest,
     RepairUpdateBrokenPartStatusRequest,
@@ -81,6 +85,7 @@ function requestToRecord(entity: RepairRequest) {
         stepsLocked: entity.stepsLocked,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        statusBeforePause: entity.statusBeforePause ?? '',
     };
 }
 
@@ -224,6 +229,30 @@ export class RepairGrpcController {
     async denyRefund(data: RepairDenyRefundRequest) {
         try {
             const request = await this.repairRequestService.denyRefund(data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'PauseRequest')
+    async pauseRequest(data: RepairPauseRequest) {
+        try {
+            const request = await this.repairRequestService.pause(data.repairerUserId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ResumeRequest')
+    async resumeRequest(data: RepairResumeRequest) {
+        try {
+            const request = await this.repairRequestService.resume(data.repairerUserId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ReassignRepairer')
+    async reassignRepairer(data: RepairReassignRepairerRequest) {
+        try {
+            const request = await this.repairRequestService.reassign(data.managerId, data.requestId, data.newRepairerId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -390,6 +419,22 @@ export class RepairGrpcController {
                 { offset: data.offset, limit: data.limit },
                 data.status || undefined,
             );
+            return {
+                data: result.data.map(requestToRecord),
+                overallCount: result.total,
+                offset: data.offset,
+                limit: data.limit,
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'FindPausedByRepairer')
+    async findPausedByRepairer(data: RepairFindPausedByRepairerRequest) {
+        try {
+            const result = await this.repairRequestService.findPausedByRepairer(data.repairerUserId, {
+                offset: data.offset,
+                limit: data.limit,
+            });
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,

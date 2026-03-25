@@ -259,7 +259,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -525,7 +526,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -882,7 +884,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -1065,7 +1068,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -1282,7 +1286,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -1616,7 +1621,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -1863,7 +1869,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -2112,7 +2119,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -2349,7 +2357,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -2513,7 +2522,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ],
           "mappedType": "unknown",
           "nativeEnumName": "repair_request_status"
@@ -2693,6 +2703,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "status_before_pause": {
+          "name": "status_before_pause",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "repair_request",
@@ -2824,7 +2850,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -3105,7 +3132,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -3349,7 +3377,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -3625,7 +3654,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -3894,7 +3924,8 @@
             "refused",
             "cancelled",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
         "withdrawal_status": {
@@ -3981,7 +4012,8 @@
         "refused",
         "cancelled",
         "refund_requested",
-        "refunded"
+        "refunded",
+        "paused"
       ]
     },
     "withdrawal_status": {

@@ -8,6 +8,7 @@ export enum RepairRequestStatus {
     COMPLETED = 'completed',
     REFUSED = 'refused',
     CANCELLED = 'cancelled',
+    PAUSED = 'paused',
     REFUND_REQUESTED = 'refund_requested',
     REFUNDED = 'refunded',
 }
@@ -50,6 +51,7 @@ export interface IRepairRequest {
     refuseReason?: string;
     rejectedRepairers?: string[];
     completionNote?: string;
+    statusBeforePause?: string;
     stepsLocked: boolean;
     user?: import('./user/user.type').IUser;
     userDevice?: import('./device.type').IUserDevice;

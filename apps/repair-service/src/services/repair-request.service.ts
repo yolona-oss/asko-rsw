@@ -380,6 +380,101 @@ export class RepairRequestService {
         return request;
     }
 
+    /** Repairer pauses accepted or in-progress request */
+    @CreateRequestContext()
+    async pause(repairerUserId: string, requestId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        assertTransition(request.status, RepairRequestStatus.PAUSED);
+
+        const oldStatus = request.status;
+        request.statusBeforePause = request.status;
+        request.status = RepairRequestStatus.PAUSED;
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.PAUSED,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
+    /** Repairer resumes a paused request */
+    @CreateRequestContext()
+    async resume(repairerUserId: string, requestId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        assertActionTransition('resume', request.status);
+
+        const oldStatus = request.status;
+        const resumeTo = (request.statusBeforePause as RepairRequestStatus) ?? RepairRequestStatus.IN_PROGRESS;
+        request.status = resumeTo;
+        request.statusBeforePause = undefined;
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: resumeTo,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
+    /** Manager reassigns request from current repairer to a new one */
+    @CreateRequestContext()
+    async reassign(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        assertActionTransition('reassign', request.status);
+
+        const newRepairer = await this.em.findOne(Repairer, { id: newRepairerId });
+        if (!newRepairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        if (!newRepairer.isActive) throw AppErrors.badRequest('Repairer is not active');
+
+        // Track old repairer in rejected list
+        const oldRepairerId = request.repairer
+            ? (typeof request.repairer === 'object' ? request.repairer.id : String(request.repairer))
+            : undefined;
+        if (oldRepairerId) {
+            if (!request.rejectedRepairers) request.rejectedRepairers = [];
+            request.rejectedRepairers.push(oldRepairerId);
+        }
+
+        const oldStatus = request.status;
+        request.repairer = this.em.getReference(Repairer, newRepairerId);
+        request.managerId = managerId;
+        request.status = RepairRequestStatus.ASSIGNED;
+        request.statusBeforePause = undefined;
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.ASSIGNED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.ASSIGNED,
+            repairerId: newRepairerId,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
     /** User cancels request */
     @CreateRequestContext()
     async cancel(userId: string, requestId: string): Promise<RepairRequest> {
@@ -439,6 +534,24 @@ export class RepairRequestService {
             },
             { populate: ['workSteps'] },
         );
+    }
+
+    @CreateRequestContext()
+    async findPausedByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const [data, total] = await this.em.findAndCount(
+            RepairRequest,
+            { repairer: repairer.id, status: RepairRequestStatus.PAUSED },
+            {
+                limit: pagination.limit ?? 20,
+                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                orderBy: { createdAt: 'DESC' },
+                populate: ['workSteps'],
+            }
+        );
+        return { data, total };
     }
 
     @CreateRequestContext()
