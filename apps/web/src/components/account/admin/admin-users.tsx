@@ -46,6 +46,24 @@ const TTL_OPTIONS: { value: number; label: string }[] = [
 
 type StatusFilter = 'all' | 'active' | 'disabled';
 
+// ── Checkbox ──
+
+function Checkbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      className="w-4 h-4 border border-[#e0e0e0] bg-[#f1f1f1] flex items-center justify-center flex-shrink-0 cursor-pointer"
+      onClick={() => onChange(!checked)}
+    >
+      {checked && (
+        <svg className="w-3 h-3 text-[#323232]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 // ── "Настроить" dropdown ──
 
 function SettingsDropdown({
@@ -76,7 +94,7 @@ function SettingsDropdown({
     <div className="relative" ref={ref}>
       <button
         type="button"
-        className="text-[#1855a4] font-medium text-sm hover:underline cursor-pointer"
+        className="text-[#1855a4] font-medium text-base hover:underline cursor-pointer tracking-[-0.16px]"
         onClick={() => setOpen(!open)}
         disabled={loading}
       >
@@ -155,7 +173,7 @@ function InviteDropdown() {
     <div className="relative" ref={ref}>
       <button
         type="button"
-        className="flex items-center gap-1 bg-[#179242] text-white text-sm font-medium px-3 py-2.5 hover:bg-[#147a38] cursor-pointer whitespace-nowrap"
+        className="flex items-center gap-1 bg-[#179242] text-[#f1f1f1] text-sm font-medium px-2 py-1 hover:bg-[#147a38] cursor-pointer whitespace-nowrap"
         onClick={() => setOpen(!open)}
       >
         Выдать доступ
@@ -223,6 +241,7 @@ export function AdminUsers() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
@@ -266,11 +285,20 @@ export function AdminUsers() {
     try {
       await usersApi.delete(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
+      setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
     } catch {
       // silently fail
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
   };
 
   // Filter: tab → role, then search, then status
@@ -288,26 +316,22 @@ export function AdminUsers() {
     return true;
   });
 
-  const showFrom = filteredUsers.length > 0 ? 1 : 0;
-  const showTo = filteredUsers.length;
-  const total = filteredUsers.length;
-
   return (
     <PageContainer>
       <PageHeader>Выдача доступов</PageHeader>
 
       {/* Tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-0 flex-wrap">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
-            className={`px-6 py-2.5 text-sm font-medium cursor-pointer border transition-colors ${
+            className={`px-6 py-2.5 text-sm font-medium cursor-pointer border shadow-sm transition-colors ${
               activeTab === tab.key
                 ? 'bg-[#323232] text-white border-[#323232]'
-                : 'bg-white/10 text-[#323232] border-[#cbd5e1] hover:bg-[#f6f6f8]'
+                : 'bg-white/10 text-[#323232] border-[#cbd5e1]'
             }`}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => { setActiveTab(tab.key); setSelected(new Set()); }}
           >
             {tab.label}
           </button>
@@ -316,9 +340,9 @@ export function AdminUsers() {
 
       {/* Search + Filters + Invite button */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        {/* Search */}
-        <div className="relative lg:w-[320px]">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#737373]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+        {/* Search input */}
+        <div className="relative lg:w-[320px] flex-shrink-0">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 text-[#737373]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <input
@@ -326,26 +350,50 @@ export function AdminUsers() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Поиск"
-            className="w-full border border-[#e5e5e5] bg-white pl-10 pr-3 py-2.5 text-sm text-text-main placeholder:text-[#737373] focus:outline-none focus:border-text-sub"
+            className="w-full h-[42px] border border-[#e5e5e5] bg-white pl-11 pr-3 text-sm text-text-main placeholder:text-[#737373] focus:outline-none focus:border-text-sub shadow-xs"
           />
         </div>
 
-        {/* Filters + Invite */}
-        <div className="flex-1 flex items-center border border-[#e5e5e5] bg-white">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-r border-[#edeff1]">
-            <span className="text-sm font-medium text-text-main whitespace-nowrap">Статус:</span>
-            <Select
+        {/* Filter bar */}
+        <div className="flex-1 flex items-center h-[42px] border border-[#e5e5e5] bg-white overflow-hidden">
+          {/* Статус filter */}
+          <div className="flex items-center gap-2 px-5 h-full">
+            <span className="text-sm font-medium text-[#323232] whitespace-nowrap">Статус:</span>
+            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="border-none text-sm py-0 pl-0 pr-5 min-w-[50px] focus:ring-0"
+              className="text-sm text-[#323232] bg-transparent border-none outline-none cursor-pointer appearance-none pr-4"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23323232\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right center' }}
             >
               <option value="all">Все</option>
               <option value="active">Активен</option>
               <option value="disabled">Заблокирован</option>
-            </Select>
+            </select>
           </div>
+
+          {/* Divider */}
+          <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0" />
+
+          {/* Район filter */}
+          <div className="flex items-center gap-2 px-5 h-full">
+            <span className="text-sm font-medium text-[#323232] whitespace-nowrap">Район:</span>
+            <select
+              className="text-sm text-[#323232] bg-transparent border-none outline-none cursor-pointer appearance-none pr-4"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23323232\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right center' }}
+              defaultValue="all"
+            >
+              <option value="all">Все</option>
+            </select>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0" />
+
+          {/* Spacer */}
           <div className="flex-1" />
-          <div className="px-2 py-1.5">
+
+          {/* Invite button */}
+          <div className="px-3 flex-shrink-0">
             <InviteDropdown />
           </div>
         </div>
@@ -361,10 +409,12 @@ export function AdminUsers() {
       ) : (
         <div className="bg-white border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-hidden">
           {/* Header */}
-          <div className="hidden lg:grid lg:grid-cols-[1fr_160px_100px_120px_90px] bg-[#f6f6f8] border-b border-[#edeff1] px-8 py-2 text-sm text-text-main">
+          <div className="hidden lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] bg-[#f6f6f8] border-b border-[#edeff1] px-6 py-2 text-sm text-[#323232] items-center">
+            <span />
             <span>Пользователь</span>
             <span>Телефон</span>
             <span>Роль</span>
+            <span>Район</span>
             <span>Статус</span>
             <span>Действия</span>
           </div>
@@ -379,42 +429,54 @@ export function AdminUsers() {
               const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
               const isActive = (user as any).isActive !== false;
               const isLoading = actionLoading === user.id;
+              const isSelected = selected.has(user.id);
 
               return (
                 <div
                   key={user.id}
-                  className={`grid grid-cols-1 lg:grid-cols-[1fr_160px_100px_120px_90px] items-center px-8 py-3 border-b border-[#edeff1] gap-2 lg:gap-0 ${
+                  className={`grid grid-cols-1 lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] items-center px-6 py-2.5 border-b border-[#edeff1] gap-2 lg:gap-0 ${
                     !isActive ? 'opacity-50' : ''
                   }`}
                 >
+                  {/* Checkbox */}
+                  <div className="hidden lg:flex items-center">
+                    <Checkbox checked={isSelected} onChange={() => toggleSelect(user.id)} />
+                  </div>
+
                   {/* User */}
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#d9d9d9] flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-text-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="w-6 h-6 text-[#888]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
                     </div>
-                    <p className="text-sm font-medium text-text-main">{name}</p>
+                    <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
                   </div>
 
                   {/* Phone */}
                   <div>
                     <p className="text-xs text-text-sub lg:hidden">Телефон:</p>
-                    <p className="text-sm text-text-main">{user.phone ?? '—'}</p>
+                    <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '—'}</p>
                   </div>
 
                   {/* Role */}
                   <div>
                     <p className="text-xs text-text-sub lg:hidden">Роль:</p>
-                    <p className="text-sm text-text-main">
+                    <p className="text-sm text-[#323232] tracking-[-0.14px]">
                       {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
                     </p>
+                  </div>
+
+                  {/* Район */}
+                  <div>
+                    <p className="text-xs text-text-sub lg:hidden">Район:</p>
+                    <p className="text-sm text-[#323232] tracking-[-0.14px]">—</p>
                   </div>
 
                   {/* Status */}
                   <div>
                     <p className="text-xs text-text-sub lg:hidden">Статус:</p>
-                    <span className={`inline-block text-sm text-white px-2.5 py-0.5 rounded-full ${
+                    <span className={`inline-block text-sm text-white px-2 py-0.5 rounded-[22px] ${
                       isActive ? 'bg-[#187f43]' : 'bg-[#a0a0a0]'
                     }`}>
                       {isActive ? 'Активен' : 'Заблокирован'}
@@ -437,9 +499,9 @@ export function AdminUsers() {
 
           {/* Footer */}
           {filteredUsers.length > 0 && (
-            <div className="px-8 py-2.5">
-              <p className="text-sm text-text-sub/60">
-                Показаны пользователей {showFrom}-{showTo} из {total}
+            <div className="px-6 py-2.5">
+              <p className="text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px]">
+                Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
               </p>
             </div>
           )}
