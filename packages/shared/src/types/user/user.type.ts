@@ -13,6 +13,7 @@ export interface IUser {
     lastName?: string;
     phone?: string;
     email?: string;
+    isActive: boolean;
     emailVerified: boolean;
     phoneVerified: boolean;
     passwordHash?: string;

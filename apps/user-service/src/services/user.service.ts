@@ -282,6 +282,16 @@ export class UserService {
     }
 
     @CreateRequestContext()
+    async setActive(id: string, isActive: boolean) {
+        const user = await this.findById(id)
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found')
+        }
+        user.isActive = isActive
+        await this.em.persistAndFlush(user)
+    }
+
+    @CreateRequestContext()
     async addRole(id: string, role: Role) {
         const user = await this.findById(id)
         if (!user) {

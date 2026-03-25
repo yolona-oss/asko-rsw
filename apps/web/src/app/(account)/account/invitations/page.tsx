@@ -8,7 +8,7 @@ import { PageContainer } from '@/components/account/page-container';
 
 export default function InvitationsPage() {
   const { stage } = useAccount();
-  const allowed = useRoleGuard(['admin']);
+  const allowed = useRoleGuard(['admin', 'manager']);
 
   if (!allowed) {
     if (stage === 'skeleton') {

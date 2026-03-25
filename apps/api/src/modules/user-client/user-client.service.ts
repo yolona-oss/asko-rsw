@@ -24,6 +24,7 @@ import type {
     ChangePasswordRequest,
     AddRoleRequest,
     RemoveRoleRequest,
+    SetUserActiveRequest,
     UserResponse,
     CreateInviteRequest,
     InviteCreatedResponse,
@@ -122,6 +123,10 @@ export class UserClientService implements OnModuleInit {
 
     removeRole(data: RemoveRoleRequest): Promise<EmptyResponse> {
         return grpcCall(this.userService.removeRole(data));
+    }
+
+    setUserActive(data: SetUserActiveRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.setUserActive(data));
     }
 
     // ─── Invite ──────────────────────────────────────────────────────────

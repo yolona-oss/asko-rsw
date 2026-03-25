@@ -9,6 +9,7 @@ export interface IAuthUser {
     lastName?: string;
     email?: string;
     phone?: string;
+    isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
     googleId?: string

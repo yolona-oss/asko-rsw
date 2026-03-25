@@ -12,6 +12,7 @@ export interface JwtPayload {
     authProvider: AuthProvider;
     username?: string;
     roles: string[];
+    isActive: boolean;
 }
 
 /***

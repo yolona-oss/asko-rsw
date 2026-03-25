@@ -16,6 +16,7 @@ export class User {
     | 'passwordHash'
     | 'phone'
     | 'googleId'
+    | 'isActive'
     | 'emailVerified'
     | 'phoneVerified'
     | 'preferences';
@@ -57,6 +58,9 @@ export class User {
 
     @Property({ nullable: true })
     googleId?: string;
+
+    @Property({ type: 'boolean', default: true })
+    isActive: boolean = true;
 
     @Property({ type: 'boolean', default: false })
     emailVerified: boolean = false;

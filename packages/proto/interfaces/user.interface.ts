@@ -102,6 +102,11 @@ export interface ChangePasswordRequest {
     newPassword: string;
 }
 
+export interface SetUserActiveRequest {
+    id: string;
+    isActive: boolean;
+}
+
 export interface AddRoleRequest {
     id: string;
     role: string;
@@ -161,6 +166,7 @@ export interface AuthUser {
     createdAt: string;
     updatedAt: string;
     preferencesJson: string;
+    isActive: boolean;
 }
 
 export interface UserResponse {
@@ -177,6 +183,7 @@ export interface UserResponse {
     createdAt: string;
     updatedAt: string;
     preferencesJson: string;
+    isActive: boolean;
 }
 
 export interface PaginatedUsersResponse {
@@ -235,6 +242,7 @@ export interface UserServiceClient {
     setEmailConfirmed(request: UserIdRequest): Observable<EmptyResponse>;
     addRole(request: AddRoleRequest): Observable<EmptyResponse>;
     removeRole(request: RemoveRoleRequest): Observable<EmptyResponse>;
+    setUserActive(request: SetUserActiveRequest): Observable<EmptyResponse>;
 
     createInvite(request: CreateInviteRequest): Observable<InviteCreatedResponse>;
     findAllInvites(request: EmptyRequest): Observable<InviteListResponse>;

@@ -29,6 +29,7 @@ import type {
     ChangePasswordRequest,
     AddRoleRequest,
     RemoveRoleRequest,
+    SetUserActiveRequest,
     UserResponse,
     CreateInviteRequest,
     InviteCreatedResponse,
@@ -74,6 +75,7 @@ function userToResponse(user: any): UserResponse {
         roles: user.roles ?? [],
         emailVerified: user.emailVerified ?? false,
         phoneVerified: user.phoneVerified ?? false,
+        isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
         preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
@@ -90,6 +92,7 @@ function userToAuthUser(user: any) {
         googleId: user.googleId ?? '',
         providers: user.providers ?? [],
         roles: user.roles ?? [],
+        isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
         preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
@@ -308,6 +311,14 @@ export class UserGrpcController {
     async removeRole(data: RemoveRoleRequest): Promise<EmptyResponse> {
         try {
             await this.userService.removeRole(data.id, data.role as Role);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'SetUserActive')
+    async setUserActive(data: SetUserActiveRequest): Promise<EmptyResponse> {
+        try {
+            await this.userService.setActive(data.id, data.isActive);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

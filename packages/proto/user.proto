@@ -104,6 +104,11 @@ message ChangePasswordRequest {
     string new_password = 3;
 }
 
+message SetUserActiveRequest {
+    string id = 1;
+    bool is_active = 2;
+}
+
 message AddRoleRequest {
     string id = 1;
     string role = 2;
@@ -163,6 +168,7 @@ message AuthUser {
     string created_at = 9;
     string updated_at = 10;
     string preferences_json = 11;
+    bool is_active = 12;
 }
 
 message UserResponse {
@@ -179,6 +185,7 @@ message UserResponse {
     string created_at = 11;
     string updated_at = 12;
     string preferences_json = 13;
+    bool is_active = 14;
 }
 
 message PaginatedUsersResponse {
@@ -234,6 +241,7 @@ service UserService {
     rpc SetEmailConfirmed(UserIdRequest) returns (EmptyResponse);
     rpc AddRole(AddRoleRequest) returns (EmptyResponse);
     rpc RemoveRole(RemoveRoleRequest) returns (EmptyResponse);
+    rpc SetUserActive(SetUserActiveRequest) returns (EmptyResponse);
 
     // Invite
     rpc CreateInvite(CreateInviteRequest) returns (InviteCreatedResponse);

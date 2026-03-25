@@ -67,7 +67,7 @@ function StepCircle({
   else if (isCompleted) circleClass = 'bg-green-600 text-white';
 
   return (
-    <div className={`flex flex-col items-center gap-2 flex-shrink-0 ${isFuture ? 'opacity-40 blur-[0.5px]' : ''}`}>
+    <div className={`flex flex-col items-center gap-2 flex-shrink-0 ${isFuture ? 'opacity-40 blur-[3px]' : ''}`}>
       <div className="relative">
         {isActive && (
           <div className="absolute inset-0 rounded-full bg-green-600/30 animate-ping" />

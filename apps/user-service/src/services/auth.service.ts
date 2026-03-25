@@ -85,11 +85,16 @@ export class AuthService {
 
         await this.loginThrottle.resetAttempts(params.email);
 
+        if (!user.isActive) {
+            throw AppErrors.forbidden('Account is disabled');
+        }
+
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
             <Role[]>user.roles,
             { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: AuthProvider.EMAIL },
-            { deviceInfo: params.deviceInfo, ipAddress: params.ipAddress }
+            { deviceInfo: params.deviceInfo, ipAddress: params.ipAddress },
+            user.isActive,
         )
 
         return {
@@ -141,7 +146,8 @@ export class AuthService {
             newUser.id,
             roles,
             { email: newUser.email, phone: newUser.phone, googleId: newUser.googleId, authProvider: AuthProvider.EMAIL },
-            { deviceInfo, ipAddress }
+            { deviceInfo, ipAddress },
+            newUser.isActive,
         )
 
         return {
@@ -238,10 +244,15 @@ export class AuthService {
                 throw new AppError(AppErrorTypeEnum.DB_ENTITY_NOT_FOUND, { message: 'User not found' })
             }
 
+            if (!user.isActive) {
+                throw AppErrors.forbidden('Account is disabled');
+            }
+
             const newATkn = this.generateAccessToken(
                 user.id,
                 <Role[]>user.roles,
-                { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider }
+                { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider },
+                user.isActive,
             );
 
             return {
@@ -270,7 +281,8 @@ export class AuthService {
         const { access_token } = this.generateAccessToken(
             user.id,
             <Role[]>user.roles,
-            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider }
+            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider },
+            user.isActive,
         );
 
         return {
@@ -316,12 +328,13 @@ export class AuthService {
         return toAuthUser(user);
     }
 
-    private generateAccessToken(userId: string, roles: string[], userIdentityData: UserIdentificationData): IAccessToken {
+    private generateAccessToken(userId: string, roles: string[], userIdentityData: UserIdentificationData, isActive: boolean = true): IAccessToken {
         const access_token_payload: JwtPayload = {
             id: userId,
             sub: userId,
             ...userIdentityData,
-            roles
+            roles,
+            isActive,
         }
         const access_token = this.jwtService.sign(access_token_payload)
 
@@ -352,8 +365,8 @@ export class AuthService {
         }
     }
 
-    private async generateTokens(userId: string, roles: string[], params: UserIdentificationData, hostInfo: { deviceInfo: string, ipAddress: string }): Promise<IRefreshToken & IAccessToken> {
-        const { access_token } = this.generateAccessToken(userId, roles, params)
+    private async generateTokens(userId: string, roles: string[], params: UserIdentificationData, hostInfo: { deviceInfo: string, ipAddress: string }, isActive: boolean = true): Promise<IRefreshToken & IAccessToken> {
+        const { access_token } = this.generateAccessToken(userId, roles, params, isActive)
         const { refresh_token } = await this.generateRefreshToken(userId, hostInfo)
         return {
             access_token,

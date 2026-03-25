@@ -19,6 +19,14 @@ export const usersApi = {
     return api.delete<void>('/users/delete', { params: { userId: id } });
   },
 
+  disable(id: string) {
+    return api.post<void>(`/users/${id}/disable`);
+  },
+
+  enable(id: string) {
+    return api.post<void>(`/users/${id}/enable`);
+  },
+
   uploadAvatar(file: Blob, userId: string) {
     const form = new FormData();
     form.append('file', file, 'avatar.webp');

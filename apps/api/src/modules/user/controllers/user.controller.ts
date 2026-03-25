@@ -5,6 +5,8 @@ import {
     Get,
     Delete,
     Put,
+    Post,
+    Param,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 
@@ -20,7 +22,8 @@ import {
     ChangePasswordDto,
     PaginationDto,
     ALL_ROLES,
-    ADMIN_ROLES
+    ADMIN_ROLES,
+    Role,
 } from '@asko/shared';
 import {
     PaginatedUsersResponseDto,
@@ -37,7 +40,7 @@ export class UsersController {
         private readonly chatPrivacy: ChatPrivacyService,
     ) { }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
     async getAllUsers(@Query() pagination: PaginationDto = {}) {
@@ -103,5 +106,21 @@ export class UsersController {
     @Get('/profile')
     async getUserById(@JwtAuthUser() user: IAuthUser) {
         return this.userClient.getProfile({ id: user.id });
+    }
+
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @ApiOkResponse({ type: EmptyResponseDto })
+    @Post(':id/disable')
+    async disableUser(@Param('id') id: string) {
+        await this.userClient.setUserActive({ id, isActive: false });
+        return {};
+    }
+
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @ApiOkResponse({ type: EmptyResponseDto })
+    @Post(':id/enable')
+    async enableUser(@Param('id') id: string) {
+        await this.userClient.setUserActive({ id, isActive: true });
+        return {};
     }
 }

@@ -50,6 +50,11 @@ export class JwtGuard implements CanActivate {
             })
             request[REQUSET_USER_KEY] = payload;
 
+            // Block disabled users from all protected endpoints
+            if (payload.isActive === false) {
+                throw AppErrors.forbidden('Account is disabled');
+            }
+
             // No specific roles required - any authenticated user is allowed
             if (!requiredRoles) {
                 return true;
