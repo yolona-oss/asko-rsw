@@ -6,6 +6,12 @@ import { useAppSelector } from '@/store';
 import type { ChatMessage } from '@/lib/chat-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const SOCKET_PATH = (() => {
+  try {
+    const p = new URL(API_URL).pathname;
+    return p === '/' ? '/socket.io' : `${p.replace(/\/$/, '')}/socket.io`;
+  } catch { return '/socket.io'; }
+})();
 
 export interface ChatSocketCallbacks {
   onNewMessage?: (message: ChatMessage) => void;
@@ -35,6 +41,7 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
     if (!accessToken) return;
 
     const socket = io(`${API_URL}/chat`, {
+      path: SOCKET_PATH,
       auth: { token: accessToken },
       transports: ['websocket', 'polling'],
       reconnection: true,
