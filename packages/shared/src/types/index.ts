@@ -1,6 +1,7 @@
 export * from './roles.type'
 
 export * from './image'
+export * from './video'
 export * from './user'
 
 export * from './util'

@@ -28,6 +28,19 @@ service FileService {
     // Reorder operations
     rpc ReorderImages(ReorderImagesRequest) returns (EmptyResponse);
     rpc ReorderByIds(ReorderByIdsRequest) returns (ImageListResponse);
+
+    // Video upload operations
+    rpc UploadVideo(UploadVideoRequest) returns (VideoResponse);
+    rpc UploadRepairRequestVideo(UploadWithOwnerRequest) returns (VideoResponse);
+    rpc UploadReviewVideo(UploadWithOwnerRequest) returns (VideoResponse);
+    rpc UploadDeviceVideo(UploadWithOwnerRequest) returns (VideoResponse);
+    rpc UploadArticleVideo(UploadWithOwnerRequest) returns (VideoResponse);
+
+    // Video management operations
+    rpc RemoveVideo(VideoIdRequest) returns (EmptyResponse);
+    rpc FindAttachedVideos(FindAttachedRequest) returns (VideoListResponse);
+    rpc AttachVideo(AttachVideoRequest) returns (VideoResponse);
+    rpc UnattachVideo(VideoIdRequest) returns (EmptyResponse);
 }
 
 // ─── Common ────────────────────────────────────────────────────────────
@@ -119,4 +132,38 @@ message ImageListResponse {
 
 message CountResponse {
     int32 count = 1;
+}
+
+// ─── Video ────────────────────────────────────────────────────────────
+
+message UploadVideoRequest {
+    FileData file = 1;
+}
+
+message VideoIdRequest {
+    string id = 1;
+}
+
+message AttachVideoRequest {
+    string videoId = 1;
+    string ownerType = 2;
+    string ownerId = 3;
+}
+
+message VideoRecord {
+    string id = 1;
+    string videoJson = 2;
+    int32 order = 3;
+    string ownerType = 4;
+    string ownerId = 5;
+    string createdAt = 6;
+    string updatedAt = 7;
+}
+
+message VideoResponse {
+    VideoRecord video = 1;
+}
+
+message VideoListResponse {
+    repeated VideoRecord videos = 1;
 }

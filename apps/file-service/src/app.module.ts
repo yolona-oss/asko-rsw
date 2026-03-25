@@ -4,7 +4,9 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { Image } from 'entities/image.entity';
+import { Video } from 'entities/video.entity';
 import { ImageService } from 'services/image.service';
+import { VideoService } from 'services/video.service';
 import { ImageProcessingService } from 'services/image-processing.service';
 import { ImageResizeService } from 'services/image-resize.service';
 import { CloudinaryService } from 'services/cloudinary.service';
@@ -17,7 +19,7 @@ import { ImageResizeConsumer } from 'consumers/image-resize.consumer';
     imports: [
         AppConfigModule,
         DatabaseModule,
-        MikroOrmModule.forFeature([Image]),
+        MikroOrmModule.forFeature([Image, Video]),
         ClientsModule.registerAsync([
             {
                 name: 'IMAGE_EVENTS',
@@ -48,6 +50,7 @@ import { ImageResizeConsumer } from 'consumers/image-resize.consumer';
         ImageProcessingService,
         ImageResizeService,
         ImageService,
+        VideoService,
     ],
 })
 export class AppModule {}

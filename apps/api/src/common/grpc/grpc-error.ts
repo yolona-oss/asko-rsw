@@ -28,7 +28,7 @@ const ARRAY_FIELDS = new Set([
     // paginated responses
     'data',
     // list responses
-    'images', 'parts', 'steps', 'certificates', 'reviews', 'clients',
+    'images', 'videos', 'parts', 'steps', 'certificates', 'reviews', 'clients',
     'withdrawals', 'invites', 'userDevices', 'addresses', 'payments',
     'repairers', 'devices',
     // entity array fields

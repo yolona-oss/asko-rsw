@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { Readable } from 'stream';
-import { StorageProvider } from 'storage/storage-provider.interface';
+import { StorageProvider, VideoUploadResult } from 'storage/storage-provider.interface';
 
 export interface CloudinaryUploadResult {
     public_id: string;
@@ -150,6 +150,42 @@ export class CloudinaryService implements StorageProvider {
                 fetch_format: 'auto',
             }),
         };
+    }
+
+    async uploadVideo(
+        file: Express.Multer.File,
+        folder: string = "default",
+    ): Promise<VideoUploadResult> {
+        return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: `${this.config.app_name}/${folder}`,
+                    resource_type: 'video',
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else {
+                        const r = result as UploadApiResponse;
+                        resolve({
+                            public_id: r.public_id,
+                            format: r.format,
+                            resource_type: r.resource_type,
+                            url: r.url,
+                            secure_url: r.secure_url,
+                            original_filename: r.original_filename,
+                            duration: r.duration,
+                            size: r.bytes,
+                        });
+                    }
+                },
+            );
+
+            Readable.from(file.buffer).pipe(uploadStream);
+        });
+    }
+
+    async deleteVideo(publicId: string): Promise<void> {
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
     }
 
     private extractPublicIdFromUrl(url: string): string {

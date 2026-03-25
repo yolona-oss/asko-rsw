@@ -9,6 +9,7 @@ export * from './review.response.dto';
 export * from './dealer.response.dto';
 export * from './payment.response.dto';
 export * from './file.response.dto';
+export * from './video.response.dto';
 export * from './notification.response.dto';
 export * from './article.response.dto';
 export * from './invite.response.dto';

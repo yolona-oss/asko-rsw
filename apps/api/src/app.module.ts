@@ -58,14 +58,24 @@ console.log("Images path: ", join(process.cwd(), 'images'))
         ServeStaticModule.forRootAsync({
             inject: [AppConfig],
             useFactory: (config: AppConfig) => {
-                return [{
-                    rootPath: join(process.cwd(), config.staticPath),
-                    serveRoot: '/images',
-                    serveStaticOptions: {
-                        cacheControl: true,
-                        extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico']
-                    }
-                }]
+                return [
+                    {
+                        rootPath: join(process.cwd(), config.staticPath),
+                        serveRoot: '/images',
+                        serveStaticOptions: {
+                            cacheControl: true,
+                            extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico']
+                        }
+                    },
+                    {
+                        rootPath: join(process.cwd(), config.staticPath, 'videos'),
+                        serveRoot: '/videos',
+                        serveStaticOptions: {
+                            cacheControl: true,
+                            extensions: ['mp4', 'webm', 'mov']
+                        }
+                    },
+                ]
             }
         }),
     ],

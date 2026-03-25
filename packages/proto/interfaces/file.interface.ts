@@ -91,6 +91,42 @@ export interface CountResponse {
     count: number;
 }
 
+// ─── Video Requests ───────────────────────────────────────────────────
+
+export interface UploadVideoRequest {
+    file: FileData;
+}
+
+export interface VideoIdRequest {
+    id: string;
+}
+
+export interface AttachVideoRequest {
+    videoId: string;
+    ownerType: string;
+    ownerId: string;
+}
+
+// ─── Video Responses ──────────────────────────────────────────────────
+
+export interface VideoRecord {
+    id: string;
+    videoJson: string;
+    order: number;
+    ownerType: string;
+    ownerId: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface VideoResponse {
+    video: VideoRecord;
+}
+
+export interface VideoListResponse {
+    videos: VideoRecord[];
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface FileServiceClient {
@@ -114,4 +150,15 @@ export interface FileServiceClient {
 
     reorderImages(request: ReorderImagesRequest): Observable<EmptyFileResponse>;
     reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;
+
+    // Video operations
+    uploadVideo(request: UploadVideoRequest): Observable<VideoResponse>;
+    uploadRepairRequestVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
+    uploadReviewVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
+    uploadDeviceVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
+    uploadArticleVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
+    removeVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
+    findAttachedVideos(request: FindAttachedRequest): Observable<VideoListResponse>;
+    attachVideo(request: AttachVideoRequest): Observable<VideoResponse>;
+    unattachVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
 }

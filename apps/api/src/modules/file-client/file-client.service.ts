@@ -10,6 +10,9 @@ import type {
     ImageListResponse,
     CountResponse,
     EmptyFileResponse,
+    VideoRecord,
+    VideoResponse,
+    VideoListResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -180,5 +183,88 @@ export class FileClientService implements OnModuleInit {
     async reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]) {
         const res = await grpcCall(this.fileService.reorderByIds({ ownerType, ownerId, imageIds }));
         return this.parseImageListResponse(res);
+    }
+
+    // ─── Video helpers ───────────────────────────────────────────────────
+
+    private parseVideoRecord(record: VideoRecord): VideoRecord & { videoJson: any } {
+        try {
+            return { ...record, videoJson: JSON.parse(record.videoJson) };
+        } catch {
+            return record as any;
+        }
+    }
+
+    private parseVideoResponse(res: VideoResponse) {
+        return { video: this.parseVideoRecord(res.video) };
+    }
+
+    private parseVideoListResponse(res: VideoListResponse) {
+        return { videos: (res.videos ?? []).map((r) => this.parseVideoRecord(r)) };
+    }
+
+    // ─── Video upload operations ─────────────────────────────────────────
+
+    async uploadVideo(file: Express.Multer.File) {
+        const res = await grpcCall(this.fileService.uploadVideo({
+            file: this.toFileData(file),
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    async uploadRepairRequestVideo(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadRepairRequestVideo({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    async uploadReviewVideo(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadReviewVideo({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    async uploadDeviceVideo(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadDeviceVideo({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    async uploadArticleVideo(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadArticleVideo({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    // ─── Video management operations ─────────────────────────────────────
+
+    removeVideo(id: string): Promise<EmptyFileResponse> {
+        return grpcCall(this.fileService.removeVideo({ id }));
+    }
+
+    unattachVideo(videoId: string): Promise<EmptyFileResponse> {
+        return grpcCall(this.fileService.unattachVideo({ id: videoId }));
+    }
+
+    async attachVideo(videoId: string, dto: { ownerType: string; ownerId: string }) {
+        const res = await grpcCall(this.fileService.attachVideo({
+            videoId,
+            ownerType: dto.ownerType,
+            ownerId: dto.ownerId,
+        }));
+        return this.parseVideoResponse(res);
+    }
+
+    async findAttachedVideos(ownerType: string, ownerId: string) {
+        const res = await grpcCall(this.fileService.findAttachedVideos({ ownerType, ownerId }));
+        return this.parseVideoListResponse(res);
     }
 }

@@ -2,8 +2,9 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { ImageService } from 'services/image.service';
+import { VideoService } from 'services/video.service';
 import { AppError } from 'common/error';
-import { ImageTypeEnum } from '@asko/shared';
+import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
 import { Readable } from 'stream';
 import type {
     UploadFileRequest,
@@ -15,8 +16,12 @@ import type {
     CountAttachedRequest,
     ReorderImagesRequest,
     ReorderByIdsRequest,
+    UploadVideoRequest,
+    VideoIdRequest,
+    AttachVideoRequest,
 } from '@asko/proto';
 import type { Image } from 'entities/image.entity';
+import type { Video } from 'entities/video.entity';
 
 function toGrpcError(error: unknown): RpcException {
     if (error instanceof AppError) {
@@ -64,9 +69,24 @@ function entityToRecord(entity: Image) {
     };
 }
 
+function videoEntityToRecord(entity: Video) {
+    return {
+        id: entity.id,
+        videoJson: JSON.stringify(entity.video),
+        order: entity.order,
+        ownerType: entity.ownerType ?? '',
+        ownerId: entity.ownerId ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
 @Controller()
 export class FileGrpcController {
-    constructor(private readonly imageService: ImageService) {}
+    constructor(
+        private readonly imageService: ImageService,
+        private readonly videoService: VideoService,
+    ) {}
 
     // ─── Upload operations ──────────────────────────────────────────────
 
@@ -250,6 +270,92 @@ export class FileGrpcController {
                 data.imageIds,
             );
             return { images: images.map(entityToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Video operations ────────────────────────────────────────────────
+
+    @GrpcMethod('FileService', 'UploadVideo')
+    async uploadVideo(data: UploadVideoRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const video = await this.videoService.upload(file);
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadRepairRequestVideo')
+    async uploadRepairRequestVideo(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const video = await this.videoService.uploadRepairRequestVideo(file, data.ownerId);
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadReviewVideo')
+    async uploadReviewVideo(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const video = await this.videoService.uploadReviewVideo(file, data.ownerId);
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadDeviceVideo')
+    async uploadDeviceVideo(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const video = await this.videoService.uploadDeviceVideo(file, data.ownerId);
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadArticleVideo')
+    async uploadArticleVideo(data: UploadWithOwnerRequest) {
+        try {
+            const file = toMulterFile(data.file);
+            const video = await this.videoService.uploadArticleVideo(file, data.ownerId);
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'RemoveVideo')
+    async removeVideo(data: VideoIdRequest) {
+        try {
+            await this.videoService.remove(data.id);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'FindAttachedVideos')
+    async findAttachedVideos(data: FindAttachedRequest) {
+        try {
+            const videos = await this.videoService.findAttachedVideos(
+                data.ownerType as VideoTypeEnum,
+                data.ownerId,
+            );
+            return { videos: videos.map(videoEntityToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'AttachVideo')
+    async attachVideo(data: AttachVideoRequest) {
+        try {
+            const video = await this.videoService.attachVideo(
+                data.videoId,
+                data.ownerType as VideoTypeEnum,
+                data.ownerId,
+            );
+            return { video: videoEntityToRecord(video) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UnattachVideo')
+    async unattachVideo(data: VideoIdRequest) {
+        try {
+            await this.videoService.unattachVideo(data.id);
+            return {};
         } catch (e) { throw toGrpcError(e); }
     }
 }

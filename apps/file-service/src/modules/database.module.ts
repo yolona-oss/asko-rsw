@@ -3,6 +3,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
 import { Image } from 'entities/image.entity';
+import { Video } from 'entities/video.entity';
 import { isProdEnv } from '@asko/shared';
 
 @Module({
@@ -16,7 +17,7 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [Image],
+                    entities: [Image, Video],
                     debug: !isProdEnv(),
                 };
             },
