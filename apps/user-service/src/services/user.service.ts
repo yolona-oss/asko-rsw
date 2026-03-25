@@ -67,7 +67,7 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async findByEmail(email: string, relations?: Populate<User, UserPopulateHints>): Promise<User | null>  {
+    async findByEmail(email: string, relations?: Populate<User, UserPopulateHints>): Promise<User | null> {
         return await this.em.findOne(User, { email }, { populate: relations })
     }
 
@@ -223,7 +223,7 @@ export class UserService {
         }
 
         if (newUserInfo.name) {
-            const [ firstName, lastName ] = newUserInfo.name.split(' ')
+            const [firstName, lastName] = newUserInfo.name.split(' ')
             user.firstName = firstName
             user.lastName = lastName
         }
@@ -328,16 +328,8 @@ export class UserService {
                     { lastName: { $ilike: `%${query}%` } },
                 ],
             })
-
-        if (!isPrivileged) {
-            qb.andWhere({
-                $and: [
-                    { preferences: { $ne: null } },
-                    { [`preferences->>'chat'`]: { $ne: null } },
-                ],
-            })
-            // Use raw where for JSONB path query
-            qb.andWhere(`u.preferences->'chat'->>'searchable' = 'true'`)
+        if (!isPrivileged) {                                                                                                                │
+            qb.andWhere(`u.preferences IS NOT NULL AND u.preferences->'chat'->>'searchable' = 'true'`)                                      │
         }
 
         qb.limit(limit)
