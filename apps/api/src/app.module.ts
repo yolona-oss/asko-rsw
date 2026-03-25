@@ -29,7 +29,9 @@ import { join } from 'path';
 import { CursorModule } from 'modules/cursor/cursor.module';
 import { HealthModule } from 'modules/health/health.module';
 import { PaymentModule } from 'modules/payment/payment.module';
-console.log("Images path: ", join(process.cwd(), 'images'))
+
+console.debug("Images path: ", join(process.cwd(), 'images'))
+console.debug("Videos path: ", join(process.cwd(), 'videos'))
 
 @Module({
     imports: [
