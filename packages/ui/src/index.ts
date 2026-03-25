@@ -59,6 +59,7 @@ export {
   DataTableRow,
   DataTableCell,
   DataTableEmpty,
+  DataTableFooter,
 } from './components/data-table';
 export type {
   DataTableProps,
@@ -66,6 +67,7 @@ export type {
   DataTableRowProps,
   DataTableCellProps,
   DataTableEmptyProps,
+  DataTableFooterProps,
 } from './components/data-table';
 
 export { Container } from './components/container';

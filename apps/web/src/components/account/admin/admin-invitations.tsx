@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
+  Badge,
   Select,
   FormField,
   DataTable,
@@ -11,11 +12,14 @@ import {
   DataTableRow,
   DataTableCell,
   DataTableEmpty,
-  Badge,
+  DataTableFooter,
+  DataSearch,
+  DataFilter,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
+import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/account/skeleton';
@@ -45,6 +49,18 @@ const ROLE_LABELS: Record<string, string> = {
   repairer: 'Мастер',
   admin: 'Администратор',
   super_admin: 'Супер-администратор',
+};
+
+const STATUS_FILTER: FilterDefinition = {
+  key: 'status',
+  label: '',
+  type: 'tabs',
+  options: [
+    { value: 'all', label: 'Все' },
+    { value: 'active', label: 'Активные' },
+    { value: 'used', label: 'Использованные' },
+    { value: 'expired', label: 'Истекшие' },
+  ],
 };
 
 function formatDate(date: string | Date): string {
@@ -103,7 +119,7 @@ function InvitationRow({
         </DataTableCell>
         <DataTableCell mobileLabel="Токен:" className="lg:flex-1 lg:px-4">
           <p className="text-sm font-mono text-text-sub truncate max-w-[140px]">
-            {invitation.token.slice(0, 14)}…
+            {invitation.token.slice(0, 14)}...
           </p>
         </DataTableCell>
         <DataTableCell mobileLabel="Истекает:" className="lg:w-[160px] lg:px-4">
@@ -111,7 +127,7 @@ function InvitationRow({
             {formatDate(invitation.expiresAt)}
           </p>
         </DataTableCell>
-        <DataTableCell mobileLabel="Статус:" className="lg:w-[110px] lg:px-4">
+        <DataTableCell mobileLabel="Статус:" className="lg:w-[130px] lg:px-4">
           {invitation.used ? (
             <Badge variant="neutral">Использовано</Badge>
           ) : expired ? (
@@ -164,7 +180,7 @@ function InvitationCard({
   const resolvedLink = link ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${invitation.token}`;
 
   return (
-    <div className={`bg-white border border-border-light rounded-sm p-5 flex flex-col gap-3 ${inactive ? 'opacity-50' : ''}`}>
+    <Card padding="none" className={`p-5 flex flex-col gap-3 ${inactive ? 'opacity-50' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-text-main">
           {ROLE_LABELS[invitation.role] ?? invitation.role}
@@ -177,7 +193,7 @@ function InvitationCard({
           <Badge variant="success">Активно</Badge>
         )}
       </div>
-      <p className="text-xs font-mono text-text-sub truncate">{invitation.token.slice(0, 20)}…</p>
+      <p className="text-xs font-mono text-text-sub truncate">{invitation.token.slice(0, 20)}...</p>
       <p className={`text-sm ${expired ? 'text-brand-red' : 'text-text-main'}`}>
         Истекает: {formatDate(invitation.expiresAt)}
       </p>
@@ -195,7 +211,7 @@ function InvitationCard({
           {deleteLoading === invitation.id ? '...' : 'Удалить'}
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -204,13 +220,15 @@ export function AdminInvitations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState('table');
+  const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
 
   const [role, setRole] = useState('');
   const [ttl, setTtl] = useState<number | ''>('');
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
-  // Map invitationId → full link for newly created invitations
+  // Map invitationId -> full link for newly created invitations
   const [newLinks, setNewLinks] = useState<Record<string, string>>({});
 
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
@@ -256,15 +274,35 @@ export function AdminInvitations() {
     }
   };
 
+  const filteredInvitations = useMemo(() => {
+    let result = invitations;
+
+    // Status filter
+    const status = filterValues.status;
+    if (status === 'active') {
+      result = result.filter((inv) => !inv.used && !isExpired(inv.expiresAt));
+    } else if (status === 'used') {
+      result = result.filter((inv) => inv.used);
+    } else if (status === 'expired') {
+      result = result.filter((inv) => !inv.used && isExpired(inv.expiresAt));
+    }
+
+    // Search filter
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((inv) => {
+        const roleName = (ROLE_LABELS[inv.role] ?? inv.role).toLowerCase();
+        const token = inv.token.toLowerCase();
+        return roleName.includes(q) || token.includes(q);
+      });
+    }
+
+    return result;
+  }, [invitations, filterValues.status, search]);
+
   return (
     <PageContainer>
       <PageHeader>Приглашения</PageHeader>
-
-      <ViewSwitcher
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
-      />
 
       {/* Create form */}
       <Card className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
@@ -302,6 +340,21 @@ export function AdminInvitations() {
 
       {error && <p className="text-sm text-brand-red">{error}</p>}
 
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[STATUS_FILTER]}
+            values={filterValues}
+            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -309,47 +362,51 @@ export function AdminInvitations() {
           ))}
         </div>
       ) : view === 'table' ? (
-        <>
+        <DataTable>
           <DataTableHeader>
             <div className="w-[160px] flex-shrink-0">Роль</div>
             <div className="flex-1 px-4">Токен</div>
             <div className="w-[160px] px-4">Истекает</div>
-            <div className="w-[110px] px-4">Статус</div>
+            <div className="w-[130px] px-4">Статус</div>
             <div className="w-[180px] flex-shrink-0" />
           </DataTableHeader>
 
-          <DataTable>
-            {invitations.length === 0 ? (
-              <DataTableEmpty>Нет приглашений</DataTableEmpty>
-            ) : (
-              invitations.map((inv) => (
-                <InvitationRow
-                  key={inv.id}
-                  invitation={inv}
-                  link={newLinks[inv.id]}
-                  onDelete={handleDelete}
-                  deleteLoading={deleteLoading}
-                />
-              ))
-            )}
-          </DataTable>
-        </>
-      ) : (
-        invitations.length === 0 ? (
-          <p className="text-sm text-text-sub text-center py-8">Нет приглашений</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {invitations.map((inv) => (
-              <InvitationCard
+          {filteredInvitations.length === 0 ? (
+            <DataTableEmpty>Нет приглашений</DataTableEmpty>
+          ) : (
+            filteredInvitations.map((inv) => (
+              <InvitationRow
                 key={inv.id}
                 invitation={inv}
                 link={newLinks[inv.id]}
                 onDelete={handleDelete}
                 deleteLoading={deleteLoading}
               />
-            ))}
-          </div>
-        )
+            ))
+          )}
+
+          <DataTableFooter>
+            Показано {filteredInvitations.length} из {invitations.length}
+          </DataTableFooter>
+        </DataTable>
+      ) : (
+        <>
+          {filteredInvitations.length === 0 ? (
+            <p className="text-sm text-text-sub text-center py-8">Нет приглашений</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredInvitations.map((inv) => (
+                <InvitationCard
+                  key={inv.id}
+                  invitation={inv}
+                  link={newLinks[inv.id]}
+                  onDelete={handleDelete}
+                  deleteLoading={deleteLoading}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </PageContainer>
   );

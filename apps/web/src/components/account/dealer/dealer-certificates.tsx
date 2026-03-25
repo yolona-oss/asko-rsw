@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
+  Card,
   Select,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
   DataTableEmpty,
+  DataTableFooter,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -128,149 +130,145 @@ export function DealerCertificates() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
   return (
     <PageContainer>
       <PageHeader>Сертификаты</PageHeader>
 
-      <div className="flex items-center justify-between gap-4">
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
-        <Link href="/account/certificates/create">
-          <Button variant="primary" size="sm">Создать сертификат</Button>
-        </Link>
-      </div>
-
-      {/* Status filter tabs */}
-      <DataFilter
-        filters={[STATUS_FILTER_DEF]}
-        values={filterValues}
-        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-      />
-
-      {/* Search + Sort controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
         <DataSearch
           value={search}
           onChange={setSearch}
-          placeholder="Поиск по номеру..."
-          className="flex-1"
+          placeholder="Поиск по номеру сертификата"
+          className="lg:w-[320px] flex-shrink-0"
         />
-        <Select
-          value={sortField}
-          onChange={(e) => setSortField(e.target.value as SortField)}
-          className="sm:w-52"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </Select>
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[STATUS_FILTER_DEF]}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <Select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
+              className="w-52"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </Select>
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/certificates/create">
+              <Button variant="primary" size="sm">Создать сертификат</Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
+      {/* Data */}
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : (
-        <>
-          {view === 'table' ? (
-            <>
-              <DataTableHeader>
-                <div className="w-[140px] flex-shrink-0">Номер</div>
-                <div className="flex-1 px-4">Клиент</div>
-                <div className="flex-1 px-4">Устройство</div>
-                <div className="w-[100px] px-4">Статус</div>
-                <div className="w-[100px] px-4">Выдан</div>
-                <div className="w-[100px] px-4">Истекает</div>
-              </DataTableHeader>
-
-              <DataTable>
-                {sorted.length === 0 ? (
-                  <DataTableEmpty>Нет сертификатов</DataTableEmpty>
-                ) : (
-                  sorted.map((cert) => {
-                    const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
-                      || cert.user?.email || '-';
-                    const deviceName = cert.userDevice?.device?.name ?? '-';
-
-                    return (
-                      <DataTableRow key={cert.id}>
-                        <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
-                          <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
-                          <p className="text-sm text-text-main">{clientName}</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
-                          <p className="text-sm text-text-main">{deviceName}</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
-                          <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
-                            {STATUS_LABELS[cert.status] ?? cert.status}
-                          </span>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
-                          <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
-                          <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
-                        </DataTableCell>
-                      </DataTableRow>
-                    );
-                  })
-                )}
-              </DataTable>
-            </>
-          ) : sorted.length === 0 ? (
-            <p className="text-sm text-text-sub text-center py-8">Нет сертификатов</p>
+      ) : view === 'table' ? (
+        <DataTable>
+          <DataTableHeader>
+            <div className="w-[140px] flex-shrink-0">Номер</div>
+            <div className="flex-1 px-4">Клиент</div>
+            <div className="flex-1 px-4">Устройство</div>
+            <div className="w-[100px] px-4">Статус</div>
+            <div className="w-[100px] px-4">Выдан</div>
+            <div className="w-[100px] px-4">Истекает</div>
+          </DataTableHeader>
+          {sorted.length === 0 ? (
+            <DataTableEmpty>Нет сертификатов</DataTableEmpty>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sorted.map((cert) => {
-                const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
-                  || cert.user?.email || '-';
-                const deviceName = cert.userDevice?.device?.name ?? '-';
-                return (
-                  <div key={cert.id} className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
-                      <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
-                        {STATUS_LABELS[cert.status] ?? cert.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-text-main">{clientName}</p>
-                    <p className="text-sm text-text-sub">{deviceName}</p>
-                    <p className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+            sorted.map((cert) => {
+              const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
+                || cert.user?.email || '-';
+              const deviceName = cert.userDevice?.device?.name ?? '-';
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Назад
-              </Button>
-              <span className="text-sm text-text-sub">
-                {page} / {totalPages}
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Вперед
-              </Button>
-            </div>
+              return (
+                <DataTableRow key={cert.id}>
+                  <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
+                    <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+                  </DataTableCell>
+                  <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
+                    <p className="text-sm text-text-main">{clientName}</p>
+                  </DataTableCell>
+                  <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+                    <p className="text-sm text-text-main">{deviceName}</p>
+                  </DataTableCell>
+                  <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
+                    <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+                      {STATUS_LABELS[cert.status] ?? cert.status}
+                    </span>
+                  </DataTableCell>
+                  <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
+                    <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
+                  </DataTableCell>
+                  <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
+                    <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
+                  </DataTableCell>
+                </DataTableRow>
+              );
+            })
           )}
-        </>
+          <DataTableFooter>
+            Показано {sorted.length} из {total}
+          </DataTableFooter>
+        </DataTable>
+      ) : sorted.length === 0 ? (
+        <p className="text-sm text-text-sub text-center py-8">Нет сертификатов</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sorted.map((cert) => {
+            const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
+              || cert.user?.email || '-';
+            const deviceName = cert.userDevice?.device?.name ?? '-';
+            return (
+              <Card key={cert.id} padding="none" className="p-5 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
+                  <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+                    {STATUS_LABELS[cert.status] ?? cert.status}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+                <p className="text-sm text-text-sub">{clientName} / {deviceName}</p>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Назад
+          </Button>
+          <span className="text-sm text-text-sub">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Вперед
+          </Button>
+        </div>
       )}
     </PageContainer>
   );

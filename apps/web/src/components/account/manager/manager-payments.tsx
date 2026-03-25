@@ -3,11 +3,18 @@
 import { useState, useEffect } from 'react';
 import {
   Badge,
+  Card,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   DataSearch,
   DataFilter,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
 } from '@asko/ui';
 import type { BadgeVariant, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -151,144 +158,149 @@ export function ManagerPayments() {
         </div>
       </div>
 
-      {/* Search + View Switcher */}
-      <div className="flex flex-col lg:flex-row gap-3">
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
         <DataSearch
           value={search}
           onChange={handleSearch}
           placeholder="Поиск по ID или плательщику"
-          className="flex-1"
+          className="lg:w-[320px] flex-shrink-0"
         />
-        <ViewSwitcher
-          views={[VIEW_TABLE, VIEW_CARD]}
-          activeView={view}
-          onViewChange={setView}
-        />
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={FILTERS}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+          </div>
+        </div>
       </div>
-
-      {/* Filters */}
-      <DataFilter
-        filters={FILTERS}
-        values={filterValues}
-        onChange={handleFilterChange}
-      />
 
       {/* Data */}
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : payments.length === 0 ? (
-        <p className="text-sm text-text-sub">Платежи не найдены</p>
-      ) : (
-        <>
-          {view === 'table' ? (
-            <div className="bg-white border border-border-light overflow-hidden">
-              {/* Header */}
-              <div className="hidden lg:grid grid-cols-[80px_1fr_110px_100px_110px_140px_100px] bg-[#f6f6f8] border-b border-border-light px-5 py-2 text-sm text-text-main">
-                <span>ID</span>
-                <span>Плательщик</span>
-                <span>Сумма</span>
-                <span>Способ</span>
-                <span>Статус</span>
-                <span>Дата платежа</span>
-                <span>Действия</span>
-              </div>
-              {/* Rows */}
-              {payments.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex flex-col gap-2 lg:grid lg:grid-cols-[80px_1fr_110px_100px_110px_140px_100px] px-5 py-3 border-b border-border-light items-start lg:items-center text-sm"
-                >
-                  <span className="font-medium text-text-main">#{p.id.slice(0, 4)}</span>
-                  <span className="text-text-main">{payerName(p.user)}</span>
-                  <span>
-                    <Badge
-                      variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                      className="text-xs"
-                    >
-                      +{formatAmount(p.amount)} ₽
-                    </Badge>
-                  </span>
-                  <span className="text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}</span>
-                  <span>
-                    <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                      {STATUS_LABELS[p.status] ?? p.status}
-                    </Badge>
-                  </span>
-                  <span className="text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</span>
+      ) : view === 'table' ? (
+        <DataTable>
+          <DataTableHeader>
+            <div className="w-[80px] flex-shrink-0">ID</div>
+            <div className="flex-1 px-4">Плательщик</div>
+            <div className="w-[110px] px-4">Сумма</div>
+            <div className="w-[100px] px-4">Способ</div>
+            <div className="w-[110px] px-4">Статус</div>
+            <div className="w-[140px] px-4">Дата платежа</div>
+            <div className="w-[100px] px-4">Действия</div>
+          </DataTableHeader>
+          {payments.length === 0 ? (
+            <DataTableEmpty>Платежи не найдены</DataTableEmpty>
+          ) : (
+            payments.map((p) => (
+              <DataTableRow key={p.id} className="hover:bg-gray-50 transition-colors">
+                <DataTableCell mobileLabel="ID:" className="lg:w-[80px] lg:flex-shrink-0">
+                  <span className="font-medium text-text-main text-sm">#{p.id.slice(0, 4)}</span>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Плательщик:" className="lg:flex-1 lg:px-4">
+                  <span className="text-sm text-text-main">{payerName(p.user)}</span>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Сумма:" className="lg:w-[110px] lg:px-4">
+                  <Badge
+                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                    className="text-xs"
+                  >
+                    +{formatAmount(p.amount)} ₽
+                  </Badge>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Способ:" className="lg:w-[100px] lg:px-4">
+                  <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}</span>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Статус:" className="lg:w-[110px] lg:px-4">
+                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
+                    {STATUS_LABELS[p.status] ?? p.status}
+                  </Badge>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">
+                  <span className="text-sm text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</span>
+                </DataTableCell>
+                <DataTableCell className="lg:w-[100px] lg:px-4">
                   <button
                     type="button"
-                    className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1"
+                    className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1 text-sm"
                   >
                     Подробнее
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {payments.map((p) => (
-                <div key={p.id} className="bg-white border border-border-light p-5 flex flex-col gap-4 rounded-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-lg font-medium text-text-main">{payerName(p.user)}</p>
-                      <p className="text-sm text-text-main">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                    </div>
-                    <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                      {STATUS_LABELS[p.status] ?? p.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Badge
-                      variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                    >
-                      +{formatAmount(p.amount)} ₽
-                    </Badge>
-                    <span className="text-sm text-text-main">
-                      {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="text-[#1855a4] font-medium text-base flex items-center gap-1 cursor-pointer"
-                  >
-                    Подробнее
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
+                </DataTableCell>
+              </DataTableRow>
+            ))
           )}
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between text-sm text-text-sub">
-            <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
-            {totalPages > 1 && (
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-                >
-                  &larr;
-                </button>
-                <button
-                  type="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-                >
-                  &rarr;
-                </button>
+          <DataTableFooter>
+            Показаны платежи {showFrom}-{showTo} из {total}
+          </DataTableFooter>
+        </DataTable>
+      ) : payments.length === 0 ? (
+        <p className="text-sm text-text-sub">Платежи не найдены</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {payments.map((p) => (
+            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span>
+                <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
+                  {STATUS_LABELS[p.status] ?? p.status}
+                </Badge>
               </div>
-            )}
+              <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
+              <div className="flex items-center gap-3">
+                <Badge
+                  variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                  className="text-xs"
+                >
+                  +{formatAmount(p.amount)} ₽
+                </Badge>
+                <span className="text-sm text-text-sub">
+                  {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors mt-auto pt-2 cursor-pointer"
+              >
+                Подробнее
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-text-sub">
+          <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
+            >
+              &larr;
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
+            >
+              &rarr;
+            </button>
           </div>
-        </>
+        </div>
       )}
     </PageContainer>
   );

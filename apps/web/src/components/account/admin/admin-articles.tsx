@@ -1,14 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Button,
   Modal,
+  Card,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
+  DataSearch,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -67,9 +71,9 @@ function ArticleCard({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-3">
+    <Card padding="none" className="p-5 flex flex-col gap-3">
       <p className="text-sm font-medium text-text-main">{article.title}</p>
-      <p className="text-xs text-text-sub">{article.slug}</p>
+      <p className="text-sm text-text-sub">{article.slug}</p>
       {article.tags && article.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {article.tags.map((tag) => (
@@ -83,7 +87,7 @@ function ArticleCard({
         </Link>
         <Button variant="danger" size="sm" onClick={() => onDelete(article.id)}>Удалить</Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -93,6 +97,7 @@ export function AdminArticles() {
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
   const [view, setView] = useState('table');
+  const [search, setSearch] = useState('');
 
   const fetchArticles = async () => {
     try {
@@ -131,33 +136,36 @@ export function AdminArticles() {
     }
   };
 
+  const filteredArticles = useMemo(() => {
+    if (!search) return articles;
+    const q = search.toLowerCase();
+    return articles.filter((a) =>
+      a.title.toLowerCase().includes(q)
+      || a.slug.toLowerCase().includes(q)
+      || a.tags?.some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [articles, search]);
+
   return (
     <PageContainer>
       <PageHeader>Статьи</PageHeader>
 
-      <ViewSwitcher
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
-      />
-
-      <div className="flex items-start gap-2">
-        <Link
-          href="/account/articles/create"
-          className="m-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
-        >
-          Добавить статью
-        </Link>
-        {articles.length > 0 && (
-          <Button
-            variant="danger"
-            size="sm"
-            className="m-2"
-            onClick={() => setShowDeleteAll(true)}
-          >
-            Удалить все
-          </Button>
-        )}
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/articles/create">
+              <Button size="sm">Добавить статью</Button>
+            </Link>
+            {articles.length > 0 && (
+              <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
+                Удалить все
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <Modal
@@ -195,7 +203,7 @@ export function AdminArticles() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : view === 'table' ? (
-        <>
+        <DataTable>
           <DataTableHeader>
             <div className="flex-1">Название</div>
             <div className="w-48 px-4">Slug</div>
@@ -203,26 +211,38 @@ export function AdminArticles() {
             <div className="w-[200px] flex-shrink-0" />
           </DataTableHeader>
 
-          <DataTable>
-            {articles.map((article) => (
+          {filteredArticles.length === 0 ? (
+            <DataTableEmpty>Нет статей</DataTableEmpty>
+          ) : (
+            filteredArticles.map((article) => (
               <ArticleRow
                 key={article.id}
                 article={article}
                 onDelete={handleDelete}
               />
-            ))}
-          </DataTable>
-        </>
+            ))
+          )}
+
+          <DataTableFooter>
+            Показано {filteredArticles.length} из {articles.length}
+          </DataTableFooter>
+        </DataTable>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {articles.map((article) => (
-            <ArticleCard
-              key={article.id}
-              article={article}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
+        <>
+          {filteredArticles.length === 0 ? (
+            <p className="text-sm text-text-sub text-center py-8">Нет статей</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredArticles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </PageContainer>
   );

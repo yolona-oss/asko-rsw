@@ -1,14 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Button,
   Modal,
+  Card,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
+  DataSearch,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -74,7 +78,7 @@ function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string
 
 function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
   return (
-    <div className="bg-white border border-border-light rounded-sm p-5 flex flex-col gap-2">
+    <Card padding="none" className="p-5 flex flex-col gap-3">
       <p className="text-sm font-medium text-text-main">{device.name}</p>
       <div className="flex flex-col gap-1 text-sm">
         <div className="flex justify-between">
@@ -90,13 +94,13 @@ function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id: strin
           <span className="text-text-main">{device.brand}</span>
         </div>
       </div>
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-2 pt-1">
         <Link href={`/account/devices/${device.id}`}>
           <Button variant="secondary" size="sm">Изменить</Button>
         </Link>
         <Button variant="danger" size="sm" onClick={() => onDelete(device.id)}>Удалить</Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -108,6 +112,7 @@ export function AdminDevices() {
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
   const [view, setView] = useState('table');
+  const [search, setSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,49 +193,52 @@ export function AdminDevices() {
     }
   };
 
+  const filteredDevices = useMemo(() => {
+    if (!search) return devices;
+    const q = search.toLowerCase();
+    return devices.filter((d) =>
+      d.name.toLowerCase().includes(q)
+      || d.model.toLowerCase().includes(q)
+      || d.brand.toLowerCase().includes(q)
+      || (TYPE_LABELS[d.type] ?? d.type).toLowerCase().includes(q),
+    );
+  }, [devices, search]);
+
   return (
     <PageContainer>
       <PageHeader>Товары</PageHeader>
 
-      <ViewSwitcher
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
-      />
-
-      <div className="flex items-start gap-2">
-        <Link
-          href="/account/devices/create"
-          className="m-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm cursor-pointer"
-        >
-          Добавить товар
-        </Link>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={handleImport}
-        />
-        <Button
-          variant="secondary"
-          size="sm"
-          className="m-2"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={importing}
-        >
-          Импорт JSON
-        </Button>
-        {devices.length > 0 && (
-          <Button
-            variant="danger"
-            size="sm"
-            className="m-2"
-            onClick={() => setShowDeleteAll(true)}
-          >
-            Удалить все
-          </Button>
-        )}
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/devices/create">
+              <Button size="sm">Добавить товар</Button>
+            </Link>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImport}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+            >
+              Импорт JSON
+            </Button>
+            {devices.length > 0 && (
+              <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
+                Удалить все
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <Modal
@@ -318,7 +326,7 @@ export function AdminDevices() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : view === 'table' ? (
-        <>
+        <DataTable>
           <DataTableHeader>
             <div className="w-35 flex-shrink-0">Название</div>
             <div className="flex-1 px-4">Тип</div>
@@ -327,18 +335,30 @@ export function AdminDevices() {
             <div className="w-[200px] flex-shrink-0" />
           </DataTableHeader>
 
-          <DataTable>
-            {devices.map((device) => (
+          {filteredDevices.length === 0 ? (
+            <DataTableEmpty>Нет товаров</DataTableEmpty>
+          ) : (
+            filteredDevices.map((device) => (
               <DeviceRow key={device.id} device={device} onDelete={handleDelete} />
-            ))}
-          </DataTable>
-        </>
+            ))
+          )}
+
+          <DataTableFooter>
+            Показано {filteredDevices.length} из {devices.length}
+          </DataTableFooter>
+        </DataTable>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {devices.map((device) => (
-            <DeviceCard key={device.id} device={device} onDelete={handleDelete} />
-          ))}
-        </div>
+        <>
+          {filteredDevices.length === 0 ? (
+            <p className="text-sm text-text-sub text-center py-8">Нет товаров</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDevices.map((device) => (
+                <DeviceCard key={device.id} device={device} onDelete={handleDelete} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </PageContainer>
   );

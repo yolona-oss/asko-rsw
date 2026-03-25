@@ -10,7 +10,7 @@ export function DataTable({ className, children }: DataTableProps) {
   return (
     <div
       className={cn(
-        'flex flex-col border border-border-light rounded-sm overflow-hidden',
+        'bg-white border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-hidden',
         className,
       )}
     >
@@ -28,7 +28,7 @@ export function DataTableHeader({ className, children }: DataTableHeaderProps) {
   return (
     <div
       className={cn(
-        'hidden lg:flex items-center px-5 py-3 text-xs font-medium text-text-sub uppercase tracking-wider border-b border-border-light',
+        'hidden lg:flex items-center bg-[#f6f6f8] border-b border-[#edeff1] px-6 py-2 text-sm text-[#323232]',
         className,
       )}
     >
@@ -46,7 +46,7 @@ export function DataTableRow({ className, children }: DataTableRowProps) {
   return (
     <div
       className={cn(
-        'flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-0 px-5 py-4 border-b border-border-light last:border-b-0 bg-white',
+        'flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-0 px-6 py-2.5 border-b border-[#edeff1] last:border-b-0 bg-white',
         className,
       )}
     >
@@ -79,7 +79,20 @@ export interface DataTableEmptyProps {
 
 export function DataTableEmpty({ className, children }: DataTableEmptyProps) {
   return (
-    <div className={cn('px-5 py-8 text-center text-sm text-text-sub', className)}>
+    <div className={cn('px-8 py-10 text-center text-sm text-text-sub', className)}>
+      {children}
+    </div>
+  );
+}
+
+export interface DataTableFooterProps {
+  className?: string;
+  children: ReactNode;
+}
+
+export function DataTableFooter({ className, children }: DataTableFooterProps) {
+  return (
+    <div className={cn('px-6 py-2.5 text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px]', className)}>
       {children}
     </div>
   );

@@ -1,7 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Button, Select, DataSearch, DataFilter } from '@asko/ui';
+import {
+  Button,
+  Select,
+  Card,
+  DataSearch,
+  DataFilter,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+} from '@asko/ui';
 import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -46,6 +61,13 @@ const TTL_OPTIONS: { value: number; label: string }[] = [
 ];
 
 type StatusFilter = 'all' | 'active' | 'disabled';
+
+const ROLE_TAB_FILTER_DEF: FilterDefinition = {
+  key: 'role',
+  label: '',
+  type: 'tabs',
+  options: TABS.map((t) => ({ value: t.key, label: t.label })),
+};
 
 // ── Checkbox ──
 
@@ -416,6 +438,78 @@ function InviteCreatePopup({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── User avatar placeholder ──
+
+function UserAvatar() {
+  return (
+    <div className="w-10 h-10 rounded-full bg-[#d9d9d9] flex items-center justify-center flex-shrink-0">
+      <svg className="w-6 h-6 text-[#888]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    </div>
+  );
+}
+
+// ── Status badge ──
+
+function StatusBadge({ isActive }: { isActive: boolean }) {
+  return (
+    <span className={`inline-block text-sm text-white px-2 py-0.5 rounded-[22px] ${
+      isActive ? 'bg-[#187f43]' : 'bg-[#a0a0a0]'
+    }`}>
+      {isActive ? 'Активен' : 'Заблокирован'}
+    </span>
+  );
+}
+
+// ── User card (card view) ──
+
+function UserCard({
+  user,
+  onToggleActive,
+  onDelete,
+  loading,
+}: {
+  user: IAuthUser;
+  onToggleActive: (id: string, active: boolean) => void;
+  onDelete: (id: string) => void;
+  loading: boolean;
+}) {
+  const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
+  const isActive = (user as any).isActive !== false;
+
+  return (
+    <Card padding="none" className={`p-5 flex flex-col gap-3 ${!isActive ? 'opacity-50' : ''}`}>
+      <div className="flex items-center gap-3">
+        <UserAvatar />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
+          <p className="text-xs text-text-sub">{user.phone ?? '—'}</p>
+        </div>
+        <StatusBadge isActive={isActive} />
+      </div>
+      <div className="flex flex-col gap-1 text-sm text-[#323232] tracking-[-0.14px]">
+        <div className="flex justify-between">
+          <span className="text-text-sub">Роль:</span>
+          <span>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-sub">Район:</span>
+          <span>—</span>
+        </div>
+      </div>
+      <div className="pt-1">
+        <SettingsDropdown
+          user={user}
+          onToggleActive={onToggleActive}
+          onDelete={onDelete}
+          loading={loading}
+        />
+      </div>
+    </Card>
+  );
+}
+
 // ── Main component ──
 
 export function AdminUsers() {
@@ -424,8 +518,9 @@ export function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', role: 'repairer' });
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [view, setView] = useState('table');
 
   useEffect(() => {
     async function fetchUsers() {
@@ -440,6 +535,12 @@ export function AdminUsers() {
     }
     fetchUsers();
   }, []);
+
+  // Keep activeTab and filterValues.role in sync
+  useEffect(() => {
+    setActiveTab(filterValues.role as UserTab);
+    setSelected(new Set());
+  }, [filterValues.role]);
 
   const handleToggleActive = async (id: string, active: boolean) => {
     setActionLoading(id);
@@ -511,25 +612,14 @@ export function AdminUsers() {
     <PageContainer>
       <PageHeader>Выдача доступов</PageHeader>
 
-      {/* Tabs */}
-      <div className="flex gap-0 flex-wrap">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            className={`px-6 py-2.5 text-sm font-medium cursor-pointer border shadow-sm transition-colors ${
-              activeTab === tab.key
-                ? 'bg-[#323232] text-white border-[#323232]'
-                : 'bg-white/10 text-[#323232] border-[#cbd5e1]'
-            }`}
-            onClick={() => { setActiveTab(tab.key); setSelected(new Set()); }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Role tabs */}
+      <DataFilter
+        filters={[ROLE_TAB_FILTER_DEF]}
+        values={filterValues}
+        onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+      />
 
-      {/* Search + Filters + Invite button */}
+      {/* Search + Filters + ViewSwitcher + Invite button */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
         <DataSearch
           value={search}
@@ -543,23 +633,24 @@ export function AdminUsers() {
             values={filterValues}
             onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
           />
-          <div className="ml-auto flex-shrink-0">
+          <div className="ml-auto flex-shrink-0 flex items-center gap-3">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
             <InviteDropdown />
           </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <SkeletonCard key={i} className="h-14" />
           ))}
         </div>
-      ) : (
-        <div className="bg-white border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-hidden">
+      ) : view === 'table' ? (
+        <DataTable>
           {/* Header */}
-          <div className="hidden lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] bg-[#f6f6f8] border-b border-[#edeff1] px-6 py-2 text-sm text-[#323232] items-center">
+          <DataTableHeader className="lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px]">
             <span />
             <span>Пользователь</span>
             <span>Телефон</span>
@@ -567,13 +658,11 @@ export function AdminUsers() {
             <span>Район</span>
             <span>Статус</span>
             <span>Действия</span>
-          </div>
+          </DataTableHeader>
 
           {/* Rows */}
           {filteredUsers.length === 0 ? (
-            <div className="px-8 py-10 text-center text-sm text-text-sub">
-              Нет пользователей
-            </div>
+            <DataTableEmpty>Нет пользователей</DataTableEmpty>
           ) : (
             filteredUsers.map((user) => {
               const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
@@ -582,80 +671,90 @@ export function AdminUsers() {
               const isSelected = selected.has(user.id);
 
               return (
-                <div
+                <DataTableRow
                   key={user.id}
-                  className={`grid grid-cols-1 lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] items-center px-6 py-2.5 border-b border-[#edeff1] gap-2 lg:gap-0 ${
+                  className={`lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] ${
                     !isActive ? 'opacity-50' : ''
                   }`}
                 >
                   {/* Checkbox */}
-                  <div className="hidden lg:flex items-center">
+                  <DataTableCell className="hidden lg:flex items-center">
                     <Checkbox checked={isSelected} onChange={() => toggleSelect(user.id)} />
-                  </div>
+                  </DataTableCell>
 
                   {/* User */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#d9d9d9] flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-[#888]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                      </svg>
+                  <DataTableCell>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar />
+                      <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
                     </div>
-                    <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
-                  </div>
+                  </DataTableCell>
 
                   {/* Phone */}
-                  <div>
-                    <p className="text-xs text-text-sub lg:hidden">Телефон:</p>
+                  <DataTableCell mobileLabel="Телефон:">
                     <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '—'}</p>
-                  </div>
+                  </DataTableCell>
 
                   {/* Role */}
-                  <div>
-                    <p className="text-xs text-text-sub lg:hidden">Роль:</p>
+                  <DataTableCell mobileLabel="Роль:">
                     <p className="text-sm text-[#323232] tracking-[-0.14px]">
                       {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
                     </p>
-                  </div>
+                  </DataTableCell>
 
                   {/* Район */}
-                  <div>
-                    <p className="text-xs text-text-sub lg:hidden">Район:</p>
+                  <DataTableCell mobileLabel="Район:">
                     <p className="text-sm text-[#323232] tracking-[-0.14px]">—</p>
-                  </div>
+                  </DataTableCell>
 
                   {/* Status */}
-                  <div>
-                    <p className="text-xs text-text-sub lg:hidden">Статус:</p>
-                    <span className={`inline-block text-sm text-white px-2 py-0.5 rounded-[22px] ${
-                      isActive ? 'bg-[#187f43]' : 'bg-[#a0a0a0]'
-                    }`}>
-                      {isActive ? 'Активен' : 'Заблокирован'}
-                    </span>
-                  </div>
+                  <DataTableCell mobileLabel="Статус:">
+                    <StatusBadge isActive={isActive} />
+                  </DataTableCell>
 
                   {/* Actions */}
-                  <div>
+                  <DataTableCell>
                     <SettingsDropdown
                       user={user}
                       onToggleActive={handleToggleActive}
                       onDelete={handleDelete}
                       loading={isLoading}
                     />
-                  </div>
-                </div>
+                  </DataTableCell>
+                </DataTableRow>
               );
             })
           )}
 
           {/* Footer */}
           {filteredUsers.length > 0 && (
-            <div className="px-6 py-2.5">
-              <p className="text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px]">
-                Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
-              </p>
-            </div>
+            <DataTableFooter>
+              Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
+            </DataTableFooter>
           )}
-        </div>
+        </DataTable>
+      ) : (
+        /* Card view */
+        filteredUsers.length === 0 ? (
+          <p className="text-sm text-text-sub text-center py-8">Нет пользователей</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredUsers.map((user) => (
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  onToggleActive={handleToggleActive}
+                  onDelete={handleDelete}
+                  loading={actionLoading === user.id}
+                />
+              ))}
+            </div>
+            <p className="text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px]">
+              Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
+            </p>
+          </>
+        )
       )}
     </PageContainer>
   );

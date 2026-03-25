@@ -9,11 +9,14 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  DataSearch,
   DataFilter,
   DataTable,
   DataTableHeader,
   DataTableRow,
   DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
 } from '@asko/ui';
 import type { BadgeVariant, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -81,25 +84,25 @@ function RequestCard({ request, highlight }: { request: RepairRequest; highlight
 
   return (
     <Card padding="none" className={`p-5 flex flex-col gap-3 ${highlight ? 'ring-2 ring-brand-red' : ''}`}>
-      <div className="flex items-center gap-2 text-xs text-text-sub">
-        <span>{formatDate(request.createdAt)}</span>
-        {request.address?.city && (
-          <>
-            <span>&bull;</span>
-            <span>{request.address.city}</span>
-          </>
-        )}
-      </div>
-      <p className="text-sm font-medium text-text-main">{userName}</p>
-      <p className="text-sm text-text-sub truncate">{deviceName}</p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs text-text-sub">
+          <span>{formatDate(request.createdAt)}</span>
+          {request.address?.city && (
+            <>
+              <span>&bull;</span>
+              <span>{request.address.city}</span>
+            </>
+          )}
+        </div>
         <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
           {STATUS_LABELS[request.status] ?? request.status}
         </Badge>
-        {request.totalCost != null && request.totalCost > 0 && (
-          <span className="text-xs text-text-sub ml-auto">{request.totalCost.toLocaleString('ru-RU')} ₽</span>
-        )}
       </div>
+      <p className="text-sm font-medium text-text-main">{userName}</p>
+      <p className="text-sm text-text-sub truncate">{deviceName}</p>
+      {request.totalCost != null && request.totalCost > 0 && (
+        <span className="text-xs text-text-sub">{request.totalCost.toLocaleString('ru-RU')} ₽</span>
+      )}
       <Link
         href={`/account/requests/${request.id}`}
         className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors mt-auto pt-2"
@@ -165,6 +168,7 @@ export function RepairerRequests() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
+  const [search, setSearch] = useState('');
 
   // Fetch active request once
   useEffect(() => {
@@ -204,21 +208,36 @@ export function RepairerRequests() {
     setPage(1);
   };
 
+  // Client-side search filter
+  const filteredRequests = (() => {
+    if (!search.trim()) return requests;
+    const q = search.trim().toLowerCase();
+    return requests.filter((r) => {
+      const userName = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ').toLowerCase();
+      const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
+      const city = (r.address?.city ?? '').toLowerCase();
+      return userName.includes(q) || deviceName.includes(q) || city.includes(q);
+    });
+  })();
+
   return (
     <PageContainer>
       <PageHeader>Мои заявки</PageHeader>
 
-      <ViewSwitcher
-        views={[VIEW_CARD, VIEW_TABLE]}
-        activeView={view}
-        onViewChange={setView}
-      />
-
-      <DataFilter
-        filters={[TAB_FILTER]}
-        values={filterValues}
-        onChange={handleFilterChange}
-      />
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[TAB_FILTER]}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+          </div>
+        </div>
+      </div>
 
       {/* Active request highlight */}
       {activeTab === 'active' && activeRequest && (
@@ -228,6 +247,15 @@ export function RepairerRequests() {
             <RequestCard request={activeRequest} highlight />
           ) : (
             <DataTable>
+              <DataTableHeader>
+                <div className="w-[180px] flex-shrink-0">Клиент</div>
+                <div className="flex-1 px-4">Устройство</div>
+                <div className="w-[120px] px-4">Город</div>
+                <div className="w-[160px] px-4">Статус</div>
+                <div className="w-[100px] px-4">Стоимость</div>
+                <div className="w-[140px] px-4">Дата</div>
+                <div className="w-[120px] flex-shrink-0" />
+              </DataTableHeader>
               <RequestTableRow request={activeRequest} highlight />
             </DataTable>
           )}
@@ -243,11 +271,11 @@ export function RepairerRequests() {
         <>
           {loading ? (
             <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : requests.length === 0 ? (
+          ) : filteredRequests.length === 0 ? (
             <p className="text-sm text-text-sub">Нет заявок</p>
           ) : view === 'card' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {requests.map((req) => (
+              {filteredRequests.map((req) => (
                 <RequestCard
                   key={req.id}
                   request={req}
@@ -256,7 +284,7 @@ export function RepairerRequests() {
               ))}
             </div>
           ) : (
-            <>
+            <DataTable>
               <DataTableHeader>
                 <div className="w-[180px] flex-shrink-0">Клиент</div>
                 <div className="flex-1 px-4">Устройство</div>
@@ -266,16 +294,17 @@ export function RepairerRequests() {
                 <div className="w-[140px] px-4">Дата</div>
                 <div className="w-[120px] flex-shrink-0" />
               </DataTableHeader>
-              <DataTable>
-                {requests.map((req) => (
-                  <RequestTableRow
-                    key={req.id}
-                    request={req}
-                    highlight={showActiveHighlight && activeRequest?.id === req.id}
-                  />
-                ))}
-              </DataTable>
-            </>
+              {filteredRequests.map((req) => (
+                <RequestTableRow
+                  key={req.id}
+                  request={req}
+                  highlight={showActiveHighlight && activeRequest?.id === req.id}
+                />
+              ))}
+              <DataTableFooter>
+                Показано {filteredRequests.length} из {total}
+              </DataTableFooter>
+            </DataTable>
           )}
 
           {totalPages > 1 && (

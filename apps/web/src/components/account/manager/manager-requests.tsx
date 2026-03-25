@@ -2,7 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Badge, Button, ViewSwitcher, VIEW_TABLE, VIEW_CARD, DataFilter, DataTable, DataTableHeader, DataTableRow, DataTableCell } from '@asko/ui';
+import {
+  Card,
+  Badge,
+  Button,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataSearch,
+  DataFilter,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
+} from '@asko/ui';
 import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -87,7 +102,6 @@ function ChatStatusBadges({ convInfo, currentUserId }: { convInfo?: Conversation
   if (!convInfo) return null;
 
   const iAmIn = convInfo.participantUserIds.includes(currentUserId);
-  // Check if any non-creator manager is attached (participantUserIds length > 1 means someone besides creator joined)
   const hasManager = convInfo.participantUserIds.length > 1;
 
   return (
@@ -108,6 +122,13 @@ function ChatStatusBadges({ convInfo, currentUserId }: { convInfo?: Conversation
   );
 }
 
+const TAB_FILTER: FilterDefinition = {
+  key: 'tab',
+  label: '',
+  type: 'tabs',
+  options: TABS.map((tab) => ({ value: tab.key, label: tab.label })),
+};
+
 function RequestCardItem({ request, convInfo, currentUserId }: { request: RepairRequest; convInfo?: ConversationInfo; currentUserId: string }) {
   const tabKey = STATUS_MAP[request.status] ?? 'pending';
   const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
@@ -126,20 +147,19 @@ function RequestCardItem({ request, convInfo, currentUserId }: { request: Repair
             </>
           )}
         </div>
-        {request.conversationId && (
-          <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
-        )}
+        <div className="flex items-center gap-2">
+          {request.conversationId && (
+            <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
+          )}
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}
+          >
+            {STATUS_LABELS[request.status] ?? request.status}
+          </span>
+        </div>
       </div>
       <p className="text-sm font-medium text-text-main">{userName}</p>
       <p className="text-sm text-text-sub">{deviceName}</p>
-      <div className="flex items-center gap-2 mt-1">
-        <span className="text-sm font-bold text-text-main">Статус:</span>
-        <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}
-        >
-          {STATUS_LABELS[request.status] ?? request.status}
-        </span>
-      </div>
       <Link
         href={`/account/requests/${request.id}`}
         className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors mt-auto pt-2"
@@ -152,13 +172,6 @@ function RequestCardItem({ request, convInfo, currentUserId }: { request: Repair
     </Card>
   );
 }
-
-const TAB_FILTER: FilterDefinition = {
-  key: 'tab',
-  label: '',
-  type: 'tabs',
-  options: TABS.map((tab) => ({ value: tab.key, label: tab.label })),
-};
 
 function RequestTableRow({ request, convInfo, currentUserId }: { request: RepairRequest; convInfo?: ConversationInfo; currentUserId: string }) {
   const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
@@ -205,6 +218,7 @@ export function ManagerRequests() {
   const [loading, setLoading] = useState(true);
   const [convInfoMap, setConvInfoMap] = useState<Record<string, ConversationInfo>>({});
   const [view, setView] = useState('card');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     async function fetchRequests() {
@@ -246,27 +260,56 @@ export function ManagerRequests() {
     fetchRequests();
   }, [page]);
 
-  const filteredRequests = activeTab === 'all'
-    ? requests
-    : requests.filter((r) => STATUS_MAP[r.status] === activeTab);
+  // Client-side filtering by tab and search
+  const filteredRequests = (() => {
+    let result = requests;
+
+    if (activeTab !== 'all') {
+      result = result.filter((r) => STATUS_MAP[r.status] === activeTab);
+    }
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter((r) => {
+        const userName = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ').toLowerCase();
+        const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
+        const city = (r.address?.city ?? '').toLowerCase();
+        return userName.includes(q) || deviceName.includes(q) || city.includes(q);
+      });
+    }
+
+    return result;
+  })();
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+  };
 
   return (
     <PageContainer>
       <PageHeader>Заявки на обслуживание</PageHeader>
 
-      <ViewSwitcher
-        views={[VIEW_CARD, VIEW_TABLE]}
-        activeView={view}
-        onViewChange={setView}
-      />
-
-      <DataFilter
-        filters={[TAB_FILTER]}
-        values={filterValues}
-        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-      />
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={handleSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[TAB_FILTER]}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+          </div>
+        </div>
+      </div>
 
       {/* Request data */}
       {loading ? (
@@ -285,7 +328,7 @@ export function ManagerRequests() {
           ))}
         </div>
       ) : (
-        <>
+        <DataTable>
           <DataTableHeader>
             <div className="w-[180px] flex-shrink-0">Клиент</div>
             <div className="flex-1 px-4">Устройство</div>
@@ -294,17 +337,18 @@ export function ManagerRequests() {
             <div className="w-[140px] px-4">Чат</div>
             <div className="w-[140px] px-4">Дата</div>
           </DataTableHeader>
-          <DataTable>
-            {filteredRequests.map((req) => (
-              <RequestTableRow
-                key={req.id}
-                request={req}
-                convInfo={convInfoMap[req.id]}
-                currentUserId={currentUserId}
-              />
-            ))}
-          </DataTable>
-        </>
+          {filteredRequests.map((req) => (
+            <RequestTableRow
+              key={req.id}
+              request={req}
+              convInfo={convInfoMap[req.id]}
+              currentUserId={currentUserId}
+            />
+          ))}
+          <DataTableFooter>
+            Показано {filteredRequests.length} из {total}
+          </DataTableFooter>
+        </DataTable>
       )}
 
       {/* Pagination */}
