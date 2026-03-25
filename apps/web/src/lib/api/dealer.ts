@@ -6,9 +6,7 @@ import type {
 import type {
   IDealerProfile,
   IDealerClient,
-  IPointsTransaction,
   ICertificate,
-  IDevice,
   IPointsWithdrawal,
   PaginatedPoints,
   PaginatedCertificates,

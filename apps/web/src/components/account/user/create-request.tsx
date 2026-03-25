@@ -10,7 +10,7 @@ import { userDeviceApi } from '@/lib/api/user-device';
 import { certificateApi } from '@/lib/api/certificate';
 import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
-import type { ICertificate, IRepairRequest } from '@/lib/api/types';
+import type { ICertificate } from '@/lib/api/types';
 
 interface UserDevice {
   id: string;
@@ -19,8 +19,6 @@ interface UserDevice {
 }
 
 type Certificate = ICertificate;
-
-type RepairRequest = IRepairRequest;
 
 interface UploadedImage {
   id: string;

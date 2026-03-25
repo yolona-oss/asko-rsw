@@ -282,27 +282,20 @@ export function ManagerRequests() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
-  };
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-  };
-
   return (
     <PageContainer>
       <PageHeader>Заявки на обслуживание</PageHeader>
 
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch
-          value={search}
-          onChange={setSearch}
-          placeholder="Поиск"
-          className="lg:w-[320px] flex-shrink-0"
-        />
+        <div className="flex-shrink-0">
+          <DataSearch
+            value={search}
+            onChange={setSearch}
+            placeholder="Поиск"
+            className="lg:w-[320px]"
+          />
+        </div>
         <div className="flex-1 flex items-center gap-3">
           <DataFilter
             filters={[TAB_FILTER]}
@@ -316,69 +309,73 @@ export function ManagerRequests() {
       </div>
 
       {/* Request data */}
-      {loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : filteredRequests.length === 0 ? (
-        <p className="text-sm text-text-sub">Нет заявок</p>
-      ) : view === 'card' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRequests.map((req) => (
-            <RequestCardItem
-              key={req.id}
-              request={req}
-              convInfo={convInfoMap[req.id]}
-              currentUserId={currentUserId}
-            />
-          ))}
-        </div>
-      ) : (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[180px] flex-shrink-0">Клиент</div>
-            <div className="flex-1 px-4">Устройство</div>
-            <div className="w-[120px] px-4">Город</div>
-            <div className="w-[160px] px-4">Статус</div>
-            <div className="w-[140px] px-4">Чат</div>
-            <div className="w-[140px] px-4">Дата</div>
-          </DataTableHeader>
-          {filteredRequests.map((req) => (
-            <RequestTableRow
-              key={req.id}
-              request={req}
-              convInfo={convInfoMap[req.id]}
-              currentUserId={currentUserId}
-            />
-          ))}
-          <DataTableFooter>
-            Показано {filteredRequests.length} из {total}
-          </DataTableFooter>
-        </DataTable>
-      )}
+      {
+        loading ? (
+          <p className="text-sm text-text-sub">Загрузка...</p>
+        ) : filteredRequests.length === 0 ? (
+          <p className="text-sm text-text-sub">Нет заявок</p>
+        ) : view === 'card' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredRequests.map((req) => (
+              <RequestCardItem
+                key={req.id}
+                request={req}
+                convInfo={convInfoMap[req.id]}
+                currentUserId={currentUserId}
+              />
+            ))}
+          </div>
+        ) : (
+          <DataTable>
+            <DataTableHeader>
+              <div className="w-[180px] flex-shrink-0">Клиент</div>
+              <div className="flex-1 px-4">Устройство</div>
+              <div className="w-[120px] px-4">Город</div>
+              <div className="w-[160px] px-4">Статус</div>
+              <div className="w-[140px] px-4">Чат</div>
+              <div className="w-[140px] px-4">Дата</div>
+            </DataTableHeader>
+            {filteredRequests.map((req) => (
+              <RequestTableRow
+                key={req.id}
+                request={req}
+                convInfo={convInfoMap[req.id]}
+                currentUserId={currentUserId}
+              />
+            ))}
+            <DataTableFooter>
+              Показано {filteredRequests.length} из {total}
+            </DataTableFooter>
+          </DataTable>
+        )
+      }
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page <= 1}
-          >
-            Назад
-          </Button>
-          <span className="text-sm text-text-sub">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-          >
-            Далее
-          </Button>
-        </div>
-      )}
-    </PageContainer>
+      {
+        totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              Назад
+            </Button>
+            <span className="text-sm text-text-sub">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Далее
+            </Button>
+          </div>
+        )
+      }
+    </PageContainer >
   );
 }

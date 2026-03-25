@@ -8,7 +8,7 @@ export interface AccountUser extends IAuthUser {
   avatar?: string;
 }
 
-export interface MenuItem {
+interface MenuItem {
   href: string;
   label: string;
   icon: string; // icon key

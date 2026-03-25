@@ -2,7 +2,6 @@
 
 import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { useCursors } from './cursor-context';
-import { Cursor } from './cursor';
 
 interface CursorAreaProps {
   width?: number | string;

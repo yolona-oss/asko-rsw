@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
 import { useSignup } from '@/lib/api/use-auth';
-import { EmailInput, PasswordInput, PhoneInput, Input, NameInput } from '@asko/ui';
+import { EmailInput, PasswordInput, PhoneInput, NameInput } from '@asko/ui';
 import {
   MIN_USER_PASSWORD_LENGTH,
   MAX_USER_PASSWORD_LENGTH,

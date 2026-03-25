@@ -18,7 +18,7 @@ export function SkeletonCircle({ className = '' }: { className?: string }) {
   return <div className={`${pulse} rounded-full ${className}`} />;
 }
 
-export function SkeletonText({
+function SkeletonText({
   className = '',
   lines = 1,
 }: {

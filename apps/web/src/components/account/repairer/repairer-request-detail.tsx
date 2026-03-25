@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { api } from '@/lib/api/client';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
-import { Card, Button, Badge, Modal, Textarea, FormField, Input, Select } from '@asko/ui';
+import { Card, Button, Badge, Modal, Textarea, FormField, Input } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
