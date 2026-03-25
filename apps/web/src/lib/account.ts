@@ -41,7 +41,6 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
     { href: '/account', label: 'Главная', icon: 'home' },
     { href: '/account/devices', label: 'Устройства', icon: 'devices' },
     { href: '/account/articles', label: 'Статьи', icon: 'manual' },
-    { href: '/account/invitations', label: 'Приглашения', icon: 'invite' },
     { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
@@ -66,8 +65,7 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   manager: [
     { href: '/account', label: 'Главная', icon: 'home' },
     { href: '/account/requests', label: 'Заявки', icon: 'orders' },
-    { href: '/account/access', label: 'Доступы', icon: 'clients' },
-    { href: '/account/users', label: 'Пользователи', icon: 'clients' },
+    { href: '/account/users', label: 'Доступы', icon: 'clients' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
