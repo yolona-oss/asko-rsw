@@ -247,12 +247,12 @@ export function ManagerRequests() {
                   unreadCount: 0,
                   participantUserIds: (parts.participants ?? []).map((p: any) => p.userId),
                 };
-              } catch {}
+              } catch { }
             }
           }));
           setConvInfoMap(infoMap);
         }
-      } catch {} finally {
+      } catch { } finally {
         setLoading(false);
       }
     }
@@ -297,7 +297,7 @@ export function ManagerRequests() {
 
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={handleSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px] flex-shrink-0" />
+        <DataSearch value={search} onChange={handleSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px]" />
         <div className="flex-1 flex items-center gap-3">
           <DataFilter
             filters={[TAB_FILTER]}
