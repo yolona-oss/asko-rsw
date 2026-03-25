@@ -1,7 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Badge, Card, Button } from '@asko/ui';
+import {
+  Badge,
+  Card,
+  Button,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableFooter,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+} from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -37,6 +49,11 @@ const WITHDRAW_BADGE_VARIANT: Record<string, BadgeVariant> = {
   rejected: 'error',
 };
 
+const TARGET_LABELS: Record<string, string> = {
+  certificate: 'Сертификат',
+  repairRequest: 'Заявка на ремонт',
+};
+
 function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', {
@@ -57,6 +74,7 @@ export function DealerPayments() {
   const [loading, setLoading] = useState(true);
   const [pointsBalance, setPointsBalance] = useState(0);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [view, setView] = useState('card');
 
   useEffect(() => {
     async function fetchData() {
@@ -125,27 +143,75 @@ export function DealerPayments() {
       )}
 
       {/* Payment history */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <h3 className="text-lg font-medium text-text-main">История платежей</h3>
+
+        {/* Toolbar */}
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+          <div className="flex-1 flex items-center gap-3">
+            <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+              <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            </div>
+          </div>
+        </div>
+
         {loading ? (
           <p className="text-sm text-text-sub">Загрузка...</p>
         ) : payments.length === 0 ? (
           <p className="text-sm text-text-sub">У вас пока нет платежей</p>
+        ) : view === 'table' ? (
+          <DataTable>
+            <DataTableHeader>
+              <div className="flex-1">Тип</div>
+              <div className="w-[140px] px-4">Сумма</div>
+              <div className="w-[140px] px-4">Статус</div>
+              <div className="w-[160px] px-4">Дата</div>
+            </DataTableHeader>
+
+            {payments.map((p) => (
+              <DataTableRow key={p.id}>
+                <DataTableCell mobileLabel="Тип:" className="lg:flex-1">
+                  <p className="text-sm font-medium text-text-main">
+                    {TARGET_LABELS[p.targetType ?? ''] ?? 'Заявка на ремонт'}
+                  </p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Сумма:" className="lg:w-[140px] lg:px-4">
+                  <p className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Статус:" className="lg:w-[140px] lg:px-4">
+                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+                    {STATUS_LABELS[p.status] ?? p.status}
+                  </Badge>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Дата:" className="lg:w-[160px] lg:px-4">
+                  <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                </DataTableCell>
+              </DataTableRow>
+            ))}
+
+            <DataTableFooter>
+              Показано {payments.length} из {payments.length}
+            </DataTableFooter>
+          </DataTable>
         ) : (
-          payments.map((p) => (
-            <Card key={p.id} className="flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1 min-w-0">
-                <p className="text-base font-medium text-text-main">
-                  {p.targetType === 'certificate' ? 'Сертификат' : 'Заявка на ремонт'}
-                </p>
-                <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                <span className="text-base font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-              </div>
-              <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                {STATUS_LABELS[p.status] ?? p.status}
-              </Badge>
-            </Card>
-          ))
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {payments.map((p) => (
+                <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-base font-medium text-text-main">
+                      {TARGET_LABELS[p.targetType ?? ''] ?? 'Заявка на ремонт'}
+                    </p>
+                    <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+                      {STATUS_LABELS[p.status] ?? p.status}
+                    </Badge>
+                  </div>
+                  <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
+                  <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

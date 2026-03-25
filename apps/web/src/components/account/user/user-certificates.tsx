@@ -1,7 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Input, FormField, Select, Modal, SerialNumberInput } from '@asko/ui';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  Button,
+  Input,
+  FormField,
+  Select,
+  Modal,
+  SerialNumberInput,
+  Badge,
+  DataTable,
+  DataTableHeader,
+  DataTableRow,
+  DataTableCell,
+  DataTableEmpty,
+  DataTableFooter,
+  DataSearch,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+} from '@asko/ui';
+import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
@@ -18,6 +37,14 @@ const STATUS_LABELS: Record<string, string> = {
   [CertificateStatus.ACTIVE]: 'Активен',
   [CertificateStatus.EXPIRED]: 'Истек',
   [CertificateStatus.REVOKED]: 'Отозван',
+};
+
+const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  [CertificateStatus.PENDING_PAYMENT]: 'warning',
+  [CertificateStatus.VALIDATION_ERROR]: 'error',
+  [CertificateStatus.ACTIVE]: 'success',
+  [CertificateStatus.EXPIRED]: 'neutral',
+  [CertificateStatus.REVOKED]: 'error',
 };
 
 function formatDate(dateStr: Date | string) {
@@ -592,6 +619,104 @@ function AddCertificateForm({
   );
 }
 
+/** Helper: get a printable PDF from a certificate (used in table view) */
+function useExportPdf(cert: ICertificate) {
+  const device = cert.userDevice?.device;
+  const deviceName = device?.name ?? 'Устройство';
+  const brandModel = [device?.brand, device?.model].filter(Boolean).join(' ');
+  const deviceDesc = device?.description
+    ?? 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.\nСертификат подтверждает право на обслуживание и ремонт.';
+  const isActive = cert.status === CertificateStatus.ACTIVE;
+  const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
+  const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
+
+  return useCallback(() => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Сертификат ${cert.certificateNumber}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 40px; color: #323232; }
+          .card { border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; }
+          .title { font-size: 28px; font-weight: 400; line-height: 1.2; margin-bottom: 8px; }
+          .title strong { font-weight: 500; }
+          .desc { font-size: 13px; color: #979797; line-height: 1.5; margin-bottom: 24px; max-width: 500px; }
+          .details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+          .details p { font-size: 16px; line-height: 1.4; }
+          .details strong { font-weight: 500; }
+          .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 4px; }
+          .status-active { color: #108b00; font-weight: 500; }
+          .warranty { font-size: 13px; margin-bottom: 24px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="title">${deviceName} ${brandModel ? `<strong>${brandModel}</strong>` : ''}</div>
+          <div class="desc">${deviceDesc.replace(/\n/g, '<br>')}</div>
+          <div class="details">
+            <p>Номер сертификата: <strong>${cert.certificateNumber}</strong></p>
+            <p>Дата активации: <strong>${formatDate(cert.issuedAt)}</strong></p>
+            <p>Срок действия: <strong>${durationMonths} месяцев</strong></p>
+          </div>
+          <div class="status-line">
+            <span>Статус: <span class="${isActive ? 'status-active' : ''}">${STATUS_LABELS[cert.status] ?? cert.status}</span></span>
+            <span style="color:#979797">Действителен до ${formatDateLong(cert.expiresAt)}</span>
+          </div>
+          ${isActive ? '<div class="warranty">Расширенная гарантия активна</div>' : ''}
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }, [cert, deviceName, brandModel, deviceDesc, durationMonths, isActive]);
+}
+
+function CertificateTableRow({ cert, onPay }: { cert: ICertificate; onPay?: (cert: ICertificate) => void }) {
+  const isPendingPayment = cert.status === CertificateStatus.PENDING_PAYMENT;
+  const device = cert.userDevice?.device;
+  const deviceName = device ? `${device.name ?? ''} ${device.brand ?? ''} ${device.model ?? ''}`.trim() : 'Устройство';
+  const exportPdf = useExportPdf(cert);
+
+  return (
+    <DataTableRow>
+      <DataTableCell mobileLabel="Номер:" className="lg:w-[180px] lg:flex-shrink-0">
+        <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+        <p className="text-sm text-text-main truncate">{deviceName}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Статус:" className="lg:w-[160px] lg:px-4">
+        <Badge variant={STATUS_BADGE_VARIANT[cert.status] ?? 'neutral'}>
+          {STATUS_LABELS[cert.status] ?? cert.status}
+        </Badge>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Выдан:" className="lg:w-[110px] lg:px-4">
+        <p className="text-sm text-text-sub">{formatDate(cert.issuedAt)}</p>
+      </DataTableCell>
+      <DataTableCell mobileLabel="Истекает:" className="lg:w-[110px] lg:px-4">
+        <p className="text-sm text-text-sub">{formatDate(cert.expiresAt)}</p>
+      </DataTableCell>
+      <DataTableCell className="lg:w-[220px] lg:flex-shrink-0 lg:text-right flex gap-2">
+        {isPendingPayment && onPay && (
+          <Button variant="primary" size="sm" onClick={() => onPay(cert)}>
+            Оплатить
+          </Button>
+        )}
+        <Button variant="secondary" size="sm" onClick={exportPdf}>
+          PDF
+        </Button>
+      </DataTableCell>
+    </DataTableRow>
+  );
+}
+
 export function UserCertificates() {
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [devices, setDevices] = useState<UserDevice[]>([]);
@@ -600,6 +725,8 @@ export function UserCertificates() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
+  const [view, setView] = useState('card');
+  const [search, setSearch] = useState('');
 
   const handlePay = (cert: ICertificate) => {
     setPaymentCert(cert);
@@ -639,40 +766,94 @@ export function UserCertificates() {
     fetchDevices();
   }, []);
 
+  const filteredCertificates = useMemo(() => {
+    if (!search) return certificates;
+    const q = search.toLowerCase();
+    return certificates.filter((cert) => {
+      const certNum = (cert.certificateNumber ?? '').toLowerCase();
+      const device = cert.userDevice?.device;
+      const deviceName = (device?.name ?? '').toLowerCase();
+      const brand = (device?.brand ?? '').toLowerCase();
+      const model = (device?.model ?? '').toLowerCase();
+      return certNum.includes(q) || deviceName.includes(q) || brand.includes(q) || model.includes(q);
+    });
+  }, [certificates, search]);
+
   return (
     <PageContainer>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader>Мои сертификаты</PageHeader>
-        <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
-          Добавить сертификат
-        </Button>
+      <PageHeader>Мои сертификаты</PageHeader>
+
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по номеру или устройству" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-1 flex items-center gap-3">
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
+              Добавить сертификат
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <DeviceSlider devices={devices} loading={loadingDevices} />
+      {view === 'card' ? (
+        <>
+          <DeviceSlider devices={devices} loading={loadingDevices} />
 
-      {loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : certificates.length === 0 ? (
-        <p className="text-sm text-text-sub">У вас нет сертификатов</p>
+          {loading ? (
+            <p className="text-sm text-text-sub">Загрузка...</p>
+          ) : filteredCertificates.length === 0 ? (
+            <p className="text-sm text-text-sub">У вас нет сертификатов</p>
+          ) : (
+            filteredCertificates.map((cert) => (
+              <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
+            ))
+          )}
+
+          {/* Add new device section */}
+          <div className="flex flex-col gap-3">
+            <h2 className="text-2xl lg:text-[28px] font-bold text-text-main">
+              Новое устройство?
+            </h2>
+            <p className="text-sm text-text-sub max-w-md">
+              Зарегистрируйте устройство, чтобы активировать сертификат и получить доступ к
+              обслуживанию
+            </p>
+            <Button variant="primary" className="w-full lg:w-fit mt-2" onClick={() => setShowAddDevice(true)}>
+              Добавить устройство
+            </Button>
+          </div>
+        </>
       ) : (
-        certificates.map((cert) => (
-          <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
-        ))
-      )}
+        <>
+          {loading ? (
+            <p className="text-sm text-text-sub">Загрузка...</p>
+          ) : (
+            <DataTable>
+              <DataTableHeader>
+                <div className="w-[180px] flex-shrink-0">Номер</div>
+                <div className="flex-1 px-4">Устройство</div>
+                <div className="w-[160px] px-4">Статус</div>
+                <div className="w-[110px] px-4">Выдан</div>
+                <div className="w-[110px] px-4">Истекает</div>
+                <div className="w-[220px] flex-shrink-0" />
+              </DataTableHeader>
 
-      {/* Add new device section */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-2xl lg:text-[28px] font-bold text-text-main">
-          Новое устройство?
-        </h2>
-        <p className="text-sm text-text-sub max-w-md">
-          Зарегистрируйте устройство, чтобы активировать сертификат и получить доступ к
-          обслуживанию
-        </p>
-        <Button variant="primary" className="w-full lg:w-fit mt-2" onClick={() => setShowAddDevice(true)}>
-          Добавить устройство
-        </Button>
-      </div>
+              {filteredCertificates.length === 0 ? (
+                <DataTableEmpty>У вас нет сертификатов</DataTableEmpty>
+              ) : (
+                filteredCertificates.map((cert) => (
+                  <CertificateTableRow key={cert.id} cert={cert} onPay={handlePay} />
+                ))
+              )}
+
+              <DataTableFooter>
+                Показано {filteredCertificates.length} из {certificates.length}
+              </DataTableFooter>
+            </DataTable>
+          )}
+        </>
+      )}
 
       <AddCertificateForm
         open={showAddForm}
