@@ -24,6 +24,7 @@ export class MessageService {
     ): Promise<Message> {
         const conversation = await this.em.findOne(Conversation, { id: conversationId });
         if (!conversation) throw AppErrors.conversationNotFound();
+        if (conversation.closedAt) throw AppErrors.conversationClosed();
 
         // Verify sender is a participant
         const participant = await this.em.findOne(ConversationParticipant, {

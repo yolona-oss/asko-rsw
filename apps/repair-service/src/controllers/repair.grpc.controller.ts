@@ -40,6 +40,9 @@ import type {
     RepairResumeRequest,
     RepairReassignRepairerRequest,
     RepairFindPausedByRepairerRequest,
+    RepairSetConversationIdRequest,
+    RepairFindOpenChatsRequest,
+    RepairClearChatCloseAtRequest,
     RepairAddBrokenPartRequest,
     RepairUpdateBrokenPartRequest,
     RepairUpdateBrokenPartStatusRequest,
@@ -86,6 +89,8 @@ function requestToRecord(entity: RepairRequest) {
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
         statusBeforePause: entity.statusBeforePause ?? '',
+        conversationId: entity.conversationId ?? '',
+        chatCloseAt: entity.chatCloseAt?.toISOString() ?? '',
     };
 }
 
@@ -476,6 +481,32 @@ export class RepairGrpcController {
                 hasActive: result.hasActive,
                 request: result.request ? requestToRecord(result.request) : undefined,
             };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ── Chat ──
+
+    @GrpcMethod('RepairService', 'SetConversationId')
+    async setConversationId(data: RepairSetConversationIdRequest) {
+        try {
+            await this.repairRequestService.setConversationId(data.requestId, data.conversationId);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'FindOpenChatsForClose')
+    async findOpenChatsForClose(_data: RepairFindOpenChatsRequest) {
+        try {
+            const chats = await this.repairRequestService.findOpenChatsForClose();
+            return { chats };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ClearChatCloseAt')
+    async clearChatCloseAt(data: RepairClearChatCloseAtRequest) {
+        try {
+            const conversationId = await this.repairRequestService.clearChatCloseAt(data.requestId);
+            return { conversationId: conversationId ?? '' };
         } catch (e) { throw toGrpcError(e); }
     }
 }

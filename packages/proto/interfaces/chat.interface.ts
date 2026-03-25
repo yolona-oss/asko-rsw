@@ -25,6 +25,10 @@ export interface DeleteConversationRequest {
     userId: string;
 }
 
+export interface CloseConversationRequest {
+    conversationId: string;
+}
+
 export interface AddParticipantRequest {
     conversationId: string;
     userId: string;
@@ -107,6 +111,7 @@ export interface ConversationRecord {
     unreadCount: number;
     createdAt: string;
     updatedAt: string;
+    closedAt: string;
 }
 
 export interface ConversationResponse {
@@ -183,6 +188,7 @@ export interface ChatServiceClient {
     getConversation(request: GetConversationRequest): Observable<ConversationResponse>;
     listUserConversations(request: ListUserConversationsRequest): Observable<PaginatedConversationsResponse>;
     deleteConversation(request: DeleteConversationRequest): Observable<EmptyChatResponse>;
+    closeConversation(request: CloseConversationRequest): Observable<EmptyChatResponse>;
     addParticipant(request: AddParticipantRequest): Observable<EmptyChatResponse>;
     removeParticipant(request: RemoveParticipantRequest): Observable<EmptyChatResponse>;
     listParticipants(request: ListParticipantsRequest): Observable<ParticipantListResponse>;

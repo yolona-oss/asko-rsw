@@ -8,6 +8,7 @@ service ChatService {
     rpc GetConversation(GetConversationRequest) returns (ConversationResponse);
     rpc ListUserConversations(ListUserConversationsRequest) returns (PaginatedConversationsResponse);
     rpc DeleteConversation(DeleteConversationRequest) returns (EmptyChatResponse);
+    rpc CloseConversation(CloseConversationRequest) returns (EmptyChatResponse);
 
     // ─── Participants ─────────────────────────────────────────────────
     rpc AddParticipant(AddParticipantRequest) returns (EmptyChatResponse);
@@ -51,6 +52,10 @@ message ListUserConversationsRequest {
 message DeleteConversationRequest {
     string conversationId = 1;
     string userId = 2;
+}
+
+message CloseConversationRequest {
+    string conversationId = 1;
 }
 
 message AddParticipantRequest {
@@ -135,6 +140,7 @@ message ConversationRecord {
     int32 unreadCount = 7;
     string createdAt = 8;
     string updatedAt = 9;
+    string closedAt = 10;
 }
 
 message ConversationResponse {

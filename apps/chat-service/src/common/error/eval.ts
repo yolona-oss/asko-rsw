@@ -23,4 +23,5 @@ export const AppErrors = {
     notParticipant: (msg?: string) => createAppError(AppErrorTypeEnum.NOT_PARTICIPANT, msg),
     cannotDeleteConversation: (msg?: string) => createAppError(AppErrorTypeEnum.CANNOT_DELETE_CONVERSATION, msg),
     directConversationExists: (msg?: string) => createAppError(AppErrorTypeEnum.DIRECT_CONVERSATION_EXISTS, msg),
+    conversationClosed: (msg?: string) => createAppError(AppErrorTypeEnum.CONVERSATION_CLOSED, msg ?? 'Conversation is closed'),
 };

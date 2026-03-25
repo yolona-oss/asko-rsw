@@ -5,6 +5,8 @@ import {
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
+import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
@@ -51,6 +53,8 @@ import {
 export class RepairRequestController {
     constructor(
         private readonly repairClient: RepairClientService,
+        private readonly repairerClient: RepairerClientService,
+        private readonly chatClient: ChatClientService,
         private readonly paymentService: PaymentClientService,
         private readonly notificationService: NotificationService,
         private readonly fileService: FileClientService,
@@ -62,7 +66,18 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairRequestDto) {
-        return this.repairClient.createRequest(user.sub, dto);
+        const result = await this.repairClient.createRequest(user.sub, dto);
+        // Create group conversation linked to repair request
+        try {
+            const conv = await this.chatClient.createConversation(
+                user.sub, 'group', `Заявка #${result.request.id.slice(0, 8)}`, [],
+            );
+            await this.repairClient.setConversationId(result.request.id, conv.conversation.id);
+            result.request.conversationId = conv.conversation.id;
+        } catch {
+            // Non-critical: don't fail request creation if chat creation fails
+        }
+        return result;
     }
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
@@ -131,7 +146,17 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        return this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
+        const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
+        // Add repairer to conversation
+        if (result.request.conversationId) {
+            try {
+                const { repairer } = await this.repairerClient.findRepairerById(dto.repairerId);
+                if (repairer?.userId) {
+                    await this.chatClient.addParticipant(result.request.conversationId, repairer.userId, user.sub);
+                }
+            } catch { /* non-critical */ }
+        }
+        return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -148,11 +173,52 @@ export class RepairRequestController {
         return this.repairClient.denyRefund(id);
     }
 
+    @ApiCreatedResponse({ type: EmptyResponseDto })
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/chat/accept')
+    async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        const { request } = await this.repairClient.findById(id);
+        if (request.conversationId) {
+            await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub);
+        }
+        return {};
+    }
+
+    @ApiCreatedResponse({ type: EmptyResponseDto })
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/chat/detach')
+    async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        const { request } = await this.repairClient.findById(id);
+        if (request.conversationId) {
+            await this.chatClient.removeParticipant(request.conversationId, user.sub, user.sub);
+        }
+        return {};
+    }
+
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        return this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
+        // Get old repairer before reassign
+        const before = await this.repairClient.findById(id);
+        const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
+        if (result.request.conversationId) {
+            try {
+                // Remove old repairer from chat
+                if (before.request.repairerId) {
+                    const { repairer: oldRep } = await this.repairerClient.findRepairerById(before.request.repairerId);
+                    if (oldRep?.userId) {
+                        await this.chatClient.removeParticipant(result.request.conversationId, oldRep.userId, user.sub);
+                    }
+                }
+                // Add new repairer to chat
+                const { repairer: newRep } = await this.repairerClient.findRepairerById(dto.repairerId);
+                if (newRep?.userId) {
+                    await this.chatClient.addParticipant(result.request.conversationId, newRep.userId, user.sub);
+                }
+            } catch { /* non-critical */ }
+        }
+        return result;
     }
 
     // ── Repairer endpoints ──
@@ -193,7 +259,14 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
-        return this.repairClient.refuseRequest(user.sub, id, dto.reason);
+        const result = await this.repairClient.refuseRequest(user.sub, id, dto.reason);
+        // Remove repairer from conversation
+        if (result.request.conversationId) {
+            try {
+                await this.chatClient.removeParticipant(result.request.conversationId, user.sub, user.sub);
+            } catch { /* non-critical */ }
+        }
+        return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })

@@ -116,6 +116,11 @@ service RepairService {
     rpc FindPausedByRepairer(RepairFindPausedByRepairerRequest) returns (PaginatedRepairRequestsResponse);
     rpc FindAll(RepairFindAllRequest) returns (PaginatedRepairRequestsResponse);
     rpc CheckActiveForDevice(RepairCheckActiveForDeviceRequest) returns (RepairCheckActiveResponse);
+
+    // Chat
+    rpc SetConversationId(RepairSetConversationIdRequest) returns (RepairEmptyResponse);
+    rpc FindOpenChatsForClose(RepairFindOpenChatsRequest) returns (RepairOpenChatsResponse);
+    rpc ClearChatCloseAt(RepairClearChatCloseAtRequest) returns (RepairClearChatCloseAtResponse);
 }
 
 service DealerService {
@@ -626,6 +631,8 @@ message RepairRequestRecord {
     string createdAt = 18;
     string updatedAt = 19;
     string statusBeforePause = 20;
+    string conversationId = 21;
+    string chatCloseAt = 22;
 }
 
 message BrokenPartRecord {
@@ -852,6 +859,30 @@ message RepairFindAllRequest {
 
 message RepairCheckActiveForDeviceRequest {
     string userDeviceId = 1;
+}
+
+message RepairSetConversationIdRequest {
+    string requestId = 1;
+    string conversationId = 2;
+}
+
+message RepairFindOpenChatsRequest {}
+
+message RepairOpenChatsResponse {
+    repeated RepairOpenChatRecord chats = 1;
+}
+
+message RepairOpenChatRecord {
+    string requestId = 1;
+    string conversationId = 2;
+}
+
+message RepairClearChatCloseAtRequest {
+    string requestId = 1;
+}
+
+message RepairClearChatCloseAtResponse {
+    string conversationId = 1;
 }
 
 // ─── Repair Responses ──────────────────────────────────────────────────────

@@ -11,6 +11,8 @@ import type {
     CompleteStepResponse,
     RepairEmptyResponse,
     RepairCheckActiveResponse,
+    RepairOpenChatsResponse,
+    RepairClearChatCloseAtResponse,
     BrokenPartResponse,
     BrokenPartListResponse,
 } from '@asko/proto';
@@ -235,5 +237,19 @@ export class RepairClientService implements OnModuleInit {
 
     checkActiveForDevice(userDeviceId: string): Promise<RepairCheckActiveResponse> {
         return grpcCall(this.repairService.checkActiveForDevice({ userDeviceId }));
+    }
+
+    // ── Chat ──
+
+    setConversationId(requestId: string, conversationId: string): Promise<RepairEmptyResponse> {
+        return grpcCall(this.repairService.setConversationId({ requestId, conversationId }));
+    }
+
+    findOpenChatsForClose(): Promise<RepairOpenChatsResponse> {
+        return grpcCall(this.repairService.findOpenChatsForClose({}));
+    }
+
+    clearChatCloseAt(requestId: string): Promise<RepairClearChatCloseAtResponse> {
+        return grpcCall(this.repairService.clearChatCloseAt({ requestId }));
     }
 }

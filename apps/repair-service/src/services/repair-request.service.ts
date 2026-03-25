@@ -366,6 +366,11 @@ export class RepairRequestService {
             }
         }
 
+        // Schedule chat close 30 minutes after completion
+        if (request.conversationId) {
+            request.chatCloseAt = new Date(Date.now() + 30 * 60 * 1000);
+        }
+
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -633,5 +638,35 @@ export class RepairRequestService {
             },
         });
         return { hasActive: !!request, request: request ?? undefined };
+    }
+
+    @CreateRequestContext()
+    async setConversationId(requestId: string, conversationId: string): Promise<void> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        request.conversationId = conversationId;
+        await this.em.flush();
+    }
+
+    @CreateRequestContext()
+    async findOpenChatsForClose(): Promise<{ requestId: string; conversationId: string }[]> {
+        const requests = await this.em.find(RepairRequest, {
+            status: RepairRequestStatus.COMPLETED,
+            conversationId: { $ne: null },
+            chatCloseAt: { $lte: new Date() },
+        });
+        return requests
+            .filter(r => r.conversationId)
+            .map(r => ({ requestId: r.id, conversationId: r.conversationId! }));
+    }
+
+    @CreateRequestContext()
+    async clearChatCloseAt(requestId: string): Promise<string | undefined> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) return undefined;
+        const conversationId = request.conversationId;
+        request.chatCloseAt = undefined;
+        await this.em.flush();
+        return conversationId;
     }
 }

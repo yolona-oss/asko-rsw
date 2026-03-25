@@ -21,6 +21,7 @@ import type {
     ChatGetUnreadCountRequest,
     UpdatePresenceRequest,
     GetPresenceRequest,
+    CloseConversationRequest,
     GetBulkPresenceRequest,
 } from '@asko/proto';
 import type { Conversation } from 'entities/conversation.entity';
@@ -58,6 +59,7 @@ function conversationToRecord(entity: Conversation, unreadCount = 0, lastMessage
         unreadCount,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        closedAt: entity.closedAt?.toISOString() ?? '',
     };
 }
 
@@ -152,6 +154,14 @@ export class ChatGrpcController {
     async deleteConversation(data: DeleteConversationRequest) {
         try {
             await this.conversationService.deleteConversation(data.conversationId, data.userId);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('ChatService', 'CloseConversation')
+    async closeConversation(data: CloseConversationRequest) {
+        try {
+            await this.conversationService.closeConversation(data.conversationId);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

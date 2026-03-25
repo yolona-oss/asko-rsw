@@ -29,4 +29,5 @@ export const ErrorsDefinition: Record<AppErrorTypeEnum, IErrorMessage> = {
     [AppErrorTypeEnum.NOT_PARTICIPANT]: { httpStatus: HttpStatus.FORBIDDEN, message: 'User is not a participant of this conversation' },
     [AppErrorTypeEnum.CANNOT_DELETE_CONVERSATION]: { httpStatus: HttpStatus.FORBIDDEN, message: 'Only the creator can delete a conversation' },
     [AppErrorTypeEnum.DIRECT_CONVERSATION_EXISTS]: { httpStatus: HttpStatus.CONFLICT, message: 'Direct conversation already exists between these users' },
+    [AppErrorTypeEnum.CONVERSATION_CLOSED]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Conversation is closed' },
 };

@@ -4,7 +4,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
+import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
@@ -24,7 +26,9 @@ import {
 @Controller('reviews')
 export class ReviewController {
     constructor(
+        private readonly repairClient: RepairClientService,
         private readonly repairerClient: RepairerClientService,
+        private readonly chatClient: ChatClientService,
         private readonly fileService: FileClientService,
     ) {}
 
@@ -34,13 +38,21 @@ export class ReviewController {
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateReviewDto) {
         // TODO: Phase 4 - call repairClient.findById(dto.repairRequestId) to get repairerId
         // and validate repair is COMPLETED before creating review
-        return this.repairerClient.createReview(
+        const result = await this.repairerClient.createReview(
             dto.repairRequestId,
             user.sub,
             '', // repairerId - will be resolved from repair-service in Phase 4
             dto.rating,
             dto.comment,
         );
+        // Close chat on review submission
+        try {
+            const { conversationId } = await this.repairClient.clearChatCloseAt(dto.repairRequestId);
+            if (conversationId) {
+                await this.chatClient.closeConversation(conversationId);
+            }
+        } catch { /* non-critical */ }
+        return result;
     }
 
     @ApiOkResponse({ type: ReviewListResponseDto })

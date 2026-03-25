@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'statusBeforePause' | 'stepsLocked' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -62,6 +62,12 @@ export class RepairRequest {
 
     @Property({ type: 'varchar', length: 255, nullable: true })
     statusBeforePause?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    conversationId?: string;
+
+    @Property({ type: 'datetime', nullable: true })
+    chatCloseAt?: Date;
 
     @Property({ type: 'boolean', default: false })
     stepsLocked: boolean = false;

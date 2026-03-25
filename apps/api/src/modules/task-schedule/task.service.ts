@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { CursorService } from 'modules/cursor/cursor.service';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
+import { ChatClientService } from 'modules/chat-client/chat-client.service';
 
 @Injectable()
 export class TasksService {
@@ -9,7 +11,9 @@ export class TasksService {
 
     constructor(
         private readonly em: EntityManager,
-        private readonly cursorService: CursorService
+        private readonly cursorService: CursorService,
+        private readonly repairClient: RepairClientService,
+        private readonly chatClient: ChatClientService,
     ) { }
 
     // TODO move to user-service
@@ -29,5 +33,23 @@ export class TasksService {
     async handleStaleCursors() {
         // this.logger.debug('Cleaning up stale cursors...');
         // await this.cursorService.cleanupStaleCursors();
+    }
+
+    @Cron(CronExpression.EVERY_MINUTE)
+    async closeExpiredRepairChats() {
+        try {
+            const result = await this.repairClient.findOpenChatsForClose();
+            const chats = result.chats ?? [];
+            for (const chat of chats) {
+                try {
+                    await this.chatClient.closeConversation(chat.conversationId);
+                    this.logger.log(`Closed chat for repair request ${chat.requestId}`);
+                } catch (e) {
+                    this.logger.error(`Failed to close chat ${chat.conversationId}: ${e}`);
+                }
+            }
+        } catch (e) {
+            this.logger.error(`Failed to fetch open chats for close: ${e}`);
+        }
     }
 }

@@ -183,6 +183,15 @@ export class ConversationService {
         return this.em.count(Message, where);
     }
 
+    @CreateRequestContext()
+    async closeConversation(conversationId: string): Promise<void> {
+        const conversation = await this.em.findOne(Conversation, { id: conversationId });
+        if (!conversation) throw AppErrors.conversationNotFound();
+        if (conversation.closedAt) return;
+        conversation.closedAt = new Date();
+        await this.em.flush();
+    }
+
     async assertParticipant(conversationId: string, userId: string): Promise<ConversationParticipant> {
         const participant = await this.em.findOne(ConversationParticipant, {
             conversation: { id: conversationId },

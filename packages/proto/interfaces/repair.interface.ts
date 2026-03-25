@@ -563,6 +563,8 @@ export interface RepairRequestRecord {
     createdAt: string;
     updatedAt: string;
     statusBeforePause: string;
+    conversationId: string;
+    chatCloseAt: string;
 }
 
 export interface BrokenPartRecord {
@@ -791,6 +793,30 @@ export interface RepairCheckActiveForDeviceRequest {
     userDeviceId: string;
 }
 
+export interface RepairSetConversationIdRequest {
+    requestId: string;
+    conversationId: string;
+}
+
+export interface RepairFindOpenChatsRequest {}
+
+export interface RepairOpenChatsResponse {
+    chats: RepairOpenChatRecord[];
+}
+
+export interface RepairOpenChatRecord {
+    requestId: string;
+    conversationId: string;
+}
+
+export interface RepairClearChatCloseAtRequest {
+    requestId: string;
+}
+
+export interface RepairClearChatCloseAtResponse {
+    conversationId: string;
+}
+
 // ─── Repair Responses ───────────────────────────────────────────────────
 
 export interface RepairEmptyResponse {}
@@ -876,6 +902,11 @@ export interface RepairServiceClient {
     findPausedByRepairer(request: RepairFindPausedByRepairerRequest): Observable<PaginatedRepairRequestsResponse>;
     findAll(request: RepairFindAllRequest): Observable<PaginatedRepairRequestsResponse>;
     checkActiveForDevice(request: RepairCheckActiveForDeviceRequest): Observable<RepairCheckActiveResponse>;
+
+    // Chat
+    setConversationId(request: RepairSetConversationIdRequest): Observable<RepairEmptyResponse>;
+    findOpenChatsForClose(request: RepairFindOpenChatsRequest): Observable<RepairOpenChatsResponse>;
+    clearChatCloseAt(request: RepairClearChatCloseAtRequest): Observable<RepairClearChatCloseAtResponse>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

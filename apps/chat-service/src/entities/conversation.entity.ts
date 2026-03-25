@@ -6,7 +6,7 @@ import { ConversationType } from '@asko/shared';
 
 @Entity({ tableName: 'conversation' })
 export class Conversation {
-    [OptionalProps]?: 'name' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'name' | 'closedAt' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -26,6 +26,9 @@ export class Conversation {
 
     @OneToMany(() => Message, m => m.conversation)
     messages = new Collection<Message>(this);
+
+    @Property({ type: 'datetime', nullable: true })
+    closedAt?: Date;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();
