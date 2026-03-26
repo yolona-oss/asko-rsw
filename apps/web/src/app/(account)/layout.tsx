@@ -14,9 +14,9 @@ export default function AccountLayout({
       <AuthGuard>
         <div className="flex min-h-screen bg-page-bg max-w-7xl lg:w-7xl mx-auto">
           <AccountSidebar />
-          <div className="relative flex-1 flex flex-col">
+          <div className="relative flex-1 min-w-0 flex flex-col">
             <AccountHeader />
-            <main className="flex-1">
+            <main className="flex-1 min-w-0">
               {children}
             </main>
           </div>
