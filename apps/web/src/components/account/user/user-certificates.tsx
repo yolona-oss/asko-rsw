@@ -166,7 +166,7 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
   return (
     <div
       ref={cardRef}
-      className="relative border border-border-light bg-white rounded-sm p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
+      className="relative overflow-hidden border border-border-light bg-white rounded-sm p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
     >
       {/* Title + description - full width */}
       <div className="flex flex-col gap-2">
@@ -174,7 +174,7 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
           {deviceName}{' '}
           {brandModel && <span className="font-medium">{brandModel}</span>}
         </h2>
-        <p className="text-sm leading-[18px] text-text-sub max-w-[527px] whitespace-pre-line">
+        <p className="text-sm leading-[18px] text-text-sub lg:max-w-[527px] whitespace-pre-line">
           {deviceDesc}
         </p>
       </div>
