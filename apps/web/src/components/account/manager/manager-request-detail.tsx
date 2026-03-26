@@ -62,11 +62,19 @@ interface RepairRequestDetail {
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
   address?: { city?: string; street?: string; building?: number; apartment?: string };
-  repairer?: { id: string; user?: { firstName?: string; lastName?: string } };
+  repairer?: {
+    id: string;
+    city: string;
+    latitude?: number;
+    longitude?: number;
+    lastLocationUpdate?: string;
+    user?: { firstName?: string; lastName?: string };
+  };
 }
 
 interface RepairerOption {
   id: string;
+  city?: string;
   user?: { firstName?: string; lastName?: string };
 }
 
@@ -317,6 +325,19 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             <div>
               <p className="text-sm font-bold text-text-main">Исполнитель</p>
               <p className="text-sm text-text-main">{assignedName}</p>
+              {request.repairer?.city && (
+                <p className="text-sm text-text-sub">Город: {request.repairer.city}</p>
+              )}
+              {request.repairer?.latitude != null && request.repairer?.longitude != null && (
+                <p className="text-sm text-text-sub">
+                  Координаты: {request.repairer.latitude.toFixed(4)}, {request.repairer.longitude.toFixed(4)}
+                </p>
+              )}
+              {request.repairer?.lastLocationUpdate && (
+                <p className="text-xs text-text-sub">
+                  Обновлено: {formatDate(request.repairer.lastLocationUpdate)}
+                </p>
+              )}
             </div>
           )}
 
@@ -359,11 +380,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                   <option value="">Выбрать доступного мастера</option>
                   {repairers
                     .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || `${r?.user?.firstName} ${r?.user?.lastName}`}
-                      </option>
-                    ))}
+                    .map((r) => {
+                      const name = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || `${r?.user?.firstName} ${r?.user?.lastName}`;
+                      const label = r.city ? `${name} (${r.city})` : name;
+                      return (
+                        <option key={r.id} value={r.id}>
+                          {label}
+                        </option>
+                      );
+                    })}
                 </Select>
                 <button
                   type="button"
