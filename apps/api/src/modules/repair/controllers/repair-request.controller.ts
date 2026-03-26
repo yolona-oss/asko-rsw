@@ -30,8 +30,10 @@ import {
     Role,
     JwtPayload,
 } from '@asko/shared';
+import { IsOptional, IsString } from 'class-validator';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+
 import {
     RepairRequestResponseDto,
     RepairRequestRecordDto,
@@ -47,6 +49,12 @@ import {
     ImageRecordDto,
     ImageListResponseDto,
 } from 'common/dto/responses';
+
+class AssignedQueryDto extends PaginationDto {
+    @IsOptional()
+    @IsString()
+    status?: string;
+}
 
 @ApiTags('Repair Requests')
 @Controller('repair-requests')
@@ -244,8 +252,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
-    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto, @Query() status?: string) {
-        return this.repairClient.findByRepairerFiltered(user.sub, pagination, status);
+    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: AssignedQueryDto) {
+        return this.repairClient.findByRepairerFiltered(user.sub, query, query.status);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
