@@ -7,8 +7,10 @@ import { DealerProfile } from 'entities/dealer-profile.entity';
 import {
     CertificateStatus,
     PaymentTargetType,
+    PointsTransactionType,
     generateCertificateNumber,
 } from '@asko/shared';
+import { PointsTransaction } from 'entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
 
@@ -119,6 +121,14 @@ export class CertificateService {
             const points = Math.round(cert.price * 0.03);
             if (points > 0) {
                 cert.dealer.pointsBalance += points;
+
+                const transaction = this.em.create(PointsTransaction, {
+                    dealer: cert.dealer,
+                    type: PointsTransactionType.EARNED,
+                    amount: points,
+                    reason: `Certificate ${cert.certificateNumber} approved (price: ${cert.price})`,
+                });
+                this.em.persist(transaction);
             }
         }
 
