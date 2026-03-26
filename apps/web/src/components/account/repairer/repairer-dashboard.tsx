@@ -28,29 +28,44 @@ export function RepairerDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
 
-  // TODO save in browser store
-  // TODO bg update some how
   const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [detectedAddress, setDetectedAddress] = useState<string | null>(null);
   const [activeRequest, setActiveRequest] = useState<any | null>(null);
   const [completedCount, setCompletedCount] = useState<number | null>(null);
 
   const sendLocation = useCallback(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationError('Геолокация не поддерживается браузером');
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        const { latitude, longitude } = pos.coords;
         try {
-          await repairerApi.updateLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          });
+          await repairerApi.updateLocation({ latitude, longitude });
           setLastLocationUpdate(new Date());
           setLocationError(null);
         } catch {
           setLocationError('Не удалось отправить геопозицию');
         }
+        // Reverse geocode to display address
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`,
+          );
+          const data = await res.json();
+          const a = data.address ?? {};
+          const city = a.city || a.town || a.village || '';
+          const road = a.road || '';
+          const parts = [city, road].filter(Boolean);
+          setDetectedAddress(parts.length > 0 ? parts.join(', ') : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        } catch {
+          setDetectedAddress(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        }
       },
       () => setLocationError('Нет доступа к геолокации'),
+      { timeout: 10000, enableHighAccuracy: true },
     );
   }, []);
 
@@ -62,7 +77,10 @@ export function RepairerDashboard() {
 
   useEffect(() => {
     repairRequestApi.getActive()
-      .then(({ data }) => setActiveRequest(data ?? null))
+      .then(({ data }) => {
+        const req = (data as any)?.request ?? data;
+        setActiveRequest(req?.id ? req : null);
+      })
       .catch(() => setActiveRequest(null));
 
     repairRequestApi.getAssigned({ status: 'completed', limit: 1 })
@@ -92,11 +110,16 @@ export function RepairerDashboard() {
         {locationError ? (
           <p className="text-sm text-brand-red">{locationError}</p>
         ) : (
-          <p className="text-sm text-text-sub">
-            {lastLocationUpdate
-              ? `Последнее обновление: ${formatTime(lastLocationUpdate)}`
-              : 'Получение геопозиции...'}
-          </p>
+          <div className="flex flex-col gap-1">
+            {detectedAddress && (
+              <p className="text-sm text-text-main">{detectedAddress}</p>
+            )}
+            <p className="text-sm text-text-sub">
+              {lastLocationUpdate
+                ? `Последнее обновление: ${formatTime(lastLocationUpdate)}`
+                : 'Получение геопозиции...'}
+            </p>
+          </div>
         )}
       </Card>
 
