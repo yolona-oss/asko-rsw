@@ -149,16 +149,16 @@ export function DealerCertificates() {
               className="lg:w-[320px]"
             />
           </div>
-          <div className="flex-shrink-0">
-            <DataFilter
-              filters={[STATUS_FILTER_DEF]}
-              values={filterValues}
-              onChange={handleFilterChange}
-            />
-          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <DataFilter
+            filters={[STATUS_FILTER_DEF]}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
         </div>
         <div className="flex-1 flex-row flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as SortField)}
@@ -168,7 +168,9 @@ export function DealerCertificates() {
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </Select>
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <div className="ml-auto">
+              <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            </div>
           </div>
         </div>
       </div>
