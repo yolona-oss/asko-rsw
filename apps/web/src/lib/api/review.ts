@@ -12,7 +12,7 @@ export const reviewApi = {
   },
 
   getMy() {
-    return api.get<IReview[]>('/reviews/my');
+    return api.get<IReview[]>('/reviews/my', { _silent: true } as any);
   },
 
   getByRepairer(repairerId: string) {

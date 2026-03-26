@@ -110,7 +110,6 @@ export function UserDashboard() {
         const certs = certRes.data ?? [];
         setCertsCount(certs.filter((c: any) => c.status === 'active').length);
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

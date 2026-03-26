@@ -86,7 +86,6 @@ export function DealerPayments() {
         setPayments(paymentsRes.data.data ?? []);
         setPointsBalance(profileRes.data?.pointsBalance ?? 0);
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

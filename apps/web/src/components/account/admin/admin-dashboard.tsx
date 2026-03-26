@@ -49,7 +49,6 @@ export function AdminDashboard() {
           invitations: invitationsRes.data?.length ?? 0,
         });
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

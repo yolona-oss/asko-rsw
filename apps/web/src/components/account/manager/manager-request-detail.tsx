@@ -107,7 +107,7 @@ function RequestChat({ conversationId, currentUserId }: { conversationId: string
   });
 
   useEffect(() => {
-    chatApi.getConversation(conversationId).then(({ data }) => setConversation(data.conversation)).catch(() => {});
+    chatApi.getConversation(conversationId, true).then(({ data }) => setConversation(data.conversation)).catch(() => {});
   }, [conversationId]);
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         // Check if manager is attached to chat
         if (req.conversationId) {
           try {
-            const { data: conv } = await chatApi.getConversation(req.conversationId);
+            const { data: conv } = await chatApi.getConversation(req.conversationId, true);
             setChatAttached(conv.conversation.participants.some((p: any) => p.userId === authUser?.id));
           } catch { /* not a participant */ }
         }
@@ -187,7 +187,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         try {
           const { data: images } = await api.get('/file-upload/image/attached', {
             params: { ownerType: 'repair_request', ownerId: requestId },
-          });
+            _silent: true,
+          } as any);
           const urls = (Array.isArray(images) ? images : [])
             .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
             .filter(Boolean);

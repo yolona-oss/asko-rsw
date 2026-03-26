@@ -28,7 +28,6 @@ function DeviceImages({ deviceId }: { deviceId: string }) {
       const { data } = await deviceApi.getImages(deviceId);
       setImages(data.images ?? []);
     } catch {
-      // silently fail
     }
   };
 
@@ -216,7 +215,6 @@ function DeviceParts({ deviceId }: { deviceId: string }) {
       const { data } = await deviceApi.getParts(deviceId);
       setParts(data.parts ?? []);
     } catch {
-      // silently fail
     }
   };
 

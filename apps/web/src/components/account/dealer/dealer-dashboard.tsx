@@ -29,7 +29,6 @@ export function DealerDashboard() {
         setClientsCount(clients.length);
         setPointsBalance(profileRes.data?.pointsBalance ?? 0);
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

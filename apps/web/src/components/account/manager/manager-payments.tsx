@@ -115,7 +115,6 @@ export function ManagerPayments() {
         setTotal(result.overallCount ?? 0);
         setStats(statsRes.data);
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

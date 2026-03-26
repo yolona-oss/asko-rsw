@@ -161,7 +161,6 @@ export function AdminDevices() {
       const { data } = await deviceApi.getAll({ limit: 100 });
       setDevices(data.data ?? []);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }
@@ -176,7 +175,6 @@ export function AdminDevices() {
       await deviceApi.delete(id);
       setDevices((prev) => prev.filter((d) => d.id !== id));
     } catch {
-      // silently fail
     }
   };
 
@@ -186,7 +184,6 @@ export function AdminDevices() {
       await deviceApi.deleteAll();
       setDevices([]);
     } catch {
-      // silently fail
     } finally {
       setDeletingAll(false);
       setShowDeleteAll(false);

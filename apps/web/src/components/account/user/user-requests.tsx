@@ -162,7 +162,6 @@ export function UserRequests() {
         const { data } = await repairRequestApi.getMy({ limit: 50 });
         setRequests((data.data ?? []) as unknown as RepairRequest[]);
       } catch {
-        // silently fail
       } finally {
         setLoading(false);
       }

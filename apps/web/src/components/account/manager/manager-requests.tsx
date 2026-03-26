@@ -234,7 +234,7 @@ export function ManagerRequests() {
           const infoMap: Record<string, ConversationInfo> = {};
           await Promise.all(withConv.map(async (r) => {
             try {
-              const { data: conv } = await chatApi.getConversation(r.conversationId!);
+              const { data: conv } = await chatApi.getConversation(r.conversationId!, true);
               infoMap[r.id] = {
                 unreadCount: conv.conversation.unreadCount ?? 0,
                 participantUserIds: conv.conversation.participants.map((p: any) => p.userId),
@@ -242,7 +242,7 @@ export function ManagerRequests() {
             } catch {
               // Manager may not be a participant — just check participants list
               try {
-                const { data: parts } = await chatApi.listParticipants(r.conversationId!);
+                const { data: parts } = await chatApi.listParticipants(r.conversationId!, true);
                 infoMap[r.id] = {
                   unreadCount: 0,
                   participantUserIds: (parts.participants ?? []).map((p: any) => p.userId),

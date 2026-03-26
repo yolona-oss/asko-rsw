@@ -77,7 +77,6 @@ export function UserPayments() {
       setPayments(result.data ?? []);
       setTotal(result.overallCount ?? 0);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }

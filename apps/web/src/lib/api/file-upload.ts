@@ -17,9 +17,10 @@ export const fileUploadApi = {
     });
   },
 
-  getAttachedImages(ownerType: string, ownerId: string) {
+  getAttachedImages(ownerType: string, ownerId: string, silent?: boolean) {
     return api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
       params: { ownerType, ownerId },
-    });
+      ...(silent ? { _silent: true } : {}),
+    } as any);
   },
 };

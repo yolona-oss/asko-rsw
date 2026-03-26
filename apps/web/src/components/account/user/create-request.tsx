@@ -74,7 +74,6 @@ export function CreateRequest() {
         }
         setDevicesInRepair(activeDeviceIds);
       } catch {
-        // silently fail
       } finally {
         setLoadingDevices(false);
       }

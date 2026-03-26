@@ -743,7 +743,6 @@ export function UserCertificates() {
       const { data } = await certificateApi.getMy();
       setCertificates(data);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }
@@ -755,7 +754,6 @@ export function UserCertificates() {
       const { data } = await userDeviceApi.getMy();
       setDevices(data);
     } catch {
-      // silently fail
     } finally {
       setLoadingDevices(false);
     }

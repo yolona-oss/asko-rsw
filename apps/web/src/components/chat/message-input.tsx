@@ -44,7 +44,6 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
       setText('');
       onMessageSent();
     } catch {
-      // silently fail
     } finally {
       setSending(false);
     }

@@ -224,11 +224,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           );
           if (reviewed) setReviewSubmitted(true);
         } catch {
-          // ignore
         }
       }
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }

@@ -27,7 +27,10 @@ export const dealerApi = {
   },
 
   searchUser(email: string) {
-    return api.get<Pick<IUser, 'id' | 'firstName' | 'lastName' | 'email'>>('/dealers/search-user', { params: { email } });
+    return api.get<Pick<IUser, 'id' | 'firstName' | 'lastName' | 'email'>>('/dealers/search-user', {
+      params: { email },
+      _silent: true,
+    } as any);
   },
 
   getPointsHistory(params?: { offset?: number; limit?: number }) {

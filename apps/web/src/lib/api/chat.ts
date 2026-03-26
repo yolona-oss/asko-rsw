@@ -18,8 +18,10 @@ export const chatApi = {
     return api.get<PaginatedConversations>('/chat/conversations', { params });
   },
 
-  getConversation(id: string) {
-    return api.get<ConversationResponse>(`/chat/conversations/${id}`);
+  getConversation(id: string, silent?: boolean) {
+    return api.get<ConversationResponse>(`/chat/conversations/${id}`, {
+      ...(silent ? { _silent: true } : {}),
+    } as any);
   },
 
   createConversation(body: { type: string; name?: string; participantIds: string[] }) {
@@ -50,8 +52,10 @@ export const chatApi = {
 
   // ─── Participants ───────────────────────────────────────────
 
-  listParticipants(conversationId: string) {
-    return api.get<ParticipantListResponse>(`/chat/conversations/${conversationId}/participants`);
+  listParticipants(conversationId: string, silent?: boolean) {
+    return api.get<ParticipantListResponse>(`/chat/conversations/${conversationId}/participants`, {
+      ...(silent ? { _silent: true } : {}),
+    } as any);
   },
 
   addParticipant(conversationId: string, userId: string) {
@@ -81,6 +85,7 @@ export const chatApi = {
   searchUsers(query: string, limit?: number) {
     return api.get<ChatUserSearchResponse>('/chat/search-users', {
       params: { q: query, limit },
-    });
+      _silent: true,
+    } as any);
   },
 };

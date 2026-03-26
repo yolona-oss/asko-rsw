@@ -554,7 +554,6 @@ export function AdminUsers() {
         prev.map((u) => u.id === id ? { ...u, isActive: active } as any : u),
       );
     } catch {
-      // silently fail
     } finally {
       setActionLoading(null);
     }
@@ -567,7 +566,6 @@ export function AdminUsers() {
       setUsers((prev) => prev.filter((u) => u.id !== id));
       setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
     } catch {
-      // silently fail
     } finally {
       setActionLoading(null);
     }

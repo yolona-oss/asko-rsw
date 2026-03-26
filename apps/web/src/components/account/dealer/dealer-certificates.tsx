@@ -106,7 +106,6 @@ export function DealerCertificates() {
       setCertificates(list);
       setTotal(data.overallCount ?? list.length);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }

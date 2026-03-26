@@ -173,7 +173,6 @@ export function AdminCertificates() {
       const { data } = await certificateApi.getAll({ limit: 200 });
       setCertificates(data.data ?? []);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }
@@ -188,7 +187,6 @@ export function AdminCertificates() {
       await certificateApi.revoke(id);
       await fetchCertificates();
     } catch {
-      // silently fail
     }
   };
 

@@ -26,7 +26,6 @@ function ArticleImages({ articleId }: { articleId: string }) {
       const { data } = await articleApi.getImages(articleId);
       setImages((data.images).sort((a, b) => a.order - b.order));
     } catch {
-      // silently fail
     }
   };
 

@@ -104,7 +104,6 @@ export function AdminArticles() {
       const { data } = await articleApi.getAll({ limit: 100 });
       setArticles(data.data ?? []);
     } catch {
-      // silently fail
     } finally {
       setLoading(false);
     }
@@ -119,7 +118,6 @@ export function AdminArticles() {
       await articleApi.delete(id);
       setArticles((prev) => prev.filter((a) => a.id !== id));
     } catch {
-      // silently fail
     }
   };
 
@@ -129,7 +127,6 @@ export function AdminArticles() {
       await articleApi.deleteAll();
       setArticles([]);
     } catch {
-      // silently fail
     } finally {
       setDeletingAll(false);
       setShowDeleteAll(false);
