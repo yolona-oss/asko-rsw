@@ -12,6 +12,7 @@ import type {
   IRepairPayment,
   PaginatedRepairRequests,
   ProcessInvoiceResult,
+  RepairRequestResponse,
 } from './types';
 import { api } from './client';
 
@@ -38,7 +39,7 @@ export const repairRequestApi = {
   },
 
   create(data: CreateRepairRequestDto) {
-    return api.post<IRepairRequest>('/repair-requests', data);
+    return api.post<RepairRequestResponse>('/repair-requests', data);
   },
 
   // Status changes

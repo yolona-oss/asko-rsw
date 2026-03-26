@@ -155,18 +155,19 @@ export function CreateRequest() {
         ...(sp.devicePartId ? { devicePartId: sp.devicePartId } : {}),
         name: sp.name,
       }));
-      const { data: request } = await repairRequestApi.create({
+      const { data } = await repairRequestApi.create({
         userDeviceId,
         description: description.trim(),
         ...(certificateId ? { certificateId } : {}),
         ...(brokenParts.length > 0 ? { brokenParts } : {}),
       });
+      const request = data.request;
 
       // 2. Upload and attach images
       for (const img of images) {
         try {
           const { data: uploaded } = await fileUploadApi.uploadImage(img.file);
-          await fileUploadApi.attachImage(uploaded.id, 'repair_request', request.id);
+          await fileUploadApi.attachImage(uploaded.image.id, 'repair_request', request.id);
         } catch {
           // continue even if single image fails
         }
