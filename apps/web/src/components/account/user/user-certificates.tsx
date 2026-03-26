@@ -19,6 +19,9 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  AddressInput,
+  AddressView,
+  type AddressValue,
 } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -285,9 +288,6 @@ function DeviceSlider({
         {devices.map((ud) => {
           const name = ud.device?.name ?? 'Устройство';
           const subtitle = [ud.device?.brand, ud.device?.model].filter(Boolean).join(' ');
-          const addr = ud.address
-            ? [ud.address.city, ud.address.street, ud.address.house].filter(Boolean).join(', ')
-            : null;
           return (
             <div
               key={ud.id}
@@ -298,7 +298,12 @@ function DeviceSlider({
               {ud.serialNumber && (
                 <p className="text-xs text-text-sub">S/N: {ud.serialNumber}</p>
               )}
-              {addr && <p className="text-xs text-text-sub truncate">{addr}</p>}
+              <AddressView
+                address={ud.address}
+                variant="compact"
+                fallback=""
+                className="text-xs text-text-sub truncate"
+              />
             </div>
           );
         })}
@@ -327,42 +332,9 @@ function AddDeviceForm({
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [deviceId, setDeviceId] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
-  const [city, setCity] = useState('');
-  const [street, setStreet] = useState('');
-  const [house, setHouse] = useState('');
-  const [building, setBuilding] = useState('');
-  const [floor, setFloor] = useState('');
-  const [room, setRoom] = useState('');
-  const [detecting, setDetecting] = useState(false);
+  const [addressValue, setAddressValue] = useState<AddressValue | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  const detectAddress = async () => {
-    if (!navigator.geolocation) {
-      setError('Геолокация не поддерживается браузером');
-      return;
-    }
-    setDetecting(true);
-    setError('');
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }),
-      );
-      const { latitude, longitude } = pos.coords;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`,
-      );
-      const data = await res.json();
-      const a = data.address ?? {};
-      setCity(a.city || a.town || a.village || '');
-      setStreet(a.road || '');
-      if (a.house_number) setHouse(String(parseInt(a.house_number, 10) || ''));
-    } catch {
-      setError('Не удалось определить адрес');
-    } finally {
-      setDetecting(false);
-    }
-  };
 
   useEffect(() => {
     if (!open) return;
@@ -380,18 +352,18 @@ function AddDeviceForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!deviceId || !serialNumber || !city || !street || !house) return;
+    if (!deviceId || !serialNumber || !addressValue) return;
     setSubmitting(true);
     setError('');
     try {
       const { data: address } = await addressApi.create({
-        country: 'Россия',
-        city,
-        street,
-        house: Number(house),
-        ...(building ? { building: Number(building) } : {}),
-        ...(floor ? { floor: Number(floor) } : {}),
-        ...(room ? { room: Number(room) } : {}),
+        country: addressValue.country,
+        city: addressValue.city,
+        street: addressValue.street,
+        house: addressValue.house,
+        ...(addressValue.building ? { building: addressValue.building } : {}),
+        ...(addressValue.floor ? { floor: addressValue.floor } : {}),
+        ...(addressValue.room ? { room: addressValue.room } : {}),
       });
       await userDeviceApi.register({
         deviceId,
@@ -399,12 +371,7 @@ function AddDeviceForm({
         addressId: address.id,
       });
       setSerialNumber('');
-      setCity('');
-      setStreet('');
-      setHouse('');
-      setBuilding('');
-      setFloor('');
-      setRoom('');
+      setAddressValue(null);
       setDeviceId('');
       onSuccess();
       onClose();
@@ -444,70 +411,12 @@ function AddDeviceForm({
           />
         </FormField>
 
-        <div className="flex items-center justify-between mt-1">
-          <p className="text-sm font-medium text-text-main">Адрес установки</p>
-          <Button variant="secondary" size="sm" type="button" onClick={detectAddress} disabled={detecting}>
-            {detecting ? 'Определение...' : 'Определить автоматически'}
-          </Button>
-        </div>
-
-        <div className="flex gap-3">
-          <FormField label="Город" className="flex-1">
-            <Input
-              placeholder="Москва"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              required
-            />
-          </FormField>
-          <FormField label="Улица" className="flex-1">
-            <Input
-              placeholder="Ленина"
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              required
-            />
-          </FormField>
-        </div>
-
-        <div className="flex gap-3">
-          <FormField label="Дом" className="flex-1">
-            <Input
-              placeholder="1"
-              value={house}
-              onChange={(e) => setHouse(e.target.value)}
-              type="number"
-              required
-            />
-          </FormField>
-          <FormField label="Корпус" className="flex-1">
-            <Input
-              placeholder="-"
-              value={building}
-              onChange={(e) => setBuilding(e.target.value)}
-              type="number"
-            />
-          </FormField>
-        </div>
-
-        <div className="flex gap-3">
-          <FormField label="Этаж" className="flex-1">
-            <Input
-              placeholder="-"
-              value={floor}
-              onChange={(e) => setFloor(e.target.value)}
-              type="number"
-            />
-          </FormField>
-          <FormField label="Помещение" className="flex-1">
-            <Input
-              placeholder="-"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-              type="number"
-            />
-          </FormField>
-        </div>
+        <AddressInput
+          value={addressValue}
+          onChange={setAddressValue}
+          showGeolocation
+          label="Адрес установки"
+        />
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
@@ -518,7 +427,7 @@ function AddDeviceForm({
           <Button
             variant="primary"
             type="submit"
-            disabled={submitting || !deviceId || !serialNumber || serialNumber === 'SN-' || !city || !street || !house}
+            disabled={submitting || !deviceId || !serialNumber || serialNumber === 'SN-' || !addressValue}
           >
             {submitting ? 'Регистрация...' : 'Зарегистрировать'}
           </Button>

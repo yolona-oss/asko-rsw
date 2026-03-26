@@ -2,6 +2,12 @@
 export { cn } from './utils/cn';
 
 // Components
+export { AddressInput } from './components/address-input';
+export type { AddressInputProps, AddressValue } from './components/address-input';
+
+export { AddressView } from './components/address-view';
+export type { AddressViewProps } from './components/address-view';
+
 export { Button } from './components/button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './components/button';
 

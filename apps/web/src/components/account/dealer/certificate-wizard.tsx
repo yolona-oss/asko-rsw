@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Select, FormField, SerialNumberInput } from '@asko/ui';
+import { Button, Input, Select, FormField, SerialNumberInput, AddressInput, type AddressValue } from '@asko/ui';
 import { CERTIFICATE_DURATION_OPTIONS, CERTIFICATE_DURATION_LABELS } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -177,62 +177,38 @@ function Step2({
         />
       </FormField>
 
-      <p className="text-sm font-bold text-text-main">Адрес установки</p>
-
-      <div className="flex gap-3 max-w-[500px]">
-        <FormField label="Город" className="flex-1">
-          <Input
-            placeholder="Москва"
-            value={data.city}
-            onChange={(e) => onChange({ city: e.target.value })}
-          />
-        </FormField>
-        <FormField label="Улица" className="flex-1">
-          <Input
-            placeholder="Ленина"
-            value={data.street}
-            onChange={(e) => onChange({ street: e.target.value })}
-          />
-        </FormField>
-      </div>
-
-      <div className="flex gap-3 max-w-[500px]">
-        <FormField label="Дом" className="flex-1">
-          <Input
-            placeholder="1"
-            value={data.house}
-            onChange={(e) => onChange({ house: e.target.value })}
-            type="number"
-          />
-        </FormField>
-        <FormField label="Корпус" className="flex-1">
-          <Input
-            placeholder="-"
-            value={data.building}
-            onChange={(e) => onChange({ building: e.target.value })}
-            type="number"
-          />
-        </FormField>
-      </div>
-
-      <div className="flex gap-3 max-w-[500px]">
-        <FormField label="Этаж" className="flex-1">
-          <Input
-            placeholder="-"
-            value={data.floor}
-            onChange={(e) => onChange({ floor: e.target.value })}
-            type="number"
-          />
-        </FormField>
-        <FormField label="Помещение" className="flex-1">
-          <Input
-            placeholder="-"
-            value={data.room}
-            onChange={(e) => onChange({ room: e.target.value })}
-            type="number"
-          />
-        </FormField>
-      </div>
+      <AddressInput
+        value={
+          data.city && data.street && data.house
+            ? {
+                country: data.country || 'Россия',
+                city: data.city,
+                street: data.street,
+                house: Number(data.house),
+                ...(data.building ? { building: Number(data.building) } : {}),
+                ...(data.floor ? { floor: Number(data.floor) } : {}),
+                ...(data.room ? { room: Number(data.room) } : {}),
+              }
+            : null
+        }
+        onChange={(val: AddressValue | null) => {
+          if (val) {
+            onChange({
+              country: val.country,
+              city: val.city,
+              street: val.street,
+              house: String(val.house),
+              building: val.building ? String(val.building) : '',
+              floor: val.floor ? String(val.floor) : '',
+              room: val.room ? String(val.room) : '',
+            });
+          } else {
+            onChange({ city: '', street: '', house: '', building: '', floor: '', room: '' });
+          }
+        }}
+        label="Адрес установки"
+        className="max-w-[500px]"
+      />
     </div>
   );
 }
