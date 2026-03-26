@@ -172,7 +172,10 @@ export function RepairerRequests() {
   // Fetch active request once
   useEffect(() => {
     repairRequestApi.getActive()
-      .then(({ data }) => { if (data) setActiveRequest(data as unknown as RepairRequest); })
+      .then(({ data }) => {
+        const req = (data as any)?.request ?? data;
+        if (req?.id) setActiveRequest(req as unknown as RepairRequest);
+      })
       .catch(() => {});
   }, []);
 
