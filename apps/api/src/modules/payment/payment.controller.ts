@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
 import {
     CreatePaymentDto,
     ALL_ROLES,
@@ -22,7 +23,18 @@ import {
 export class PaymentController {
     constructor(
         private readonly paymentService: PaymentClientService,
+        private readonly userClient: UserClientService,
     ) {}
+
+    private async enrichPayments(payments: any[]): Promise<void> {
+        await Promise.all(payments.map(async (p) => {
+            if (!p.userId) return;
+            try {
+                const u = await this.userClient.findUserById({ id: p.userId });
+                if (u) p.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone };
+            } catch { /* non-critical */ }
+        }));
+    }
 
     @ApiOkResponse({ type: PaymentOptionsResponseDto })
     @RequiredRoles(...ALL_ROLES)
@@ -48,10 +60,13 @@ export class PaymentController {
         @Query('provider') provider?: string,
         @Query('search') search?: string,
     ) {
-        return this.paymentService.listPayments(
+        const result = await this.paymentService.listPayments(
             { status, provider },
             { offset, limit, search },
         );
+        result.data = result.data ?? [];
+        await this.enrichPayments(result.data);
+        return result;
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })
