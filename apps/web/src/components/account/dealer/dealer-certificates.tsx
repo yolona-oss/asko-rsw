@@ -139,136 +139,144 @@ export function DealerCertificates() {
       <PageHeader>Сертификаты</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch
-          value={search}
-          onChange={setSearch}
-          placeholder="Поиск по номеру сертификата"
-          className="lg:w-[320px] flex-shrink-0"
-        />
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[STATUS_FILTER_DEF]}
-            values={filterValues}
-            onChange={handleFilterChange}
+      <div className="flex flex-col gap-4 items-stretch">
+        <div className="flex flex-row"
+        <div className="flex-shrink-0">
+          <DataSearch
+            value={search}
+            onChange={setSearch}
+            placeholder="Поиск по номеру сертификата"
+            className="lg:w-[320px]"
           />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <Select
-              value={sortField}
-              onChange={(e) => setSortField(e.target.value as SortField)}
-              className="w-52"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </Select>
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Link href="/account/certificates/create">
-              <Button variant="primary" size="sm">Создать сертификат</Button>
-            </Link>
-          </div>
+        </div>
+        <DataFilter
+          filters={[STATUS_FILTER_DEF]}
+          values={filterValues}
+          onChange={handleFilterChange}
+        />
+      </div>
+      <div className="flex-1 flex-row flex items-center gap-3">
+        <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+          <Select
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value as SortField)}
+            className="w-52"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+          <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+          <Link href="/account/certificates/create">
+            <Button variant="primary" size="sm">Создать сертификат</Button>
+          </Link>
         </div>
       </div>
+    </div>
 
-      {/* Data */}
-      {loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[140px] flex-shrink-0">Номер</div>
-            <div className="flex-1 px-4">Клиент</div>
-            <div className="flex-1 px-4">Устройство</div>
-            <div className="w-[100px] px-4">Статус</div>
-            <div className="w-[100px] px-4">Выдан</div>
-            <div className="w-[100px] px-4">Истекает</div>
-          </DataTableHeader>
-          {sorted.length === 0 ? (
-            <DataTableEmpty>Нет сертификатов</DataTableEmpty>
-          ) : (
-            sorted.map((cert) => {
-              const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
-                || cert.user?.email || '-';
-              const deviceName = cert.userDevice?.device?.name ?? '-';
-
-              return (
-                <DataTableRow key={cert.id}>
-                  <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
-                    <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
-                    <p className="text-sm text-text-main">{clientName}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
-                    <p className="text-sm text-text-main">{deviceName}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
-                    <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
-                      {STATUS_LABELS[cert.status] ?? cert.status}
-                    </span>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
-                    <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
-                    <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
-                  </DataTableCell>
-                </DataTableRow>
-              );
-            })
-          )}
-          <DataTableFooter>
-            Показано {sorted.length} из {total}
-          </DataTableFooter>
-        </DataTable>
-      ) : sorted.length === 0 ? (
-        <p className="text-sm text-text-sub text-center py-8">Нет сертификатов</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sorted.map((cert) => {
+      {/* Data */ }
+  {
+    loading ? (
+      <p className="text-sm text-text-sub p-4">Загрузка...</p>
+    ) : view === 'table' ? (
+      <DataTable>
+        <DataTableHeader>
+          <div className="w-[140px] flex-shrink-0">Номер</div>
+          <div className="flex-1 px-4">Клиент</div>
+          <div className="flex-1 px-4">Устройство</div>
+          <div className="w-[100px] px-4">Статус</div>
+          <div className="w-[100px] px-4">Выдан</div>
+          <div className="w-[100px] px-4">Истекает</div>
+        </DataTableHeader>
+        {sorted.length === 0 ? (
+          <DataTableEmpty>Нет сертификатов</DataTableEmpty>
+        ) : (
+          sorted.map((cert) => {
             const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
               || cert.user?.email || '-';
             const deviceName = cert.userDevice?.device?.name ?? '-';
+
             return (
-              <Card key={cert.id} padding="none" className="p-5 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
-                  <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+              <DataTableRow key={cert.id}>
+                <DataTableCell mobileLabel="Номер:" className="lg:w-[140px] lg:flex-shrink-0">
+                  <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Клиент:" className="lg:flex-1 lg:px-4">
+                  <p className="text-sm text-text-main">{clientName}</p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Устройство:" className="lg:flex-1 lg:px-4">
+                  <p className="text-sm text-text-main">{deviceName}</p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Статус:" className="lg:w-[100px] lg:px-4">
+                  <span className={`text-sm font-medium ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
                     {STATUS_LABELS[cert.status] ?? cert.status}
                   </span>
-                </div>
-                <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
-                <p className="text-sm text-text-sub">{clientName} / {deviceName}</p>
-              </Card>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Выдан:" className="lg:w-[100px] lg:px-4">
+                  <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>
+                </DataTableCell>
+                <DataTableCell mobileLabel="Истекает:" className="lg:w-[100px] lg:px-4">
+                  <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>
+                </DataTableCell>
+              </DataTableRow>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+        <DataTableFooter>
+          Показано {sorted.length} из {total}
+        </DataTableFooter>
+      </DataTable>
+    ) : sorted.length === 0 ? (
+      <p className="text-sm text-text-sub text-center py-8">Нет сертификатов</p>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {sorted.map((cert) => {
+          const clientName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ')
+            || cert.user?.email || '-';
+          const deviceName = cert.userDevice?.device?.name ?? '-';
+          return (
+            <Card key={cert.id} padding="none" className="p-5 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
+                <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
+                  {STATUS_LABELS[cert.status] ?? cert.status}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>
+              <p className="text-sm text-text-sub">{clientName} / {deviceName}</p>
+            </Card>
+          );
+        })}
+      </div>
+    )
+  }
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Назад
-          </Button>
-          <span className="text-sm text-text-sub">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Вперед
-          </Button>
-        </div>
-      )}
-    </PageContainer>
+  {/* Pagination */ }
+  {
+    totalPages > 1 && (
+      <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Назад
+        </Button>
+        <span className="text-sm text-text-sub">
+          {page} / {totalPages}
+        </span>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Вперед
+        </Button>
+      </div>
+    )
+  }
+    </PageContainer >
   );
 }
