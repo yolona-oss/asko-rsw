@@ -13,6 +13,9 @@ import type {
   PaginatedRepairRequests,
   ProcessInvoiceResult,
   RepairRequestResponse,
+  WorkStepList,
+  WorkStepResponse,
+  CompleteStep,
 } from './types';
 import { api } from './client';
 
@@ -111,19 +114,19 @@ export const repairRequestApi = {
 
   // Work steps
   getSteps(requestId: string) {
-    return api.get<IWorkStep[]>(`/repair-requests/${requestId}/steps`);
+    return api.get<WorkStepList>(`/repair-requests/${requestId}/steps`);
   },
 
   addStep(requestId: string, data: AddWorkStepDto) {
-    return api.post<IWorkStep>(`/repair-requests/${requestId}/steps`, data);
+    return api.post<WorkStepResponse>(`/repair-requests/${requestId}/steps`, data);
   },
 
   updateStep(requestId: string, stepId: string, data: Partial<UpdateWorkStepDto>) {
-    return api.post<IWorkStep>(`/repair-requests/${requestId}/steps/${stepId}/update`, data);
+    return api.post<WorkStepResponse>(`/repair-requests/${requestId}/steps/${stepId}/update`, data);
   },
 
   completeStep(requestId: string, stepId: string) {
-    return api.post<{ step: IWorkStep; requestCompleted: boolean }>(`/repair-requests/${requestId}/steps/${stepId}/complete`);
+    return api.post<CompleteStep>(`/repair-requests/${requestId}/steps/${stepId}/complete`);
   },
 
   deleteStep(requestId: string, stepId: string) {

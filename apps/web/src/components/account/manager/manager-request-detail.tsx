@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
 import { chatApi } from '@/lib/api/chat';
-import { api } from '@/lib/api/client';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import { useAuth } from '@/lib/api/use-auth';
 import { useChatSocket } from '@/lib/hooks/use-chat-socket';
 import { MessageList } from '@/components/chat/message-list';
@@ -107,7 +107,7 @@ function RequestChat({ conversationId, currentUserId }: { conversationId: string
   });
 
   useEffect(() => {
-    chatApi.getConversation(conversationId, true).then(({ data }) => setConversation(data.conversation)).catch(() => {});
+    chatApi.getConversation(conversationId, true).then(({ data }) => setConversation(data.conversation)).catch(() => { });
   }, [conversationId]);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ function RequestChat({ conversationId, currentUserId }: { conversationId: string
       <TypingIndicator userNames={typingNames} />
       <MessageInput
         conversationId={conversationId}
-        onMessageSent={() => {}}
+        onMessageSent={() => { }}
         onTyping={() => socketActions.emitTyping(conversationId)}
         onStopTyping={() => socketActions.emitStopTyping(conversationId)}
       />
@@ -185,17 +185,14 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         setRepairers(repData.data ?? []);
 
         try {
-          const { data: images } = await api.get('/file-upload/image/attached', {
-            params: { ownerType: 'repair_request', ownerId: requestId },
-            _silent: true,
-          } as any);
-          const urls = (Array.isArray(images) ? images : [])
-            .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
+          const { data } = await fileUploadApi.getAttachedImages('repair_request', requestId, true);
+          const urls = (data.images ?? [])
+            .map((img) => img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url)
             .filter(Boolean);
           setPhotos(urls);
-        } catch {}
+        } catch { }
 
-      } catch {} finally {
+      } catch { } finally {
         setLoading(false);
       }
     }
@@ -214,7 +211,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
       setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetail);
-    } catch {} finally {
+    } catch { } finally {
       setAssigning(false);
     }
   };
@@ -226,7 +223,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       await repairRequestApi.acceptChat(request.id);
       setChatAttached(true);
       setChatOpen(true);
-    } catch {} finally {
+    } catch { } finally {
       setChatLoading(false);
     }
   };
@@ -238,7 +235,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       await repairRequestApi.detachChat(request.id);
       setChatAttached(false);
       setChatOpen(false);
-    } catch {} finally {
+    } catch { } finally {
       setChatLoading(false);
     }
   };
@@ -364,7 +361,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                     .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
                     .map((r) => (
                       <option key={r.id} value={r.id}>
-                        {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || r.id}
+                        {[r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || `${r?.user?.firstName} ${r?.user?.lastName}`}
                       </option>
                     ))}
                 </Select>
@@ -451,9 +448,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                   key={idx}
                   type="button"
                   onClick={() => setMainPhoto(idx)}
-                  className={`relative w-20 h-16 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${
-                    idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
-                  }`}
+                  className={`relative w-20 h-16 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
+                    }`}
                 >
                   <Image
                     src={photo}

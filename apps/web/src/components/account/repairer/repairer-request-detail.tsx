@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { api } from '@/lib/api/client';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
@@ -124,17 +124,15 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         if (data.totalCost) setPriceValue(String(data.totalCost));
 
         const [stepsRes] = await Promise.all([
-          repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
-          api.get('/file-upload/image/attached', {
-            params: { ownerType: 'repair_request', ownerId: requestId },
-          }).then(({ data: images }) => {
-            const urls = (Array.isArray(images) ? images : [])
-              .map((img: any) => img.image?.medium?.secure_url ?? img.image?.original?.secure_url)
+          repairRequestApi.getSteps(requestId).catch(() => ({ data: { steps: [] } })),
+          fileUploadApi.getAttachedImages('repair_request', requestId, true).then(({ data }) => {
+            const urls = (data.images ?? [])
+              .map((img) => img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url)
               .filter(Boolean);
             setPhotos(urls);
           }).catch(() => {}),
         ]);
-        setSteps(stepsRes.data ?? []);
+        setSteps(stepsRes.data.steps ?? []);
       } catch {} finally {
         setLoading(false);
       }
@@ -176,7 +174,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     setActionLoading(true);
     try {
       const { data } = await repairRequestApi.resume(request.id);
-      setRequest(data);
+      setRequest((data as any).request ?? data);
     } catch {} finally { setActionLoading(false); }
   };
 
@@ -257,7 +255,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       const { data } = await repairRequestApi.addStep(request.id, {
         title: addStepTitle.trim(), description: addStepDescription.trim() || undefined, isFinal: addStepIsFinal || undefined,
       });
-      setSteps((prev) => [...prev, data]);
+      setSteps((prev) => [...prev, data.step]);
       setAddStepOpen(false); setAddStepTitle(''); setAddStepDescription(''); setAddStepIsFinal(false);
     } catch { setAddStepError('Не удалось добавить шаг'); }
     finally { setAddStepLoading(false); }
