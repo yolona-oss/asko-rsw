@@ -149,11 +149,13 @@ export function DealerCertificates() {
               className="lg:w-[320px]"
             />
           </div>
-          <DataFilter
-            filters={[STATUS_FILTER_DEF]}
-            values={filterValues}
-            onChange={handleFilterChange}
-          />
+          <div className="flex-shrink-0">
+            <DataFilter
+              filters={[STATUS_FILTER_DEF]}
+              values={filterValues}
+              onChange={handleFilterChange}
+            />
+          </div>
         </div>
         <div className="flex-1 flex-row flex items-center gap-3">
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
@@ -167,9 +169,6 @@ export function DealerCertificates() {
               ))}
             </Select>
             <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Link href="/account/certificates/create">
-              <Button variant="primary" size="sm">Создать сертификат</Button>
-            </Link>
           </div>
         </div>
       </div>
