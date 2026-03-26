@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAppSelector } from '@/store';
-import type { ChatMessage } from '@/lib/chat-types';
+import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 const { SOCKET_ORIGIN, SOCKET_PATH } = (() => {
@@ -25,6 +25,7 @@ export interface ChatSocketCallbacks {
   onUserStopTyping?: (data: { userId: string; conversationId: string }) => void;
   onUserPresence?: (data: { userId: string; status: string; activity: string }) => void;
   onMessageRead?: (data: { userId: string; conversationId: string; messageId: string }) => void;
+  onConversationNew?: (conversation: ChatConversation) => void;
 }
 
 export interface ChatSocketActions {
@@ -81,6 +82,10 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
 
     socket.on('message:read', (data: { userId: string; conversationId: string; messageId: string }) => {
       cbRef.current.onMessageRead?.(data);
+    });
+
+    socket.on('conversation:new', (data: ChatConversation) => {
+      cbRef.current.onConversationNew?.(data);
     });
 
     return () => {

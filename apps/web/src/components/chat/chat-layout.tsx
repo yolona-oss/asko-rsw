@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatSocket } from '@/lib/hooks/use-chat-socket';
+import { chatApi } from '@/lib/api/chat';
 import { ConversationList } from './conversation-list';
 import { ConversationPanel } from './conversation-panel';
 import { ChatEmptyState } from './chat-empty-state';
@@ -11,19 +13,37 @@ import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 
 interface ChatLayoutProps {
   currentUserId: string;
+  initialConversationId?: string;
 }
 
-export function ChatLayout({ currentUserId }: ChatLayoutProps) {
+export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [activeConversation, setActiveConversation] = useState<ChatConversation | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const initialConversationHandled = useRef(false);
 
   // Participant name cache (userId → display name)
   const [participantNames] = useState<Record<string, string>>({});
+
+  // Auto-open conversation from ?conversation= query parameter (notification links)
+  useEffect(() => {
+    if (!initialConversationId || initialConversationHandled.current) return;
+    initialConversationHandled.current = true;
+
+    chatApi.getConversation(initialConversationId, true)
+      .then(({ data }) => {
+        setActiveConversation(data.conversation);
+        router.replace('/account/chat', { scroll: false });
+      })
+      .catch(() => {
+        // Conversation may have been deleted
+      });
+  }, [initialConversationId, router]);
 
   const socketActions = useChatSocket({
     onNewMessage: useCallback((message: ChatMessage) => {
@@ -83,6 +103,10 @@ export function ChatLayout({ currentUserId }: ChatLayoutProps) {
     onMessageRead: useCallback(() => {
       // Could update read receipts UI here
     }, []),
+
+    onConversationNew: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    }, [queryClient]),
   });
 
   const handleSelectConversation = useCallback((conversation: ChatConversation) => {

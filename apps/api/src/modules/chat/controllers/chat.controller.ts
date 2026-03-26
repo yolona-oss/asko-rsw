@@ -45,9 +45,17 @@ export class ChatController {
             }
         }
 
-        return this.chatClient.createConversation(
+        const result = await this.chatClient.createConversation(
             userId, body.type, body.name ?? '', body.participantIds,
         );
+
+        // Emit to other participants via WebSocket
+        const recipientIds = body.participantIds.filter(id => id !== userId);
+        if (recipientIds.length > 0 && result.conversation) {
+            this.chatGateway.emitConversationCreated(recipientIds, result.conversation);
+        }
+
+        return result;
     }
 
     @ApiOkResponse({ type: PaginatedConversationsResponseDto })

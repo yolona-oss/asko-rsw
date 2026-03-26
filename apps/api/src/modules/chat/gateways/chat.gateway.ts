@@ -184,6 +184,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to(`conversation:${conversationId}`).emit('message:deleted', { messageId });
     }
 
+    emitConversationCreated(recipientUserIds: string[], conversation: any) {
+        for (const userId of recipientUserIds) {
+            this.server.to(`user:${userId}`).emit('conversation:new', conversation);
+        }
+    }
+
     emitToUser(userId: string, event: string, payload: any) {
         this.server.to(`user:${userId}`).emit(event, payload);
     }

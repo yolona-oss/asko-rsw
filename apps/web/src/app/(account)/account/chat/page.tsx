@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/components/account/account-provider';
 import { ChatLayout } from '@/components/chat/chat-layout';
 import { PageContainer } from '@/components/account/page-container';
@@ -15,8 +17,10 @@ function ChatSkeleton() {
   );
 }
 
-export default function ChatPage() {
+function ChatPageInner() {
   const { stage, user } = useAccount();
+  const searchParams = useSearchParams();
+  const initialConversationId = searchParams.get('conversation') ?? undefined;
 
   if (stage === 'skeleton' || !user) {
     return <ChatSkeleton />;
@@ -25,7 +29,15 @@ export default function ChatPage() {
   return (
     <PageContainer>
       <PageHeader>Чат</PageHeader>
-      <ChatLayout currentUserId={user.id} />
+      <ChatLayout currentUserId={user.id} initialConversationId={initialConversationId} />
     </PageContainer>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<ChatSkeleton />}>
+      <ChatPageInner />
+    </Suspense>
   );
 }

@@ -98,7 +98,7 @@ export function ConversationPanel({
 
     // Fire mark-as-read API for each (silent, no refetch)
     toMark.forEach((n) => notificationApi.markAsRead(n.id));
-  }, [conversation.id, queryClient]);
+  }, [conversation.id, queryClient, realtimeMessages.length]);
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';
