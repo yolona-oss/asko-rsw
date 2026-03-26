@@ -133,7 +133,7 @@ export function NotificationBell() {
       return data;
     },
     enabled: open,
-    staleTime: 10_000,
+    staleTime: 0,
   });
 
   const unreadCount = countData?.count ?? 0;
@@ -145,11 +145,11 @@ export function NotificationBell() {
       queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
         count: (old?.count ?? 0) + 1,
       }));
-      // Prepend to list if dropdown is open
+      // Prepend to list — if cache exists update it, otherwise seed it
       queryClient.setQueryData<{ data: NotificationRecord[]; overallCount: number }>(
         ['notifications-unread-list'],
         (old) => {
-          if (!old) return old;
+          if (!old) return { data: [notification], overallCount: 1 };
           return { ...old, data: [notification, ...old.data], overallCount: old.overallCount + 1 };
         },
       );

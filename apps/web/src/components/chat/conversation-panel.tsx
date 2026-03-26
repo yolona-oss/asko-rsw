@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@asko/ui';
 import { PresenceDot } from './presence-dot';
@@ -33,13 +33,35 @@ export function ConversationPanel({
 }: ConversationPanelProps) {
   const queryClient = useQueryClient();
 
-  // Join/leave conversation room
+  // Join/leave conversation room + mark messages as read
   useEffect(() => {
     socketActions.joinConversation(conversation.id);
+
+    // Mark last message as read to reset unread count
+    const lastMsg = conversation.lastMessage;
+    if (lastMsg && lastMsg.senderId !== currentUserId) {
+      socketActions.emitMarkAsRead(conversation.id, lastMsg.id);
+      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    }
+
     return () => {
       socketActions.leaveConversation(conversation.id);
     };
-  }, [conversation.id, socketActions]);
+  }, [conversation.id, socketActions, currentUserId, queryClient]);
+
+  // Mark incoming realtime messages as read while viewing
+  const lastMarkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const incoming = realtimeMessages.filter(
+      (m) => m.conversationId === conversation.id && m.senderId !== currentUserId,
+    );
+    const last = incoming[incoming.length - 1];
+    if (last && last.id !== lastMarkedRef.current) {
+      lastMarkedRef.current = last.id;
+      socketActions.emitMarkAsRead(conversation.id, last.id);
+      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+    }
+  }, [realtimeMessages, conversation.id, currentUserId, socketActions, queryClient]);
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';

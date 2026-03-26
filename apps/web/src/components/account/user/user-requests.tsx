@@ -200,7 +200,14 @@ export function UserRequests() {
 
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по устройству или описанию" className="lg:w-[320px] flex-shrink-0" />
+        <div className="flex-shrink-0">
+          <DataSearch
+            value={search}
+            onChange={setSearch}
+            placeholder="Поиск по устройству или описанию"
+            className="lg:w-[320px]"
+          />
+        </div>
         <div className="flex-1 flex items-center gap-3">
           <DataFilter
             filters={[STATUS_FILTER]}
