@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select, FormField, SerialNumberInput } from '@asko/ui';
+import { CERTIFICATE_DURATION_OPTIONS, CERTIFICATE_DURATION_LABELS } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { dealerApi, type SearchedUser } from '@/lib/api/dealer';
@@ -28,7 +29,7 @@ interface FormData {
   building: string;
   floor: string;
   room: string;
-  expiresAt: string;
+  durationMonths: string;
   purchaseReceiptUrl: string;
   description: string;
 }
@@ -44,7 +45,7 @@ const INITIAL_DATA: FormData = {
   building: '',
   floor: '',
   room: '',
-  expiresAt: '',
+  durationMonths: '',
   purchaseReceiptUrl: '',
   description: '',
 };
@@ -245,14 +246,19 @@ function Step3({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <FormField label="Дата окончания сертификата" variant="bold">
-        <Input
-          placeholder="Выберите дату"
-          value={data.expiresAt}
-          onChange={(e) => onChange({ expiresAt: e.target.value })}
-          type="date"
+      <FormField label="Срок действия сертификата" variant="bold">
+        <Select
+          value={data.durationMonths}
+          onChange={(e) => onChange({ durationMonths: e.target.value })}
           className="max-w-[500px]"
-        />
+        >
+          <option value="" disabled>Выберите срок действия</option>
+          {CERTIFICATE_DURATION_OPTIONS.map((months) => (
+            <option key={months} value={String(months)}>
+              {CERTIFICATE_DURATION_LABELS[months]}
+            </option>
+          ))}
+        </Select>
       </FormField>
       <FormField label="URL чека покупки (необязательно)" variant="bold">
         <Input
@@ -302,7 +308,7 @@ export function CertificateWizard() {
   const canProceed = () => {
     if (step === 1) return !!data.clientUserId;
     if (step === 2) return !!data.deviceId && !!data.serialNumber && data.serialNumber !== 'SN-' && !!data.city && !!data.street && !!data.house;
-    if (step === 3) return !!data.expiresAt;
+    if (step === 3) return !!data.durationMonths;
     return false;
   };
 
@@ -324,7 +330,7 @@ export function CertificateWizard() {
           ...(data.building ? { building: Number(data.building) } : {}),
           ...(data.floor ? { floor: Number(data.floor) } : {}),
           ...(data.room ? { room: Number(data.room) } : {}),
-          expiresAt: new Date(data.expiresAt).toISOString(),
+          durationMonths: Number(data.durationMonths),
           purchaseReceiptUrl: data.purchaseReceiptUrl || undefined,
           description: data.description || undefined,
         });

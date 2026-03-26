@@ -16,6 +16,7 @@ import {
     JwtPayload,
     PaymentTargetType,
     PaymentProviderType,
+    computeExpiresAt,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
@@ -84,12 +85,15 @@ export class CertificateController {
             // Ignore if already linked
         }
 
+        // Compute expiration date from duration, rounded to end of day
+        const expiresAt = computeExpiresAt(dto.durationMonths).toISOString();
+
         // Create certificate via certificate-service
         const result = await this.certificateClient.createByDealer({
             clientUserId: dto.clientUserId,
             userDeviceId: userDeviceRes.userDevice.id,
             dealerId: dealerProfile.id,
-            expiresAt: dto.expiresAt,
+            expiresAt,
             serialNumber: dto.serialNumber,
             purchaseReceiptUrl: dto.purchaseReceiptUrl,
             description: dto.description,
@@ -124,8 +128,9 @@ export class CertificateController {
     @Get('calculate-price')
     async calculatePrice(
         @Query('userDeviceId') userDeviceId: string,
-        @Query('expiresAt') expiresAt: string,
+        @Query('durationMonths') durationMonths: string,
     ) {
+        const expiresAt = computeExpiresAt(Number(durationMonths)).toISOString();
         return this.certificateClient.calculatePrice(userDeviceId, expiresAt);
     }
 

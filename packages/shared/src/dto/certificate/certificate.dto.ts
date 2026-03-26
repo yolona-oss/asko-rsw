@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsDateString, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, IsIn } from 'class-validator';
+import { CERTIFICATE_DURATION_OPTIONS } from '../../constants/certificate';
 
 /** User adds an existing certificate */
 export class AddCertificateDto {
@@ -51,8 +52,9 @@ export class CreateCertificateDto {
     @IsString()
     postalCode?: string;
 
-    @IsDateString()
-    expiresAt!: string;
+    @IsInt()
+    @IsIn(CERTIFICATE_DURATION_OPTIONS as unknown as number[])
+    durationMonths!: number;
 
     @IsOptional()
     @IsString()

@@ -24,7 +24,7 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const STATUS_LABELS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
+  [RepairRequestStatus.PENDING]: 'В обработке',
   [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначен мастер',
   [RepairRequestStatus.ACCEPTED]: 'Мастер выехал',

@@ -1,3 +1,4 @@
+export * from './certificate'
 export * from './default-user-role'
 export * from './refresh-token'
 export * from './pagination'
