@@ -7,8 +7,13 @@ import { PresenceDot } from './presence-dot';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import { TypingIndicator } from './typing-indicator';
+import { notificationApi } from '@/lib/api/notification';
+import { setActiveConversation } from '@/lib/active-conversation';
+import type { NotificationRecord } from '@/lib/api/types';
 import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
+
+const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
 
 interface ConversationPanelProps {
   conversation: ChatConversation;
@@ -33,8 +38,9 @@ export function ConversationPanel({
 }: ConversationPanelProps) {
   const queryClient = useQueryClient();
 
-  // Join/leave conversation room + mark messages as read
+  // Join/leave conversation room + mark messages as read + track active conversation
   useEffect(() => {
+    setActiveConversation(conversation.id);
     socketActions.joinConversation(conversation.id);
 
     // Mark last message as read to reset unread count
@@ -46,6 +52,7 @@ export function ConversationPanel({
 
     return () => {
       socketActions.leaveConversation(conversation.id);
+      setActiveConversation(null);
     };
   }, [conversation.id, socketActions, currentUserId, queryClient]);
 
@@ -62,6 +69,36 @@ export function ConversationPanel({
       queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
     }
   }, [realtimeMessages, conversation.id, currentUserId, socketActions, queryClient]);
+
+  // Dismiss notification-bell entries for this conversation
+  useEffect(() => {
+    type ListCache = { data: NotificationRecord[]; overallCount: number };
+    const cache = queryClient.getQueryData<ListCache>(['notifications-unread-list']);
+    if (!cache) return;
+
+    const toMark = cache.data.filter(
+      (n) => CHAT_NOTIFICATION_TYPES.has(n.type) && n.targetId === conversation.id,
+    );
+    if (toMark.length === 0) return;
+
+    const ids = new Set(toMark.map((n) => n.id));
+
+    // Optimistic: remove from bell list + decrement badge
+    queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        data: old.data.filter((n) => !ids.has(n.id)),
+        overallCount: Math.max(0, old.overallCount - toMark.length),
+      };
+    });
+    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
+      count: Math.max(0, (old?.count ?? 0) - toMark.length),
+    }));
+
+    // Fire mark-as-read API for each (silent, no refetch)
+    toMark.forEach((n) => notificationApi.markAsRead(n.id));
+  }, [conversation.id, queryClient]);
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';

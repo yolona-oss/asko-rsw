@@ -2,10 +2,15 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationApi } from '@/lib/api/notification';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
+import { getActiveConversation } from '@/lib/active-conversation';
 import type { NotificationRecord } from '@/lib/api/types';
+
+type ListCache = { data: NotificationRecord[]; overallCount: number };
+
+const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
 
 const NOTIFICATION_TYPE_CONFIG: Record<string, {
   icon: string;
@@ -114,39 +119,50 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch unread count
+  // Fetch unread count — once on mount, then WebSocket-driven
   const { data: countData } = useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: async () => {
       const { data } = await notificationApi.unreadCount();
       return data;
     },
-    refetchInterval: 60_000,
-    staleTime: 30_000,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch unread notifications (when dropdown open)
-  const { data: listData, refetch: refetchList } = useQuery({
+  // Fetch unread list — once on first open, then WebSocket-driven
+  const { data: listData } = useQuery({
     queryKey: ['notifications-unread-list'],
     queryFn: async () => {
       const { data } = await notificationApi.list({ limit: 20, unreadOnly: true });
       return data;
     },
     enabled: open,
-    staleTime: 0,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   const unreadCount = countData?.count ?? 0;
   const notifications = listData?.data ?? [];
 
-  // Real-time via WebSocket
+  // ── Real-time via WebSocket ──────────────────────────────────
   useNotificationSocket(
     useCallback((notification: NotificationRecord) => {
+      // If user is currently viewing this chat conversation, auto-dismiss
+      if (
+        CHAT_NOTIFICATION_TYPES.has(notification.type) &&
+        notification.targetId === getActiveConversation()
+      ) {
+        notificationApi.markAsRead(notification.id);
+        return;
+      }
+
+      // Increment badge count
       queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
         count: (old?.count ?? 0) + 1,
       }));
-      // Prepend to list — if cache exists update it, otherwise seed it
-      queryClient.setQueryData<{ data: NotificationRecord[]; overallCount: number }>(
+      // Prepend to list cache (seed if first notification)
+      queryClient.setQueryData<ListCache>(
         ['notifications-unread-list'],
         (old) => {
           if (!old) return { data: [notification], overallCount: 1 };
@@ -154,28 +170,46 @@ export function NotificationBell() {
         },
       );
     }, [queryClient]),
-    useCallback((_delta: number) => {
-      // Already handled via the 'notification' event above
-    }, []),
+    useCallback((delta: number) => {
+      queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
+        count: Math.max(0, (old?.count ?? 0) + delta),
+      }));
+    }, [queryClient]),
   );
 
-  // Mark single as read
-  const markRead = useMutation({
-    mutationFn: (id: string) => notificationApi.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-list'] });
-    },
-  });
+  // ── Optimistic mark single as read ───────────────────────────
+  const [markingIds, setMarkingIds] = useState<Set<string>>(new Set());
 
-  // Mark all as read
-  const markAllRead = useMutation({
-    mutationFn: () => notificationApi.markAllAsRead(),
-    onSuccess: () => {
-      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-list'] });
-    },
-  });
+  const markRead = useCallback((id: string) => {
+    setMarkingIds((prev) => new Set(prev).add(id));
+    // Optimistic: decrement count, remove from list
+    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
+      count: Math.max(0, (old?.count ?? 1) - 1),
+    }));
+    queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
+      if (!old) return old;
+      const filtered = old.data.filter((n) => n.id !== id);
+      return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
+    });
+    // Fire API (no refetch on success — cache is already correct)
+    notificationApi.markAsRead(id).finally(() => {
+      setMarkingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    });
+  }, [queryClient]);
+
+  // ── Optimistic mark all as read ──────────────────────────────
+  const [markingAll, setMarkingAll] = useState(false);
+
+  const markAllRead = useCallback(() => {
+    setMarkingAll(true);
+    // Optimistic: zero everything
+    queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
+    queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
+      if (!old) return old;
+      return { ...old, data: [], overallCount: 0 };
+    });
+    notificationApi.markAllAsRead().finally(() => setMarkingAll(false));
+  }, [queryClient]);
 
   // Close on outside click
   useEffect(() => {
@@ -192,7 +226,7 @@ export function NotificationBell() {
     const config = NOTIFICATION_TYPE_CONFIG[n.type];
     const href = config?.href?.(n);
 
-    markRead.mutate(n.id);
+    markRead(n.id);
     setOpen(false);
 
     if (href) {
@@ -210,7 +244,7 @@ export function NotificationBell() {
       {/* Bell button */}
       <button
         type="button"
-        onClick={() => { setOpen(!open); if (!open) refetchList(); }}
+        onClick={() => setOpen(!open)}
         aria-label="Уведомления"
         className="relative cursor-pointer"
       >
@@ -235,8 +269,8 @@ export function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 type="button"
-                onClick={() => markAllRead.mutate()}
-                disabled={markAllRead.isPending}
+                onClick={markAllRead}
+                disabled={markingAll}
                 className="text-xs text-brand-red hover:underline cursor-pointer disabled:opacity-50"
               >
                 Прочитать все
