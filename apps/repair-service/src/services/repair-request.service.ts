@@ -536,7 +536,7 @@ export class RepairRequestService {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
-                populate: ['workSteps'],
+                populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
         );
         return { data, total };
@@ -560,7 +560,7 @@ export class RepairRequestService {
                     ],
                 },
             },
-            { populate: ['workSteps'] },
+            { populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'] },
         );
     }
 
@@ -576,7 +576,7 @@ export class RepairRequestService {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
-                populate: ['workSteps'],
+                populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
         );
         return { data, total };
@@ -597,7 +597,7 @@ export class RepairRequestService {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
-                populate: ['workSteps'],
+                populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
         );
         return { data, total };
@@ -615,7 +615,7 @@ export class RepairRequestService {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
-                populate: ['workSteps'],
+                populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
         );
         return { data, total };
@@ -630,7 +630,7 @@ export class RepairRequestService {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
-                populate: ['workSteps'],
+                populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
         );
         return { data, total };
@@ -641,7 +641,7 @@ export class RepairRequestService {
         const request = await this.em.findOne(
             RepairRequest,
             { id },
-            { populate: ['workSteps'] }
+            { populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'] }
         );
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         return request;

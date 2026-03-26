@@ -6,6 +6,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
@@ -62,6 +63,7 @@ export class RepairRequestController {
     constructor(
         private readonly repairClient: RepairClientService,
         private readonly repairerClient: RepairerClientService,
+        private readonly userClient: UserClientService,
         private readonly chatClient: ChatClientService,
         private readonly paymentService: PaymentClientService,
         private readonly notificationService: NotificationService,
@@ -147,7 +149,25 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.repairClient.findAll(pagination);
+        const result = await this.repairClient.findAll(pagination);
+        result.data = result.data ?? [];
+        // Enrich with user data in parallel
+        await Promise.all(result.data.map(async (req) => {
+            if (!req.userId) return;
+            try {
+                const userData = await this.userClient.findUserById({ id: req.userId });
+                if (userData) {
+                    (req as any).user = {
+                        id: userData.id,
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        email: userData.email,
+                        phone: userData.phone,
+                    };
+                }
+            } catch { /* non-critical */ }
+        }));
+        return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -476,6 +496,22 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.repairClient.findById(id);
+        const result = await this.repairClient.findById(id);
+        // Enrich with user data from user-service
+        if (result.request?.userId) {
+            try {
+                const userData = await this.userClient.findUserById({ id: result.request.userId });
+                if (userData) {
+                    (result.request as any).user = {
+                        id: userData.id,
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        email: userData.email,
+                        phone: userData.phone,
+                    };
+                }
+            } catch { /* non-critical */ }
+        }
+        return result;
     }
 }

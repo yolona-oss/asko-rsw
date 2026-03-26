@@ -3002,16 +3002,7 @@
     "/certificates/dealer": {
       "get": {
         "operationId": "CertificateController_findDealerCerts",
-        "parameters": [
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",

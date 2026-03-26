@@ -633,6 +633,10 @@ message RepairRequestRecord {
     string statusBeforePause = 20;
     string conversationId = 21;
     string chatCloseAt = 22;
+    UserDeviceRecord userDevice = 23;
+    RepairerRecord repairer = 24;
+    CertificateRecord certificate = 25;
+    AddressRecord address = 26;
 }
 
 message BrokenPartRecord {

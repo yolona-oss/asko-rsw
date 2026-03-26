@@ -6,6 +6,11 @@ import { WorkStepService } from 'services/work-step.service';
 import { BrokenPartService } from 'services/broken-part.service';
 import { AppError } from 'common/error';
 import type { RepairRequest } from 'entities/repair-request.entity';
+import type { UserDevice } from 'entities/user-device.entity';
+import type { Device } from 'entities/device.entity';
+import type { Repairer } from 'entities/repairer.entity';
+import type { Certificate } from 'entities/certificate.entity';
+import type { Address } from 'entities/address.entity';
 import type { WorkStep } from 'entities/work-step.entity';
 import type { BrokenPart } from 'entities/broken-part.entity';
 
@@ -67,15 +72,104 @@ function toGrpcError(error: unknown): RpcException {
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
 
-function requestToRecord(entity: RepairRequest) {
+function deviceToRecord(entity: Device) {
+    return {
+        id: entity.id,
+        name: entity.name,
+        type: entity.type,
+        model: entity.model,
+        brand: entity.brand,
+        price: entity.price ?? 0,
+        description: entity.description ?? '',
+        specifications: entity.specifications ? JSON.stringify(entity.specifications) : '',
+        features: entity.features ? JSON.stringify(entity.features) : '',
+        slug: entity.slug,
+        isFeatured: entity.isFeatured ?? false,
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
+function addressToRecord(entity: Address) {
+    return {
+        id: entity.id,
+        country: '',
+        city: entity.city,
+        street: entity.street,
+        house: parseInt(entity.house) || 0,
+        building: 0,
+        floor: parseInt(entity.floor ?? '') || 0,
+        room: parseInt(entity.apartment ?? '') || 0,
+        postalCode: '',
+    };
+}
+
+function userDeviceToRecord(entity: UserDevice) {
+    const device = typeof entity.device === 'object' ? entity.device : null;
+    const address = typeof entity.address === 'object' ? entity.address : null;
+    return {
+        id: entity.id,
+        userId: entity.userId,
+        deviceId: device?.id ?? '',
+        serialNumber: entity.serialNumber,
+        addressId: address?.id ?? '',
+        purchaseDate: entity.purchaseDate?.toISOString() ?? '',
+        warrantyUntil: entity.warrantyUntil?.toISOString() ?? '',
+        notes: entity.notes ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        device: device ? deviceToRecord(device) : undefined,
+        address: address ? addressToRecord(address) : undefined,
+    };
+}
+
+function repairerToRecord(entity: Repairer) {
+    return {
+        id: entity.id,
+        userId: entity.userId,
+        specializations: entity.specializations ?? [],
+        city: entity.city,
+        isActive: entity.isActive,
+        completedRepairs: entity.completedRepairs,
+        latitude: entity.latitude ?? 0,
+        longitude: entity.longitude ?? 0,
+        lastLocationUpdate: entity.lastLocationUpdate?.toISOString() ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
+function certificateToRecord(entity: Certificate) {
     return {
         id: entity.id,
         userId: entity.userId,
         userDeviceId: typeof entity.userDevice === 'object' ? entity.userDevice.id : String(entity.userDevice),
-        repairerId: entity.repairer ? (typeof entity.repairer === 'object' ? entity.repairer.id : String(entity.repairer)) : '',
+        dealerId: entity.dealer ? (typeof entity.dealer === 'object' ? entity.dealer.id : String(entity.dealer)) : '',
+        certificateNumber: entity.certificateNumber,
+        status: entity.status,
+        issuedAt: entity.issuedAt?.toISOString() ?? '',
+        expiresAt: entity.expiresAt?.toISOString() ?? '',
+        price: entity.price ?? 0,
+        paid: entity.paid ?? false,
+        purchaseReceiptUrl: entity.purchaseReceiptUrl ?? '',
+        description: entity.description ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+    };
+}
+
+function requestToRecord(entity: RepairRequest) {
+    const userDevice = typeof entity.userDevice === 'object' ? entity.userDevice : null;
+    const repairer = typeof entity.repairer === 'object' ? entity.repairer : null;
+    const certificate = typeof entity.certificate === 'object' ? entity.certificate : null;
+    const address = typeof entity.address === 'object' ? entity.address : null;
+
+    return {
+        id: entity.id,
+        userId: entity.userId,
+        userDeviceId: userDevice ? userDevice.id : String(entity.userDevice),
+        repairerId: repairer ? repairer.id : (entity.repairer ? String(entity.repairer) : ''),
         managerId: entity.managerId ?? '',
-        certificateId: entity.certificate ? (typeof entity.certificate === 'object' ? entity.certificate.id : String(entity.certificate)) : '',
-        addressId: entity.address ? (typeof entity.address === 'object' ? entity.address.id : String(entity.address)) : '',
+        certificateId: certificate ? certificate.id : (entity.certificate ? String(entity.certificate) : ''),
+        addressId: address ? address.id : (entity.address ? String(entity.address) : ''),
         status: entity.status,
         description: entity.description,
         preferredDate: entity.preferredDate?.toISOString() ?? '',
@@ -91,6 +185,10 @@ function requestToRecord(entity: RepairRequest) {
         statusBeforePause: entity.statusBeforePause ?? '',
         conversationId: entity.conversationId ?? '',
         chatCloseAt: entity.chatCloseAt?.toISOString() ?? '',
+        userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
+        repairer: repairer ? repairerToRecord(repairer) : undefined,
+        certificate: certificate ? certificateToRecord(certificate) : undefined,
+        address: address ? addressToRecord(address) : undefined,
     };
 }
 

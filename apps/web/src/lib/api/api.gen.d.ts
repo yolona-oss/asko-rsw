@@ -5381,9 +5381,7 @@ export interface operations {
     };
     CertificateController_findDealerCerts: {
         parameters: {
-            query: {
-                status: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
