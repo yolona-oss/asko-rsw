@@ -143,6 +143,7 @@ interface Bucket {
   start: Date;
   end: Date;
   total: number;
+  count: number;
   label: string;
 }
 
@@ -187,6 +188,7 @@ function bucketPayments(
       start: new Date(t),
       end: new Date(bEnd),
       total: 0,
+      count: 0,
       label: labelFn(new Date(t)),
     });
     t += bucketMs;
@@ -202,10 +204,27 @@ function bucketPayments(
     );
     if (idx >= 0 && idx < buckets.length) {
       buckets[idx].total += p.amount;
+      buckets[idx].count += 1;
     }
   }
 
   return buckets;
+}
+
+// ── Chart tooltip ──
+
+function ChartTooltip({ bucket, x, visible }: { bucket: Bucket | null; x: number; visible: boolean }) {
+  if (!visible || !bucket) return null;
+  return (
+    <div
+      className="absolute z-10 pointer-events-none bg-white border border-border-light rounded-sm shadow-md px-3 py-2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap"
+      style={{ left: `${x}%` }}
+    >
+      <p className="text-xs font-medium text-text-main">{bucket.label}</p>
+      <p className="text-xs text-text-sub">{formatAmount(bucket.total)} ₽</p>
+      <p className="text-xs text-text-sub">{bucket.count} {bucket.count === 1 ? 'транзакция' : bucket.count < 5 ? 'транзакции' : 'транзакций'}</p>
+    </div>
+  );
 }
 
 // ── Chart rendering ──
@@ -213,19 +232,27 @@ function bucketPayments(
 function BarChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
   const max = Math.max(...buckets.map((b) => b.total), 1);
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
+  const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <div className="flex items-end gap-[2px] h-[120px]">
+      <div className="relative flex items-end gap-[2px] h-[120px]">
+        <ChartTooltip
+          bucket={hovered !== null ? buckets[hovered] : null}
+          x={hovered !== null && buckets.length > 0 ? ((hovered + 0.5) / buckets.length) * 100 : 0}
+          visible={hovered !== null}
+        />
         {buckets.map((b, i) => (
           <div
             key={i}
-            className="flex-1 min-w-0 rounded-t-sm transition-all"
+            className="flex-1 min-w-0 rounded-t-sm transition-all cursor-pointer"
             style={{
               height: `${Math.max((b.total / max) * 100, b.total > 0 ? 4 : 0)}%`,
               backgroundColor: color,
+              opacity: hovered !== null && hovered !== i ? 0.4 : 1,
             }}
-            title={`${b.label}: ${formatAmount(b.total)} ₽`}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
           />
         ))}
       </div>
@@ -247,6 +274,7 @@ function LineChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
   const h = 120;
   const w = buckets.length > 1 ? buckets.length - 1 : 1;
+  const [hovered, setHovered] = useState<number | null>(null);
 
   const points = buckets
     .map((b, i) => {
@@ -258,18 +286,50 @@ function LineChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
 
   const areaPoints = `0,${h} ${points} 100,${h}`;
 
+  const hoveredX = hovered !== null ? (hovered / w) * 100 : 0;
+  const hoveredY = hovered !== null ? h - (buckets[hovered].total / max) * h : 0;
+
   return (
     <div className="flex flex-col gap-1 w-full">
-      <svg viewBox={`0 0 100 ${h}`} preserveAspectRatio="none" className="w-full" style={{ height: h }}>
-        <polygon points={areaPoints} fill={color} opacity={0.1} />
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth={1.5}
-          vectorEffect="non-scaling-stroke"
+      <div className="relative">
+        <ChartTooltip
+          bucket={hovered !== null ? buckets[hovered] : null}
+          x={hoveredX}
+          visible={hovered !== null}
         />
-      </svg>
+        <svg viewBox={`0 0 100 ${h}`} preserveAspectRatio="none" className="w-full" style={{ height: h }}>
+          <polygon points={areaPoints} fill={color} opacity={0.1} />
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
+          />
+          {/* Hover dot */}
+          {hovered !== null && (
+            <circle cx={hoveredX} cy={hoveredY} r={3} fill={color} vectorEffect="non-scaling-stroke" />
+          )}
+          {/* Invisible hit areas */}
+          {buckets.map((_, i) => {
+            const x = (i / w) * 100;
+            const barW = 100 / buckets.length;
+            return (
+              <rect
+                key={i}
+                x={x - barW / 2}
+                y={0}
+                width={barW}
+                height={h}
+                fill="transparent"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                className="cursor-pointer"
+              />
+            );
+          })}
+        </svg>
+      </div>
       <div className="flex">
         {buckets.map((b, i) => (
           <div key={i} className="flex-1 min-w-0 text-center overflow-hidden">
