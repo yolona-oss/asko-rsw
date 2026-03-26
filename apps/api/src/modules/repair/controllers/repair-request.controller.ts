@@ -151,22 +151,25 @@ export class RepairRequestController {
     async findAll(@Query() pagination: PaginationDto) {
         const result = await this.repairClient.findAll(pagination);
         result.data = result.data ?? [];
-        // Enrich with user data in parallel
-        await Promise.all(result.data.map(async (req) => {
-            if (!req.userId) return;
-            try {
-                const userData = await this.userClient.findUserById({ id: req.userId });
-                if (userData) {
-                    (req as any).user = {
-                        id: userData.id,
-                        firstName: userData.firstName,
-                        lastName: userData.lastName,
-                        email: userData.email,
-                        phone: userData.phone,
-                    };
-                }
-            } catch { /* non-critical */ }
-        }));
+        // Collect all unique userIds to enrich (request owners + repairers)
+        const enrichments: Promise<void>[] = [];
+        for (const req of result.data) {
+            if (req.userId) {
+                enrichments.push(
+                    this.userClient.findUserById({ id: req.userId })
+                        .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                        .catch(() => {}),
+                );
+            }
+            if ((req as any).repairer?.userId) {
+                enrichments.push(
+                    this.userClient.findUserById({ id: (req as any).repairer.userId })
+                        .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                        .catch(() => {}),
+                );
+            }
+        }
+        await Promise.all(enrichments);
         return result;
     }
 
@@ -497,21 +500,27 @@ export class RepairRequestController {
     @Get(':id')
     async findOne(@Param('id') id: string) {
         const result = await this.repairClient.findById(id);
-        // Enrich with user data from user-service
-        if (result.request?.userId) {
-            try {
-                const userData = await this.userClient.findUserById({ id: result.request.userId });
-                if (userData) {
-                    (result.request as any).user = {
-                        id: userData.id,
-                        firstName: userData.firstName,
-                        lastName: userData.lastName,
-                        email: userData.email,
-                        phone: userData.phone,
-                    };
-                }
-            } catch { /* non-critical */ }
+        const req = result.request;
+        if (!req) return result;
+
+        // Enrich with user data from user-service (in parallel)
+        const enrichments: Promise<void>[] = [];
+        if (req.userId) {
+            enrichments.push(
+                this.userClient.findUserById({ id: req.userId })
+                    .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                    .catch(() => {}),
+            );
         }
+        // Enrich nested repairer with user data
+        if ((req as any).repairer?.userId) {
+            enrichments.push(
+                this.userClient.findUserById({ id: (req as any).repairer.userId })
+                    .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                    .catch(() => {}),
+            );
+        }
+        await Promise.all(enrichments);
         return result;
     }
 }
