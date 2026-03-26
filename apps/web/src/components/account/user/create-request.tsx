@@ -150,6 +150,7 @@ export function CreateRequest() {
 
     setSubmitting(true);
     try {
+      // TODO add modal with view progress(stages and stages steps)
       // 1. Create the repair request
       const brokenParts = selectedParts.map((sp) => ({
         ...(sp.devicePartId ? { devicePartId: sp.devicePartId } : {}),

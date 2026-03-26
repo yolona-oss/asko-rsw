@@ -171,7 +171,7 @@ export class ChatGrpcController {
     @GrpcMethod('ChatService', 'AddParticipant')
     async addParticipant(data: AddParticipantRequest) {
         try {
-            await this.conversationService.addParticipant(data.conversationId, data.userId, data.addedBy);
+            await this.conversationService.addParticipant(data.conversationId, data.userId, data.addedBy, data.force ?? false);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

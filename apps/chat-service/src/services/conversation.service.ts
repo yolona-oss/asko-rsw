@@ -133,11 +133,14 @@ export class ConversationService {
     }
 
     @CreateRequestContext()
-    async addParticipant(conversationId: string, userId: string, addedBy: string): Promise<void> {
+    async addParticipant(conversationId: string, userId: string, addedBy: string, force = false): Promise<void> {
         const conversation = await this.em.findOne(Conversation, { id: conversationId });
         if (!conversation) throw AppErrors.conversationNotFound();
 
-        await this.assertParticipant(conversationId, addedBy);
+        // force=true bypasses participant check (used by API gateway for role-gated operations like manager chat accept)
+        if (!force) {
+            await this.assertParticipant(conversationId, addedBy);
+        }
 
         const existing = await this.em.findOne(ConversationParticipant, {
             conversation: { id: conversationId },

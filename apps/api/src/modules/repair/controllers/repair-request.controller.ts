@@ -210,7 +210,7 @@ export class RepairRequestController {
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
-            await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub);
+            await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub, true);
         }
         return {};
     }

@@ -64,8 +64,8 @@ export class ChatClientService implements OnModuleInit {
 
     // ─── Participants ─────────────────────────────────────────────────
 
-    addParticipant(conversationId: string, userId: string, addedBy: string): Promise<EmptyChatResponse> {
-        return grpcCall(this.chatService.addParticipant({ conversationId, userId, addedBy }));
+    addParticipant(conversationId: string, userId: string, addedBy: string, force = false): Promise<EmptyChatResponse> {
+        return grpcCall(this.chatService.addParticipant({ conversationId, userId, addedBy, force }));
     }
 
     removeParticipant(conversationId: string, userId: string, removedBy: string): Promise<EmptyChatResponse> {

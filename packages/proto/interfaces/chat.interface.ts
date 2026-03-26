@@ -33,6 +33,7 @@ export interface AddParticipantRequest {
     conversationId: string;
     userId: string;
     addedBy: string;
+    force?: boolean;
 }
 
 export interface RemoveParticipantRequest {
