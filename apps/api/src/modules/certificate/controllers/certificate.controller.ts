@@ -4,6 +4,7 @@ import { CertificateClientService } from 'modules/repair-client/certificate-clie
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
+import { IsOptional, IsEnum } from 'class-validator';
 import {
     AddCertificateDto,
     CreateCertificateDto,
@@ -18,8 +19,15 @@ import {
     PaymentProviderType,
     computeExpiresAt,
 } from '@asko/shared';
+
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
+
+class FindDealerCertificatesDto extends PaginationDto {
+    @IsOptional()
+    @IsEnum(CertificateStatus)
+    status?: CertificateStatus;
+}
 import {
     CertificateResponseDto,
     CertPriceResponseDto,
@@ -148,9 +156,9 @@ export class CertificateController {
     @Get('dealer')
     async findDealerCerts(
         @JwtAuthUser() user: JwtPayload,
-        @Query() pagination: PaginationDto,
-        @Query('status') status?: CertificateStatus,
+        @Query() query: FindDealerCertificatesDto,
     ) {
+        const { status, ...pagination } = query;
         // Resolve dealer profile to get dealerId
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
         return this.certificateClient.findByDealer(dealerProfile.id, pagination, status);

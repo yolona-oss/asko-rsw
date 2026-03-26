@@ -168,7 +168,7 @@ export function DealerCertificates() {
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </Select>
-            <div className="ml-auto">
+            <div className="self-end">
               <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
             </div>
           </div>
