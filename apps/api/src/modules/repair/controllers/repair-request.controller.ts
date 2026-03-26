@@ -58,7 +58,7 @@ export class RepairRequestController {
         private readonly paymentService: PaymentClientService,
         private readonly notificationService: NotificationService,
         private readonly fileService: FileClientService,
-    ) {}
+    ) { }
 
     // ── User endpoints ──
 
@@ -244,8 +244,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
-    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.repairClient.findByRepairer(user.sub, pagination);
+    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto, @Query() status?: string) {
+        return this.repairClient.findByRepairerFiltered(user.sub, pagination, status);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
