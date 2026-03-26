@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Badge,
   Card,
+  Modal,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -20,6 +22,8 @@ import type { BadgeVariant, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { paymentApi, type PaymentRecord, type PaymentStats } from '@/lib/api/payment';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { certificateApi } from '@/lib/api/certificate';
 
 const STATUS_LABELS: Record<string, string> = {
   paid: 'Подтверждён',
@@ -40,6 +44,12 @@ const PROVIDER_LABELS: Record<string, string> = {
   yookassa: 'ЮKassa',
   tbank: 'Т-Банк',
   card: 'Карта',
+};
+
+const TARGET_TYPE_LABELS: Record<string, string> = {
+  repairRequest: 'Заявка на ремонт',
+  certificate: 'Сертификат',
+  dealerWithdrawal: 'Вывод средств дилера',
 };
 
 const FILTERS: FilterDefinition[] = [
@@ -86,6 +96,185 @@ function payerName(user?: PaymentRecord['user']) {
   return [user.lastName, user.firstName].filter(Boolean).join(' ') || user.email || '-';
 }
 
+// ── Detail row helper ──
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 py-2 border-b border-border-light last:border-b-0">
+      <span className="text-sm text-text-sub flex-shrink-0">{label}</span>
+      <span className="text-sm text-text-main text-right">{value}</span>
+    </div>
+  );
+}
+
+// ── Payment detail modal ──
+
+function PaymentDetailModal({
+  payment,
+  open,
+  onClose,
+}: {
+  payment: PaymentRecord | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [target, setTarget] = useState<any>(null);
+  const [targetLoading, setTargetLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !payment?.targetId || !payment?.targetType) {
+      setTarget(null);
+      return;
+    }
+    setTargetLoading(true);
+    setTarget(null);
+
+    if (payment.targetType === 'repairRequest') {
+      repairRequestApi.getOne(payment.targetId)
+        .then(({ data }) => setTarget((data as any)?.request ?? data))
+        .catch(() => {})
+        .finally(() => setTargetLoading(false));
+    } else if (payment.targetType === 'certificate') {
+      certificateApi.getOne(payment.targetId)
+        .then(({ data }) => setTarget((data as any)?.certificate ?? data))
+        .catch(() => {})
+        .finally(() => setTargetLoading(false));
+    } else {
+      setTargetLoading(false);
+    }
+  }, [open, payment?.targetId, payment?.targetType]);
+
+  if (!payment) return null;
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <div className="flex flex-col gap-5 p-6 w-full sm:w-[520px]">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-medium text-text-main">Детали платежа</h2>
+          <Badge variant={STATUS_BADGE_VARIANT[payment.status] ?? 'neutral'}>
+            {STATUS_LABELS[payment.status] ?? payment.status}
+          </Badge>
+        </div>
+
+        {/* Payment info */}
+        <div className="flex flex-col">
+          <DetailRow label="ID платежа" value={payment.id} />
+          <DetailRow label="Плательщик" value={payerName(payment.user)} />
+          {payment.user?.email && (
+            <DetailRow label="Email" value={payment.user.email} />
+          )}
+          {payment.user?.phone && (
+            <DetailRow label="Телефон" value={payment.user.phone} />
+          )}
+          <DetailRow
+            label="Сумма"
+            value={
+              <Badge
+                variant={payment.status === 'refunded' ? 'error' : payment.status === 'pending' ? 'warning' : 'success'}
+                className="text-xs"
+              >
+                {formatAmount(payment.amount)} ₽
+              </Badge>
+            }
+          />
+          <DetailRow label="Валюта" value={payment.currency?.toUpperCase() ?? 'RUB'} />
+          <DetailRow label="Способ оплаты" value={PROVIDER_LABELS[payment.provider ?? ''] ?? payment.provider ?? '-'} />
+          {payment.providerPaymentId && (
+            <DetailRow label="ID провайдера" value={payment.providerPaymentId} />
+          )}
+          <DetailRow label="Создан" value={formatDate(payment.createdAt)} />
+          {payment.paidAt && (
+            <DetailRow label="Оплачен" value={formatDate(payment.paidAt)} />
+          )}
+        </div>
+
+        {/* Target info */}
+        <div className="flex flex-col gap-3">
+          <h3 className="text-sm font-bold text-text-main">
+            {TARGET_TYPE_LABELS[payment.targetType] ?? 'Назначение платежа'}
+          </h3>
+
+          {targetLoading ? (
+            <p className="text-sm text-text-sub">Загрузка...</p>
+          ) : !target ? (
+            <p className="text-sm text-text-sub">ID: {payment.targetId}</p>
+          ) : payment.targetType === 'repairRequest' ? (
+            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+              <DetailRow label="ID заявки" value={`#${target.id?.slice(0, 8)}`} />
+              <DetailRow label="Статус" value={target.status ?? '-'} />
+              {target.description && (
+                <DetailRow label="Описание" value={target.description} />
+              )}
+              {target.userDevice?.device?.name && (
+                <DetailRow label="Устройство" value={target.userDevice.device.name} />
+              )}
+              {target.address && (
+                <DetailRow
+                  label="Адрес"
+                  value={[target.address.city, target.address.street, target.address.house ? `д. ${target.address.house}` : ''].filter(Boolean).join(', ') || '-'}
+                />
+              )}
+              {target.repairer?.user && (
+                <DetailRow
+                  label="Мастер"
+                  value={[target.repairer.user.lastName, target.repairer.user.firstName].filter(Boolean).join(' ') || '-'}
+                />
+              )}
+              {target.totalCost != null && (
+                <DetailRow label="Стоимость ремонта" value={`${formatAmount(target.totalCost)} ₽`} />
+              )}
+              <div className="mt-3">
+                <Link
+                  href={`/account/requests/${target.id}`}
+                  className="text-sm text-brand-red hover:underline"
+                >
+                  Перейти к заявке
+                </Link>
+              </div>
+            </div>
+          ) : payment.targetType === 'certificate' ? (
+            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+              <DetailRow label="Номер сертификата" value={target.certificateNumber ?? '-'} />
+              <DetailRow label="Статус" value={target.status ?? '-'} />
+              {target.userDevice?.device?.name && (
+                <DetailRow label="Устройство" value={target.userDevice.device.name} />
+              )}
+              {target.issuedAt && (
+                <DetailRow label="Выдан" value={formatDate(target.issuedAt)} />
+              )}
+              {target.expiresAt && (
+                <DetailRow label="Истекает" value={formatDate(target.expiresAt)} />
+              )}
+              {target.dealer?.companyName && (
+                <DetailRow label="Дилер" value={target.dealer.companyName} />
+              )}
+              {target.price != null && (
+                <DetailRow label="Стоимость" value={`${formatAmount(target.price)} ₽`} />
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+              <DetailRow label="ID" value={payment.targetId} />
+            </div>
+          )}
+        </div>
+
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="self-end px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+          Закрыть
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ── Main component ──
+
 export function ManagerPayments() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [stats, setStats] = useState<PaymentStats | null>(null);
@@ -95,6 +284,7 @@ export function ManagerPayments() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: '', provider: '' });
   const [page, setPage] = useState(0);
   const [view, setView] = useState('table');
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
   const pageSize = 20;
 
   useEffect(() => {
@@ -224,6 +414,7 @@ export function ManagerPayments() {
                 <DataTableCell className="lg:w-[100px] lg:px-4">
                   <button
                     type="button"
+                    onClick={() => setSelectedPayment(p)}
                     className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1 text-sm"
                   >
                     Подробнее
@@ -265,6 +456,7 @@ export function ManagerPayments() {
               </div>
               <button
                 type="button"
+                onClick={() => setSelectedPayment(p)}
                 className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors mt-auto pt-2 cursor-pointer"
               >
                 Подробнее
@@ -301,6 +493,13 @@ export function ManagerPayments() {
           </div>
         </div>
       )}
+
+      {/* Payment detail modal */}
+      <PaymentDetailModal
+        payment={selectedPayment}
+        open={!!selectedPayment}
+        onClose={() => setSelectedPayment(null)}
+      />
     </PageContainer>
   );
 }
