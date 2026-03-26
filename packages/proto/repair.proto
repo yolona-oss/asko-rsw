@@ -383,6 +383,8 @@ message CertificateRecord {
     string purchaseReceiptUrl = 11;
     string description = 12;
     string createdAt = 13;
+    UserDeviceRecord userDevice = 14;
+    DealerProfileRecord dealer = 15;
 }
 
 // ─── Certificate Requests ──────────────────────────────────────────────────

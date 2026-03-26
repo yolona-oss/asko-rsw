@@ -4,6 +4,10 @@ import { status } from '@grpc/grpc-js';
 import { CertificateService } from 'services/certificate.service';
 import { AppError } from 'common/error';
 import type { Certificate } from 'entities/certificate.entity';
+import type { UserDevice } from 'entities/user-device.entity';
+import type { Device } from 'entities/device.entity';
+import type { Address } from 'entities/address.entity';
+import type { DealerProfile } from 'entities/dealer-profile.entity';
 
 import type {
     CertAddCertificateRequest,
@@ -36,15 +40,77 @@ function toGrpcError(error: unknown): RpcException {
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
 
+function deviceToRecord(entity: Device) {
+    return {
+        id: entity.id,
+        name: entity.name,
+        type: entity.type,
+        model: entity.model,
+        brand: entity.brand,
+        price: entity.price ?? 0,
+        description: entity.description ?? '',
+        specifications: entity.specifications ? JSON.stringify(entity.specifications) : '',
+        features: entity.features ? JSON.stringify(entity.features) : '',
+        slug: entity.slug,
+        isFeatured: entity.isFeatured ?? false,
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
+function addressToRecord(entity: Address) {
+    return {
+        id: entity.id,
+        country: '',
+        city: entity.city,
+        street: entity.street,
+        house: parseInt(entity.house) || 0,
+        building: 0,
+        floor: parseInt(entity.floor ?? '') || 0,
+        room: parseInt(entity.apartment ?? '') || 0,
+        postalCode: '',
+    };
+}
+
+function userDeviceToRecord(entity: UserDevice) {
+    const device = typeof entity.device === 'object' ? entity.device : null;
+    const address = typeof entity.address === 'object' ? entity.address : null;
+    return {
+        id: entity.id,
+        userId: entity.userId,
+        deviceId: device?.id ?? '',
+        serialNumber: entity.serialNumber,
+        addressId: address?.id ?? '',
+        purchaseDate: entity.purchaseDate?.toISOString() ?? '',
+        warrantyUntil: entity.warrantyUntil?.toISOString() ?? '',
+        notes: entity.notes ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        device: device ? deviceToRecord(device) : undefined,
+        address: address ? addressToRecord(address) : undefined,
+    };
+}
+
+function dealerToRecord(entity: DealerProfile) {
+    return {
+        id: entity.id,
+        userId: entity.userId,
+        companyName: entity.companyName ?? '',
+        inn: entity.inn ?? '',
+        pointsBalance: entity.pointsBalance,
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+    };
+}
+
 function certToRecord(entity: Certificate) {
-    const userDeviceId = typeof entity.userDevice === 'object' ? entity.userDevice.id : String(entity.userDevice ?? '');
-    const dealerId = typeof entity.dealer === 'object' ? entity.dealer?.id ?? '' : String(entity.dealer ?? '');
+    const userDevice = typeof entity.userDevice === 'object' ? entity.userDevice : null;
+    const dealer = typeof entity.dealer === 'object' ? entity.dealer : null;
 
     return {
         id: entity.id,
         userId: entity.userId,
-        userDeviceId,
-        dealerId,
+        userDeviceId: userDevice ? userDevice.id : String(entity.userDevice ?? ''),
+        dealerId: dealer ? dealer.id : (entity.dealer ? String(entity.dealer) : ''),
         certificateNumber: entity.certificateNumber,
         status: entity.status,
         issuedAt: entity.issuedAt?.toISOString() ?? '',
@@ -54,6 +120,8 @@ function certToRecord(entity: Certificate) {
         purchaseReceiptUrl: entity.purchaseReceiptUrl ?? '',
         description: entity.description ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
+        userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
+        dealer: dealer ? dealerToRecord(dealer) : undefined,
     };
 }
 

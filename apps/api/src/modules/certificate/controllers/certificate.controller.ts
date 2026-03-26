@@ -3,6 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
 import {
@@ -43,9 +44,33 @@ export class CertificateController {
     constructor(
         private readonly certificateClient: CertificateClientService,
         private readonly deviceClient: DeviceClientService,
+        private readonly userClient: UserClientService,
         private readonly paymentService: PaymentClientService,
         private readonly dealerClient: DealerClientService,
     ) {}
+
+    private async enrichCertificates(certs: any[]): Promise<void> {
+        const enrichments: Promise<void>[] = [];
+        for (const cert of certs) {
+            // Enrich certificate owner
+            if (cert.userId) {
+                enrichments.push(
+                    this.userClient.findUserById({ id: cert.userId })
+                        .then((u) => { if (u) cert.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                        .catch(() => {}),
+                );
+            }
+            // Enrich dealer user
+            if (cert.dealer?.userId) {
+                enrichments.push(
+                    this.userClient.findUserById({ id: cert.dealer.userId })
+                        .then((u) => { if (u) cert.dealer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
+                        .catch(() => {}),
+                );
+            }
+        }
+        await Promise.all(enrichments);
+    }
 
     /** User adds a certificate they purchased */
     @ApiCreatedResponse({ type: CertificateResponseDto })
@@ -147,7 +172,9 @@ export class CertificateController {
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
-        return this.certificateClient.findByUser(user.sub);
+        const result = await this.certificateClient.findByUser(user.sub);
+        await this.enrichCertificates(result.certificates ?? []);
+        return result;
     }
 
     /** Dealer gets certificates they created */
@@ -161,7 +188,10 @@ export class CertificateController {
         const { status, ...pagination } = query;
         // Resolve dealer profile to get dealerId
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
-        return this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
+        const result = await this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
+        result.data = result.data ?? [];
+        await this.enrichCertificates(result.data);
+        return result;
     }
 
     /** Admin: list all certificates */
@@ -169,7 +199,10 @@ export class CertificateController {
     @RequiredRoles(...ADMIN_ROLES)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
-        return this.certificateClient.findAll(pagination);
+        const result = await this.certificateClient.findAll(pagination);
+        result.data = result.data ?? [];
+        await this.enrichCertificates(result.data);
+        return result;
     }
 
     /** Pay for a certificate */

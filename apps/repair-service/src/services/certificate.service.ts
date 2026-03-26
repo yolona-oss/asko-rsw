@@ -218,7 +218,7 @@ export class CertificateService {
             limit,
             offset,
             orderBy: { createdAt: 'DESC' },
-            populate: ['userDevice', 'userDevice.device'],
+            populate: ['userDevice', 'userDevice.device', 'dealer'],
         });
         return { data, total };
     }
