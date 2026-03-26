@@ -8,11 +8,11 @@ export interface ViewDefinition {
   key: string;
   /** Display label */
   label: string;
-  /** Icon rendered inside the button — pass an SVG or any ReactNode */
+  /** Icon rendered inside the button - pass an SVG or any ReactNode */
   icon?: ReactNode;
 }
 
-// Built-in view definitions — consumers can use these or create their own
+// Built-in view definitions - consumers can use these or create their own
 export const VIEW_TABLE: ViewDefinition = {
   key: 'table',
   label: 'Таблица',

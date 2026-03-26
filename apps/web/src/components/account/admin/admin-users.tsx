@@ -484,7 +484,7 @@ function UserCard({
         <UserAvatar />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
-          <p className="text-xs text-text-sub">{user.phone ?? '—'}</p>
+          <p className="text-xs text-text-sub">{user.phone ?? '-'}</p>
         </div>
         <StatusBadge isActive={isActive} />
       </div>
@@ -495,7 +495,7 @@ function UserCard({
         </div>
         <div className="flex justify-between">
           <span className="text-text-sub">Район:</span>
-          <span>—</span>
+          <span>-</span>
         </div>
       </div>
       <div className="pt-1">
@@ -690,7 +690,7 @@ export function AdminUsers() {
 
                   {/* Phone */}
                   <DataTableCell mobileLabel="Телефон:">
-                    <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '—'}</p>
+                    <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '-'}</p>
                   </DataTableCell>
 
                   {/* Role */}
@@ -702,7 +702,7 @@ export function AdminUsers() {
 
                   {/* Район */}
                   <DataTableCell mobileLabel="Район:">
-                    <p className="text-sm text-[#323232] tracking-[-0.14px]">—</p>
+                    <p className="text-sm text-[#323232] tracking-[-0.14px]">-</p>
                   </DataTableCell>
 
                   {/* Status */}

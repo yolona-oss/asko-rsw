@@ -74,7 +74,7 @@ export function DataCardView<T>({
 // ─── DataCard (individual card wrapper) ─────────────────────────────────────
 
 export interface DataCardProps {
-  /** Click handler — makes the card look interactive */
+  /** Click handler - makes the card look interactive */
   onClick?: () => void;
   /** Highlighted state (e.g. active item) */
   highlighted?: boolean;

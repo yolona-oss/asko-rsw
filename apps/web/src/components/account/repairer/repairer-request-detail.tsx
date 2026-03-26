@@ -67,7 +67,7 @@ function StepCircle({ status, index }: { status: WorkStepStatus; index: number }
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
-      ) : status === WorkStepStatus.SKIPPED ? '—' : index + 1}
+      ) : status === WorkStepStatus.SKIPPED ? '-' : index + 1}
     </div>
   );
 }
@@ -423,7 +423,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           )}
         </div>
 
-        {/* Right column — photos */}
+        {/* Right column - photos */}
         {photos.length > 0 && (
           <div className="lg:w-[360px] flex-shrink-0">
             <Card className="flex flex-col gap-3">

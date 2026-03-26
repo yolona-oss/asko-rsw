@@ -70,7 +70,7 @@ export class WorkStepService {
         if (request.stepsLocked) {
             // When locked, only status changes are allowed
             if (dto.title || dto.description !== undefined) {
-                throw AppErrors.badRequest('Шаги заблокированы — можно менять только статус');
+                throw AppErrors.badRequest('Шаги заблокированы - можно менять только статус');
             }
         }
 
@@ -82,7 +82,7 @@ export class WorkStepService {
         return step;
     }
 
-    /** Repairer locks work steps — no more adding/editing/deleting */
+    /** Repairer locks work steps - no more adding/editing/deleting */
     @CreateRequestContext()
     async lockSteps(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);

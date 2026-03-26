@@ -1,6 +1,6 @@
 /**
  * Re-export generated OpenAPI types with clean names.
- * These types are the single source of truth — generated from the backend OpenAPI spec.
+ * These types are the single source of truth - generated from the backend OpenAPI spec.
  *
  * DO NOT edit manually. Regenerate with: ./scripts/openapi.sh
  */

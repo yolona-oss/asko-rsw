@@ -146,7 +146,7 @@ function CertificateCard({
         </div>
         <div className="flex justify-between">
           <span className="text-text-sub">Действие</span>
-          <span className="text-text-main">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
+          <span className="text-text-main">{formatDate(cert.issuedAt)} - {formatDate(cert.expiresAt)}</span>
         </div>
       </div>
       {showRevoke && (

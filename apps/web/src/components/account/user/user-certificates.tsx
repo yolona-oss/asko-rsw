@@ -23,6 +23,7 @@ import {
 import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { CTABanner } from '@/components/account/cta-banner';
 import { PaymentModal } from '@/components/account/user/payment-modal';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
@@ -161,20 +162,23 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
       ref={cardRef}
       className="relative border border-border-light bg-white rounded-sm p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
     >
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left content */}
-        <div className="flex flex-col gap-0 flex-1 min-w-0">
-          {/* Title */}
-          <h2 className="text-2xl lg:text-[32px] leading-tight text-text-main tracking-tight">
-            {deviceName}{' '}
-            {brandModel && <span className="font-medium">{brandModel}</span>}
-          </h2>
-          <p className="text-sm leading-relaxed text-text-sub mt-2 max-w-[527px] whitespace-pre-line">
-            {deviceDesc}
-          </p>
+      {/* Title + description - full width */}
+      <div className="flex flex-col gap-2">
+        <h2 className="text-2xl lg:text-[32px] leading-tight text-text-main tracking-tight">
+          {deviceName}{' '}
+          {brandModel && <span className="font-medium">{brandModel}</span>}
+        </h2>
+        <p className="text-sm leading-relaxed text-text-sub max-w-[527px] whitespace-pre-line">
+          {deviceDesc}
+        </p>
+      </div>
 
+      {/* Details + image row */}
+      <div className="flex flex-col lg:flex-row gap-6 mt-6">
+        {/* Left: details, status, actions */}
+        <div className="flex flex-col flex-1 min-w-0">
           {/* Certificate details */}
-          <div className="flex flex-col gap-2 mt-6">
+          <div className="flex flex-col gap-2">
             <p className="text-lg text-text-main tracking-tight">
               Номер сертификата: <span className="font-medium">{cert.certificateNumber}</span>
             </p>
@@ -187,12 +191,12 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
           </div>
 
           {/* Status line */}
-          <div className="flex flex-col gap-1 mt-6">
+          <div className="flex flex-col gap-2 mt-6">
             <div className="flex items-center gap-2 text-sm">
               <span>
                 Статус:{' '}
                 <span className={
-                  isActive ? 'text-green-600 font-medium'
+                  isActive ? 'text-[#108b00] font-medium'
                     : isPendingPayment ? 'text-orange-600 font-medium'
                       : 'text-text-sub font-medium'
                 }>
@@ -220,7 +224,7 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
             <button
               type="button"
               onClick={handleExportPdf}
-              className="flex items-center gap-2 border border-border-light px-6 py-2.5 text-sm font-medium text-text-main cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 border border-slate-300 px-6 py-2.5 text-sm font-medium text-text-main cursor-pointer hover:bg-gray-50 transition-colors"
             >
               <FileTextIcon />
               Скачать сертификат PDF
@@ -228,8 +232,8 @@ function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (cert: I
           </div>
         </div>
 
-        {/* Device image */}
-        <div className="hidden lg:block flex-shrink-0 w-[236px] self-start mt-4">
+        {/* Device image - aligned with details */}
+        <div className="hidden lg:flex flex-shrink-0 w-[236px] items-start">
           <img
             src={deviceImageUrl}
             alt={deviceName}
@@ -798,29 +802,53 @@ export function UserCertificates() {
         <>
           <DeviceSlider devices={devices} loading={loadingDevices} />
 
-          {loading ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : filteredCertificates.length === 0 ? (
-            <p className="text-sm text-text-sub">У вас нет сертификатов</p>
-          ) : (
-            filteredCertificates.map((cert) => (
-              <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
-            ))
-          )}
+          {/* Certificates + CTA banner row */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Certificate cards */}
+            <div className="flex flex-col gap-6 flex-1 min-w-0">
+              {loading ? (
+                <p className="text-sm text-text-sub">Загрузка...</p>
+              ) : filteredCertificates.length === 0 ? (
+                <p className="text-sm text-text-sub">У вас нет сертификатов</p>
+              ) : (
+                filteredCertificates.map((cert) => (
+                  <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
+                ))
+              )}
+            </div>
+
+            {/* CTA Banner - sidebar */}
+            <CTABanner
+              variant="compact"
+              className="hidden lg:flex lg:w-[262px] lg:flex-shrink-0 lg:self-start"
+              title={<>Возникла проблема с устройством?</>}
+              description="Создайте заявку, и специалист сервисного центра ASKO свяжется с вами для диагностики и согласования ремонта."
+              linkHref="/account/requests/create"
+              linkLabel="Создать заявку"
+            />
+          </div>
 
           {/* Add new device section */}
-          <div className="flex flex-col gap-3">
-            <h2 className="text-2xl lg:text-[28px] font-bold text-text-main">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl lg:text-[32px] font-medium leading-[36px] tracking-tight text-text-main">
               Новое устройство?
             </h2>
-            <p className="text-sm text-text-sub max-w-md">
-              Зарегистрируйте устройство, чтобы активировать сертификат и получить доступ к
-              обслуживанию
+            <p className="text-lg leading-[22px] tracking-tight text-text-main max-w-sm">
+              Зарегистрируйте устройство, чтобы активировать сертификат и получить доступ к обслуживанию
             </p>
-            <Button variant="primary" className="w-full lg:w-fit mt-2" onClick={() => setShowAddDevice(true)}>
+            <Button variant="primary" className="w-full lg:w-fit mt-4" onClick={() => setShowAddDevice(true)}>
               Добавить устройство
             </Button>
           </div>
+
+          {/* Mobile CTA - after "Новое устройство?", with appliance images */}
+          <CTABanner
+            className="lg:hidden"
+            title={<>Возникла проблема{'\n'}с техникой?</>}
+            description="Создайте заявку, и наш специалист свяжется с вами для диагностики и согласования ремонта."
+            linkHref="/account/requests/create"
+            linkLabel="Создать заявку"
+          />
         </>
       ) : (
         <>

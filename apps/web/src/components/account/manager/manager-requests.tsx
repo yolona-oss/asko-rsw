@@ -187,7 +187,7 @@ function RequestTableRow({ request, convInfo, currentUserId }: { request: Repair
           <p className="text-sm text-text-main truncate">{deviceName}</p>
         </DataTableCell>
         <DataTableCell mobileLabel="Город:" className="lg:w-[120px] lg:px-4">
-          <p className="text-sm text-text-main">{request.address?.city ?? '—'}</p>
+          <p className="text-sm text-text-main">{request.address?.city ?? '-'}</p>
         </DataTableCell>
         <DataTableCell mobileLabel="Статус:" className="lg:w-[160px] lg:px-4">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}>
@@ -240,7 +240,7 @@ export function ManagerRequests() {
                 participantUserIds: conv.conversation.participants.map((p: any) => p.userId),
               };
             } catch {
-              // Manager may not be a participant — just check participants list
+              // Manager may not be a participant - just check participants list
               try {
                 const { data: parts } = await chatApi.listParticipants(r.conversationId!, true);
                 infoMap[r.id] = {

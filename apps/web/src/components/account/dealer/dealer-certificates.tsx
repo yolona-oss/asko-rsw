@@ -238,7 +238,7 @@ export function DealerCertificates() {
               return (
                 <Card key={cert.id} padding="none" className="p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs text-text-sub">{formatDate(cert.issuedAt)} — {formatDate(cert.expiresAt)}</span>
+                    <span className="text-xs text-text-sub">{formatDate(cert.issuedAt)} - {formatDate(cert.expiresAt)}</span>
                     <span className={`text-xs font-medium flex-shrink-0 ${STATUS_COLORS[cert.status] ?? 'text-text-main'}`}>
                       {STATUS_LABELS[cert.status] ?? cert.status}
                     </span>

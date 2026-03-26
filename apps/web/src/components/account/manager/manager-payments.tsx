@@ -82,8 +82,8 @@ function formatAmount(amount: number) {
 }
 
 function payerName(user?: PaymentRecord['user']) {
-  if (!user) return '—';
-  return [user.lastName, user.firstName].filter(Boolean).join(' ') || user.email || '—';
+  if (!user) return '-';
+  return [user.lastName, user.firstName].filter(Boolean).join(' ') || user.email || '-';
 }
 
 export function ManagerPayments() {
@@ -145,13 +145,13 @@ export function ManagerPayments() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white border border-border-light p-5 lg:p-8 flex flex-col gap-1">
           <p className="text-2xl lg:text-[52px] font-bold text-text-main leading-tight tracking-tight">
-            {stats ? `${formatAmount(stats.confirmedTotal)} ₽` : '—'}
+            {stats ? `${formatAmount(stats.confirmedTotal)} ₽` : '-'}
           </p>
           <p className="text-base lg:text-2xl text-text-main">Подтверждено</p>
         </div>
         <div className="bg-white border border-border-light p-5 lg:p-8 flex flex-col gap-1">
           <p className="text-2xl lg:text-[52px] font-bold text-text-main leading-tight tracking-tight">
-            {stats ? `${formatAmount(stats.refundedTotal)} ₽` : '—'}
+            {stats ? `${formatAmount(stats.refundedTotal)} ₽` : '-'}
           </p>
           <p className="text-base lg:text-2xl text-text-main">Возвращено</p>
         </div>
@@ -211,7 +211,7 @@ export function ManagerPayments() {
                   </Badge>
                 </DataTableCell>
                 <DataTableCell mobileLabel="Способ:" className="lg:w-[100px] lg:px-4">
-                  <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}</span>
+                  <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}</span>
                 </DataTableCell>
                 <DataTableCell mobileLabel="Статус:" className="lg:w-[110px] lg:px-4">
                   <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
@@ -260,7 +260,7 @@ export function ManagerPayments() {
                   +{formatAmount(p.amount)} ₽
                 </Badge>
                 <span className="text-sm text-text-sub">
-                  {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '—'}
+                  {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
                 </span>
               </div>
               <button

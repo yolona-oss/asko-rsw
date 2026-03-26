@@ -110,7 +110,7 @@ export function DealerPayments() {
         <div className="flex flex-col gap-1">
           <span className="text-sm text-text-sub">Баланс баллов</span>
           <span className="text-3xl lg:text-[48px] font-bold text-text-main leading-tight">
-            {loading ? '—' : `${formatAmount(pointsBalance)} ₽`}
+            {loading ? '-' : `${formatAmount(pointsBalance)} ₽`}
           </span>
         </div>
         <Button

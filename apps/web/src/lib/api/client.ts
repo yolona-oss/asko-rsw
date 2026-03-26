@@ -57,7 +57,7 @@ api.interceptors.response.use(
       store.dispatch(logout());
     }
 
-    // Global error modal — skip auth endpoints, 401s, and silent requests
+    // Global error modal - skip auth endpoints, 401s, and silent requests
     if (
       error.response?.status !== 401 &&
       !original?.url?.startsWith('/auth/') &&

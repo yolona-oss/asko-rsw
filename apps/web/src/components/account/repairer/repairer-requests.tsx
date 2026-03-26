@@ -128,7 +128,7 @@ function RequestTableRow({ request, highlight }: { request: RepairRequest; highl
         <p className="text-sm text-text-main truncate">{deviceName}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Город:" className="lg:w-[120px] lg:px-4">
-        <p className="text-sm text-text-main">{request.address?.city ?? '—'}</p>
+        <p className="text-sm text-text-main">{request.address?.city ?? '-'}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Статус:" className="lg:w-[160px] lg:px-4">
         <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
@@ -137,7 +137,7 @@ function RequestTableRow({ request, highlight }: { request: RepairRequest; highl
       </DataTableCell>
       <DataTableCell mobileLabel="Стоимость:" className="lg:w-[100px] lg:px-4">
         <p className="text-sm text-text-main">
-          {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '—'}
+          {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '-'}
         </p>
       </DataTableCell>
       <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">

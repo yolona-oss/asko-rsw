@@ -56,7 +56,7 @@ async function bootstrap() {
         jsonDocumentUrl: '/doc/openapi.json',
     });
 
-    // Socket.io Redis adapter — enables cross-pod WebSocket communication
+    // Socket.io Redis adapter - enables cross-pod WebSocket communication
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     const redisIoAdapter = new RedisIoAdapter(app, redisUrl);
     await redisIoAdapter.connectToRedis();

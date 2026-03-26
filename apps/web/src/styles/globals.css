@@ -27,6 +27,36 @@ body {
   @apply bg-page-bg text-text-main antialiased;
 }
 
+@keyframes glow-drift-1 {
+  0%, 100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 30px 20px;
+  }
+  50% {
+    translate: -15px 35px;
+  }
+  75% {
+    translate: 20px -10px;
+  }
+}
+
+@keyframes glow-drift-2 {
+  0%, 100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: -25px -15px;
+  }
+  50% {
+    translate: 20px -30px;
+  }
+  75% {
+    translate: -10px 20px;
+  }
+}
+
 @keyframes cursor-pulse {
   0% {
     transform: scale(1);

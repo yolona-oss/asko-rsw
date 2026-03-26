@@ -119,7 +119,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch unread count — once on mount, then WebSocket-driven
+  // Fetch unread count - once on mount, then WebSocket-driven
   const { data: countData } = useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: async () => {
@@ -130,7 +130,7 @@ export function NotificationBell() {
     refetchOnWindowFocus: false,
   });
 
-  // Fetch unread list — once on first open, then WebSocket-driven
+  // Fetch unread list - once on first open, then WebSocket-driven
   const { data: listData } = useQuery({
     queryKey: ['notifications-unread-list'],
     queryFn: async () => {
@@ -191,7 +191,7 @@ export function NotificationBell() {
       const filtered = old.data.filter((n) => n.id !== id);
       return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
     });
-    // Fire API (no refetch on success — cache is already correct)
+    // Fire API (no refetch on success - cache is already correct)
     notificationApi.markAsRead(id).finally(() => {
       setMarkingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     });

@@ -29,7 +29,7 @@ export class DealerService {
     /** Admin creates dealer profile for a user */
     @CreateRequestContext()
     async createProfile(dto: CreateDealerProfileDto): Promise<DealerProfile> {
-        // User entity is in user-service DB — we only store userId reference
+        // User entity is in user-service DB - we only store userId reference
         const existing = await this.em.findOne(DealerProfile, { userId: dto.userId });
         if (existing) throw AppErrors.dbEntityExists('Dealer profile already exists');
 

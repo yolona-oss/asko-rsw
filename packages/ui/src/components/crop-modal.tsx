@@ -211,7 +211,7 @@ export function CropModal({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
-  // Confirm — render to canvas
+  // Confirm - render to canvas
   const handleConfirm = () => {
     const img = imgRef.current;
     if (!img) return;

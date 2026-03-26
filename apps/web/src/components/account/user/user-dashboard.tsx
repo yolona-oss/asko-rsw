@@ -183,7 +183,7 @@ export function UserDashboard() {
           <div className="flex items-baseline gap-2">
             <span className="text-base font-medium text-text-sub">Счет на оплату:</span>
             <span className="text-2xl font-bold text-text-main">
-              {loading ? '—' : pendingCount === 0 ? '—' : pendingCount === 1
+              {loading ? '-' : pendingCount === 0 ? '-' : pendingCount === 1
                 ? `${formatAmount(pendingTotal)} ₽`
                 : `${formatAmount(pendingTotal)}₽ x ${pendingCount} ${pluralPayments(pendingCount)}`
               }

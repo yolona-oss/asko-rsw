@@ -70,7 +70,7 @@ export class PaymentService {
         return paymentRecord;
     }
 
-    /** Process an existing PENDING invoice — user pays via selected provider */
+    /** Process an existing PENDING invoice - user pays via selected provider */
     @CreateRequestContext()
     async processInvoice(
         userId: string,
