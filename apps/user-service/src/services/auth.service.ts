@@ -9,6 +9,8 @@ import { EmailService } from 'common/email/email';
 import { AppError, AppErrors, AppErrorTypeEnum } from 'common/error';
 import { LoginThrottleService } from './login-throttle.service';
 import { InviteService } from './invite.service';
+import { MfaService } from './mfa.service';
+import { OtpService } from './otp.service';
 import Crypto from './crypto.service';
 import crypto from 'crypto'
 
@@ -35,6 +37,16 @@ export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googl
 interface LoginParams extends LoginCredentials {
     deviceInfo: string;
     ipAddress: string;
+    trustedDeviceToken?: string;
+}
+
+export interface LoginResult {
+    status: 'SUCCESS' | 'MFA_REQUIRED';
+    access_token?: string;
+    refresh_token?: string;
+    user?: IAuthUser;
+    mfa_token?: string;
+    mfa_method?: string;
 }
 
 interface RegisterParams {
@@ -59,16 +71,19 @@ export class AuthService {
         private readonly config: AppConfig,
         private readonly loginThrottle: LoginThrottleService,
         private readonly inviteService: InviteService,
+        private readonly mfaService: MfaService,
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
     ) { }
 
-    async login(params: LoginParams): Promise<IAuthSession> {
+    async login(params: LoginParams): Promise<LoginResult> {
         if (params.email && params.password) {
             return await this.credentialsLogin(params as LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>)
         } else if (params.phone) {
-            return await this.OPTLogin(params as LoginParams & Required<Pick<LoginCredentials, 'phone'>>)
+            const session = await this.OPTLogin(params as LoginParams & Required<Pick<LoginCredentials, 'phone'>>)
+            return { status: 'SUCCESS', ...session }
         } else if (params.googleId) {
-            return await this.GoogleLogin(params as LoginParams & Required<Pick<LoginCredentials, 'googleId'>>)
+            const session = await this.GoogleLogin(params as LoginParams & Required<Pick<LoginCredentials, 'googleId'>>)
+            return { status: 'SUCCESS', ...session }
         } else {
             throw AppErrors.badRequest('No valid login method provided')
         }
@@ -77,7 +92,7 @@ export class AuthService {
     /**
      * Login by email and password
      */
-    async credentialsLogin(params: LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>): Promise<IAuthSession> {
+    async credentialsLogin(params: LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>): Promise<LoginResult> {
         const lockSeconds = await this.loginThrottle.isLocked(params.email);
         if (lockSeconds > 0) {
             const minutes = Math.ceil(lockSeconds / 60);
@@ -98,6 +113,30 @@ export class AuthService {
             throw AppErrors.forbidden('Account is disabled');
         }
 
+        // MFA check
+        if (this.mfaService.isMfaEnabled(user)) {
+            const needsChallenge = await this.mfaService.shouldChallenge(
+                user.id,
+                params.deviceInfo,
+                params.ipAddress,
+                params.trustedDeviceToken,
+            );
+
+            if (needsChallenge) {
+                const mfaMethod = this.mfaService.getMfaMethods(user)[0];
+                const mfaToken = this.mfaService.generateMfaChallengeToken(user.id);
+
+                // Send OTP (generate + send via the method's channel)
+                await this.mfaService.initiateLoginOtp(user);
+
+                return {
+                    status: 'MFA_REQUIRED',
+                    mfa_token: mfaToken,
+                    mfa_method: mfaMethod,
+                };
+            }
+        }
+
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
             <Role[]>user.roles,
@@ -107,6 +146,7 @@ export class AuthService {
         )
 
         return {
+            status: 'SUCCESS',
             access_token,
             refresh_token,
             user: toAuthUser(user),
@@ -561,5 +601,51 @@ export class AuthService {
             if (err instanceof AppError) throw err;
             throw AppErrors.badRequest('Недействительный или истекший токен смены email');
         }
+    }
+
+    // ─── MFA OTP verification (login completion) ─────────────────────────
+
+    async verifyMfaOtp(
+        mfaToken: string,
+        code: string,
+        trustDevice: boolean,
+        deviceInfo: string,
+        ipAddress: string,
+    ): Promise<{
+        access_token: string;
+        refresh_token: string;
+        user: IAuthUser;
+        trusted_device_token?: string;
+    }> {
+        const { userId } = this.mfaService.verifyMfaChallengeToken(mfaToken);
+
+        const user = await this.userService.findById(userId);
+        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+
+        const method = this.mfaService.getMfaMethods(user)[0];
+        const valid = await this.mfaService['otpService'].verify(userId, method, code);
+        if (!valid) {
+            throw AppErrors.unauthorized('Неверный код');
+        }
+
+        const { access_token, refresh_token } = await this.generateTokens(
+            user.id,
+            <Role[]>user.roles,
+            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: AuthProvider.EMAIL },
+            { deviceInfo, ipAddress },
+            user.isActive,
+        );
+
+        let trusted_device_token: string | undefined;
+        if (trustDevice) {
+            trusted_device_token = this.mfaService.generateTrustedDeviceToken(user.id, deviceInfo);
+        }
+
+        return {
+            access_token,
+            refresh_token,
+            user: toAuthUser(user),
+            trusted_device_token,
+        };
     }
 }

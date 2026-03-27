@@ -44,6 +44,21 @@ import type {
     RequestEmailChangeResponse,
     ConfirmEmailChangeRequest,
     ConfirmEmailChangeResponse,
+    LoginResponse,
+    VerifyMfaRequest,
+    VerifyMfaResponse,
+    ResendMfaOtpRequest,
+    ResendMfaOtpResponse,
+    EnableMfaRequest,
+    EnableMfaResponse,
+    VerifyEnableMfaRequest,
+    VerifyEnableMfaResponse,
+    InitiateDisableMfaRequest,
+    InitiateDisableMfaResponse,
+    ConfirmDisableMfaRequest,
+    ConfirmDisableMfaResponse,
+    GetMfaStatusRequest,
+    GetMfaStatusResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -60,7 +75,7 @@ export class UserClientService implements OnModuleInit {
 
     // ─── Auth ────────────────────────────────────────────────────────────
 
-    login(data: LoginRequest): Promise<AuthSessionResponse> {
+    login(data: LoginRequest): Promise<LoginResponse> {
         return grpcCall(this.userService.login(data));
     }
 
@@ -106,6 +121,36 @@ export class UserClientService implements OnModuleInit {
 
     confirmEmailChange(data: ConfirmEmailChangeRequest): Promise<ConfirmEmailChangeResponse> {
         return grpcCall(this.userService.confirmEmailChange(data));
+    }
+
+    // ─── MFA ──────────────────────────────────────────────────────────────
+
+    verifyMfaOtp(data: VerifyMfaRequest): Promise<VerifyMfaResponse> {
+        return grpcCall(this.userService.verifyMfaOtp(data));
+    }
+
+    resendMfaOtp(data: ResendMfaOtpRequest): Promise<ResendMfaOtpResponse> {
+        return grpcCall(this.userService.resendMfaOtp(data));
+    }
+
+    enableMfa(data: EnableMfaRequest): Promise<EnableMfaResponse> {
+        return grpcCall(this.userService.enableMfa(data));
+    }
+
+    verifyEnableMfa(data: VerifyEnableMfaRequest): Promise<VerifyEnableMfaResponse> {
+        return grpcCall(this.userService.verifyEnableMfa(data));
+    }
+
+    initiateDisableMfa(data: InitiateDisableMfaRequest): Promise<InitiateDisableMfaResponse> {
+        return grpcCall(this.userService.initiateDisableMfa(data));
+    }
+
+    confirmDisableMfa(data: ConfirmDisableMfaRequest): Promise<ConfirmDisableMfaResponse> {
+        return grpcCall(this.userService.confirmDisableMfa(data));
+    }
+
+    getMfaStatus(data: GetMfaStatusRequest): Promise<GetMfaStatusResponse> {
+        return grpcCall(this.userService.getMfaStatus(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────

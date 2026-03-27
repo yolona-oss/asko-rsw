@@ -5,6 +5,7 @@ import { status } from '@grpc/grpc-js';
 import { AuthService } from 'services/auth.service';
 import { UserService } from 'services/user.service';
 import { InviteService } from 'services/invite.service';
+import { MfaService } from 'services/mfa.service';
 import { AppError } from 'common/error';
 
 import type {
@@ -50,6 +51,21 @@ import type {
     RequestEmailChangeResponse,
     ConfirmEmailChangeRequest,
     ConfirmEmailChangeResponse,
+    LoginResponse,
+    VerifyMfaRequest,
+    VerifyMfaResponse,
+    ResendMfaOtpRequest,
+    ResendMfaOtpResponse,
+    EnableMfaRequest,
+    EnableMfaResponse,
+    VerifyEnableMfaRequest,
+    VerifyEnableMfaResponse,
+    InitiateDisableMfaRequest,
+    InitiateDisableMfaResponse,
+    ConfirmDisableMfaRequest,
+    ConfirmDisableMfaResponse,
+    GetMfaStatusRequest,
+    GetMfaStatusResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -114,12 +130,13 @@ export class UserGrpcController {
         private readonly authService: AuthService,
         private readonly userService: UserService,
         private readonly inviteService: InviteService,
+        private readonly mfaService: MfaService,
     ) {}
 
     // ─── Auth ────────────────────────────────────────────────────────────
 
     @GrpcMethod('UserService', 'Login')
-    async login(data: LoginRequest): Promise<AuthSessionResponse> {
+    async login(data: LoginRequest): Promise<LoginResponse> {
         try {
             const result = await this.authService.login({
                 email: data.email || undefined,
@@ -128,11 +145,15 @@ export class UserGrpcController {
                 googleId: data.googleId || undefined,
                 deviceInfo: data.deviceInfo || 'unknown',
                 ipAddress: data.ipAddress || 'unknown',
+                trustedDeviceToken: data.trustedDeviceToken || undefined,
             });
             return {
-                accessToken: result.access_token,
+                status: result.status,
+                accessToken: result.access_token ?? '',
                 refreshToken: result.refresh_token ?? '',
-                user: userToAuthUser(result.user),
+                user: result.user ? userToAuthUser(result.user) : undefined,
+                mfaToken: result.mfa_token ?? '',
+                mfaMethod: result.mfa_method ?? '',
             };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -249,6 +270,74 @@ export class UserGrpcController {
         try {
             const result = await this.authService.confirmEmailChange(data.token);
             return { message: result.message };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── MFA ──────────────────────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'VerifyMfaOtp')
+    async verifyMfaOtp(data: VerifyMfaRequest): Promise<VerifyMfaResponse> {
+        try {
+            const result = await this.authService.verifyMfaOtp(
+                data.mfaToken,
+                data.code,
+                data.trustDevice,
+                data.deviceInfo || 'unknown',
+                data.ipAddress || 'unknown',
+            );
+            return {
+                accessToken: result.access_token,
+                refreshToken: result.refresh_token,
+                user: userToAuthUser(result.user),
+                trustedDeviceToken: result.trusted_device_token ?? '',
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ResendMfaOtp')
+    async resendMfaOtp(data: ResendMfaOtpRequest): Promise<ResendMfaOtpResponse> {
+        try {
+            const result = await this.mfaService.resendLoginOtp(data.mfaToken);
+            return { retryAfter: result.retryAfter };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'EnableMfa')
+    async enableMfa(data: EnableMfaRequest): Promise<EnableMfaResponse> {
+        try {
+            const result = await this.mfaService.initiateEnableMfa(data.userId);
+            return { message: result.message, retryAfter: result.retryAfter };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'VerifyEnableMfa')
+    async verifyEnableMfa(data: VerifyEnableMfaRequest): Promise<VerifyEnableMfaResponse> {
+        try {
+            await this.mfaService.confirmEnableMfa(data.userId, data.code);
+            return { message: 'MFA включена' };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'InitiateDisableMfa')
+    async initiateDisableMfa(data: InitiateDisableMfaRequest): Promise<InitiateDisableMfaResponse> {
+        try {
+            const result = await this.mfaService.initiateDisableMfa(data.userId);
+            return { message: result.message, retryAfter: result.retryAfter };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ConfirmDisableMfa')
+    async confirmDisableMfa(data: ConfirmDisableMfaRequest): Promise<ConfirmDisableMfaResponse> {
+        try {
+            await this.mfaService.confirmDisableMfa(data.userId, data.code);
+            return { message: 'MFA отключена' };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'GetMfaStatus')
+    async getMfaStatus(data: GetMfaStatusRequest): Promise<GetMfaStatusResponse> {
+        try {
+            return await this.mfaService.getMfaStatus(data.userId);
         } catch (e) { throw toGrpcError(e); }
     }
 

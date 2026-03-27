@@ -9,6 +9,16 @@ export interface LoginRequest {
     googleId: string;
     deviceInfo: string;
     ipAddress: string;
+    trustedDeviceToken: string;
+}
+
+export interface LoginResponse {
+    status: string;
+    accessToken: string;
+    refreshToken: string;
+    user?: AuthUser;
+    mfaToken: string;
+    mfaMethod: string;
 }
 
 export interface RegisterRequest {
@@ -260,10 +270,80 @@ export interface SearchUsersForChatResponse {
     users: ChatUserResult[];
 }
 
+// ─── MFA Messages ───────────────────────────────────────────────────────────
+
+export interface VerifyMfaRequest {
+    mfaToken: string;
+    code: string;
+    trustDevice: boolean;
+    deviceInfo: string;
+    ipAddress: string;
+}
+
+export interface VerifyMfaResponse {
+    accessToken: string;
+    refreshToken: string;
+    user: AuthUser;
+    trustedDeviceToken: string;
+}
+
+export interface ResendMfaOtpRequest {
+    mfaToken: string;
+}
+
+export interface ResendMfaOtpResponse {
+    retryAfter: number;
+}
+
+export interface EnableMfaRequest {
+    userId: string;
+}
+
+export interface EnableMfaResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface VerifyEnableMfaRequest {
+    userId: string;
+    code: string;
+}
+
+export interface VerifyEnableMfaResponse {
+    message: string;
+}
+
+export interface InitiateDisableMfaRequest {
+    userId: string;
+}
+
+export interface InitiateDisableMfaResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface ConfirmDisableMfaRequest {
+    userId: string;
+    code: string;
+}
+
+export interface ConfirmDisableMfaResponse {
+    message: string;
+}
+
+export interface GetMfaStatusRequest {
+    userId: string;
+}
+
+export interface GetMfaStatusResponse {
+    enabled: boolean;
+    methods: string[];
+}
+
 // ─── gRPC Service Interface ─────────────────────────────────────────────────
 
 export interface UserServiceClient {
-    login(request: LoginRequest): Observable<AuthSessionResponse>;
+    login(request: LoginRequest): Observable<LoginResponse>;
     register(request: RegisterRequest): Observable<RegisterResponse>;
     confirmEmail(request: ConfirmEmailRequest): Observable<ConfirmEmailResponse>;
     resendConfirmation(request: ResendConfirmationRequest): Observable<ResendConfirmationResponse>;
@@ -275,6 +355,15 @@ export interface UserServiceClient {
     resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse>;
     requestEmailChange(request: RequestEmailChangeRequest): Observable<RequestEmailChangeResponse>;
     confirmEmailChange(request: ConfirmEmailChangeRequest): Observable<ConfirmEmailChangeResponse>;
+
+    // MFA
+    verifyMfaOtp(request: VerifyMfaRequest): Observable<VerifyMfaResponse>;
+    resendMfaOtp(request: ResendMfaOtpRequest): Observable<ResendMfaOtpResponse>;
+    enableMfa(request: EnableMfaRequest): Observable<EnableMfaResponse>;
+    verifyEnableMfa(request: VerifyEnableMfaRequest): Observable<VerifyEnableMfaResponse>;
+    initiateDisableMfa(request: InitiateDisableMfaRequest): Observable<InitiateDisableMfaResponse>;
+    confirmDisableMfa(request: ConfirmDisableMfaRequest): Observable<ConfirmDisableMfaResponse>;
+    getMfaStatus(request: GetMfaStatusRequest): Observable<GetMfaStatusResponse>;
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;

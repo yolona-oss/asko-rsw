@@ -41,6 +41,14 @@ export function ProfileForm() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // MFA state
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaOtpStep, setMfaOtpStep] = useState<'enable' | 'disable' | null>(null);
+  const [mfaOtpCode, setMfaOtpCode] = useState('');
+  const [mfaMessage, setMfaMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [mfaCooldown, setMfaCooldown] = useState(0);
+
   // Password state
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -78,6 +86,9 @@ export function ProfileForm() {
       usersApi.getAvatarUrl(authUser.id).then((url) => {
         if (url) setAvatarPreview(url);
       }),
+      authApi.getMfaStatus().then(({ data }) => {
+        setMfaEnabled(data.enabled);
+      }).catch(() => {}),
     ]).finally(() => setLoaded(true));
   }
 
@@ -208,6 +219,73 @@ export function ProfileForm() {
       setResendingEmail(false);
       setTimeout(() => setEmailResendMessage(null), 5000);
     }
+  };
+
+  // ---- MFA cooldown ----
+
+  useEffect(() => {
+    if (mfaCooldown <= 0) return;
+    const timer = setInterval(() => setMfaCooldown((v) => Math.max(0, v - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [mfaCooldown]);
+
+  const handleMfaToggle = async (enabled: boolean) => {
+    setMfaMessage(null);
+    setMfaLoading(true);
+    try {
+      if (enabled) {
+        const { data } = await authApi.enableMfa();
+        setMfaCooldown(data.retryAfter ?? 60);
+        setMfaOtpStep('enable');
+        setMfaOtpCode('');
+      } else {
+        const { data } = await authApi.initiateDisableMfa();
+        setMfaCooldown(data.retryAfter ?? 60);
+        setMfaOtpStep('disable');
+        setMfaOtpCode('');
+      }
+    } catch (err: any) {
+      setMfaMessage({ type: 'error', text: err?.response?.data?.message ?? 'Ошибка' });
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleMfaOtpSubmit = async () => {
+    if (!mfaOtpCode || mfaOtpCode.length !== 6) return;
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      if (mfaOtpStep === 'enable') {
+        await authApi.verifyEnableMfa(mfaOtpCode);
+        setMfaEnabled(true);
+        setMfaMessage({ type: 'success', text: 'MFA включена' });
+      } else {
+        await authApi.confirmDisableMfa(mfaOtpCode);
+        setMfaEnabled(false);
+        setMfaMessage({ type: 'success', text: 'MFA отключена' });
+      }
+      setMfaOtpStep(null);
+      setMfaOtpCode('');
+    } catch (err: any) {
+      setMfaMessage({ type: 'error', text: err?.response?.data?.message ?? 'Неверный код' });
+    } finally {
+      setMfaLoading(false);
+      setTimeout(() => setMfaMessage(null), 5000);
+    }
+  };
+
+  const handleMfaResend = async () => {
+    if (mfaCooldown > 0) return;
+    try {
+      if (mfaOtpStep === 'enable') {
+        const { data } = await authApi.enableMfa();
+        setMfaCooldown(data.retryAfter ?? 60);
+      } else {
+        const { data } = await authApi.initiateDisableMfa();
+        setMfaCooldown(data.retryAfter ?? 60);
+      }
+    } catch {}
   };
 
   // ---- Password change ----
@@ -400,6 +478,78 @@ export function ProfileForm() {
             </div>
             <Toggle checked={chatSearchable} onChange={setChatSearchable} />
           </div>
+        </div>
+
+        {/* MFA */}
+        <div className="h-px bg-border-light" />
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-medium text-text-main">Двухфакторная аутентификация</p>
+          {emailVerified ? (
+            <>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-text-main">Email OTP</p>
+                  <p className="text-xs text-text-sub/60 mt-0.5">
+                    При входе с нового устройства потребуется ввести код из email
+                  </p>
+                </div>
+                <Toggle
+                  checked={mfaEnabled}
+                  onChange={mfaLoading || mfaOtpStep !== null ? () => {} : handleMfaToggle}
+                />
+              </div>
+
+              {mfaOtpStep && (
+                <div className="flex flex-col gap-3 p-4 border border-border-light rounded-sm">
+                  <p className="text-sm text-text-main">
+                    {mfaOtpStep === 'enable' ? 'Введите код для включения MFA' : 'Введите код для отключения MFA'}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      value={mfaOtpCode}
+                      onChange={(e) => setMfaOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      inputMode="numeric"
+                      className="w-40 text-center tracking-[0.3em] font-mono"
+                    />
+                    <Button
+                      onClick={handleMfaOtpSubmit}
+                      disabled={mfaOtpCode.length !== 6 || mfaLoading}
+                      size="lg"
+                    >
+                      {mfaLoading ? 'Проверка...' : 'Подтвердить'}
+                    </Button>
+                    <Button
+                      onClick={() => { setMfaOtpStep(null); setMfaOtpCode(''); }}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleMfaResend}
+                    disabled={mfaCooldown > 0}
+                    className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed w-fit"
+                  >
+                    {mfaCooldown > 0 ? `Отправить повторно (${mfaCooldown}с)` : 'Отправить код повторно'}
+                  </button>
+                </div>
+              )}
+
+              {mfaMessage && (
+                <p className={`text-sm ${mfaMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+                  {mfaMessage.text}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-text-sub/60">
+              Для включения двухфакторной аутентификации необходимо подтвердить email
+            </p>
+          )}
         </div>
 
         {/* Change password */}

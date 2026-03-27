@@ -11,6 +11,16 @@ message LoginRequest {
     string google_id = 4;
     string device_info = 5;
     string ip_address = 6;
+    string trusted_device_token = 7;
+}
+
+message LoginResponse {
+    string status = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    AuthUser user = 4;
+    string mfa_token = 5;
+    string mfa_method = 6;
 }
 
 message RegisterRequest {
@@ -258,11 +268,81 @@ message SearchUsersForChatResponse {
     repeated ChatUserResult users = 1;
 }
 
+// ─── MFA ─────────────────────────────────────────────────────────────────────
+
+message VerifyMfaRequest {
+    string mfa_token = 1;
+    string code = 2;
+    bool trust_device = 3;
+    string device_info = 4;
+    string ip_address = 5;
+}
+
+message VerifyMfaResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    AuthUser user = 3;
+    string trusted_device_token = 4;
+}
+
+message ResendMfaOtpRequest {
+    string mfa_token = 1;
+}
+
+message ResendMfaOtpResponse {
+    int32 retry_after = 1;
+}
+
+message EnableMfaRequest {
+    string user_id = 1;
+}
+
+message EnableMfaResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message VerifyEnableMfaRequest {
+    string user_id = 1;
+    string code = 2;
+}
+
+message VerifyEnableMfaResponse {
+    string message = 1;
+}
+
+message InitiateDisableMfaRequest {
+    string user_id = 1;
+}
+
+message InitiateDisableMfaResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message ConfirmDisableMfaRequest {
+    string user_id = 1;
+    string code = 2;
+}
+
+message ConfirmDisableMfaResponse {
+    string message = 1;
+}
+
+message GetMfaStatusRequest {
+    string user_id = 1;
+}
+
+message GetMfaStatusResponse {
+    bool enabled = 1;
+    repeated string methods = 2;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 service UserService {
     // Auth
-    rpc Login(LoginRequest) returns (AuthSessionResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc ConfirmEmail(ConfirmEmailRequest) returns (ConfirmEmailResponse);
     rpc ResendConfirmation(ResendConfirmationRequest) returns (ResendConfirmationResponse);
@@ -273,6 +353,15 @@ service UserService {
     rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
     rpc RequestEmailChange(RequestEmailChangeRequest) returns (RequestEmailChangeResponse);
     rpc ConfirmEmailChange(ConfirmEmailChangeRequest) returns (ConfirmEmailChangeResponse);
+
+    // MFA
+    rpc VerifyMfaOtp(VerifyMfaRequest) returns (VerifyMfaResponse);
+    rpc ResendMfaOtp(ResendMfaOtpRequest) returns (ResendMfaOtpResponse);
+    rpc EnableMfa(EnableMfaRequest) returns (EnableMfaResponse);
+    rpc VerifyEnableMfa(VerifyEnableMfaRequest) returns (VerifyEnableMfaResponse);
+    rpc InitiateDisableMfa(InitiateDisableMfaRequest) returns (InitiateDisableMfaResponse);
+    rpc ConfirmDisableMfa(ConfirmDisableMfaRequest) returns (ConfirmDisableMfaResponse);
+    rpc GetMfaStatus(GetMfaStatusRequest) returns (GetMfaStatusResponse);
     rpc FindUserByAccessToken(FindByTokenRequest) returns (AuthUserResponse);
 
     // User CRUD

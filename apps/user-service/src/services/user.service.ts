@@ -392,6 +392,19 @@ export class UserService {
     }
 
     @CreateRequestContext()
+    async setMfaPreferences(userId: string, methods: string[]) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found');
+        }
+        user.preferences = {
+            ...(user.preferences ?? {}),
+            mfa: { methods },
+        };
+        await this.em.persistAndFlush(user);
+    }
+
+    @CreateRequestContext()
     async changeEmail(userId: string, newEmail: string) {
         const user = await this.findById(userId);
         if (!user) {

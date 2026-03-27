@@ -63,6 +63,10 @@ export class AppConfig {
         };
     }
 
+    get mfaTrustedDeviceSecret(): string {
+        return this.configService.get<string>('MFA_TRUSTED_DEVICE_SECRET') ?? 'default-mfa-secret-change-in-production';
+    }
+
     get email() {
         return {
             config: {

@@ -14,6 +14,11 @@ import {
     CreateUserDto,
     ForgotPasswordDto,
     ResetPasswordDto,
+    VerifyMfaOtpDto,
+    ResendMfaOtpDto,
+    VerifyEnableMfaDto,
+    DisableMfaDto,
+    MFA_TRUSTED_DEVICE_COOKIE,
     extractToken,
     getHostUrl,
     Role,
@@ -63,13 +68,24 @@ export class AuthController {
             googleId: credentials.googleId ?? '',
             deviceInfo: request.headers['user-agent'] ?? 'unknown',
             ipAddress: request.ip ?? 'unknown',
+            trustedDeviceToken: request.cookies?.[MFA_TRUSTED_DEVICE_COOKIE.cookie.name] ?? '',
         });
+
+        if (result.status === 'MFA_REQUIRED') {
+            response.status(200).json({
+                status: 'MFA_REQUIRED',
+                mfa_token: result.mfaToken,
+                mfa_method: result.mfaMethod,
+            });
+            return;
+        }
 
         if (result.refreshToken) {
             this.setRefreshTokenCookie(request, response, result.refreshToken);
         }
 
         response.status(201).json({
+            status: 'SUCCESS',
             access_token: result.accessToken,
             user: result.user,
             refresh_token: result.refreshToken,
@@ -235,6 +251,95 @@ export class AuthController {
             newPassword: dto.newPassword,
         });
         return { message: result.message };
+    }
+
+    // ─── MFA ──────────────────────────────────────────────────────────────
+
+    @Public()
+    @ApiResponse({ status: 201, type: AuthSessionResponseDto })
+    @Post('/mfa/verify')
+    async verifyMfaOtp(
+        @Body() dto: VerifyMfaOtpDto,
+        @Req() request: Request,
+        @Res() response: Response,
+    ) {
+        const result = await this.userClient.verifyMfaOtp({
+            mfaToken: dto.mfaToken,
+            code: dto.code,
+            trustDevice: dto.trustDevice ?? false,
+            deviceInfo: request.headers['user-agent'] ?? 'unknown',
+            ipAddress: request.ip ?? 'unknown',
+        });
+
+        if (result.refreshToken) {
+            this.setRefreshTokenCookie(request, response, result.refreshToken);
+        }
+
+        if (result.trustedDeviceToken) {
+            response.cookie(
+                MFA_TRUSTED_DEVICE_COOKIE.cookie.name,
+                result.trustedDeviceToken,
+                MFA_TRUSTED_DEVICE_COOKIE.cookie.options as any,
+            );
+        }
+
+        response.status(201).json({
+            access_token: result.accessToken,
+            user: result.user,
+            refresh_token: result.refreshToken,
+        });
+    }
+
+    @Public()
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/mfa/resend')
+    async resendMfaOtp(@Body() dto: ResendMfaOtpDto) {
+        const result = await this.userClient.resendMfaOtp({ mfaToken: dto.mfaToken });
+        return { retryAfter: result.retryAfter };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/mfa/enable')
+    async enableMfa(@Req() request: Request) {
+        const user = (request as any).user;
+        const result = await this.userClient.enableMfa({ userId: user.id });
+        return { message: result.message, retryAfter: result.retryAfter };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/mfa/enable/verify')
+    async verifyEnableMfa(@Req() request: Request, @Body() dto: VerifyEnableMfaDto) {
+        const user = (request as any).user;
+        const result = await this.userClient.verifyEnableMfa({ userId: user.id, code: dto.code });
+        return { message: result.message };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/mfa/disable')
+    async initiateDisableMfa(@Req() request: Request) {
+        const user = (request as any).user;
+        const result = await this.userClient.initiateDisableMfa({ userId: user.id });
+        return { message: result.message, retryAfter: result.retryAfter };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/mfa/disable/verify')
+    async confirmDisableMfa(@Req() request: Request, @Body() dto: DisableMfaDto) {
+        const user = (request as any).user;
+        const result = await this.userClient.confirmDisableMfa({ userId: user.id, code: dto.code });
+        return { message: result.message };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Get('/mfa/status')
+    async getMfaStatus(@Req() request: Request) {
+        const user = (request as any).user;
+        return await this.userClient.getMfaStatus({ userId: user.id });
     }
 
     @Public()

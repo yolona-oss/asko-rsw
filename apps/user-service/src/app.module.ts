@@ -8,6 +8,8 @@ import { UserService } from 'services/user.service';
 import { AuthService } from 'services/auth.service';
 import { InviteService } from 'services/invite.service';
 import { LoginThrottleService } from 'services/login-throttle.service';
+import { OtpService } from 'services/otp.service';
+import { MfaService } from 'services/mfa.service';
 import { redisProvider } from 'providers/redis.provider';
 
 import { UserGrpcController } from 'controllers/user.grpc.controller';
@@ -24,6 +26,8 @@ import { DatabaseModule } from 'modules/database.module';
         AuthService,
         InviteService,
         LoginThrottleService,
+        OtpService,
+        MfaService,
     ],
     imports: [
         AppConfigModule,

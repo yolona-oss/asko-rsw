@@ -35,6 +35,35 @@ export const authApi = {
     return api.post<{ message: string; retryAfter: number }>('/auth/resend-confirmation', { email });
   },
 
+  // MFA
+  verifyMfaOtp(data: { mfaToken: string; code: string; trustDevice?: boolean }) {
+    return api.post<IAuthSession>('/auth/mfa/verify', data);
+  },
+
+  resendMfaOtp(mfaToken: string) {
+    return api.post<{ retryAfter: number }>('/auth/mfa/resend', { mfaToken });
+  },
+
+  enableMfa() {
+    return api.post<{ message: string; retryAfter: number }>('/auth/mfa/enable');
+  },
+
+  verifyEnableMfa(code: string) {
+    return api.post<{ message: string }>('/auth/mfa/enable/verify', { code });
+  },
+
+  initiateDisableMfa() {
+    return api.post<{ message: string; retryAfter: number }>('/auth/mfa/disable');
+  },
+
+  confirmDisableMfa(code: string) {
+    return api.post<{ message: string }>('/auth/mfa/disable/verify', { code });
+  },
+
+  getMfaStatus() {
+    return api.get<{ enabled: boolean; methods: string[] }>('/auth/mfa/status');
+  },
+
   confirmEmailChange(token: string) {
     return api.post<{ message: string }>('/auth/confirm-email-change', { token });
   },

@@ -49,6 +49,25 @@ export function useLogin() {
   return useMutation({
     mutationFn: (credentials: LoginCredentials) =>
       authApi.login(credentials).then((r) => r.data),
+    onSuccess: (data: any) => {
+      if (data.status === 'MFA_REQUIRED') {
+        // Don't dispatch credentials — component reads mutation.data for MFA state
+        return;
+      }
+      maybeSaveDevAccount(data);
+      dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
+      router.push('/account');
+    },
+  });
+}
+
+export function useVerifyMfaOtp() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (data: { mfaToken: string; code: string; trustDevice?: boolean }) =>
+      authApi.verifyMfaOtp(data).then((r) => r.data),
     onSuccess: (data) => {
       maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
