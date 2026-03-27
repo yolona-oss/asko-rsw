@@ -20,6 +20,7 @@ const NOTIFICATION_CHANNEL = 'notifications:push';
 export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
     @WebSocketServer()
     server!: Server;
+    private connections = new Map<string, string[]>();
 
     private redisSubscriber!: Redis;
 
@@ -27,7 +28,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, 
         private readonly jwtService: JwtService,
         private readonly config: AppConfig,
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
-    ) {}
+    ) { }
 
     afterInit() {
         // Dedicated subscriber connection for notification push from notification-service
@@ -63,30 +64,57 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, 
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
 
+            if (!payload?.id) {
+                throw new Error('Invalid payload');
+            }
+
             const userId = payload.id;
             client.data.userId = userId;
+
+            // check existed conn
+            this.connections.set(
+                userId,
+                [...(this.connections.get(userId) || []), client.id]
+            );
 
             // Join user's personal room
             client.join(`user:${userId}`);
 
             // Join role-based rooms
-            if (payload.roles) {
-                for (const role of payload.roles) {
-                    if (role === 'manager' || role === 'admin' || role === 'superAdmin') {
-                        client.join('managers');
-                    }
-                    if (role === 'repairer') {
-                        client.join('repairers');
-                    }
-                }
+            const roles = new Set(payload.roles || []);
+
+            if (['manager', 'admin', 'superAdmin'].some(r => roles.has(r))) {
+                client.join('managers');
             }
-        } catch {
+
+            if (roles.has('repairer')) {
+                client.join('repairers');
+            }
+        } catch (err: any) {
+            if (err.name === 'TokenExpiredError') {
+                client.emit('auth_error', { reason: 'TOKEN_EXPIRED' });
+            } else {
+                client.emit('auth_error', { reason: 'INVALID_TOKEN' });
+            }
+            console.debug('WS auth failed: ', err.message)
             client.disconnect();
         }
     }
 
-    handleDisconnect(_client: Socket) {
-        // Room cleanup is automatic in Socket.io
+    handleDisconnect(client: Socket) {
+        const userId = client.data.userId;
+
+        if (!userId) return;
+
+        const userConnections = this.connections.get(userId) || [];
+
+        const updated = userConnections.filter(id => id !== client.id);
+
+        if (updated.length === 0) {
+            this.connections.delete(userId);
+        } else {
+            this.connections.set(userId, updated);
+        }
     }
 
     // ─── Server → Client Emissions (called from API controllers) ─────

@@ -9,6 +9,7 @@
     "prod:web": "cd apps/web && pnpm run start",
     "lint": "pnpm dlx turbo run lint",
     "typecheck": "pnpm dlx turbo run typecheck",
+    "test": "pnpm dlx turbo run test",
     "clean": "pnpm dlx turbo run clean"
   },
   "devDependencies": {

@@ -29,7 +29,16 @@
     "build": "tsc --project tsconfig.json && tsc --project tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "dev": "tsc --watch --project tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
+  },
+  "jest": {
+    "rootDir": "src",
+    "moduleFileExtensions": ["ts", "js", "json"],
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": { "^.+\\.ts$": ["ts-jest", { "tsconfig": "tsconfig.cjs.json" }] }
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -39,6 +48,9 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@types/node": "^24.1.0"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6"
   }
 }
