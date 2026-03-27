@@ -4,11 +4,12 @@ import { NotificationGateway } from "./gateways/notify.gateway";
 import { NotificationClientModule } from "modules/notification-client/notification-client.module";
 import { NotificationController } from "./controllers/notification.controller";
 import { redisProvider } from "providers/redis.provider";
+import { NotificationService } from "./services/common-notification.service";
 
 @Module({
     imports: [NotificationClientModule, JwtModule],
     controllers: [NotificationController],
-    providers: [NotificationGateway, redisProvider],
-    exports: [],
+    providers: [NotificationGateway, redisProvider, NotificationService],
+    exports: [NotificationService],
 })
 export class NotificationModule { }
