@@ -3,7 +3,7 @@
 import { useAccount } from '@/components/account/account-provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { primaryRole } from '@/lib/account';
-import { UserCertificates } from '@/components/account/user/user-certificates';
+import { UserCertificates } from '@/components/account/user/certificates';
 import { DealerCertificates } from '@/components/account/dealer/dealer-certificates';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
 import { PageContainer } from '@/components/account/page-container';

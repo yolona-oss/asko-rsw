@@ -1,0 +1,79 @@
+'use client';
+
+import { useState } from 'react';
+import type { Bucket } from './types';
+import { ChartTooltip } from './chart-tooltip';
+
+export function LineChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
+  const max = Math.max(...buckets.map((b) => b.total), 1);
+  const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
+  const h = 120;
+  const w = buckets.length > 1 ? buckets.length - 1 : 1;
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const points = buckets
+    .map((b, i) => {
+      const x = (i / w) * 100;
+      const y = h - (b.total / max) * h;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  const areaPoints = `0,${h} ${points} 100,${h}`;
+
+  const hoveredX = hovered !== null ? (hovered / w) * 100 : 0;
+  const hoveredY = hovered !== null ? h - (buckets[hovered].total / max) * h : 0;
+
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <div className="relative">
+        <ChartTooltip
+          bucket={hovered !== null ? buckets[hovered] : null}
+          x={hoveredX}
+          visible={hovered !== null}
+        />
+        <svg viewBox={`0 0 100 ${h}`} preserveAspectRatio="none" className="w-full" style={{ height: h }}>
+          <polygon points={areaPoints} fill={color} opacity={0.1} />
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
+          />
+          {/* Hover dot */}
+          {hovered !== null && (
+            <circle cx={hoveredX} cy={hoveredY} r={3} fill={color} vectorEffect="non-scaling-stroke" />
+          )}
+          {/* Invisible hit areas */}
+          {buckets.map((_, i) => {
+            const x = (i / w) * 100;
+            const barW = 100 / buckets.length;
+            return (
+              <rect
+                key={i}
+                x={x - barW / 2}
+                y={0}
+                width={barW}
+                height={h}
+                fill="transparent"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                className="cursor-pointer"
+              />
+            );
+          })}
+        </svg>
+      </div>
+      <div className="flex">
+        {buckets.map((b, i) => (
+          <div key={i} className="flex-1 min-w-0 text-center overflow-hidden">
+            {i % showEvery === 0 ? (
+              <span className="text-[9px] text-text-sub leading-none whitespace-nowrap">{b.label}</span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

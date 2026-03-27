@@ -1,0 +1,139 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import {
+  Button,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  DataSearch,
+  DataFilter,
+  DataTable,
+  DataTableHeader,
+  DataTableFooter,
+} from '@asko/ui';
+import type { FilterValues } from '@asko/ui';
+import { PageContainer } from '@/components/account/page-container';
+import { PageHeader } from '@/components/account/page-header';
+import { repairRequestApi } from '@/lib/api/repair-request';
+import { STATUS_TAB_MAP, STATUS_FILTER, type StatusFilter } from './constants';
+import type { RepairRequest } from './types';
+import { RequestCard } from './request-card';
+import { RequestTableRow } from './request-table-row';
+
+export function UserRequests() {
+  const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('card');
+  const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
+
+  const statusFilter = filterValues.status as StatusFilter;
+
+  useEffect(() => {
+    async function fetchRequests() {
+      try {
+        const { data } = await repairRequestApi.getMy({ limit: 50 });
+        setRequests((data.data ?? []) as unknown as RepairRequest[]);
+      } catch {
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRequests();
+  }, []);
+
+  const filteredRequests = useMemo(() => {
+    let result = requests;
+
+    // Filter by status tab
+    if (statusFilter !== 'all') {
+      result = result.filter((r) => STATUS_TAB_MAP[r.status] === statusFilter);
+    }
+
+    // Filter by search (device name / description)
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter((r) => {
+        const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
+        const description = (r.description ?? '').toLowerCase();
+        return deviceName.includes(q) || description.includes(q);
+      });
+    }
+
+    return result;
+  }, [requests, statusFilter, search]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  return (
+    <PageContainer>
+      <PageHeader>Мои заявки</PageHeader>
+
+      {/* Toolbar */}
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+        <div className="flex-shrink-0">
+          <DataSearch
+            value={search}
+            onChange={setSearch}
+            placeholder="Поиск по устройству или описанию"
+            className="lg:w-[320px]"
+          />
+        </div>
+        <div className="flex-1 flex items-center gap-3">
+          <DataFilter
+            filters={[STATUS_FILTER]}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
+          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/requests/create">
+              <Button variant="primary">Создать заявку</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Data */}
+      {loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : filteredRequests.length === 0 ? (
+        requests.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 py-12">
+            <p className="text-base text-text-sub">У вас пока нет заявок</p>
+            <Link href="/account/requests/create">
+              <Button variant="primary">Создать первую заявку</Button>
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-text-sub">Заявки не найдены</p>
+        )
+      ) : view === 'card' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRequests.map((req) => (
+            <RequestCard key={req.id} request={req} />
+          ))}
+        </div>
+      ) : (
+        <DataTable>
+          <DataTableHeader>
+            <div className="w-[200px] flex-shrink-0">Устройство</div>
+            <div className="flex-1 px-4">Описание</div>
+            <div className="w-[160px] px-4">Статус</div>
+            <div className="w-[120px] px-4">Дата</div>
+          </DataTableHeader>
+          {filteredRequests.map((req) => (
+            <RequestTableRow key={req.id} request={req} />
+          ))}
+          <DataTableFooter>
+            Показано {filteredRequests.length} из {requests.length}
+          </DataTableFooter>
+        </DataTable>
+      )}
+    </PageContainer>
+  );
+}

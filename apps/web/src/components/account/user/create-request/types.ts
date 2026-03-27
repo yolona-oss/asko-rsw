@@ -1,0 +1,15 @@
+import type { ICertificate } from '@/lib/api/types';
+
+export interface UserDevice {
+  id: string;
+  device?: { id?: string; name?: string; model?: string };
+  serialNumber?: string;
+}
+
+export type Certificate = ICertificate;
+
+export interface UploadedImage {
+  id: string;
+  file: File;
+  preview: string;
+}

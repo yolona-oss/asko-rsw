@@ -1,0 +1,28 @@
+import { RepairRequestStatus } from '@asko/shared/client';
+
+export interface RepairRequestDetail {
+  id: string;
+  status: RepairRequestStatus;
+  description: string;
+  createdAt: Date | string;
+  rejectedRepairers?: string[];
+  refuseReason?: string;
+  conversationId?: string;
+  user?: { firstName?: string; lastName?: string; phone?: string };
+  userDevice?: { device?: { name?: string } };
+  address?: { city?: string; street?: string; building?: number; apartment?: string };
+  repairer?: {
+    id: string;
+    city: string;
+    latitude?: number;
+    longitude?: number;
+    lastLocationUpdate?: string;
+    user?: { firstName?: string; lastName?: string };
+  };
+}
+
+export interface RepairerOption {
+  id: string;
+  city?: string;
+  user?: { firstName?: string; lastName?: string };
+}
