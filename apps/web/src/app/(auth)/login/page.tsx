@@ -85,7 +85,7 @@ export default function LoginPage() {
 
               {/* Forgot password */}
               <Link
-                href="#"
+                href="/reset"
                 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]"
               >
                 Забыли пароль?
@@ -158,7 +158,7 @@ export default function LoginPage() {
 
             {/* Forgot password - positioned below the form */}
             <Link
-              href="#"
+              href="/reset"
               className="block mt-12 text-sm font-medium leading-[22px] tracking-[-0.01em] text-text-main"
             >
               Забыли пароль?

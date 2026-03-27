@@ -12,6 +12,8 @@ import {
     LoginCredentials,
     ResendConfirmMailDto,
     CreateUserDto,
+    ForgotPasswordDto,
+    ResetPasswordDto,
     extractToken,
     getHostUrl,
     Role,
@@ -136,8 +138,8 @@ export class AuthController {
         @Body() dto: ResendConfirmMailDto,
         @Res() response: Response
     ) {
-        await this.userClient.resendConfirmation({ email: dto.email });
-        response.status(200).json({ message: "Email sent successfully" });
+        const result = await this.userClient.resendConfirmation({ email: dto.email });
+        response.status(200).json({ message: "Email sent successfully", retryAfter: result.retryAfter });
     }
 
     @Public()
@@ -217,15 +219,22 @@ export class AuthController {
     }
 
     @Public()
+    @ApiOkResponse({ type: MessageResponseDto })
     @Post('/forgot-password')
-    async forgotPassword() {
-        throw new NotImplementedException()
+    async forgotPassword(@Body() dto: ForgotPasswordDto) {
+        const result = await this.userClient.forgotPassword({ email: dto.email });
+        return { message: result.message, retryAfter: result.retryAfter };
     }
 
     @Public()
+    @ApiOkResponse({ type: MessageResponseDto })
     @Post('/reset-password')
-    async resetPassword() {
-        throw new NotImplementedException()
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        const result = await this.userClient.resetPassword({
+            token: dto.token,
+            newPassword: dto.newPassword,
+        });
+        return { message: result.message };
     }
 
     @ApiOkResponse({ type: AuthUserDto })

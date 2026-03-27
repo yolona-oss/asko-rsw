@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useRef, useCallback, type DragEvent, type ChangeEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type DragEvent, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from './account-provider';
 import { useAuth } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
+import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from './avatar-crop-modal';
 import { SkeletonBlock, SkeletonCircle } from './skeleton';
-import { Button, Input, FormField, Toggle } from '@asko/ui';
+import { Button, Input, FormField, Toggle, PasswordInput } from '@asko/ui';
 
 export function ProfileForm() {
   const { user } = useAccount();
@@ -22,6 +23,12 @@ export function ProfileForm() {
   const [phone, setPhone] = useState('');
   const [loaded, setLoaded] = useState(false);
 
+  // Email verification
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [emailResendCooldown, setEmailResendCooldown] = useState(0);
+  const [emailResendMessage, setEmailResendMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   // Chat preferences
   const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
   const [chatSearchable, setChatSearchable] = useState(false);
@@ -31,6 +38,13 @@ export function ProfileForm() {
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Password state
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Submission state
   const [saving, setSaving] = useState(false);
@@ -47,6 +61,7 @@ export function ProfileForm() {
         setLastName(data.lastName ?? '');
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
+        setEmailVerified(data.emailVerified ?? false);
         // Load chat preferences
         const prefs = (data as any).preferencesJson
           ? JSON.parse((data as any).preferencesJson)
@@ -140,6 +155,63 @@ export function ProfileForm() {
     } finally {
       setSaving(false);
       setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  // ---- Email resend cooldown ----
+
+  useEffect(() => {
+    if (emailResendCooldown <= 0) return;
+    const timer = setInterval(() => setEmailResendCooldown((v) => Math.max(0, v - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [emailResendCooldown]);
+
+  const handleResendConfirmation = async () => {
+    if (resendingEmail || emailResendCooldown > 0 || !email) return;
+    setResendingEmail(true);
+    setEmailResendMessage(null);
+    try {
+      const { data } = await authApi.resendConfirmation(email);
+      setEmailResendCooldown(data.retryAfter ?? 60);
+      setEmailResendMessage({ type: 'success', text: 'Письмо отправлено' });
+    } catch (err: any) {
+      setEmailResendMessage({ type: 'error', text: err?.response?.data?.message ?? 'Не удалось отправить письмо' });
+    } finally {
+      setResendingEmail(false);
+      setTimeout(() => setEmailResendMessage(null), 5000);
+    }
+  };
+
+  // ---- Password change ----
+
+  const handleChangePassword = async () => {
+    setPasswordMessage(null);
+
+    if (!newPassword || !oldPassword) {
+      setPasswordMessage({ type: 'error', text: 'Заполните все поля' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'Пароли не совпадают' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordMessage({ type: 'error', text: 'Минимальная длина пароля — 8 символов' });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await usersApi.changePassword({ oldPassword, newPassword });
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMessage({ type: 'success', text: 'Пароль изменён' });
+    } catch {
+      setPasswordMessage({ type: 'error', text: 'Не удалось изменить пароль. Проверьте текущий пароль.' });
+    } finally {
+      setChangingPassword(false);
+      setTimeout(() => setPasswordMessage(null), 3000);
     }
   };
 
@@ -247,6 +319,36 @@ export function ProfileForm() {
           </FormField>
           <FormField label="Email">
             <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="example@mail.com" />
+            {email && !emailVerified && (
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-xs text-amber-600">Email не подтверждён</span>
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={resendingEmail || emailResendCooldown > 0}
+                  className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {emailResendCooldown > 0
+                    ? `Отправить повторно (${emailResendCooldown}с)`
+                    : resendingEmail
+                      ? 'Отправка...'
+                      : 'Отправить подтверждение'}
+                </button>
+                {emailResendMessage && (
+                  <span className={`text-xs ${emailResendMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+                    {emailResendMessage.text}
+                  </span>
+                )}
+              </div>
+            )}
+            {email && emailVerified && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                <span className="text-xs text-green-600">Email подтверждён</span>
+              </div>
+            )}
           </FormField>
           <FormField label="Телефон">
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+7 (999) 123-45-67" />
@@ -269,6 +371,48 @@ export function ProfileForm() {
               <p className="text-sm text-text-main">Показывать меня в поиске чата</p>
             </div>
             <Toggle checked={chatSearchable} onChange={setChatSearchable} />
+          </div>
+        </div>
+
+        {/* Change password */}
+        <div className="h-px bg-border-light" />
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-medium text-text-main">Смена пароля</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <FormField label="Текущий пароль">
+              <PasswordInput
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Введите текущий пароль"
+                showStrength={false}
+              />
+            </FormField>
+            <div />
+            <FormField label="Новый пароль">
+              <PasswordInput
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Введите новый пароль"
+              />
+            </FormField>
+            <FormField label="Подтверждение пароля">
+              <PasswordInput
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Повторите новый пароль"
+                showStrength={false}
+              />
+            </FormField>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <Button onClick={handleChangePassword} disabled={changingPassword} variant="secondary" size="lg">
+              {changingPassword ? 'Сохранение...' : 'Изменить пароль'}
+            </Button>
+            {passwordMessage && (
+              <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+                {passwordMessage.text}
+              </p>
+            )}
           </div>
         </div>
 

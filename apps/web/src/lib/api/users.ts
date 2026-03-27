@@ -1,10 +1,10 @@
 import type { UpdateUserDto } from '@asko/shared/client';
-import type { IAuthUser, IImage, IImageAttachment, PaginatedUsers } from './types';
+import type { IAuthUser, IImage, IImageAttachment, PaginatedUsers, UserResponse } from './types';
 import { api } from './client';
 
 export const usersApi = {
   getProfile() {
-    return api.get<IAuthUser>('/users/profile');
+    return api.get<UserResponse>('/users/profile');
   },
 
   updateProfile(data: Partial<UpdateUserDto>) {
@@ -33,6 +33,10 @@ export const usersApi = {
     return api.post<IImage>(`/file-upload/image/upload/avatar/${userId}`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  changePassword(data: { oldPassword: string; newPassword: string }) {
+    return api.put<void>('/users/password', data);
   },
 
   async getAvatarUrl(userId: string): Promise<string | null> {

@@ -16,6 +16,7 @@ import type {
     ConfirmEmailRequest,
     ConfirmEmailResponse,
     ResendConfirmationRequest,
+    ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
     DevSwitchRequest,
@@ -41,6 +42,10 @@ import type {
     EmptyResponse,
     SearchUsersForChatRequest,
     SearchUsersForChatResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -162,10 +167,10 @@ export class UserGrpcController {
     }
 
     @GrpcMethod('UserService', 'ResendConfirmation')
-    async resendConfirmation(data: ResendConfirmationRequest): Promise<EmptyResponse> {
+    async resendConfirmation(data: ResendConfirmationRequest): Promise<ResendConfirmationResponse> {
         try {
-            await this.authService.resendConfirmEmailToken(data.email);
-            return {};
+            const result = await this.authService.resendConfirmEmailToken(data.email);
+            return { retryAfter: result.retryAfter };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -208,6 +213,22 @@ export class UserGrpcController {
             return {
                 user: userToAuthUser(user),
             };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ForgotPassword')
+    async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+        try {
+            const result = await this.authService.forgotPassword(data.email);
+            return { message: result.message, retryAfter: result.retryAfter };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ResetPassword')
+    async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        try {
+            const result = await this.authService.resetPassword(data.token, data.newPassword);
+            return { message: result.message };
         } catch (e) { throw toGrpcError(e); }
     }
 

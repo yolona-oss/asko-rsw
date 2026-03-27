@@ -54,6 +54,10 @@ message ResendConfirmationRequest {
     string email = 1;
 }
 
+message ResendConfirmationResponse {
+    int32 retry_after = 1;
+}
+
 message RefreshTokenRequest {
     string refresh_token = 1;
 }
@@ -102,6 +106,24 @@ message ChangePasswordRequest {
     string id = 1;
     string old_password = 2;
     string new_password = 3;
+}
+
+message ForgotPasswordRequest {
+    string email = 1;
+}
+
+message ForgotPasswordResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message ResetPasswordRequest {
+    string token = 1;
+    string new_password = 2;
+}
+
+message ResetPasswordResponse {
+    string message = 1;
 }
 
 message SetUserActiveRequest {
@@ -225,10 +247,12 @@ service UserService {
     rpc Login(LoginRequest) returns (AuthSessionResponse);
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc ConfirmEmail(ConfirmEmailRequest) returns (ConfirmEmailResponse);
-    rpc ResendConfirmation(ResendConfirmationRequest) returns (EmptyResponse);
+    rpc ResendConfirmation(ResendConfirmationRequest) returns (ResendConfirmationResponse);
     rpc RefreshAccessToken(RefreshTokenRequest) returns (AccessTokenResponse);
     rpc Logout(LogoutRequest) returns (EmptyResponse);
     rpc DevSwitchAccount(DevSwitchRequest) returns (AuthSessionResponse);
+    rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+    rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
     rpc FindUserByAccessToken(FindByTokenRequest) returns (AuthUserResponse);
 
     // User CRUD

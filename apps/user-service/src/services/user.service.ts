@@ -159,7 +159,7 @@ export class UserService {
 
         const provider = userData.email ? AuthProvider.EMAIL : AuthProvider.PHONE
 
-        this.checkPasswordStrenth(userData.password)
+        this.checkPasswordStrength(userData.password)
 
         const passwordHash = await CryptoService.createPasswordHash(userData.password)
         const user = this.em.create(User, {
@@ -347,7 +347,48 @@ export class UserService {
         return await qb.getResult()
     }
 
-    private checkPasswordStrenth(password: string) {
+    @CreateRequestContext()
+    async removeResetTokens(userId: string) {
+        const sessions = await this.em.find(Session, {
+            user: { id: userId },
+            type: TokenType.RESET_PASSWORD,
+        });
+        for (const session of sessions) {
+            await this.em.removeAndFlush(session);
+        }
+    }
+
+    @CreateRequestContext()
+    async findByResetToken(tokenHash: string): Promise<User | null> {
+        const session = await this.em.findOne(Session, {
+            token: tokenHash,
+            type: TokenType.RESET_PASSWORD,
+        });
+        if (!session) return null;
+        if (session.expiresAt < new Date()) {
+            await this.em.removeAndFlush(session);
+            return null;
+        }
+        return await this.findById(session.user.id);
+    }
+
+    @CreateRequestContext()
+    async resetPasswordByToken(userId: string, tokenHash: string, passwordHash: string) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found');
+        }
+        user.passwordHash = passwordHash;
+        await this.em.persistAndFlush(user);
+
+        // Remove the used reset token
+        const session = await this.em.findOne(Session, { token: tokenHash });
+        if (session) {
+            await this.em.removeAndFlush(session);
+        }
+    }
+
+    checkPasswordStrength(password: string) {
         if (password.length < MIN_USER_PASSWORD_LENGTH) {
             throw AppErrors.badRequest("Insufficient user password length. Must be at least " + MIN_USER_PASSWORD_LENGTH + " characters.")
         } else if (password.length >= MAX_USER_PASSWORD_LENGTH) {

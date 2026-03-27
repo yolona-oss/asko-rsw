@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { AppConfig } from 'app.config';
@@ -28,6 +28,7 @@ import {
     AuthProvider
 } from '@asko/shared';
 import { time } from 'utils';
+import Redis from 'ioredis';
 
 export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider' | 'username'>
 
@@ -43,6 +44,11 @@ interface RegisterParams {
     ipAddress: string;
 }
 
+const RESET_COOLDOWN_SECONDS = 60;
+const RESET_KEY_PREFIX = 'password:reset:';
+const EMAIL_CONFIRM_COOLDOWN_SECONDS = 60;
+const EMAIL_CONFIRM_KEY_PREFIX = 'email:confirm:';
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -51,6 +57,7 @@ export class AuthService {
         private readonly config: AppConfig,
         private readonly loginThrottle: LoginThrottleService,
         private readonly inviteService: InviteService,
+        @Inject('REDIS_CLIENT') private readonly redis: Redis,
     ) { }
 
     async login(params: LoginParams): Promise<IAuthSession> {
@@ -196,7 +203,13 @@ export class AuthService {
         await EmailService.getInstance().sendMail(conf)
     }
 
-    async resendConfirmEmailToken(email: string) {
+    async resendConfirmEmailToken(email: string): Promise<{ retryAfter: number }> {
+        const redisKey = `${EMAIL_CONFIRM_KEY_PREFIX}${email.toLowerCase()}`;
+        const ttl = await this.redis.ttl(redisKey);
+        if (ttl > 0) {
+            return { retryAfter: ttl };
+        }
+
         const user = await this.userService.findByEmail(email)
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found')
@@ -205,6 +218,8 @@ export class AuthService {
             throw AppErrors.badRequest('Email already confirmed')
         }
         await this.sendEmailConfirmation(user);
+        await this.redis.set(redisKey, '1', 'EX', EMAIL_CONFIRM_COOLDOWN_SECONDS);
+        return { retryAfter: EMAIL_CONFIRM_COOLDOWN_SECONDS };
     }
 
     async confirmEmail(token: string) {
@@ -398,5 +413,73 @@ export class AuthService {
         }
 
         return resetToken;
+    }
+
+    async forgotPassword(email: string): Promise<{ message: string; retryAfter: number }> {
+        const redisKey = `${RESET_KEY_PREFIX}${email.toLowerCase()}`;
+        const ttl = await this.redis.ttl(redisKey);
+        if (ttl > 0) {
+            return {
+                message: 'Письмо уже отправлено. Попробуйте позже.',
+                retryAfter: ttl,
+            };
+        }
+
+        const user = await this.userService.findByEmail(email.toLowerCase());
+        if (!user) {
+            // Don't reveal whether email exists — return success-like response
+            return { message: 'Если аккаунт существует, письмо отправлено.', retryAfter: RESET_COOLDOWN_SECONDS };
+        }
+
+        // Remove any existing reset tokens for this user
+        await this.userService.removeResetTokens(user.id);
+
+        const resetToken = await this.generageResetToken(user.id);
+
+        const url = `${this.config.frontendUrl}/reset?token=${encodeURIComponent(resetToken)}`;
+        await EmailService.getInstance().sendMail({
+            to: user.email!,
+            from: this.config.email.from,
+            subject: 'Сброс пароля — ASKO',
+            text: `Для сброса пароля перейдите по ссылке: ${url}\n\nСсылка действительна 10 минут.\nЕсли вы не запрашивали сброс пароля, проигнорируйте это письмо.`,
+            html: [
+                '<div style="font-family:sans-serif;max-width:480px;margin:0 auto">',
+                '<h2 style="color:#111">Сброс пароля</h2>',
+                '<p>Для сброса пароля нажмите на кнопку ниже:</p>',
+                `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#EB001C;color:#fff;text-decoration:none;border-radius:4px;font-weight:600">Сбросить пароль</a>`,
+                '<p style="margin-top:16px;color:#666;font-size:13px">Ссылка действительна 10 минут.</p>',
+                '<p style="color:#666;font-size:13px">Если вы не запрашивали сброс пароля, проигнорируйте это письмо.</p>',
+                '</div>',
+            ].join(''),
+        });
+
+        await this.redis.set(redisKey, '1', 'EX', RESET_COOLDOWN_SECONDS);
+
+        return { message: 'Если аккаунт существует, письмо отправлено.', retryAfter: RESET_COOLDOWN_SECONDS };
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+        const parts = token.split('+');
+        if (parts.length !== 2) {
+            throw AppErrors.badRequest('Недействительный токен сброса');
+        }
+
+        const [resetTokenValue, resetTokenSecret] = parts;
+        const resetTokenHash = crypto
+            .createHmac('sha256', resetTokenSecret)
+            .update(resetTokenValue)
+            .digest('hex');
+
+        const user = await this.userService.findByResetToken(resetTokenHash);
+        if (!user) {
+            throw AppErrors.badRequest('Недействительный или истекший токен сброса');
+        }
+
+        this.userService.checkPasswordStrength(newPassword);
+
+        const passwordHash = await Crypto.createPasswordHash(newPassword);
+        await this.userService.resetPasswordByToken(user.id, resetTokenHash, passwordHash);
+
+        return { message: 'Пароль успешно изменён' };
     }
 }

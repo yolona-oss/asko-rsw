@@ -52,6 +52,10 @@ export interface ResendConfirmationRequest {
     email: string;
 }
 
+export interface ResendConfirmationResponse {
+    retryAfter: number;
+}
+
 export interface RefreshTokenRequest {
     refreshToken: string;
 }
@@ -100,6 +104,24 @@ export interface ChangePasswordRequest {
     id: string;
     oldPassword: string;
     newPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ForgotPasswordResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+    message: string;
 }
 
 export interface SetUserActiveRequest {
@@ -226,11 +248,13 @@ export interface UserServiceClient {
     login(request: LoginRequest): Observable<AuthSessionResponse>;
     register(request: RegisterRequest): Observable<RegisterResponse>;
     confirmEmail(request: ConfirmEmailRequest): Observable<ConfirmEmailResponse>;
-    resendConfirmation(request: ResendConfirmationRequest): Observable<EmptyResponse>;
+    resendConfirmation(request: ResendConfirmationRequest): Observable<ResendConfirmationResponse>;
     refreshAccessToken(request: RefreshTokenRequest): Observable<AccessTokenResponse>;
     logout(request: LogoutRequest): Observable<EmptyResponse>;
     devSwitchAccount(request: DevSwitchRequest): Observable<AuthSessionResponse>;
     findUserByAccessToken(request: FindByTokenRequest): Observable<AuthUserResponse>;
+    forgotPassword(request: ForgotPasswordRequest): Observable<ForgotPasswordResponse>;
+    resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse>;
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;

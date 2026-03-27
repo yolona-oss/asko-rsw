@@ -51,7 +51,7 @@ export class AppModule implements OnApplicationBootstrap {
     constructor(
         private userService: UserService,
         private config: AppConfig
-    ) {}
+    ) { }
 
     async onApplicationBootstrap(): Promise<void> {
         await this.userService.__createSuperAdmin({
@@ -60,5 +60,7 @@ export class AppModule implements OnApplicationBootstrap {
             email: this.config.defaultUser.email,
             password: this.config.defaultUser.password
         })
+
+        console.log(this.config)
     }
 }

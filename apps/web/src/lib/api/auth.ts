@@ -26,4 +26,20 @@ export const authApi = {
   devSwitch(refreshToken: string) {
     return api.post<IAuthSession>('/auth/dev-switch', { refresh_token: refreshToken });
   },
+
+  confirmEmail(token: string) {
+    return api.post<{ message: string }>('/auth/confirm-email', { token });
+  },
+
+  resendConfirmation(email: string) {
+    return api.post<{ message: string; retryAfter: number }>('/auth/resend-confirmation', { email });
+  },
+
+  forgotPassword(email: string) {
+    return api.post<{ message: string; retryAfter: number }>('/auth/forgot-password', { email });
+  },
+
+  resetPassword(token: string, newPassword: string) {
+    return api.post<{ message: string }>('/auth/reset-password', { token, newPassword });
+  },
 };

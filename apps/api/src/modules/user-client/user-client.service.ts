@@ -12,6 +12,7 @@ import type {
     ConfirmEmailRequest,
     ConfirmEmailResponse,
     ResendConfirmationRequest,
+    ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
     DevSwitchRequest,
@@ -35,6 +36,10 @@ import type {
     EmptyResponse,
     SearchUsersForChatRequest,
     SearchUsersForChatResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -63,7 +68,7 @@ export class UserClientService implements OnModuleInit {
         return grpcCall(this.userService.confirmEmail(data));
     }
 
-    resendConfirmation(data: ResendConfirmationRequest): Promise<EmptyResponse> {
+    resendConfirmation(data: ResendConfirmationRequest): Promise<ResendConfirmationResponse> {
         return grpcCall(this.userService.resendConfirmation(data));
     }
 
@@ -81,6 +86,14 @@ export class UserClientService implements OnModuleInit {
 
     findUserByAccessToken(data: FindByTokenRequest): Promise<AuthUserResponse> {
         return grpcCall(this.userService.findUserByAccessToken(data));
+    }
+
+    forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+        return grpcCall(this.userService.forgotPassword(data));
+    }
+
+    resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        return grpcCall(this.userService.resetPassword(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────
