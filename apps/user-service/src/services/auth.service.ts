@@ -230,7 +230,7 @@ export class AuthService {
                 publicKey: Buffer.from(this.config.jwt.email_confirmation.public_key, 'base64').toString('utf-8')
             });
 
-            await this.userService.setEmailConfirmed(payload.sub);
+            await this.userService.setEmailConfirmed(payload.id);
             return { message: 'Email confirmed successfully' };
         } catch (err: any) {
             console.error(err)
