@@ -67,6 +67,8 @@ export class UserDeviceRecordDto {
     warrantyUntil?: string;
     notes?: string;
     createdAt: string;
+    registrationSignature?: string;
+    registrationSignedPayload?: string;
     device?: DeviceRecordDto;
     address?: AddressRecordDto;
 }

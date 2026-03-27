@@ -16,6 +16,7 @@ import {
     PaginationDto,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { SignatureService } from './signature.service';
 
 /** Points = certificatePrice * 0.03, rounded to nearest integer */
 function calculateDealerPoints(certificatePrice: number): number {
@@ -24,7 +25,10 @@ function calculateDealerPoints(certificatePrice: number): number {
 
 @Injectable()
 export class DealerService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly signatureService: SignatureService,
+    ) {}
 
     /** Admin creates dealer profile for a user */
     @CreateRequestContext()
@@ -39,6 +43,18 @@ export class DealerService {
             inn: dto.inn,
         });
         await this.em.persistAndFlush(profile);
+
+        // Sign dealer agreement
+        const payload = {
+            dealerId: profile.id,
+            companyName: profile.companyName ?? '',
+            inn: profile.inn ?? '',
+            signedAt: new Date().toISOString(),
+        };
+        profile.agreementSignedPayload = JSON.stringify(payload, Object.keys(payload).sort());
+        profile.agreementSignature = this.signatureService.sign(payload);
+        await this.em.flush();
+
         return profile;
     }
 
@@ -48,6 +64,17 @@ export class DealerService {
         const profile = await this.em.findOne(DealerProfile, { userId: dealerUserId });
         if (!profile) throw AppErrors.dbEntityNotFound('Dealer profile not found');
         this.em.assign(profile, dto);
+
+        // Re-sign dealer agreement with updated data
+        const payload = {
+            dealerId: profile.id,
+            companyName: profile.companyName ?? '',
+            inn: profile.inn ?? '',
+            signedAt: new Date().toISOString(),
+        };
+        profile.agreementSignedPayload = JSON.stringify(payload, Object.keys(payload).sort());
+        profile.agreementSignature = this.signatureService.sign(payload);
+
         await this.em.flush();
         return profile;
     }

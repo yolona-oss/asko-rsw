@@ -7,6 +7,8 @@ export class DealerProfileRecordDto {
     companyName?: string;
     inn?: string;
     pointsBalance: number;
+    agreementSignature?: string;
+    agreementSignedPayload?: string;
     user?: AuthUserDto;
     @ApiProperty({ type: () => [DealerClientRecordDto] })
     clients?: DealerClientRecordDto[];

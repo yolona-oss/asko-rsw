@@ -36,7 +36,10 @@ import {
     PaginatedCertificatesResponseDto,
     ProcessInvoiceResponseDto,
     PaymentListResponseDto,
+    VerifySignatureResponseDto,
+    PublicKeyResponseDto,
 } from 'common/dto/responses';
+import { Public } from 'common/decorators/public.decorotor';
 
 @ApiTags('Certificates')
 @Controller('certificates')
@@ -236,6 +239,20 @@ export class CertificateController {
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('certificate', id);
+    }
+
+    @ApiOkResponse({ type: PublicKeyResponseDto })
+    @Public()
+    @Get('public-key')
+    async getPublicKey() {
+        return this.certificateClient.getPublicKey();
+    }
+
+    @ApiOkResponse({ type: VerifySignatureResponseDto })
+    @Public()
+    @Get('verify/:id')
+    async verifySignature(@Param('id') id: string) {
+        return this.certificateClient.verifySignature('certificate', id);
     }
 
     @ApiOkResponse({ type: CertificateResponseDto })

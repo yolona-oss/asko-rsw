@@ -51,6 +51,8 @@ service CertificateService {
     rpc FindByDealer(CertFindByDealerRequest) returns (PaginatedCertificatesResponse);
     rpc FindAll(CertFindAllRequest) returns (PaginatedCertificatesResponse);
     rpc ValidateCertificate(CertValidateRequest) returns (CertValidateResponse);
+    rpc VerifySignature(VerifySignatureRequest) returns (VerifySignatureResponse);
+    rpc GetPublicKey(SignatureEmptyRequest) returns (PublicKeyResponse);
 }
 
 service RepairerService {
@@ -91,6 +93,7 @@ service RepairService {
     rpc PauseRequest(RepairPauseRequest) returns (RepairRequestResponse);
     rpc ResumeRequest(RepairResumeRequest) returns (RepairRequestResponse);
     rpc ReassignRepairer(RepairReassignRepairerRequest) returns (RepairRequestResponse);
+    rpc AcceptCompletion(RepairAcceptCompletionRequest) returns (RepairRequestResponse);
 
     // Work steps
     rpc AddStep(RepairAddStepRequest) returns (WorkStepResponse);
@@ -353,6 +356,8 @@ message UserDeviceRecord {
     string createdAt = 9;
     DeviceRecord device = 10;
     AddressRecord address = 11;
+    string registrationSignature = 12;
+    string registrationSignedPayload = 13;
 }
 
 message UserDeviceResponse {
@@ -385,6 +390,8 @@ message CertificateRecord {
     string createdAt = 13;
     UserDeviceRecord userDevice = 14;
     DealerProfileRecord dealer = 15;
+    string signature = 16;
+    string signedPayload = 17;
 }
 
 // ─── Certificate Requests ──────────────────────────────────────────────────
@@ -639,6 +646,10 @@ message RepairRequestRecord {
     RepairerRecord repairer = 24;
     CertificateRecord certificate = 25;
     AddressRecord address = 26;
+    string completionSignature = 27;
+    string completionSignedPayload = 28;
+    string acceptanceSignature = 29;
+    string acceptanceSignedPayload = 30;
 }
 
 message BrokenPartRecord {
@@ -946,6 +957,8 @@ message DealerProfileRecord {
     int32 pointsBalance = 5;
     string createdAt = 6;
     string updatedAt = 7;
+    string agreementSignature = 8;
+    string agreementSignedPayload = 9;
 }
 
 message DealerClientRecord {
@@ -1099,3 +1112,30 @@ message PaginatedDealersResponse {
     int32 offset = 3;
     int32 limit = 4;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Signature Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message RepairAcceptCompletionRequest {
+    string userId = 1;
+    string requestId = 2;
+}
+
+message VerifySignatureRequest {
+    string entityType = 1;
+    string entityId = 2;
+}
+
+message VerifySignatureResponse {
+    bool valid = 1;
+    string reason = 2;
+    string signedPayload = 3;
+}
+
+message PublicKeyResponse {
+    string publicKeyPem = 1;
+    string algorithm = 2;
+}
+
+message SignatureEmptyRequest {}

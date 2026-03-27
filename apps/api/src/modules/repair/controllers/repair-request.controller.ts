@@ -280,6 +280,13 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/accept-completion')
+    async acceptCompletion(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.acceptCompletion(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Post(':id/accept')
     async accept(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {

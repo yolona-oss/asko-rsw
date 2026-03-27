@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'rejectedRepairers' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload';
 
     @PrimaryKey()
     id: string = uuid();
@@ -83,4 +83,16 @@ export class RepairRequest {
 
     @Property({ type: 'datetime', onUpdate: () => new Date() })
     updatedAt = new Date();
+
+    @Property({ type: 'text', nullable: true })
+    completionSignature?: string;
+
+    @Property({ type: 'text', nullable: true })
+    completionSignedPayload?: string;
+
+    @Property({ type: 'text', nullable: true })
+    acceptanceSignature?: string;
+
+    @Property({ type: 'text', nullable: true })
+    acceptanceSignedPayload?: string;
 }

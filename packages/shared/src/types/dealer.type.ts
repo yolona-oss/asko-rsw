@@ -19,6 +19,8 @@ export interface IDealerProfile {
     pointsBalance: number;
     user?: import('./user/user.type').IUser;
     clients?: IDealerClient[];
+    agreementSignature?: string;
+    agreementSignedPayload?: string;
     createdAt: Date;
     updatedAt: Date;
 }

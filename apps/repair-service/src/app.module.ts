@@ -38,6 +38,7 @@ import { RepairRequestService } from 'services/repair-request.service';
 import { WorkStepService } from 'services/work-step.service';
 import { DealerService } from 'services/dealer.service';
 import { BrokenPartService } from 'services/broken-part.service';
+import { SignatureService } from 'services/signature.service';
 
 @Module({
     imports: [
@@ -106,6 +107,7 @@ import { BrokenPartService } from 'services/broken-part.service';
         WorkStepService,
         BrokenPartService,
         DealerService,
+        SignatureService,
         RepairEventService,
         PaymentCommandService,
     ],

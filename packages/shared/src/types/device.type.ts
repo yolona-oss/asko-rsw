@@ -49,5 +49,7 @@ export interface IUserDevice {
     notes?: string;
     device?: IDevice;
     address?: import('./address-book.type').IAddressBook;
+    registrationSignature?: string;
+    registrationSignedPayload?: string;
     createdAt: Date;
 }

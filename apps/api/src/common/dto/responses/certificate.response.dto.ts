@@ -16,6 +16,8 @@ export class CertificateRecordDto {
     description?: string;
     price?: number;
     paid: boolean;
+    signature?: string;
+    signedPayload?: string;
     user?: AuthUserDto;
     userDevice?: UserDeviceRecordDto;
     dealer?: DealerProfileRecordDto;
@@ -46,4 +48,15 @@ export class CertPriceResponseDto {
 export class CertValidateResponseDto {
     valid: boolean;
     certificate: CertificateRecordDto;
+}
+
+export class VerifySignatureResponseDto {
+    valid: boolean;
+    reason?: string;
+    signedPayload?: string;
+}
+
+export class PublicKeyResponseDto {
+    publicKeyPem: string;
+    algorithm: string;
 }

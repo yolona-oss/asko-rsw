@@ -6,7 +6,7 @@ import { DealerProfile } from './dealer-profile.entity';
 
 @Entity()
 export class Certificate {
-    [OptionalProps]?: 'status' | 'issuedAt' | 'paid' | 'createdAt' | 'dealer' | 'purchaseReceiptUrl' | 'description';
+    [OptionalProps]?: 'status' | 'issuedAt' | 'paid' | 'createdAt' | 'dealer' | 'purchaseReceiptUrl' | 'description' | 'signature' | 'signedPayload';
 
     @PrimaryKey()
     id: string = uuid();
@@ -46,4 +46,10 @@ export class Certificate {
 
     @Property({ type: 'datetime' })
     createdAt = new Date();
+
+    @Property({ type: 'text', nullable: true })
+    signature?: string;
+
+    @Property({ type: 'text', nullable: true })
+    signedPayload?: string;
 }

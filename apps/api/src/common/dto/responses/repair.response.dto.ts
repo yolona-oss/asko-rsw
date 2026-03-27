@@ -22,6 +22,10 @@ export class RepairRequestRecordDto {
     rejectedRepairers?: string[];
     completionNote?: string;
     stepsLocked: boolean;
+    completionSignature?: string;
+    completionSignedPayload?: string;
+    acceptanceSignature?: string;
+    acceptanceSignedPayload?: string;
     user?: AuthUserDto;
     userDevice?: UserDeviceRecordDto;
     repairer?: RepairerRecordDto;

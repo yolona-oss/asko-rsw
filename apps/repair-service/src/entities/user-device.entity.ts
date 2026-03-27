@@ -5,7 +5,7 @@ import { Address } from './address.entity';
 
 @Entity()
 export class UserDevice {
-    [OptionalProps]?: 'purchaseDate' | 'warrantyUntil' | 'notes' | 'createdAt';
+    [OptionalProps]?: 'purchaseDate' | 'warrantyUntil' | 'notes' | 'createdAt' | 'registrationSignature' | 'registrationSignedPayload';
 
     @PrimaryKey()
     id: string = uuid();
@@ -33,4 +33,10 @@ export class UserDevice {
 
     @Property({ type: 'datetime' })
     createdAt = new Date();
+
+    @Property({ type: 'text', nullable: true })
+    registrationSignature?: string;
+
+    @Property({ type: 'text', nullable: true })
+    registrationSignedPayload?: string;
 }

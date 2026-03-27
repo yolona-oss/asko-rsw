@@ -4,7 +4,7 @@ import { DealerClient } from './dealer-client.entity';
 
 @Entity()
 export class DealerProfile {
-    [OptionalProps]?: 'companyName' | 'inn' | 'pointsBalance' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'companyName' | 'inn' | 'pointsBalance' | 'createdAt' | 'updatedAt' | 'agreementSignature' | 'agreementSignedPayload';
 
     @PrimaryKey()
     id: string = uuid();
@@ -29,4 +29,10 @@ export class DealerProfile {
 
     @Property({ type: 'datetime', onUpdate: () => new Date() })
     updatedAt = new Date();
+
+    @Property({ type: 'text', nullable: true })
+    agreementSignature?: string;
+
+    @Property({ type: 'text', nullable: true })
+    agreementSignedPayload?: string;
 }

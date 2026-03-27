@@ -22,6 +22,8 @@ export interface ICertificate {
     user?: import('./user/user.type').IUser;
     userDevice?: import('./device.type').IUserDevice;
     dealer?: import('./dealer.type').IDealerProfile;
+    signature?: string;
+    signedPayload?: string;
     createdAt: Date;
 }
 

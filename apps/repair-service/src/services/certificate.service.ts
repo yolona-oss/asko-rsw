@@ -13,6 +13,7 @@ import {
 import { PointsTransaction } from 'entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
+import { SignatureService } from './signature.service';
 
 /** Certificate price = device price * years * 0.05. Minimum 1000. */
 function calculateCertificatePrice(devicePrice: number, years: number): number {
@@ -25,6 +26,7 @@ export class CertificateService {
     constructor(
         private readonly em: EntityManager,
         private readonly paymentCommandService: PaymentCommandService,
+        private readonly signatureService: SignatureService,
     ) {}
 
     /** User adds an existing certificate (e.g. received with product) */
@@ -51,6 +53,20 @@ export class CertificateService {
             paid: true,
         });
         await this.em.persistAndFlush(cert);
+
+        // Sign certificate data
+        const payload = {
+            certificateNumber: cert.certificateNumber,
+            userId: cert.userId,
+            userDeviceId: userDevice.id,
+            issuedAt: cert.issuedAt.toISOString(),
+            expiresAt: cert.expiresAt.toISOString(),
+            signedAt: new Date().toISOString(),
+        };
+        cert.signedPayload = JSON.stringify(payload, Object.keys(payload).sort());
+        cert.signature = this.signatureService.sign(payload);
+        await this.em.flush();
+
         return cert;
     }
 
@@ -115,6 +131,19 @@ export class CertificateService {
 
         cert.status = CertificateStatus.ACTIVE;
         cert.paid = true;
+
+        // Sign certificate data
+        const userDeviceId = typeof cert.userDevice === 'object' ? cert.userDevice.id : String(cert.userDevice);
+        const payload = {
+            certificateNumber: cert.certificateNumber,
+            userId: cert.userId,
+            userDeviceId,
+            issuedAt: cert.issuedAt.toISOString(),
+            expiresAt: cert.expiresAt.toISOString(),
+            signedAt: new Date().toISOString(),
+        };
+        cert.signedPayload = JSON.stringify(payload, Object.keys(payload).sort());
+        cert.signature = this.signatureService.sign(payload);
 
         // Award dealer points if certificate was created by dealer
         if (cert.dealer && cert.price) {

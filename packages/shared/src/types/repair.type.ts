@@ -60,6 +60,10 @@ export interface IRepairRequest {
     workSteps?: IWorkStep[];
     brokenParts?: IBrokenPart[];
     address?: import('./address-book.type').IAddressBook;
+    completionSignature?: string;
+    completionSignedPayload?: string;
+    acceptanceSignature?: string;
+    acceptanceSignedPayload?: string;
     createdAt: Date;
     updatedAt: Date;
 }

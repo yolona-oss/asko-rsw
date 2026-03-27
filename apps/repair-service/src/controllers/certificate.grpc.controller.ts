@@ -1,13 +1,18 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { CertificateService } from 'services/certificate.service';
-import { AppError } from 'common/error';
+import { RepairRequestService } from 'services/repair-request.service';
+import { DeviceService } from 'services/device.service';
+import { SignatureService } from 'services/signature.service';
+import { AppError, AppErrors } from 'common/error';
 import type { Certificate } from 'entities/certificate.entity';
 import type { UserDevice } from 'entities/user-device.entity';
 import type { Device } from 'entities/device.entity';
 import type { Address } from 'entities/address.entity';
 import type { DealerProfile } from 'entities/dealer-profile.entity';
+import { DealerProfile as DealerProfileEntity } from 'entities/dealer-profile.entity';
 
 import type {
     CertAddCertificateRequest,
@@ -21,6 +26,8 @@ import type {
     CertFindByDealerRequest,
     CertFindAllRequest,
     CertValidateRequest,
+    VerifySignatureRequest,
+    SignatureEmptyRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -120,6 +127,8 @@ function certToRecord(entity: Certificate) {
         purchaseReceiptUrl: entity.purchaseReceiptUrl ?? '',
         description: entity.description ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
+        signature: entity.signature ?? '',
+        signedPayload: entity.signedPayload ?? '',
         userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
         dealer: dealer ? dealerToRecord(dealer) : undefined,
     };
@@ -129,6 +138,10 @@ function certToRecord(entity: Certificate) {
 export class CertificateGrpcController {
     constructor(
         private readonly certificateService: CertificateService,
+        private readonly signatureService: SignatureService,
+        private readonly repairRequestService: RepairRequestService,
+        private readonly deviceService: DeviceService,
+        private readonly em: EntityManager,
     ) {}
 
     @GrpcMethod('CertificateService', 'AddCertificate')
@@ -248,6 +261,61 @@ export class CertificateGrpcController {
             return {
                 valid: result.valid,
                 certificate: result.certificate ? certToRecord(result.certificate) : undefined,
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'VerifySignature')
+    async verifySignature(data: VerifySignatureRequest) {
+        try {
+            let signature: string | null | undefined;
+            let signedPayload: string | null | undefined;
+
+            switch (data.entityType) {
+                case 'certificate': {
+                    const cert = await this.certificateService.findById(data.entityId);
+                    signature = cert.signature;
+                    signedPayload = cert.signedPayload;
+                    break;
+                }
+                case 'repairRequest': {
+                    const request = await this.repairRequestService.findById(data.entityId);
+                    signature = request.completionSignature;
+                    signedPayload = request.completionSignedPayload;
+                    break;
+                }
+                case 'userDevice': {
+                    const userDevice = await this.deviceService.findUserDeviceById(data.entityId);
+                    signature = userDevice.registrationSignature;
+                    signedPayload = userDevice.registrationSignedPayload;
+                    break;
+                }
+                case 'dealerProfile': {
+                    const dealer = await this.em.findOne(DealerProfileEntity, { id: data.entityId });
+                    if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+                    signature = dealer.agreementSignature;
+                    signedPayload = dealer.agreementSignedPayload;
+                    break;
+                }
+                default:
+                    throw AppErrors.badRequest(`Unknown entity type: ${data.entityType}`);
+            }
+
+            const result = this.signatureService.verifyStoredSignature(signedPayload, signature);
+            return {
+                valid: result.valid,
+                reason: result.reason ?? '',
+                signedPayload: signedPayload ?? '',
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'GetPublicKey')
+    async getPublicKey(_data: SignatureEmptyRequest) {
+        try {
+            return {
+                publicKeyPem: this.signatureService.getPublicKeyPem(),
+                algorithm: 'ECDSA-P256-SHA256',
             };
         } catch (e) { throw toGrpcError(e); }
     }

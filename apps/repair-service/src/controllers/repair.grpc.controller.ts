@@ -53,6 +53,7 @@ import type {
     RepairUpdateBrokenPartStatusRequest,
     RepairDeleteBrokenPartRequest,
     RepairGetBrokenPartsRequest,
+    RepairAcceptCompletionRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -185,6 +186,10 @@ function requestToRecord(entity: RepairRequest) {
         statusBeforePause: entity.statusBeforePause ?? '',
         conversationId: entity.conversationId ?? '',
         chatCloseAt: entity.chatCloseAt?.toISOString() ?? '',
+        completionSignature: entity.completionSignature ?? '',
+        completionSignedPayload: entity.completionSignedPayload ?? '',
+        acceptanceSignature: entity.acceptanceSignature ?? '',
+        acceptanceSignedPayload: entity.acceptanceSignedPayload ?? '',
         userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
         repairer: repairer ? repairerToRecord(repairer) : undefined,
         certificate: certificate ? certificateToRecord(certificate) : undefined,
@@ -356,6 +361,14 @@ export class RepairGrpcController {
     async reassignRepairer(data: RepairReassignRepairerRequest) {
         try {
             const request = await this.repairRequestService.reassign(data.managerId, data.requestId, data.newRepairerId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'AcceptCompletion')
+    async acceptCompletion(data: RepairAcceptCompletionRequest) {
+        try {
+            const request = await this.repairRequestService.acceptCompletion(data.userId, data.requestId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

@@ -20,6 +20,12 @@ export class AppConfig {
             url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
         };
     }
+    get signature() {
+        return {
+            privateKey: Buffer.from(this.configService.getOrThrow<string>('SIGNATURE_PRIVATE_KEY'), 'base64').toString('utf-8'),
+            publicKey: Buffer.from(this.configService.getOrThrow<string>('SIGNATURE_PUBLIC_KEY'), 'base64').toString('utf-8'),
+        };
+    }
 }
 
 @Global()

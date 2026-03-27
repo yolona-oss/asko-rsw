@@ -3,6 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, UserDevice, Address, DevicePart } from 'entities';
 import { DeviceType } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { SignatureService } from './signature.service';
 
 /** Simple slugify helper: lowercase, replace non-alphanum with dashes, trim dashes */
 function slugify(text: string): string {
@@ -21,6 +22,7 @@ function slugify(text: string): string {
 export class DeviceService {
     constructor(
         private readonly em: EntityManager,
+        private readonly signatureService: SignatureService,
     ) {}
 
     // ── Device catalog (admin) ──────────────────────────────────────────
@@ -206,6 +208,18 @@ export class DeviceService {
             notes: dto.notes,
         });
         await this.em.persistAndFlush(userDevice);
+
+        // Sign device registration
+        const regPayload = {
+            userId,
+            userDeviceId: userDevice.id,
+            serialNumber: dto.serialNumber,
+            signedAt: new Date().toISOString(),
+        };
+        userDevice.registrationSignedPayload = JSON.stringify(regPayload, Object.keys(regPayload).sort());
+        userDevice.registrationSignature = this.signatureService.sign(regPayload);
+        await this.em.flush();
+
         return userDevice;
     }
 

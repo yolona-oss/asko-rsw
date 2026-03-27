@@ -102,6 +102,10 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.reassignRepairer({ managerId, requestId, newRepairerId }));
     }
 
+    acceptCompletion(userId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.acceptCompletion({ userId, requestId }));
+    }
+
     // ── Work steps ──
 
     addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; order?: number; isFinal?: boolean }): Promise<WorkStepResponse> {

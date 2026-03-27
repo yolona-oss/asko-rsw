@@ -105,6 +105,8 @@ function userDeviceToRecord(entity: UserDevice) {
         warrantyUntil: entity.warrantyUntil?.toISOString() ?? '',
         notes: entity.notes ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
+        registrationSignature: entity.registrationSignature ?? '',
+        registrationSignedPayload: entity.registrationSignedPayload ?? '',
         device: device ? deviceToRecord(device) : undefined,
         address: address ? addressToRecord(address) : undefined,
     };

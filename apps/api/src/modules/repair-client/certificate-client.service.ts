@@ -9,6 +9,8 @@ import type {
     PaginatedCertificatesResponse,
     CertPriceResponse,
     CertValidateResponse,
+    VerifySignatureResponse,
+    PublicKeyResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -116,5 +118,13 @@ export class CertificateClientService implements OnModuleInit {
 
     validateCertificate(certificateNumber: string): Promise<CertValidateResponse> {
         return grpcCall(this.certificateService.validateCertificate({ certificateNumber }));
+    }
+
+    verifySignature(entityType: string, entityId: string): Promise<VerifySignatureResponse> {
+        return grpcCall(this.certificateService.verifySignature({ entityType, entityId }));
+    }
+
+    getPublicKey(): Promise<PublicKeyResponse> {
+        return grpcCall(this.certificateService.getPublicKey({}));
     }
 }

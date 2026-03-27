@@ -49,6 +49,8 @@ function profileToRecord(entity: DealerProfile) {
         pointsBalance: entity.pointsBalance,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        agreementSignature: entity.agreementSignature ?? '',
+        agreementSignedPayload: entity.agreementSignedPayload ?? '',
     };
 }
 

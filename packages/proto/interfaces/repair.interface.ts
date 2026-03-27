@@ -203,6 +203,8 @@ export interface UserDeviceRecord {
     createdAt: string;
     device: DeviceRecord;
     address: AddressRecord;
+    registrationSignature?: string;
+    registrationSignedPayload?: string;
 }
 
 export interface UserDeviceResponse {
@@ -271,6 +273,8 @@ export interface CertificateRecord {
     purchaseReceiptUrl: string;
     description: string;
     createdAt: string;
+    signature?: string;
+    signedPayload?: string;
 }
 
 // ─── Certificate Requests ───────────────────────────────────────────────
@@ -377,6 +381,8 @@ export interface CertificateServiceClient {
     findByDealer(request: CertFindByDealerRequest): Observable<PaginatedCertificatesResponse>;
     findAll(request: CertFindAllRequest): Observable<PaginatedCertificatesResponse>;
     validateCertificate(request: CertValidateRequest): Observable<CertValidateResponse>;
+    verifySignature(request: VerifySignatureRequest): Observable<VerifySignatureResponse>;
+    getPublicKey(request: SignatureEmptyRequest): Observable<PublicKeyResponse>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -565,6 +571,10 @@ export interface RepairRequestRecord {
     statusBeforePause: string;
     conversationId: string;
     chatCloseAt: string;
+    completionSignature?: string;
+    completionSignedPayload?: string;
+    acceptanceSignature?: string;
+    acceptanceSignedPayload?: string;
 }
 
 export interface BrokenPartRecord {
@@ -877,6 +887,7 @@ export interface RepairServiceClient {
     pauseRequest(request: RepairPauseRequest): Observable<RepairRequestResponse>;
     resumeRequest(request: RepairResumeRequest): Observable<RepairRequestResponse>;
     reassignRepairer(request: RepairReassignRepairerRequest): Observable<RepairRequestResponse>;
+    acceptCompletion(request: RepairAcceptCompletionRequest): Observable<RepairRequestResponse>;
 
     // Work steps
     addStep(request: RepairAddStepRequest): Observable<WorkStepResponse>;
@@ -923,6 +934,8 @@ export interface DealerProfileRecord {
     pointsBalance: number;
     createdAt: string;
     updatedAt: string;
+    agreementSignature?: string;
+    agreementSignedPayload?: string;
 }
 
 export interface DealerClientRecord {
@@ -1097,3 +1110,30 @@ export interface DealerServiceClient {
     completeWithdrawal(request: DealerFindByIdRequest): Observable<DealerEmptyResponse>;
     findAllDealers(request: DealerPaginationRequest): Observable<PaginatedDealersResponse>;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGNATURE DOMAIN
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface RepairAcceptCompletionRequest {
+    userId: string;
+    requestId: string;
+}
+
+export interface VerifySignatureRequest {
+    entityType: string;
+    entityId: string;
+}
+
+export interface VerifySignatureResponse {
+    valid: boolean;
+    reason: string;
+    signedPayload: string;
+}
+
+export interface PublicKeyResponse {
+    publicKeyPem: string;
+    algorithm: string;
+}
+
+export interface SignatureEmptyRequest {}

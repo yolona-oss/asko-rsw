@@ -10,7 +10,9 @@ import { AppErrors } from 'common/error';
 import { assertTransition, assertActionTransition, canTransition } from 'common/repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { WorkStep } from 'entities/work-step.entity';
 import { BrokenPartService } from './broken-part.service';
+import { SignatureService } from './signature.service';
 
 @Injectable()
 export class RepairRequestService {
@@ -19,6 +21,7 @@ export class RepairRequestService {
         private readonly paymentCommandService: PaymentCommandService,
         private readonly repairEventService: RepairEventService,
         private readonly brokenPartService: BrokenPartService,
+        private readonly signatureService: SignatureService,
     ) {}
 
     /** User creates a repair request */
@@ -394,6 +397,23 @@ export class RepairRequestService {
             request.chatCloseAt = new Date(Date.now() + 30 * 60 * 1000);
         }
 
+        // Sign completion data
+        const workSteps = await this.em.find(WorkStep, { repairRequest: requestId });
+        const workStepsSummary = workSteps
+            .sort((a, b) => a.order - b.order)
+            .map(s => `${s.title}:${s.status}`)
+            .join(',');
+        const completionPayload = {
+            requestId: request.id,
+            repairerId: repairerId ?? '',
+            totalCost: request.totalCost ?? 0,
+            completionNote: request.completionNote ?? '',
+            workStepsSummary,
+            signedAt: new Date().toISOString(),
+        };
+        request.completionSignedPayload = JSON.stringify(completionPayload, Object.keys(completionPayload).sort());
+        request.completionSignature = this.signatureService.sign(completionPayload);
+
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -404,6 +424,30 @@ export class RepairRequestService {
             newStatus: RepairRequestStatus.COMPLETED,
             timestamp: new Date(),
         });
+
+        return request;
+    }
+
+    /** Customer accepts completed repair — cryptographic attestation */
+    @CreateRequestContext()
+    async acceptCompletion(userId: string, requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.status !== RepairRequestStatus.COMPLETED) {
+            throw AppErrors.badRequest('Can only accept completed repairs');
+        }
+        if (request.acceptanceSignature) {
+            throw AppErrors.badRequest('Repair already accepted');
+        }
+
+        const payload = {
+            requestId: request.id,
+            userId,
+            signedAt: new Date().toISOString(),
+        };
+        request.acceptanceSignedPayload = JSON.stringify(payload, Object.keys(payload).sort());
+        request.acceptanceSignature = this.signatureService.sign(payload);
+        await this.em.flush();
 
         return request;
     }
