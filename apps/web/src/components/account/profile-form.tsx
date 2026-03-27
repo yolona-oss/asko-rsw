@@ -24,6 +24,8 @@ export function ProfileForm() {
   const [loaded, setLoaded] = useState(false);
 
   // Email verification
+  const originalEmail = useRef('');
+  const originalEmailVerified = useRef(false);
   const [emailVerified, setEmailVerified] = useState(true);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailResendCooldown, setEmailResendCooldown] = useState(0);
@@ -62,6 +64,8 @@ export function ProfileForm() {
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
         setEmailVerified(data.emailVerified ?? false);
+        originalEmail.current = data.email ?? '';
+        originalEmailVerified.current = data.emailVerified ?? false;
         // Load chat preferences
         const prefs = (data as any).preferencesJson
           ? JSON.parse((data as any).preferencesJson)
@@ -137,6 +141,10 @@ export function ProfileForm() {
     setSaving(true);
     setMessage(null);
     try {
+      const emailChanged = email.toLowerCase() !== originalEmail.current.toLowerCase();
+      const needsEmailConfirmation = emailChanged && originalEmailVerified.current;
+
+      // Save profile (if email is verified and changed, backend will skip the email update)
       await usersApi.updateProfile({
         name: [firstName, lastName].filter(Boolean).join(' '),
         email: email || undefined,
@@ -149,12 +157,32 @@ export function ProfileForm() {
         },
       } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });
-      setMessage({ type: 'success', text: 'Профиль сохранён' });
+
+      if (needsEmailConfirmation) {
+        // Request email change confirmation — sends link to current (old) email
+        try {
+          const { data } = await usersApi.requestEmailChange(email);
+          setEmail(originalEmail.current); // revert input to current email
+          setMessage({ type: 'success', text: data.message });
+        } catch (err: any) {
+          const errMsg = err?.response?.data?.message ?? 'Не удалось запросить смену email';
+          setEmail(originalEmail.current);
+          setMessage({ type: 'error', text: errMsg });
+        }
+      } else {
+        if (emailChanged) {
+          // Email changed directly (was unverified) — update tracking
+          originalEmail.current = email.toLowerCase();
+          originalEmailVerified.current = false;
+          setEmailVerified(false);
+        }
+        setMessage({ type: 'success', text: 'Профиль сохранён' });
+      }
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
       setSaving(false);
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), 5000);
     }
   };
 

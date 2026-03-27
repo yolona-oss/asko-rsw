@@ -58,6 +58,24 @@ message ResendConfirmationResponse {
     int32 retry_after = 1;
 }
 
+message RequestEmailChangeRequest {
+    string id = 1;
+    string new_email = 2;
+}
+
+message RequestEmailChangeResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message ConfirmEmailChangeRequest {
+    string token = 1;
+}
+
+message ConfirmEmailChangeResponse {
+    string message = 1;
+}
+
 message RefreshTokenRequest {
     string refresh_token = 1;
 }
@@ -253,6 +271,8 @@ service UserService {
     rpc DevSwitchAccount(DevSwitchRequest) returns (AuthSessionResponse);
     rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
     rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+    rpc RequestEmailChange(RequestEmailChangeRequest) returns (RequestEmailChangeResponse);
+    rpc ConfirmEmailChange(ConfirmEmailChangeRequest) returns (ConfirmEmailChangeResponse);
     rpc FindUserByAccessToken(FindByTokenRequest) returns (AuthUserResponse);
 
     // User CRUD

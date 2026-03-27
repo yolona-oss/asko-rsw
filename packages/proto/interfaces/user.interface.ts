@@ -56,6 +56,24 @@ export interface ResendConfirmationResponse {
     retryAfter: number;
 }
 
+export interface RequestEmailChangeRequest {
+    id: string;
+    newEmail: string;
+}
+
+export interface RequestEmailChangeResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface ConfirmEmailChangeRequest {
+    token: string;
+}
+
+export interface ConfirmEmailChangeResponse {
+    message: string;
+}
+
 export interface RefreshTokenRequest {
     refreshToken: string;
 }
@@ -255,6 +273,8 @@ export interface UserServiceClient {
     findUserByAccessToken(request: FindByTokenRequest): Observable<AuthUserResponse>;
     forgotPassword(request: ForgotPasswordRequest): Observable<ForgotPasswordResponse>;
     resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse>;
+    requestEmailChange(request: RequestEmailChangeRequest): Observable<RequestEmailChangeResponse>;
+    confirmEmailChange(request: ConfirmEmailChangeRequest): Observable<ConfirmEmailChangeResponse>;
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;

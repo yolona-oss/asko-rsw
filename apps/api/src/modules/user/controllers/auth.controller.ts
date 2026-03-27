@@ -237,6 +237,14 @@ export class AuthController {
         return { message: result.message };
     }
 
+    @Public()
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/confirm-email-change')
+    async confirmEmailChange(@Body() dto: { token: string }) {
+        const result = await this.userClient.confirmEmailChange({ token: dto.token });
+        return { message: result.message };
+    }
+
     @ApiOkResponse({ type: AuthUserDto })
     @Get('session')
     async findSessionUser(@Req() request: Request) {

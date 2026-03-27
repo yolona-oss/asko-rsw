@@ -237,8 +237,11 @@ export class UserService {
 
         if (newUserInfo.email) {
             if (user.email !== newUserInfo.email.toLowerCase()) {
-                user.email = newUserInfo.email.toLowerCase()
-                user.emailVerified = false
+                // If current email is verified, skip — email change requires confirmation flow
+                if (!user.emailVerified) {
+                    user.email = newUserInfo.email.toLowerCase()
+                    user.emailVerified = false
+                }
             }
         }
 
@@ -386,6 +389,17 @@ export class UserService {
         if (session) {
             await this.em.removeAndFlush(session);
         }
+    }
+
+    @CreateRequestContext()
+    async changeEmail(userId: string, newEmail: string) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found');
+        }
+        user.email = newEmail.toLowerCase();
+        user.emailVerified = false;
+        await this.em.persistAndFlush(user);
     }
 
     checkPasswordStrength(password: string) {

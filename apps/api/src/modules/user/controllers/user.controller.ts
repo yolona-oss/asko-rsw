@@ -24,11 +24,13 @@ import {
     ALL_ROLES,
     ADMIN_ROLES,
     Role,
+    RequestEmailChangeDto,
 } from '@asko/shared';
 import {
     PaginatedUsersResponseDto,
     EmptyResponseDto,
     UserResponseDto,
+    MessageResponseDto,
 } from 'common/dto/responses';
 
 @ApiTags('Users')
@@ -99,6 +101,20 @@ export class UsersController {
             oldPassword: data.oldPassword,
             newPassword: data.newPassword,
         });
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ type: MessageResponseDto })
+    @Post('/request-email-change')
+    async requestEmailChange(
+        @JwtAuthUser() user: IAuthUser,
+        @Body() data: RequestEmailChangeDto,
+    ) {
+        const result = await this.userClient.requestEmailChange({
+            id: user.id,
+            newEmail: data.newEmail,
+        });
+        return { message: result.message, retryAfter: result.retryAfter };
     }
 
     @RequiredRoles(...ALL_ROLES)

@@ -13,3 +13,7 @@ export class ResetPasswordDto {
     token: string
     newPassword: string
 }
+
+export class RequestEmailChangeDto {
+    newEmail: string
+}

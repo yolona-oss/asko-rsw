@@ -46,6 +46,10 @@ import type {
     ForgotPasswordResponse,
     ResetPasswordRequest,
     ResetPasswordResponse,
+    RequestEmailChangeRequest,
+    RequestEmailChangeResponse,
+    ConfirmEmailChangeRequest,
+    ConfirmEmailChangeResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -228,6 +232,22 @@ export class UserGrpcController {
     async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
         try {
             const result = await this.authService.resetPassword(data.token, data.newPassword);
+            return { message: result.message };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'RequestEmailChange')
+    async requestEmailChange(data: RequestEmailChangeRequest): Promise<RequestEmailChangeResponse> {
+        try {
+            const result = await this.authService.requestEmailChange(data.id, data.newEmail);
+            return { message: result.message, retryAfter: result.retryAfter };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ConfirmEmailChange')
+    async confirmEmailChange(data: ConfirmEmailChangeRequest): Promise<ConfirmEmailChangeResponse> {
+        try {
+            const result = await this.authService.confirmEmailChange(data.token);
             return { message: result.message };
         } catch (e) { throw toGrpcError(e); }
     }

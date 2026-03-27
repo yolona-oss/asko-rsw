@@ -48,6 +48,8 @@ const RESET_COOLDOWN_SECONDS = 60;
 const RESET_KEY_PREFIX = 'password:reset:';
 const EMAIL_CONFIRM_COOLDOWN_SECONDS = 60;
 const EMAIL_CONFIRM_KEY_PREFIX = 'email:confirm:';
+const EMAIL_CHANGE_COOLDOWN_SECONDS = 60;
+const EMAIL_CHANGE_KEY_PREFIX = 'email:change:';
 
 @Injectable()
 export class AuthService {
@@ -481,5 +483,83 @@ export class AuthService {
         await this.userService.resetPasswordByToken(user.id, resetTokenHash, passwordHash);
 
         return { message: 'Пароль успешно изменён' };
+    }
+
+    async requestEmailChange(userId: string, newEmail: string): Promise<{ message: string; retryAfter: number }> {
+        const normalizedEmail = newEmail.toLowerCase();
+        const redisKey = `${EMAIL_CHANGE_KEY_PREFIX}${userId}`;
+        const ttl = await this.redis.ttl(redisKey);
+        if (ttl > 0) {
+            return { message: 'Письмо уже отправлено. Попробуйте позже.', retryAfter: ttl };
+        }
+
+        const user = await this.userService.findById(userId);
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found');
+        }
+        if (!user.email || !user.emailVerified) {
+            throw AppErrors.badRequest('Email не подтверждён — измените его напрямую в профиле');
+        }
+        if (user.email === normalizedEmail) {
+            throw AppErrors.badRequest('Новый email совпадает с текущим');
+        }
+
+        // Check if the new email is already taken
+        const existing = await this.userService.findByEmail(normalizedEmail);
+        if (existing) {
+            throw AppErrors.badRequest('Этот email уже используется');
+        }
+
+        const token = this.jwtService.sign<any>(
+            { id: user.id, newEmail: normalizedEmail },
+            {
+                expiresIn: this.config.jwt.email_confirmation.sign_options.expires_in,
+                privateKey: Buffer.from(this.config.jwt.email_confirmation.private_key, 'base64').toString('utf-8'),
+            },
+        );
+
+        const url = `${this.config.frontendUrl}/auth/confirm-email-change?token=${token}`;
+        await EmailService.getInstance().sendMail({
+            to: user.email,
+            from: this.config.email.from,
+            subject: 'Подтверждение смены email — ASKO',
+            text: `Вы запросили смену email на ${normalizedEmail}.\nДля подтверждения перейдите по ссылке: ${url}\n\nЕсли вы не запрашивали смену email, проигнорируйте это письмо.`,
+            html: [
+                '<div style="font-family:sans-serif;max-width:480px;margin:0 auto">',
+                '<h2 style="color:#111">Смена email</h2>',
+                `<p>Вы запросили смену email на <strong>${normalizedEmail}</strong>.</p>`,
+                '<p>Для подтверждения нажмите на кнопку ниже:</p>',
+                `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#EB001C;color:#fff;text-decoration:none;border-radius:4px;font-weight:600">Подтвердить смену email</a>`,
+                '<p style="margin-top:16px;color:#666;font-size:13px">Если вы не запрашивали смену email, проигнорируйте это письмо.</p>',
+                '</div>',
+            ].join(''),
+        });
+
+        await this.redis.set(redisKey, '1', 'EX', EMAIL_CHANGE_COOLDOWN_SECONDS);
+        return { message: `Письмо для подтверждения отправлено на ${user.email}`, retryAfter: EMAIL_CHANGE_COOLDOWN_SECONDS };
+    }
+
+    async confirmEmailChange(token: string): Promise<{ message: string }> {
+        try {
+            const payload = this.jwtService.verify(token, {
+                publicKey: Buffer.from(this.config.jwt.email_confirmation.public_key, 'base64').toString('utf-8'),
+            });
+
+            if (!payload.id || !payload.newEmail) {
+                throw AppErrors.badRequest('Недействительный токен');
+            }
+
+            // Check new email isn't taken (could have been taken since the link was sent)
+            const existing = await this.userService.findByEmail(payload.newEmail);
+            if (existing && existing.id !== payload.id) {
+                throw AppErrors.badRequest('Этот email уже используется другим аккаунтом');
+            }
+
+            await this.userService.changeEmail(payload.id, payload.newEmail);
+            return { message: 'Email успешно изменён' };
+        } catch (err: any) {
+            if (err instanceof AppError) throw err;
+            throw AppErrors.badRequest('Недействительный или истекший токен смены email');
+        }
     }
 }

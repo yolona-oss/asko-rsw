@@ -40,6 +40,10 @@ import type {
     ForgotPasswordResponse,
     ResetPasswordRequest,
     ResetPasswordResponse,
+    RequestEmailChangeRequest,
+    RequestEmailChangeResponse,
+    ConfirmEmailChangeRequest,
+    ConfirmEmailChangeResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -94,6 +98,14 @@ export class UserClientService implements OnModuleInit {
 
     resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
         return grpcCall(this.userService.resetPassword(data));
+    }
+
+    requestEmailChange(data: RequestEmailChangeRequest): Promise<RequestEmailChangeResponse> {
+        return grpcCall(this.userService.requestEmailChange(data));
+    }
+
+    confirmEmailChange(data: ConfirmEmailChangeRequest): Promise<ConfirmEmailChangeResponse> {
+        return grpcCall(this.userService.confirmEmailChange(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────

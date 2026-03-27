@@ -35,6 +35,10 @@ export const authApi = {
     return api.post<{ message: string; retryAfter: number }>('/auth/resend-confirmation', { email });
   },
 
+  confirmEmailChange(token: string) {
+    return api.post<{ message: string }>('/auth/confirm-email-change', { token });
+  },
+
   forgotPassword(email: string) {
     return api.post<{ message: string; retryAfter: number }>('/auth/forgot-password', { email });
   },

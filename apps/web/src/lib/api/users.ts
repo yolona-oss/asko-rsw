@@ -35,6 +35,10 @@ export const usersApi = {
     });
   },
 
+  requestEmailChange(newEmail: string) {
+    return api.post<{ message: string; retryAfter: number }>('/users/request-email-change', { newEmail });
+  },
+
   changePassword(data: { oldPassword: string; newPassword: string }) {
     return api.put<void>('/users/password', data);
   },
