@@ -13,6 +13,7 @@ import { ProfileFormSkeleton } from './profile-form-skeleton';
 import { AvatarSection } from './avatar-section';
 import { ChatPreferencesSection } from './chat-preferences-section';
 import { MfaSection } from './mfa-section';
+import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 
 export function ProfileForm() {
@@ -26,6 +27,10 @@ export function ProfileForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [loaded, setLoaded] = useState(false);
+
+  // Providers & verification
+  const [providers, setProviders] = useState<string[]>([]);
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   // Email verification
   const originalEmail = useRef('');
@@ -60,6 +65,8 @@ export function ProfileForm() {
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
         setEmailVerified(data.emailVerified ?? false);
+        setPhoneVerified(data.phoneVerified ?? false);
+        setProviders(data.providers ?? []);
         originalEmail.current = data.email ?? '';
         originalEmailVerified.current = data.emailVerified ?? false;
         // Load chat preferences
@@ -251,6 +258,16 @@ export function ProfileForm() {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+7 (999) 123-45-67" />
           </FormField>
         </div>
+
+        {/* Login methods */}
+        <div className="h-px bg-border-light" />
+        <LoginMethodsSection
+          providers={providers}
+          email={email}
+          emailVerified={emailVerified}
+          phone={phone}
+          phoneVerified={phoneVerified}
+        />
 
         {/* Chat privacy */}
         <div className="h-px bg-border-light" />
