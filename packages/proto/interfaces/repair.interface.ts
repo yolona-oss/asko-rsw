@@ -166,6 +166,8 @@ export interface AddressRecord {
     postalCode: string;
     latitude: number;
     longitude: number;
+    validationStatus: string;
+    validationError: string;
 }
 
 export interface AddressResponse {

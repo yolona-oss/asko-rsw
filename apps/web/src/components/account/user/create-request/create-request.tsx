@@ -128,6 +128,18 @@ export function CreateRequest() {
       setError('Выберите устройство');
       return;
     }
+
+    const selectedDev = devices.find((d) => d.id === userDeviceId);
+    const addrValidation = selectedDev?.address?.validationStatus;
+    if (addrValidation === 'pending') {
+      setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+      return;
+    }
+    if (addrValidation === 'invalid' || addrValidation === 'error') {
+      setError('Адрес устройства не прошёл проверку. Обновите адрес в разделе «Сертификаты».');
+      return;
+    }
+
     if (!description.trim()) {
       setError('Опишите проблему');
       return;
@@ -200,18 +212,46 @@ export function CreateRequest() {
               </option>
               {devices.map((d) => {
                 const inRepair = devicesInRepair.has(d.id);
+                const addrStatus = d.address?.validationStatus;
+                const addrInvalid = addrStatus === 'invalid' || addrStatus === 'error';
+                const addrPending = addrStatus === 'pending';
+                const isDisabled = inRepair || addrInvalid;
                 const label = d.device?.name
                   ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
                   : d.serialNumber ?? d.id;
+                const suffix = inRepair
+                  ? ' — в ремонте'
+                  : addrInvalid
+                    ? ' — адрес не подтверждён'
+                    : addrPending
+                      ? ' — проверка адреса...'
+                      : '';
                 return (
-                  <option key={d.id} value={d.id} disabled={inRepair}>
-                    {label}{inRepair ? ' - в ремонте' : ''}
+                  <option key={d.id} value={d.id} disabled={isDisabled}>
+                    {label}{suffix}
                   </option>
                 );
               })}
             </Select>
           )}
         </FormField>
+
+        {/* Address validation warning */}
+        {userDeviceId && (() => {
+          const sel = devices.find((d) => d.id === userDeviceId);
+          const vs = sel?.address?.validationStatus;
+          if (vs === 'pending') return (
+            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-sm text-sm text-yellow-800">
+              Адрес устройства проходит проверку. Отправка заявки будет доступна после подтверждения.
+            </div>
+          );
+          if (vs === 'invalid' || vs === 'error') return (
+            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-sm text-sm text-red-800">
+              Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}. Обновите адрес в разделе «Сертификаты».
+            </div>
+          );
+          return null;
+        })()}
 
         {/* Certificate select */}
         {filteredCertificates.length > 0 && (

@@ -77,6 +77,8 @@ function addressToRecord(entity: Address) {
         postalCode: '',
         latitude: entity.latitude ?? 0,
         longitude: entity.longitude ?? 0,
+        validationStatus: entity.validationStatus ?? 'pending',
+        validationError: entity.validationError ?? '',
     };
 }
 

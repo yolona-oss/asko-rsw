@@ -62,10 +62,25 @@ export class RepairRequestService {
             certificate = cert;
         }
 
-        const addressRef = userDevice.address
-            ? (typeof userDevice.address === 'object'
-                ? this.em.getReference(Address, userDevice.address.id)
-                : this.em.getReference(Address, String(userDevice.address)))
+        // Validate address
+        const addressEntity = userDevice.address
+            ? (typeof userDevice.address === 'object' ? userDevice.address : await this.em.findOne(Address, { id: String(userDevice.address) }))
+            : undefined;
+
+        if (addressEntity) {
+            if (addressEntity.validationStatus === 'invalid') {
+                throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (addressEntity.validationError || 'адрес не найден'));
+            }
+            if (addressEntity.validationStatus === 'pending') {
+                throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
+            }
+            if (addressEntity.validationStatus === 'error') {
+                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
+            }
+        }
+
+        const addressRef = addressEntity
+            ? this.em.getReference(Address, addressEntity.id)
             : undefined;
 
         const request = this.em.create(RepairRequest, {

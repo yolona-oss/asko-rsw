@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Address } from 'entities/address.entity';
 import { AppErrors } from 'common/error';
+import { AddressValidationPublisher } from 'modules/address-validation.service';
 
 @Injectable()
 export class AddressService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly validationPublisher: AddressValidationPublisher,
+    ) {}
 
     @CreateRequestContext()
     async create(userId: string, dto: {
@@ -36,6 +40,18 @@ export class AddressService {
             longitude: dto.longitude,
         });
         await this.em.persistAndFlush(address);
+
+        // Queue async validation
+        this.validationPublisher.emit({
+            addressId: address.id,
+            city: address.city,
+            street: address.street,
+            house: address.house,
+            latitude: address.latitude,
+            longitude: address.longitude,
+            attempt: 0,
+        }).catch((e) => console.error('[AddressService] Failed to queue validation:', e));
+
         return address;
     }
 

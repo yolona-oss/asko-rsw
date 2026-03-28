@@ -6,6 +6,8 @@ import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { RepairEventService } from 'modules/repair-event.service';
 import { PaymentCommandService } from 'modules/payment-command.service';
+import { AddressValidationPublisher } from 'modules/address-validation.service';
+import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
 import {
     Device,
     Address,
@@ -86,6 +88,18 @@ import { SignatureService } from 'services/signature.service';
                     },
                 }),
             },
+            {
+                name: 'ADDRESS_VALIDATION',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'address_validation_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
         ]),
     ],
     controllers: [
@@ -95,6 +109,7 @@ import { SignatureService } from 'services/signature.service';
         RepairGrpcController,
         DealerGrpcController,
         PaymentEventConsumer,
+        AddressValidationConsumer,
     ],
     providers: [
         DeviceService,
@@ -110,6 +125,7 @@ import { SignatureService } from 'services/signature.service';
         SignatureService,
         RepairEventService,
         PaymentCommandService,
+        AddressValidationPublisher,
     ],
 })
 export class AppModule {}

@@ -322,6 +322,8 @@ message AddressRecord {
     string postalCode = 9;
     double latitude = 10;
     double longitude = 11;
+    string validationStatus = 12;
+    string validationError = 13;
 }
 
 message AddressResponse {

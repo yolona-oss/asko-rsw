@@ -32,6 +32,17 @@ async function bootstrap() {
         },
     });
 
+    // RabbitMQ transport for address validation queue
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.RMQ,
+        options: {
+            urls: [config.rabbitmq.url],
+            queue: 'address_validation_queue',
+            queueOptions: { durable: true },
+            noAck: false,
+        },
+    });
+
     await app.startAllMicroservices();
 
     const metricsService = app.get(MetricsService);

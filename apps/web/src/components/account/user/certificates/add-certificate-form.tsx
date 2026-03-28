@@ -46,6 +46,18 @@ export function AddCertificateForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!deviceId || !certNumber || !expiresAt) return;
+
+    const selectedDev = devices.find((d) => d.id === deviceId);
+    const vs = selectedDev?.address?.validationStatus;
+    if (vs === 'pending') {
+      setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+      return;
+    }
+    if (vs === 'invalid' || vs === 'error') {
+      setError('Адрес устройства не прошёл проверку. Обновите адрес устройства.');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
     try {
@@ -77,11 +89,16 @@ export function AddCertificateForm({
             <p className="text-sm text-text-sub">Нет зарегистрированных устройств</p>
           ) : (
             <Select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
-              {devices.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.device?.name ?? d.id}
-                </option>
-              ))}
+              {devices.map((d) => {
+                const vs = d.address?.validationStatus;
+                const blocked = vs === 'invalid' || vs === 'error';
+                const suffix = blocked ? ' — адрес не подтверждён' : vs === 'pending' ? ' — проверка адреса...' : '';
+                return (
+                  <option key={d.id} value={d.id} disabled={blocked}>
+                    {d.device?.name ?? d.id}{suffix}
+                  </option>
+                );
+              })}
             </Select>
           )}
         </FormField>

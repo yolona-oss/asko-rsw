@@ -12,6 +12,8 @@ export class AddressRecordDto {
     postalCode?: string;
     latitude?: number;
     longitude?: number;
+    validationStatus?: string;
+    validationError?: string;
 }
 
 export class DeviceRecordDto {
