@@ -1,11 +1,16 @@
-import { IsString, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsObject } from 'class-validator';
 
 export class CreateArticleDto {
     @IsString()
     title!: string;
 
+    @IsOptional()
     @IsString()
-    text!: string;
+    text?: string;
+
+    @IsOptional()
+    @IsObject()
+    content?: Record<string, any>;
 
     @IsOptional()
     @IsArray()
@@ -23,7 +28,16 @@ export class UpdateArticleDto {
     text?: string;
 
     @IsOptional()
+    @IsObject()
+    content?: Record<string, any>;
+
+    @IsOptional()
     @IsArray()
     @IsString({ each: true })
     tags?: string[];
+}
+
+export class RecordArticleViewDto {
+    @IsString()
+    sessionId!: string;
 }

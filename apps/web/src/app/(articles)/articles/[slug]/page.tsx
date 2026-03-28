@@ -6,8 +6,10 @@ import {
   fetchArticle,
   fetchArticleImages,
   fetchArticlePreviewImage,
-  fetchOtherArticles,
+  fetchRelatedArticles,
 } from '@/lib/api/article';
+import { generateArticleHTML } from '@/lib/lexical/generate-html';
+import { ArticleViewTracker } from '@/components/articles/article-view-tracker';
 
 export default async function ArticlePage({
   params,
@@ -34,11 +36,12 @@ export default async function ArticlePage({
         sortedImages[0].imageJson.original.secure_url
         : null;
 
-  // Split text into paragraphs
-  const paragraphs = article.text.split('\n').filter((p) => p.trim());
+  // Render content: rich HTML or plain text fallback
+  const richHTML = article.content ? generateArticleHTML(article.content) : null;
+  const paragraphs = !richHTML ? article.text.split('\n').filter((p: string) => p.trim()) : [];
 
-  // Get other articles for recommendations
-  const otherArticles = await fetchOtherArticles(slug);
+  // Get related articles for recommendations
+  const otherArticles = await fetchRelatedArticles(slug);
   const otherImageMap = new Map<string, string | null>();
   const otherImageResults = await Promise.all(
     otherArticles.map((a) => fetchArticlePreviewImage(a.slug)),
@@ -50,6 +53,7 @@ export default async function ArticlePage({
 
   return (
     <div className="bg-page-bg">
+      <ArticleViewTracker slug={slug} />
       <Container>
         <div className="py-8 md:py-12">
           {/* Breadcrumb */}
@@ -120,16 +124,23 @@ export default async function ArticlePage({
               </div>
             )}
 
-            <div className="flex flex-col gap-6">
-              {paragraphs.map((p, i) => (
-                <p
-                  key={i}
-                  className="text-lg leading-[22px] tracking-[-0.01em] text-[#150F0F]"
-                >
-                  {p}
-                </p>
-              ))}
-            </div>
+            {richHTML ? (
+              <div
+                className="prose prose-lg max-w-none text-[#150F0F]"
+                dangerouslySetInnerHTML={{ __html: richHTML }}
+              />
+            ) : (
+              <div className="flex flex-col gap-6">
+                {paragraphs.map((p: string, i: number) => (
+                  <p
+                    key={i}
+                    className="text-lg leading-[22px] tracking-[-0.01em] text-[#150F0F]"
+                  >
+                    {p}
+                  </p>
+                ))}
+              </div>
+            )}
 
             {nextArticle && (
               <div>

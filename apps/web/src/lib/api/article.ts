@@ -50,6 +50,10 @@ export const articleApi = {
   reorderImages(articleId: string, imageIds: string[]) {
     return api.put<void>(`/articles/${articleId}/images/reorder`, imageIds);
   },
+
+  recordView(slug: string, sessionId: string) {
+    return api.post<{ message: string }>(`/articles/${slug}/view`, { sessionId });
+  },
 };
 
 // ── Server-side functions (uses raw fetch for SSR) ──────────────────
@@ -87,11 +91,20 @@ export async function fetchArticlePreviewImage(slug: string): Promise<string | n
   return preview.imageJson.medium?.secure_url ?? preview.imageJson.original.secure_url;
 }
 
-export async function fetchOtherArticles(currentSlug: string): Promise<IArticle[]> {
-  const res = await fetch(`${API_URL}/articles?limit=5&offset=1`, {
+export async function fetchRelatedArticles(slug: string): Promise<IArticle[]> {
+  const res = await fetch(`${API_URL}/articles/${slug}/related`, {
     next: { revalidate: 60 },
   });
   if (!res.ok) return [];
-  const { data } = (await res.json()) as PaginatedArticles;
-  return data.filter((a) => a.slug !== currentSlug).slice(0, 4);
+  const { data } = await res.json();
+  return data ?? [];
+}
+
+export async function fetchRecommendedArticles(): Promise<IArticle[]> {
+  const res = await fetch(`${API_URL}/articles/recommended`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) return [];
+  const { data } = await res.json();
+  return data ?? [];
 }

@@ -5,6 +5,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import {
     Article,
+    ArticleView,
     WSchedule,
     Cursor,
 } from 'entities'
@@ -33,6 +34,7 @@ import { readFileSync } from "fs";
                     // },
                     entities: [
                         Article,
+                        ArticleView,
                         WSchedule,
                         Cursor,
                     ],

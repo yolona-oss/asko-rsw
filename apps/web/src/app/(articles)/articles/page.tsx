@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
-import { fetchArticles, fetchArticlePreviewImage } from '@/lib/api/article';
+import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article';
 
 const LIMIT = 12;
 
@@ -37,6 +37,8 @@ export default async function ArticlesListPage({
           <h1 className="text-[32px] md:text-[42px] leading-9 md:leading-[46px] font-normal tracking-[-0.01em] text-text-main mb-8 md:mb-12">
             Статьи о ремонте
           </h1>
+
+          <RecommendedSection currentArticleIds={articles.map((a) => a.id)} />
 
           {articles.length === 0 ? (
             <p className="text-text-sub text-sm">Статьи не найдены</p>
@@ -123,5 +125,62 @@ export default async function ArticlesListPage({
         </div>
       </Container>
     </div>
+  );
+}
+
+async function RecommendedSection({ currentArticleIds }: { currentArticleIds: string[] }) {
+  const recommended = await fetchRecommendedArticles();
+  const filtered = recommended.filter((a) => !currentArticleIds.includes(a.id)).slice(0, 4);
+
+  if (filtered.length === 0) return null;
+
+  const recImageResults = await Promise.all(
+    filtered.map((a) => fetchArticlePreviewImage(a.slug)),
+  );
+
+  return (
+    <section className="mb-10 pb-10 border-b border-border-light/30">
+      <h2 className="text-2xl font-medium tracking-[-0.01em] text-text-main mb-6">
+        Рекомендуемые статьи
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {filtered.map((article, i) => {
+          const imgUrl = recImageResults[i];
+          const previewText =
+            article.text.length > 200
+              ? article.text.slice(0, 200) + '...'
+              : article.text;
+          return (
+            <Link
+              key={article.id}
+              href={`/articles/${article.slug}`}
+              className="group flex flex-col gap-4"
+            >
+              <div className="relative w-full aspect-[262/204] overflow-hidden">
+                {imgUrl ? (
+                  <Image
+                    src={imgUrl}
+                    alt={article.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
+                    Нет фото
+                  </div>
+                )}
+              </div>
+              <h3 className="text-lg font-medium leading-6 tracking-[-0.01em] text-[#150F0F]">
+                {article.title}
+              </h3>
+              <p className="text-sm leading-5 tracking-[-0.01em] text-[#150F0F]">
+                {previewText}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }

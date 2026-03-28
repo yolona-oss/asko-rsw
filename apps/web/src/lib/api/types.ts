@@ -103,7 +103,11 @@ export type PaginatedNotifications = components['schemas']['PaginatedNotificatio
 export type UnreadCount = components['schemas']['UnreadCountResponseDto'];
 
 // ── Articles ──
-export type ArticleResponse = components['schemas']['ArticleResponseDto'];
+// TODO: Remove overrides after running ./scripts/openapi.sh
+export type ArticleResponse = components['schemas']['ArticleResponseDto'] & {
+  content?: Record<string, any>;
+  viewCount?: number;
+};
 export type PaginatedArticles = components['schemas']['PaginatedArticlesResponseDto'];
 
 // ── Invitations ──

@@ -1,24 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Textarea, FormField } from '@asko/ui';
+import { Button, Input, FormField } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
 import { ArticleImages } from './article-images';
+import { RichTextEditor, plainTextToLexicalState } from './rich-text-editor';
 
 export function AdminArticleForm({ articleId }: ArticleFormProps) {
   const router = useRouter();
   const isEdit = !!articleId;
 
   const [title, setTitle] = useState('');
-  const [text, setText] = useState('');
+  const [content, setContent] = useState<Record<string, any> | undefined>(undefined);
   const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState('');
+  const contentReady = useRef(false);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -26,8 +28,14 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
       try {
         const { data: article } = await articleApi.getOne(articleId);
         setTitle(article.title ?? '');
-        setText(article.text ?? '');
         setTagsInput((article.tags ?? []).join(', '));
+
+        // Load rich content or convert legacy plain text
+        if (article.content) {
+          setContent(article.content);
+        } else if (article.text) {
+          setContent(plainTextToLexicalState(article.text));
+        }
       } catch {
         setError('Не удалось загрузить статью');
       } finally {
@@ -35,6 +43,11 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
       }
     })();
   }, [articleId, isEdit]);
+
+  const handleContentChange = (json: Record<string, any>) => {
+    contentReady.current = true;
+    setContent(json);
+  };
 
   const handleSave = async () => {
     setError('');
@@ -44,7 +57,7 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
-      const data = { title, text, tags };
+      const data = { title, content, tags };
 
       if (isEdit) {
         await articleApi.update(articleId, data);
@@ -73,7 +86,7 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
         {isEdit ? 'Редактирование статьи' : 'Новая статья'}
       </PageHeader>
 
-      <div className="max-w-[600px] flex flex-col gap-6">
+      <div className="max-w-[900px] flex flex-col gap-6">
         <FormField label="Заголовок" variant="bold">
           <Input
             type="text"
@@ -95,12 +108,9 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
         </FormField>
 
         <FormField label="Текст статьи" variant="bold">
-          <Textarea
-            placeholder="Текст статьи. Каждый абзац с новой строки."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={16}
-            className="max-w-[500px]"
+          <RichTextEditor
+            content={content}
+            onChange={handleContentChange}
           />
         </FormField>
 
@@ -120,7 +130,7 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
             variant="primary"
             size="lg"
             onClick={handleSave}
-            disabled={saving || !title.trim() || !text.trim()}
+            disabled={saving || !title.trim()}
           >
             {isEdit
               ? (saving ? 'Сохранение...' : 'Сохранить')

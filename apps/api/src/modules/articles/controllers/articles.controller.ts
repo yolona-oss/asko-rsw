@@ -9,15 +9,22 @@ import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateArticleDto,
     UpdateArticleDto,
+    RecordArticleViewDto,
     PaginationDto,
     ADMIN_ROLES,
     ImageTypeEnum,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
+import { OptionalAuth } from 'common/decorators/optional-auth.decorator';
+import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { JwtPayload } from '@asko/shared';
 import {
     ArticleResponseDto,
     PaginatedArticlesResponseDto,
+    ArticleViewResponseDto,
+    RelatedArticlesResponseDto,
+    RecommendedArticlesResponseDto,
     DeleteCountResponseDto,
     MessageResponseDto,
     EmptyResponseDto,
@@ -115,11 +122,39 @@ export class ArticlesController {
         return this.articlesService.findAll(pagination);
     }
 
+    @OptionalAuth()
+    @Get('recommended')
+    @ApiOkResponse({ type: RecommendedArticlesResponseDto })
+    async recommended(@JwtAuthUser() user?: JwtPayload) {
+        const data = await this.articlesService.findRecommended(user?.id, 8);
+        return { data };
+    }
+
     @Public()
     @Get(':slug')
     @ApiOkResponse({ type: ArticleResponseDto })
     async findOne(@Param('slug') slug: string) {
         return this.articlesService.findBySlug(slug);
+    }
+
+    @Public()
+    @Get(':slug/related')
+    @ApiOkResponse({ type: RelatedArticlesResponseDto })
+    async findRelated(@Param('slug') slug: string) {
+        const data = await this.articlesService.findRelated(slug, 4);
+        return { data };
+    }
+
+    @OptionalAuth()
+    @Post(':slug/view')
+    @ApiCreatedResponse({ type: ArticleViewResponseDto })
+    async recordView(
+        @Param('slug') slug: string,
+        @Body() dto: RecordArticleViewDto,
+        @JwtAuthUser() user?: JwtPayload,
+    ) {
+        await this.articlesService.recordView(slug, user?.id, dto.sessionId);
+        return { message: 'View recorded' };
     }
 
     @Public()

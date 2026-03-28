@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { REQUSET_USER_KEY } from '@asko/shared'
 
 import { IS_PUBLIC_KEY } from './../../common/decorators/public.decorotor';
+import { IS_OPTIONAL_AUTH_KEY } from './../../common/decorators/optional-auth.decorator';
 import { ROLES_KEY } from './../../common/decorators/role.decorator';
 
 import { JwtPayload, Role } from '@asko/shared';
@@ -32,6 +33,11 @@ export class JwtGuard implements CanActivate {
             return true;
         }
 
+        const isOptionalAuth = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_AUTH_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+
         const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
             context.getHandler(),
             context.getClass(),
@@ -41,6 +47,7 @@ export class JwtGuard implements CanActivate {
         const { accessToken } = extractToken(request);
 
         if (!accessToken) {
+            if (isOptionalAuth) return true;
             throw AppErrors.unauthorized("Authentication token not found.");
         }
 
@@ -52,17 +59,18 @@ export class JwtGuard implements CanActivate {
 
             // Block disabled users from all protected endpoints
             if (payload.isActive === false) {
+                if (isOptionalAuth) return true;
                 throw AppErrors.forbidden('Account is disabled');
             }
 
             // No specific roles required - any authenticated user is allowed
             if (!requiredRoles) {
                 return true;
-                // throw new Error("JwtGuard::canActivate(): No roles to access setted up to route.")
             }
 
             return requiredRoles.some((role) => payload.roles.includes(role))
         } catch (error: any) {
+            if (isOptionalAuth) return true;
             throw AppErrors.tokenInvalid(`Token validation failed. ${error}`);
         }
     }

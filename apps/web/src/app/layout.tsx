@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { AppProviders } from '@/store/providers';
+import { YandexMetrika } from '@/components/YandexMetrika';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -16,6 +18,9 @@ export default function RootLayout({
     <html lang="ru">
       <body className="min-h-screen flex flex-col">
         <AppProviders>{children}</AppProviders>
+        <Suspense fallback={null}>
+          <YandexMetrika />
+        </Suspense>
       </body>
     </html>
   );
