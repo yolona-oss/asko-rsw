@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
-import { Article, ArticleView } from 'entities';
-import { CreateArticleDto, UpdateArticleDto, PaginationDto } from '@asko/shared';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { Article } from 'entities/article.entity';
+import { ArticleView } from 'entities/article-view.entity';
 import { AppErrors } from 'common/error';
-import { extractPlainText } from '../utils/extract-plain-text';
 
 function slugify(text: string): string {
     return text
@@ -15,11 +14,33 @@ function slugify(text: string): string {
         .slice(0, 200);
 }
 
+function extractPlainText(editorState: Record<string, any>): string {
+    const root = editorState?.root;
+    if (!root) return '';
+    return extractFromNode(root).trim();
+}
+
+function extractFromNode(node: Record<string, any>): string {
+    if (node.type === 'text') return node.text ?? '';
+    if (!node.children || !Array.isArray(node.children)) return '';
+    const isBlock = ['root', 'paragraph', 'heading', 'quote', 'list', 'listitem'].includes(node.type);
+    const parts = node.children.map((child: Record<string, any>) => extractFromNode(child));
+    const joined = parts.join('');
+    if (isBlock && node.type !== 'root') return joined + '\n';
+    return joined;
+}
+
 @Injectable()
-export class ArticlesService {
+export class ContentService {
     constructor(private readonly em: EntityManager) {}
 
-    async create(dto: CreateArticleDto): Promise<Article> {
+    @CreateRequestContext()
+    async create(dto: {
+        title: string;
+        text?: string;
+        content?: Record<string, any>;
+        tags?: string[];
+    }): Promise<Article> {
         const baseSlug = slugify(dto.title);
         let slug = baseSlug;
         let counter = 1;
@@ -40,9 +61,15 @@ export class ArticlesService {
         return article;
     }
 
-    async update(id: string, dto: UpdateArticleDto): Promise<Article> {
+    @CreateRequestContext()
+    async update(id: string, dto: {
+        title?: string;
+        text?: string;
+        content?: Record<string, any>;
+        tags?: string[];
+    }): Promise<Article> {
         const article = await this.em.findOne(Article, { id });
-        if (!article) throw AppErrors.dbEntityNotFound('Article not found');
+        if (!article) throw AppErrors.articleNotFound();
 
         if (dto.title && dto.title !== article.title) {
             const baseSlug = slugify(dto.title);
@@ -65,17 +92,20 @@ export class ArticlesService {
         return article;
     }
 
+    @CreateRequestContext()
     async delete(id: string): Promise<void> {
         const article = await this.em.findOne(Article, { id });
-        if (!article) throw AppErrors.dbEntityNotFound('Article not found');
+        if (!article) throw AppErrors.articleNotFound();
         await this.em.removeAndFlush(article);
     }
 
+    @CreateRequestContext()
     async deleteAll(): Promise<number> {
         return this.em.nativeDelete(Article, {});
     }
 
-    async findAll(pagination: PaginationDto): Promise<{ data: Article[]; total: number }> {
+    @CreateRequestContext()
+    async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Article[]; total: number }> {
         const [data, total] = await this.em.findAndCount(
             Article,
             pagination.search
@@ -90,25 +120,19 @@ export class ArticlesService {
         return { data, total };
     }
 
-    async findById(id: string): Promise<Article> {
-        const article = await this.em.findOne(Article, { id });
-        if (!article) throw AppErrors.dbEntityNotFound('Article not found');
-        return article;
-    }
-
+    @CreateRequestContext()
     async findBySlug(slug: string): Promise<Article> {
-        // Try slug first, then fall back to id lookup (for admin API calls)
         const article = await this.em.findOne(Article, { slug })
             ?? await this.em.findOne(Article, { id: slug });
-        if (!article) throw AppErrors.dbEntityNotFound('Article not found');
+        if (!article) throw AppErrors.articleNotFound();
         return article;
     }
 
+    @CreateRequestContext()
     async recordView(slug: string, userId: string | undefined, sessionId: string): Promise<void> {
-        const article = await this.findBySlug(slug);
+        const article = await this.findBySlugInternal(slug);
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
-        // Deduplicate: 1 view per user/session per article per hour
         const dedup = userId
             ? { articleId: article.id, userId, viewedAt: { $gte: oneHourAgo } }
             : { articleId: article.id, sessionId, viewedAt: { $gte: oneHourAgo } };
@@ -125,12 +149,12 @@ export class ArticlesService {
         await this.em.persistAndFlush(view);
     }
 
+    @CreateRequestContext()
     async findRelated(slug: string, limit = 4): Promise<Article[]> {
-        const article = await this.findBySlug(slug);
+        const article = await this.findBySlugInternal(slug);
         const tags = article.tags ?? [];
 
         if (tags.length === 0) {
-            // No tags — fall back to latest articles excluding current
             return this.em.find(
                 Article,
                 { id: { $ne: article.id } },
@@ -138,14 +162,12 @@ export class ArticlesService {
             );
         }
 
-        // Find articles that share at least one tag, sorted by viewCount
         const all = await this.em.find(
             Article,
             { id: { $ne: article.id } },
             { orderBy: { viewCount: 'DESC', createdAt: 'DESC' } },
         );
 
-        // Score by number of overlapping tags
         const scored = all
             .map((a) => {
                 const overlap = (a.tags ?? []).filter((t) => tags.includes(t)).length;
@@ -158,7 +180,6 @@ export class ArticlesService {
             return scored.slice(0, limit).map((s) => s.article);
         }
 
-        // Pad with other articles if not enough tag-related ones
         const relatedIds = new Set(scored.map((s) => s.article.id));
         const remaining = all
             .filter((a) => !relatedIds.has(a.id))
@@ -167,16 +188,15 @@ export class ArticlesService {
         return [...scored.map((s) => s.article), ...remaining];
     }
 
+    @CreateRequestContext()
     async findRecommended(userId: string | undefined, limit = 8): Promise<Article[]> {
         if (!userId) {
-            // Anonymous: return popular articles
             return this.em.find(Article, {}, {
                 orderBy: { viewCount: 'DESC', createdAt: 'DESC' },
                 limit,
             });
         }
 
-        // Get tags from articles the user has recently viewed
         const recentViews = await this.em.find(
             ArticleView,
             { userId },
@@ -193,7 +213,6 @@ export class ArticlesService {
         const viewedArticleIds = [...new Set(recentViews.map((v) => v.articleId))];
         const viewedArticles = await this.em.find(Article, { id: { $in: viewedArticleIds } });
 
-        // Collect tag frequency from reading history
         const tagFreq = new Map<string, number>();
         for (const a of viewedArticles) {
             for (const tag of a.tags ?? []) {
@@ -208,7 +227,6 @@ export class ArticlesService {
             });
         }
 
-        // Find unread articles, score by tag relevance + popularity
         const candidates = await this.em.find(
             Article,
             { id: { $nin: viewedArticleIds } },
@@ -225,5 +243,12 @@ export class ArticlesService {
         scored.sort((a, b) => b.tagScore - a.tagScore || b.article.viewCount - a.article.viewCount);
 
         return scored.slice(0, limit).map((s) => s.article);
+    }
+
+    private async findBySlugInternal(slug: string): Promise<Article> {
+        const article = await this.em.findOne(Article, { slug })
+            ?? await this.em.findOne(Article, { id: slug });
+        if (!article) throw AppErrors.articleNotFound();
+        return article;
     }
 }

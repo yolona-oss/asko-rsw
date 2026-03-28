@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
     $getSelection,
@@ -21,10 +21,16 @@ import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $getNearestNodeOfType } from '@lexical/utils';
 import { $createParagraphNode } from 'lexical';
 import { INSERT_IMAGE_COMMAND } from './image-node';
+import { articleApi } from '@/lib/api/article';
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
 type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'ul' | 'ol';
 
-export function EditorToolbar() {
+interface EditorToolbarProps {
+    articleId?: string;
+}
+
+export function EditorToolbar({ articleId }: EditorToolbarProps) {
     const [editor] = useLexicalComposerContext();
     const [isBold, setIsBold] = useState(false);
     const [isItalic, setIsItalic] = useState(false);
@@ -98,10 +104,39 @@ export function EditorToolbar() {
         }
     };
 
-    const insertImage = () => {
-        const src = prompt('URL изображения:');
-        if (src) {
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !articleId) return;
+        if (fileRef.current) fileRef.current.value = '';
+
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return;
+        if (file.size > MAX_IMAGE_SIZE) return;
+
+        setUploading(true);
+        try {
+            const { data } = await articleApi.uploadImage(articleId, file);
+            const src = data.imageJson.large?.secure_url
+                ?? data.imageJson.medium?.secure_url
+                ?? data.imageJson.original.secure_url;
             editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
+        } catch {
+            // silently fail
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const insertImage = () => {
+        if (articleId) {
+            fileRef.current?.click();
+        } else {
+            const src = prompt('URL изображения (сохраните статью для загрузки файлов):');
+            if (src) {
+                editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
+            }
         }
     };
 
@@ -147,9 +182,16 @@ export function EditorToolbar() {
             <button type="button" className={btn(isLink)} onClick={insertLink} title="Ссылка">
                 Ссылка
             </button>
-            <button type="button" className={btn(false)} onClick={insertImage} title="Изображение">
-                Фото
+            <button type="button" className={btn(false)} onClick={insertImage} disabled={uploading} title={articleId ? 'Загрузить изображение' : 'Сохраните статью для загрузки'}>
+                {uploading ? 'Загрузка...' : 'Фото'}
             </button>
+            <input
+                ref={fileRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                className="hidden"
+                onChange={handleImageUpload}
+            />
         </div>
     );
 }

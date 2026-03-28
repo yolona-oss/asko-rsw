@@ -56,6 +56,10 @@ export class AppConfig {
         return this.configService.get<string>('CHAT_SERVICE_URL') ?? 'localhost:5005';
     }
 
+    get contentServiceUrl(): string {
+        return this.configService.get<string>('CONTENT_SERVICE_URL') ?? 'localhost:5010';
+    }
+
     get database() {
         return {
             host: this.configService.getOrThrow<string>('DATABASE_HOST'),

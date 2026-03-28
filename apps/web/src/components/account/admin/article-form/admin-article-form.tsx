@@ -111,6 +111,7 @@ export function AdminArticleForm({ articleId }: ArticleFormProps) {
           <RichTextEditor
             content={content}
             onChange={handleContentChange}
+            articleId={articleId}
           />
         </FormField>
 

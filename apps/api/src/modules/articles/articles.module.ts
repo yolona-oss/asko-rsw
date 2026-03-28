@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Article, ArticleView } from 'entities';
-import { ArticlesService } from './services/articles.service';
 import { ArticlesController } from './controllers/articles.controller';
 import { FileClientModule } from 'modules/file-client/file-client.module';
+import { ContentClientModule } from 'modules/content-client/content-client.module';
 
 @Module({
-    imports: [MikroOrmModule.forFeature([Article, ArticleView]), FileClientModule],
+    imports: [ContentClientModule, FileClientModule],
     controllers: [ArticlesController],
-    providers: [ArticlesService],
-    exports: [ArticlesService],
 })
 export class ArticlesModule {}

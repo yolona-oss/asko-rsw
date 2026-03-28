@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ArticlesService } from '../services/articles.service';
+import { ContentClientService } from 'modules/content-client/content-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateArticleDto,
@@ -32,11 +32,19 @@ import {
     ImageListResponseDto,
 } from 'common/dto/responses';
 
+function parseArticleRecord(record: any) {
+    return {
+        ...record,
+        content: record.content ? JSON.parse(record.content) : undefined,
+        tags: record.tags?.length ? record.tags : undefined,
+    };
+}
+
 @ApiTags('Articles')
 @Controller('articles')
 export class ArticlesController {
     constructor(
-        private readonly articlesService: ArticlesService,
+        private readonly contentClient: ContentClientService,
         private readonly fileService: FileClientService,
     ) {}
 
@@ -46,29 +54,42 @@ export class ArticlesController {
     @Post()
     @ApiCreatedResponse({ type: ArticleResponseDto })
     async create(@Body() dto: CreateArticleDto) {
-        return this.articlesService.create(dto);
+        const result = await this.contentClient.createArticle(
+            dto.title,
+            dto.text,
+            dto.content ? JSON.stringify(dto.content) : undefined,
+            dto.tags,
+        );
+        return parseArticleRecord(result.article);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Patch(':id')
     @ApiOkResponse({ type: ArticleResponseDto })
     async update(@Param('id') id: string, @Body() dto: UpdateArticleDto) {
-        return this.articlesService.update(id, dto);
+        const result = await this.contentClient.updateArticle(
+            id,
+            dto.title,
+            dto.text,
+            dto.content ? JSON.stringify(dto.content) : undefined,
+            dto.tags,
+        );
+        return parseArticleRecord(result.article);
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Delete('all')
     @ApiOkResponse({ type: DeleteCountResponseDto })
     async removeAll() {
-        const count = await this.articlesService.deleteAll();
-        return { message: `Deleted ${count} articles`, count };
+        const result = await this.contentClient.deleteAllArticles();
+        return { message: `Deleted ${result.count} articles`, count: result.count };
     }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {
-        await this.articlesService.delete(id);
+        await this.contentClient.deleteArticle(id);
         return { message: 'Article deleted' };
     }
 
@@ -90,7 +111,8 @@ export class ArticlesController {
         )
         file: Express.Multer.File,
     ) {
-        await this.articlesService.findById(id);
+        // Verify article exists via content-service
+        await this.contentClient.findArticleBySlug(id);
         return this.fileService.uploadArticleImage(file, id);
     }
 
@@ -101,7 +123,7 @@ export class ArticlesController {
         @Param('id') id: string,
         @Body() imageIds: string[],
     ) {
-        await this.articlesService.findById(id);
+        await this.contentClient.findArticleBySlug(id);
         return this.fileService.reorderByIds(ImageTypeEnum.Article, id, imageIds);
     }
 
@@ -109,7 +131,7 @@ export class ArticlesController {
     @Delete(':id/images/:imageId')
     @ApiOkResponse({ type: EmptyResponseDto })
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
-        await this.articlesService.findById(id);
+        await this.contentClient.findArticleBySlug(id);
         return this.fileService.remove(imageId);
     }
 
@@ -119,30 +141,39 @@ export class ArticlesController {
     @Get()
     @ApiOkResponse({ type: PaginatedArticlesResponseDto })
     async findAll(@Query() pagination: PaginationDto) {
-        return this.articlesService.findAll(pagination);
+        const result = await this.contentClient.findAllArticles(
+            pagination.offset,
+            pagination.limit,
+            pagination.search,
+        );
+        return {
+            ...result,
+            data: (result.data ?? []).map(parseArticleRecord),
+        };
     }
 
     @OptionalAuth()
     @Get('recommended')
     @ApiOkResponse({ type: RecommendedArticlesResponseDto })
     async recommended(@JwtAuthUser() user?: JwtPayload) {
-        const data = await this.articlesService.findRecommended(user?.id, 8);
-        return { data };
+        const result = await this.contentClient.findRecommendedArticles(user?.id, 8);
+        return { data: (result.data ?? []).map(parseArticleRecord) };
     }
 
     @Public()
     @Get(':slug')
     @ApiOkResponse({ type: ArticleResponseDto })
     async findOne(@Param('slug') slug: string) {
-        return this.articlesService.findBySlug(slug);
+        const result = await this.contentClient.findArticleBySlug(slug);
+        return parseArticleRecord(result.article);
     }
 
     @Public()
     @Get(':slug/related')
     @ApiOkResponse({ type: RelatedArticlesResponseDto })
     async findRelated(@Param('slug') slug: string) {
-        const data = await this.articlesService.findRelated(slug, 4);
-        return { data };
+        const result = await this.contentClient.findRelatedArticles(slug, 4);
+        return { data: (result.data ?? []).map(parseArticleRecord) };
     }
 
     @OptionalAuth()
@@ -153,7 +184,7 @@ export class ArticlesController {
         @Body() dto: RecordArticleViewDto,
         @JwtAuthUser() user?: JwtPayload,
     ) {
-        await this.articlesService.recordView(slug, user?.id, dto.sessionId);
+        await this.contentClient.recordView(slug, user?.id, dto.sessionId);
         return { message: 'View recorded' };
     }
 
@@ -161,7 +192,7 @@ export class ArticlesController {
     @Get(':slug/images')
     @ApiOkResponse({ type: ImageListResponseDto })
     async findImages(@Param('slug') slug: string) {
-        const article = await this.articlesService.findBySlug(slug);
-        return this.fileService.findAttachedImages(ImageTypeEnum.Article, article.id);
+        const result = await this.contentClient.findArticleBySlug(slug);
+        return this.fileService.findAttachedImages(ImageTypeEnum.Article, result.article.id);
     }
 }

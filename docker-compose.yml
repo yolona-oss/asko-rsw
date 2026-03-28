@@ -24,6 +24,18 @@ services:
       METRICS_PORT: 9105
       RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
+  content-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.content-service
+    container_name: asko-content-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 5010
+      METRICS_PORT: 9110
+
   notification-service:
     build:
       context: .
@@ -113,6 +125,7 @@ services:
       - repair-service
       - notification-service
       - chat-service
+      - content-service
     volumes:
       - images-data:/app/apps/api/images
     environment:
@@ -123,6 +136,7 @@ services:
       REPAIR_SERVICE_URL: "localhost:5003"
       NOTIFICATION_SERVICE_URL: "localhost:5004"
       CHAT_SERVICE_URL: "localhost:5005"
+      CONTENT_SERVICE_URL: "localhost:5010"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
       interval: 10s

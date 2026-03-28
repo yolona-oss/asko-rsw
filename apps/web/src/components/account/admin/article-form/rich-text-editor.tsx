@@ -22,6 +22,7 @@ import { ImageNode, INSERT_IMAGE_COMMAND, $createImageNode } from './image-node'
 interface RichTextEditorProps {
     content?: Record<string, any>;
     onChange: (json: Record<string, any>) => void;
+    articleId?: string;
 }
 
 const theme = {
@@ -118,7 +119,7 @@ export function plainTextToLexicalState(text: string): Record<string, any> {
     };
 }
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, articleId }: RichTextEditorProps) {
     const initialConfig = {
         namespace: 'ArticleEditor',
         theme,
@@ -136,7 +137,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     return (
         <LexicalComposer initialConfig={initialConfig}>
             <div className="border border-border-light/30 rounded bg-white">
-                <EditorToolbar />
+                <EditorToolbar articleId={articleId} />
                 <div className="relative min-h-[300px]">
                     <RichTextPlugin
                         contentEditable={

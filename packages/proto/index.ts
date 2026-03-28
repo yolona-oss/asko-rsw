@@ -4,6 +4,7 @@ export * from './interfaces/file.interface';
 export * from './interfaces/repair.interface';
 export * from './interfaces/notification.interface';
 export * from './interfaces/chat.interface';
+export * from './interfaces/content.interface';
 
 import { join } from 'path';
 
@@ -34,3 +35,7 @@ export const NOTIFICATION_SERVICE_NAME = 'NotificationService';
 export const CHAT_PROTO_PATH = join(__dirname, 'chat.proto');
 export const CHAT_PACKAGE_NAME = 'chat';
 export const CHAT_SERVICE_NAME = 'ChatService';
+
+export const CONTENT_PROTO_PATH = join(__dirname, 'content.proto');
+export const CONTENT_PACKAGE_NAME = 'content';
+export const CONTENT_SERVICE_NAME = 'ContentService';

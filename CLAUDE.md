@@ -108,7 +108,7 @@ npx mikro-orm migration:create
 npx mikro-orm migration:up
 ```
 
-Databases (user: almagest_root):
+Databases (user: asko_root):
 
 ```
 apps/api              → asko_rws_misc_db

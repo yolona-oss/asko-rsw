@@ -1,0 +1,99 @@
+import { Observable } from 'rxjs';
+
+// ─── Requests ───────────────────────────────────────────────────────────
+
+export interface CreateArticleRequest {
+    title: string;
+    text: string;
+    content: string;
+    tags: string[];
+}
+
+export interface UpdateArticleRequest {
+    id: string;
+    title: string;
+    text: string;
+    content: string;
+    tags: string[];
+}
+
+export interface DeleteArticleRequest {
+    id: string;
+}
+
+export interface FindAllArticlesRequest {
+    offset: number;
+    limit: number;
+    search: string;
+}
+
+export interface FindArticleBySlugRequest {
+    slug: string;
+}
+
+export interface RecordViewRequest {
+    slug: string;
+    userId: string;
+    sessionId: string;
+}
+
+export interface FindRelatedArticlesRequest {
+    slug: string;
+    limit: number;
+}
+
+export interface FindRecommendedArticlesRequest {
+    userId: string;
+    limit: number;
+}
+
+// ─── Record ─────────────────────────────────────────────────────────────
+
+export interface ArticleRecord {
+    id: string;
+    title: string;
+    slug: string;
+    text: string;
+    content: string;
+    tags: string[];
+    viewCount: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────
+
+export interface EmptyContentResponse {}
+
+export interface DeleteCountResponse {
+    count: number;
+}
+
+export interface ArticleResponse {
+    article: ArticleRecord;
+}
+
+export interface PaginatedArticlesResponse {
+    data: ArticleRecord[];
+    overallCount: number;
+    offset: number;
+    limit: number;
+}
+
+export interface ArticleListResponse {
+    data: ArticleRecord[];
+}
+
+// ─── gRPC Service Interface ────────────────────────────────────────────
+
+export interface ContentServiceClient {
+    createArticle(data: CreateArticleRequest): Observable<ArticleResponse>;
+    updateArticle(data: UpdateArticleRequest): Observable<ArticleResponse>;
+    deleteArticle(data: DeleteArticleRequest): Observable<EmptyContentResponse>;
+    deleteAllArticles(data: {}): Observable<DeleteCountResponse>;
+    findAllArticles(data: FindAllArticlesRequest): Observable<PaginatedArticlesResponse>;
+    findArticleBySlug(data: FindArticleBySlugRequest): Observable<ArticleResponse>;
+    recordView(data: RecordViewRequest): Observable<EmptyContentResponse>;
+    findRelatedArticles(data: FindRelatedArticlesRequest): Observable<ArticleListResponse>;
+    findRecommendedArticles(data: FindRecommendedArticlesRequest): Observable<ArticleListResponse>;
+}

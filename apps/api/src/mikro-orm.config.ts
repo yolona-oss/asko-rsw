@@ -5,8 +5,6 @@ import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import {
-    Article,
-    ArticleView,
     WSchedule,
     Cursor,
 } from '@entities/index'
@@ -36,8 +34,6 @@ const config = defineConfig<PostgreSqlDriver>({
     //     }
     // },
     entities: [
-        Article,
-        ArticleView,
         WSchedule,
         Cursor,
     ],
