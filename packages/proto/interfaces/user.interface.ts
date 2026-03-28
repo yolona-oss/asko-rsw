@@ -38,6 +38,8 @@ export interface RegisterResponse {
     refreshToken: string;
     user: AuthUser;
     roles: string[];
+    status: string;
+    pendingToken: string;
 }
 
 export interface AuthSessionResponse {
@@ -340,6 +342,23 @@ export interface GetMfaStatusResponse {
     methods: string[];
 }
 
+// ─── Phone Register Messages ────────────────────────────────────────────────
+
+export interface VerifyPhoneRegisterRequest {
+    pendingToken: string;
+    code: string;
+    deviceInfo: string;
+    ipAddress: string;
+}
+
+export interface ResendPhoneRegisterOtpRequest {
+    pendingToken: string;
+}
+
+export interface ResendPhoneRegisterOtpResponse {
+    retryAfter: number;
+}
+
 // ─── gRPC Service Interface ─────────────────────────────────────────────────
 
 export interface UserServiceClient {
@@ -364,6 +383,10 @@ export interface UserServiceClient {
     initiateDisableMfa(request: InitiateDisableMfaRequest): Observable<InitiateDisableMfaResponse>;
     confirmDisableMfa(request: ConfirmDisableMfaRequest): Observable<ConfirmDisableMfaResponse>;
     getMfaStatus(request: GetMfaStatusRequest): Observable<GetMfaStatusResponse>;
+
+    // Phone register
+    verifyPhoneRegister(request: VerifyPhoneRegisterRequest): Observable<RegisterResponse>;
+    resendPhoneRegisterOtp(request: ResendPhoneRegisterOtpRequest): Observable<ResendPhoneRegisterOtpResponse>;
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;

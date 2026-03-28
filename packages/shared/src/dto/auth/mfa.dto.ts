@@ -26,3 +26,16 @@ export class VerifyEnableMfaDto {
     @IsString()
     code: string;
 }
+
+export class VerifyPhoneRegisterDto {
+    @IsString()
+    pendingToken: string;
+
+    @IsString()
+    code: string;
+}
+
+export class ResendPhoneRegisterOtpDto {
+    @IsString()
+    pendingToken: string;
+}

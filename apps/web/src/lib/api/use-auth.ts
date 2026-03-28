@@ -76,20 +76,39 @@ export function useVerifyMfaOtp() {
   });
 }
 
-export function useSignup(options?: { onSuccess?: () => void }) {
+export function useSignup(options?: { onSuccess?: (data: any) => void }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   return useMutation({
     mutationFn: (data: CreateUserDto) => authApi.signup(data).then((r) => r.data),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
+      if (data.status === 'OTP_REQUIRED') {
+        options?.onSuccess?.(data);
+        return;
+      }
       maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       if (options?.onSuccess) {
-        options.onSuccess();
+        options.onSuccess(data);
       } else {
         router.push('/account');
       }
+    },
+  });
+}
+
+export function useVerifyPhoneRegister() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (data: { pendingToken: string; code: string }) =>
+      authApi.verifyPhoneRegister(data).then((r) => r.data),
+    onSuccess: (data) => {
+      maybeSaveDevAccount(data);
+      dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
+      router.push('/account');
     },
   });
 }

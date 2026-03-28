@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useSignup } from '@/lib/api/use-auth';
+import { useSignup, useVerifyPhoneRegister } from '@/lib/api/use-auth';
+import { authApi } from '@/lib/api/auth';
 import { PhoneOtpForm } from './phone-otp-form';
 import { EmailInput, PasswordInput, PhoneInput, NameInput } from '@asko/ui';
 import {
@@ -44,10 +45,21 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
+  // Phone register OTP
+  const [pendingToken, setPendingToken] = useState('');
+
   const passwordsMatch = password === confirmPassword;
   const showConfirmError = confirmTouched && confirmPassword.length > 0 && !passwordsMatch;
 
-  const signup = useSignup({ onSuccess: () => setStep('verification') });
+  const signup = useSignup({
+    onSuccess: (data: any) => {
+      if (data?.status === 'OTP_REQUIRED') {
+        setPendingToken(data.pending_token);
+      }
+      setStep('verification');
+    },
+  });
+  const verifyPhoneReg = useVerifyPhoneRegister();
 
   function validateName(value: string) {
     if (value && !NAME_REGEX.test(value)) {
@@ -91,8 +103,10 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
         setPhoneError('Введите полный номер телефона');
         return;
       }
-      // TODO: Call phone OTP API when backend is ready
-      setStep('verification');
+      signup.mutate({
+        phone: phoneDigits,
+        firstName,
+      });
     }
   }
 
@@ -132,7 +146,14 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
     return (
       <PhoneOtpForm
         phone={phone}
-        onBack={() => setStep('credentials')}
+        onVerify={(code) => verifyPhoneReg.mutate({ pendingToken, code })}
+        onResend={async () => {
+          const { data } = await authApi.resendPhoneRegisterOtp(pendingToken);
+          return data;
+        }}
+        onBack={() => { setStep('credentials'); setPendingToken(''); }}
+        isPending={verifyPhoneReg.isPending}
+        error={verifyPhoneReg.error ? (verifyPhoneReg.error as any)?.response?.data?.message ?? 'Неверный код' : null}
         variant={variant}
       />
     );

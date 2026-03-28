@@ -27,7 +27,11 @@ import {
     Role,
     DEFAULT_USER_ROLE,
     TokenType,
-    AuthProvider
+    AuthProvider,
+    MfaMethod,
+    MFA_OTP_EXPIRY_SECONDS,
+    MFA_CHALLENGE_TOKEN_EXPIRY,
+    PHONE_OTP_PENDING_REG_PREFIX,
 } from '@asko/shared';
 import { time } from 'utils';
 import Redis from 'ioredis';
@@ -72,6 +76,7 @@ export class AuthService {
         private readonly loginThrottle: LoginThrottleService,
         private readonly inviteService: InviteService,
         private readonly mfaService: MfaService,
+        private readonly otpService: OtpService,
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
     ) { }
 
@@ -79,8 +84,7 @@ export class AuthService {
         if (params.email && params.password) {
             return await this.credentialsLogin(params as LoginParams & Required<Pick<LoginCredentials, 'email' | 'password'>>)
         } else if (params.phone) {
-            const session = await this.OPTLogin(params as LoginParams & Required<Pick<LoginCredentials, 'phone'>>)
-            return { status: 'SUCCESS', ...session }
+            return await this.OPTLogin(params as LoginParams & Required<Pick<LoginCredentials, 'phone'>>)
         } else if (params.googleId) {
             const session = await this.GoogleLogin(params as LoginParams & Required<Pick<LoginCredentials, 'googleId'>>)
             return { status: 'SUCCESS', ...session }
@@ -154,17 +158,44 @@ export class AuthService {
     }
 
     /**
-    * Login with one time password sended by sms service
-    */
-    async OPTLogin(_: LoginParams & Required<Pick<LoginCredentials, 'phone'>>): Promise<IAuthSession> {
-        throw new NotImplementedException()
+     * Login with one time password sent by SMS
+     */
+    async OPTLogin(params: LoginParams & Required<Pick<LoginCredentials, 'phone'>>): Promise<LoginResult> {
+        const phone = params.phone.replace(/\D/g, '');
+
+        const user = await this.userService.findByPhone(phone);
+        if (!user) {
+            throw AppErrors.unauthorized('Пользователь с этим номером не найден');
+        }
+        if (!user.isActive) {
+            throw AppErrors.forbidden('Account is disabled');
+        }
+
+        // Check cooldown
+        const cooldown = await this.otpService.checkCooldown(user.id, MfaMethod.PHONE);
+        if (cooldown > 0) {
+            const mfaToken = this.mfaService.generateMfaChallengeToken(user.id, MfaMethod.PHONE);
+            return { status: 'MFA_REQUIRED', mfa_token: mfaToken, mfa_method: MfaMethod.PHONE };
+        }
+
+        // Send OTP via SMS
+        await this.otpService.send(user.id, phone, MfaMethod.PHONE);
+        await this.otpService.setCooldown(user.id, MfaMethod.PHONE);
+
+        const mfaToken = this.mfaService.generateMfaChallengeToken(user.id, MfaMethod.PHONE);
+
+        return {
+            status: 'MFA_REQUIRED',
+            mfa_token: mfaToken,
+            mfa_method: MfaMethod.PHONE,
+        };
     }
 
     async GoogleLogin(_: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<IAuthSession> {
         throw new NotImplementedException()
     }
 
-    async register(params: RegisterParams): Promise<IAuthSession & { roles: Role[] }> {
+    async register(params: RegisterParams): Promise<(IAuthSession & { roles: Role[] }) | { status: 'OTP_REQUIRED'; pendingToken: string }> {
         const { dto, inviteToken, deviceInfo, ipAddress } = params;
         if (dto.email && dto.password) {
             return await this.emailPasswordRegister(dto, deviceInfo, ipAddress, inviteToken)
@@ -207,8 +238,43 @@ export class AuthService {
         }
     }
 
-    private async OPTRegister(_dto: CreateUserDto, _deviceInfo: string, _ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
-        throw new NotImplementedException()
+    private async OPTRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string): Promise<{ status: 'OTP_REQUIRED'; pendingToken: string }> {
+        const phone = dto.phone!.replace(/\D/g, '');
+
+        // Check if phone already registered
+        const existing = await this.userService.findByPhone(phone);
+        if (existing) {
+            throw AppErrors.conflict('Пользователь с этим номером уже зарегистрирован');
+        }
+
+        // Check cooldown
+        const cooldown = await this.otpService.checkPhoneCooldown(phone);
+        if (cooldown > 0) {
+            throw AppErrors.tooManyRequests(`Подождите ${cooldown} сек. перед повторной отправкой`);
+        }
+
+        // Send OTP keyed by phone (no userId yet)
+        await this.otpService.sendPhoneOtp(phone);
+        await this.otpService.setPhoneCooldown(phone);
+
+        // Store pending registration data in Redis
+        const pendingKey = `${PHONE_OTP_PENDING_REG_PREFIX}${phone}`;
+        const pendingData = JSON.stringify({
+            phone,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            deviceInfo,
+            ipAddress,
+        });
+        await this.redis.set(pendingKey, pendingData, 'EX', MFA_OTP_EXPIRY_SECONDS);
+
+        // Generate pending token
+        const pendingToken = this.jwtService.sign(
+            { sub: phone, purpose: 'phone_register' },
+            { expiresIn: MFA_CHALLENGE_TOKEN_EXPIRY },
+        );
+
+        return { status: 'OTP_REQUIRED', pendingToken };
     }
 
     private async GoogleRegister(_dto: CreateUserDto, _deviceInfo: string, _ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
@@ -617,21 +683,23 @@ export class AuthService {
         user: IAuthUser;
         trusted_device_token?: string;
     }> {
-        const { userId } = this.mfaService.verifyMfaChallengeToken(mfaToken);
+        const { userId, method: tokenMethod } = this.mfaService.verifyMfaChallengeToken(mfaToken);
 
         const user = await this.userService.findById(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
 
-        const method = this.mfaService.getMfaMethods(user)[0];
-        const valid = await this.mfaService['otpService'].verify(userId, method, code);
+        // Use method from token (handles phone-login users who have no MFA preferences)
+        const method = tokenMethod ?? this.mfaService.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
+        const valid = await this.otpService.verify(userId, method, code);
         if (!valid) {
             throw AppErrors.unauthorized('Неверный код');
         }
 
+        const authProvider = method === MfaMethod.PHONE ? AuthProvider.PHONE : AuthProvider.EMAIL;
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
             <Role[]>user.roles,
-            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: AuthProvider.EMAIL },
+            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider },
             { deviceInfo, ipAddress },
             user.isActive,
         );
@@ -647,5 +715,78 @@ export class AuthService {
             user: toAuthUser(user),
             trusted_device_token,
         };
+    }
+
+    // ─── Phone registration verification ──────────────────────────────────
+
+    async verifyPhoneRegister(
+        pendingToken: string,
+        code: string,
+        deviceInfo: string,
+        ipAddress: string,
+    ): Promise<IAuthSession & { roles: Role[] }> {
+        // Verify pending token
+        let phone: string;
+        try {
+            const payload = this.jwtService.verify(pendingToken);
+            if (payload.purpose !== 'phone_register') throw new Error();
+            phone = payload.sub;
+        } catch {
+            throw AppErrors.unauthorized('Недействительный или истекший токен регистрации');
+        }
+
+        // Verify OTP
+        const valid = await this.otpService.verifyByPhone(phone, code);
+        if (!valid) {
+            throw AppErrors.unauthorized('Неверный код');
+        }
+
+        // Get pending data from Redis
+        const pendingKey = `${PHONE_OTP_PENDING_REG_PREFIX}${phone}`;
+        const raw = await this.redis.get(pendingKey);
+        if (!raw) throw AppErrors.badRequest('Данные регистрации истекли');
+        const pendingData = JSON.parse(raw);
+        await this.redis.del(pendingKey);
+
+        // Create user
+        const roles: Role[] = [DEFAULT_USER_ROLE];
+        const user = await this.userService.createPhoneUser({
+            phone: pendingData.phone,
+            firstName: pendingData.firstName,
+            lastName: pendingData.lastName,
+            roles,
+        });
+
+        // Generate tokens
+        const { access_token, refresh_token } = await this.generateTokens(
+            user.id,
+            roles,
+            { phone: user.phone, authProvider: AuthProvider.PHONE },
+            { deviceInfo, ipAddress },
+            user.isActive,
+        );
+
+        return { access_token, refresh_token, user: toAuthUser(user), roles };
+    }
+
+    async resendPhoneRegisterOtp(pendingToken: string): Promise<{ retryAfter: number }> {
+        // Verify pending token
+        let phone: string;
+        try {
+            const payload = this.jwtService.verify(pendingToken);
+            if (payload.purpose !== 'phone_register') throw new Error();
+            phone = payload.sub;
+        } catch {
+            throw AppErrors.unauthorized('Недействительный или истекший токен');
+        }
+
+        const cooldown = await this.otpService.checkPhoneCooldown(phone);
+        if (cooldown > 0) {
+            return { retryAfter: cooldown };
+        }
+
+        await this.otpService.sendPhoneOtp(phone);
+        await this.otpService.setPhoneCooldown(phone);
+        return { retryAfter: 60 };
     }
 }

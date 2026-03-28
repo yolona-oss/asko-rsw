@@ -159,9 +159,12 @@ export class UserService {
 
         const provider = userData.email ? AuthProvider.EMAIL : AuthProvider.PHONE
 
-        this.checkPasswordStrength(userData.password)
+        let passwordHash: string | undefined;
+        if (userData.password) {
+            this.checkPasswordStrength(userData.password);
+            passwordHash = await CryptoService.createPasswordHash(userData.password);
+        }
 
-        const passwordHash = await CryptoService.createPasswordHash(userData.password)
         const user = this.em.create(User, {
             firstName: userData.firstName,
             lastName: userData.lastName,
@@ -282,6 +285,34 @@ export class UserService {
         }
         user.phoneVerified = true
         await this.em.persistAndFlush(user)
+    }
+
+    @CreateRequestContext()
+    async createPhoneUser(data: {
+        phone: string;
+        firstName?: string;
+        lastName?: string;
+        roles: Role[];
+    }): Promise<User> {
+        const existing = await this.findByPhone(data.phone);
+        if (existing) throw AppErrors.conflict('Пользов��тель с этим номером уже зарегистрирован');
+
+        const user = this.em.create(User, {
+            phone: data.phone,
+            firstName: data.firstName ?? '',
+            lastName: data.lastName ?? '',
+            phoneVerified: true,
+            emailVerified: false,
+            sessions: [],
+            roles: data.roles,
+            providers: [AuthProvider.PHONE],
+            addresses: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        await this.em.persistAndFlush(user);
+        return user;
     }
 
     @CreateRequestContext()

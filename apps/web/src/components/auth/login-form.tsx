@@ -20,11 +20,8 @@ export function LoginForm({ variant }: LoginFormProps) {
   const login = useLogin();
   const verifyMfa = useVerifyMfaOtp();
 
-  // MFA state (email login)
+  // MFA / Phone OTP state (unified — both use challenge token flow)
   const [mfaState, setMfaState] = useState<{ mfaToken: string; mfaMethod: string } | null>(null);
-
-  // Phone OTP state
-  const [showPhoneOtp, setShowPhoneOtp] = useState(false);
 
   function handleCredentialChange(value: string, type: CredentialType) {
     setCredential(value);
@@ -37,8 +34,15 @@ export function LoginForm({ variant }: LoginFormProps) {
     if (!credential) return;
 
     if (credentialType === 'phone') {
-      // TODO: Call phone OTP send API when backend is ready
-      setShowPhoneOtp(true);
+      // Phone login — sends SMS OTP, returns MFA_REQUIRED
+      const phone = credential.replace(/\D/g, '');
+      login.mutate({ phone }, {
+        onSuccess: (data: any) => {
+          if (data.status === 'MFA_REQUIRED') {
+            setMfaState({ mfaToken: data.mfa_token, mfaMethod: data.mfa_method });
+          }
+        },
+      });
       return;
     }
 
@@ -53,11 +57,16 @@ export function LoginForm({ variant }: LoginFormProps) {
     });
   }
 
-  // ─── MFA handlers ────────────────────────────────────────────────
+  // ─── MFA / OTP handlers ──────────────────────────────────────────
 
   const handleMfaSubmit = useCallback((code: string, trustDevice: boolean) => {
     if (!mfaState) return;
     verifyMfa.mutate({ mfaToken: mfaState.mfaToken, code, trustDevice });
+  }, [mfaState, verifyMfa]);
+
+  const handlePhoneOtpVerify = useCallback((code: string) => {
+    if (!mfaState) return;
+    verifyMfa.mutate({ mfaToken: mfaState.mfaToken, code });
   }, [mfaState, verifyMfa]);
 
   const handleMfaResend = useCallback(async () => {
@@ -76,7 +85,23 @@ export function LoginForm({ variant }: LoginFormProps) {
     ? (verifyMfa.error as any)?.response?.data?.message ?? 'Ошибка проверки кода'
     : null;
 
-  // ─── Step 2: MFA OTP (email) ─────────────────────────────────────
+  // ─── Step 2: Phone OTP ─────────────────────────────────────────
+
+  if (mfaState && mfaState.mfaMethod === 'phone') {
+    return (
+      <PhoneOtpForm
+        phone={credential}
+        onVerify={handlePhoneOtpVerify}
+        onResend={handleMfaResend}
+        onBack={handleMfaBack}
+        isPending={verifyMfa.isPending}
+        error={mfaError}
+        variant={variant}
+      />
+    );
+  }
+
+  // ─── Step 2: Email MFA OTP ─────────────────────────────────────
 
   if (mfaState) {
     return (
@@ -87,18 +112,6 @@ export function LoginForm({ variant }: LoginFormProps) {
         isPending={verifyMfa.isPending}
         error={mfaError}
         showTrustDevice
-        variant={variant}
-      />
-    );
-  }
-
-  // ─── Step 2: Phone OTP ───────────────────────────────────────────
-
-  if (showPhoneOtp) {
-    return (
-      <PhoneOtpForm
-        phone={credential}
-        onBack={() => setShowPhoneOtp(false)}
         variant={variant}
       />
     );

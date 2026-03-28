@@ -59,6 +59,9 @@ import type {
     ConfirmDisableMfaResponse,
     GetMfaStatusRequest,
     GetMfaStatusResponse,
+    VerifyPhoneRegisterRequest,
+    ResendPhoneRegisterOtpRequest,
+    ResendPhoneRegisterOtpResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -151,6 +154,16 @@ export class UserClientService implements OnModuleInit {
 
     getMfaStatus(data: GetMfaStatusRequest): Promise<GetMfaStatusResponse> {
         return grpcCall(this.userService.getMfaStatus(data));
+    }
+
+    // ─── Phone Register ─────────────────────────────────────────────────
+
+    verifyPhoneRegister(data: VerifyPhoneRegisterRequest): Promise<RegisterResponse> {
+        return grpcCall(this.userService.verifyPhoneRegister(data));
+    }
+
+    resendPhoneRegisterOtp(data: ResendPhoneRegisterOtpRequest): Promise<ResendPhoneRegisterOtpResponse> {
+        return grpcCall(this.userService.resendPhoneRegisterOtp(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────

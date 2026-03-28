@@ -18,6 +18,8 @@ import {
     ResendMfaOtpDto,
     VerifyEnableMfaDto,
     DisableMfaDto,
+    VerifyPhoneRegisterDto,
+    ResendPhoneRegisterOtpDto,
     MFA_TRUSTED_DEVICE_COOKIE,
     extractToken,
     getHostUrl,
@@ -111,6 +113,15 @@ export class AuthController {
             deviceInfo: request.headers['user-agent'] ?? 'unknown',
             ipAddress: request.ip ?? 'unknown',
         });
+
+        // Phone registration returns OTP_REQUIRED — no session yet
+        if (result.status === 'OTP_REQUIRED') {
+            response.status(200).json({
+                status: 'OTP_REQUIRED',
+                pending_token: result.pendingToken,
+            });
+            return;
+        }
 
         if (result.refreshToken) {
             this.setRefreshTokenCookie(request, response, result.refreshToken);
@@ -348,6 +359,44 @@ export class AuthController {
     async confirmEmailChange(@Body() dto: { token: string }) {
         const result = await this.userClient.confirmEmailChange({ token: dto.token });
         return { message: result.message };
+    }
+
+    // ─── Phone Register ─────────────────────────────────────────────────
+
+    @Public()
+    @Post('/phone-register/verify')
+    async verifyPhoneRegister(
+        @Body() dto: VerifyPhoneRegisterDto,
+        @Req() request: Request,
+        @Res() response: Response,
+    ) {
+        const result = await this.userClient.verifyPhoneRegister({
+            pendingToken: dto.pendingToken,
+            code: dto.code,
+            deviceInfo: request.headers['user-agent'] ?? 'unknown',
+            ipAddress: request.ip ?? 'unknown',
+        });
+
+        if (result.refreshToken) {
+            this.setRefreshTokenCookie(request, response, result.refreshToken);
+        }
+
+        response.status(201).json({
+            access_token: result.accessToken,
+            user: result.user,
+            ...(process.env.NODE_ENV !== 'production' && { refresh_token: result.refreshToken }),
+        });
+    }
+
+    @Public()
+    @Post('/phone-register/resend')
+    async resendPhoneRegisterOtp(
+        @Body() dto: ResendPhoneRegisterOtpDto,
+    ) {
+        const result = await this.userClient.resendPhoneRegisterOtp({
+            pendingToken: dto.pendingToken,
+        });
+        return { retryAfter: result.retryAfter };
     }
 
     @ApiOkResponse({ type: AuthUserDto })

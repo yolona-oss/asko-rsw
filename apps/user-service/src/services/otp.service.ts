@@ -1,9 +1,10 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 import crypto from 'crypto';
 
 import { EmailService } from 'common/email/email';
 import { AppConfig } from 'app.config';
+import { SmsRu } from '@asko/shared';
 import {
     MfaMethod,
     MFA_OTP_LENGTH,
@@ -13,15 +14,24 @@ import {
     MFA_OTP_REDIS_PREFIX,
     MFA_OTP_COOLDOWN_REDIS_PREFIX,
     MFA_OTP_ATTEMPTS_REDIS_PREFIX,
+    PHONE_OTP_REDIS_PREFIX,
+    PHONE_OTP_COOLDOWN_REDIS_PREFIX,
+    PHONE_OTP_ATTEMPTS_REDIS_PREFIX,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
 @Injectable()
 export class OtpService {
+    private readonly smsClient: SmsRu;
+
     constructor(
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
         private readonly config: AppConfig,
-    ) {}
+    ) {
+        this.smsClient = new SmsRu(this.config.sms.apiKey);
+    }
+
+    // ─── User-keyed OTP (for authenticated flows: MFA login, enable/disable) ──
 
     async generate(userId: string, method: MfaMethod): Promise<string> {
         const code = this.generateCode();
@@ -65,12 +75,16 @@ export class OtpService {
 
     async send(userId: string, target: string, method: MfaMethod): Promise<void> {
         switch (method) {
-            case MfaMethod.EMAIL:
+            case MfaMethod.EMAIL: {
                 const code = await this.generate(userId, method);
                 await this.sendEmailOtp(target, code);
                 break;
-            case MfaMethod.PHONE:
-                throw new NotImplementedException('SMS OTP not implemented');
+            }
+            case MfaMethod.PHONE: {
+                const code = await this.generate(userId, method);
+                await this.sendSmsOtp(target, code);
+                break;
+            }
             default:
                 throw AppErrors.badRequest(`Unknown MFA method: ${method}`);
         }
@@ -86,6 +100,64 @@ export class OtpService {
         const key = `${MFA_OTP_COOLDOWN_REDIS_PREFIX}${userId}:${method}`;
         await this.redis.set(key, '1', 'EX', MFA_OTP_RESEND_COOLDOWN_SECONDS);
     }
+
+    // ─── Phone-keyed OTP (for unauthenticated flows: phone registration) ──────
+
+    async generateByPhone(phone: string): Promise<string> {
+        const code = this.generateCode();
+        const hash = crypto.createHash('sha256').update(code).digest('hex');
+
+        const key = `${PHONE_OTP_REDIS_PREFIX}${phone}`;
+        await this.redis.set(key, hash, 'EX', MFA_OTP_EXPIRY_SECONDS);
+
+        const attemptsKey = `${PHONE_OTP_ATTEMPTS_REDIS_PREFIX}${phone}`;
+        await this.redis.del(attemptsKey);
+
+        return code;
+    }
+
+    async verifyByPhone(phone: string, code: string): Promise<boolean> {
+        const attemptsKey = `${PHONE_OTP_ATTEMPTS_REDIS_PREFIX}${phone}`;
+        const attempts = parseInt(await this.redis.get(attemptsKey) || '0', 10);
+        if (attempts >= MFA_OTP_MAX_ATTEMPTS) {
+            throw AppErrors.tooManyRequests('Слишком много попыток. Запросите новый код.');
+        }
+
+        const key = `${PHONE_OTP_REDIS_PREFIX}${phone}`;
+        const storedHash = await this.redis.get(key);
+        if (!storedHash) {
+            return false;
+        }
+
+        const inputHash = crypto.createHash('sha256').update(code).digest('hex');
+        if (!crypto.timingSafeEqual(Buffer.from(storedHash), Buffer.from(inputHash))) {
+            await this.redis.incr(attemptsKey);
+            await this.redis.expire(attemptsKey, MFA_OTP_EXPIRY_SECONDS);
+            return false;
+        }
+
+        await this.redis.del(key);
+        await this.redis.del(attemptsKey);
+        return true;
+    }
+
+    async checkPhoneCooldown(phone: string): Promise<number> {
+        const key = `${PHONE_OTP_COOLDOWN_REDIS_PREFIX}${phone}`;
+        const ttl = await this.redis.ttl(key);
+        return ttl > 0 ? ttl : 0;
+    }
+
+    async setPhoneCooldown(phone: string): Promise<void> {
+        const key = `${PHONE_OTP_COOLDOWN_REDIS_PREFIX}${phone}`;
+        await this.redis.set(key, '1', 'EX', MFA_OTP_RESEND_COOLDOWN_SECONDS);
+    }
+
+    async sendPhoneOtp(phone: string): Promise<void> {
+        const code = await this.generateByPhone(phone);
+        await this.sendSmsOtp(phone, code);
+    }
+
+    // ─── Private ──────────────────────────────────────────────────────────────
 
     private generateCode(): string {
         const max = Math.pow(10, MFA_OTP_LENGTH);
@@ -108,5 +180,16 @@ export class OtpService {
                 '</div>',
             ].join(''),
         });
+    }
+
+    private async sendSmsOtp(phone: string, code: string): Promise<void> {
+        const result = await this.smsClient.smsSend({
+            to: phone,
+            text: `ASKO: Ваш код подтверждения: ${code}. Действителен 5 минут.`,
+            test: this.config.sms.testMode,
+        });
+        if (result.code !== '100') {
+            throw AppErrors.internalError(`SMS send failed: ${result.description ?? result.code}`);
+        }
     }
 }

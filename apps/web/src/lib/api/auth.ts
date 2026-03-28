@@ -75,4 +75,13 @@ export const authApi = {
   resetPassword(token: string, newPassword: string) {
     return api.post<{ message: string }>('/auth/reset-password', { token, newPassword });
   },
+
+  // Phone register
+  verifyPhoneRegister(data: { pendingToken: string; code: string }) {
+    return api.post<IAuthSession>('/auth/phone-register/verify', data);
+  },
+
+  resendPhoneRegisterOtp(pendingToken: string) {
+    return api.post<{ retryAfter: number }>('/auth/phone-register/resend', { pendingToken });
+  },
 };

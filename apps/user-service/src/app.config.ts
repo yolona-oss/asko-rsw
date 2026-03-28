@@ -63,6 +63,21 @@ export class AppConfig {
         };
     }
 
+    get sms() {
+        return {
+            apiKey: this.configService.getOrThrow<string>('SMS_RU_API_KEY'),
+            testMode: this.configService.get<string>('SMS_RU_TEST_MODE') === 'true',
+        };
+    }
+
+    get phoneOtp() {
+        return {
+            maxAttempts: parseInt(this.configService.get<string>('OPT_MAX_ATTEMPTS') || '3', 10),
+            cooldownSec: parseInt(this.configService.get<string>('OPT_DELAY_BETWEEN_ATTEMPTS_SEC') || '60', 10),
+            lockoutSec: parseInt(this.configService.get<string>('OPT_DELAY_BETWEEN_MAX_ATTEMPTS_SEC') || '360', 10),
+        };
+    }
+
     get mfaTrustedDeviceSecret(): string {
         return this.configService.get<string>('MFA_TRUSTED_DEVICE_SECRET') ?? 'default-mfa-secret-change-in-production';
     }

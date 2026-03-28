@@ -8,6 +8,11 @@ export const MFA_OTP_REDIS_PREFIX = 'mfa:otp:';
 export const MFA_OTP_COOLDOWN_REDIS_PREFIX = 'mfa:cooldown:';
 export const MFA_OTP_ATTEMPTS_REDIS_PREFIX = 'mfa:attempts:';
 
+export const PHONE_OTP_REDIS_PREFIX = 'phone:otp:';
+export const PHONE_OTP_COOLDOWN_REDIS_PREFIX = 'phone:cooldown:';
+export const PHONE_OTP_ATTEMPTS_REDIS_PREFIX = 'phone:attempts:';
+export const PHONE_OTP_PENDING_REG_PREFIX = 'phone:pending_reg:';
+
 export const MFA_TRUSTED_DEVICE_COOKIE = {
     cookie: {
         name: 'trustedDevice',

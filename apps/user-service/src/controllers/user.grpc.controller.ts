@@ -164,7 +164,7 @@ export class UserGrpcController {
             const result = await this.authService.register({
                 dto: {
                     email: data.email || undefined,
-                    password: data.password || '',
+                    password: data.password || undefined,
                     firstName: data.firstName || undefined,
                     lastName: data.lastName || undefined,
                     phone: data.phone || undefined,
@@ -174,11 +174,26 @@ export class UserGrpcController {
                 deviceInfo: data.deviceInfo || 'unknown',
                 ipAddress: data.ipAddress || 'unknown',
             });
+
+            if ('status' in result && result.status === 'OTP_REQUIRED') {
+                return {
+                    status: 'OTP_REQUIRED',
+                    pendingToken: result.pendingToken,
+                    accessToken: '',
+                    refreshToken: '',
+                    user: undefined as any,
+                    roles: [],
+                };
+            }
+
+            const session = result as any;
             return {
-                accessToken: result.access_token,
-                refreshToken: result.refresh_token ?? '',
-                user: userToAuthUser(result.user),
-                roles: result.roles ?? [],
+                status: 'SUCCESS',
+                pendingToken: '',
+                accessToken: session.access_token,
+                refreshToken: session.refresh_token ?? '',
+                user: userToAuthUser(session.user),
+                roles: session.roles ?? [],
             };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -338,6 +353,35 @@ export class UserGrpcController {
     async getMfaStatus(data: GetMfaStatusRequest): Promise<GetMfaStatusResponse> {
         try {
             return await this.mfaService.getMfaStatus(data.userId);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Phone Register ─────────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'VerifyPhoneRegister')
+    async verifyPhoneRegister(data: any): Promise<RegisterResponse> {
+        try {
+            const result = await this.authService.verifyPhoneRegister(
+                data.pendingToken,
+                data.code,
+                data.deviceInfo || 'unknown',
+                data.ipAddress || 'unknown',
+            );
+            return {
+                status: 'SUCCESS',
+                pendingToken: '',
+                accessToken: result.access_token,
+                refreshToken: result.refresh_token ?? '',
+                user: userToAuthUser(result.user),
+                roles: result.roles ?? [],
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ResendPhoneRegisterOtp')
+    async resendPhoneRegisterOtp(data: any): Promise<{ retryAfter: number }> {
+        try {
+            return await this.authService.resendPhoneRegisterOtp(data.pendingToken);
         } catch (e) { throw toGrpcError(e); }
     }
 

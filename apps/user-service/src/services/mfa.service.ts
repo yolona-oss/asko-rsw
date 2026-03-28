@@ -76,23 +76,22 @@ export class MfaService {
 
     // ─── Challenge token ─────────────────────────────────────────────────
 
-    generateMfaChallengeToken(userId: string): string {
+    generateMfaChallengeToken(userId: string, method?: MfaMethod): string {
         return this.jwtService.sign(
-            { sub: userId, purpose: 'mfa_challenge' },
+            { sub: userId, purpose: 'mfa_challenge', method: method ?? MfaMethod.EMAIL },
             {
                 expiresIn: MFA_CHALLENGE_TOKEN_EXPIRY,
-                // Uses the default access token key from JwtModule config
             },
         );
     }
 
-    verifyMfaChallengeToken(token: string): { userId: string } {
+    verifyMfaChallengeToken(token: string): { userId: string; method: MfaMethod } {
         try {
             const payload = this.jwtService.verify(token);
             if (payload.purpose !== 'mfa_challenge') {
                 throw AppErrors.unauthorized('Invalid MFA token');
             }
-            return { userId: payload.sub };
+            return { userId: payload.sub, method: payload.method ?? MfaMethod.EMAIL };
         } catch (err: any) {
             if (err?.httpStatus) throw err;
             throw AppErrors.unauthorized('Недействительный или истекший MFA токен');
@@ -120,26 +119,30 @@ export class MfaService {
 
     // ─── Login OTP ─────────────────────────────────────────────────────────
 
-    async initiateLoginOtp(user: User): Promise<void> {
-        const method = this.getMfaMethods(user)[0];
-        if (method === MfaMethod.EMAIL && user.email) {
+    async initiateLoginOtp(user: User, method?: MfaMethod): Promise<void> {
+        const m = method ?? this.getMfaMethods(user)[0];
+        if (m === MfaMethod.EMAIL && user.email) {
             await this.otpService.send(user.id, user.email, MfaMethod.EMAIL);
             await this.otpService.setCooldown(user.id, MfaMethod.EMAIL);
+        } else if (m === MfaMethod.PHONE && user.phone) {
+            await this.otpService.send(user.id, user.phone, MfaMethod.PHONE);
+            await this.otpService.setCooldown(user.id, MfaMethod.PHONE);
         }
     }
 
     async resendLoginOtp(mfaToken: string): Promise<{ retryAfter: number }> {
-        const { userId } = this.verifyMfaChallengeToken(mfaToken);
+        const { userId, method: tokenMethod } = this.verifyMfaChallengeToken(mfaToken);
         const user = await this.userService.findById(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
 
-        const method = this.getMfaMethods(user)[0];
+        const method = tokenMethod ?? this.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
         const cooldown = await this.otpService.checkCooldown(userId, method);
         if (cooldown > 0) {
             return { retryAfter: cooldown };
         }
 
-        await this.otpService.send(userId, user.email!, method);
+        const target = method === MfaMethod.PHONE ? user.phone! : user.email!;
+        await this.otpService.send(userId, target, method);
         await this.otpService.setCooldown(userId, method);
         return { retryAfter: 60 };
     }

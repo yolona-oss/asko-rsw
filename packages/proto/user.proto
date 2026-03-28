@@ -40,6 +40,8 @@ message RegisterResponse {
     string refresh_token = 2;
     AuthUser user = 3;
     repeated string roles = 4;
+    string status = 5;
+    string pending_token = 6;
 }
 
 message AuthSessionResponse {
@@ -338,6 +340,23 @@ message GetMfaStatusResponse {
     repeated string methods = 2;
 }
 
+// ─── Phone Register ─────────────────────────────────────────────────────────
+
+message VerifyPhoneRegisterRequest {
+    string pending_token = 1;
+    string code = 2;
+    string device_info = 3;
+    string ip_address = 4;
+}
+
+message ResendPhoneRegisterOtpRequest {
+    string pending_token = 1;
+}
+
+message ResendPhoneRegisterOtpResponse {
+    int32 retry_after = 1;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 service UserService {
@@ -363,6 +382,10 @@ service UserService {
     rpc ConfirmDisableMfa(ConfirmDisableMfaRequest) returns (ConfirmDisableMfaResponse);
     rpc GetMfaStatus(GetMfaStatusRequest) returns (GetMfaStatusResponse);
     rpc FindUserByAccessToken(FindByTokenRequest) returns (AuthUserResponse);
+
+    // Phone register
+    rpc VerifyPhoneRegister(VerifyPhoneRegisterRequest) returns (RegisterResponse);
+    rpc ResendPhoneRegisterOtp(ResendPhoneRegisterOtpRequest) returns (ResendPhoneRegisterOtpResponse);
 
     // User CRUD
     rpc FindAllUsers(PaginationRequest) returns (PaginatedUsersResponse);
