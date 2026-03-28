@@ -11,11 +11,10 @@ import {
   MIN_USER_PASSWORD_LENGTH,
   MAX_USER_PASSWORD_LENGTH,
   NAME_REGEX,
+  RUSSIAN_NAMES,
+  RUSSIAN_SURNAMES,
+  RUSSIAN_PATRONYMICS,
 } from '@asko/shared/client';
-
-const NAMES_D = ['Иван', 'Петр', 'Александр', 'Дмитрий'];
-const SURNAMES_D = ['Иванов', 'Петров', 'Сидоров', 'Кузнецов'];
-const PATRONYMICS_D = ['Иванович', 'Петрович', 'Александрович'];
 
 type AuthMethod = 'email' | 'phone';
 type Step = 'credentials' | 'verification';
@@ -196,9 +195,9 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
           <label className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>ФИО</label>
           <NameInput
             type="text"
-            names={NAMES_D}
-            surnames={SURNAMES_D}
-            patronymics={PATRONYMICS_D}
+            names={RUSSIAN_NAMES}
+            surnames={RUSSIAN_SURNAMES}
+            patronymics={RUSSIAN_PATRONYMICS}
             value={firstName}
             onChange={(e) => {
               setFirstName(e.target.value);

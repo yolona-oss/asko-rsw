@@ -13,9 +13,9 @@ import { Input, type InputProps } from './input';
 import { cn } from '../utils/cn';
 
 export interface NameInputProps extends InputProps {
-  names: string[];
-  surnames: string[];
-  patronymics: string[];
+  names: readonly string[];
+  surnames: readonly string[];
+  patronymics: readonly string[];
 }
 
 export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(

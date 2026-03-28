@@ -16,9 +16,11 @@ import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 
-const NAMES_D = ['Иван', 'Петр', 'Александр', 'Дмитрий'];
-const SURNAMES_D = ['Иванов', 'Петров', 'Сидоров', 'Кузнецов'];
-const PATRONYMICS_D = ['Иванович', 'Петрович', 'Александрович'];
+import {
+  RUSSIAN_NAMES,
+  RUSSIAN_SURNAMES,
+  RUSSIAN_PATRONYMICS,
+} from '@asko/shared/client';
 
 export function ProfileForm() {
   const { user } = useAccount();
@@ -251,9 +253,9 @@ export function ProfileForm() {
           <FormField label="ФИО">
             <NameInput
               type="text"
-              names={NAMES_D}
-              surnames={SURNAMES_D}
-              patronymics={PATRONYMICS_D}
+              names={RUSSIAN_NAMES}
+              surnames={RUSSIAN_SURNAMES}
+              patronymics={RUSSIAN_PATRONYMICS}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Фамилия Имя Отчество"
