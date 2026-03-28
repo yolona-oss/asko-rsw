@@ -28,9 +28,10 @@ type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'ul' | 'ol';
 
 interface EditorToolbarProps {
     articleId?: string;
+    onRequestArticleId?: () => Promise<string | null>;
 }
 
-export function EditorToolbar({ articleId }: EditorToolbarProps) {
+export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarProps) {
     const [editor] = useLexicalComposerContext();
     const [isBold, setIsBold] = useState(false);
     const [isItalic, setIsItalic] = useState(false);
@@ -106,10 +107,23 @@ export function EditorToolbar({ articleId }: EditorToolbarProps) {
 
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const resolvedArticleId = useRef<string | undefined>(articleId);
+
+    useEffect(() => {
+        resolvedArticleId.current = articleId;
+    }, [articleId]);
+
+    const ensureArticleId = async (): Promise<string | null> => {
+        if (resolvedArticleId.current) return resolvedArticleId.current;
+        if (!onRequestArticleId) return null;
+        const id = await onRequestArticleId();
+        if (id) resolvedArticleId.current = id;
+        return id;
+    };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !articleId) return;
+        if (!file) return;
         if (fileRef.current) fileRef.current.value = '';
 
         if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return;
@@ -117,7 +131,10 @@ export function EditorToolbar({ articleId }: EditorToolbarProps) {
 
         setUploading(true);
         try {
-            const { data } = await articleApi.uploadImage(articleId, file);
+            const id = await ensureArticleId();
+            if (!id) return;
+
+            const { data } = await articleApi.uploadImage(id, file);
             const src = data.imageJson.large?.secure_url
                 ?? data.imageJson.medium?.secure_url
                 ?? data.imageJson.original.secure_url;
@@ -130,14 +147,7 @@ export function EditorToolbar({ articleId }: EditorToolbarProps) {
     };
 
     const insertImage = () => {
-        if (articleId) {
-            fileRef.current?.click();
-        } else {
-            const src = prompt('URL изображения (сохраните статью для загрузки файлов):');
-            if (src) {
-                editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
-            }
-        }
+        fileRef.current?.click();
     };
 
     const btn = (active: boolean) =>

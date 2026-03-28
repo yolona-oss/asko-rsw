@@ -23,6 +23,7 @@ interface RichTextEditorProps {
     content?: Record<string, any>;
     onChange: (json: Record<string, any>) => void;
     articleId?: string;
+    onRequestArticleId?: () => Promise<string | null>;
 }
 
 const theme = {
@@ -119,7 +120,7 @@ export function plainTextToLexicalState(text: string): Record<string, any> {
     };
 }
 
-export function RichTextEditor({ content, onChange, articleId }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, articleId, onRequestArticleId }: RichTextEditorProps) {
     const initialConfig = {
         namespace: 'ArticleEditor',
         theme,
@@ -137,7 +138,7 @@ export function RichTextEditor({ content, onChange, articleId }: RichTextEditorP
     return (
         <LexicalComposer initialConfig={initialConfig}>
             <div className="border border-border-light/30 rounded bg-white">
-                <EditorToolbar articleId={articleId} />
+                <EditorToolbar articleId={articleId} onRequestArticleId={onRequestArticleId} />
                 <div className="relative min-h-[300px]">
                     <RichTextPlugin
                         contentEditable={
