@@ -166,6 +166,13 @@ export function LoginForm({ variant }: LoginFormProps) {
           Забыли пароль?
         </Link>
       )}
+
+      <p className={`${variant === 'desktop' ? 'mt-4' : 'mt-6'} text-sm ${variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub'}`}>
+        Нет аккаунта?{' '}
+        <Link href="/register" className={`font-medium ${labelColor}`}>
+          Зарегистрироваться
+        </Link>
+      </p>
     </>
   );
 }

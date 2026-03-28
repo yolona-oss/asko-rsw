@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSignup } from '@/lib/api/use-auth';
 import { PhoneOtpForm } from './phone-otp-form';
 import { EmailInput, PasswordInput, PhoneInput, NameInput } from '@asko/ui';
@@ -270,6 +271,13 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       >
         {signup.isPending ? 'Загрузка...' : 'Далее'}
       </button>
+
+      <p className={`text-sm ${subColor}`}>
+        Уже есть аккаунт?{' '}
+        <Link href="/login" className={`font-medium ${labelColor}`}>
+          Войти
+        </Link>
+      </p>
     </form>
   );
 }
