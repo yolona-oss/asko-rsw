@@ -1,14 +1,14 @@
 'use client';
 
 import { forwardRef, useCallback } from 'react';
-import { Input } from '@asko/ui';
+import { EmailInput, PhoneInput, PatternInput } from '@asko/ui';
 
 export type CredentialType = 'email' | 'phone' | null;
 
 export function detectCredentialType(value: string): CredentialType {
   if (!value) return null;
   const stripped = value.replace(/[\s()\-+]/g, '');
-  if (!stripped) return null;
+  if (!stripped) return value.includes('+') ? 'phone' : null;
   return /^\d+$/.test(stripped) ? 'phone' : 'email';
 }
 
@@ -22,28 +22,36 @@ interface CredentialInputProps {
 
 export const CredentialInput = forwardRef<HTMLInputElement, CredentialInputProps>(
   function CredentialInput({ value, onChange, error, required, className }, ref) {
-    const type = detectCredentialType(value);
+    const mode = detectCredentialType(value);
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = e.target.value;
-        onChange(v, detectCredentialType(v));
+        onChange(e.target.value, detectCredentialType(e.target.value));
       },
       [onChange],
     );
 
-    return (
-      <Input
-        ref={ref}
-        value={value}
-        onChange={handleChange}
-        placeholder="Email или телефон"
-        inputMode={type === 'phone' ? 'tel' : 'email'}
-        autoComplete={type === 'phone' ? 'tel' : 'email'}
-        error={error}
-        required={required}
-        className={className}
-      />
+    // First keystroke in empty field — detect mode, seed phone with +7 prefix
+    const handleFirstInput = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value;
+        if (detectCredentialType(raw) === 'phone') {
+          let d = raw.replace(/\D/g, '');
+          if (d === '8') d = '7';
+          onChange(d ? `+${d}` : '+7', 'phone');
+        } else {
+          onChange(raw, detectCredentialType(raw));
+        }
+      },
+      [onChange],
     );
+
+    if (mode === 'phone')
+      return <PhoneInput ref={ref} value={value} onChange={handleChange} error={error} required={required} className={className} />;
+
+    if (mode === 'email')
+      return <EmailInput ref={ref} value={value} onChange={handleChange} error={error} required={required} className={className} />;
+
+    return <PatternInput ref={ref} value={value} onChange={handleFirstInput} placeholder="Email или телефон" error={error} required={required} className={className} />;
   },
 );
