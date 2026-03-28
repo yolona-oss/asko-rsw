@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Generate ECDSA P-256 key pair for digital signatures (repair-service)
 set -euo pipefail
 
 TMPDIR=$(mktemp -d)

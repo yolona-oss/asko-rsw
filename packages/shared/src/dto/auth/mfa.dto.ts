@@ -1,17 +1,28 @@
+import { IsString, IsBoolean, IsOptional } from 'class-validator';
+
 export class VerifyMfaOtpDto {
-    mfaToken: string
-    code: string
-    trustDevice?: boolean
+    @IsString()
+    mfaToken: string;
+
+    @IsString()
+    code: string;
+
+    @IsOptional()
+    @IsBoolean()
+    trustDevice?: boolean;
 }
 
 export class ResendMfaOtpDto {
-    mfaToken: string
+    @IsString()
+    mfaToken: string;
 }
 
 export class DisableMfaDto {
-    code: string
+    @IsString()
+    code: string;
 }
 
 export class VerifyEnableMfaDto {
-    code: string
+    @IsString()
+    code: string;
 }

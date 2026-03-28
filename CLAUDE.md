@@ -595,7 +595,7 @@ export class PaymentEventConsumer {
 **DTOs** (Data Transfer Objects):
 
 * Live in `packages/shared/src/dto/<domain>/` — shared across all services.
-* Use `class-validator` decorators for validation.
+* **Every** DTO property **must** have `class-validator` decorators (`@IsString()`, `@IsNumber()`, `@IsBoolean()`, `@IsEmail()`, `@IsEnum()`, `@IsOptional()`, etc.). The API gateway uses `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true` — properties without decorators are silently stripped and undecorated DTOs will break at runtime.
 * Swagger CLI plugin auto-adds `@ApiProperty()` to typed class properties in `*.dto.ts` files.
 * Manual `@ApiProperty({ type: [RecordDto] })` only needed on array properties in paginated responses.
 * Must use `PaginationDto` and `PaginatedResponseDto` from `@asko/shared`.
