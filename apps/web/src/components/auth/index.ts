@@ -1,6 +1,9 @@
 export { AuthImageShell } from './auth-image-shell';
+export { CredentialInput, detectCredentialType } from './credential-input';
+export type { CredentialType } from './credential-input';
 export { LoginForm } from './login-form';
 export { MfaOtpForm } from './mfa-otp-form';
+export { PhoneOtpForm } from './phone-otp-form';
 export { RegisterForm } from './register-form';
 export { RequestResetForm } from './request-reset-form';
 export { ResetPasswordForm } from './reset-password-form';

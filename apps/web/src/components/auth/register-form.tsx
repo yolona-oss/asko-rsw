@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSignup } from '@/lib/api/use-auth';
-import { EmailInput, PasswordInput, PhoneInput, NameInput, Input } from '@asko/ui';
+import { PhoneOtpForm } from './phone-otp-form';
+import { EmailInput, PasswordInput, PhoneInput, NameInput } from '@asko/ui';
 import {
   MIN_USER_PASSWORD_LENGTH,
   MAX_USER_PASSWORD_LENGTH,
@@ -128,10 +129,10 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
     }
 
     return (
-      <PhoneOtpStep
+      <PhoneOtpForm
         phone={phone}
-        variant={variant}
         onBack={() => setStep('credentials')}
+        variant={variant}
       />
     );
   }
@@ -273,84 +274,3 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
   );
 }
 
-// ─── Phone OTP placeholder (backend not implemented) ─────────────
-
-function PhoneOtpStep({
-  phone,
-  variant,
-  onBack,
-}: {
-  phone: string;
-  variant: 'mobile' | 'desktop';
-  onBack: () => void;
-}) {
-  const [code, setCode] = useState('');
-  const [cooldown, setCooldown] = useState(60);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setInterval(() => setCooldown((v) => Math.max(0, v - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [cooldown]);
-
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const subColor = variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub';
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <p className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>
-          Подтверждение телефона
-        </p>
-        <p className={`text-sm ${subColor}`}>
-          Введите 6-значный код, отправленный на {phone}
-        </p>
-      </div>
-
-      <Input
-        ref={inputRef}
-        value={code}
-        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-        placeholder="000000"
-        maxLength={6}
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        className="text-center text-2xl tracking-[0.5em] font-mono"
-      />
-
-      <button
-        type="button"
-        disabled
-        className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer disabled:opacity-60`}
-        style={{ background: '#EB001C' }}
-      >
-        Подтвердить
-      </button>
-
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          disabled={cooldown > 0}
-          className={`text-sm font-medium ${labelColor} disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed`}
-        >
-          {cooldown > 0
-            ? `Отправить повторно (${cooldown}с)`
-            : 'Отправить код повторно'}
-        </button>
-
-        <button
-          type="button"
-          onClick={onBack}
-          className={`text-sm font-medium ${labelColor} cursor-pointer`}
-        >
-          Назад
-        </button>
-      </div>
-    </div>
-  );
-}

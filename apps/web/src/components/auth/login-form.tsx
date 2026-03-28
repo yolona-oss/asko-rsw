@@ -5,24 +5,46 @@ import Link from 'next/link';
 import { useLogin, useVerifyMfaOtp } from '@/lib/api/use-auth';
 import { authApi } from '@/lib/api/auth';
 import { MfaOtpForm } from './mfa-otp-form';
-import { EmailInput, PasswordInput } from '@asko/ui';
+import { PhoneOtpForm } from './phone-otp-form';
+import { CredentialInput, type CredentialType } from './credential-input';
+import { PasswordInput } from '@asko/ui';
 
 interface LoginFormProps {
   variant: 'mobile' | 'desktop';
 }
 
 export function LoginForm({ variant }: LoginFormProps) {
-  const [email, setEmail] = useState('');
+  const [credential, setCredential] = useState('');
+  const [credentialType, setCredentialType] = useState<CredentialType>(null);
   const [password, setPassword] = useState('');
   const login = useLogin();
   const verifyMfa = useVerifyMfaOtp();
 
+  // MFA state (email login)
   const [mfaState, setMfaState] = useState<{ mfaToken: string; mfaMethod: string } | null>(null);
+
+  // Phone OTP state
+  const [showPhoneOtp, setShowPhoneOtp] = useState(false);
+
+  function handleCredentialChange(value: string, type: CredentialType) {
+    setCredential(value);
+    setCredentialType(type);
+    if (login.error) login.reset();
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
-    login.mutate({ email, password }, {
+    if (!credential) return;
+
+    if (credentialType === 'phone') {
+      // TODO: Call phone OTP send API when backend is ready
+      setShowPhoneOtp(true);
+      return;
+    }
+
+    // Email login
+    if (!password) return;
+    login.mutate({ email: credential, password }, {
       onSuccess: (data: any) => {
         if (data.status === 'MFA_REQUIRED') {
           setMfaState({ mfaToken: data.mfa_token, mfaMethod: data.mfa_method });
@@ -30,6 +52,8 @@ export function LoginForm({ variant }: LoginFormProps) {
       },
     });
   }
+
+  // ─── MFA handlers ────────────────────────────────────────────────
 
   const handleMfaSubmit = useCallback((code: string, trustDevice: boolean) => {
     if (!mfaState) return;
@@ -52,6 +76,8 @@ export function LoginForm({ variant }: LoginFormProps) {
     ? (verifyMfa.error as any)?.response?.data?.message ?? 'Ошибка проверки кода'
     : null;
 
+  // ─── Step 2: MFA OTP (email) ─────────────────────────────────────
+
   if (mfaState) {
     return (
       <MfaOtpForm
@@ -66,12 +92,27 @@ export function LoginForm({ variant }: LoginFormProps) {
     );
   }
 
+  // ─── Step 2: Phone OTP ───────────────────────────────────────────
+
+  if (showPhoneOtp) {
+    return (
+      <PhoneOtpForm
+        phone={credential}
+        onBack={() => setShowPhoneOtp(false)}
+        variant={variant}
+      />
+    );
+  }
+
+  // ─── Step 1: Credentials ─────────────────────────────────────────
+
   const errorMessage = login.error
     ? (login.error as any)?.response?.data?.message ?? 'Ошибка авторизации'
     : null;
 
   const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
   const errorBg = variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600';
+  const showPassword = credentialType !== 'phone';
 
   return (
     <>
@@ -82,14 +123,22 @@ export function LoginForm({ variant }: LoginFormProps) {
 
         <div className={`flex flex-col ${variant === 'desktop' ? 'gap-8' : 'gap-6'}`}>
           <div className="flex flex-col gap-2">
-            <label className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>Email</label>
-            <EmailInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" required />
+            <label className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>
+              Email или телефон
+            </label>
+            <CredentialInput
+              value={credential}
+              onChange={handleCredentialChange}
+              required
+            />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>Пароль</label>
-            <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Введите пароль" showStrength={false} required />
-          </div>
+          {showPassword && (
+            <div className="flex flex-col gap-2">
+              <label className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>Пароль</label>
+              <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Введите пароль" showStrength={false} required />
+            </div>
+          )}
         </div>
 
         <button
@@ -98,17 +147,21 @@ export function LoginForm({ variant }: LoginFormProps) {
           className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6 cursor-pointer'} h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60`}
           style={{ background: '#EB001C' }}
         >
-          {login.isPending ? 'Загрузка...' : 'Авторизироваться'}
+          {login.isPending
+            ? 'Загрузка...'
+            : credentialType === 'phone'
+              ? 'Получить код'
+              : 'Авторизироваться'}
         </button>
 
-        {variant === 'mobile' && (
+        {showPassword && variant === 'mobile' && (
           <Link href="/reset" className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
             Забыли пароль?
           </Link>
         )}
       </form>
 
-      {variant === 'desktop' && (
+      {showPassword && variant === 'desktop' && (
         <Link href="/reset" className="block mt-12 text-sm font-medium leading-[22px] tracking-[-0.01em] text-text-main">
           Забыли пароль?
         </Link>
