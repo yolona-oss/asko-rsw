@@ -16,7 +16,8 @@
     "build": "tsc --project tsconfig.json",
     "dev": "tsc --watch --project tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "react": "^19",

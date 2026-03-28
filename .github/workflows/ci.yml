@@ -10,10 +10,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+env:
+  NODE_VERSION: 20
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
+jobs:
+  setup:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -44,11 +48,96 @@ jobs:
       - name: Build packages
         run: pnpm dlx turbo run build --filter='./packages/*'
 
-      - name: Typecheck
-        run: pnpm dlx turbo run typecheck
+      - name: Cache workspace
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+            packages/*/node_modules
+            apps/*/node_modules
+          key: workspace-${{ github.sha }}
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Restore workspace
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+            packages/*/node_modules
+            apps/*/node_modules
+          key: workspace-${{ github.sha }}
 
       - name: Lint
         run: pnpm dlx turbo run lint
+
+  typecheck:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Restore workspace
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+            packages/*/node_modules
+            apps/*/node_modules
+          key: workspace-${{ github.sha }}
+
+      - name: Typecheck
+        run: pnpm dlx turbo run typecheck
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Restore workspace
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+            packages/*/node_modules
+            apps/*/node_modules
+          key: workspace-${{ github.sha }}
 
       - name: Test
         run: pnpm dlx turbo run test

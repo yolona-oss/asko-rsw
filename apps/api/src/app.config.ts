@@ -12,7 +12,7 @@ export class AppConfig {
     constructor(private readonly configService: ConfigService) { }
 
     get app_name() {
-        return "almagest-web";
+        return "asko-rws";
     }
 
     get serverUrl() {

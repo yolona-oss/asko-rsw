@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next",
-    "api:generate": "openapi-typescript openapi.json -o src/lib/api/api.gen.d.ts"
+    "api:generate": "openapi-typescript openapi.json -o src/lib/api/api.gen.d.ts",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "@asko/shared": "workspace:*",
