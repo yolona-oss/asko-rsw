@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge, Button, Select } from '@asko/ui';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Badge, Button } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { PageHeader } from '@/components/account/page-header';
@@ -16,6 +17,40 @@ import { RepairRequestStatus } from '@asko/shared/client';
 import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption } from './types';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { RequestChat } from './request-chat';
+import { RepairerSelector } from './repairer-selector';
+
+const ASSIGN_MESSAGES = [
+  'Назначение мастера…',
+  'Отправка уведомления…',
+  'Обновление статуса заявки…',
+  'Почти готово…',
+];
+
+const REASSIGN_MESSAGES = [
+  'Переназначение мастера…',
+  'Уведомление нового мастера…',
+  'Обновление статуса заявки…',
+  'Почти готово…',
+];
+
+function useTimedMessages(messages: string[], active: boolean, interval = 2000) {
+  const [index, setIndex] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    if (!active) {
+      setIndex(0);
+      clearInterval(timerRef.current);
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setIndex((prev) => Math.min(prev + 1, messages.length - 1));
+    }, interval);
+    return () => clearInterval(timerRef.current);
+  }, [active, messages.length, interval]);
+
+  return messages[index];
+}
 
 export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const { user: authUser } = useAuth();
@@ -28,6 +63,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatAttached, setChatAttached] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
@@ -48,7 +84,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           } catch { /* not a participant */ }
         }
 
-        const { data: repData } = await repairerApi.getAll({ limit: 100 });
+        const { data: repData } = await repairerApi.getForAssignment({ limit: 100 });
         setRepairers(repData.data ?? []);
 
         try {
@@ -69,6 +105,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const handleAssign = async () => {
     if (!selectedRepairer || !request) return;
     setAssigning(true);
+    setAssignSuccess(false);
     try {
       const isReassign = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
       if (isReassign) {
@@ -78,7 +115,10 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
       setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
-    } catch { } finally {
+      setAssigning(false);
+      setAssignSuccess(true);
+      setTimeout(() => setAssignSuccess(false), 3000);
+    } catch {
       setAssigning(false);
     }
   };
@@ -221,44 +261,16 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
           {/* Master assignment / reassignment */}
           {canAssign && !isTerminal && (
-            <div>
-              <p className="text-sm font-bold text-text-main mb-2">
-                {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
-              </p>
-              {isAssigned && (
-                <p className="text-xs text-text-sub mb-2">
-                  При смене исполнителя заявка перейдёт в статус «Назначена».
-                </p>
-              )}
-              <div className="flex items-center gap-2">
-                <Select
-                  value={selectedRepairer}
-                  onChange={(e) => setSelectedRepairer(e.target.value)}
-                  className="max-w-[400px] py-3"
-                >
-                  <option value="">Выбрать доступного мастера</option>
-                  {repairers
-                    .filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))
-                    .map((r) => {
-                      const name = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ') || `${r?.user?.firstName} ${r?.user?.lastName}`;
-                      const label = r.city ? `${name} (${r.city})` : name;
-                      return (
-                        <option key={r.id} value={r.id}>
-                          {label}
-                        </option>
-                      );
-                    })}
-                </Select>
-                <button
-                  type="button"
-                  onClick={handleAssign}
-                  disabled={!selectedRepairer || assigning}
-                  className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
-                >
-                  {assigning ? 'Назначение...' : isAssigned ? 'Переназначить' : 'Назначить'}
-                </button>
-              </div>
-            </div>
+            <AssignSection
+              isAssigned={isAssigned}
+              assigning={assigning}
+              assignSuccess={assignSuccess}
+              selectedRepairer={selectedRepairer}
+              onSelectRepairer={setSelectedRepairer}
+              repairers={repairers.filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))}
+              onAssign={handleAssign}
+              requestAddress={request.address}
+            />
           )}
 
           {/* Chat section */}
@@ -351,5 +363,148 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         )}
       </div>
     </PageContainer>
+  );
+}
+
+/* ─── Animated assign/reassign section ─── */
+
+interface AssignSectionProps {
+  isAssigned: boolean;
+  assigning: boolean;
+  assignSuccess: boolean;
+  selectedRepairer: string;
+  onSelectRepairer: (id: string) => void;
+  repairers: RepairerOption[];
+  onAssign: () => void;
+  requestAddress?: { city?: string; latitude?: number; longitude?: number };
+}
+
+function AssignSection({
+  isAssigned,
+  assigning,
+  assignSuccess,
+  selectedRepairer,
+  onSelectRepairer,
+  repairers,
+  onAssign,
+  requestAddress,
+}: AssignSectionProps) {
+  const messages = isAssigned ? REASSIGN_MESSAGES : ASSIGN_MESSAGES;
+  const timedMessage = useTimedMessages(messages, assigning);
+
+  return (
+    <div className="relative">
+      <AnimatePresence mode="wait">
+        {assigning ? (
+          <motion.div
+            key="assigning"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="flex flex-col items-center justify-center gap-3 py-6 px-4 border border-border-main rounded-sm bg-bg-sub"
+          >
+            {/* Spinner */}
+            <motion.div
+              className="w-8 h-8 border-[2.5px] border-border-main border-t-brand-red rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+            />
+            {/* Timed message */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={timedMessage}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm text-text-sub"
+              >
+                {timedMessage}
+              </motion.p>
+            </AnimatePresence>
+            {/* Progress dots */}
+            <div className="flex gap-1.5">
+              {messages.map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full"
+                  animate={{
+                    backgroundColor: i <= messages.indexOf(timedMessage) ? 'var(--color-brand-red, #e53e3e)' : 'var(--color-border-main, #d1d5db)',
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+              ))}
+            </div>
+          </motion.div>
+        ) : assignSuccess ? (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-2 py-3 px-4 border border-green-300 rounded-sm bg-green-50 text-green-700"
+          >
+            <motion.svg
+              className="w-5 h-5 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <motion.path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              />
+            </motion.svg>
+            <span className="text-sm font-medium">
+              {isAssigned ? 'Мастер успешно переназначен' : 'Мастер успешно назначен'}
+            </span>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+          >
+            <p className="text-sm font-bold text-text-main mb-2">
+              {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
+            </p>
+            {isAssigned && (
+              <p className="text-xs text-text-sub mb-2">
+                При смене исполнителя заявка перейдёт в статус «Назначена».
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <RepairerSelector
+                repairers={repairers}
+                selectedId={selectedRepairer}
+                onSelect={onSelectRepairer}
+                requestAddress={requestAddress}
+                placeholder="Выбрать доступного мастера"
+              />
+              <button
+                type="button"
+                onClick={onAssign}
+                disabled={!selectedRepairer}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
+              >
+                {isAssigned ? 'Переназначить' : 'Назначить'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

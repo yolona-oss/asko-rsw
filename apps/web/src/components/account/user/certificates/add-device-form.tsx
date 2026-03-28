@@ -60,6 +60,8 @@ export function AddDeviceForm({
         ...(addressValue.building ? { building: addressValue.building } : {}),
         ...(addressValue.floor ? { floor: addressValue.floor } : {}),
         ...(addressValue.room ? { room: addressValue.room } : {}),
+        ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
+        ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
       });
       await userDeviceApi.register({
         deviceId,

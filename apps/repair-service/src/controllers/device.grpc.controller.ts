@@ -75,6 +75,8 @@ function addressToRecord(entity: Address) {
         floor: parseInt(entity.floor ?? '') || 0,
         room: parseInt(entity.apartment ?? '') || 0,
         postalCode: '',
+        latitude: entity.latitude ?? 0,
+        longitude: entity.longitude ?? 0,
     };
 }
 
@@ -329,6 +331,8 @@ export class DeviceGrpcController {
                 house: String(data.house),
                 floor: data.floor ? String(data.floor) : undefined,
                 apartment: data.room ? String(data.room) : undefined,
+                latitude: data.latitude || undefined,
+                longitude: data.longitude || undefined,
             });
             return { address: addressToRecord(address) };
         } catch (e) { throw toGrpcError(e); }

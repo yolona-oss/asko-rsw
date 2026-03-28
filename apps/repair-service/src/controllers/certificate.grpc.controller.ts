@@ -76,6 +76,8 @@ function addressToRecord(entity: Address) {
         floor: parseInt(entity.floor ?? '') || 0,
         room: parseInt(entity.apartment ?? '') || 0,
         postalCode: '',
+        latitude: entity.latitude ?? 0,
+        longitude: entity.longitude ?? 0,
     };
 }
 

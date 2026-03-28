@@ -31,6 +31,13 @@ export const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Возвращено',
 };
 
+export const REPAIRER_REQUEST_STATUS_LABELS: Record<string, string> = {
+  [RepairRequestStatus.ASSIGNED]: 'Назначена',
+  [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
+};
+
 export function formatDate(dateStr: Date | string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', {

@@ -124,6 +124,9 @@ service RepairService {
     rpc SetConversationId(RepairSetConversationIdRequest) returns (RepairEmptyResponse);
     rpc FindOpenChatsForClose(RepairFindOpenChatsRequest) returns (RepairOpenChatsResponse);
     rpc ClearChatCloseAt(RepairClearChatCloseAtRequest) returns (RepairClearChatCloseAtResponse);
+
+    // Stats
+    rpc GetRepairersActiveRequestCounts(RepairGetRepairersStatsRequest) returns (RepairRepairersStatsResponse);
 }
 
 service DealerService {
@@ -262,6 +265,8 @@ message CreateAddressRequest {
     int32 floor = 6;
     int32 room = 7;
     string postalCode = 8;
+    double latitude = 9;
+    double longitude = 10;
 }
 
 // ─── Device Responses ──────────────────────────────────────────────────────
@@ -315,6 +320,8 @@ message AddressRecord {
     int32 floor = 7;
     int32 room = 8;
     string postalCode = 9;
+    double latitude = 10;
+    double longitude = 11;
 }
 
 message AddressResponse {
@@ -900,6 +907,20 @@ message RepairClearChatCloseAtRequest {
 
 message RepairClearChatCloseAtResponse {
     string conversationId = 1;
+}
+
+message RepairGetRepairersStatsRequest {
+    repeated string repairerIds = 1;
+}
+
+message RepairerStatsRecord {
+    string repairerId = 1;
+    int32 activeRequestCount = 2;
+    string currentRequestStatus = 3;
+}
+
+message RepairRepairersStatsResponse {
+    repeated RepairerStatsRecord stats = 1;
 }
 
 // ─── Repair Responses ──────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ export class AddressRecordDto {
     floor?: number;
     room?: number;
     postalCode?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export class DeviceRecordDto {

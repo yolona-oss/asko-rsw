@@ -13,6 +13,8 @@ export class RepairerRecordDto {
     longitude?: number;
     lastLocationUpdate?: string;
     user?: AuthUserDto;
+    activeRequestCount?: number;
+    currentRequestStatus?: string;
     createdAt: string;
     updatedAt: string;
 }

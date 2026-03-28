@@ -256,4 +256,8 @@ export class RepairClientService implements OnModuleInit {
     clearChatCloseAt(requestId: string): Promise<RepairClearChatCloseAtResponse> {
         return grpcCall(this.repairService.clearChatCloseAt({ requestId }));
     }
+
+    getRepairersActiveRequestCounts(repairerIds: string[]): Promise<{ stats: { repairerId: string; activeRequestCount: number; currentRequestStatus: string }[] }> {
+        return grpcCall((this.repairService as any).getRepairersActiveRequestCounts({ repairerIds }));
+    }
 }

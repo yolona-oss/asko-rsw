@@ -17,6 +17,8 @@ export class AddressService {
         floor?: string;
         intercom?: string;
         comment?: string;
+        latitude?: number;
+        longitude?: number;
     }): Promise<Address> {
         const address = this.em.create(Address, {
             userId,
@@ -28,6 +30,8 @@ export class AddressService {
             floor: dto.floor,
             intercom: dto.intercom,
             comment: dto.comment,
+            latitude: dto.latitude,
+            longitude: dto.longitude,
         });
         await this.em.persistAndFlush(address);
         return address;

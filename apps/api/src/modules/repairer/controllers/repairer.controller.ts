@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { UserClientService } from 'modules/user-client/user-client.service';
 import {
     CreateRepairerDto,
@@ -34,6 +35,7 @@ function mapUser(userData: any) {
 export class RepairerController {
     constructor(
         private readonly repairerClient: RepairerClientService,
+        private readonly repairClient: RepairClientService,
         private readonly userClient: UserClientService,
     ) {}
 
@@ -98,6 +100,28 @@ export class RepairerController {
         const result = await this.repairerClient.findActiveInCity(city);
         result.repairers = result.repairers ?? [];
         await Promise.all(result.repairers.map((r) => this.enrichRepairer(r)));
+        return result;
+    }
+
+    @ApiOkResponse({ type: PaginatedRepairersResponseDto })
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Get('for-assignment')
+    async findForAssignment(@Query() pagination: PaginationDto) {
+        const result = await this.repairerClient.findAllRepairers(pagination);
+        result.data = result.data ?? [];
+        await Promise.all(result.data.map((r) => this.enrichRepairer(r)));
+
+        const repairerIds = result.data.map((r: any) => r.id);
+        try {
+            const { stats } = await this.repairClient.getRepairersActiveRequestCounts(repairerIds);
+            const statsMap = new Map(stats.map((s) => [s.repairerId, s]));
+            for (const r of result.data) {
+                const stat = statsMap.get((r as any).id);
+                (r as any).activeRequestCount = stat?.activeRequestCount ?? 0;
+                (r as any).currentRequestStatus = stat?.currentRequestStatus ?? '';
+            }
+        } catch { /* non-critical */ }
+
         return result;
     }
 

@@ -102,6 +102,8 @@ function addressToRecord(entity: Address) {
         floor: parseInt(entity.floor ?? '') || 0,
         room: parseInt(entity.apartment ?? '') || 0,
         postalCode: '',
+        latitude: entity.latitude ?? 0,
+        longitude: entity.longitude ?? 0,
     };
 }
 
@@ -618,6 +620,14 @@ export class RepairGrpcController {
         try {
             const conversationId = await this.repairRequestService.clearChatCloseAt(data.requestId);
             return { conversationId: conversationId ?? '' };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'GetRepairersActiveRequestCounts')
+    async getRepairersActiveRequestCounts(data: { repairerIds: string[] }) {
+        try {
+            const stats = await this.repairRequestService.getRepairersActiveRequestCounts(data.repairerIds ?? []);
+            return { stats };
         } catch (e) { throw toGrpcError(e); }
     }
 }

@@ -157,7 +157,7 @@ export class DeviceClientService implements OnModuleInit {
 
     // ── Address ──
 
-    createAddress(dto: { country: string; city: string; street: string; house: number; building?: number; floor?: number; room?: number; postalCode?: string }): Promise<AddressResponse> {
+    createAddress(dto: { country: string; city: string; street: string; house: number; building?: number; floor?: number; room?: number; postalCode?: string; latitude?: number; longitude?: number }): Promise<AddressResponse> {
         return grpcCall(this.deviceService.createAddress({
             country: dto.country,
             city: dto.city,
@@ -167,6 +167,8 @@ export class DeviceClientService implements OnModuleInit {
             floor: dto.floor ?? 0,
             room: dto.room ?? 0,
             postalCode: dto.postalCode ?? '',
+            latitude: dto.latitude ?? 0,
+            longitude: dto.longitude ?? 0,
         }));
     }
 

@@ -14,6 +14,10 @@ export const repairerApi = {
     return api.get<PaginatedRepairers>('/repairers', { params });
   },
 
+  getForAssignment(params?: { offset?: number; limit?: number }) {
+    return api.get<PaginatedRepairers>('/repairers/for-assignment', { params });
+  },
+
   getOne(id: string) {
     return api.get<IRepairer>(`/repairers/${id}`);
   },

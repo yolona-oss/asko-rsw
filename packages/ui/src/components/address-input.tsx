@@ -20,6 +20,8 @@ export interface AddressValue {
   building?: number;
   floor?: number;
   room?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface AddressInputProps {
@@ -33,6 +35,8 @@ export interface AddressInputProps {
 
 interface NominatimResult {
   display_name: string;
+  lat: string;
+  lon: string;
   address: {
     road?: string;
     house_number?: string;
@@ -78,6 +82,8 @@ export function AddressInput({
   const [building, setBuilding] = useState('');
   const [floor, setFloor] = useState('');
   const [room, setRoom] = useState('');
+  const [lat, setLat] = useState<number | undefined>();
+  const [lon, setLon] = useState<number | undefined>();
 
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -113,7 +119,7 @@ export function AddressInput({
 
   // Emit structured value when fields change
   const emitChange = useCallback(
-    (c: string, s: string, h: string, b: string, f: string, r: string) => {
+    (c: string, s: string, h: string, b: string, f: string, r: string, la?: number, lo?: number) => {
       if (c && s && h) {
         const houseNum = Number(h);
         if (Number.isFinite(houseNum) && houseNum > 0) {
@@ -125,6 +131,7 @@ export function AddressInput({
             ...(b ? { building: Number(b) } : {}),
             ...(f ? { floor: Number(f) } : {}),
             ...(r ? { room: Number(r) } : {}),
+            ...(la != null && lo != null ? { latitude: la, longitude: lo } : {}),
           });
           return;
         }
@@ -152,6 +159,8 @@ export function AddressInput({
       next.building,
       next.floor,
       next.room,
+      lat,
+      lon,
     );
   };
 
@@ -190,14 +199,18 @@ export function AddressInput({
     const newCity = parsed.city;
     const newStreet = parsed.street;
     const newHouse = parsed.house !== undefined ? String(parsed.house) : '';
+    const newLat = parseFloat(result.lat) || undefined;
+    const newLon = parseFloat(result.lon) || undefined;
 
     setCity(newCity);
     setStreet(newStreet);
     setHouse(newHouse);
+    setLat(newLat);
+    setLon(newLon);
     setQuery(result.display_name);
     setShowSuggestions(false);
     setActiveIndex(-1);
-    emitChange(newCity, newStreet, newHouse, building, floor, room);
+    emitChange(newCity, newStreet, newHouse, building, floor, room, newLat, newLon);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -247,12 +260,14 @@ export function AddressInput({
       setCity(newCity);
       setStreet(newStreet);
       setHouse(newHouse);
+      setLat(latitude);
+      setLon(longitude);
       setQuery(
         [newCity, newStreet, newHouse ? `д. ${newHouse}` : '']
           .filter(Boolean)
           .join(', '),
       );
-      emitChange(newCity, newStreet, newHouse, building, floor, room);
+      emitChange(newCity, newStreet, newHouse, building, floor, room, latitude, longitude);
     } catch {
       setGeoError('Не удалось определить адрес');
     } finally {

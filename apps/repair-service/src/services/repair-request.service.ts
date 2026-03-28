@@ -736,4 +736,38 @@ export class RepairRequestService {
         await this.em.flush();
         return conversationId;
     }
+
+    @CreateRequestContext()
+    async getRepairersActiveRequestCounts(repairerIds: string[]): Promise<{ repairerId: string; activeRequestCount: number; currentRequestStatus: string }[]> {
+        if (!repairerIds.length) return [];
+
+        const activeStatuses = [
+            RepairRequestStatus.ASSIGNED,
+            RepairRequestStatus.ACCEPTED,
+            RepairRequestStatus.IN_PROGRESS,
+            RepairRequestStatus.AWAITING_COMPLETION,
+        ];
+
+        const requests = await this.em.find(RepairRequest, {
+            repairer: { $in: repairerIds },
+            status: { $in: activeStatuses },
+        });
+
+        const statsMap = new Map<string, { count: number; status: string }>();
+        for (const req of requests) {
+            const rid = typeof req.repairer === 'object' ? (req.repairer as Repairer).id : String(req.repairer);
+            const existing = statsMap.get(rid);
+            if (existing) {
+                existing.count++;
+            } else {
+                statsMap.set(rid, { count: 1, status: req.status });
+            }
+        }
+
+        return repairerIds.map(id => ({
+            repairerId: id,
+            activeRequestCount: statsMap.get(id)?.count ?? 0,
+            currentRequestStatus: statsMap.get(id)?.status ?? '',
+        }));
+    }
 }

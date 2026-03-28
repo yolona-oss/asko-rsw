@@ -10,7 +10,7 @@ export interface RepairRequestDetail {
   conversationId?: string;
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
-  address?: { city?: string; street?: string; building?: number; apartment?: string };
+  address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number };
   repairer?: {
     id: string;
     city: string;
@@ -24,5 +24,10 @@ export interface RepairRequestDetail {
 export interface RepairerOption {
   id: string;
   city?: string;
+  latitude?: number;
+  longitude?: number;
+  completedRepairs?: number;
+  activeRequestCount?: number;
+  currentRequestStatus?: string;
   user?: { firstName?: string; lastName?: string };
 }

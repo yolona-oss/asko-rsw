@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 @Entity()
 export class Address {
-    [OptionalProps]?: 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'createdAt';
+    [OptionalProps]?: 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'latitude' | 'longitude' | 'createdAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -34,6 +34,12 @@ export class Address {
 
     @Property({ type: 'text', nullable: true })
     comment?: string;
+
+    @Property({ type: 'float', nullable: true })
+    latitude?: number;
+
+    @Property({ type: 'float', nullable: true })
+    longitude?: number;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();
