@@ -22,13 +22,22 @@ import { AppErrors } from 'common/error';
 
 @Injectable()
 export class OtpService {
-    private readonly smsClient: SmsRu;
+    private smsClient: SmsRu | null = null;
 
     constructor(
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
         private readonly config: AppConfig,
-    ) {
-        this.smsClient = new SmsRu(this.config.sms.apiKey);
+    ) {}
+
+    private getSmsClient(): SmsRu {
+        if (!this.smsClient) {
+            const apiKey = this.config.sms.apiKey;
+            if (!apiKey) {
+                throw AppErrors.internalError('SMS_RU_API_KEY is not configured');
+            }
+            this.smsClient = new SmsRu(apiKey);
+        }
+        return this.smsClient;
     }
 
     // ─── User-keyed OTP (for authenticated flows: MFA login, enable/disable) ──
@@ -183,7 +192,8 @@ export class OtpService {
     }
 
     private async sendSmsOtp(phone: string, code: string): Promise<void> {
-        const result = await this.smsClient.smsSend({
+        const client = this.getSmsClient();
+        const result = await client.smsSend({
             to: phone,
             text: `ASKO: Ваш код подтверждения: ${code}. Действителен 5 минут.`,
             test: this.config.sms.testMode,

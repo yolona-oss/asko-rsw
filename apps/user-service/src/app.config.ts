@@ -65,7 +65,7 @@ export class AppConfig {
 
     get sms() {
         return {
-            apiKey: this.configService.getOrThrow<string>('SMS_RU_API_KEY'),
+            apiKey: this.configService.get<string>('SMS_RU_API_KEY') ?? '',
             testMode: this.configService.get<string>('SMS_RU_TEST_MODE') === 'true',
         };
     }
