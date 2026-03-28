@@ -270,6 +270,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               repairers={repairers.filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))}
               onAssign={handleAssign}
               requestAddress={request.address}
+              currentRepairerId={request.repairer?.id}
             />
           )}
 
@@ -377,6 +378,7 @@ interface AssignSectionProps {
   repairers: RepairerOption[];
   onAssign: () => void;
   requestAddress?: { city?: string; latitude?: number; longitude?: number };
+  currentRepairerId?: string;
 }
 
 function AssignSection({
@@ -388,6 +390,7 @@ function AssignSection({
   repairers,
   onAssign,
   requestAddress,
+  currentRepairerId,
 }: AssignSectionProps) {
   const messages = isAssigned ? REASSIGN_MESSAGES : ASSIGN_MESSAGES;
   const timedMessage = useTimedMessages(messages, assigning);
@@ -491,6 +494,7 @@ function AssignSection({
                 selectedId={selectedRepairer}
                 onSelect={onSelectRepairer}
                 requestAddress={requestAddress}
+                currentRepairerId={currentRepairerId}
                 placeholder="Выбрать доступного мастера"
               />
               <button

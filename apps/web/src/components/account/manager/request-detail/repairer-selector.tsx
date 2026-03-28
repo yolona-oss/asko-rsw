@@ -16,6 +16,7 @@ interface RepairerSelectorProps {
   selectedId: string;
   onSelect: (id: string) => void;
   requestAddress?: RequestAddress;
+  currentRepairerId?: string;
   placeholder?: string;
 }
 
@@ -44,6 +45,7 @@ export function RepairerSelector({
   selectedId,
   onSelect,
   requestAddress,
+  currentRepairerId,
   placeholder = 'Выбрать доступного мастера',
 }: RepairerSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -98,8 +100,10 @@ export function RepairerSelector({
     }
     if (e.key === 'Enter' && focusIndex >= 0 && filtered[focusIndex]) {
       e.preventDefault();
-      onSelect(filtered[focusIndex].id);
-      setOpen(false);
+      if (filtered[focusIndex].id !== currentRepairerId) {
+        onSelect(filtered[focusIndex].id);
+        setOpen(false);
+      }
     }
   };
 
@@ -155,6 +159,7 @@ export function RepairerSelector({
               const name = getRepairerName(r);
               const isSelected = r.id === selectedId;
               const isFocused = i === focusIndex;
+              const isCurrent = r.id === currentRepairerId;
 
               // Distance
               let distanceLabel: string | null = null;
@@ -183,17 +188,23 @@ export function RepairerSelector({
                 <div
                   key={r.id}
                   data-repairer-item
-                  onMouseDown={() => { onSelect(r.id); setOpen(false); }}
+                  onMouseDown={() => { if (!isCurrent) { onSelect(r.id); setOpen(false); } }}
                   onMouseEnter={() => setFocusIndex(i)}
-                  className={`px-3 py-2.5 cursor-pointer transition-colors ${
-                    isSelected ? 'bg-red-50' : isFocused ? 'bg-gray-50' : 'hover:bg-gray-50'
+                  className={`px-3 py-2.5 transition-colors ${
+                    isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-red-50 cursor-pointer' : isFocused ? 'bg-gray-50 cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'
                   }`}
                 >
                   {/* Row 1: name + badges */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-sm font-medium ${isSelected ? 'text-brand-red' : 'text-text-main'}`}>
+                    <span className={`text-sm font-medium ${isCurrent ? 'text-text-sub' : isSelected ? 'text-brand-red' : 'text-text-main'}`}>
                       {name}
                     </span>
+
+                    {isCurrent && (
+                      <Badge variant="neutral" className="text-xs px-1.5 py-0">
+                        Текущий
+                      </Badge>
+                    )}
 
                     {distanceLabel ? (
                       <Badge variant="info" className="text-xs px-1.5 py-0">
