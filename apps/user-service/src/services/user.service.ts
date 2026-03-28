@@ -233,8 +233,11 @@ export class UserService {
 
         if (newUserInfo.phone) {
             if (user.phone !== newUserInfo.phone) {
-                user.phone = newUserInfo.phone
-                user.phoneVerified = false
+                // If current phone is verified, skip — phone change requires confirmation flow
+                if (!user.phoneVerified) {
+                    user.phone = newUserInfo.phone
+                    user.phoneVerified = false
+                }
             }
         }
 
@@ -443,6 +446,17 @@ export class UserService {
         }
         user.email = newEmail.toLowerCase();
         user.emailVerified = false;
+        await this.em.persistAndFlush(user);
+    }
+
+    @CreateRequestContext()
+    async changePhone(userId: string, newPhone: string) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw AppErrors.dbEntityNotFound('User not found');
+        }
+        user.phone = newPhone;
+        user.phoneVerified = false;
         await this.em.persistAndFlush(user);
     }
 

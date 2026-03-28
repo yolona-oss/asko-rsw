@@ -399,6 +399,45 @@ export class AuthController {
         return { retryAfter: result.retryAfter };
     }
 
+    // ─── Phone Verification (authenticated) ─────────────────────────────
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post('/phone/send-verification')
+    async sendPhoneVerification(@Req() request: Request) {
+        const userId = (request as any).user?.id ?? (request as any).userId;
+        return await this.userClient.sendPhoneVerification({ userId });
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post('/phone/confirm-verification')
+    async confirmPhoneVerification(
+        @Req() request: Request,
+        @Body() dto: { code: string },
+    ) {
+        const userId = (request as any).user?.id ?? (request as any).userId;
+        return await this.userClient.confirmPhoneVerification({ userId, code: dto.code });
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post('/phone/request-change')
+    async requestPhoneChange(
+        @Req() request: Request,
+        @Body() dto: { newPhone: string },
+    ) {
+        const userId = (request as any).user?.id ?? (request as any).userId;
+        return await this.userClient.requestPhoneChange({ userId, newPhone: dto.newPhone });
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Post('/phone/confirm-change')
+    async confirmPhoneChange(
+        @Req() request: Request,
+        @Body() dto: { code: string },
+    ) {
+        const userId = (request as any).user?.id ?? (request as any).userId;
+        return await this.userClient.confirmPhoneChange({ userId, code: dto.code });
+    }
+
     @ApiOkResponse({ type: AuthUserDto })
     @Get('session')
     async findSessionUser(@Req() request: Request) {

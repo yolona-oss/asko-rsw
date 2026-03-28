@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../avatar-crop-modal';
-import { Button, Input, FormField } from '@asko/ui';
+import { Button, Input, FormField, PhoneInput } from '@asko/ui';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from './profile-form-skeleton';
 import { AvatarSection } from './avatar-section';
@@ -32,9 +32,14 @@ export function ProfileForm() {
   const [providers, setProviders] = useState<string[]>([]);
   const [phoneVerified, setPhoneVerified] = useState(false);
 
-  // Email verification
+  // Original values for change detection
   const originalEmail = useRef('');
   const originalEmailVerified = useRef(false);
+  const originalPhone = useRef('');
+  const originalPhoneVerified = useRef(false);
+
+  // Phone change OTP
+  const [phoneChangePending, setPhoneChangePending] = useState(false);
   const [emailVerified, setEmailVerified] = useState(true);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailResendCooldown, setEmailResendCooldown] = useState(0);
@@ -69,6 +74,8 @@ export function ProfileForm() {
         setProviders(data.providers ?? []);
         originalEmail.current = data.email ?? '';
         originalEmailVerified.current = data.emailVerified ?? false;
+        originalPhone.current = data.phone ?? '';
+        originalPhoneVerified.current = data.phoneVerified ?? false;
         // Load chat preferences
         const prefs = (data as any).preferencesJson
           ? JSON.parse((data as any).preferencesJson)
@@ -119,14 +126,19 @@ export function ProfileForm() {
     setSaving(true);
     setMessage(null);
     try {
-      const emailChanged = email.toLowerCase() !== originalEmail.current.toLowerCase();
-      const needsEmailConfirmation = emailChanged && originalEmailVerified.current;
+      const phoneDigits = phone.replace(/\D/g, '');
+      const originalPhoneDigits = originalPhone.current.replace(/\D/g, '');
 
-      // Save profile (if email is verified and changed, backend will skip the email update)
+      const emailChanged = email.toLowerCase() !== originalEmail.current.toLowerCase();
+      const phoneChanged = phoneDigits !== originalPhoneDigits;
+      const needsEmailConfirmation = emailChanged && originalEmailVerified.current;
+      const needsPhoneConfirmation = phoneChanged && originalPhoneVerified.current;
+
+      // Save profile (backend skips verified email/phone if changed — requires confirmation flow)
       await usersApi.updateProfile({
         name: [firstName, lastName].filter(Boolean).join(' '),
         email: email || undefined,
-        phone: phone || undefined,
+        phone: phoneDigits || undefined,
         preferences: {
           chat: {
             acceptConversations: chatAcceptConversations,
@@ -136,26 +148,45 @@ export function ProfileForm() {
       } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });
 
+      const messages: string[] = [];
+
+      // Handle email change confirmation
       if (needsEmailConfirmation) {
-        // Request email change confirmation — sends link to current (old) email
         try {
           const { data } = await usersApi.requestEmailChange(email);
           setEmail(originalEmail.current); // revert input to current email
-          setMessage({ type: 'success', text: data.message });
+          messages.push(data.message);
         } catch (err: any) {
-          const errMsg = err?.response?.data?.message ?? 'Не удалось запросить смену email';
           setEmail(originalEmail.current);
-          setMessage({ type: 'error', text: errMsg });
+          messages.push(err?.response?.data?.message ?? 'Не удалось запросить смену email');
         }
-      } else {
-        if (emailChanged) {
-          // Email changed directly (was unverified) — update tracking
-          originalEmail.current = email.toLowerCase();
-          originalEmailVerified.current = false;
-          setEmailVerified(false);
-        }
-        setMessage({ type: 'success', text: 'Профиль сохранён' });
+      } else if (emailChanged) {
+        originalEmail.current = email.toLowerCase();
+        originalEmailVerified.current = false;
+        setEmailVerified(false);
       }
+
+      // Handle phone change confirmation
+      if (needsPhoneConfirmation) {
+        try {
+          const { data } = await authApi.requestPhoneChange(phoneDigits);
+          setPhone(originalPhone.current); // revert input to current phone
+          setPhoneChangePending(true);
+          messages.push(data.message);
+        } catch (err: any) {
+          setPhone(originalPhone.current);
+          messages.push(err?.response?.data?.message ?? 'Не удалось запросить смену номера');
+        }
+      } else if (phoneChanged) {
+        originalPhone.current = phoneDigits;
+        originalPhoneVerified.current = false;
+        setPhoneVerified(false);
+      }
+
+      setMessage({
+        type: 'success',
+        text: messages.length > 0 ? messages.join('. ') : 'Профиль сохранён',
+      });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
@@ -255,7 +286,7 @@ export function ProfileForm() {
             )}
           </FormField>
           <FormField label="Телефон">
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="+7 (999) 123-45-67" />
+            <PhoneInput value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 (999) 123-45-67" />
           </FormField>
         </div>
 
@@ -267,6 +298,21 @@ export function ProfileForm() {
           emailVerified={emailVerified}
           phone={phone}
           phoneVerified={phoneVerified}
+          onPhoneVerified={() => setPhoneVerified(true)}
+          onResendEmailConfirmation={handleResendConfirmation}
+          resendingEmail={resendingEmail}
+          emailResendCooldown={emailResendCooldown}
+          phoneChangePending={phoneChangePending}
+          onPhoneChangeConfirmed={() => {
+            setPhoneChangePending(false);
+            // Reload profile to get the new phone
+            usersApi.getProfile().then(({ data }) => {
+              setPhone(data.phone ?? '');
+              setPhoneVerified(data.phoneVerified ?? false);
+              originalPhone.current = data.phone ?? '';
+              originalPhoneVerified.current = data.phoneVerified ?? false;
+            });
+          }}
         />
 
         {/* Chat privacy */}

@@ -84,4 +84,22 @@ export const authApi = {
   resendPhoneRegisterOtp(pendingToken: string) {
     return api.post<{ retryAfter: number }>('/auth/phone-register/resend', { pendingToken });
   },
+
+  // Phone verification (authenticated)
+  sendPhoneVerification() {
+    return api.post<{ message: string; retryAfter: number }>('/auth/phone/send-verification');
+  },
+
+  confirmPhoneVerification(code: string) {
+    return api.post<{ message: string }>('/auth/phone/confirm-verification', { code });
+  },
+
+  // Phone change (verified phone)
+  requestPhoneChange(newPhone: string) {
+    return api.post<{ message: string; retryAfter: number }>('/auth/phone/request-change', { newPhone });
+  },
+
+  confirmPhoneChange(code: string) {
+    return api.post<{ message: string }>('/auth/phone/confirm-change', { code });
+  },
 };

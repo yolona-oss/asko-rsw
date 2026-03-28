@@ -385,6 +385,38 @@ export class UserGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
+    // ─── Phone Verification ────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'SendPhoneVerification')
+    async sendPhoneVerification(data: any): Promise<{ message: string; retryAfter: number }> {
+        try {
+            return await this.authService.sendPhoneVerification(data.userId);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ConfirmPhoneVerification')
+    async confirmPhoneVerification(data: any): Promise<{ message: string }> {
+        try {
+            return await this.authService.confirmPhoneVerification(data.userId, data.code);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Phone Change ─────────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'RequestPhoneChange')
+    async requestPhoneChange(data: any): Promise<{ message: string; retryAfter: number }> {
+        try {
+            return await this.authService.requestPhoneChange(data.userId, data.newPhone);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ConfirmPhoneChange')
+    async confirmPhoneChange(data: any): Promise<{ message: string }> {
+        try {
+            return await this.authService.confirmPhoneChange(data.userId, data.code);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
     // ─── User CRUD ───────────────────────────────────────────────────────
 
     @GrpcMethod('UserService', 'FindAllUsers')

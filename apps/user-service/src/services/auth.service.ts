@@ -66,6 +66,7 @@ const EMAIL_CONFIRM_COOLDOWN_SECONDS = 60;
 const EMAIL_CONFIRM_KEY_PREFIX = 'email:confirm:';
 const EMAIL_CHANGE_COOLDOWN_SECONDS = 60;
 const EMAIL_CHANGE_KEY_PREFIX = 'email:change:';
+const PHONE_CHANGE_KEY_PREFIX = 'phone:change:';
 
 @Injectable()
 export class AuthService {
@@ -625,17 +626,18 @@ export class AuthService {
         );
 
         const url = `${this.config.frontendUrl}/auth/confirm-email-change?token=${token}`;
+        // Send to the NEW email — clicking the link proves ownership of the new address
         await EmailService.getInstance().sendMail({
-            to: user.email,
+            to: normalizedEmail,
             from: this.config.email.from,
             subject: 'Подтверждение смены email — ASKO',
-            text: `Вы запросили смену email на ${normalizedEmail}.\nДля подтверждения перейдите по ссылке: ${url}\n\nЕсли вы не запрашивали смену email, проигнорируйте это письмо.`,
+            text: `Подтвердите новый email для вашего аккаунта ASKO.\nДля подтверждения перейдите по ссылке: ${url}\n\nЕсли вы не запрашивали смену email, проигнорируйте это письмо.`,
             html: [
                 '<div style="font-family:sans-serif;max-width:480px;margin:0 auto">',
-                '<h2 style="color:#111">Смена email</h2>',
-                `<p>Вы запросили смену email на <strong>${normalizedEmail}</strong>.</p>`,
+                '<h2 style="color:#111">Подтверждение нового email</h2>',
+                `<p>Подтвердите что <strong>${normalizedEmail}</strong> — ваш новый email для аккаунта ASKO.</p>`,
                 '<p>Для подтверждения нажмите на кнопку ниже:</p>',
-                `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#EB001C;color:#fff;text-decoration:none;border-radius:4px;font-weight:600">Подтвердить смену email</a>`,
+                `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#EB001C;color:#fff;text-decoration:none;border-radius:4px;font-weight:600">Подтвердить email</a>`,
                 '<p style="margin-top:16px;color:#666;font-size:13px">Если вы не запрашивали смену email, проигнорируйте это письмо.</p>',
                 '</div>',
             ].join(''),
@@ -662,6 +664,8 @@ export class AuthService {
             }
 
             await this.userService.changeEmail(payload.id, payload.newEmail);
+            // The user proved ownership of the new email by clicking the confirmation link
+            await this.userService.setEmailConfirmed(payload.id);
             return { message: 'Email успешно изменён' };
         } catch (err: any) {
             if (err instanceof AppError) throw err;
@@ -788,5 +792,97 @@ export class AuthService {
         await this.otpService.sendPhoneOtp(phone);
         await this.otpService.setPhoneCooldown(phone);
         return { retryAfter: 60 };
+    }
+
+    // ─── Phone verification (authenticated user) ──────────────────────────
+
+    async sendPhoneVerification(userId: string): Promise<{ message: string; retryAfter: number }> {
+        const user = await this.userService.findById(userId);
+        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user.phone) throw AppErrors.badRequest('Номер телефона не указан');
+        if (user.phoneVerified) throw AppErrors.badRequest('Телефон уже подтверждён');
+
+        const cooldown = await this.otpService.checkCooldown(userId, MfaMethod.PHONE);
+        if (cooldown > 0) {
+            return { message: 'Код уже отправлен', retryAfter: cooldown };
+        }
+
+        await this.otpService.send(userId, user.phone, MfaMethod.PHONE);
+        await this.otpService.setCooldown(userId, MfaMethod.PHONE);
+        return { message: 'Код отправлен', retryAfter: 60 };
+    }
+
+    async confirmPhoneVerification(userId: string, code: string): Promise<{ message: string }> {
+        const user = await this.userService.findById(userId);
+        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user.phone) throw AppErrors.badRequest('Номер телефона не указан');
+        if (user.phoneVerified) throw AppErrors.badRequest('Телефон уже подтверждён');
+
+        const valid = await this.otpService.verify(userId, MfaMethod.PHONE, code);
+        if (!valid) throw AppErrors.unauthorized('Неверный код');
+
+        await this.userService.setPhoneConfirmed(userId);
+        return { message: 'Телефон подтверждён' };
+    }
+
+    // ─── Phone change (verified phone requires OTP on new number) ─────
+
+    async requestPhoneChange(userId: string, newPhone: string): Promise<{ message: string; retryAfter: number }> {
+        const normalized = newPhone.replace(/\D/g, '');
+        const redisKey = `${PHONE_CHANGE_KEY_PREFIX}${userId}`;
+        const ttl = await this.redis.ttl(redisKey);
+        if (ttl > 0) {
+            return { message: 'Код уже отправлен. Попробуйте позже.', retryAfter: ttl };
+        }
+
+        const user = await this.userService.findById(userId);
+        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user.phone || !user.phoneVerified) {
+            throw AppErrors.badRequest('Телефон не подтверждён — измените его напрямую в профиле');
+        }
+        if (user.phone === normalized) {
+            throw AppErrors.badRequest('Новый номер совпадает с текущим');
+        }
+
+        // Check if new phone is already taken
+        const existing = await this.userService.findByPhone(normalized);
+        if (existing) {
+            throw AppErrors.badRequest('Этот номер уже используется');
+        }
+
+        // Send OTP to the NEW phone — verifying ownership
+        const cooldown = await this.otpService.checkPhoneCooldown(normalized);
+        if (cooldown > 0) {
+            return { message: 'Код уже отправлен', retryAfter: cooldown };
+        }
+
+        await this.otpService.sendPhoneOtp(normalized);
+        await this.otpService.setPhoneCooldown(normalized);
+
+        // Store pending phone change in Redis
+        await this.redis.set(redisKey, normalized, 'EX', MFA_OTP_EXPIRY_SECONDS);
+        return { message: 'Код отправлен на новый номер', retryAfter: 60 };
+    }
+
+    async confirmPhoneChange(userId: string, code: string): Promise<{ message: string }> {
+        const redisKey = `${PHONE_CHANGE_KEY_PREFIX}${userId}`;
+        const newPhone = await this.redis.get(redisKey);
+        if (!newPhone) {
+            throw AppErrors.badRequest('Запрос на смену номера не найден или истёк');
+        }
+
+        const valid = await this.otpService.verifyByPhone(newPhone, code);
+        if (!valid) throw AppErrors.unauthorized('Неверный код');
+
+        // Check phone still available (race condition guard)
+        const existing = await this.userService.findByPhone(newPhone);
+        if (existing && existing.id !== userId) {
+            throw AppErrors.badRequest('Этот номер уже используется другим аккаунтом');
+        }
+
+        await this.userService.changePhone(userId, newPhone);
+        await this.userService.setPhoneConfirmed(userId);
+        await this.redis.del(redisKey);
+        return { message: 'Номер телефона изменён' };
     }
 }

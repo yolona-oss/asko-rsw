@@ -62,6 +62,14 @@ import type {
     VerifyPhoneRegisterRequest,
     ResendPhoneRegisterOtpRequest,
     ResendPhoneRegisterOtpResponse,
+    SendPhoneVerificationRequest,
+    SendPhoneVerificationResponse,
+    ConfirmPhoneVerificationRequest,
+    ConfirmPhoneVerificationResponse,
+    RequestPhoneChangeRequest,
+    RequestPhoneChangeResponse,
+    ConfirmPhoneChangeRequest,
+    ConfirmPhoneChangeResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -164,6 +172,24 @@ export class UserClientService implements OnModuleInit {
 
     resendPhoneRegisterOtp(data: ResendPhoneRegisterOtpRequest): Promise<ResendPhoneRegisterOtpResponse> {
         return grpcCall(this.userService.resendPhoneRegisterOtp(data));
+    }
+
+    // ─── Phone Verification ─────────────────────────────────────────────
+
+    sendPhoneVerification(data: SendPhoneVerificationRequest): Promise<SendPhoneVerificationResponse> {
+        return grpcCall(this.userService.sendPhoneVerification(data));
+    }
+
+    confirmPhoneVerification(data: ConfirmPhoneVerificationRequest): Promise<ConfirmPhoneVerificationResponse> {
+        return grpcCall(this.userService.confirmPhoneVerification(data));
+    }
+
+    requestPhoneChange(data: RequestPhoneChangeRequest): Promise<RequestPhoneChangeResponse> {
+        return grpcCall(this.userService.requestPhoneChange(data));
+    }
+
+    confirmPhoneChange(data: ConfirmPhoneChangeRequest): Promise<ConfirmPhoneChangeResponse> {
+        return grpcCall(this.userService.confirmPhoneChange(data));
     }
 
     // ─── User CRUD ───────────────────────────────────────────────────────

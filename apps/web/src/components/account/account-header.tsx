@@ -110,9 +110,17 @@ export function AccountHeader() {
             <NotificationBell />
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C4C4C4]">
-              {user?.avatar && (
-                <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
-              )}
+              {user?.avatar ?
+                (
+                  <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
+                )
+                :
+                (
+                  <div className="w-full h-full flex items-center justify-center text-3xl text-white font-medium">
+                    {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )
+              }
             </div>
             {/* Logout */}
             <button

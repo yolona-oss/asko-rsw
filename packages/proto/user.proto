@@ -357,6 +357,47 @@ message ResendPhoneRegisterOtpResponse {
     int32 retry_after = 1;
 }
 
+// ─── Phone Verification (authenticated user) ────────────────────────────────
+
+message SendPhoneVerificationRequest {
+    string user_id = 1;
+}
+
+message SendPhoneVerificationResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message ConfirmPhoneVerificationRequest {
+    string user_id = 1;
+    string code = 2;
+}
+
+message ConfirmPhoneVerificationResponse {
+    string message = 1;
+}
+
+// ─── Phone Change ───────────────────────────────────────────────────────────
+
+message RequestPhoneChangeRequest {
+    string user_id = 1;
+    string new_phone = 2;
+}
+
+message RequestPhoneChangeResponse {
+    string message = 1;
+    int32 retry_after = 2;
+}
+
+message ConfirmPhoneChangeRequest {
+    string user_id = 1;
+    string code = 2;
+}
+
+message ConfirmPhoneChangeResponse {
+    string message = 1;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 service UserService {
@@ -386,6 +427,14 @@ service UserService {
     // Phone register
     rpc VerifyPhoneRegister(VerifyPhoneRegisterRequest) returns (RegisterResponse);
     rpc ResendPhoneRegisterOtp(ResendPhoneRegisterOtpRequest) returns (ResendPhoneRegisterOtpResponse);
+
+    // Phone verification
+    rpc SendPhoneVerification(SendPhoneVerificationRequest) returns (SendPhoneVerificationResponse);
+    rpc ConfirmPhoneVerification(ConfirmPhoneVerificationRequest) returns (ConfirmPhoneVerificationResponse);
+
+    // Phone change
+    rpc RequestPhoneChange(RequestPhoneChangeRequest) returns (RequestPhoneChangeResponse);
+    rpc ConfirmPhoneChange(ConfirmPhoneChangeRequest) returns (ConfirmPhoneChangeResponse);
 
     // User CRUD
     rpc FindAllUsers(PaginationRequest) returns (PaginatedUsersResponse);

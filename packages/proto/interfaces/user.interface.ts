@@ -359,6 +359,47 @@ export interface ResendPhoneRegisterOtpResponse {
     retryAfter: number;
 }
 
+// ─── Phone Verification Messages ────────────────────────────────────────────
+
+export interface SendPhoneVerificationRequest {
+    userId: string;
+}
+
+export interface SendPhoneVerificationResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface ConfirmPhoneVerificationRequest {
+    userId: string;
+    code: string;
+}
+
+export interface ConfirmPhoneVerificationResponse {
+    message: string;
+}
+
+// ─── Phone Change Messages ──────────────────────────────────────────────────
+
+export interface RequestPhoneChangeRequest {
+    userId: string;
+    newPhone: string;
+}
+
+export interface RequestPhoneChangeResponse {
+    message: string;
+    retryAfter: number;
+}
+
+export interface ConfirmPhoneChangeRequest {
+    userId: string;
+    code: string;
+}
+
+export interface ConfirmPhoneChangeResponse {
+    message: string;
+}
+
 // ─── gRPC Service Interface ─────────────────────────────────────────────────
 
 export interface UserServiceClient {
@@ -387,6 +428,14 @@ export interface UserServiceClient {
     // Phone register
     verifyPhoneRegister(request: VerifyPhoneRegisterRequest): Observable<RegisterResponse>;
     resendPhoneRegisterOtp(request: ResendPhoneRegisterOtpRequest): Observable<ResendPhoneRegisterOtpResponse>;
+
+    // Phone verification
+    sendPhoneVerification(request: SendPhoneVerificationRequest): Observable<SendPhoneVerificationResponse>;
+    confirmPhoneVerification(request: ConfirmPhoneVerificationRequest): Observable<ConfirmPhoneVerificationResponse>;
+
+    // Phone change
+    requestPhoneChange(request: RequestPhoneChangeRequest): Observable<RequestPhoneChangeResponse>;
+    confirmPhoneChange(request: ConfirmPhoneChangeRequest): Observable<ConfirmPhoneChangeResponse>;
 
     findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;
