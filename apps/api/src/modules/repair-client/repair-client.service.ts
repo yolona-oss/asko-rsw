@@ -15,6 +15,7 @@ import type {
     RepairClearChatCloseAtResponse,
     BrokenPartResponse,
     BrokenPartListResponse,
+    RepairRepairersStatsResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -257,7 +258,7 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.clearChatCloseAt({ requestId }));
     }
 
-    getRepairersActiveRequestCounts(repairerIds: string[]): Promise<{ stats: { repairerId: string; activeRequestCount: number; currentRequestStatus: string }[] }> {
-        return grpcCall((this.repairService as any).getRepairersActiveRequestCounts({ repairerIds }));
+    getRepairersActiveRequestCounts(repairerIds: string[]): Promise<RepairRepairersStatsResponse> {
+        return grpcCall(this.repairService.getRepairersActiveRequestCounts({ repairerIds }));
     }
 }

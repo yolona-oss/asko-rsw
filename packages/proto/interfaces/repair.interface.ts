@@ -109,6 +109,8 @@ export interface CreateAddressRequest {
     floor: number;
     room: number;
     postalCode: string;
+    latitude: number;
+    longitude: number;
 }
 
 // ─── Device Responses ───────────────────────────────────────────────────
@@ -162,6 +164,8 @@ export interface AddressRecord {
     floor: number;
     room: number;
     postalCode: string;
+    latitude: number;
+    longitude: number;
 }
 
 export interface AddressResponse {
@@ -918,6 +922,23 @@ export interface RepairServiceClient {
     setConversationId(request: RepairSetConversationIdRequest): Observable<RepairEmptyResponse>;
     findOpenChatsForClose(request: RepairFindOpenChatsRequest): Observable<RepairOpenChatsResponse>;
     clearChatCloseAt(request: RepairClearChatCloseAtRequest): Observable<RepairClearChatCloseAtResponse>;
+
+    // Stats
+    getRepairersActiveRequestCounts(request: RepairGetRepairersStatsRequest): Observable<RepairRepairersStatsResponse>;
+}
+
+export interface RepairGetRepairersStatsRequest {
+    repairerIds: string[];
+}
+
+export interface RepairerStatsRecord {
+    repairerId: string;
+    activeRequestCount: number;
+    currentRequestStatus: string;
+}
+
+export interface RepairRepairersStatsResponse {
+    stats: RepairerStatsRecord[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

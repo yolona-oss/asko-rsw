@@ -114,7 +114,7 @@ export class RepairerController {
         const repairerIds = result.data.map((r: any) => r.id);
         try {
             const { stats } = await this.repairClient.getRepairersActiveRequestCounts(repairerIds);
-            const statsMap = new Map(stats.map((s) => [s.repairerId, s]));
+            const statsMap = new Map((stats ?? []).map((s: any) => [s.repairerId, s] as const));
             for (const r of result.data) {
                 const stat = statsMap.get((r as any).id);
                 (r as any).activeRequestCount = stat?.activeRequestCount ?? 0;
