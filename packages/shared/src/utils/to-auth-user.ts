@@ -14,6 +14,7 @@ export const toAuthUser = (user: IUser): IAuthUser => ({
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
+    middleName: user.middleName,
     email: user.email,
     phone: user.phone,
     isActive: user.isActive,

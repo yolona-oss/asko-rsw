@@ -107,6 +107,7 @@ export class AuthController {
             password: dto.password ?? '',
             firstName: dto.firstName ?? '',
             lastName: dto.lastName ?? '',
+            middleName: dto.middleName ?? '',
             phone: dto.phone ?? '',
             googleId: dto.googleId ?? '',
             inviteToken: dto.inviteToken ?? '',

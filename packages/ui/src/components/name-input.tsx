@@ -3,6 +3,7 @@
 import {
   useState,
   useEffect,
+  useMemo,
   forwardRef,
   KeyboardEvent,
   useRef,
@@ -12,175 +13,109 @@ import { Input, type InputProps } from './input';
 import { cn } from '../utils/cn';
 
 export interface NameInputProps extends InputProps {
+  /** Autocomplete suggestions for first names (имена) */
   names: string[];
+  /** Autocomplete suggestions for surnames (фамилии) */
   surnames: string[];
+  /** Autocomplete suggestions for patronymics (отчества) */
   patronymics: string[];
 }
 
-export const NameInput = forwardRef<
-  HTMLInputElement,
-  NameInputProps
->(
-  (
-    {
-      value = '',
-      onChange,
-      names,
-      surnames,
-      patronymics,
-      className,
-      ...props
-    },
-    ref,
-  ) => {
+export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(
+  ({ value = '', onChange, names, surnames, patronymics, className, ...props }, ref) => {
     const [open, setOpen] = useState(false);
-    const [filtered, setFiltered] = useState<string[]>([]);
     const [active, setActive] = useState(-1);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const words = String(value).split(' ');
+    const text = String(value);
+    const words = text.split(' ');
+    const wordIndex = words.length - 1; // 0 = surname, 1 = name, 2 = patronymic
 
+    // Pick the right suggestion list based on which word is being typed
+    // ФИО order: Фамилия(0) Имя(1) Отчество(2)
+    const pool = wordIndex === 0 ? surnames : wordIndex === 1 ? names : wordIndex === 2 ? patronymics : [];
+
+    const currentWord = (words[wordIndex] ?? '').toLowerCase();
+
+    const filtered = useMemo(() => {
+      if (!currentWord) return pool.slice(0, 20);
+      return pool.filter((s) => s.toLowerCase().startsWith(currentWord)).slice(0, 20);
+    }, [currentWord, pool]);
+
+    // All 3 parts are filled — no more suggestions
+    const isComplete = wordIndex >= 3 || (wordIndex === 2 && currentWord.length > 0 && filtered.length === 0);
+
+    // Close on outside click
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
-        if (
-          wrapperRef.current &&
-          !wrapperRef.current.contains(e.target as Node)
-        ) {
+        if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
           setOpen(false);
         }
       };
-
-      document.addEventListener(
-        'mousedown',
-        handleClickOutside,
-      );
-
-      return () => {
-        document.removeEventListener(
-          'mousedown',
-          handleClickOutside,
-        );
-      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Reset active selection when filtered list changes
     useEffect(() => {
-      if (!value) {
-        setFiltered(names.slice(0, 20));
-        return;
+      setActive(-1);
+    }, [currentWord]);
+
+    const complete = (suggestion: string) => {
+      const before = words.slice(0, wordIndex);
+      const next = [...before, suggestion].join(' ');
+
+      // Add trailing space after words 1 and 2 so user can start typing next part
+      const withSpace = wordIndex < 2 ? next + ' ' : next;
+
+      onChange?.({ target: { value: withSpace } } as any);
+
+      if (wordIndex >= 2) {
+        setOpen(false);
       }
-
-      // first name
-      if (words.length === 1) {
-        const v = words[0].toLowerCase();
-
-        setFiltered(
-          names
-            .filter((n) =>
-              n.toLowerCase().startsWith(v),
-            )
-            .slice(0, 20),
-        );
-
-        return;
-      }
-
-      // surname
-      if (words.length === 2) {
-        const v = words[1].toLowerCase();
-
-        setFiltered(
-          surnames
-            .filter((s) =>
-              s.toLowerCase().startsWith(v),
-            )
-            .slice(0, 20),
-        );
-
-        return;
-      }
-
-      // patronymic
-      if (words.length >= 3) {
-        const v = words[2].toLowerCase();
-
-        setFiltered(
-          patronymics
-            .filter((p) =>
-              p.toLowerCase().startsWith(v),
-            )
-            .slice(0, 20),
-        );
-
-        return;
-      }
-    }, [value, names, surnames, patronymics]);
-
-    const complete = (part: string) => {
-      let next = '';
-
-      if (words.length === 1) {
-        next = part;
-      } else if (words.length === 2) {
-        next = words[0] + ' ' + part;
-      } else {
-        next =
-          words[0] +
-          ' ' +
-          words[1] +
-          ' ' +
-          part;
-      }
-
-      onChange?.({
-        target: { value: next },
-      } as any);
-
-      setOpen(false);
       setActive(-1);
     };
 
-    const onKeyDown = (
-      e: KeyboardEvent<HTMLInputElement>,
-    ) => {
-      if (!filtered.length) return;
+    const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Tab') {
+        // After all 3 words or no suggestions — let Tab work normally
+        if (isComplete || filtered.length === 0 || wordIndex >= 3) {
+          setOpen(false);
+          return;
+        }
+
+        e.preventDefault();
+        complete(active >= 0 ? filtered[active] : filtered[0]);
+        return;
+      }
+
+      if (!open || !filtered.length) return;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setActive((i) =>
-          i + 1 >= filtered.length ? 0 : i + 1,
-        );
+        setActive((i) => (i + 1 >= filtered.length ? 0 : i + 1));
       }
 
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setActive((i) =>
-          i <= 0 ? filtered.length - 1 : i - 1,
-        );
+        setActive((i) => (i <= 0 ? filtered.length - 1 : i - 1));
       }
 
-      if (e.key === 'Tab') {
+      if (e.key === 'Enter' && active >= 0) {
         e.preventDefault();
-
-        complete(
-          active >= 0
-            ? filtered[active]
-            : filtered[0],
-        );
+        complete(filtered[active]);
       }
 
-      if (e.key === 'Enter') {
-        if (active >= 0) {
-          e.preventDefault();
-          complete(filtered[active]);
-        }
+      if (e.key === 'Escape') {
+        setOpen(false);
       }
     };
 
+    // Don't show dropdown when all parts are done
+    const showDropdown = open && filtered.length > 0 && !isComplete;
+
     return (
-      <div
-        ref={wrapperRef}
-        className="relative w-full"
-      >
+      <div ref={wrapperRef} className="relative w-full">
         <Input
           ref={ref}
           value={value}
@@ -189,12 +124,14 @@ export const NameInput = forwardRef<
             onChange?.(e);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            if (!isComplete) setOpen(true);
+          }}
           onKeyDown={onKeyDown}
           {...props}
         />
 
-        {open && filtered.length > 0 && (
+        {showDropdown && (
           <div
             className={cn(
               'absolute z-50 mt-1 w-full',
@@ -222,3 +159,5 @@ export const NameInput = forwardRef<
     );
   },
 );
+
+NameInput.displayName = 'NameInput';

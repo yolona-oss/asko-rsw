@@ -31,6 +31,7 @@ export interface RegisterRequest {
     inviteToken: string;
     deviceInfo: string;
     ipAddress: string;
+    middleName: string;
 }
 
 export interface RegisterResponse {
@@ -128,6 +129,7 @@ export interface UpdateUserRequest {
     addressId: string;
     currentPassword: string;
     preferencesJson: string;
+    middleName: string;
 }
 
 export interface ChangePasswordRequest {
@@ -210,6 +212,7 @@ export interface AuthUser {
     id: string;
     firstName: string;
     lastName: string;
+    middleName: string;
     email: string;
     phone: string;
     googleId: string;
@@ -225,6 +228,7 @@ export interface UserResponse {
     id: string;
     firstName: string;
     lastName: string;
+    middleName: string;
     email: string;
     phone: string;
     googleId: string;
@@ -265,6 +269,7 @@ export interface ChatUserResult {
     id: string;
     firstName: string;
     lastName: string;
+    middleName: string;
     email: string;
 }
 

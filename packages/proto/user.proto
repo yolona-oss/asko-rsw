@@ -33,6 +33,7 @@ message RegisterRequest {
     string invite_token = 7;
     string device_info = 8;
     string ip_address = 9;
+    string middle_name = 10;
 }
 
 message RegisterResponse {
@@ -130,6 +131,7 @@ message UpdateUserRequest {
     string address_id = 6;
     string current_password = 7;
     string preferences_json = 8;
+    string middle_name = 9;
 }
 
 message ChangePasswordRequest {
@@ -221,6 +223,7 @@ message AuthUser {
     string updated_at = 10;
     string preferences_json = 11;
     bool is_active = 12;
+    string middle_name = 13;
 }
 
 message UserResponse {
@@ -238,6 +241,7 @@ message UserResponse {
     string updated_at = 12;
     string preferences_json = 13;
     bool is_active = 14;
+    string middle_name = 15;
 }
 
 message PaginatedUsersResponse {
@@ -264,6 +268,7 @@ message ChatUserResult {
     string first_name = 2;
     string last_name = 3;
     string email = 4;
+    string middle_name = 5;
 }
 
 message SearchUsersForChatResponse {

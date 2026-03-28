@@ -168,6 +168,7 @@ export class UserService {
         const user = this.em.create(User, {
             firstName: userData.firstName,
             lastName: userData.lastName,
+            middleName: userData.middleName,
             email: userData.email?.toLowerCase(),
             phone: userData.phone,
             passwordHash,
@@ -226,9 +227,13 @@ export class UserService {
         }
 
         if (newUserInfo.name) {
-            const [firstName, lastName] = newUserInfo.name.split(' ')
-            user.firstName = firstName
-            user.lastName = lastName
+            const parts = newUserInfo.name.split(' ')
+            user.lastName = parts[0]
+            user.firstName = parts[1]
+            user.middleName = parts[2]
+        }
+        if (newUserInfo.middleName !== undefined) {
+            user.middleName = newUserInfo.middleName || undefined
         }
 
         if (newUserInfo.phone) {
@@ -295,15 +300,17 @@ export class UserService {
         phone: string;
         firstName?: string;
         lastName?: string;
+        middleName?: string;
         roles: Role[];
     }): Promise<User> {
         const existing = await this.findByPhone(data.phone);
-        if (existing) throw AppErrors.conflict('Пользов��тель с этим номером уже зарегистрирован');
+        if (existing) throw AppErrors.conflict('Пользователь с этим номером уже зарегистрирован');
 
         const user = this.em.create(User, {
             phone: data.phone,
             firstName: data.firstName ?? '',
             lastName: data.lastName ?? '',
+            middleName: data.middleName ?? '',
             phoneVerified: true,
             emailVerified: false,
             sessions: [],
@@ -360,19 +367,20 @@ export class UserService {
         requesterId: string,
         requesterRoles: string[],
         limit: number = 20,
-    ): Promise<Pick<User, 'id' | 'firstName' | 'lastName' | 'email'>[]> {
+    ): Promise<Pick<User, 'id' | 'firstName' | 'lastName' | 'middleName' | 'email'>[]> {
         const isPrivileged = requesterRoles.some(r =>
             r === Role.SUPER_ADMIN || r === Role.ADMIN || r === Role.MANAGER,
         )
 
         const qb = this.em.createQueryBuilder(User, 'u')
-            .select(['u.id', 'u.firstName', 'u.lastName', 'u.email'])
+            .select(['u.id', 'u.firstName', 'u.lastName', 'u.middleName', 'u.email'])
             .where({ id: { $ne: requesterId } })
             .andWhere({
                 $or: [
                     { email: { $ilike: `%${query}%` } },
                     { firstName: { $ilike: `%${query}%` } },
                     { lastName: { $ilike: `%${query}%` } },
+                    { middleName: { $ilike: `%${query}%` } },
                 ],
             })
         if (!isPrivileged) {

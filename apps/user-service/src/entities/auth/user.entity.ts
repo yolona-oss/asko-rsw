@@ -12,6 +12,7 @@ export class User {
     [OptionalProps]?:
     'firstName'
     | 'lastName'
+    | 'middleName'
     | 'email'
     | 'passwordHash'
     | 'phone'
@@ -29,6 +30,9 @@ export class User {
 
     @Property({ type: 'varchar', length: 255, nullable: true })
     lastName?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    middleName?: string;
 
     @Property({ nullable: true })
     @Unique()

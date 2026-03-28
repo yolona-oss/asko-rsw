@@ -264,6 +264,7 @@ export class AuthService {
             phone,
             firstName: dto.firstName,
             lastName: dto.lastName,
+            middleName: dto.middleName,
             deviceInfo,
             ipAddress,
         });
@@ -758,6 +759,7 @@ export class AuthService {
             phone: pendingData.phone,
             firstName: pendingData.firstName,
             lastName: pendingData.lastName,
+            middleName: pendingData.middleName,
             roles,
         });
 

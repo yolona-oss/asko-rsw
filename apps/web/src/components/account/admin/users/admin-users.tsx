@@ -181,7 +181,7 @@ export function AdminUsers() {
             <DataTableEmpty>Нет пользователей</DataTableEmpty>
           ) : (
             filteredUsers.map((user) => {
-              const name = [user.lastName, user.firstName].filter(Boolean).join(' ') || 'Без имени';
+              const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
               const isActive = (user as any).isActive !== false;
               const isLoading = actionLoading === user.id;
               const isSelected = selected.has(user.id);

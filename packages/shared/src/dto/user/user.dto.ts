@@ -27,6 +27,10 @@ export class CreateUserDto {
     lastName?: string;
 
     @IsOptional()
+    @IsString()
+    middleName?: string;
+
+    @IsOptional()
     @IsArray()
     roles?: Role[];
 
@@ -39,6 +43,10 @@ export class UpdateUserDto {
     @IsOptional()
     @IsString()
     name?: string;
+
+    @IsOptional()
+    @IsString()
+    middleName?: string;
 
     @IsOptional()
     @IsString()

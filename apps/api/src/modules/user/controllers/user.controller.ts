@@ -70,6 +70,7 @@ export class UsersController {
         const result = await this.userClient.updateUser({
             id: user.id,
             name: data.name ?? '',
+            middleName: data.middleName ?? '',
             email: data.email ?? '',
             phone: data.phone ?? '',
             password: data.password ?? '',

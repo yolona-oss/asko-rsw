@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../avatar-crop-modal';
-import { Button, Input, FormField, PhoneInput } from '@asko/ui';
+import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from './profile-form-skeleton';
 import { AvatarSection } from './avatar-section';
@@ -16,14 +16,17 @@ import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 
+const NAMES_D = ['Иван', 'Петр', 'Александр', 'Дмитрий'];
+const SURNAMES_D = ['Иванов', 'Петров', 'Сидоров', 'Кузнецов'];
+const PATRONYMICS_D = ['Иванович', 'Петрович', 'Александрович'];
+
 export function ProfileForm() {
   const { user } = useAccount();
   const { user: authUser } = useAuth();
   const queryClient = useQueryClient();
 
   // Form state
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [loaded, setLoaded] = useState(false);
@@ -43,7 +46,6 @@ export function ProfileForm() {
   const [emailVerified, setEmailVerified] = useState(true);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailResendCooldown, setEmailResendCooldown] = useState(0);
-  const [emailResendMessage, setEmailResendMessage] = useState<StatusMessage>(null);
 
   // Chat preferences
   const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
@@ -65,8 +67,7 @@ export function ProfileForm() {
     profileLoaded.current = true;
     Promise.all([
       usersApi.getProfile().then(({ data }) => {
-        setFirstName(data.firstName ?? '');
-        setLastName(data.lastName ?? '');
+        setFullName([data.lastName, data.firstName, (data as any).middleName].filter(Boolean).join(' '));
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
         setEmailVerified(data.emailVerified ?? false);
@@ -135,8 +136,12 @@ export function ProfileForm() {
       const needsPhoneConfirmation = phoneChanged && originalPhoneVerified.current;
 
       // Save profile (backend skips verified email/phone if changed — requires confirmation flow)
+      const nameParts = fullName.trim().split(/\s+/);
+      const [pLastName, pFirstName, pMiddleName] = [nameParts[0], nameParts[1], nameParts[2]];
+
       await usersApi.updateProfile({
-        name: [firstName, lastName].filter(Boolean).join(' '),
+        name: [pLastName, pFirstName].filter(Boolean).join(' '),
+        middleName: pMiddleName || undefined,
         email: email || undefined,
         phone: phoneDigits || undefined,
         preferences: {
@@ -206,16 +211,13 @@ export function ProfileForm() {
   const handleResendConfirmation = async () => {
     if (resendingEmail || emailResendCooldown > 0 || !email) return;
     setResendingEmail(true);
-    setEmailResendMessage(null);
     try {
       const { data } = await authApi.resendConfirmation(email);
       setEmailResendCooldown(data.retryAfter ?? 60);
-      setEmailResendMessage({ type: 'success', text: 'Письмо отправлено' });
-    } catch (err: any) {
-      setEmailResendMessage({ type: 'error', text: err?.response?.data?.message ?? 'Не удалось отправить письмо' });
+    } catch {
+      // Error handled by LoginMethodsSection UI
     } finally {
       setResendingEmail(false);
-      setTimeout(() => setEmailResendMessage(null), 5000);
     }
   };
 
@@ -233,7 +235,7 @@ export function ProfileForm() {
         {/* Avatar section */}
         <AvatarSection
           displayAvatar={displayAvatar}
-          firstName={firstName}
+          firstName={fullName.split(/\s+/)[1] ?? fullName.split(/\s+/)[0] ?? ''}
           userFirstName={user?.firstName}
           uploadingAvatar={uploadingAvatar}
           dragOver={dragOver}
@@ -245,49 +247,26 @@ export function ProfileForm() {
         <div className="h-px bg-border-light" />
 
         {/* Form fields */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <FormField label="Имя">
-            <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Ваше имя" />
+        <div className="flex flex-col gap-6">
+          <FormField label="ФИО">
+            <NameInput
+              type="text"
+              names={NAMES_D}
+              surnames={SURNAMES_D}
+              patronymics={PATRONYMICS_D}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Фамилия Имя Отчество"
+            />
           </FormField>
-          <FormField label="Фамилия">
-            <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Ваша фамилия" />
-          </FormField>
-          <FormField label="Email">
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="example@mail.com" />
-            {email && !emailVerified && (
-              <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-xs text-amber-600">Email не подтверждён</span>
-                <button
-                  type="button"
-                  onClick={handleResendConfirmation}
-                  disabled={resendingEmail || emailResendCooldown > 0}
-                  className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {emailResendCooldown > 0
-                    ? `Отправить повторно (${emailResendCooldown}с)`
-                    : resendingEmail
-                      ? 'Отправка...'
-                      : 'Отправить подтверждение'}
-                </button>
-                {emailResendMessage && (
-                  <span className={`text-xs ${emailResendMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
-                    {emailResendMessage.text}
-                  </span>
-                )}
-              </div>
-            )}
-            {email && emailVerified && (
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                <span className="text-xs text-green-600">Email подтверждён</span>
-              </div>
-            )}
-          </FormField>
-          <FormField label="Телефон">
-            <PhoneInput value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 (999) 123-45-67" />
-          </FormField>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <FormField label="Email">
+              <EmailInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@mail.com" />
+            </FormField>
+            <FormField label="Телефон">
+              <PhoneInput value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 (999) 123-45-67" />
+            </FormField>
+          </div>
         </div>
 
         {/* Login methods */}

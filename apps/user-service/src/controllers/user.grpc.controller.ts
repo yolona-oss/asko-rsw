@@ -93,6 +93,7 @@ function userToResponse(user: any): UserResponse {
         id: user.id,
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
+        middleName: user.middleName ?? '',
         email: user.email ?? '',
         phone: user.phone ?? '',
         googleId: user.googleId ?? '',
@@ -112,6 +113,7 @@ function userToAuthUser(user: any) {
         id: user.id,
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
+        middleName: user.middleName ?? '',
         email: user.email ?? '',
         phone: user.phone ?? '',
         googleId: user.googleId ?? '',
@@ -167,6 +169,7 @@ export class UserGrpcController {
                     password: data.password || undefined,
                     firstName: data.firstName || undefined,
                     lastName: data.lastName || undefined,
+                    middleName: data.middleName || undefined,
                     phone: data.phone || undefined,
                     googleId: data.googleId || undefined,
                 },
@@ -463,6 +466,7 @@ export class UserGrpcController {
         try {
             const updateDto: any = {};
             if (data.name) updateDto.name = data.name;
+            if (data.middleName !== undefined) updateDto.middleName = data.middleName;
             if (data.email) updateDto.email = data.email;
             if (data.phone) updateDto.phone = data.phone;
             if (data.password) updateDto.password = data.password;
@@ -611,6 +615,7 @@ export class UserGrpcController {
                     id: u.id,
                     firstName: u.firstName ?? '',
                     lastName: u.lastName ?? '',
+                    middleName: u.middleName ?? '',
                     email: u.email ?? '',
                 })),
             };

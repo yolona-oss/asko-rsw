@@ -82,8 +82,18 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
     if (signup.error) signup.reset();
   }
 
+  function parseFio(fio: string) {
+    const parts = fio.trim().split(/\s+/);
+    return {
+      lastName: parts[0] || undefined,
+      firstName: parts[1] || undefined,
+      middleName: parts[2] || undefined,
+    };
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const nameParts = parseFio(firstName);
 
     if (authMethod === 'email') {
       if (!email || !password) return;
@@ -94,7 +104,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       signup.mutate({
         email,
         password,
-        firstName,
+        ...nameParts,
         inviteToken: inviteToken ?? undefined,
       });
     } else {
@@ -105,7 +115,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       }
       signup.mutate({
         phone: phoneDigits,
-        firstName,
+        ...nameParts,
       });
     }
   }

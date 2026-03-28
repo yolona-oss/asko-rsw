@@ -11,6 +11,7 @@ export interface IUser {
     id: string;
     firstName?: string;
     lastName?: string;
+    middleName?: string;
     phone?: string;
     email?: string;
     isActive: boolean;
