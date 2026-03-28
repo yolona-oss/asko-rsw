@@ -29,6 +29,7 @@ apps/
   repair-service/         # Repairs, dealers, devices, certificates (:5003, gRPC)
   notification-service/   # Notifications (:5004, gRPC + RabbitMQ consumer)
   chat-service/           # Chat, presence, messaging (:5005, gRPC + RabbitMQ publisher/consumer)
+  content-service/        # Articles, views, recommendations (:5010, gRPC)
   web/                    # Next.js frontend (:3000)
 
 packages/
@@ -68,7 +69,7 @@ turbo run clean
 
 ### Per-app commands
 
-All NestJS apps (api, user-service, payment-service, file-service, repair-service, notification-service):
+All NestJS apps (api, user-service, payment-service, file-service, repair-service, notification-service, content-service):
 
 ```bash
 pnpm run start:dev           # Dev mode with watch
@@ -108,7 +109,7 @@ npx mikro-orm migration:create
 npx mikro-orm migration:up
 ```
 
-Databases (user: asko_root):
+Databases (user: almagest_root):
 
 ```
 apps/api              → asko_rws_misc_db
@@ -118,6 +119,7 @@ apps/file-service     → asko_rws_files_db
 apps/repair-service   → asko_rws_db
 apps/notification-service → asko_rws_notify_db
 apps/chat-service         → asko_rws_chat_db
+apps/content-service      → asko_rws_content_db
 ```
 
 ---
@@ -130,7 +132,6 @@ Main backend entrypoint. REST gateway + WebSocket server. Delegates all domain l
 
 **Owns** (local entities):
 
-* Article
 * Cursor
 * WSchedule
 
@@ -148,6 +149,7 @@ Main backend entrypoint. REST gateway + WebSocket server. Delegates all domain l
 | Repairers | RepairerClientModule | repair-service |
 | Notifications | NotificationClientModule | notification-service |
 | Chat / Messaging / Presence | ChatClientModule | chat-service |
+| Articles / Views / Recommendations | ContentClientModule | content-service |
 
 **Static file serving**:
 
@@ -156,7 +158,7 @@ Main backend entrypoint. REST gateway + WebSocket server. Delegates all domain l
 
 **Stack**: NestJS v11, MikroORM v6, PostgreSQL, Redis, Socket.io, Nodemailer, gRPC clients, @nestjs/swagger
 
-**Env**: `.env.dev` / `.env.prod`, loaded via AppConfig. Service URLs: `USER_SERVICE_URL`, `PAYMENT_SERVICE_URL`, `FILE_SERVICE_URL`, `REPAIR_SERVICE_URL`, `NOTIFICATION_SERVICE_URL`.
+**Env**: `.env.dev` / `.env.prod`, loaded via AppConfig. Service URLs: `USER_SERVICE_URL`, `PAYMENT_SERVICE_URL`, `FILE_SERVICE_URL`, `REPAIR_SERVICE_URL`, `NOTIFICATION_SERVICE_URL`, `CHAT_SERVICE_URL`, `CONTENT_SERVICE_URL`.
 
 ---
 
@@ -300,11 +302,33 @@ Real-time chat, conversations, messaging, user presence, activity statuses.
 
 ---
 
+### Content Service (`apps/content-service`)
+
+Article management, rich content (Lexical editor), view analytics, tag-based recommendations.
+
+**Entities** (2): Article, ArticleView
+
+**Services**: ContentService (CRUD, slug generation, plain-text extraction from Lexical JSON, view tracking with hourly dedup, tag-based related articles, reading-history recommendations)
+
+**gRPC controller**: ContentGrpcController (9 methods: CreateArticle, UpdateArticle, DeleteArticle, DeleteAllArticles, FindAllArticles, FindArticleBySlug, RecordView, FindRelatedArticles, FindRecommendedArticles)
+
+**Article content**: Stored as Lexical editor state JSON in `content` (JSONB) column. Plain text auto-extracted to `text` column for search/preview/SEO. Backward compatible with legacy plain-text articles.
+
+**View tracking**: ArticleView entity records views per user/session, deduplicated to 1 per hour. Denormalized `viewCount` on Article for fast sorting.
+
+**Recommendations**: Authenticated users get tag-based recommendations from reading history. Anonymous users get popularity-based (viewCount). Related articles computed by tag overlap.
+
+**Stack**: NestJS, MikroORM, PostgreSQL, gRPC
+
+**Transport**: gRPC only
+
+---
+
 ### Web (`apps/web`)
 
 Next.js App Router frontend. Communicates with API gateway only. Never calls microservices directly.
 
-**Stack**: Next.js v16, React 19, Redux Toolkit v2, React Query v5, Tailwind v4, Socket.io-client, openapi-fetch, Axios (legacy), Framer Motion
+**Stack**: Next.js v16, React 19, Redux Toolkit v2, React Query v5, Tailwind v4, Socket.io-client, openapi-fetch, Axios (legacy), Framer Motion, Lexical (rich text editor)
 
 **API clients**:
 
@@ -314,7 +338,11 @@ Next.js App Router frontend. Communicates with API gateway only. Never calls mic
 
 **State management**: Redux Toolkit for auth state, React Query for server state.
 
-**Env**: `NEXT_PUBLIC_API_URL` — API gateway URL (default: `http://localhost:4000`)
+**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Server-side HTML generation via `@lexical/headless` in `src/lib/lexical/generate-html.ts`.
+
+**Analytics**: Yandex Metrika integration via `src/components/YandexMetrika.tsx`. Configured with `NEXT_PUBLIC_YM_ID` env var.
+
+**Env**: `NEXT_PUBLIC_API_URL` — API gateway URL (default: `http://localhost:4000`), `NEXT_PUBLIC_YM_ID` — Yandex Metrika counter ID (optional)
 
 **Generating API types** after backend changes:
 
@@ -338,7 +366,7 @@ cd apps/web && pnpm run api:generate
 
 gRPC contracts shared between all backend services.
 
-**.proto files** (10): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat
+**.proto files** (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
 
 **Exports per service**: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME` + generated TS interfaces.
 
@@ -402,20 +430,21 @@ Must run `pnpm run build` after any change.
 
 | Service | Entities |
 |---|---|
-| api | Article, Cursor, WSchedule |
+| api | Cursor, WSchedule |
 | user-service | User, Session, InvitationLink, UserAddress |
 | payment-service | PaymentEntity |
 | file-service | Image, Video |
 | repair-service | RepairRequest, Device, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart |
 | notification-service | NotificationEntity |
 | chat-service | Conversation, ConversationParticipant, Message, UserPresence |
+| content-service | Article, ArticleView |
 
 ---
 
 ## gRPC Rules
 
 * All `.proto` definitions must be in `packages/proto/src/*.proto`
-* Proto files (10): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat
+* Proto files (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
 * Generated TS types are exported from `@asko/proto`
 * Never duplicate DTOs between services — always use proto types for gRPC
 * Never import entities through proto — only transport types
@@ -587,6 +616,7 @@ export class PaymentEventConsumer {
 * REST controllers use standard NestJS decorators.
 * Guards, interceptors, and pipes are app-specific — not shared between services.
 * MikroORM v6 for all database operations.
+* `@Public()` decorator bypasses JWT entirely. `@OptionalAuth()` tries JWT silently — attaches user if valid, allows request without user if not. Use `@OptionalAuth()` for endpoints that work for both authenticated and anonymous users (e.g., personalized recommendations).
 
 ---
 
@@ -667,6 +697,7 @@ file-service → shared + proto
 repair-service → shared + proto + (calls payment-service + file-service via gRPC)
 notification-service → shared + proto
 chat-service → shared + proto
+content-service → shared + proto
 proto       → standalone
 ui          → standalone
 shared      → standalone
@@ -687,6 +718,7 @@ Dockerfile.file-service
 Dockerfile.repair-service
 Dockerfile.notification-service
 Dockerfile.chat-service
+Dockerfile.content-service
 ```
 
 **docker-compose.yml** — production: all services + RabbitMQ, network_mode: host, shared `images-data` volume.
@@ -708,6 +740,8 @@ All Docker builds use turborepo prune.
 * Never put service-specific logic in `packages/shared`.
 * Never use CSS files or styled-components in `packages/ui` — Tailwind classes only.
 * API must NEVER access chat-service database directly — always use gRPC.
+* API must NEVER access content-service database directly — always use gRPC.
+* content-service owns Article and ArticleView entities.
 * Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
 * Always run `./scripts/openapi.sh` after changing backend endpoints or response types.
 * Always run `pnpm run build` in packages after changes.
