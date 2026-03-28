@@ -166,41 +166,9 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "latitude": {
-          "name": "latitude",
-          "type": "real",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "float"
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "real",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "float"
-        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -213,25 +181,78 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
         }
       },
       "name": "address",
       "schema": "public",
       "indexes": [
         {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
           "keyName": "address_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {},
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -247,25 +268,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -281,28 +290,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -315,7 +315,8 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -335,8 +336,8 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "user_id": {
-          "name": "user_id",
+        "repair_request_id": {
+          "name": "repair_request_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -351,412 +352,13 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "company_name": {
-          "name": "company_name",
+        "device_part_id": {
+          "name": "device_part_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "inn": {
-          "name": "inn",
-          "type": "varchar(50)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 50,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "points_balance": {
-          "name": "points_balance",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "0",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "integer"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "agreement_signature": {
-          "name": "agreement_signature",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        },
-        "agreement_signed_payload": {
-          "name": "agreement_signed_payload",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        }
-      },
-      "name": "dealer_profile",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "dealer_profile_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "dealer_id": {
-          "name": "dealer_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "client_user_id": {
-          "name": "client_user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        }
-      },
-      "name": "dealer_client",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "dealer_client_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "dealer_client_dealer_id_foreign": {
-          "constraintName": "dealer_client_dealer_id_foreign",
-          "columnNames": [
-            "dealer_id"
-          ],
-          "localTableName": "public.dealer_client",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.dealer_profile",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
           "unique": false,
           "length": 255,
           "precision": null,
@@ -781,606 +383,10 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "string"
-        },
-        "type": {
-          "name": "type",
-          "type": "device_type",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ],
-          "mappedType": "enum",
-          "nativeEnumName": "device_type"
-        },
-        "model": {
-          "name": "model",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "brand": {
-          "name": "brand",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "price": {
-          "name": "price",
-          "type": "real",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "float"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        },
-        "specifications": {
-          "name": "specifications",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
-        },
-        "features": {
-          "name": "features",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
-        },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "is_featured": {
-          "name": "is_featured",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        }
-      },
-      "name": "device",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "slug"
-          ],
-          "composite": false,
-          "keyName": "device_slug_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "device_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "device_id": {
-          "name": "device_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "part_number": {
-          "name": "part_number",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "price": {
-          "name": "price",
-          "type": "real",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "float"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        }
-      },
-      "name": "device_part",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "device_part_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "device_part_device_id_foreign": {
-          "constraintName": "device_part_device_id_foreign",
-          "columnNames": [
-            "device_id"
-          ],
-          "localTableName": "public.device_part",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.device",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "dealer_id": {
-          "name": "dealer_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "amount": {
-          "name": "amount",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "integer"
         },
         "status": {
           "name": "status",
-          "type": "withdrawal_status",
+          "type": "broken_part_status",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -1389,282 +395,20 @@
           "length": null,
           "precision": null,
           "scale": null,
-          "default": "'pending'",
+          "default": "'added'",
           "comment": null,
           "enumItems": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ],
-          "mappedType": "enum",
-          "nativeEnumName": "withdrawal_status"
-        },
-        "requested_at": {
-          "name": "requested_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "processed_at": {
-          "name": "processed_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "processed_by_user_id": {
-          "name": "processed_by_user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        }
-      },
-      "name": "points_withdrawal",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "points_withdrawal_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "points_withdrawal_dealer_id_foreign": {
-          "constraintName": "points_withdrawal_dealer_id_foreign",
-          "columnNames": [
-            "dealer_id"
-          ],
-          "localTableName": "public.points_withdrawal",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.dealer_profile",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
             "added",
             "ordered",
             "shipped",
             "replaced"
-          ]
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "broken_part_status"
         },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "specializations": {
-          "name": "specializations",
-          "type": "text[]",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "'{}'",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "array"
-        },
-        "city": {
-          "name": "city",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "true",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
-        "completed_repairs": {
-          "name": "completed_repairs",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "0",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "integer"
-        },
-        "latitude": {
-          "name": "latitude",
-          "type": "real",
+        "note": {
+          "name": "note",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -1676,43 +420,11 @@
           "default": null,
           "comment": null,
           "enumItems": [],
-          "mappedType": "float"
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "real",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "float"
-        },
-        "last_location_update": {
-          "name": "last_location_update",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
+          "mappedType": "text"
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -1728,7 +440,7 @@
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -1743,329 +455,71 @@
           "mappedType": "datetime"
         }
       },
-      "name": "repairer",
+      "name": "broken_part",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "repairer_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "device_id": {
-          "name": "device_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "serial_number": {
-          "name": "serial_number",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "address_id": {
-          "name": "address_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "purchase_date": {
-          "name": "purchase_date",
-          "type": "date",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 0,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "date"
-        },
-        "warranty_until": {
-          "name": "warranty_until",
-          "type": "date",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 0,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "date"
-        },
-        "notes": {
-          "name": "notes",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "registration_signature": {
-          "name": "registration_signature",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        },
-        "registration_signed_payload": {
-          "name": "registration_signed_payload",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
-        }
-      },
-      "name": "user_device",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "user_device_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "broken_part_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "user_device_device_id_foreign": {
-          "constraintName": "user_device_device_id_foreign",
+        "broken_part_device_part_id_foreign": {
           "columnNames": [
-            "device_id"
+            "device_part_id"
           ],
-          "localTableName": "public.user_device",
+          "constraintName": "broken_part_device_part_id_foreign",
+          "localTableName": "public.broken_part",
+          "referencedTableName": "public.device_part",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.device",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "set null"
         },
-        "user_device_address_id_foreign": {
-          "constraintName": "user_device_address_id_foreign",
+        "broken_part_repair_request_id_foreign": {
           "columnNames": [
-            "address_id"
+            "repair_request_id"
           ],
-          "localTableName": "public.user_device",
+          "constraintName": "broken_part_repair_request_id_foreign",
+          "localTableName": "public.broken_part",
+          "referencedTableName": "public.repair_request",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.address",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -2081,25 +535,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -2115,28 +557,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -2149,7 +582,8 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -2176,7 +610,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -2253,12 +687,12 @@
             "expired",
             "revoked"
           ],
-          "mappedType": "enum",
+          "mappedType": "unknown",
           "nativeEnumName": "certificate_status"
         },
         "issued_at": {
           "name": "issued_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2274,7 +708,7 @@
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2290,14 +724,14 @@
         },
         "price": {
           "name": "price",
-          "type": "real",
+          "type": "float4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
           "unique": false,
           "length": null,
-          "precision": null,
+          "precision": 24,
           "scale": null,
           "default": null,
           "comment": null,
@@ -2306,7 +740,7 @@
         },
         "paid": {
           "name": "paid",
-          "type": "boolean",
+          "type": "bool",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2354,7 +788,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2409,51 +843,73 @@
             "certificate_number"
           ],
           "composite": false,
-          "keyName": "certificate_certificate_number_unique",
           "constraint": true,
-          "primary": false,
-          "unique": true
+          "keyName": "certificate_certificate_number_unique",
+          "unique": true,
+          "primary": false
         },
         {
-          "keyName": "certificate_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "certificate_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "certificate_user_device_id_foreign": {
-          "constraintName": "certificate_user_device_id_foreign",
-          "columnNames": [
-            "user_device_id"
-          ],
-          "localTableName": "public.certificate",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.user_device",
-          "updateRule": "cascade"
-        },
         "certificate_dealer_id_foreign": {
-          "constraintName": "certificate_dealer_id_foreign",
           "columnNames": [
             "dealer_id"
           ],
+          "constraintName": "certificate_dealer_id_foreign",
           "localTableName": "public.certificate",
+          "referencedTableName": "public.dealer_profile",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.dealer_profile",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "certificate_user_device_id_foreign": {
+          "columnNames": [
+            "user_device_id"
+          ],
+          "constraintName": "certificate_user_device_id_foreign",
+          "localTableName": "public.certificate",
+          "referencedTableName": "public.user_device",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -2469,25 +925,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -2503,28 +947,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -2537,7 +972,1513 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "dealer_id": {
+          "name": "dealer_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "client_user_id": {
+          "name": "client_user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "dealer_client",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "dealer_client_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "dealer_client_dealer_id_foreign": {
+          "columnNames": [
+            "dealer_id"
+          ],
+          "constraintName": "dealer_client_dealer_id_foreign",
+          "localTableName": "public.dealer_client",
+          "referencedTableName": "public.dealer_profile",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "inn": {
+          "name": "inn",
+          "type": "varchar(50)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 50,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "points_balance": {
+          "name": "points_balance",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "agreement_signature": {
+          "name": "agreement_signature",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "agreement_signed_payload": {
+          "name": "agreement_signed_payload",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "name": "dealer_profile",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "dealer_profile_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "device_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "device_type"
+        },
+        "model": {
+          "name": "model",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "brand": {
+          "name": "brand",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "price": {
+          "name": "price",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "specifications": {
+          "name": "specifications",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "features": {
+          "name": "features",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "is_featured": {
+          "name": "is_featured",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "device",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "device_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "slug"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "device_slug_unique",
+          "unique": true,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "device_id": {
+          "name": "device_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "part_number": {
+          "name": "part_number",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "price": {
+          "name": "price",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "device_part",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "device_part_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "device_part_device_id_foreign": {
+          "columnNames": [
+            "device_id"
+          ],
+          "constraintName": "device_part_device_id_foreign",
+          "localTableName": "public.device_part",
+          "referencedTableName": "public.device",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "dealer_id": {
+          "name": "dealer_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "points_transaction_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "earned",
+            "spent",
+            "adjustment"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "points_transaction_type"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "reason": {
+          "name": "reason",
+          "type": "varchar(500)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 500,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "repair_request_id": {
+          "name": "repair_request_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "points_transaction",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "points_transaction_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "points_transaction_dealer_id_foreign": {
+          "columnNames": [
+            "dealer_id"
+          ],
+          "constraintName": "points_transaction_dealer_id_foreign",
+          "localTableName": "public.points_transaction",
+          "referencedTableName": "public.dealer_profile",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        },
+        "points_transaction_repair_request_id_foreign": {
+          "columnNames": [
+            "repair_request_id"
+          ],
+          "constraintName": "points_transaction_repair_request_id_foreign",
+          "localTableName": "public.points_transaction",
+          "referencedTableName": "public.repair_request",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        }
+      },
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "dealer_id": {
+          "name": "dealer_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "status": {
+          "name": "status",
+          "type": "withdrawal_status",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'pending'",
+          "comment": null,
+          "enumItems": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "withdrawal_status"
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "processed_by_user_id": {
+          "name": "processed_by_user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "name": "points_withdrawal",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "points_withdrawal_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "points_withdrawal_dealer_id_foreign": {
+          "columnNames": [
+            "dealer_id"
+          ],
+          "constraintName": "points_withdrawal_dealer_id_foreign",
+          "localTableName": "public.points_withdrawal",
+          "referencedTableName": "public.dealer_profile",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -2676,11 +2617,11 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ],
-          "mappedType": "enum",
+          "mappedType": "unknown",
           "nativeEnumName": "repair_request_status"
         },
         "description": {
@@ -2701,7 +2642,7 @@
         },
         "preferred_date": {
           "name": "preferred_date",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2717,14 +2658,14 @@
         },
         "total_cost": {
           "name": "total_cost",
-          "type": "real",
+          "type": "float4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
           "unique": false,
           "length": null,
-          "precision": null,
+          "precision": 24,
           "scale": null,
           "default": null,
           "comment": null,
@@ -2733,7 +2674,7 @@
         },
         "refund_requested": {
           "name": "refund_requested",
-          "type": "boolean",
+          "type": "bool",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -2811,6 +2752,54 @@
           "enumItems": [],
           "mappedType": "text"
         },
+        "steps_locked": {
+          "name": "steps_locked",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
         "status_before_pause": {
           "name": "status_before_pause",
           "type": "varchar(255)",
@@ -2845,59 +2834,11 @@
         },
         "chat_close_at": {
           "name": "chat_close_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "steps_locked": {
-          "name": "steps_locked",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
           "unique": false,
           "length": 6,
           "precision": null,
@@ -2976,71 +2917,93 @@
       "schema": "public",
       "indexes": [
         {
-          "keyName": "repair_request_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "repair_request_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "repair_request_user_device_id_foreign": {
-          "constraintName": "repair_request_user_device_id_foreign",
-          "columnNames": [
-            "user_device_id"
-          ],
-          "localTableName": "public.repair_request",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.user_device",
-          "updateRule": "cascade"
-        },
-        "repair_request_repairer_id_foreign": {
-          "constraintName": "repair_request_repairer_id_foreign",
-          "columnNames": [
-            "repairer_id"
-          ],
-          "localTableName": "public.repair_request",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.repairer",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "repair_request_certificate_id_foreign": {
-          "constraintName": "repair_request_certificate_id_foreign",
-          "columnNames": [
-            "certificate_id"
-          ],
-          "localTableName": "public.repair_request",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.certificate",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
         "repair_request_address_id_foreign": {
-          "constraintName": "repair_request_address_id_foreign",
           "columnNames": [
             "address_id"
           ],
+          "constraintName": "repair_request_address_id_foreign",
           "localTableName": "public.repair_request",
+          "referencedTableName": "public.address",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.address",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "repair_request_certificate_id_foreign": {
+          "columnNames": [
+            "certificate_id"
+          ],
+          "constraintName": "repair_request_certificate_id_foreign",
+          "localTableName": "public.repair_request",
+          "referencedTableName": "public.certificate",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "repair_request_repairer_id_foreign": {
+          "columnNames": [
+            "repairer_id"
+          ],
+          "constraintName": "repair_request_repairer_id_foreign",
+          "localTableName": "public.repair_request",
+          "referencedTableName": "public.repairer",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "repair_request_user_device_id_foreign": {
+          "columnNames": [
+            "user_device_id"
+          ],
+          "constraintName": "repair_request_user_device_id_foreign",
+          "localTableName": "public.repair_request",
+          "referencedTableName": "public.user_device",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -3056,25 +3019,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -3090,28 +3041,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -3124,7 +3066,290 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "specializations": {
+          "name": "specializations",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'{}'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "array"
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "completed_repairs": {
+          "name": "completed_repairs",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "float4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 24,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
+        "last_location_update": {
+          "name": "last_location_update",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "repairer",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "repairer_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "device_type": {
+          "name": "device_type",
+          "schema": "public",
+          "items": [
+            "washing_machine",
+            "dryer",
+            "dishwasher",
+            "oven",
+            "cooktop",
+            "refrigerator",
+            "freezer",
+            "hood",
+            "other"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -3194,15 +3419,15 @@
         },
         "rating": {
           "name": "rating",
-          "type": "int",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "unique": false,
           "length": null,
-          "precision": null,
-          "scale": null,
+          "precision": 32,
+          "scale": 0,
           "default": null,
           "comment": null,
           "enumItems": [],
@@ -3226,7 +3451,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -3245,44 +3470,67 @@
       "schema": "public",
       "indexes": [
         {
-          "keyName": "review_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "review_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
         "review_repair_request_id_foreign": {
-          "constraintName": "review_repair_request_id_foreign",
           "columnNames": [
             "repair_request_id"
           ],
+          "constraintName": "review_repair_request_id_foreign",
           "localTableName": "public.review",
+          "referencedTableName": "public.repair_request",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.repair_request",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         },
         "review_repairer_id_foreign": {
-          "constraintName": "review_repairer_id_foreign",
           "columnNames": [
             "repairer_id"
           ],
+          "constraintName": "review_repairer_id_foreign",
           "localTableName": "public.review",
-          "referencedColumnNames": [
-            "id"
-          ],
           "referencedTableName": "public.repairer",
-          "updateRule": "cascade"
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -3298,25 +3546,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -3332,28 +3568,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -3366,7 +3593,8 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -3386,8 +3614,8 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "dealer_id": {
-          "name": "dealer_id",
+        "user_id": {
+          "name": "user_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -3402,52 +3630,15 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "type": {
-          "name": "type",
-          "type": "points_transaction_type",
+        "device_id": {
+          "name": "device_id",
+          "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [
-            "earned",
-            "spent",
-            "adjustment"
-          ],
-          "mappedType": "enum",
-          "nativeEnumName": "points_transaction_type"
-        },
-        "amount": {
-          "name": "amount",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "integer"
-        },
-        "reason": {
-          "name": "reason",
-          "type": "varchar(500)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 500,
+          "length": 255,
           "precision": null,
           "scale": null,
           "default": null,
@@ -3455,257 +3646,72 @@
           "enumItems": [],
           "mappedType": "string"
         },
-        "repair_request_id": {
-          "name": "repair_request_id",
+        "serial_number": {
+          "name": "serial_number",
           "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "address_id": {
+          "name": "address_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "purchase_date": {
+          "name": "purchase_date",
+          "type": "date",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
           "unique": false,
-          "length": 255,
+          "length": 0,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "enumItems": [],
-          "mappedType": "string"
+          "mappedType": "date"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        }
-      },
-      "name": "points_transaction",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "points_transaction_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "points_transaction_dealer_id_foreign": {
-          "constraintName": "points_transaction_dealer_id_foreign",
-          "columnNames": [
-            "dealer_id"
-          ],
-          "localTableName": "public.points_transaction",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.dealer_profile",
-          "updateRule": "cascade"
-        },
-        "points_transaction_repair_request_id_foreign": {
-          "constraintName": "points_transaction_repair_request_id_foreign",
-          "columnNames": [
-            "repair_request_id"
-          ],
-          "localTableName": "public.points_transaction",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.repair_request",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
-          ]
-        },
-        "repair_request_status": {
-          "name": "repair_request_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "paid",
-            "assigned",
-            "accepted",
-            "in_progress",
-            "awaiting_completion",
-            "completed",
-            "refused",
-            "cancelled",
-            "paused",
-            "refund_requested",
-            "refunded"
-          ]
-        },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
-          "schema": "public",
-          "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ]
-        },
-        "work_step_status": {
-          "name": "work_step_status",
-          "schema": "public",
-          "items": [
-            "pending",
-            "in_progress",
-            "completed",
-            "skipped"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": true,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "repair_request_id": {
-          "name": "repair_request_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "device_part_id": {
-          "name": "device_part_id",
-          "type": "varchar(255)",
+        "warranty_until": {
+          "name": "warranty_until",
+          "type": "date",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
           "unique": false,
-          "length": 255,
+          "length": 0,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "enumItems": [],
-          "mappedType": "string"
+          "mappedType": "date"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "status": {
-          "name": "status",
-          "type": "broken_part_status",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "'added'",
-          "comment": null,
-          "enumItems": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
-          ],
-          "mappedType": "enum",
-          "nativeEnumName": "broken_part_status"
-        },
-        "note": {
-          "name": "note",
+        "notes": {
+          "name": "notes",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
@@ -3722,7 +3728,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -3736,66 +3742,104 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
+        "registration_signature": {
+          "name": "registration_signature",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
-          "length": 6,
+          "length": null,
           "precision": null,
           "scale": null,
           "default": null,
           "comment": null,
           "enumItems": [],
-          "mappedType": "datetime"
+          "mappedType": "text"
+        },
+        "registration_signed_payload": {
+          "name": "registration_signed_payload",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
         }
       },
-      "name": "broken_part",
+      "name": "user_device",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "broken_part_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "user_device_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "broken_part_repair_request_id_foreign": {
-          "constraintName": "broken_part_repair_request_id_foreign",
+        "user_device_address_id_foreign": {
           "columnNames": [
-            "repair_request_id"
+            "address_id"
           ],
-          "localTableName": "public.broken_part",
+          "constraintName": "user_device_address_id_foreign",
+          "localTableName": "public.user_device",
+          "referencedTableName": "public.address",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.repair_request",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         },
-        "broken_part_device_part_id_foreign": {
-          "constraintName": "broken_part_device_part_id_foreign",
+        "user_device_device_id_foreign": {
           "columnNames": [
-            "device_part_id"
+            "device_id"
           ],
-          "localTableName": "public.broken_part",
+          "constraintName": "user_device_device_id_foreign",
+          "localTableName": "public.user_device",
+          "referencedTableName": "public.device",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.device_part",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -3811,25 +3855,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -3845,28 +3877,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -3879,7 +3902,8 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -3966,20 +3990,20 @@
             "completed",
             "skipped"
           ],
-          "mappedType": "enum",
+          "mappedType": "unknown",
           "nativeEnumName": "work_step_status"
         },
         "order": {
           "name": "order",
-          "type": "int",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "unique": false,
           "length": null,
-          "precision": null,
-          "scale": null,
+          "precision": 32,
+          "scale": 0,
           "default": null,
           "comment": null,
           "enumItems": [],
@@ -3987,7 +4011,7 @@
         },
         "is_final": {
           "name": "is_final",
-          "type": "boolean",
+          "type": "bool",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -4003,7 +4027,7 @@
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -4019,7 +4043,7 @@
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -4038,32 +4062,54 @@
       "schema": "public",
       "indexes": [
         {
-          "keyName": "work_step_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "work_step_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {
         "work_step_repair_request_id_foreign": {
-          "constraintName": "work_step_repair_request_id_foreign",
           "columnNames": [
             "repair_request_id"
           ],
+          "constraintName": "work_step_repair_request_id_foreign",
           "localTableName": "public.work_step",
+          "referencedTableName": "public.repair_request",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.repair_request",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
         "device_type": {
           "name": "device_type",
           "schema": "public",
@@ -4079,25 +4125,13 @@
             "other"
           ]
         },
-        "withdrawal_status": {
-          "name": "withdrawal_status",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "pending",
-            "approved",
-            "rejected",
-            "completed"
-          ]
-        },
-        "certificate_status": {
-          "name": "certificate_status",
-          "schema": "public",
-          "items": [
-            "pending_payment",
-            "validation_error",
-            "active",
-            "expired",
-            "revoked"
+            "earned",
+            "spent",
+            "adjustment"
           ]
         },
         "repair_request_status": {
@@ -4113,28 +4147,19 @@
             "completed",
             "refused",
             "cancelled",
-            "paused",
             "refund_requested",
-            "refunded"
+            "refunded",
+            "paused"
           ]
         },
-        "points_transaction_type": {
-          "name": "points_transaction_type",
+        "withdrawal_status": {
+          "name": "withdrawal_status",
           "schema": "public",
           "items": [
-            "earned",
-            "spent",
-            "adjustment"
-          ]
-        },
-        "broken_part_status": {
-          "name": "broken_part_status",
-          "schema": "public",
-          "items": [
-            "added",
-            "ordered",
-            "shipped",
-            "replaced"
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
           ]
         },
         "work_step_status": {
@@ -4147,10 +4172,32 @@
             "skipped"
           ]
         }
-      }
+      },
+      "comment": null
     }
   ],
   "nativeEnums": {
+    "broken_part_status": {
+      "name": "broken_part_status",
+      "schema": "public",
+      "items": [
+        "added",
+        "ordered",
+        "shipped",
+        "replaced"
+      ]
+    },
+    "certificate_status": {
+      "name": "certificate_status",
+      "schema": "public",
+      "items": [
+        "pending_payment",
+        "validation_error",
+        "active",
+        "expired",
+        "revoked"
+      ]
+    },
     "device_type": {
       "name": "device_type",
       "schema": "public",
@@ -4166,25 +4213,13 @@
         "other"
       ]
     },
-    "withdrawal_status": {
-      "name": "withdrawal_status",
+    "points_transaction_type": {
+      "name": "points_transaction_type",
       "schema": "public",
       "items": [
-        "pending",
-        "approved",
-        "rejected",
-        "completed"
-      ]
-    },
-    "certificate_status": {
-      "name": "certificate_status",
-      "schema": "public",
-      "items": [
-        "pending_payment",
-        "validation_error",
-        "active",
-        "expired",
-        "revoked"
+        "earned",
+        "spent",
+        "adjustment"
       ]
     },
     "repair_request_status": {
@@ -4200,28 +4235,19 @@
         "completed",
         "refused",
         "cancelled",
-        "paused",
         "refund_requested",
-        "refunded"
+        "refunded",
+        "paused"
       ]
     },
-    "points_transaction_type": {
-      "name": "points_transaction_type",
+    "withdrawal_status": {
+      "name": "withdrawal_status",
       "schema": "public",
       "items": [
-        "earned",
-        "spent",
-        "adjustment"
-      ]
-    },
-    "broken_part_status": {
-      "name": "broken_part_status",
-      "schema": "public",
-      "items": [
-        "added",
-        "ordered",
-        "shipped",
-        "replaced"
+        "pending",
+        "approved",
+        "rejected",
+        "completed"
       ]
     },
     "work_step_status": {
