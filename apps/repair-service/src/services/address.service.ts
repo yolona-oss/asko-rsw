@@ -12,6 +12,7 @@ export class AddressService {
         city: string;
         street: string;
         house: string;
+        building?: string;
         apartment?: string;
         entrance?: string;
         floor?: string;
@@ -25,6 +26,7 @@ export class AddressService {
             city: dto.city,
             street: dto.street,
             house: dto.house,
+            building: dto.building,
             apartment: dto.apartment,
             entrance: dto.entrance,
             floor: dto.floor,

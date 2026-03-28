@@ -213,6 +213,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "float"
+        },
+        "building": {
+          "name": "building",
+          "type": "varchar(50)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 50,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "address",

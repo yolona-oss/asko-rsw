@@ -72,7 +72,7 @@ function addressToRecord(entity: Address) {
         city: entity.city,
         street: entity.street,
         house: parseInt(entity.house) || 0,
-        building: 0,
+        building: parseInt(entity.building ?? '') || 0,
         floor: parseInt(entity.floor ?? '') || 0,
         room: parseInt(entity.apartment ?? '') || 0,
         postalCode: '',

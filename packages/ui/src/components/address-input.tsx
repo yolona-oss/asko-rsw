@@ -67,6 +67,28 @@ function parseNominatimAddress(result: NominatimResult) {
   return { city, street, house };
 }
 
+async function reverseGeocode(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal,
+): Promise<{ city: string; street: string; house: string; lat: number; lon: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`,
+      { signal },
+    );
+    const data = await res.json();
+    const a = data.address ?? {};
+    const city = a.city || a.town || a.village || '';
+    const street = a.road || '';
+    const houseRaw = parseInt(a.house_number || '', 10);
+    const house = Number.isFinite(houseRaw) ? String(houseRaw) : '';
+    return { city, street, house, lat: latitude, lon: longitude };
+  } catch {
+    return null;
+  }
+}
+
 export function AddressInput({
   value,
   onChange,
@@ -75,6 +97,8 @@ export function AddressInput({
   label = 'Адрес',
   className,
 }: AddressInputProps) {
+  const [inputMode, setInputMode] = useState<'address' | 'coords'>('address');
+
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
   const [street, setStreet] = useState('');
@@ -84,6 +108,11 @@ export function AddressInput({
   const [room, setRoom] = useState('');
   const [lat, setLat] = useState<number | undefined>();
   const [lon, setLon] = useState<number | undefined>();
+
+  // Coords input mode fields
+  const [coordLat, setCoordLat] = useState('');
+  const [coordLon, setCoordLon] = useState('');
+  const [reversing, setReversing] = useState(false);
 
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -105,6 +134,8 @@ export function AddressInput({
       setBuilding(value.building ? String(value.building) : '');
       setFloor(value.floor ? String(value.floor) : '');
       setRoom(value.room ? String(value.room) : '');
+      if (value.latitude != null) setLat(value.latitude);
+      if (value.longitude != null) setLon(value.longitude);
       setQuery(
         [value.city, value.street, value.house ? `д. ${value.house}` : '']
           .filter(Boolean)
@@ -164,8 +195,40 @@ export function AddressInput({
     );
   };
 
-  // Nominatim search
+  // ── Forward geocode: auto-refresh coords when address fields change manually ──
+  const fieldsKey = `${city}|${street}|${house}`;
+  const debouncedFieldsKey = useDebounce(fieldsKey, 800);
+
   useEffect(() => {
+    if (!city || !street || !house) return;
+    // Skip if coords were just set by suggestion/reverse geocode (they're already fresh)
+    const q = `${city}, ${street}, ${house}`;
+    const controller = new AbortController();
+    fetch(
+      `https://nominatim.openstreetmap.org/search?` +
+        `q=${encodeURIComponent(q)}&format=json&addressdetails=1` +
+        `&accept-language=ru&countrycodes=ru&limit=1`,
+      { signal: controller.signal },
+    )
+      .then((r) => r.json())
+      .then((data: NominatimResult[]) => {
+        if (data.length > 0) {
+          const newLat = parseFloat(data[0].lat) || undefined;
+          const newLon = parseFloat(data[0].lon) || undefined;
+          if (newLat != null && newLon != null) {
+            setLat(newLat);
+            setLon(newLon);
+            emitChange(city, street, house, building, floor, room, newLat, newLon);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [debouncedFieldsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Nominatim autocomplete search ──
+  useEffect(() => {
+    if (inputMode !== 'address') return;
     if (debouncedQuery.length < 3) {
       setSuggestions([]);
       return;
@@ -181,7 +244,7 @@ export function AddressInput({
       .then((data) => setSuggestions(data))
       .catch(() => {});
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, inputMode]);
 
   // Click outside
   useEffect(() => {
@@ -233,6 +296,7 @@ export function AddressInput({
     }
   };
 
+  // ── Browser geolocation → reverse geocode ──
   const detectAddress = async () => {
     if (!navigator.geolocation) {
       setGeoError('Геолокация не поддерживается браузером');
@@ -246,28 +310,12 @@ export function AddressInput({
           timeout: 10000,
         }),
       );
-      const { latitude, longitude } = pos.coords;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`,
-      );
-      const data = await res.json();
-      const a = data.address ?? {};
-      const newCity = a.city || a.town || a.village || '';
-      const newStreet = a.road || '';
-      const houseRaw = parseInt(a.house_number || '', 10);
-      const newHouse = Number.isFinite(houseRaw) ? String(houseRaw) : '';
-
-      setCity(newCity);
-      setStreet(newStreet);
-      setHouse(newHouse);
-      setLat(latitude);
-      setLon(longitude);
-      setQuery(
-        [newCity, newStreet, newHouse ? `д. ${newHouse}` : '']
-          .filter(Boolean)
-          .join(', '),
-      );
-      emitChange(newCity, newStreet, newHouse, building, floor, room, latitude, longitude);
+      const result = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+      if (result) {
+        applyReverseResult(result);
+      } else {
+        setGeoError('Не удалось определить адрес');
+      }
     } catch {
       setGeoError('Не удалось определить адрес');
     } finally {
@@ -275,68 +323,171 @@ export function AddressInput({
     }
   };
 
+  // ── Manual coords → reverse geocode ──
+  const handleReverseGeocode = async () => {
+    const parsedLat = parseFloat(coordLat);
+    const parsedLon = parseFloat(coordLon);
+    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLon)) {
+      setGeoError('Введите корректные координаты');
+      return;
+    }
+    setReversing(true);
+    setGeoError('');
+    const result = await reverseGeocode(parsedLat, parsedLon);
+    if (result) {
+      applyReverseResult(result);
+    } else {
+      setGeoError('Не удалось определить адрес по координатам');
+    }
+    setReversing(false);
+  };
+
+  // Apply reverse geocode result to all fields
+  const applyReverseResult = (result: { city: string; street: string; house: string; lat: number; lon: number }) => {
+    setCity(result.city);
+    setStreet(result.street);
+    setHouse(result.house);
+    setLat(result.lat);
+    setLon(result.lon);
+    setCoordLat(String(result.lat));
+    setCoordLon(String(result.lon));
+    setQuery(
+      [result.city, result.street, result.house ? `д. ${result.house}` : '']
+        .filter(Boolean)
+        .join(', '),
+    );
+    emitChange(result.city, result.street, result.house, building, floor, room, result.lat, result.lon);
+  };
+
   const hasFields = !!(city || street || house);
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       {/* Header row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm font-bold text-text-main">{label}</p>
-        {showGeolocation && (
+
+        <div className="flex items-center gap-2">
+          {/* Mode toggle */}
+          <div className="flex rounded-sm border border-border-main text-xs overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setInputMode('address')}
+              className={cn(
+                'px-2.5 py-1 transition-colors cursor-pointer',
+                inputMode === 'address'
+                  ? 'bg-text-main text-white'
+                  : 'bg-white text-text-sub hover:bg-gray-50',
+              )}
+            >
+              По адресу
+            </button>
+            <button
+              type="button"
+              onClick={() => setInputMode('coords')}
+              className={cn(
+                'px-2.5 py-1 transition-colors cursor-pointer',
+                inputMode === 'coords'
+                  ? 'bg-text-main text-white'
+                  : 'bg-white text-text-sub hover:bg-gray-50',
+              )}
+            >
+              По координатам
+            </button>
+          </div>
+
+          {showGeolocation && (
+            <Button
+              variant="secondary"
+              size="sm"
+              type="button"
+              onClick={detectAddress}
+              disabled={detecting}
+            >
+              {detecting ? 'Определение...' : 'GPS'}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Address mode: autocomplete search ── */}
+      {inputMode === 'address' && (
+        <div ref={wrapperRef} className="relative w-full">
+          <Input
+            placeholder="Начните вводить адрес..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowSuggestions(true);
+              setActiveIndex(-1);
+            }}
+            onFocus={() => {
+              if (suggestions.length > 0) setShowSuggestions(true);
+            }}
+            onKeyDown={handleKeyDown}
+            error={!!error}
+          />
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div
+              className={cn(
+                'absolute z-50 mt-1 w-full',
+                'bg-white border border-border-light',
+                'rounded-sm shadow-md',
+                'max-h-60 overflow-auto',
+              )}
+            >
+              {suggestions.map((s, i) => (
+                <div
+                  key={s.display_name + i}
+                  onMouseDown={() => selectSuggestion(s)}
+                  className={cn(
+                    'px-3 py-2 text-sm cursor-pointer',
+                    'hover:bg-gray-100',
+                    i === activeIndex && 'bg-gray-100',
+                  )}
+                >
+                  {s.display_name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Coords mode: lat/lng inputs + reverse geocode ── */}
+      {inputMode === 'coords' && (
+        <div className="flex items-end gap-2">
+          <FormField label="Широта" className="flex-1">
+            <Input
+              value={coordLat}
+              onChange={(e) => setCoordLat(e.target.value)}
+              placeholder="55.7558"
+              type="number"
+              error={!!error}
+            />
+          </FormField>
+          <FormField label="Долгота" className="flex-1">
+            <Input
+              value={coordLon}
+              onChange={(e) => setCoordLon(e.target.value)}
+              placeholder="37.6173"
+              type="number"
+              error={!!error}
+            />
+          </FormField>
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
             type="button"
-            onClick={detectAddress}
-            disabled={detecting}
+            onClick={handleReverseGeocode}
+            disabled={reversing || !coordLat || !coordLon}
+            className="whitespace-nowrap mb-0.5"
           >
-            {detecting ? 'Определение...' : 'Определить автоматически'}
+            {reversing ? 'Поиск...' : 'Определить адрес'}
           </Button>
-        )}
-      </div>
-
-      {/* Main autocomplete input */}
-      <div ref={wrapperRef} className="relative w-full">
-        <Input
-          placeholder="Начните вводить адрес..."
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setShowSuggestions(true);
-            setActiveIndex(-1);
-          }}
-          onFocus={() => {
-            if (suggestions.length > 0) setShowSuggestions(true);
-          }}
-          onKeyDown={handleKeyDown}
-          error={!!error}
-        />
-
-        {showSuggestions && suggestions.length > 0 && (
-          <div
-            className={cn(
-              'absolute z-50 mt-1 w-full',
-              'bg-white border border-border-light',
-              'rounded-sm shadow-md',
-              'max-h-60 overflow-auto',
-            )}
-          >
-            {suggestions.map((s, i) => (
-              <div
-                key={s.display_name + i}
-                onMouseDown={() => selectSuggestion(s)}
-                className={cn(
-                  'px-3 py-2 text-sm cursor-pointer',
-                  'hover:bg-gray-100',
-                  i === activeIndex && 'bg-gray-100',
-                )}
-              >
-                {s.display_name}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Parsed editable fields */}
       {hasFields && (
@@ -405,6 +556,13 @@ export function AddressInput({
             />
           </FormField>
         </div>
+      )}
+
+      {/* Coords display (when available) */}
+      {hasFields && lat != null && lon != null && (
+        <p className="text-xs text-text-sub">
+          Координаты: {lat.toFixed(6)}, {lon.toFixed(6)}
+        </p>
       )}
 
       {/* Error messages */}

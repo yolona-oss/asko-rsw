@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 @Entity()
 export class Address {
-    [OptionalProps]?: 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'latitude' | 'longitude' | 'createdAt';
+    [OptionalProps]?: 'building' | 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'latitude' | 'longitude' | 'createdAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -19,6 +19,9 @@ export class Address {
 
     @Property({ type: 'varchar', length: 50 })
     house!: string;
+
+    @Property({ type: 'varchar', length: 50, nullable: true })
+    building?: string;
 
     @Property({ type: 'varchar', length: 50, nullable: true })
     apartment?: string;
