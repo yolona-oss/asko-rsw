@@ -76,7 +76,7 @@ export function useVerifyMfaOtp() {
   });
 }
 
-export function useSignup() {
+export function useSignup(options?: { onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -85,7 +85,11 @@ export function useSignup() {
     onSuccess: (data) => {
       maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
-      router.push('/account');
+      if (options?.onSuccess) {
+        options.onSuccess();
+      } else {
+        router.push('/account');
+      }
     },
   });
 }
