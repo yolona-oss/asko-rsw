@@ -1,42 +1,53 @@
 import type { IDevice, IImageAttachment, PaginatedDevices } from './types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { api } from './client';
 
 export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.webp';
 
-export async function fetchDevices(page: number, limit: number) {
-  const res = await fetch(
-    `${API_URL}/devices?offset=${page}&limit=${limit}`,
-    { next: { revalidate: 60 } },
-  );
-  if (!res.ok) return { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
-  return res.json() as Promise<PaginatedDevices>;
+export async function fetchDevices(page: number, limit: number): Promise<PaginatedDevices> {
+  try {
+    const { data } = await api.get<PaginatedDevices>('/devices', {
+      params: { offset: page, limit },
+    });
+    return data;
+  } catch {
+    return { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
+  }
 }
 
 export async function fetchDevice(id: string): Promise<IDevice | null> {
-  const res = await fetch(`${API_URL}/devices/${id}`, { next: { revalidate: 60 } });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const { data } = await api.get<IDevice>(`/devices/${id}`);
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchDeviceBySlug(slug: string): Promise<IDevice | null> {
-  const res = await fetch(`${API_URL}/devices/slug/${slug}`, { next: { revalidate: 60 } });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const { data } = await api.get<IDevice>(`/devices/slug/${slug}`);
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchDeviceImages(id: string): Promise<IImageAttachment[]> {
-  const res = await fetch(`${API_URL}/devices/${id}/images`, { next: { revalidate: 60 } });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.images ?? [];
+  try {
+    const { data } = await api.get<{ images: IImageAttachment[] }>(`/devices/${id}/images`);
+    return data.images ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttachment[]> {
-  const res = await fetch(`${API_URL}/devices/slug/${slug}/images`, { next: { revalidate: 60 } });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.images ?? [];
+  try {
+    const { data } = await api.get<{ images: IImageAttachment[] }>(`/devices/slug/${slug}/images`);
+    return data.images ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchFirstDeviceImage(deviceId: string): Promise<string> {

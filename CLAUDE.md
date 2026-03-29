@@ -332,13 +332,13 @@ Next.js App Router frontend. Communicates with API gateway only. Never calls mic
 
 **API clients**:
 
-* Legacy Axios client: `src/lib/api/client.ts` — auto-attaches access token, auto-refreshes on 401
-* Typed openapi-fetch client: `src/lib/api/openapi-client.ts` — for new code
+* **Primary Axios client: `src/lib/api/client.ts`** — auto-attaches access token, auto-refreshes on 401. **All API calls must use this client.** Never use raw `fetch()` for API requests.
+* Typed openapi-fetch client: `src/lib/api/openapi-client.ts` — alternative for new code
 * Generated types: `src/lib/api/api.gen.d.ts` — auto-generated, do NOT edit
 
 **State management**: Redux Toolkit for auth state, React Query for server state.
 
-**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Server-side HTML generation via `@lexical/headless` in `src/lib/lexical/generate-html.ts`.
+**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Server-side HTML generation in `src/lib/lexical/generate-html.ts` (pure function, no DOM required).
 
 **Analytics**: Yandex Metrika integration via `src/components/YandexMetrika.tsx`. Configured with `NEXT_PUBLIC_YM_ID` env var.
 
@@ -743,6 +743,7 @@ All Docker builds use turborepo prune.
 * API must NEVER access content-service database directly — always use gRPC.
 * content-service owns Article and ArticleView entities.
 * Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
+* **Never use raw `fetch()` for API calls in the web app** — always use the Axios `api` instance from `src/lib/api/client.ts`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
 * Always run `./scripts/openapi.sh` after changing backend endpoints or response types.
 * Always run `pnpm run build` in packages after changes.
 * `.env` files must never be committed to git.

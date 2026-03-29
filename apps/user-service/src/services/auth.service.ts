@@ -165,7 +165,7 @@ export class AuthService {
         const phone = params.phone.replace(/\D/g, '');
 
         const user = await this.userService.findByPhone(phone);
-        if (!user) {
+        if (!user || !user.phoneVerified) {
             throw AppErrors.unauthorized('Пользователь с этим номером не найден');
         }
         if (!user.isActive) {

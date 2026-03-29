@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Container } from '@asko/ui';
 import { SkeletonImage } from '@/components/landing/skeleton-image';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { articleApi } from '@/lib/api/article';
 
 interface ArticleData {
   id: string;
@@ -55,29 +55,14 @@ export function ArticlesSection() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/articles?limit=4&offset=1`);
-        if (!res.ok) return;
-        const { data } = await res.json();
+        const { data: resp } = await articleApi.getAll({ limit: 4, offset: 1 });
+        const data = resp.data;
         if (!data || data.length === 0) return;
 
         // Fetch preview images
         const articlesWithImages: ArticleData[] = await Promise.all(
-          data.map(async (a: any) => {
-            let previewImage: string | null = null;
-            try {
-              const imgRes = await fetch(`${API_URL}/articles/${a.slug}/images`);
-              if (imgRes.ok) {
-                const imgs = await imgRes.json();
-                if (imgs.length > 0) {
-                  const sorted = imgs.sort((x: any, y: any) => x.order - y.order);
-                  previewImage =
-                    sorted[0].image.medium?.secure_url ??
-                    sorted[0].image.original.secure_url;
-                }
-              }
-            } catch {
-              // ignore
-            }
+          data.map(async (a) => {
+            const previewImage = await articleApi.fetchArticlePreviewImage(a.slug);
             return {
               id: a.id,
               title: a.title,

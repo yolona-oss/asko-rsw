@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import { articleApi } from '@/lib/api/article';
 
+// move to lib
 function getSessionId(): string {
-    const key = 'asko_session_id';
+    const key = 'sid';
     let id = localStorage.getItem(key);
     if (!id) {
         id = crypto.randomUUID();
@@ -17,7 +18,7 @@ export function ArticleViewTracker({ slug }: { slug: string }) {
     useEffect(() => {
         try {
             const sessionId = getSessionId();
-            articleApi.recordView(slug, sessionId).catch(() => {});
+            articleApi.recordView(slug, sessionId).catch(() => { });
         } catch {
             // Silently ignore — view tracking should never break UX
         }
