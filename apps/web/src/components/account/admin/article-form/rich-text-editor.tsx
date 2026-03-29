@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useImperativeHandle, useRef, useCallback, forwardRef } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -18,6 +18,10 @@ import { COMMAND_PRIORITY_EDITOR, $insertNodes } from 'lexical';
 
 import { EditorToolbar } from './editor-toolbar';
 import { ImageNode, INSERT_IMAGE_COMMAND, $createImageNode } from './image-node';
+
+export interface RichTextEditorHandle {
+    insertImage: (src: string) => void;
+}
 
 interface RichTextEditorProps {
     content?: Record<string, any>;
@@ -61,6 +65,18 @@ function ImagePlugin() {
             COMMAND_PRIORITY_EDITOR,
         );
     }, [editor]);
+
+    return null;
+}
+
+function InsertImageBridge({ onReady }: { onReady: (fn: (src: string) => void) => void }) {
+    const [editor] = useLexicalComposerContext();
+
+    useEffect(() => {
+        onReady((src: string) => {
+            editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
+        });
+    }, [editor, onReady]);
 
     return null;
 }
@@ -120,7 +136,16 @@ export function plainTextToLexicalState(text: string): Record<string, any> {
     };
 }
 
-export function RichTextEditor({ content, onChange, articleId, onRequestArticleId }: RichTextEditorProps) {
+export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
+function RichTextEditorInner({ content, onChange, articleId, onRequestArticleId }, ref) {
+    const insertImageRef = useRef<((src: string) => void) | null>(null);
+
+    useImperativeHandle(ref, () => ({
+        insertImage: (src: string) => {
+            insertImageRef.current?.(src);
+        },
+    }));
+
     const initialConfig = {
         namespace: 'ArticleEditor',
         theme,
@@ -159,6 +184,7 @@ export function RichTextEditor({ content, onChange, articleId, onRequestArticleI
             <ImagePlugin />
             <InitialContentPlugin content={content} />
             <OnChangePlugin onChange={handleChange} />
+            <InsertImageBridge onReady={useCallback((fn: (src: string) => void) => { insertImageRef.current = fn; }, [])} />
         </LexicalComposer>
     );
-}
+});

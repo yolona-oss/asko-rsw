@@ -7,7 +7,12 @@ import { articleApi } from '@/lib/api/article';
 import type { IImageAttachment } from '@/lib/api/types';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
-export function ArticleImages({ articleId }: { articleId: string }) {
+interface ArticleImagesProps {
+  articleId: string;
+  onInsertImage?: (src: string) => void;
+}
+
+export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) {
   const [images, setImages] = useState<IImageAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -144,6 +149,20 @@ export function ArticleImages({ articleId }: { articleId: string }) {
               <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/50 text-white rounded-sm text-[10px] font-medium">
                 {imageLabel(i)}
               </div>
+              {onInsertImage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const src = img.imageJson.large?.secure_url
+                      ?? img.imageJson.medium?.secure_url
+                      ?? img.imageJson.original.secure_url;
+                    onInsertImage(src);
+                  }}
+                  className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-white rounded-sm text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  Вставить
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => handleDelete(img.id)}
