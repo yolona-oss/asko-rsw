@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Container } from '@asko/ui';
 import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article.server';
+import { ArticlePreviewCard } from '@/components/articles';
 
 const LIMIT = 12;
 
@@ -44,49 +44,15 @@ export default async function ArticlesListPage({
             <p className="text-text-sub text-sm">Статьи не найдены</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {articles.map((article) => {
-                const imgUrl = imageMap.get(article.id);
-                const previewText =
-                  article.text.length > 200
-                    ? article.text.slice(0, 200) + '...'
-                    : article.text;
-                return (
-                  <Link
-                    key={article.id}
-                    href={`/articles/${article.slug}`}
-                    className="group flex flex-col gap-6"
-                  >
-                    <div className="relative w-full aspect-[262/204] overflow-hidden">
-                      {imgUrl ? (
-                        <Image
-                          src={imgUrl}
-                          alt={article.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-                          Нет фото
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-6">
-                      <div className="flex flex-col gap-4">
-                        <h3 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#150F0F] max-w-[204px]">
-                          {article.title}
-                        </h3>
-                        <p className="text-base leading-[22px] tracking-[-0.01em] text-[#150F0F]">
-                          {previewText}
-                        </p>
-                      </div>
-                      <span className="text-sm font-bold text-text-main underline tracking-[-0.01em]">
-                        Читать статью...
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
+              {articles.map((article) => (
+                <ArticlePreviewCard
+                  key={article.id}
+                  slug={article.slug}
+                  title={article.title}
+                  text={article.text}
+                  imageUrl={imageMap.get(article.id)}
+                />
+              ))}
             </div>
           )}
 
@@ -144,42 +110,15 @@ async function RecommendedSection({ currentArticleIds }: { currentArticleIds: st
         Рекомендуемые статьи
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filtered.map((article, i) => {
-          const imgUrl = recImageResults[i];
-          const previewText =
-            article.text.length > 200
-              ? article.text.slice(0, 200) + '...'
-              : article.text;
-          return (
-            <Link
-              key={article.id}
-              href={`/articles/${article.slug}`}
-              className="group flex flex-col gap-4"
-            >
-              <div className="relative w-full aspect-[262/204] overflow-hidden">
-                {imgUrl ? (
-                  <Image
-                    src={imgUrl}
-                    alt={article.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-                    Нет фото
-                  </div>
-                )}
-              </div>
-              <h3 className="text-lg font-medium leading-6 tracking-[-0.01em] text-[#150F0F]">
-                {article.title}
-              </h3>
-              <p className="text-sm leading-5 tracking-[-0.01em] text-[#150F0F]">
-                {previewText}
-              </p>
-            </Link>
-          );
-        })}
+        {filtered.map((article, i) => (
+          <ArticlePreviewCard
+            key={article.id}
+            slug={article.slug}
+            title={article.title}
+            text={article.text}
+            imageUrl={recImageResults[i]}
+          />
+        ))}
       </div>
     </section>
   );
