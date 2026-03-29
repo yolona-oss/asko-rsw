@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
-import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article';
+import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article.server';
 
 const LIMIT = 12;
 

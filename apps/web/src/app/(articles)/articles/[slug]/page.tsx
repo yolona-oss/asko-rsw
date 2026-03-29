@@ -7,7 +7,7 @@ import {
   fetchArticleImages,
   fetchArticlePreviewImage,
   fetchRelatedArticles,
-} from '@/lib/api/article';
+} from '@/lib/api/article.server';
 import { generateArticleHTML } from '@/lib/lexical/generate-html';
 import { ArticleViewTracker } from '@/components/articles/article-view-tracker';
 

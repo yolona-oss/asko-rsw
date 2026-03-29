@@ -16,7 +16,8 @@ COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY .npmrc .npmrc
 COPY tsconfig.json tsconfig.json
-RUN --mount=type=cache,id=pnpm,target=~/pnpm-store \
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm config set store-dir /root/.local/share/pnpm/store && \
     pnpm install --frozen-lockfile
 
 # ---------- builder ----------

@@ -8,7 +8,7 @@ import { ProductSpecs } from '@/components/product/product-specs';
 import { ProductCare } from '@/components/product/product-care';
 import { ProductAllSpecs } from '@/components/product/product-all-specs';
 import { ProductRecommendations } from '@/components/product/product-recommendations';
-import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/product';
+import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/product.server';
 
 const TYPE_LABELS: Record<string, string> = {
   washing_machine: 'Стиральная машина',

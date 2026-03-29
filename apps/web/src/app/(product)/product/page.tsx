@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
-import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/product';
+import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/product.server';
 
 const TYPE_LABELS: Record<string, string> = {
   washing_machine: 'Стиральная машина',

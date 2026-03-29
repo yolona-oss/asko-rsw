@@ -330,11 +330,15 @@ Next.js App Router frontend. Communicates with API gateway only. Never calls mic
 
 **Stack**: Next.js v16, React 19, Redux Toolkit v2, React Query v5, Tailwind v4, Socket.io-client, openapi-fetch, Axios (legacy), Framer Motion, Lexical (rich text editor)
 
-**API clients**:
+**API clients** (two separate clients for server vs client):
 
-* **Primary Axios client: `src/lib/api/client.ts`** — auto-attaches access token, auto-refreshes on 401. **All API calls must use this client.** Never use raw `fetch()` for API requests.
-* Typed openapi-fetch client: `src/lib/api/openapi-client.ts` — alternative for new code
+* **Client-side Axios: `src/lib/api/client.ts`** — auto-attaches access token, auto-refreshes on 401. Used by all `'use client'` components. API modules (e.g., `articleApi` in `article.ts`) use this.
+* **Server-side fetch: `src/lib/api/server-fetch.ts`** — lightweight `fetch` wrapper for server components. Protected with `import 'server-only'` — importing in a client component causes a build error. Standalone `fetch*` functions (e.g., `fetchArticle`, `fetchDevices`) use this.
 * Generated types: `src/lib/api/api.gen.d.ts` — auto-generated, do NOT edit
+
+**API module pattern** (e.g., `src/lib/api/article.ts`):
+* `articleApi.*` — client-side methods using Axios (for `'use client'` components)
+* `fetchArticle()`, `fetchArticles()`, etc. — server-side standalone functions using `serverGet()` (for server components)
 
 **State management**: Redux Toolkit for auth state, React Query for server state.
 
@@ -743,7 +747,9 @@ All Docker builds use turborepo prune.
 * API must NEVER access content-service database directly — always use gRPC.
 * content-service owns Article and ArticleView entities.
 * Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
-* **Never use raw `fetch()` for API calls in the web app** — always use the Axios `api` instance from `src/lib/api/client.ts`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
+* **Client components (`'use client'`)** must use the Axios `api` instance from `src/lib/api/client.ts` for API calls — never raw `fetch()`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
+* **Server components** must use `serverGet()` from `src/lib/api/server-fetch.ts` for API calls — never the Axios client (it depends on Redux store which doesn't exist on the server). The `server-only` import prevents accidental use in client components.
+* Never import `server-fetch.ts` or standalone `fetch*` functions in `'use client'` components — it will cause a build error.
 * Always run `./scripts/openapi.sh` after changing backend endpoints or response types.
 * Always run `pnpm run build` in packages after changes.
 * `.env` files must never be committed to git.
