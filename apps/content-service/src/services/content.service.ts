@@ -5,6 +5,18 @@ import { ArticleView } from 'entities/article-view.entity';
 import { AppErrors } from 'common/error';
 import { GraphService } from './graph.service';
 
+const BOT_PATTERNS = [
+    /bot/i, /crawl/i, /spider/i, /headless/i, /phantom/i, /puppet/i,
+    /selenium/i, /playwright/i, /wget/i, /curl/i, /python-requests/i,
+    /go-http-client/i, /node-fetch/i, /axios/i, /scrapy/i,
+    /googlebot/i, /bingbot/i, /yandexbot/i, /baiduspider/i,
+];
+
+function isBot(userAgent: string): boolean {
+    if (!userAgent) return false;
+    return BOT_PATTERNS.some((p) => p.test(userAgent));
+}
+
 function slugify(text: string): string {
     return text
         .toLowerCase()
@@ -158,24 +170,43 @@ export class ContentService {
     }
 
     @CreateRequestContext()
-    async recordView(slug: string, userId: string | undefined, sessionId: string): Promise<void> {
-        const article = await this.findBySlugInternal(slug);
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    async recordView(
+        slug: string,
+        userId: string | undefined,
+        sessionId: string,
+        readTime = 0,
+        userAgent = '',
+    ): Promise<void> {
+        // 1. Minimum read time threshold (5 seconds)
+        if (readTime > 0 && readTime < 5000) return;
 
+        // 2. Basic bot filtering
+        if (isBot(userAgent)) return;
+
+        const article = await this.findBySlugInternal(slug);
+
+        // 3. Dedup: 5 minutes per user/session per article (shorter than before)
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
         const dedup = userId
-            ? { articleId: article.id, userId, viewedAt: { $gte: oneHourAgo } }
-            : { articleId: article.id, sessionId, viewedAt: { $gte: oneHourAgo } };
+            ? { articleId: article.id, userId, viewedAt: { $gte: fiveMinAgo } }
+            : { articleId: article.id, sessionId, viewedAt: { $gte: fiveMinAgo } };
 
         const existing = await this.em.findOne(ArticleView, dedup);
         if (existing) return;
 
+        // 4. Save view record
         const view = this.em.create(ArticleView, {
             articleId: article.id,
             userId,
             sessionId,
         });
-        article.viewCount += 1;
         await this.em.persistAndFlush(view);
+
+        // 5. Race-safe counter increment via raw SQL
+        await this.em.getConnection().execute(
+            'UPDATE article SET view_count = view_count + 1 WHERE id = ?',
+            [article.id],
+        );
     }
 
     @CreateRequestContext()

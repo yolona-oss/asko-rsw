@@ -1,5 +1,5 @@
 import {
-    Body, Controller, Delete, Get, Param, Patch, Post, Put, Query,
+    Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Headers,
     UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
@@ -214,9 +214,10 @@ export class ArticlesController {
     async recordView(
         @Param('slug') slug: string,
         @Body() dto: RecordArticleViewDto,
+        @Headers('user-agent') userAgent: string,
         @JwtAuthUser() user?: JwtPayload,
     ) {
-        await this.contentClient.recordView(slug, user?.id, dto.sessionId);
+        await this.contentClient.recordView(slug, user?.id, dto.sessionId, dto.readTime, userAgent);
         return { message: 'View recorded' };
     }
 

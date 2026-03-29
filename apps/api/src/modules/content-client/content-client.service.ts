@@ -70,11 +70,13 @@ export class ContentClientService implements OnModuleInit {
 
     // ─── Analytics ────────────────────────────────────────────────────
 
-    recordView(slug: string, userId?: string, sessionId?: string): Promise<EmptyContentResponse> {
+    recordView(slug: string, userId?: string, sessionId?: string, readTime?: number, userAgent?: string): Promise<EmptyContentResponse> {
         return grpcCall(this.contentService.recordView({
             slug,
             userId: userId ?? '',
             sessionId: sessionId ?? '',
+            readTime: readTime ?? 0,
+            userAgent: userAgent ?? '',
         }));
     }
 

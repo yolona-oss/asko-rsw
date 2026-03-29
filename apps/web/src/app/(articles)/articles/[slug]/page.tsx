@@ -2,7 +2,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Container } from '@asko/ui';
-import { articleApi } from '@/lib/api/article';
+import {
+  fetchArticle,
+  fetchArticleImages,
+  fetchArticlePreviewImage,
+  fetchRelatedArticles,
+} from '@/lib/api/article';
 import { generateArticleHTML } from '@/lib/lexical/generate-html';
 import { ArticleViewTracker } from '@/components/articles/article-view-tracker';
 
@@ -14,8 +19,8 @@ export default async function ArticlePage({
   const { slug } = await params;
 
   const [article, images] = await Promise.all([
-    articleApi.fetchArticle(slug),
-    articleApi.fetchArticleImages(slug),
+    fetchArticle(slug),
+    fetchArticleImages(slug),
   ]);
 
   if (!article) notFound();
@@ -43,10 +48,10 @@ export default async function ArticlePage({
   const paragraphs = !richHTML ? article.text.split('\n').filter((p: string) => p.trim()) : [];
 
   // Get related articles for recommendations
-  const otherArticles = await articleApi.fetchRelatedArticles(slug);
+  const otherArticles = await fetchRelatedArticles(slug);
   const otherImageMap = new Map<string, string | null>();
   const otherImageResults = await Promise.all(
-    otherArticles.map((a) => articleApi.fetchArticlePreviewImage(a.slug)),
+    otherArticles.map((a) => fetchArticlePreviewImage(a.slug)),
   );
   otherArticles.forEach((a, i) => otherImageMap.set(a.id, otherImageResults[i]));
 

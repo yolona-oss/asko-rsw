@@ -44,4 +44,7 @@ export class UpdateArticleDto {
 export class RecordArticleViewDto {
     @IsString()
     sessionId!: string;
+
+    @IsOptional()
+    readTime?: number;
 }

@@ -1,53 +1,29 @@
 import type { IDevice, IImageAttachment, PaginatedDevices } from './types';
-import { api } from './client';
+import { serverGet } from './server-fetch';
 
 export const DEVICE_PLACEHOLDER_IMAGE = '/images/placeholder.webp';
 
 export async function fetchDevices(page: number, limit: number): Promise<PaginatedDevices> {
-  try {
-    const { data } = await api.get<PaginatedDevices>('/devices', {
-      params: { offset: page, limit },
-    });
-    return data;
-  } catch {
-    return { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
-  }
+  const data = await serverGet<PaginatedDevices>(`/devices?offset=${page}&limit=${limit}`);
+  return data ?? { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
 }
 
 export async function fetchDevice(id: string): Promise<IDevice | null> {
-  try {
-    const { data } = await api.get<IDevice>(`/devices/${id}`);
-    return data;
-  } catch {
-    return null;
-  }
+  return serverGet<IDevice>(`/devices/${id}`);
 }
 
 export async function fetchDeviceBySlug(slug: string): Promise<IDevice | null> {
-  try {
-    const { data } = await api.get<IDevice>(`/devices/slug/${slug}`);
-    return data;
-  } catch {
-    return null;
-  }
+  return serverGet<IDevice>(`/devices/slug/${slug}`);
 }
 
 export async function fetchDeviceImages(id: string): Promise<IImageAttachment[]> {
-  try {
-    const { data } = await api.get<{ images: IImageAttachment[] }>(`/devices/${id}/images`);
-    return data.images ?? [];
-  } catch {
-    return [];
-  }
+  const data = await serverGet<{ images: IImageAttachment[] }>(`/devices/${id}/images`);
+  return data?.images ?? [];
 }
 
 export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttachment[]> {
-  try {
-    const { data } = await api.get<{ images: IImageAttachment[] }>(`/devices/slug/${slug}/images`);
-    return data.images ?? [];
-  } catch {
-    return [];
-  }
+  const data = await serverGet<{ images: IImageAttachment[] }>(`/devices/slug/${slug}/images`);
+  return data?.images ?? [];
 }
 
 export async function fetchFirstDeviceImage(deviceId: string): Promise<string> {

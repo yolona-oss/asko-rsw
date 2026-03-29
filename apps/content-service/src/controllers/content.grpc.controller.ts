@@ -134,6 +134,8 @@ export class ContentGrpcController {
                 data.slug,
                 data.userId || undefined,
                 data.sessionId,
+                data.readTime || 0,
+                data.userAgent || '',
             );
             return {};
         } catch (e) { throw toGrpcError(e); }

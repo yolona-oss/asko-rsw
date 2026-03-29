@@ -62,7 +62,16 @@ export function ArticlesSection() {
         // Fetch preview images
         const articlesWithImages: ArticleData[] = await Promise.all(
           data.map(async (a) => {
-            const previewImage = await articleApi.fetchArticlePreviewImage(a.slug);
+            let previewImage: string | null = null;
+            try {
+              const { data: imgData } = await articleApi.getImages(a.id);
+              const imgs = (imgData.images ?? []).sort((x, y) => x.order - y.order);
+              if (imgs.length > 0) {
+                previewImage = imgs[0].imageJson.medium?.secure_url ?? imgs[0].imageJson.original.secure_url;
+              }
+            } catch {
+              // ignore
+            }
             return {
               id: a.id,
               title: a.title,

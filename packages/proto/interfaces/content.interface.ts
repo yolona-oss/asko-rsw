@@ -36,6 +36,8 @@ export interface RecordViewRequest {
     slug: string;
     userId: string;
     sessionId: string;
+    readTime: number;
+    userAgent: string;
 }
 
 export interface FindRelatedArticlesRequest {

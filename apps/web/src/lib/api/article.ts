@@ -1,8 +1,9 @@
 import type { CreateArticleDto, UpdateArticleDto } from '@asko/shared/client';
 import type { IArticle, IImageAttachment, PaginatedArticles } from './types';
 import { api } from './client';
+import { serverGet } from './server-fetch';
 
-// ── Client-side API (uses axios) ────────────────────────────────────
+// ── Client-side API (uses axios — requires Redux store) ──────────────
 
 export const articleApi = {
   getAll(params?: { offset?: number; limit?: number; search?: string }) {
@@ -49,61 +50,40 @@ export const articleApi = {
     return api.put<void>(`/articles/${articleId}/images/reorder`, imageIds);
   },
 
-  recordView(slug: string, sessionId: string) {
-    return api.post<{ message: string }>(`/articles/${slug}/view`, { sessionId });
-  },
-
-  async fetchArticles(page: number, limit: number): Promise<PaginatedArticles> {
-    try {
-      const { data } = await api.get<PaginatedArticles>('/articles', {
-        params: { offset: page, limit },
-      });
-      return data;
-    } catch {
-      return { data: [] as IArticle[], overallCount: 0, offset: 0, limit };
-    }
-  },
-
-  async fetchArticle(slug: string): Promise<IArticle | null> {
-    try {
-      const { data } = await api.get<IArticle>(`/articles/${slug}`);
-      return data;
-    } catch {
-      return null;
-    }
-  },
-
-  async fetchArticleImages(slug: string): Promise<IImageAttachment[]> {
-    try {
-      const { data } = await api.get<{ images: IImageAttachment[] }>(`/articles/${slug}/images`);
-      return data.images ?? [];
-    } catch {
-      return [];
-    }
-  },
-
-  async fetchArticlePreviewImage(slug: string): Promise<string | null> {
-    const images = await this.fetchArticleImages(slug);
-    if (!images.length) return null;
-    const preview = images.sort((a, b) => a.order - b.order)[0];
-    return preview.imageJson.medium?.secure_url ?? preview.imageJson.original.secure_url;
-  },
-
-  async fetchRelatedArticles(slug: string): Promise<IArticle[]> {
-    try {
-      const { data } = await api.get<{ data: IArticle[] }>(`/articles/${slug}/related`);
-      return data.data ?? [];
-    } catch {
-      return [];
-    }
-  },
-
-  async fetchRecommendedArticles(): Promise<IArticle[]> {
-    try {
-      const { data } = await api.get<{ data: IArticle[] }>('/articles/recommended');
-      return data.data ?? [];
-    } catch {
-      return [];
-    }
+  recordView(slug: string, sessionId: string, readTime?: number) {
+    return api.post<{ message: string }>(`/articles/${slug}/view`, { sessionId, readTime });
   },
 };
+
+// ── Server-side functions (for server components — uses fetch) ────────
+
+export async function fetchArticles(page: number, limit: number): Promise<PaginatedArticles> {
+  const data = await serverGet<PaginatedArticles>(`/articles?offset=${page}&limit=${limit}`);
+  return data ?? { data: [] as IArticle[], overallCount: 0, offset: 0, limit };
+}
+
+export async function fetchArticle(slug: string): Promise<IArticle | null> {
+  return serverGet<IArticle>(`/articles/${slug}`);
+}
+
+export async function fetchArticleImages(slug: string): Promise<IImageAttachment[]> {
+  const data = await serverGet<{ images: IImageAttachment[] }>(`/articles/${slug}/images`);
+  return data?.images ?? [];
+}
+
+export async function fetchArticlePreviewImage(slug: string): Promise<string | null> {
+  const images = await fetchArticleImages(slug);
+  if (!images.length) return null;
+  const preview = images.sort((a, b) => a.order - b.order)[0];
+  return preview.imageJson.medium?.secure_url ?? preview.imageJson.original.secure_url;
+}
+
+export async function fetchRelatedArticles(slug: string): Promise<IArticle[]> {
+  const data = await serverGet<{ data: IArticle[] }>(`/articles/${slug}/related`);
+  return data?.data ?? [];
+}
+
+export async function fetchRecommendedArticles(): Promise<IArticle[]> {
+  const data = await serverGet<{ data: IArticle[] }>('/articles/recommended');
+  return data?.data ?? [];
+}

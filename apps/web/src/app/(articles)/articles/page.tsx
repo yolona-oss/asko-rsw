@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
-import { articleApi } from '@/lib/api/article';
+import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article';
 
 const LIMIT = 12;
 
@@ -13,12 +13,12 @@ export default async function ArticlesListPage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
 
-  const { data: articles, overallCount: total } = await articleApi.fetchArticles(page, LIMIT);
+  const { data: articles, overallCount: total } = await fetchArticles(page, LIMIT);
   const totalPages = Math.ceil(total / LIMIT);
 
   const imageMap = new Map<string, string | null>();
   const imageResults = await Promise.all(
-    articles.map((a) => articleApi.fetchArticlePreviewImage(a.slug)),
+    articles.map((a) => fetchArticlePreviewImage(a.slug)),
   );
   articles.forEach((a, i) => imageMap.set(a.id, imageResults[i]));
 
@@ -129,13 +129,13 @@ export default async function ArticlesListPage({
 }
 
 async function RecommendedSection({ currentArticleIds }: { currentArticleIds: string[] }) {
-  const recommended = await articleApi.fetchRecommendedArticles();
+  const recommended = await fetchRecommendedArticles();
   const filtered = recommended.filter((a) => !currentArticleIds.includes(a.id)).slice(0, 4);
 
   if (filtered.length === 0) return null;
 
   const recImageResults = await Promise.all(
-    filtered.map((a) => articleApi.fetchArticlePreviewImage(a.slug)),
+    filtered.map((a) => fetchArticlePreviewImage(a.slug)),
   );
 
   return (
