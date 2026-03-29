@@ -8,9 +8,9 @@ import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
 import { RichTextEditor, plainTextToLexicalState } from './rich-text-editor';
+import { ArticleImages } from './article-images';
 import { ArticleEdges } from './article-edges';
 import { TagInput } from './tag-input';
-import { ArticleImagesPreview } from './article-images-preview';
 
 export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormProps) {
   const router = useRouter();
@@ -151,8 +151,8 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         </FormField>
 
         {currentArticleId && (
-          <FormField label="Изображения" variant="bold">
-            <ArticleImagesPreview articleId={currentArticleId} />
+          <FormField label="Превью и основное изображение" variant="bold">
+            <ArticleImages articleId={currentArticleId} />
           </FormField>
         )}
 
