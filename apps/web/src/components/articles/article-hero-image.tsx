@@ -21,7 +21,7 @@ export function ArticleHeroImage({ images, alt }: ArticleHeroImageProps) {
                 alt={alt}
                 fill
                 className="object-cover"
-                sizes="738px"
+                sizes="(max-width: 768px) 100vw, 738px"
                 priority
             />
         </div>

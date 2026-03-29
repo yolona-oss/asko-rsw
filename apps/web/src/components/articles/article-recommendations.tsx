@@ -15,8 +15,8 @@ export function ArticleRecommendations({
     if (articles.length === 0) return null;
 
     return (
-        <section className="py-8 md:py-12 border-t border-border-light/30">
-            <h2 className="text-[32px] leading-9 font-medium tracking-[-0.01em] text-text-main mb-8 md:mb-12">
+        <section className="flex flex-col gap-12 items-start">
+            <h2 className="text-[32px] leading-[36px] font-medium tracking-[-0.32px] text-[#323232]">
                 {title}
             </h2>
 

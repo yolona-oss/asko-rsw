@@ -17,7 +17,7 @@ export function ArticlePreviewCard({
     text,
     imageUrl,
     previewLength = 200,
-    imageSizes = '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw',
+    imageSizes = '262px',
     className,
 }: ArticlePreviewCardProps) {
     const previewText = text.length > previewLength
@@ -29,7 +29,7 @@ export function ArticlePreviewCard({
             href={`/articles/${slug}`}
             className={`group flex flex-col gap-6 ${className ?? ''}`}
         >
-            <div className="relative w-full aspect-[262/204] overflow-hidden">
+            <div className="relative w-full h-[204px] overflow-hidden">
                 {imageUrl ? (
                     <Image
                         src={imageUrl}
@@ -46,14 +46,14 @@ export function ArticlePreviewCard({
             </div>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#150F0F] max-w-[204px]">
+                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.24px] text-[#150F0F] max-w-[204px]">
                         {title}
                     </h3>
-                    <p className="text-base leading-[22px] tracking-[-0.01em] text-[#150F0F]">
+                    <p className="text-base leading-[22px] tracking-[-0.16px] text-[#150F0F]">
                         {previewText}
                     </p>
                 </div>
-                <span className="text-sm font-bold text-text-main underline tracking-[-0.01em]">
+                <span className="text-sm font-bold text-[#323232] underline tracking-[-0.14px] leading-[18px]">
                     Читать статью...
                 </span>
             </div>

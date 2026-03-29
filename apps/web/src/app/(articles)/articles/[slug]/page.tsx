@@ -39,40 +39,47 @@ export default async function ArticlePage({
   const nextArticle = otherArticles[0] ?? null;
 
   return (
-    <div className="bg-page-bg">
+    <div className="bg-[#f1f1f1]">
       <ArticleViewTracker slug={slug} />
       <Container>
-        <div className="py-8 md:py-12">
+        <div className="py-8 md:py-12 px-4 md:px-0">
           <ArticleBreadcrumb />
 
-          {/* Article — max-width 738px, gap 32px between title and content block */}
-          <div className="flex flex-col gap-8 max-w-[738px] mb-12 md:mb-16">
-            {/* Title */}
-            <h1 className="text-[32px] md:text-[42px] leading-[36px] md:leading-[46px] font-normal tracking-[-0.01em] text-[#323232]">
-              {article.title}
-            </h1>
+          {/* Article content — 738px max on desktop, full width on mobile */}
+          <div className="max-w-[738px]">
 
-            {/* Image + text block — gap 32px between image and paragraphs */}
-            <div className="flex flex-col gap-8">
+            {/* Mobile: title + image grouped (gap-4), Desktop: title alone then gap-8 */}
+            <div className="flex flex-col gap-4 md:gap-8">
+              <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-[#323232]">
+                {article.title}
+              </h1>
+
               <ArticleHeroImage images={images} alt={article.title} />
-
-              {/* Text paragraphs — gap 24px between paragraphs */}
-              <div className="flex flex-col gap-6">
-                <ArticleContent content={article.content} text={article.text} />
-              </div>
             </div>
 
+            {/* Text paragraphs — gap-6 (24px) between paragraphs */}
+            {/* Mobile: gap-6 from image, Desktop: gap-8 (32px) from image */}
+            <div className="mt-6 md:mt-8">
+              <ArticleContent content={article.content} text={article.text} />
+            </div>
+
+            {/* Button — gap-8 (32px) from text, full width on mobile */}
             {nextArticle && (
-              <Link
-                href={`/articles/${nextArticle.slug}`}
-                className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white bg-[#D7102A] shadow-sm w-full md:w-auto self-start"
-              >
-                Следующая статья
-              </Link>
+              <div className="mt-8">
+                <Link
+                  href={`/articles/${nextArticle.slug}`}
+                  className="inline-flex items-center justify-center px-6 py-[9.5px] min-h-[40px] h-[46px] md:h-auto md:w-auto w-full text-sm font-medium text-white bg-[#D7102A] shadow-sm tracking-[0.07px]"
+                >
+                  Следующая статья
+                </Link>
+              </div>
             )}
           </div>
 
-          <ArticleRecommendations articles={otherArticles} imageMap={otherImageMap} />
+          {/* Recommendations — full width, below article */}
+          <div className="mt-12 md:mt-16">
+            <ArticleRecommendations articles={otherArticles} imageMap={otherImageMap} />
+          </div>
         </div>
       </Container>
     </div>
