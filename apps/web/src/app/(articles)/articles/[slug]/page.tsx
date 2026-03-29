@@ -37,7 +37,14 @@ export default async function ArticlePage({
         : null;
 
   // Render content: rich HTML or plain text fallback
-  const richHTML = article.content ? generateArticleHTML(article.content) : null;
+  let richHTML: string | null = null;
+  if (article.content) {
+    try {
+      richHTML = generateArticleHTML(article.content);
+    } catch {
+      // Lexical render failed (e.g., SSR without DOM) — fall back to plain text
+    }
+  }
   const paragraphs = !richHTML ? article.text.split('\n').filter((p: string) => p.trim()) : [];
 
   // Get related articles for recommendations
