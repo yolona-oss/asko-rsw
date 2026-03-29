@@ -16,6 +16,7 @@ service ContentService {
     rpc UnlinkArticles (UnlinkArticlesRequest) returns (EmptyContentResponse);
     rpc GetArticleEdges (GetArticleEdgesRequest) returns (ArticleEdgesResponse);
     rpc GetArticleGraph (EmptyContentRequest) returns (ArticleGraphResponse);
+    rpc GetTagStats (EmptyContentRequest) returns (TagStatsResponse);
 }
 
 // ─── Record ────────────────────────────────────────────────────────────
@@ -136,4 +137,14 @@ message ArticleListResponse {
 message ArticleGraphResponse {
     repeated ArticleRecord articles = 1;
     repeated ArticleEdgeRecord edges = 2;
+}
+
+message TagStat {
+    string tag = 1;
+    int32 count = 2;
+    int32 totalViews = 3;
+}
+
+message TagStatsResponse {
+    repeated TagStat tags = 1;
 }

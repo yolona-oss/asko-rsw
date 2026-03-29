@@ -121,6 +121,16 @@ export interface ArticleGraphResponse {
     edges: ArticleEdgeRecord[];
 }
 
+export interface TagStat {
+    tag: string;
+    count: number;
+    totalViews: number;
+}
+
+export interface TagStatsResponse {
+    tags: TagStat[];
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface ContentServiceClient {
@@ -137,4 +147,5 @@ export interface ContentServiceClient {
     unlinkArticles(data: UnlinkArticlesRequest): Observable<EmptyContentResponse>;
     getArticleEdges(data: GetArticleEdgesRequest): Observable<ArticleEdgesResponse>;
     getArticleGraph(data: {}): Observable<ArticleGraphResponse>;
+    getTagStats(data: {}): Observable<TagStatsResponse>;
 }

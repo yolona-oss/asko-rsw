@@ -29,7 +29,7 @@ apps/
   repair-service/         # Repairs, dealers, devices, certificates (:5003, gRPC)
   notification-service/   # Notifications (:5004, gRPC + RabbitMQ consumer)
   chat-service/           # Chat, presence, messaging (:5005, gRPC + RabbitMQ publisher/consumer)
-  content-service/        # Articles, views, recommendations (:5010, gRPC)
+  content-service/        # Articles, views, recommendations, weighted graph (:5010, gRPC)
   web/                    # Next.js frontend (:3000)
 
 packages/
@@ -306,17 +306,28 @@ Real-time chat, conversations, messaging, user presence, activity statuses.
 
 Article management, rich content (Lexical editor), view analytics, tag-based recommendations.
 
-**Entities** (2): Article, ArticleView
+**Entities** (3): Article, ArticleView, ArticleEdge
 
-**Services**: ContentService (CRUD, slug generation, plain-text extraction from Lexical JSON, view tracking with hourly dedup, tag-based related articles, reading-history recommendations)
+**Services**:
+* ContentService — CRUD, slug generation, plain-text extraction from Lexical JSON, view tracking (YouTube-style: 5s read time threshold, 5min dedup, bot filtering, race-safe SQL counter), graph-based related/recommended articles
+* GraphService — weighted article graph management. Recalculates tag edges on article create/update, rebuilds co-view edges every hour. Supports manual admin linking.
 
-**gRPC controller**: ContentGrpcController (9 methods: CreateArticle, UpdateArticle, DeleteArticle, DeleteAllArticles, FindAllArticles, FindArticleBySlug, RecordView, FindRelatedArticles, FindRecommendedArticles)
+**gRPC controller**: ContentGrpcController (13 methods: CreateArticle, UpdateArticle, DeleteArticle, DeleteAllArticles, FindAllArticles, FindArticleBySlug, RecordView, FindRelatedArticles, FindRecommendedArticles, LinkArticles, UnlinkArticles, GetArticleEdges, GetArticleGraph)
 
-**Article content**: Stored as Lexical editor state JSON in `content` (JSONB) column. Plain text auto-extracted to `text` column for search/preview/SEO. Backward compatible with legacy plain-text articles.
+**Article content**: Stored as Lexical editor state JSON in `content` (JSONB) column. Plain text auto-extracted to `text` column for search/preview/SEO. Images uploaded via file-service and inserted inline into Lexical content (no separate image management). Backward compatible with legacy plain-text articles.
 
-**View tracking**: ArticleView entity records views per user/session, deduplicated to 1 per hour. Denormalized `viewCount` on Article for fast sorting.
+**Weighted article graph** (ArticleEdge entity):
+* Three signal types: tag overlap (40% weight), co-view Jaccard similarity (60% weight), manual admin links (overrides)
+* Combined weight: `max(manual, tag * 0.4 + coview * 0.6)`
+* Tag edges recalculated on article create/update (immediate)
+* Co-view edges rebuilt every hour (periodic)
+* Related articles and recommendations powered by graph traversal
 
-**Recommendations**: Authenticated users get tag-based recommendations from reading history. Anonymous users get popularity-based (viewCount). Related articles computed by tag overlap.
+**View tracking** (YouTube-style):
+* 5-second minimum read time threshold (frontend timer)
+* 5-minute dedup window per user/session per article
+* Race-safe counter via raw SQL `UPDATE ... SET view_count = view_count + 1`
+* Bot filtering via user-agent pattern matching (15+ patterns)
 
 **Stack**: NestJS, MikroORM, PostgreSQL, gRPC
 
@@ -342,9 +353,13 @@ Next.js App Router frontend. Communicates with API gateway only. Never calls mic
 
 **State management**: Redux Toolkit for auth state, React Query for server state.
 
-**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Server-side HTML generation in `src/lib/lexical/generate-html.ts` (pure function, no DOM required).
+**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Images uploaded via toolbar directly into article content (no separate image management). Server-side HTML generation in `src/lib/lexical/generate-html.ts` (pure function, no DOM required).
 
-**Analytics**: Yandex Metrika integration via `src/components/YandexMetrika.tsx`. Configured with `NEXT_PUBLIC_YM_ID` env var.
+**Article graph admin UI**:
+* Interactive force-directed graph visualization at `/account/articles/graph` using `react-force-graph-2d`. Nodes sized by viewCount, edges color-coded (green=tag, blue=view, red=manual).
+* Edge management table on article edit page (`src/components/account/admin/article-form/article-edges.tsx`). Shows connections, allows manual linking/unlinking with weight slider.
+
+**Analytics**: Yandex Metrika integration via `src/components/YandexMetrika.tsx`. Configured with `NEXT_PUBLIC_YM_ID` env var. YouTube-style view tracking via `src/components/articles/article-view-tracker.tsx` (5s threshold, dedup, bot filtering).
 
 **Env**: `NEXT_PUBLIC_API_URL` — API gateway URL (default: `http://localhost:4000`), `NEXT_PUBLIC_YM_ID` — Yandex Metrika counter ID (optional)
 
@@ -441,7 +456,7 @@ Must run `pnpm run build` after any change.
 | repair-service | RepairRequest, Device, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart |
 | notification-service | NotificationEntity |
 | chat-service | Conversation, ConversationParticipant, Message, UserPresence |
-| content-service | Article, ArticleView |
+| content-service | Article, ArticleView, ArticleEdge |
 
 ---
 
@@ -745,7 +760,7 @@ All Docker builds use turborepo prune.
 * Never use CSS files or styled-components in `packages/ui` — Tailwind classes only.
 * API must NEVER access chat-service database directly — always use gRPC.
 * API must NEVER access content-service database directly — always use gRPC.
-* content-service owns Article and ArticleView entities.
+* content-service owns Article, ArticleView, and ArticleEdge entities.
 * Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
 * **Client components (`'use client'`)** must use the Axios `api` instance from `src/lib/api/client.ts` for API calls — never raw `fetch()`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
 * **Server components** must use `serverGet()` from `src/lib/api/server-fetch.ts` for API calls — never the Axios client (it depends on Redux store which doesn't exist on the server). The `server-only` import prevents accidental use in client components.

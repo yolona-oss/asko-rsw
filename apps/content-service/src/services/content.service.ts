@@ -167,6 +167,25 @@ export class ContentService {
     }
 
     @CreateRequestContext()
+    async getTagStats(): Promise<{ tag: string; count: number; totalViews: number }[]> {
+        const articles = await this.em.find(Article, {});
+        const stats = new Map<string, { count: number; totalViews: number }>();
+
+        for (const article of articles) {
+            for (const tag of article.tags ?? []) {
+                const existing = stats.get(tag) ?? { count: 0, totalViews: 0 };
+                existing.count += 1;
+                existing.totalViews += article.viewCount;
+                stats.set(tag, existing);
+            }
+        }
+
+        return [...stats.entries()]
+            .map(([tag, s]) => ({ tag, count: s.count, totalViews: s.totalViews }))
+            .sort((a, b) => b.count - a.count);
+    }
+
+    @CreateRequestContext()
     async findBySlug(slug: string): Promise<Article> {
         const article = await this.em.findOne(Article, { slug })
             ?? await this.em.findOne(Article, { id: slug });

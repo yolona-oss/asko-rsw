@@ -203,6 +203,13 @@ export class ArticlesController {
         };
     }
 
+    @RequiredRoles(...ADMIN_ROLES)
+    @Get('tags/stats')
+    @ApiOkResponse()
+    async getTagStats() {
+        return this.contentClient.getTagStats();
+    }
+
     @Public()
     @Get(':slug')
     @ApiOkResponse({ type: ArticleResponseDto })

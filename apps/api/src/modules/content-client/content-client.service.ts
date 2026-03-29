@@ -9,6 +9,7 @@ import type {
     ArticleListResponse,
     ArticleEdgesResponse,
     ArticleGraphResponse,
+    TagStatsResponse,
     EmptyContentResponse,
     DeleteCountResponse,
 } from '@asko/proto';
@@ -111,5 +112,9 @@ export class ContentClientService implements OnModuleInit {
 
     getArticleGraph(): Promise<ArticleGraphResponse> {
         return grpcCall(this.contentService.getArticleGraph({}));
+    }
+
+    getTagStats(): Promise<TagStatsResponse> {
+        return grpcCall(this.contentService.getTagStats({}));
     }
 }

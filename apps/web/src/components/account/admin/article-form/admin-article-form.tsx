@@ -9,6 +9,8 @@ import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
 import { RichTextEditor, plainTextToLexicalState } from './rich-text-editor';
 import { ArticleEdges } from './article-edges';
+import { TagInput } from './tag-input';
+import { ArticleImagesPreview } from './article-images-preview';
 
 export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormProps) {
   const router = useRouter();
@@ -135,14 +137,8 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
           </FormField>
         )}
 
-        <FormField label="Теги (через запятую)" variant="bold">
-          <Input
-            type="text"
-            placeholder="ремонт, ASKO, обслуживание"
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            className="max-w-[500px]"
-          />
+        <FormField label="Теги" variant="bold">
+          <TagInput value={tagsInput} onChange={setTagsInput} />
         </FormField>
 
         <FormField label="Текст статьи" variant="bold">
@@ -153,6 +149,12 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
             onRequestArticleId={handleRequestArticleId}
           />
         </FormField>
+
+        {currentArticleId && (
+          <FormField label="Изображения" variant="bold">
+            <ArticleImagesPreview articleId={currentArticleId} />
+          </FormField>
+        )}
 
         {currentArticleId && (
           <FormField label="Связи с другими статьями" variant="bold">

@@ -211,4 +211,12 @@ export class ContentGrpcController {
             };
         } catch (e) { throw toGrpcError(e); }
     }
+
+    @GrpcMethod('ContentService', 'GetTagStats')
+    async getTagStats() {
+        try {
+            const tags = await this.contentService.getTagStats();
+            return { tags };
+        } catch (e) { throw toGrpcError(e); }
+    }
 }
