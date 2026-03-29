@@ -70,6 +70,7 @@ export class ArticlesController {
         const result = await this.contentClient.updateArticle(
             id,
             dto.title,
+            dto.slug,
             dto.text,
             dto.content ? JSON.stringify(dto.content) : undefined,
             dto.tags,
@@ -91,6 +92,37 @@ export class ArticlesController {
     async remove(@Param('id') id: string) {
         await this.contentClient.deleteArticle(id);
         return { message: 'Article deleted' };
+    }
+
+    // ── Admin: graph (manual linking) ──
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Post(':id/link')
+    @ApiCreatedResponse({ type: MessageResponseDto })
+    async linkArticle(
+        @Param('id') id: string,
+        @Body() body: { targetId: string; weight: number },
+    ) {
+        await this.contentClient.linkArticles(id, body.targetId, body.weight);
+        return { message: 'Articles linked' };
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Delete(':id/link/:targetId')
+    @ApiOkResponse({ type: MessageResponseDto })
+    async unlinkArticle(
+        @Param('id') id: string,
+        @Param('targetId') targetId: string,
+    ) {
+        await this.contentClient.unlinkArticles(id, targetId);
+        return { message: 'Articles unlinked' };
+    }
+
+    @RequiredRoles(...ADMIN_ROLES)
+    @Get(':id/edges')
+    @ApiOkResponse()
+    async getEdges(@Param('id') id: string) {
+        return this.contentClient.getArticleEdges(id);
     }
 
     // ── Admin: images ──

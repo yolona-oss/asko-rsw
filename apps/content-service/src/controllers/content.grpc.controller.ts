@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { ContentService } from 'services/content.service';
+import { GraphService } from 'services/graph.service';
 import { AppError } from 'common/error';
 import type { Article } from 'entities/article.entity';
 import type {
@@ -13,6 +14,9 @@ import type {
     RecordViewRequest,
     FindRelatedArticlesRequest,
     FindRecommendedArticlesRequest,
+    LinkArticlesRequest,
+    UnlinkArticlesRequest,
+    GetArticleEdgesRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -48,7 +52,10 @@ function articleToRecord(entity: Article) {
 
 @Controller()
 export class ContentGrpcController {
-    constructor(private readonly contentService: ContentService) {}
+    constructor(
+        private readonly contentService: ContentService,
+        private readonly graphService: GraphService,
+    ) {}
 
     @GrpcMethod('ContentService', 'CreateArticle')
     async createArticle(data: CreateArticleRequest) {
@@ -69,6 +76,7 @@ export class ContentGrpcController {
         try {
             const dto: Record<string, any> = {};
             if (data.title) dto.title = data.title;
+            if (data.slug) dto.slug = data.slug;
             if (data.text) dto.text = data.text;
             if (data.content) dto.content = JSON.parse(data.content);
             if (data.tags?.length) dto.tags = data.tags;
@@ -147,6 +155,38 @@ export class ContentGrpcController {
                 data.limit || 8,
             );
             return { data: articles.map(articleToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('ContentService', 'LinkArticles')
+    async linkArticles(data: LinkArticlesRequest) {
+        try {
+            await this.graphService.setManualEdge(data.sourceId, data.targetId, data.weight);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('ContentService', 'UnlinkArticles')
+    async unlinkArticles(data: UnlinkArticlesRequest) {
+        try {
+            await this.graphService.removeManualEdge(data.sourceId, data.targetId);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('ContentService', 'GetArticleEdges')
+    async getArticleEdges(data: GetArticleEdgesRequest) {
+        try {
+            const edges = await this.graphService.getEdges(data.articleId);
+            return {
+                edges: edges.map((e) => ({
+                    id: e.id,
+                    sourceId: e.sourceId,
+                    targetId: e.targetId,
+                    weight: e.weight,
+                    edgeType: e.edgeType,
+                })),
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 }

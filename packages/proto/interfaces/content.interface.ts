@@ -12,6 +12,7 @@ export interface CreateArticleRequest {
 export interface UpdateArticleRequest {
     id: string;
     title: string;
+    slug: string;
     text: string;
     content: string;
     tags: string[];
@@ -61,7 +62,36 @@ export interface ArticleRecord {
     updatedAt: string;
 }
 
+export interface LinkArticlesRequest {
+    sourceId: string;
+    targetId: string;
+    weight: number;
+}
+
+export interface UnlinkArticlesRequest {
+    sourceId: string;
+    targetId: string;
+}
+
+export interface GetArticleEdgesRequest {
+    articleId: string;
+}
+
+// ─── Records ────────────────────────────────────────────────────────────
+
+export interface ArticleEdgeRecord {
+    id: string;
+    sourceId: string;
+    targetId: string;
+    weight: number;
+    edgeType: string;
+}
+
 // ─── Responses ──────────────────────────────────────────────────────────
+
+export interface ArticleEdgesResponse {
+    edges: ArticleEdgeRecord[];
+}
 
 export interface EmptyContentResponse {}
 
@@ -96,4 +126,7 @@ export interface ContentServiceClient {
     recordView(data: RecordViewRequest): Observable<EmptyContentResponse>;
     findRelatedArticles(data: FindRelatedArticlesRequest): Observable<ArticleListResponse>;
     findRecommendedArticles(data: FindRecommendedArticlesRequest): Observable<ArticleListResponse>;
+    linkArticles(data: LinkArticlesRequest): Observable<EmptyContentResponse>;
+    unlinkArticles(data: UnlinkArticlesRequest): Observable<EmptyContentResponse>;
+    getArticleEdges(data: GetArticleEdgesRequest): Observable<ArticleEdgesResponse>;
 }

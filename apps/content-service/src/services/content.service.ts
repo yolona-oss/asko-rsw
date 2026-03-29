@@ -3,6 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
 import { AppErrors } from 'common/error';
+import { GraphService } from './graph.service';
 
 function slugify(text: string): string {
     return text
@@ -32,7 +33,10 @@ function extractFromNode(node: Record<string, any>): string {
 
 @Injectable()
 export class ContentService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly graphService: GraphService,
+    ) {}
 
     @CreateRequestContext()
     async create(dto: {
@@ -58,12 +62,19 @@ export class ContentService {
             tags: dto.tags,
         });
         await this.em.persistAndFlush(article);
+
+        // Recalculate tag edges for the new article
+        if (article.tags?.length) {
+            this.graphService.recalculateTagEdges(article.id).catch(() => {});
+        }
+
         return article;
     }
 
     @CreateRequestContext()
     async update(id: string, dto: {
         title?: string;
+        slug?: string;
         text?: string;
         content?: Record<string, any>;
         tags?: string[];
@@ -71,7 +82,19 @@ export class ContentService {
         const article = await this.em.findOne(Article, { id });
         if (!article) throw AppErrors.articleNotFound();
 
-        if (dto.title && dto.title !== article.title) {
+        // If slug is explicitly provided, use it (with uniqueness check)
+        if (dto.slug && dto.slug !== article.slug) {
+            const baseSlug = slugify(dto.slug);
+            let slug = baseSlug;
+            let counter = 1;
+            while (true) {
+                const existing = await this.em.findOne(Article, { slug });
+                if (!existing || existing.id === id) break;
+                slug = `${baseSlug}-${counter++}`;
+            }
+            article.slug = slug;
+        } else if (dto.title && dto.title !== article.title && !dto.slug) {
+            // Auto-generate slug from new title if slug wasn't explicitly set
             const baseSlug = slugify(dto.title);
             let slug = baseSlug;
             let counter = 1;
@@ -89,6 +112,12 @@ export class ContentService {
 
         this.em.assign(article, dto);
         await this.em.flush();
+
+        // Recalculate tag edges if tags changed
+        if (dto.tags) {
+            this.graphService.recalculateTagEdges(article.id).catch(() => {});
+        }
+
         return article;
     }
 
@@ -152,40 +181,34 @@ export class ContentService {
     @CreateRequestContext()
     async findRelated(slug: string, limit = 4): Promise<Article[]> {
         const article = await this.findBySlugInternal(slug);
-        const tags = article.tags ?? [];
 
-        if (tags.length === 0) {
-            return this.em.find(
+        // Use weighted graph for related articles
+        const connected = await this.graphService.getConnected(article.id, limit);
+
+        if (connected.length > 0) {
+            const ids = connected.map((c) => c.articleId);
+            const articles = await this.em.find(Article, { id: { $in: ids } });
+            // Preserve weight order
+            const articleMap = new Map(articles.map((a) => [a.id, a]));
+            const result = ids.map((id) => articleMap.get(id)).filter(Boolean) as Article[];
+            if (result.length >= limit) return result.slice(0, limit);
+
+            // Pad with popular articles if graph doesn't have enough
+            const excludeIds = new Set([article.id, ...ids]);
+            const padding = await this.em.find(
                 Article,
-                { id: { $ne: article.id } },
-                { orderBy: { createdAt: 'DESC' }, limit },
+                { id: { $nin: [...excludeIds] } },
+                { orderBy: { viewCount: 'DESC', createdAt: 'DESC' }, limit: limit - result.length },
             );
+            return [...result, ...padding];
         }
 
-        const all = await this.em.find(
+        // Fallback: popular articles
+        return this.em.find(
             Article,
             { id: { $ne: article.id } },
-            { orderBy: { viewCount: 'DESC', createdAt: 'DESC' } },
+            { orderBy: { viewCount: 'DESC', createdAt: 'DESC' }, limit },
         );
-
-        const scored = all
-            .map((a) => {
-                const overlap = (a.tags ?? []).filter((t) => tags.includes(t)).length;
-                return { article: a, overlap };
-            })
-            .filter((s) => s.overlap > 0)
-            .sort((a, b) => b.overlap - a.overlap || b.article.viewCount - a.article.viewCount);
-
-        if (scored.length >= limit) {
-            return scored.slice(0, limit).map((s) => s.article);
-        }
-
-        const relatedIds = new Set(scored.map((s) => s.article.id));
-        const remaining = all
-            .filter((a) => !relatedIds.has(a.id))
-            .slice(0, limit - scored.length);
-
-        return [...scored.map((s) => s.article), ...remaining];
     }
 
     @CreateRequestContext()
@@ -197,10 +220,11 @@ export class ContentService {
             });
         }
 
+        // Get user's recently viewed articles
         const recentViews = await this.em.find(
             ArticleView,
             { userId },
-            { orderBy: { viewedAt: 'DESC' }, limit: 50 },
+            { orderBy: { viewedAt: 'DESC' }, limit: 20 },
         );
 
         if (recentViews.length === 0) {
@@ -210,39 +234,51 @@ export class ContentService {
             });
         }
 
-        const viewedArticleIds = [...new Set(recentViews.map((v) => v.articleId))];
-        const viewedArticles = await this.em.find(Article, { id: { $in: viewedArticleIds } });
+        const viewedIds = [...new Set(recentViews.map((v) => v.articleId))];
 
-        const tagFreq = new Map<string, number>();
-        for (const a of viewedArticles) {
-            for (const tag of a.tags ?? []) {
-                tagFreq.set(tag, (tagFreq.get(tag) ?? 0) + 1);
+        // Walk the graph: collect neighbors of all viewed articles, accumulate weights
+        const candidateScores = new Map<string, number>();
+        for (const viewedId of viewedIds) {
+            const connected = await this.graphService.getConnected(viewedId, 10);
+            for (const c of connected) {
+                if (viewedIds.includes(c.articleId)) continue; // skip already read
+                candidateScores.set(
+                    c.articleId,
+                    (candidateScores.get(c.articleId) ?? 0) + c.weight,
+                );
             }
         }
 
-        if (tagFreq.size === 0) {
-            return this.em.find(Article, {}, {
-                orderBy: { viewCount: 'DESC', createdAt: 'DESC' },
-                limit,
-            });
+        if (candidateScores.size === 0) {
+            return this.em.find(
+                Article,
+                { id: { $nin: viewedIds } },
+                { orderBy: { viewCount: 'DESC', createdAt: 'DESC' }, limit },
+            );
         }
 
-        const candidates = await this.em.find(
-            Article,
-            { id: { $nin: viewedArticleIds } },
-            { orderBy: { viewCount: 'DESC', createdAt: 'DESC' } },
-        );
+        // Sort by accumulated graph weight
+        const sorted = [...candidateScores.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, limit)
+            .map(([id]) => id);
 
-        const scored = candidates.map((a) => {
-            const tagScore = (a.tags ?? []).reduce(
-                (sum, t) => sum + (tagFreq.get(t) ?? 0), 0,
+        const articles = await this.em.find(Article, { id: { $in: sorted } });
+        const articleMap = new Map(articles.map((a) => [a.id, a]));
+        const result = sorted.map((id) => articleMap.get(id)).filter(Boolean) as Article[];
+
+        // Pad if not enough
+        if (result.length < limit) {
+            const excludeIds = [...viewedIds, ...sorted];
+            const padding = await this.em.find(
+                Article,
+                { id: { $nin: excludeIds } },
+                { orderBy: { viewCount: 'DESC', createdAt: 'DESC' }, limit: limit - result.length },
             );
-            return { article: a, tagScore };
-        });
+            return [...result, ...padding];
+        }
 
-        scored.sort((a, b) => b.tagScore - a.tagScore || b.article.viewCount - a.article.viewCount);
-
-        return scored.slice(0, limit).map((s) => s.article);
+        return result;
     }
 
     private async findBySlugInternal(slug: string): Promise<Article> {

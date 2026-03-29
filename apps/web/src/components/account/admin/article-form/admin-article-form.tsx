@@ -17,6 +17,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   const isEdit = !!currentArticleId;
 
   const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
   const [content, setContent] = useState<Record<string, any> | undefined>(undefined);
   const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -31,6 +32,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
       try {
         const { data: article } = await articleApi.getOne(initialArticleId);
         setTitle(article.title ?? '');
+        setSlug(article.slug ?? '');
         setTagsInput((article.tags ?? []).join(', '));
 
         // Load rich content or convert legacy plain text
@@ -77,7 +79,9 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
-      const data = { title, content, tags };
+      const data = currentArticleId
+        ? { title, slug: slug || undefined, content, tags }
+        : { title, content, tags };
 
       if (currentArticleId) {
         await articleApi.update(currentArticleId, data);
@@ -116,6 +120,21 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
             className="max-w-[500px]"
           />
         </FormField>
+
+        {currentArticleId && (
+          <FormField label="Slug (URL)" variant="bold">
+            <Input
+              type="text"
+              placeholder="url-slug"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              className="max-w-[500px] font-mono text-sm"
+            />
+            <p className="text-xs text-text-sub mt-1">
+              /articles/{slug || '...'}
+            </p>
+          </FormField>
+        )}
 
         <FormField label="Теги (через запятую)" variant="bold">
           <Input

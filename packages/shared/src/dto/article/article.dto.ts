@@ -25,6 +25,10 @@ export class UpdateArticleDto {
 
     @IsOptional()
     @IsString()
+    slug?: string;
+
+    @IsOptional()
+    @IsString()
     text?: string;
 
     @IsOptional()

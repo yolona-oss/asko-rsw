@@ -7,6 +7,7 @@ import type {
     ArticleResponse,
     PaginatedArticlesResponse,
     ArticleListResponse,
+    ArticleEdgesResponse,
     EmptyContentResponse,
     DeleteCountResponse,
 } from '@asko/proto';
@@ -34,10 +35,11 @@ export class ContentClientService implements OnModuleInit {
         }));
     }
 
-    updateArticle(id: string, title?: string, text?: string, content?: string, tags?: string[]): Promise<ArticleResponse> {
+    updateArticle(id: string, title?: string, slug?: string, text?: string, content?: string, tags?: string[]): Promise<ArticleResponse> {
         return grpcCall(this.contentService.updateArticle({
             id,
             title: title ?? '',
+            slug: slug ?? '',
             text: text ?? '',
             content: content ?? '',
             tags: tags ?? [],
@@ -88,5 +90,19 @@ export class ContentClientService implements OnModuleInit {
             userId: userId ?? '',
             limit: limit ?? 8,
         }));
+    }
+
+    // ─── Graph (admin) ────────────────────────────────────────────────
+
+    linkArticles(sourceId: string, targetId: string, weight: number): Promise<EmptyContentResponse> {
+        return grpcCall(this.contentService.linkArticles({ sourceId, targetId, weight }));
+    }
+
+    unlinkArticles(sourceId: string, targetId: string): Promise<EmptyContentResponse> {
+        return grpcCall(this.contentService.unlinkArticles({ sourceId, targetId }));
+    }
+
+    getArticleEdges(articleId: string): Promise<ArticleEdgesResponse> {
+        return grpcCall(this.contentService.getArticleEdges({ articleId }));
     }
 }
