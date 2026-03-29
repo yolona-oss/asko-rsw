@@ -192,6 +192,17 @@ export class ArticlesController {
         return { data: (result.data ?? []).map(parseArticleRecord) };
     }
 
+    @RequiredRoles(...ADMIN_ROLES)
+    @Get('graph')
+    @ApiOkResponse()
+    async getGraph() {
+        const result = await this.contentClient.getArticleGraph();
+        return {
+            articles: (result.articles ?? []).map(parseArticleRecord),
+            edges: result.edges ?? [],
+        };
+    }
+
     @Public()
     @Get(':slug')
     @ApiOkResponse({ type: ArticleResponseDto })

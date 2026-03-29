@@ -83,6 +83,9 @@ export function AdminArticles() {
         <div className="flex-1 flex items-center gap-3">
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
             <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/articles/graph">
+              <Button variant="secondary" size="sm">Граф связей</Button>
+            </Link>
             <Link href="/account/articles/create">
               <Button size="sm">Добавить статью</Button>
             </Link>

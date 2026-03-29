@@ -200,6 +200,11 @@ export class GraphService implements OnModuleInit, OnModuleDestroy {
         return this.em.find(ArticleEdge, { sourceId: articleId }, { orderBy: { weight: 'DESC' } });
     }
 
+    @CreateRequestContext()
+    async getAllEdges(): Promise<ArticleEdge[]> {
+        return this.em.find(ArticleEdge, {}, { orderBy: { weight: 'DESC' } });
+    }
+
     // ─── Internal ─────────────────────────────────────────────────────
 
     private async upsertEdge(sourceId: string, targetId: string, weight: number, edgeType: EdgeType): Promise<void> {

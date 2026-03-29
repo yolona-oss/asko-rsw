@@ -7,8 +7,8 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
-import { ArticleImages } from './article-images';
-import { RichTextEditor, plainTextToLexicalState, type RichTextEditorHandle } from './rich-text-editor';
+import { RichTextEditor, plainTextToLexicalState } from './rich-text-editor';
+import { ArticleEdges } from './article-edges';
 
 export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormProps) {
   const router = useRouter();
@@ -24,7 +24,6 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   const [loading, setLoading] = useState(!!initialArticleId);
   const [error, setError] = useState('');
   const contentReady = useRef(false);
-  const editorRef = useRef<RichTextEditorHandle>(null);
 
   useEffect(() => {
     if (!initialArticleId) return;
@@ -148,7 +147,6 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
 
         <FormField label="Текст статьи" variant="bold">
           <RichTextEditor
-            ref={editorRef}
             content={content}
             onChange={handleContentChange}
             articleId={currentArticleId}
@@ -157,11 +155,8 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         </FormField>
 
         {currentArticleId && (
-          <FormField label="Изображения" variant="bold">
-            <ArticleImages
-              articleId={currentArticleId}
-              onInsertImage={(src) => editorRef.current?.insertImage(src)}
-            />
+          <FormField label="Связи с другими статьями" variant="bold">
+            <ArticleEdges articleId={currentArticleId} />
           </FormField>
         )}
 

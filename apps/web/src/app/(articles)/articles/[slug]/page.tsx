@@ -3,13 +3,11 @@ import { notFound } from 'next/navigation';
 import { Container } from '@asko/ui';
 import {
   fetchArticle,
-  fetchArticleImages,
   fetchArticlePreviewImage,
   fetchRelatedArticles,
 } from '@/lib/api/article.server';
 import {
   ArticleBreadcrumb,
-  ArticleHeroImage,
   ArticleContent,
   ArticleRecommendations,
   ArticleViewTracker,
@@ -21,12 +19,7 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-
-  const [article, images] = await Promise.all([
-    fetchArticle(slug),
-    fetchArticleImages(slug),
-  ]);
-
+  const article = await fetchArticle(slug);
   if (!article) notFound();
 
   const otherArticles = await fetchRelatedArticles(slug);
@@ -47,23 +40,15 @@ export default async function ArticlePage({
 
           {/* Article content — 738px max on desktop, full width on mobile */}
           <div className="max-w-[738px]">
+            <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-[#323232]">
+              {article.title}
+            </h1>
 
-            {/* Mobile: title + image grouped (gap-4), Desktop: title alone then gap-8 */}
-            <div className="flex flex-col gap-4 md:gap-8">
-              <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-[#323232]">
-                {article.title}
-              </h1>
-
-              <ArticleHeroImage images={images} alt={article.title} />
-            </div>
-
-            {/* Text paragraphs — gap-6 (24px) between paragraphs */}
-            {/* Mobile: gap-6 from image, Desktop: gap-8 (32px) from image */}
-            <div className="mt-6 md:mt-8">
+            {/* Article body — images are inline in the Lexical content */}
+            <div className="mt-4 md:mt-8">
               <ArticleContent content={article.content} text={article.text} />
             </div>
 
-            {/* Button — gap-8 (32px) from text, full width on mobile */}
             {nextArticle && (
               <div className="mt-8">
                 <Link
@@ -76,7 +61,6 @@ export default async function ArticlePage({
             )}
           </div>
 
-          {/* Recommendations — full width, below article */}
           <div className="mt-12 md:mt-16">
             <ArticleRecommendations articles={otherArticles} imageMap={otherImageMap} />
           </div>

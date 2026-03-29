@@ -191,4 +191,24 @@ export class ContentGrpcController {
             };
         } catch (e) { throw toGrpcError(e); }
     }
+
+    @GrpcMethod('ContentService', 'GetArticleGraph')
+    async getArticleGraph() {
+        try {
+            const [articles, edges] = await Promise.all([
+                this.contentService.findAllForGraph(),
+                this.graphService.getAllEdges(),
+            ]);
+            return {
+                articles: articles.map(articleToRecord),
+                edges: edges.map((e) => ({
+                    id: e.id,
+                    sourceId: e.sourceId,
+                    targetId: e.targetId,
+                    weight: e.weight,
+                    edgeType: e.edgeType,
+                })),
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
 }

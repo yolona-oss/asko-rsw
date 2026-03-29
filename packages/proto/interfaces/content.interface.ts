@@ -116,6 +116,11 @@ export interface ArticleListResponse {
     data: ArticleRecord[];
 }
 
+export interface ArticleGraphResponse {
+    articles: ArticleRecord[];
+    edges: ArticleEdgeRecord[];
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface ContentServiceClient {
@@ -131,4 +136,5 @@ export interface ContentServiceClient {
     linkArticles(data: LinkArticlesRequest): Observable<EmptyContentResponse>;
     unlinkArticles(data: UnlinkArticlesRequest): Observable<EmptyContentResponse>;
     getArticleEdges(data: GetArticleEdgesRequest): Observable<ArticleEdgesResponse>;
+    getArticleGraph(data: {}): Observable<ArticleGraphResponse>;
 }

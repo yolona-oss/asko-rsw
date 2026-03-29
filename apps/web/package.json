@@ -33,6 +33,7 @@
     "openapi-fetch": "^0.17.0",
     "react": "^19",
     "react-dom": "^19",
+    "react-force-graph-2d": "^1.29.1",
     "react-redux": "^9.2.0",
     "server-only": "^0.0.1",
     "socket.io-client": "^4.8.3",

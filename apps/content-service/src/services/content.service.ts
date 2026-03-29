@@ -162,6 +162,11 @@ export class ContentService {
     }
 
     @CreateRequestContext()
+    async findAllForGraph(): Promise<Article[]> {
+        return this.em.find(Article, {}, { orderBy: { createdAt: 'DESC' } });
+    }
+
+    @CreateRequestContext()
     async findBySlug(slug: string): Promise<Article> {
         const article = await this.em.findOne(Article, { slug })
             ?? await this.em.findOne(Article, { id: slug });

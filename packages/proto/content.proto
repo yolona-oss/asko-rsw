@@ -15,6 +15,7 @@ service ContentService {
     rpc LinkArticles (LinkArticlesRequest) returns (EmptyContentResponse);
     rpc UnlinkArticles (UnlinkArticlesRequest) returns (EmptyContentResponse);
     rpc GetArticleEdges (GetArticleEdgesRequest) returns (ArticleEdgesResponse);
+    rpc GetArticleGraph (EmptyContentRequest) returns (ArticleGraphResponse);
 }
 
 // ─── Record ────────────────────────────────────────────────────────────
@@ -130,4 +131,9 @@ message PaginatedArticlesResponse {
 
 message ArticleListResponse {
     repeated ArticleRecord data = 1;
+}
+
+message ArticleGraphResponse {
+    repeated ArticleRecord articles = 1;
+    repeated ArticleEdgeRecord edges = 2;
 }
