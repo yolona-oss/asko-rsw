@@ -17,6 +17,7 @@ import {
     PointsWithdrawal,
     DevicePart,
     BrokenPart,
+    WSchedule,
 } from 'entities';
 import { isProdEnv } from '@asko/shared';
 
@@ -46,6 +47,7 @@ import { isProdEnv } from '@asko/shared';
                         PointsWithdrawal,
                         DevicePart,
                         BrokenPart,
+                        WSchedule,
                     ],
                     debug: !isProdEnv(),
                 };

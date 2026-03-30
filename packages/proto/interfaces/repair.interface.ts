@@ -1160,3 +1160,57 @@ export interface PublicKeyResponse {
 }
 
 export interface SignatureEmptyRequest {}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCHEDULE DOMAIN
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface ScheduleRecord {
+    id: string;
+    startTime: string;
+    endTime: string;
+    repeatRule: string;
+}
+
+export interface CreateScheduleRequest {
+    date: string;
+    startTime: string;
+    endTime: string;
+    repeatRule: string;
+}
+
+export interface ScheduleFindByIdRequest {
+    id: string;
+}
+
+export interface ScheduleDeleteRequest {
+    id: string;
+}
+
+export interface ScheduleOccurrencesRequest {
+    id: string;
+    count: number;
+}
+
+export interface ScheduleEmptyRequest {}
+export interface ScheduleEmptyResponse {}
+
+export interface ScheduleResponse {
+    schedule: ScheduleRecord;
+}
+
+export interface ScheduleListResponse {
+    data: ScheduleRecord[];
+}
+
+export interface ScheduleOccurrencesResponse {
+    dates: string[];
+}
+
+export interface ScheduleServiceClient {
+    createSchedule(data: CreateScheduleRequest): Observable<ScheduleResponse>;
+    findAllSchedules(data: ScheduleEmptyRequest): Observable<ScheduleListResponse>;
+    findScheduleById(data: ScheduleFindByIdRequest): Observable<ScheduleResponse>;
+    deleteSchedule(data: ScheduleDeleteRequest): Observable<ScheduleEmptyResponse>;
+    getOccurrences(data: ScheduleOccurrencesRequest): Observable<ScheduleOccurrencesResponse>;
+}

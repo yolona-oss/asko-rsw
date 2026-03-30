@@ -72,11 +72,12 @@ export function ArticlesSection() {
             } catch {
               // ignore
             }
+            const preview = a.description || a.text;
             return {
               id: a.id,
               title: a.title,
               slug: a.slug,
-              text: a.text.length > 200 ? a.text.slice(0, 200) + '...' : a.text,
+              text: preview.length > 200 ? preview.slice(0, 200) + '...' : preview,
               previewImage,
             };
           }),

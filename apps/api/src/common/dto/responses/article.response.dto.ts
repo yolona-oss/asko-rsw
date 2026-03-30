@@ -5,6 +5,7 @@ export class ArticleResponseDto {
     title: string;
     slug: string;
     text: string;
+    description?: string;
     content?: Record<string, any>;
     tags?: string[];
     viewCount: number;

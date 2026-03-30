@@ -54,6 +54,7 @@ export class ContentService {
     async create(dto: {
         title: string;
         text?: string;
+        description?: string;
         content?: Record<string, any>;
         tags?: string[];
     }): Promise<Article> {
@@ -70,6 +71,7 @@ export class ContentService {
             title: dto.title,
             slug,
             text,
+            description: dto.description,
             content: dto.content,
             tags: dto.tags,
         });
@@ -88,6 +90,7 @@ export class ContentService {
         title?: string;
         slug?: string;
         text?: string;
+        description?: string;
         content?: Record<string, any>;
         tags?: string[];
     }): Promise<Article> {

@@ -12,3 +12,4 @@ export { PointsTransaction } from './points-transaction.entity';
 export { PointsWithdrawal } from './points-withdrawal.entity';
 export { DevicePart } from './device-part.entity';
 export { BrokenPart } from './broken-part.entity';
+export { WSchedule } from './wschedule.entity';

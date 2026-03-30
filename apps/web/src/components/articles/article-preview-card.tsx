@@ -5,6 +5,7 @@ interface ArticlePreviewCardProps {
     slug: string;
     title: string;
     text: string;
+    description?: string;
     imageUrl?: string | null;
     previewLength?: number;
     imageSizes?: string;
@@ -15,14 +16,16 @@ export function ArticlePreviewCard({
     slug,
     title,
     text,
+    description,
     imageUrl,
     previewLength = 200,
     imageSizes = '262px',
     className,
 }: ArticlePreviewCardProps) {
-    const previewText = text.length > previewLength
-        ? text.slice(0, previewLength) + '...'
-        : text;
+    const source = description || text;
+    const previewText = source.length > previewLength
+        ? source.slice(0, previewLength) + '...'
+        : source;
 
     return (
         <Link

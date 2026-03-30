@@ -28,16 +28,17 @@ export class ContentClientService implements OnModuleInit {
 
     // ─── CRUD ─────────────────────────────────────────────────────────
 
-    createArticle(title: string, text?: string, content?: string, tags?: string[]): Promise<ArticleResponse> {
+    createArticle(title: string, text?: string, content?: string, tags?: string[], description?: string): Promise<ArticleResponse> {
         return grpcCall(this.contentService.createArticle({
             title,
             text: text ?? '',
             content: content ?? '',
             tags: tags ?? [],
+            description: description ?? '',
         }));
     }
 
-    updateArticle(id: string, title?: string, slug?: string, text?: string, content?: string, tags?: string[]): Promise<ArticleResponse> {
+    updateArticle(id: string, title?: string, slug?: string, text?: string, content?: string, tags?: string[], description?: string): Promise<ArticleResponse> {
         return grpcCall(this.contentService.updateArticle({
             id,
             title: title ?? '',
@@ -45,6 +46,7 @@ export class ContentClientService implements OnModuleInit {
             text: text ?? '',
             content: content ?? '',
             tags: tags ?? [],
+            description: description ?? '',
         }));
     }
 

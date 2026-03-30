@@ -9,6 +9,10 @@ export class CreateArticleDto {
     text?: string;
 
     @IsOptional()
+    @IsString()
+    description?: string;
+
+    @IsOptional()
     @IsObject()
     content?: Record<string, any>;
 
@@ -30,6 +34,10 @@ export class UpdateArticleDto {
     @IsOptional()
     @IsString()
     text?: string;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
 
     @IsOptional()
     @IsObject()

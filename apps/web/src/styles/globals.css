@@ -87,8 +87,3 @@ body {
     opacity: 0;
   }
 }
-
-/* Hide default cursor in cursor area */
-.cursor-area-hidden {
-  cursor: none !important;
-}

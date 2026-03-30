@@ -27,6 +27,7 @@ export const DEVICE_SERVICE_NAME = 'DeviceService';
 export const REPAIRER_SERVICE_NAME = 'RepairerService';
 export const CERTIFICATE_SERVICE_NAME = 'CertificateService';
 export const DEALER_SERVICE_NAME = 'DealerService';
+export const SCHEDULE_SERVICE_NAME = 'ScheduleService';
 
 export const NOTIFICATION_PROTO_PATH = join(__dirname, 'notification.proto');
 export const NOTIFICATION_PACKAGE_NAME = 'notification';

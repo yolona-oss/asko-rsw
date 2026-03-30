@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 @Entity()
 export class Article {
-    [OptionalProps]?: 'content' | 'tags' | 'viewCount' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'description' | 'content' | 'tags' | 'viewCount' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -16,6 +16,9 @@ export class Article {
 
     @Property({ type: 'text' })
     text!: string;
+
+    @Property({ type: 'varchar', length: 500, nullable: true })
+    description?: string;
 
     @Property({ type: 'jsonb', nullable: true })
     content?: Record<string, any>;

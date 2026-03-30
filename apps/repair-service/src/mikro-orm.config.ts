@@ -17,6 +17,7 @@ import {
     DealerClient,
     PointsTransaction,
     PointsWithdrawal,
+    WSchedule,
 } from 'entities';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
@@ -41,6 +42,7 @@ const config = defineConfig<PostgreSqlDriver>({
         DealerClient,
         PointsTransaction,
         PointsWithdrawal,
+        WSchedule,
     ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),

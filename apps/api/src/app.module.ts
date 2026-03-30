@@ -26,7 +26,6 @@ import { NotificationModule } from 'modules/notification/notification.module';
 import { ChatModule } from 'modules/chat/chat.module';
 
 import { join } from 'path';
-import { CursorModule } from 'modules/cursor/cursor.module';
 import { HealthModule } from 'modules/health/health.module';
 import { PaymentModule } from 'modules/payment/payment.module';
 
@@ -56,7 +55,6 @@ console.debug("Videos path: ", join(process.cwd(), 'videos'))
         NotificationModule,
         ChatModule,
 
-        CursorModule,
         HealthModule,
         PaymentModule,
 

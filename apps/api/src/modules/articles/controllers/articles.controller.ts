@@ -59,6 +59,7 @@ export class ArticlesController {
             dto.text,
             dto.content ? JSON.stringify(dto.content) : undefined,
             dto.tags,
+            dto.description,
         );
         return parseArticleRecord(result.article);
     }
@@ -74,6 +75,7 @@ export class ArticlesController {
             dto.text,
             dto.content ? JSON.stringify(dto.content) : undefined,
             dto.tags,
+            dto.description,
         );
         return parseArticleRecord(result.article);
     }

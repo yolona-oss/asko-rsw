@@ -129,6 +129,14 @@ service RepairService {
     rpc GetRepairersActiveRequestCounts(RepairGetRepairersStatsRequest) returns (RepairRepairersStatsResponse);
 }
 
+service ScheduleService {
+    rpc CreateSchedule(CreateScheduleRequest) returns (ScheduleResponse);
+    rpc FindAllSchedules(ScheduleEmptyRequest) returns (ScheduleListResponse);
+    rpc FindScheduleById(ScheduleFindByIdRequest) returns (ScheduleResponse);
+    rpc DeleteSchedule(ScheduleDeleteRequest) returns (ScheduleEmptyResponse);
+    rpc GetOccurrences(ScheduleOccurrencesRequest) returns (ScheduleOccurrencesResponse);
+}
+
 service DealerService {
     rpc CreateProfile(CreateDealerProfileRequest) returns (DealerProfileResponse);
     rpc UpdateProfile(UpdateDealerProfileRequest) returns (DealerProfileResponse);
@@ -1162,3 +1170,49 @@ message PublicKeyResponse {
 }
 
 message SignatureEmptyRequest {}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Schedule Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message ScheduleRecord {
+    string id = 1;
+    string startTime = 2;
+    string endTime = 3;
+    string repeatRule = 4;
+}
+
+message CreateScheduleRequest {
+    string date = 1;
+    string startTime = 2;
+    string endTime = 3;
+    string repeatRule = 4;
+}
+
+message ScheduleFindByIdRequest {
+    string id = 1;
+}
+
+message ScheduleDeleteRequest {
+    string id = 1;
+}
+
+message ScheduleOccurrencesRequest {
+    string id = 1;
+    int32 count = 2;
+}
+
+message ScheduleEmptyRequest {}
+message ScheduleEmptyResponse {}
+
+message ScheduleResponse {
+    ScheduleRecord schedule = 1;
+}
+
+message ScheduleListResponse {
+    repeated ScheduleRecord data = 1;
+}
+
+message ScheduleOccurrencesResponse {
+    repeated string dates = 1;
+}

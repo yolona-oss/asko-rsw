@@ -3,13 +3,8 @@ import { AppConfig } from "app.config";
 
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import {
-    WSchedule,
-    Cursor,
-} from 'entities'
 import path from "path";
 import { isProdEnv } from "@asko/shared";
-import { readFileSync } from "fs";
 
 @Module({
     imports: [
@@ -22,21 +17,9 @@ import { readFileSync } from "fs";
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    // driverOptions: {
-                    //     connection: {
-                    //         ssl: isProdEnv() ? {
-                    //             rejectUnauthorized: true,
-                    //             ca: readFileSync('.postgres/root.crt')
-                    //         } : false
-                    //     }
-                    // },
-                    entities: [
-                        WSchedule,
-                        Cursor,
-                    ],
+                    entities: [],
                     migrations: {
                         path: path.join(process.cwd(), 'migrations'),
-                        // pattern: /^[\w-]+\d+\.[tj]s$/,
                     },
                     debug: !isProdEnv(),
                 }

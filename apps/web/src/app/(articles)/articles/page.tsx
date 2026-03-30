@@ -50,6 +50,7 @@ export default async function ArticlesListPage({
                   slug={article.slug}
                   title={article.title}
                   text={article.text}
+                  description={article.description}
                   imageUrl={imageMap.get(article.id)}
                 />
               ))}
@@ -116,6 +117,7 @@ async function RecommendedSection({ currentArticleIds }: { currentArticleIds: st
             slug={article.slug}
             title={article.title}
             text={article.text}
+            description={article.description}
             imageUrl={recImageResults[i]}
           />
         ))}

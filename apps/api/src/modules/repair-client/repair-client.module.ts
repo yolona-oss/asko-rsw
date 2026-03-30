@@ -7,6 +7,7 @@ import { DeviceClientService } from './device-client.service';
 import { CertificateClientService } from './certificate-client.service';
 import { RepairerClientService } from './repairer-client.service';
 import { DealerClientService } from './dealer-client.service';
+import { ScheduleClientService } from './schedule-client.service';
 
 @Module({
     imports: [
@@ -31,6 +32,7 @@ import { DealerClientService } from './dealer-client.service';
         CertificateClientService,
         RepairerClientService,
         DealerClientService,
+        ScheduleClientService,
     ],
     exports: [
         RepairClientService,
@@ -38,6 +40,7 @@ import { DealerClientService } from './dealer-client.service';
         CertificateClientService,
         RepairerClientService,
         DealerClientService,
+        ScheduleClientService,
     ],
 })
 export class RepairClientModule {}

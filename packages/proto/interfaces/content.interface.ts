@@ -7,6 +7,7 @@ export interface CreateArticleRequest {
     text: string;
     content: string;
     tags: string[];
+    description: string;
 }
 
 export interface UpdateArticleRequest {
@@ -16,6 +17,7 @@ export interface UpdateArticleRequest {
     text: string;
     content: string;
     tags: string[];
+    description: string;
 }
 
 export interface DeleteArticleRequest {
@@ -57,6 +59,7 @@ export interface ArticleRecord {
     title: string;
     slug: string;
     text: string;
+    description: string;
     content: string;
     tags: string[];
     viewCount: number;

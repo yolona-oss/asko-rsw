@@ -20,6 +20,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [description, setDescription] = useState('');
   const [content, setContent] = useState<Record<string, any> | undefined>(undefined);
   const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -34,6 +35,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         const { data: article } = await articleApi.getOne(initialArticleId);
         setTitle(article.title ?? '');
         setSlug(article.slug ?? '');
+        setDescription(article.description ?? '');
         setTagsInput((article.tags ?? []).join(', '));
 
         // Load rich content or convert legacy plain text
@@ -63,7 +65,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
     }
     try {
       const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean);
-      const { data: created } = await articleApi.create({ title, content, tags });
+      const { data: created } = await articleApi.create({ title, content, tags, description: description || undefined });
       setCurrentArticleId(created.id);
       return created.id;
     } catch {
@@ -81,8 +83,8 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         .map((t) => t.trim())
         .filter(Boolean);
       const data = currentArticleId
-        ? { title, slug: slug || undefined, content, tags }
-        : { title, content, tags };
+        ? { title, slug: slug || undefined, content, tags, description: description || undefined }
+        : { title, content, tags, description: description || undefined };
 
       if (currentArticleId) {
         await articleApi.update(currentArticleId, data);
@@ -136,6 +138,17 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
             </p>
           </FormField>
         )}
+
+        <FormField label="Описание (для превью и SEO)" variant="bold">
+          <Input
+            type="text"
+            placeholder="Краткое описание статьи"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={500}
+            className="max-w-[500px]"
+          />
+        </FormField>
 
         <FormField label="Теги" variant="bold">
           <TagInput value={tagsInput} onChange={setTagsInput} />

@@ -31,6 +31,7 @@ message ArticleRecord {
     int32 viewCount = 7;
     string createdAt = 8;
     string updatedAt = 9;
+    string description = 10;
 }
 
 // ─── Requests ──────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ message CreateArticleRequest {
     string text = 2;
     string content = 3;    // JSON string
     repeated string tags = 4;
+    string description = 5;
 }
 
 message UpdateArticleRequest {
@@ -49,6 +51,7 @@ message UpdateArticleRequest {
     string text = 4;
     string content = 5;    // JSON string
     repeated string tags = 6;
+    string description = 7;
 }
 
 message DeleteArticleRequest {

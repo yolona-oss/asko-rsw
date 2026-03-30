@@ -149,6 +149,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 500,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "article",

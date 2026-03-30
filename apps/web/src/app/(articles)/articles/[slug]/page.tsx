@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Container } from '@asko/ui';
@@ -14,6 +15,38 @@ import {
   ArticleRecommendations,
   ArticleViewTracker,
 } from '@/components/articles';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [article, images] = await Promise.all([
+    fetchArticle(slug),
+    fetchArticleImages(slug),
+  ]);
+
+  if (!article) return {};
+
+  const description = article.description || article.text?.slice(0, 160).trim();
+  const previewImage = images.sort((a, b) => a.order - b.order)[0];
+  const ogImage =
+    previewImage?.imageJson.medium?.secure_url ??
+    previewImage?.imageJson.original.secure_url;
+
+  return {
+    title: `${article.title} — ASKO`,
+    description,
+    keywords: article.tags,
+    openGraph: {
+      title: article.title,
+      description,
+      type: 'article',
+      ...(ogImage && { images: [ogImage] }),
+    },
+  };
+}
 
 export default async function ArticlePage({
   params,
@@ -42,7 +75,7 @@ export default async function ArticlePage({
     <div className="bg-[#f1f1f1]">
       <ArticleViewTracker slug={slug} />
       <Container>
-        <div className="py-8 md:py-12 px-4 md:px-0">
+        <div className="py-8 md:py-12 px-4 md:px-0 flex justify-center">
           <ArticleBreadcrumb />
 
           <div className="max-w-[738px]">

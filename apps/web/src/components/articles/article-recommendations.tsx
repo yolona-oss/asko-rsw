@@ -31,6 +31,7 @@ export function ArticleRecommendations({
                         slug={a.slug}
                         title={a.title}
                         text={a.text}
+                        description={a.description}
                         imageUrl={imageMap.get(a.id)}
                         previewLength={180}
                         imageSizes="263px"
@@ -47,6 +48,7 @@ export function ArticleRecommendations({
                         slug={a.slug}
                         title={a.title}
                         text={a.text}
+                        description={a.description}
                         imageUrl={imageMap.get(a.id)}
                     />
                 ))}

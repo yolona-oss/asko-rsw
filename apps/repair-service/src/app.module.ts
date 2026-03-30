@@ -23,12 +23,14 @@ import {
     PointsWithdrawal,
     DevicePart,
     BrokenPart,
+    WSchedule,
 } from 'entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
 import { RepairerGrpcController } from 'controllers/repairer.grpc.controller';
 import { RepairGrpcController } from 'controllers/repair.grpc.controller';
 import { DealerGrpcController } from 'controllers/dealer.grpc.controller';
+import { ScheduleGrpcController } from 'controllers/schedule.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { DeviceService } from 'services/device.service';
 import { AddressService } from 'services/address.service';
@@ -41,6 +43,7 @@ import { WorkStepService } from 'services/work-step.service';
 import { DealerService } from 'services/dealer.service';
 import { BrokenPartService } from 'services/broken-part.service';
 import { SignatureService } from 'services/signature.service';
+import { WScheduleService } from 'services/wschedule.service';
 
 @Module({
     imports: [
@@ -62,6 +65,7 @@ import { SignatureService } from 'services/signature.service';
             PointsWithdrawal,
             DevicePart,
             BrokenPart,
+            WSchedule,
         ]),
         ClientsModule.registerAsync([
             {
@@ -108,6 +112,7 @@ import { SignatureService } from 'services/signature.service';
         RepairerGrpcController,
         RepairGrpcController,
         DealerGrpcController,
+        ScheduleGrpcController,
         PaymentEventConsumer,
         AddressValidationConsumer,
     ],
@@ -126,6 +131,7 @@ import { SignatureService } from 'services/signature.service';
         RepairEventService,
         PaymentCommandService,
         AddressValidationPublisher,
+        WScheduleService,
     ],
 })
 export class AppModule {}

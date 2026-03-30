@@ -42,6 +42,7 @@ function articleToRecord(entity: Article) {
         title: entity.title,
         slug: entity.slug,
         text: entity.text,
+        description: entity.description ?? '',
         content: entity.content ? JSON.stringify(entity.content) : '',
         tags: entity.tags ?? [],
         viewCount: entity.viewCount,
@@ -64,6 +65,7 @@ export class ContentGrpcController {
             const article = await this.contentService.create({
                 title: data.title,
                 text: data.text || undefined,
+                description: data.description || undefined,
                 content,
                 tags: data.tags?.length ? data.tags : undefined,
             });
@@ -78,6 +80,7 @@ export class ContentGrpcController {
             if (data.title) dto.title = data.title;
             if (data.slug) dto.slug = data.slug;
             if (data.text) dto.text = data.text;
+            if (data.description) dto.description = data.description;
             if (data.content) dto.content = JSON.parse(data.content);
             if (data.tags?.length) dto.tags = data.tags;
 

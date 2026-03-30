@@ -1,43 +1,45 @@
-export function combineDateAndTime(date: string, time: string): Date {
+import { Injectable } from '@nestjs/common';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { WSchedule } from 'entities/wschedule.entity';
+import { RRule } from 'rrule';
+
+function combineDateAndTime(date: string, time: string): Date {
     return new Date(`${date}T${time}:00`);
 }
-
-import { Injectable } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/core';
-import { WSchedule } from '@entities/wschedule.entity';
-import { CreateWScheduleDto } from '@asko/shared';
-import { RRule } from 'rrule';
 
 @Injectable()
 export class WScheduleService {
     constructor(private readonly em: EntityManager) {}
 
-    async create(dto: CreateWScheduleDto): Promise<WSchedule> {
-        const schedule = new WSchedule();
-
-        schedule.startTime = combineDateAndTime(dto.date, dto.startTime);
-        schedule.endTime = combineDateAndTime(dto.date, dto.endTime);
-        schedule.repeatRule = dto.repeatRule;
-
+    @CreateRequestContext()
+    async create(dto: { date: string; startTime: string; endTime: string; repeatRule?: string }): Promise<WSchedule> {
+        const schedule = this.em.create(WSchedule, {
+            startTime: combineDateAndTime(dto.date, dto.startTime),
+            endTime: combineDateAndTime(dto.date, dto.endTime),
+            repeatRule: dto.repeatRule,
+        });
         await this.em.persistAndFlush(schedule);
         return schedule;
     }
 
+    @CreateRequestContext()
     async findAll(): Promise<WSchedule[]> {
         return this.em.find(WSchedule, {});
     }
 
+    @CreateRequestContext()
     async findOne(id: string): Promise<WSchedule | null> {
         return this.em.findOne(WSchedule, { id });
     }
 
+    @CreateRequestContext()
     async delete(id: string): Promise<void> {
         await this.em.nativeDelete(WSchedule, { id });
     }
 
-    // Optional: generate next occurrences from repeatRule
+    @CreateRequestContext()
     async getNextOccurrences(id: string, count = 5): Promise<Date[]> {
-        const schedule = await this.findOne(id);
+        const schedule = await this.em.findOne(WSchedule, { id });
         if (!schedule || !schedule.repeatRule) return [];
 
         const rule = RRule.fromString(schedule.repeatRule);
