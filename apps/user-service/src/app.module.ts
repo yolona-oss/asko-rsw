@@ -60,7 +60,7 @@ export class AppModule implements OnApplicationBootstrap {
     async onApplicationBootstrap(): Promise<void> {
         await this.userService.__createSuperAdmin({
             firstName: this.config.defaultUser.name,
-            lastName: "SUPER",
+            lastName: "admin",
             email: this.config.defaultUser.email,
             password: this.config.defaultUser.password
         })

@@ -27,9 +27,6 @@ import { join } from 'path';
 import { HealthModule } from 'modules/health/health.module';
 import { PaymentModule } from 'modules/payment/payment.module';
 
-console.debug("Images path: ", join(process.cwd(), 'images'))
-console.debug("Videos path: ", join(process.cwd(), 'videos'))
-
 @Module({
     imports: [
         AppConfigModule,
@@ -86,4 +83,4 @@ console.debug("Videos path: ", join(process.cwd(), 'videos'))
         },
     ],
 })
-export class AppModule {}
+export class AppModule { }
