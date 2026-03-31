@@ -10,7 +10,7 @@ export function ArticleHeroImage({ images, alt }: ArticleHeroImageProps) {
     if (!images.length) return null;
 
     const sorted = [...images].sort((a, b) => a.order - b.order);
-    const image = sorted[0];
+    const image = sorted.length > 1 ? sorted[1] : sorted[0];
     const src = image.imageJson.large?.secure_url
         ?? image.imageJson.original.secure_url;
 

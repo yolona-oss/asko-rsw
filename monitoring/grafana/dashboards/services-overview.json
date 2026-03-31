@@ -18,8 +18,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[5m])) by (method)",
-          "legendFormat": "{{method}}"
+          "expr": "sum(rate(http_requests_total[5m])) by (method, service)",
+          "legendFormat": "{{service}} {{method}}"
         }
       ]
     },
@@ -54,8 +54,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status_code=~\"4..|5..\"}[5m])) by (status_code)",
-          "legendFormat": "{{status_code}}"
+          "expr": "sum(rate(http_requests_total{status_code=~\"4..|5..\"}[5m])) by (status_code, service)",
+          "legendFormat": "{{service}} {{status_code}}"
         }
       ]
     },
@@ -85,8 +85,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(grpc_calls_total[5m])) by (grpc_service)",
-          "legendFormat": "{{grpc_service}}"
+          "expr": "sum(rate(grpc_calls_total[5m])) by (grpc_service, service)",
+          "legendFormat": "{{service}} {{grpc_service}}"
         }
       ]
     },
@@ -121,8 +121,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(grpc_calls_total{status=\"error\"}[5m])) by (grpc_service, grpc_method)",
-          "legendFormat": "{{grpc_service}}.{{grpc_method}}"
+          "expr": "sum(rate(grpc_calls_total{status=\"error\"}[5m])) by (grpc_service, grpc_method, service)",
+          "legendFormat": "{{service}} {{grpc_service}}.{{grpc_method}}"
         }
       ]
     },
@@ -158,7 +158,7 @@
       "targets": [
         {
           "expr": "rate(process_cpu_seconds_total[5m])",
-          "legendFormat": "{{service}}"
+          "legendFormat": "{{job}}"
         }
       ]
     },
@@ -176,7 +176,7 @@
       "targets": [
         {
           "expr": "process_resident_memory_bytes",
-          "legendFormat": "{{service}}"
+          "legendFormat": "{{job}}"
         }
       ]
     },
@@ -194,7 +194,7 @@
       "targets": [
         {
           "expr": "nodejs_eventloop_lag_seconds",
-          "legendFormat": "{{service}}"
+          "legendFormat": "{{job}}"
         }
       ]
     },
@@ -211,7 +211,7 @@
       "targets": [
         {
           "expr": "nodejs_active_handles_total",
-          "legendFormat": "{{service}}"
+          "legendFormat": "{{job}}"
         }
       ]
     }
