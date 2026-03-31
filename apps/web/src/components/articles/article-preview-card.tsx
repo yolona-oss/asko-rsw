@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { PlaceholderImage } from '@/components/placeholder-image';
 
 interface ArticlePreviewCardProps {
     slug: string;
@@ -42,9 +43,7 @@ export function ArticlePreviewCard({
                         sizes={imageSizes}
                     />
                 ) : (
-                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-                        Нет фото
-                    </div>
+                    <PlaceholderImage category="article" idOrIndex={slug} fill className="object-cover" sizes={imageSizes} />
                 )}
             </div>
             <div className="flex flex-col gap-6">

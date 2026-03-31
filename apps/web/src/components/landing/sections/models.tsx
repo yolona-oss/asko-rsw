@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Container, DataFilter } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { PlaceholderImage } from '@/components/placeholder-image';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories } from '@/hooks/use-device-categories';
 
@@ -28,9 +29,7 @@ function ModelCard({ model }: { model: DeviceModel }) {
             className="object-cover"
           />
         ) : (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-            Нет фото
-          </div>
+          <PlaceholderImage category="device" idOrIndex={model.id} fill className="object-cover" />
         )}
       </div>
       <div className="flex flex-col gap-4">

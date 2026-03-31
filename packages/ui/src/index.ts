@@ -140,3 +140,6 @@ export type { DataSearchProps } from './components/data-search';
 
 export { Pagination } from './components/pagination';
 export type { PaginationProps } from './components/pagination';
+
+export { ImageGallery } from './components/image-gallery';
+export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/image-gallery';

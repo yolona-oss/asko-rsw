@@ -2,11 +2,10 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
-import { Card, Button, Badge, Modal, Textarea, FormField, Input } from '@asko/ui';
+import { Card, Button, Badge, Modal, Textarea, FormField, Input, ImageGallery } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
@@ -24,7 +23,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
   // Photos
   const [photos, setPhotos] = useState<string[]>([]);
-  const [mainPhoto, setMainPhoto] = useState(0);
 
   // Price
   const [priceValue, setPriceValue] = useState('');
@@ -370,18 +368,14 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <div className="lg:w-[360px] flex-shrink-0">
             <Card className="flex flex-col gap-3">
               <h2 className="text-lg font-medium text-text-main">Фото клиента</h2>
-              <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
-                {photos[mainPhoto] && <Image src={photos[mainPhoto]} alt="Фото устройства" fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-              </div>
-              {photos.length > 1 && (
-                <div className="flex gap-2 flex-wrap">
-                  {photos.map((photo, idx) => (
-                    <button key={idx} type="button" onClick={() => setMainPhoto(idx)} className={`relative w-16 h-12 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${idx === mainPhoto ? 'border-brand-red' : 'border-transparent'}`}>
-                      <Image src={photo} alt="" fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <ImageGallery
+                images={photos}
+                alt="Фото устройства"
+                variant="compact"
+                switchOn="hover"
+                zoom={{ scale: 2 }}
+                fullscreen
+              />
             </Card>
           </div>
         )}

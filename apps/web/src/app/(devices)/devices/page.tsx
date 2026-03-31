@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
+import { getPlaceholderSrc } from '@/lib/placeholders';
 
 const LIMIT = 12;
 
@@ -60,7 +61,7 @@ export default async function DevicesListPage({
                   >
                     <div className="relative aspect-square bg-gray-50">
                       <Image
-                        src={imgUrl ?? '/images/placeholder.webp'}
+                        src={imgUrl ?? getPlaceholderSrc('device', device.id)}
                         alt={device.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"

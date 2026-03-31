@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Badge, Button } from '@asko/ui';
+import { Badge, Button, ImageGallery } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { PageHeader } from '@/components/account/page-header';
@@ -59,7 +58,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
   const [selectedRepairer, setSelectedRepairer] = useState('');
-  const [mainPhoto, setMainPhoto] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -326,40 +324,14 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         {photos.length > 0 && (
           <div className="lg:w-[360px] flex-shrink-0">
             <p className="text-sm font-bold text-text-main mb-3">Фото клиента</p>
-            <div className="relative w-full aspect-video bg-[#E8E8E8] rounded-sm overflow-hidden">
-              {photos[mainPhoto] && (
-                <Image
-                  src={photos[mainPhoto]}
-                  alt="Фото устройства"
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              )}
-            </div>
-            <div className="flex gap-2 mt-2">
-              {photos.map((photo, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setMainPhoto(idx)}
-                  className={`relative w-20 h-16 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer ${idx === mainPhoto ? 'border-brand-red' : 'border-transparent'
-                    }`}
-                >
-                  <Image
-                    src={photo}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
+            <ImageGallery
+              images={photos}
+              alt="Фото устройства"
+              variant="compact"
+              switchOn="hover"
+              zoom={{ scale: 2 }}
+              fullscreen
+            />
           </div>
         )}
       </div>

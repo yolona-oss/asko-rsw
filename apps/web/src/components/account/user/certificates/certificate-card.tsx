@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { CertificateStatus } from '@asko/shared/client';
 import { deviceApi } from '@/lib/api/device';
 import type { ICertificate } from '@/lib/api/types';
+import { getPlaceholderSrc } from '@/lib/placeholders';
 import { STATUS_LABELS, formatDate, formatDateLong } from './constants';
 
 function FileTextIcon() {
@@ -30,7 +31,7 @@ export function CertificateCard({ cert, onPay }: { cert: ICertificate; onPay?: (
   const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
   const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
 
-  const [deviceImageUrl, setDeviceImageUrl] = useState('/images/placeholder.webp');
+  const [deviceImageUrl, setDeviceImageUrl] = useState(() => getPlaceholderSrc('device', device?.id));
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

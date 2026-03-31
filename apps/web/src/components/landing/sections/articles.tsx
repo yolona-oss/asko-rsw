@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Container } from '@asko/ui';
 import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { PlaceholderImage } from '@/components/placeholder-image';
 
 import { articleApi } from '@/lib/api/article';
 
@@ -138,9 +139,7 @@ export function ArticlesSection() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-                          Нет фото
-                        </div>
+                        <PlaceholderImage category="article" idOrIndex={article.id} fill className="object-cover" />
                       )}
                     </div>
                   </Link>
@@ -192,9 +191,7 @@ export function ArticlesSection() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
-                        Нет фото
-                      </div>
+                      <PlaceholderImage category="article" idOrIndex={article.id} fill className="object-cover" />
                     )}
                   </div>
                 </Link>
