@@ -1,6 +1,17 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container, Pagination } from '@asko/ui';
+
+export const metadata: Metadata = {
+  title: 'Каталог техники ASKO — модели и характеристики',
+  description: 'Полный каталог бытовой техники ASKO: стиральные машины, сушильные машины, посудомоечные машины, духовые шкафы и другое оборудование. Характеристики, цены, сервис.',
+  openGraph: {
+    title: 'Каталог техники ASKO',
+    description: 'Полный каталог бытовой техники ASKO с характеристиками и ценами.',
+    type: 'website',
+  },
+};
 import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 

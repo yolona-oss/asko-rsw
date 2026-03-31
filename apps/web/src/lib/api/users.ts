@@ -11,7 +11,7 @@ export const usersApi = {
     return api.put<IAuthUser>('/users/', data);
   },
 
-  getAll(params?: { page?: number; limit?: number }) {
+  getAll(params?: { offset?: number; limit?: number }) {
     return api.get<PaginatedUsers>('/users/', { params });
   },
 

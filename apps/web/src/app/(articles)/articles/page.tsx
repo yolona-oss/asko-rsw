@@ -1,5 +1,16 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Pagination } from '@asko/ui';
+
+export const metadata: Metadata = {
+  title: 'Статьи о ремонте техники ASKO',
+  description: 'Полезные статьи о ремонте и обслуживании бытовой техники ASKO. Советы по уходу, диагностике неисправностей и продлению срока службы оборудования.',
+  openGraph: {
+    title: 'Статьи о ремонте техники ASKO',
+    description: 'Полезные статьи о ремонте и обслуживании бытовой техники ASKO.',
+    type: 'website',
+  },
+};
 import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article.server';
 import { ArticlePreviewCard } from '@/components/articles';
 

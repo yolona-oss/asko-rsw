@@ -48,7 +48,7 @@ export function AdminUsers() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await usersApi.getAll({ page, limit: PAGE_SIZE });
+      const { data } = await usersApi.getAll({ offset: page, limit: PAGE_SIZE });
       setUsers(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch (e: any) {

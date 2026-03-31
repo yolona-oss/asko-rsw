@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Product, SpecRow } from '@/lib/devices';
@@ -8,8 +9,39 @@ import { ProductSpecs } from '@/components/devices/product-specs';
 import { ProductCare } from '@/components/devices/product-care';
 import { ProductAllSpecs } from '@/components/devices/product-all-specs';
 import { ProductRecommendations } from '@/components/devices/product-recommendations';
-import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/device.server';
+import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug, fetchDeviceImagesBySlug } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [device, images] = await Promise.all([
+    fetchDeviceBySlug(slug),
+    fetchDeviceImagesBySlug(slug),
+  ]);
+
+  if (!device) return {};
+
+  const description = device.description?.slice(0, 160).trim() || `${device.name} — характеристики, цена, сервис ASKO`;
+  const previewImage = images.sort((a, b) => a.order - b.order)[0];
+  const ogImage =
+    previewImage?.imageJson.medium?.secure_url ??
+    previewImage?.imageJson.original.secure_url;
+
+  return {
+    title: `${device.name} — ASKO`,
+    description,
+    openGraph: {
+      title: device.name,
+      description,
+      type: 'website',
+      ...(ogImage && { images: [ogImage] }),
+    },
+  };
+}
 
 const DEFAULT_BADGES: Product['badges'] = [
   { icon: 'shield', label: 'Оригинальные запчасти' },
