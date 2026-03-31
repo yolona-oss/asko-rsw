@@ -174,11 +174,13 @@ export class ArticlesController {
     @Public()
     @Get()
     @ApiOkResponse({ type: PaginatedArticlesResponseDto })
-    async findAll(@Query() pagination: PaginationDto) {
+    async findAll(@Query() pagination: PaginationDto, @Query('tags') tags?: string) {
+        const tagList = tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined;
         const result = await this.contentClient.findAllArticles(
             pagination.offset,
             pagination.limit,
             pagination.search,
+            tagList,
         );
         return {
             ...result,

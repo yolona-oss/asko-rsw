@@ -39,6 +39,11 @@ export interface ImageGalleryProps {
    * @default true
    */
   fullscreen?: boolean;
+  /**
+   * Show ← → arrow buttons on the mobile carousel.
+   * @default false
+   */
+  mobileArrows?: boolean;
   className?: string;
 }
 
@@ -69,11 +74,77 @@ function ChevronIcon({ direction, className }: { direction: 'up' | 'down' | 'lef
   );
 }
 
+function ArrowIcon({ direction, className }: { direction: 'left' | 'right'; className?: string }) {
+  const d = direction === 'left' ? 'M19 12H5M5 12l7 7M5 12l7-7' : 'M5 12h14M19 12l-7-7M19 12l-7 7';
+  return (
+    <svg className={cn('w-6 h-6', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    </svg>
+  );
+}
+
 function CloseIcon({ className }: { className?: string }) {
   return (
     <svg className={cn('w-8 h-8', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Image with spinner skeleton
+   ═══════════════════════════════════════════════════════ */
+
+function Spinner({ className }: { className?: string }) {
+  return (
+    <svg className={cn('w-8 h-8 animate-spin text-[#A6A6A6]', className)} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function LoadableImg({
+  src,
+  alt,
+  className,
+  style,
+  draggable = false,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+  draggable?: boolean;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  /* reset state when src changes */
+  const prevSrc = useRef(src);
+  if (prevSrc.current !== src) {
+    prevSrc.current = src;
+    setLoaded(false);
+    setError(false);
+  }
+
+  return (
+    <>
+      {!loaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F0F0F0]">
+          <Spinner />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={cn(className, 'transition-opacity duration-300', loaded ? 'opacity-100' : 'opacity-0')}
+        style={style}
+        draggable={draggable}
+        onLoad={() => setLoaded(true)}
+        onError={() => { setError(true); setLoaded(true); }}
+      />
+    </>
   );
 }
 
@@ -116,22 +187,21 @@ function MainImage({
   return (
     <div
       ref={containerRef}
-      className={cn('overflow-hidden', cursor, className)}
+      className={cn('overflow-hidden relative', cursor, className)}
       onMouseEnter={() => zoomCfg && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onMouseMove={handleMove}
       onClick={clickable ? onClick : undefined}
     >
-      <img
+      <LoadableImg
         src={src}
         alt={alt}
-        className="w-full h-full object-contain transition-transform duration-150 select-none"
+        className="w-full h-full object-contain select-none"
         style={
           hovering && zoomCfg
-            ? { transformOrigin: origin, transform: `scale(${zoomCfg.scale})` }
-            : undefined
+            ? { transformOrigin: origin, transform: `scale(${zoomCfg.scale})`, transitionProperty: 'transform', transitionDuration: '150ms' }
+            : { transitionProperty: 'transform, opacity', transitionDuration: '150ms, 300ms' }
         }
-        draggable={false}
       />
     </div>
   );
@@ -242,11 +312,13 @@ function MobileCarousel({
   images,
   alt,
   aspectClass,
+  showArrows,
   onTap,
 }: {
   images: string[];
   alt: string;
   aspectClass: string;
+  showArrows: boolean;
   onTap: (index: number) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -258,22 +330,51 @@ function MobileCarousel({
     setActive(Math.round(el.scrollLeft / el.offsetWidth));
   }, []);
 
+  const goTo = useCallback((index: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.offsetWidth, behavior: 'smooth' });
+    setActive(index);
+  }, []);
+
   return (
-    <div>
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex overflow-x-auto snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {images.map((src, i) => (
-          <div key={i} className={cn('flex-shrink-0 w-full snap-start', aspectClass)} onClick={() => onTap(i)}>
-            <img src={src} alt={`${alt} ${i + 1}`} className="w-full h-full object-contain cursor-pointer" draggable={false} />
-          </div>
-        ))}
+    <div className="flex flex-col items-center gap-6">
+      <div className="flex items-center gap-2 w-full">
+        {showArrows && images.length > 1 && (
+          <button
+            type="button"
+            onClick={() => goTo(Math.max(0, active - 1))}
+            className="flex-shrink-0 text-text-main"
+            aria-label="Предыдущее фото"
+          >
+            <ArrowIcon direction="left" />
+          </button>
+        )}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory flex-1 min-w-0"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {images.map((src, i) => (
+            <div key={i} className={cn('flex-shrink-0 w-full snap-start relative', aspectClass)} onClick={() => onTap(i)}>
+              <LoadableImg src={src} alt={`${alt} ${i + 1}`} className="w-full h-full object-contain cursor-pointer" />
+            </div>
+          ))}
+        </div>
+        {showArrows && images.length > 1 && (
+          <button
+            type="button"
+            onClick={() => goTo(Math.min(images.length - 1, active + 1))}
+            className="flex-shrink-0 text-text-main"
+            aria-label="Следующее фото"
+          >
+            <ArrowIcon direction="right" />
+          </button>
+        )}
       </div>
       {images.length > 1 && (
-        <div className="flex justify-center gap-[6px] mt-3">
+        <div className="flex justify-center gap-[6px]">
           {images.map((_, i) => (
             <span
               key={i}
@@ -297,6 +398,7 @@ export function ImageGallery({
   switchOn = 'hover',
   zoom = false,
   fullscreen = true,
+  mobileArrows = false,
   className,
 }: ImageGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -421,7 +523,7 @@ export function ImageGallery({
     <div className={className}>
       {/* Mobile — snap carousel */}
       <div className="lg:hidden">
-        <MobileCarousel images={images} alt={alt} aspectClass={mobileAspect} onTap={(i) => openModal(i)} />
+        <MobileCarousel images={images} alt={alt} aspectClass={mobileAspect} showArrows={mobileArrows} onTap={(i) => openModal(i)} />
       </div>
 
       {/* Desktop */}

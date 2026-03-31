@@ -8,9 +8,10 @@ import { ProductInfo } from '@/components/devices/product-info';
 import { ProductSpecs } from '@/components/devices/product-specs';
 import { ProductCare } from '@/components/devices/product-care';
 import { ProductAllSpecs } from '@/components/devices/product-all-specs';
-import { ProductRecommendations } from '@/components/devices/product-recommendations';
+import { ArticleRecommendations } from '@/components/articles/article-recommendations';
 import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug, fetchDeviceImagesBySlug } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
+import { fetchArticlesByTags, fetchArticlePreviewImage } from '@/lib/api/article.server';
 
 export async function generateMetadata({
   params,
@@ -100,6 +101,20 @@ export default async function ProductPage({
   const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
   const product = deviceToProduct(device, images, typeLabels);
 
+  // Fetch related articles by device tags
+  const deviceTags = [
+    typeLabels[device.type]?.toLowerCase(),
+    device.brand?.toLowerCase(),
+    device.model?.toLowerCase(),
+  ].filter(Boolean) as string[];
+
+  const relatedArticles = deviceTags.length > 0 ? await fetchArticlesByTags(deviceTags, 4) : [];
+  const articleImageMap = new Map<string, string | null>();
+  const articleImgResults = await Promise.all(
+    relatedArticles.map((a) => fetchArticlePreviewImage(a.slug)),
+  );
+  relatedArticles.forEach((a, i) => articleImageMap.set(a.id, articleImgResults[i]));
+
   return (
     <div className="bg-page-bg">
       <Container>
@@ -135,8 +150,12 @@ export default async function ProductPage({
             specsRight={product.specsRight}
           />
 
-          {/* Recommendations */}
-          <ProductRecommendations />
+          {/* Related articles */}
+          <ArticleRecommendations
+            articles={relatedArticles}
+            imageMap={articleImageMap}
+            title="Статьи по обслуживанию"
+          />
         </div>
       </Container>
     </div>

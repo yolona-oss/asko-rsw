@@ -31,3 +31,9 @@ export async function fetchRecommendedArticles(): Promise<IArticle[]> {
   const data = await serverGet<{ data: IArticle[] }>('/articles/recommended');
   return data?.data ?? [];
 }
+
+export async function fetchArticlesByTags(tags: string[], limit = 4): Promise<IArticle[]> {
+  const params = new URLSearchParams({ tags: tags.join(','), limit: String(limit), offset: '1' });
+  const data = await serverGet<PaginatedArticles>(`/articles?${params}`);
+  return data?.data ?? [];
+}

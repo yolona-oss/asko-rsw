@@ -5,6 +5,7 @@ import { AppConfig } from '../app.config';
 import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
 import { ArticleEdge } from 'entities/article-edge.entity';
+import { ArticleTag } from 'entities/article-tag.entity';
 import { isProdEnv } from '@asko/shared';
 import path from 'path';
 
@@ -19,7 +20,7 @@ import path from 'path';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [Article, ArticleView, ArticleEdge],
+                    entities: [Article, ArticleView, ArticleEdge, ArticleTag],
                     migrations: {
                         path: path.join(process.cwd(), 'migrations'),
                     },

@@ -31,34 +31,33 @@ export class GraphService implements OnModuleInit, OnModuleDestroy {
 
     @CreateRequestContext()
     async recalculateTagEdges(articleId: string): Promise<void> {
-        const article = await this.em.findOne(Article, { id: articleId });
-        if (!article || !article.tags?.length) return;
+        const conn = this.em.getConnection();
 
-        const others = await this.em.find(Article, { id: { $ne: articleId } });
+        // Find articles sharing tags with this article via SQL join
+        const rows = await conn.execute<{ other_id: string; shared: string; max_tags: string }[]>(
+            `SELECT
+                at2.article_id AS other_id,
+                COUNT(*)::text AS shared,
+                GREATEST(
+                    (SELECT COUNT(*) FROM article_tag WHERE article_id = $1),
+                    (SELECT COUNT(*) FROM article_tag WHERE article_id = at2.article_id)
+                )::text AS max_tags
+             FROM article_tag at1
+             JOIN article_tag at2 ON at1.tag = at2.tag AND at2.article_id != at1.article_id
+             WHERE at1.article_id = $1
+             GROUP BY at2.article_id`,
+            [articleId],
+        );
 
-        for (const other of others) {
-            const otherTags = other.tags ?? [];
-            if (otherTags.length === 0) continue;
+        // Remove old tag edges for this article
+        await this.em.nativeDelete(ArticleEdge, { sourceId: articleId, edgeType: EdgeType.TAG });
+        await this.em.nativeDelete(ArticleEdge, { targetId: articleId, edgeType: EdgeType.TAG });
 
-            const shared = article.tags.filter((t) => otherTags.includes(t)).length;
-            if (shared === 0) {
-                // Remove tag edge if it exists
-                await this.em.nativeDelete(ArticleEdge, {
-                    sourceId: articleId,
-                    targetId: other.id,
-                    edgeType: EdgeType.TAG,
-                });
-                await this.em.nativeDelete(ArticleEdge, {
-                    sourceId: other.id,
-                    targetId: articleId,
-                    edgeType: EdgeType.TAG,
-                });
-                continue;
-            }
-
-            const weight = shared / Math.max(article.tags.length, otherTags.length);
-            await this.upsertEdge(articleId, other.id, weight, EdgeType.TAG);
-            await this.upsertEdge(other.id, articleId, weight, EdgeType.TAG);
+        // Create new bidirectional tag edges
+        for (const row of rows) {
+            const weight = parseInt(row.shared, 10) / parseInt(row.max_tags, 10);
+            await this.upsertEdge(articleId, row.other_id, weight, EdgeType.TAG);
+            await this.upsertEdge(row.other_id, articleId, weight, EdgeType.TAG);
         }
     }
 
@@ -69,18 +68,28 @@ export class GraphService implements OnModuleInit, OnModuleDestroy {
         const articles = await this.em.find(Article, {});
         if (articles.length < 2) return;
 
-        // 1. Rebuild tag edges
-        for (const article of articles) {
-            if (!article.tags?.length) continue;
-            for (const other of articles) {
-                if (article.id === other.id) continue;
-                const otherTags = other.tags ?? [];
-                if (otherTags.length === 0) continue;
-                const shared = article.tags.filter((t) => otherTags.includes(t)).length;
-                if (shared === 0) continue;
-                const weight = shared / Math.max(article.tags.length, otherTags.length);
-                await this.upsertEdge(article.id, other.id, weight, EdgeType.TAG);
-            }
+        // 1. Rebuild tag edges via SQL self-join on article_tag
+        const conn = this.em.getConnection();
+        await this.em.nativeDelete(ArticleEdge, { edgeType: EdgeType.TAG });
+
+        const tagPairs = await conn.execute<{ a_id: string; b_id: string; shared: string; max_tags: string }[]>(
+            `SELECT
+                at1.article_id AS a_id,
+                at2.article_id AS b_id,
+                COUNT(*)::text AS shared,
+                GREATEST(
+                    (SELECT COUNT(*) FROM article_tag WHERE article_id = at1.article_id),
+                    (SELECT COUNT(*) FROM article_tag WHERE article_id = at2.article_id)
+                )::text AS max_tags
+             FROM article_tag at1
+             JOIN article_tag at2 ON at1.tag = at2.tag AND at1.article_id < at2.article_id
+             GROUP BY at1.article_id, at2.article_id`,
+        );
+
+        for (const row of tagPairs) {
+            const weight = parseInt(row.shared, 10) / parseInt(row.max_tags, 10);
+            await this.upsertEdge(row.a_id, row.b_id, weight, EdgeType.TAG);
+            await this.upsertEdge(row.b_id, row.a_id, weight, EdgeType.TAG);
         }
 
         // 2. Rebuild co-view edges (Jaccard similarity)

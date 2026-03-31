@@ -6,6 +6,7 @@ import { DatabaseModule } from 'modules/database.module';
 import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
 import { ArticleEdge } from 'entities/article-edge.entity';
+import { ArticleTag } from 'entities/article-tag.entity';
 import { ContentService } from 'services/content.service';
 import { GraphService } from 'services/graph.service';
 import { ContentGrpcController } from 'controllers/content.grpc.controller';
@@ -15,7 +16,7 @@ import { ContentGrpcController } from 'controllers/content.grpc.controller';
         AppConfigModule,
         MetricsModule.register({ serviceName: 'content-service' }),
         DatabaseModule,
-        MikroOrmModule.forFeature([Article, ArticleView, ArticleEdge]),
+        MikroOrmModule.forFeature([Article, ArticleView, ArticleEdge, ArticleTag]),
     ],
     controllers: [ContentGrpcController],
     providers: [ContentService, GraphService],

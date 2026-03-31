@@ -71,7 +71,7 @@ export default async function ArticlesListPage({
           <Pagination
             page={page}
             totalPages={totalPages}
-            getHref={(p) => `/articles?page=${p}`}
+            hrefPattern="/articles?page={page}"
             className="justify-center mt-10"
           />
         </div>

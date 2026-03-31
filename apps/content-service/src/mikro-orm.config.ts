@@ -7,6 +7,7 @@ import path from 'path';
 import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
 import { ArticleEdge } from 'entities/article-edge.entity';
+import { ArticleTag } from 'entities/article-tag.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 
@@ -22,7 +23,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [Article, ArticleView, ArticleEdge],
+    entities: [Article, ArticleView, ArticleEdge, ArticleTag],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

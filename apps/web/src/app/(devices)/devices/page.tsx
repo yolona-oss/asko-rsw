@@ -88,7 +88,7 @@ export default async function DevicesListPage({
           <Pagination
             page={page}
             totalPages={totalPages}
-            getHref={(p) => `/devices?page=${p}`}
+            hrefPattern="/devices?page={page}"
             className="justify-center mt-10"
           />
         </div>

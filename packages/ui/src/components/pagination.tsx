@@ -10,8 +10,14 @@ export interface PaginationProps {
   totalPages: number;
   /** Called when user clicks a page (for client-side pagination) */
   onPageChange?: (page: number) => void;
-  /** Generate href for a page (for link-based pagination). When provided, renders <a> tags instead of buttons. */
+  /** Generate href for a page (for link-based pagination in client components). Renders <a> tags instead of buttons. */
   getHref?: (page: number) => string;
+  /**
+   * URL pattern for link-based pagination in server components.
+   * Use `{page}` as placeholder, e.g. `"/devices?page={page}"`.
+   * Serializable alternative to `getHref` (which can't cross the server→client boundary).
+   */
+  hrefPattern?: string;
   /** Max visible page buttons before collapsing with ellipsis. Default: 5 */
   maxVisible?: number;
   /** Show Previous/Next text buttons. Default: true */
@@ -66,11 +72,13 @@ export function Pagination({
   page,
   totalPages,
   onPageChange,
-  getHref,
+  getHref: getHrefProp,
+  hrefPattern,
   maxVisible = 5,
   showPrevNext = true,
   className,
 }: PaginationProps) {
+  const getHref = getHrefProp ?? (hrefPattern ? (p: number) => hrefPattern.replace('{page}', String(p)) : undefined);
   const pages = useMemo(
     () => getPageRange(page, totalPages, maxVisible),
     [page, totalPages, maxVisible],

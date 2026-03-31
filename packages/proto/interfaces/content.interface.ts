@@ -28,6 +28,7 @@ export interface FindAllArticlesRequest {
     offset: number;
     limit: number;
     search: string;
+    tags: string[];
 }
 
 export interface FindArticleBySlugRequest {

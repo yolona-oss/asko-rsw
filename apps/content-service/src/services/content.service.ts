@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
+import { ArticleTag } from 'entities/article-tag.entity';
 import { AppErrors } from 'common/error';
 import { GraphService } from './graph.service';
 
@@ -73,12 +74,12 @@ export class ContentService {
             text,
             description: dto.description,
             content: dto.content,
-            tags: dto.tags,
         });
         await this.em.persistAndFlush(article);
 
-        // Recalculate tag edges for the new article
-        if (article.tags?.length) {
+        // Insert tags into junction table
+        if (dto.tags?.length) {
+            await this.replaceTags(article.id, dto.tags);
             this.graphService.recalculateTagEdges(article.id).catch(() => {});
         }
 
@@ -125,11 +126,13 @@ export class ContentService {
             dto.text = extractPlainText(dto.content);
         }
 
-        this.em.assign(article, dto);
+        const { tags, ...entityDto } = dto;
+        this.em.assign(article, entityDto);
         await this.em.flush();
 
-        // Recalculate tag edges if tags changed
-        if (dto.tags) {
+        // Replace tags in junction table if provided
+        if (tags !== undefined) {
+            await this.replaceTags(article.id, tags ?? []);
             this.graphService.recalculateTagEdges(article.id).catch(() => {});
         }
 
@@ -140,16 +143,21 @@ export class ContentService {
     async delete(id: string): Promise<void> {
         const article = await this.em.findOne(Article, { id });
         if (!article) throw AppErrors.articleNotFound();
+        await this.em.nativeDelete(ArticleTag, { articleId: id });
         await this.em.removeAndFlush(article);
     }
 
     @CreateRequestContext()
     async deleteAll(): Promise<number> {
+        await this.em.nativeDelete(ArticleTag, {});
         return this.em.nativeDelete(Article, {});
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Article[]; total: number }> {
+    async findAll(pagination: { offset?: number; limit?: number; search?: string; tags?: string[] }): Promise<{ data: Article[]; total: number }> {
+        if (pagination.tags?.length) {
+            return this.findByTags(pagination.tags, pagination.limit ?? 20);
+        }
         const [data, total] = await this.em.findAndCount(
             Article,
             pagination.search
@@ -171,21 +179,19 @@ export class ContentService {
 
     @CreateRequestContext()
     async getTagStats(): Promise<{ tag: string; count: number; totalViews: number }[]> {
-        const articles = await this.em.find(Article, {});
-        const stats = new Map<string, { count: number; totalViews: number }>();
-
-        for (const article of articles) {
-            for (const tag of article.tags ?? []) {
-                const existing = stats.get(tag) ?? { count: 0, totalViews: 0 };
-                existing.count += 1;
-                existing.totalViews += article.viewCount;
-                stats.set(tag, existing);
-            }
-        }
-
-        return [...stats.entries()]
-            .map(([tag, s]) => ({ tag, count: s.count, totalViews: s.totalViews }))
-            .sort((a, b) => b.count - a.count);
+        const conn = this.em.getConnection();
+        const rows = await conn.execute<{ tag: string; count: string; total_views: string }[]>(
+            `SELECT at.tag, COUNT(*)::text AS count, COALESCE(SUM(a.view_count), 0)::text AS total_views
+             FROM article_tag at
+             JOIN article a ON a.id = at.article_id
+             GROUP BY at.tag
+             ORDER BY COUNT(*) DESC`,
+        );
+        return rows.map((r) => ({
+            tag: r.tag,
+            count: parseInt(r.count, 10),
+            totalViews: parseInt(r.total_views, 10),
+        }));
     }
 
     @CreateRequestContext()
@@ -337,6 +343,57 @@ export class ContentService {
         }
 
         return result;
+    }
+
+    // ─── Tag helpers ────────────────────────────────────────────────
+
+    @CreateRequestContext()
+    async getArticleTags(articleId: string): Promise<string[]> {
+        const tags = await this.em.find(ArticleTag, { articleId }, { orderBy: { createdAt: 'ASC' } });
+        return tags.map((t) => t.tag);
+    }
+
+    @CreateRequestContext()
+    async getArticleTagsBatch(articleIds: string[]): Promise<Map<string, string[]>> {
+        if (!articleIds.length) return new Map();
+        const tags = await this.em.find(ArticleTag, { articleId: { $in: articleIds } });
+        const map = new Map<string, string[]>();
+        for (const t of tags) {
+            if (!map.has(t.articleId)) map.set(t.articleId, []);
+            map.get(t.articleId)!.push(t.tag);
+        }
+        return map;
+    }
+
+    private async replaceTags(articleId: string, tags: string[]): Promise<void> {
+        await this.em.nativeDelete(ArticleTag, { articleId });
+        const normalized = [...new Set(tags.map((t) => t.trim().toLowerCase()).filter(Boolean))];
+        for (const tag of normalized) {
+            this.em.create(ArticleTag, { articleId, tag });
+        }
+        if (normalized.length) await this.em.flush();
+    }
+
+    @CreateRequestContext()
+    async findByTags(tags: string[], limit = 20): Promise<{ data: Article[]; total: number }> {
+        const lowerTags = tags.map((t) => t.toLowerCase());
+        const conn = this.em.getConnection();
+        const rows = await conn.execute<{ id: string }[]>(
+            `SELECT a.id
+             FROM article a
+             JOIN article_tag at ON at.article_id = a.id
+             WHERE at.tag = ANY(?)
+             GROUP BY a.id
+             ORDER BY COUNT(*) DESC, a.view_count DESC
+             LIMIT ?`,
+            [lowerTags, limit],
+        );
+        if (!rows.length) return { data: [], total: 0 };
+        const ids = rows.map((r) => r.id);
+        const articles = await this.em.find(Article, { id: { $in: ids } });
+        const articleMap = new Map(articles.map((a) => [a.id, a]));
+        const ordered = ids.map((id) => articleMap.get(id)).filter(Boolean) as Article[];
+        return { data: ordered, total: ordered.length };
     }
 
     private async findBySlugInternal(slug: string): Promise<Article> {

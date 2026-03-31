@@ -86,22 +86,6 @@
           "enumItems": [],
           "mappedType": "json"
         },
-        "tags": {
-          "name": "tags",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
-        },
         "view_count": {
           "name": "view_count",
           "type": "int4",
@@ -356,6 +340,123 @@
           "composite": false,
           "constraint": false,
           "keyName": "article_edge_target_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {},
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "article_id": {
+          "name": "article_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "tag": {
+          "name": "tag",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "article_tag",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "article_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "article_tag_article_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "article_id",
+            "tag"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "article_tag_article_id_tag_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "article_tag_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "tag"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "article_tag_tag_index",
           "unique": false,
           "primary": false
         }

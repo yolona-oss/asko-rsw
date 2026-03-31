@@ -36,7 +36,7 @@ function toGrpcError(error: unknown): RpcException {
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
 
-function articleToRecord(entity: Article) {
+function articleToRecord(entity: Article, tags: string[] = []) {
     return {
         id: entity.id,
         title: entity.title,
@@ -44,7 +44,7 @@ function articleToRecord(entity: Article) {
         text: entity.text,
         description: entity.description ?? '',
         content: entity.content ? JSON.stringify(entity.content) : '',
-        tags: entity.tags ?? [],
+        tags,
         viewCount: entity.viewCount,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
@@ -69,7 +69,8 @@ export class ContentGrpcController {
                 content,
                 tags: data.tags?.length ? data.tags : undefined,
             });
-            return { article: articleToRecord(article) };
+            const tags = await this.contentService.getArticleTags(article.id);
+            return { article: articleToRecord(article, tags) };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -85,7 +86,8 @@ export class ContentGrpcController {
             if (data.tags?.length) dto.tags = data.tags;
 
             const article = await this.contentService.update(data.id, dto);
-            return { article: articleToRecord(article) };
+            const tags = await this.contentService.getArticleTags(article.id);
+            return { article: articleToRecord(article, tags) };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -112,9 +114,13 @@ export class ContentGrpcController {
                 offset: data.offset || undefined,
                 limit: data.limit || undefined,
                 search: data.search || undefined,
+                tags: data.tags?.length ? data.tags : undefined,
             });
+            const tagMap = result.data.length
+                ? await this.contentService.getArticleTagsBatch(result.data.map((a) => a.id))
+                : new Map<string, string[]>();
             return {
-                data: result.data.map(articleToRecord),
+                data: result.data.map((a) => articleToRecord(a, tagMap.get(a.id) ?? [])),
                 overallCount: result.total,
                 offset: data.offset ?? 0,
                 limit: data.limit ?? 20,
@@ -126,7 +132,8 @@ export class ContentGrpcController {
     async findArticleBySlug(data: FindArticleBySlugRequest) {
         try {
             const article = await this.contentService.findBySlug(data.slug);
-            return { article: articleToRecord(article) };
+            const tags = await this.contentService.getArticleTags(article.id);
+            return { article: articleToRecord(article, tags) };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -148,7 +155,10 @@ export class ContentGrpcController {
     async findRelatedArticles(data: FindRelatedArticlesRequest) {
         try {
             const articles = await this.contentService.findRelated(data.slug, data.limit || 4);
-            return { data: articles.map(articleToRecord) };
+            const tagMap = articles.length
+                ? await this.contentService.getArticleTagsBatch(articles.map((a) => a.id))
+                : new Map<string, string[]>();
+            return { data: articles.map((a) => articleToRecord(a, tagMap.get(a.id) ?? [])) };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -159,7 +169,10 @@ export class ContentGrpcController {
                 data.userId || undefined,
                 data.limit || 8,
             );
-            return { data: articles.map(articleToRecord) };
+            const tagMap = articles.length
+                ? await this.contentService.getArticleTagsBatch(articles.map((a) => a.id))
+                : new Map<string, string[]>();
+            return { data: articles.map((a) => articleToRecord(a, tagMap.get(a.id) ?? [])) };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -202,8 +215,11 @@ export class ContentGrpcController {
                 this.contentService.findAllForGraph(),
                 this.graphService.getAllEdges(),
             ]);
+            const tagMap = articles.length
+                ? await this.contentService.getArticleTagsBatch(articles.map((a) => a.id))
+                : new Map<string, string[]>();
             return {
-                articles: articles.map(articleToRecord),
+                articles: articles.map((a) => articleToRecord(a, tagMap.get(a.id) ?? [])),
                 edges: edges.map((e) => ({
                     id: e.id,
                     sourceId: e.sourceId,

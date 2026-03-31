@@ -60,11 +60,12 @@ export class ContentClientService implements OnModuleInit {
 
     // ─── Queries ──────────────────────────────────────────────────────
 
-    findAllArticles(offset?: number, limit?: number, search?: string): Promise<PaginatedArticlesResponse> {
+    findAllArticles(offset?: number, limit?: number, search?: string, tags?: string[]): Promise<PaginatedArticlesResponse> {
         return grpcCall(this.contentService.findAllArticles({
             offset: offset ?? 0,
             limit: limit ?? 20,
             search: search ?? '',
+            tags: tags ?? [],
         }));
     }
 
