@@ -41,4 +41,4 @@ COPY .postgres/root.crt ./apps/api/.postgres/root.crt
 
 WORKDIR /app/apps/api
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]
