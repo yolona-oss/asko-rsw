@@ -194,6 +194,8 @@ export class DeviceGrpcController {
                 offset: data.offset,
                 limit: data.limit,
                 search: data.search || undefined,
+                type: data.type || undefined,
+                isFeatured: data.isFeatured || undefined,
             });
             return {
                 data: result.data.map(deviceToRecord),

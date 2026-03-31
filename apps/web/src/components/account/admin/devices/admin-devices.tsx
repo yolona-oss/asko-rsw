@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -10,10 +10,12 @@ import {
   DataTableEmpty,
   DataTableFooter,
   DataSearch,
+  DataFilter,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
+import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
@@ -22,8 +24,34 @@ import { TYPE_LABELS } from './constants';
 import { DeviceRow } from './device-row';
 import { DeviceCard } from './device-card';
 
+const PAGE_SIZE = 20;
+
+const FILTERS = [
+  {
+    key: 'type',
+    label: 'Тип',
+    type: 'select' as const,
+    options: [
+      { value: '', label: 'Все типы' },
+      ...Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label })),
+    ],
+  },
+  {
+    key: 'featured',
+    label: 'На главной',
+    type: 'tabs' as const,
+    options: [
+      { value: '', label: 'Все' },
+      { value: 'yes', label: 'Да' },
+      { value: 'no', label: 'Нет' },
+    ],
+  },
+];
+
 export function AdminDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
   const [importing, setImporting] = useState(false);
@@ -31,7 +59,48 @@ export function AdminDevices() {
   const [deletingAll, setDeletingAll] = useState(false);
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState<FilterValues>({ type: '', featured: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchDevices = useCallback(async (p: number) => {
+    setLoading(true);
+    try {
+      const { data } = await deviceApi.getAll({ offset: p, limit: PAGE_SIZE, search: search || undefined });
+      setDevices(data.data ?? []);
+      setTotal(data.overallCount ?? 0);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchDevices(1);
+  }, [search, fetchDevices]);
+
+  useEffect(() => {
+    fetchDevices(page);
+  }, [page, fetchDevices]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const filteredDevices = useMemo(() => {
+    let result = devices;
+    if (filterValues.type) {
+      result = result.filter((d) => d.type === filterValues.type);
+    }
+    if (filterValues.featured === 'yes') {
+      result = result.filter((d) => d.isFeatured);
+    } else if (filterValues.featured === 'no') {
+      result = result.filter((d) => !d.isFeatured);
+    }
+    return result;
+  }, [devices, filterValues]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,7 +134,7 @@ export function AdminDevices() {
       }
 
       setImporting(false);
-      await fetchDevices();
+      await fetchDevices(page);
     } catch {
       setImporting(false);
       setImportStatus({ total: 0, done: 0, errors: ['Ошибка чтения файла'] });
@@ -74,24 +143,11 @@ export function AdminDevices() {
     }
   };
 
-  const fetchDevices = async () => {
-    try {
-      const { data } = await deviceApi.getAll({ limit: 100 });
-      setDevices(data.data ?? []);
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDevices();
-  }, []);
-
   const handleDelete = async (id: string) => {
     try {
       await deviceApi.delete(id);
       setDevices((prev) => prev.filter((d) => d.id !== id));
+      setTotal((prev) => prev - 1);
     } catch {
     }
   };
@@ -101,23 +157,13 @@ export function AdminDevices() {
     try {
       await deviceApi.deleteAll();
       setDevices([]);
+      setTotal(0);
     } catch {
     } finally {
       setDeletingAll(false);
       setShowDeleteAll(false);
     }
   };
-
-  const filteredDevices = useMemo(() => {
-    if (!search) return devices;
-    const q = search.toLowerCase();
-    return devices.filter((d) =>
-      d.name.toLowerCase().includes(q)
-      || d.model.toLowerCase().includes(q)
-      || d.brand.toLowerCase().includes(q)
-      || (TYPE_LABELS[d.type] ?? d.type).toLowerCase().includes(q),
-    );
-  }, [devices, search]);
 
   return (
     <PageContainer>
@@ -155,6 +201,13 @@ export function AdminDevices() {
           </div>
         </div>
       </div>
+
+      {/* Filters */}
+      <DataFilter
+        filters={FILTERS}
+        values={filterValues}
+        onChange={handleFilterChange}
+      />
 
       <Modal
         open={importStatus !== null}
@@ -216,7 +269,7 @@ export function AdminDevices() {
       >
         <h2 className="text-base font-medium text-text-main mb-2">Удалить все товары?</h2>
         <p className="text-sm text-text-sub mb-6">
-          Это действие удалит все {devices.length} товаров. Отменить будет невозможно.
+          Это действие удалит все {total} товаров. Отменить будет невозможно.
         </p>
         <div className="flex justify-end gap-2">
           <Button
@@ -247,6 +300,7 @@ export function AdminDevices() {
             <div className="flex-1 px-4">Тип</div>
             <div className="flex-1 px-4">Модель</div>
             <div className="w-20 px-4">Бренд</div>
+            <div className="w-24 px-4 text-center">Главная</div>
             <div className="w-[200px] flex-shrink-0" />
           </DataTableHeader>
 
@@ -259,7 +313,43 @@ export function AdminDevices() {
           )}
 
           <DataTableFooter>
-            Показано {filteredDevices.length} из {devices.length}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredDevices.length} из {total}</span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
+                  >
+                    &larr;
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPage(p)}
+                      className={`px-2 py-1 text-xs rounded-sm cursor-pointer ${
+                        p === page
+                          ? 'bg-[#D7102A] text-white'
+                          : 'border border-border-light hover:bg-gray-50'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              )}
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
@@ -271,6 +361,41 @@ export function AdminDevices() {
               {filteredDevices.map((device) => (
                 <DeviceCard key={device.id} device={device} onDelete={handleDelete} />
               ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-1 mt-6">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
+              >
+                &larr;
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={`px-2 py-1 text-xs rounded-sm cursor-pointer ${
+                    p === page
+                      ? 'bg-[#D7102A] text-white'
+                      : 'border border-border-light hover:bg-gray-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
+              >
+                &rarr;
+              </button>
             </div>
           )}
         </>

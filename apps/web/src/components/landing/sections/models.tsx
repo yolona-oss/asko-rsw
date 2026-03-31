@@ -1,49 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Container } from '@asko/ui';
+import { Container, DataFilter } from '@asko/ui';
+import type { FilterValues } from '@asko/ui';
 import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { deviceApi } from '@/lib/api/device';
 
-const tabs = ['Стиральные машины', 'Посудомоечные машины', 'Электроплиты', 'Варочные панели'];
+interface DeviceModel {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  image: string | null;
+}
 
-const models = [
+const TYPE_FILTERS = [
   {
-    image: '/images/7d57ebe13de0ab80138bca5f4062e2c0650cf8bb.webp',
-    title: 'Сушильные машины Asko -T108HBW',
-    description: 'Сушильная машина ASKO T108HB.W - это современное решение для эффективного и бережного ухода за бельём в домашних условиях. Модель из серии Classic воплощает в себе скандинавский подход к дизайну: лаконичные формы, белоснежный цвет корпуса и панели управления органично впишутся в любой интерьер',
-    column: 'left',
-  },
-  {
-    image: '/images/00f921adbbe354ea048e60bb3ee0589764b18c7b.webp',
-    title: 'Стиральная машина Asko W4114C.W/3',
-    description: 'Стиральная машина Asko W4114C. W/3 - стандартная по габаритам модель с дисплеем, который дополняет функционал оборудования и помогает увидеть всю необходимую информацию, такую как температуру стирки, количество установленных оборотов, а главное Вы всегда сможете посмотреть, сколько осталось времени до завершения стирки, что позволит спланировать свои дела.',
-    column: 'right',
-  },
-  {
-    image: '/images/c421a86e871ef4c3367e99cf70ea788325c0bfa2.webp',
-    title: 'Стиральная машина Asko WMC6863P.W/1',
-    description: 'Стиральная машина Asko WMC6863P.W/1 - отдельностоящая модель белого цвета. Благодаря стильному и современному дизайну она впишется в интерьер любой ванной комнаты или постирочной. Внутри располагается бак из нержавеющей стали - надежного и функционального сплава, который не поддается коррозии.',
-    column: 'left',
-  },
-  {
-    image: '/images/b9fd50ea648ab558085721e0f33610b5b0b61bac.webp',
-    title: 'Стиральная машина Asko WMC6863P.W/1',
-    description: 'Стиральная машина Asko WMC6863P.W/1 - отдельностоящая модель белого цвета. Благодаря стильному и современному дизайну она впишется в интерьер любой ванной комнаты или постирочной. Внутри располагается бак из нержавеющей стали - надежного и функционального сплава, который не поддается коррозии.',
-    column: 'right',
+    key: 'type',
+    label: '',
+    type: 'tabs' as const,
+    options: [
+      { value: '', label: 'Все' },
+      { value: 'washing_machine', label: 'Стиральные машины' },
+      { value: 'dryer', label: 'Сушильные машины' },
+      { value: 'dishwasher', label: 'Посудомоечные машины' },
+      { value: 'oven', label: 'Духовые шкафы' },
+      { value: 'cooktop', label: 'Варочные панели' },
+      { value: 'refrigerator', label: 'Холодильники' },
+    ],
   },
 ];
 
-function ModelCard({ model }: { model: typeof models[number] }) {
+function ModelCard({ model }: { model: DeviceModel }) {
   return (
     <div className="flex flex-col gap-6 lg:gap-10">
       <div className="relative w-full aspect-[358/400] lg:aspect-[548/769] overflow-hidden">
-        <SkeletonImage
-          src={model.image}
-          alt={model.title}
-          fill
-          className="object-cover"
-        />
+        {model.image ? (
+          <SkeletonImage
+            src={model.image}
+            alt={model.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-text-sub text-xs">
+            Нет фото
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-4">
         <h3 className="text-2xl leading-7 md:text-[32px] md:leading-9 font-normal tracking-[-0.01em] text-text-main">
@@ -54,7 +58,7 @@ function ModelCard({ model }: { model: typeof models[number] }) {
             {model.description}
           </p>
           <Link
-            href="#"
+            href={`/devices/${model.slug}`}
             className="inline-flex items-center gap-2 text-base lg:text-lg font-bold text-text-main underline tracking-[-0.01em]"
           >
             Узнать больше...
@@ -69,11 +73,47 @@ function ModelCard({ model }: { model: typeof models[number] }) {
 }
 
 export function ModelsSection() {
-  const [activeTab, setActiveTab] = useState('Стиральные машины');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [models, setModels] = useState<DeviceModel[]>([]);
+  const [filterValues, setFilterValues] = useState<FilterValues>({ type: '' });
+  const [loading, setLoading] = useState(true);
 
-  const leftModels = models.filter((m) => m.column === 'left');
-  const rightModels = models.filter((m) => m.column === 'right');
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const params: Record<string, any> = { isFeatured: true, limit: 8, offset: 1 };
+        if (filterValues.type) params.type = filterValues.type;
+
+        const { data: resp } = await deviceApi.getAll(params);
+        const devices = resp.data ?? [];
+
+        const mapped: DeviceModel[] = await Promise.all(
+          devices.map(async (d) => {
+            let image: string | null = null;
+            try {
+              const { data: imgData } = await deviceApi.getImages(d.id);
+              const imgs = (imgData.images ?? []).sort((a, b) => a.order - b.order);
+              if (imgs.length > 0) {
+                image = imgs[0].imageJson.medium?.secure_url ?? imgs[0].imageJson.original.secure_url;
+              }
+            } catch { /* ignore */ }
+            return {
+              id: d.id,
+              slug: d.slug,
+              title: d.name,
+              description: d.description ?? '',
+              image,
+            };
+          }),
+        );
+        setModels(mapped);
+      } catch { /* keep empty */ }
+      setLoading(false);
+    })();
+  }, [filterValues.type]);
+
+  const leftModels = models.filter((_, i) => i % 2 === 0);
+  const rightModels = models.filter((_, i) => i % 2 === 1);
 
   return (
     <section id="models" className="py-8 md:py-12 lg:py-16">
@@ -84,72 +124,41 @@ export function ModelsSection() {
               Описание моделей
             </h2>
 
-            {/* Mobile dropdown */}
-            <div className="md:hidden relative">
-              <button
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center justify-between w-fit px-4 py-2 text-lg font-medium text-text-main bg-white border border-border-light"
-              >
-                <span>{activeTab}</span>
-                <svg className={`w-4 h-4 ml-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 z-10 bg-white border border-border-light shadow-lg">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => { setActiveTab(tab); setDropdownOpen(false); }}
-                      className={`block w-full px-4 py-2 text-left text-base ${activeTab === tab ? 'bg-dark text-white' : 'text-text-main hover:bg-page-bg'}`}
-                    >
-                      {tab}
-                    </button>
+            <DataFilter
+              filters={TYPE_FILTERS}
+              values={filterValues}
+              onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+            />
+          </div>
+
+          {loading ? (
+            <p className="text-sm text-text-sub py-8">Загрузка...</p>
+          ) : models.length === 0 ? (
+            <p className="text-sm text-text-sub py-8">Нет рекомендуемых моделей</p>
+          ) : (
+            <>
+              {/* Mobile: single column */}
+              <div className="flex flex-col gap-8 lg:hidden">
+                {models.map((model) => (
+                  <ModelCard key={model.id} model={model} />
+                ))}
+              </div>
+
+              {/* Desktop: staggered 2-col */}
+              <div className="hidden lg:grid grid-cols-2 gap-x-14">
+                <div className="flex flex-col gap-16">
+                  {leftModels.map((model) => (
+                    <ModelCard key={model.id} model={model} />
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Desktop tabs */}
-            <div className="hidden md:flex flex-wrap gap-4">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-lg tracking-[-0.01em] ${activeTab === tab
-                      ? 'bg-black text-page-bg border border-black'
-                      : 'bg-page-bg text-text-main border border-border-light'
-                    }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile: single column */}
-          <div className="flex flex-col gap-8 lg:hidden">
-            {models.map((model) => (
-              <ModelCard key={model.title + model.column} model={model} />
-            ))}
-          </div>
-
-          {/* Desktop: staggered 2-col */}
-          <div className="hidden lg:grid grid-cols-2 gap-x-14">
-            <div className="flex flex-col gap-16">
-              {leftModels.map((model) => (
-                <ModelCard key={model.title + model.column} model={model} />
-              ))}
-            </div>
-            <div className="flex flex-col gap-16 lg:mt-[350px]">
-              {rightModels.map((model) => (
-                <ModelCard key={model.title + model.column} model={model} />
-              ))}
-            </div>
-          </div>
+                <div className="flex flex-col gap-16 lg:mt-[350px]">
+                  {rightModels.map((model) => (
+                    <ModelCard key={model.id} model={model} />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </Container>
     </section>

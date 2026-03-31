@@ -8,6 +8,13 @@ export async function fetchDevices(page: number, limit: number): Promise<Paginat
   return data ?? { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
 }
 
+export async function fetchFeaturedDevices(type?: string): Promise<IDevice[]> {
+  const params = new URLSearchParams({ isFeatured: 'true', limit: '20', offset: '1' });
+  if (type) params.set('type', type);
+  const data = await serverGet<PaginatedDevices>(`/devices?${params}`);
+  return data?.data ?? [];
+}
+
 export async function fetchDevice(id: string): Promise<IDevice | null> {
   return serverGet<IDevice>(`/devices/${id}`);
 }

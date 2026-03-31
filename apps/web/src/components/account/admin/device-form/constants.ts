@@ -17,6 +17,7 @@ export const INITIAL_DATA: FormData = {
   brand: 'ASKO',
   description: '',
   slug: '',
+  isFeatured: false,
 };
 
 export const DEVICE_TYPES = [

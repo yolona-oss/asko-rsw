@@ -196,8 +196,16 @@ export class DeviceController {
     @Public()
     @Get()
     @ApiOkResponse({ type: PaginatedDevicesResponseDto })
-    async findAll(@Query() pagination: PaginationDto) {
-        return this.deviceClient.findAllDevices(pagination);
+    async findAll(
+        @Query() pagination: PaginationDto,
+        @Query('type') type?: string,
+        @Query('isFeatured') isFeatured?: string,
+    ) {
+        return this.deviceClient.findAllDevices({
+            ...pagination,
+            type,
+            isFeatured: isFeatured === 'true',
+        });
     }
 
     @Public()

@@ -4,6 +4,7 @@ export interface Device {
   type: string;
   model: string;
   brand: string;
+  isFeatured?: boolean;
 }
 
 export interface ImportStatus {

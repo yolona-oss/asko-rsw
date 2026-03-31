@@ -36,6 +36,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
           brand: device.brand ?? '',
           description: device.description ?? '',
           slug: device.slug ?? '',
+          isFeatured: device.isFeatured ?? false,
         });
         setSpecifications(recordToKV(device.specifications));
         setFeatures(recordToKV(device.features));
@@ -61,6 +62,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
         specifications: kvToRecord(specifications),
         features: kvToRecord(features),
         slug: data.slug || Math.random().toString(36).substring(2, 2 + 10),
+        isFeatured: data.isFeatured,
       };
 
       if (isEdit) {
@@ -160,6 +162,25 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
             className="max-w-[500px]"
           />
         </FormField>
+
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={data.isFeatured}
+            onClick={() => update({ isFeatured: !data.isFeatured })}
+            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
+              data.isFeatured ? 'bg-[#D7102A]' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${
+                data.isFeatured ? 'translate-x-[22px]' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-bold text-text-main">Показывать на главной</span>
+        </label>
 
         {isEdit && deviceId && (
           <FormField label="Изображения" variant="bold">

@@ -75,10 +75,10 @@ export default async function ArticlePage({
     <div className="bg-[#f1f1f1]">
       <ArticleViewTracker slug={slug} />
       <Container>
-        <div className="py-8 md:py-12 px-4 md:px-0 flex flex-col items-center">
+        <div className="py-8 md:py-12 px-4 md:px-0 max-w-[738px] mx-auto">
           <ArticleBreadcrumb />
 
-          <div className="max-w-[738px]">
+          <div>
             {/* Mobile: title + image grouped (gap-4), Desktop: gap-8 */}
             <div className="flex flex-col gap-4 md:gap-8">
               <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-[#323232]">

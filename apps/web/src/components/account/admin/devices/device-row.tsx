@@ -24,6 +24,13 @@ export function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id:
       <DataTableCell mobileLabel="Бренд:" className="lg:w-20 lg:px-4">
         <p className="text-sm text-text-main">{device.brand}</p>
       </DataTableCell>
+      <DataTableCell mobileLabel="Главная:" className="lg:w-24 lg:px-4 lg:text-center">
+        {device.isFeatured ? (
+          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-sm">Да</span>
+        ) : (
+          <span className="inline-block px-2 py-0.5 text-xs text-text-sub">Нет</span>
+        )}
+      </DataTableCell>
       <DataTableCell className="lg:w-[200px] lg:flex-shrink-0 lg:text-right flex gap-2">
         <Link href={`/account/devices/${device.id}`}>
           <Button variant="secondary" size="sm">

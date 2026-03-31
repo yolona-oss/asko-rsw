@@ -210,6 +210,8 @@ message FindAllDevicesRequest {
     int32 offset = 1;
     int32 limit = 2;
     string search = 3;
+    string type = 4;
+    bool isFeatured = 5;
 }
 
 message FindBySlugRequest {

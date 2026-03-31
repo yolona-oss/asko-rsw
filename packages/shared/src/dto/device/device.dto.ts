@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsObject, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsObject, IsNumber, IsBoolean } from 'class-validator';
 import { DeviceType } from '../../types/device.type';
 
 export class CreateDeviceDto {
@@ -25,6 +25,10 @@ export class CreateDeviceDto {
     @IsOptional()
     @IsObject()
     features?: Record<string, any>;
+
+    @IsOptional()
+    @IsBoolean()
+    isFeatured?: boolean;
 }
 
 export class UpdateDeviceDto {
@@ -59,6 +63,10 @@ export class UpdateDeviceDto {
     @IsOptional()
     @IsString()
     slug?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isFeatured?: boolean;
 }
 
 export class CreateDevicePartDto {

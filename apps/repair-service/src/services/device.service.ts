@@ -146,7 +146,7 @@ export class DeviceService {
     // ── Device catalog (public queries) ─────────────────────────────────
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Device[]; total: number }> {
+    async findAll(pagination: { offset?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<{ data: Device[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
             where.$or = [
@@ -154,6 +154,12 @@ export class DeviceService {
                 { model: { $ilike: `%${pagination.search}%` } },
                 { brand: { $ilike: `%${pagination.search}%` } },
             ];
+        }
+        if (pagination.type) {
+            where.type = pagination.type;
+        }
+        if (pagination.isFeatured) {
+            where.isFeatured = true;
         }
 
         const limit = pagination.limit ?? 20;

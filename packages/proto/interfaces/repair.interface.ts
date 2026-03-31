@@ -42,6 +42,8 @@ export interface FindAllDevicesRequest {
     offset: number;
     limit: number;
     search: string;
+    type: string;
+    isFeatured: boolean;
 }
 
 export interface FindBySlugRequest {

@@ -12,6 +12,7 @@ export interface FormData {
   brand: string;
   description: string;
   slug: string;
+  isFeatured: boolean;
 }
 
 export interface AdminDeviceFormProps {
