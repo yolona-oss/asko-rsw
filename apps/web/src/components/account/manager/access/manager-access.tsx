@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Button,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -12,6 +11,7 @@ import {
   DataTableHeader,
   DataTableEmpty,
   DataTableFooter,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -153,7 +153,10 @@ export function ManagerAccess() {
           )}
 
           <DataTableFooter>
-            Показано {displayed.length} из {total}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {displayed.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
@@ -178,25 +181,7 @@ export function ManagerAccess() {
         </>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="secondary"
-            disabled={page <= 1 || loading}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Назад
-          </Button>
-          <span className="text-sm text-text-sub">{page} / {totalPages}</span>
-          <Button
-            variant="secondary"
-            disabled={page >= totalPages || loading}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Вперёд
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
     </PageContainer>
   );
 }

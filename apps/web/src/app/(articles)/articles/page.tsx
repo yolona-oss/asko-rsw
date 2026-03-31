@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Container } from '@asko/ui';
+import { Container, Pagination } from '@asko/ui';
 import { fetchArticles, fetchArticlePreviewImage, fetchRecommendedArticles } from '@/lib/api/article.server';
 import { ArticlePreviewCard } from '@/components/articles';
 
@@ -57,38 +57,12 @@ export default async function ArticlesListPage({
             </div>
           )}
 
-          {totalPages > 1 && (
-            <nav className="flex justify-center gap-2 mt-10">
-              {page > 1 && (
-                <Link
-                  href={`/articles?page=${page - 1}`}
-                  className="px-3 py-2 text-sm border border-border-light/30 rounded-sm hover:bg-gray-50 text-text-main"
-                >
-                  &larr;
-                </Link>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={`/articles?page=${p}`}
-                  className={`px-3 py-2 text-sm rounded-sm ${p === page
-                      ? 'bg-brand-red text-white'
-                      : 'border border-border-light/30 hover:bg-gray-50 text-text-main'
-                    }`}
-                >
-                  {p}
-                </Link>
-              ))}
-              {page < totalPages && (
-                <Link
-                  href={`/articles?page=${page + 1}`}
-                  className="px-3 py-2 text-sm border border-border-light/30 rounded-sm hover:bg-gray-50 text-text-main"
-                >
-                  &rarr;
-                </Link>
-              )}
-            </nav>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            getHref={(p) => `/articles?page=${p}`}
+            className="justify-center mt-10"
+          />
         </div>
       </Container>
     </div>

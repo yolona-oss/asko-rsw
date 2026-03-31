@@ -7,7 +7,6 @@ import { reviewApi } from '@/lib/api/review';
 import {
   Card,
   Badge,
-  Button,
   DataTable,
   DataTableHeader,
   DataTableRow,
@@ -18,6 +17,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -155,7 +155,10 @@ export function RepairerHistory() {
           )}
 
           <DataTableFooter>
-            Показано {filteredRequests.length} из {total}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredRequests.length} из {total}</span>
+              <Pagination page={offset} totalPages={totalPages} onPageChange={setOffset} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
@@ -191,25 +194,7 @@ export function RepairerHistory() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="secondary"
-            disabled={offset <= 1}
-            onClick={() => setOffset((p) => p - 1)}
-          >
-            Назад
-          </Button>
-          <span className="text-sm text-text-sub">{offset} / {totalPages}</span>
-          <Button
-            variant="secondary"
-            disabled={offset >= totalPages}
-            onClick={() => setOffset((p) => p + 1)}
-          >
-            Вперёд
-          </Button>
-        </div>
-      )}
+      <Pagination page={offset} totalPages={totalPages} onPageChange={setOffset} className="justify-center mt-6" />
     </PageContainer>
   );
 }

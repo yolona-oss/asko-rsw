@@ -11,6 +11,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -27,6 +28,8 @@ import { AddDeviceForm } from './add-device-form';
 import { AddCertificateForm } from './add-certificate-form';
 import type { UserDevice } from './types';
 
+const PAGE_SIZE = 20;
+
 export function UserCertificates() {
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [devices, setDevices] = useState<UserDevice[]>([]);
@@ -37,6 +40,7 @@ export function UserCertificates() {
   const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const handlePay = (cert: ICertificate) => {
     setPaymentCert(cert);
@@ -87,6 +91,15 @@ export function UserCertificates() {
     });
   }, [certificates, search]);
 
+  // Reset page on search change
+  useEffect(() => { setPage(1); }, [search]);
+
+  const totalPages = Math.ceil(filteredCertificates.length / PAGE_SIZE);
+  const paginatedCertificates = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredCertificates.slice(start, start + PAGE_SIZE);
+  }, [filteredCertificates, page]);
+
   return (
     <PageContainer>
       <PageHeader>Мои сертификаты</PageHeader>
@@ -114,12 +127,15 @@ export function UserCertificates() {
             <div className="flex flex-col gap-6 flex-1 min-w-0">
               {loading ? (
                 <p className="text-sm text-text-sub">Загрузка...</p>
-              ) : filteredCertificates.length === 0 ? (
+              ) : paginatedCertificates.length === 0 ? (
                 <p className="text-sm text-text-sub">У вас нет сертификатов</p>
               ) : (
-                filteredCertificates.map((cert) => (
-                  <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
-                ))
+                <>
+                  {paginatedCertificates.map((cert) => (
+                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
+                  ))}
+                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+                </>
               )}
             </div>
 
@@ -173,16 +189,19 @@ export function UserCertificates() {
                 <div className="w-[220px] flex-shrink-0" />
               </DataTableHeader>
 
-              {filteredCertificates.length === 0 ? (
+              {paginatedCertificates.length === 0 ? (
                 <DataTableEmpty>У вас нет сертификатов</DataTableEmpty>
               ) : (
-                filteredCertificates.map((cert) => (
+                paginatedCertificates.map((cert) => (
                   <CertificateTableRow key={cert.id} cert={cert} onPay={handlePay} />
                 ))
               )}
 
               <DataTableFooter>
-                Показано {filteredCertificates.length} из {certificates.length}
+                <div className="flex items-center justify-between w-full">
+                  <span>Показано {paginatedCertificates.length} из {filteredCertificates.length}</span>
+                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+                </div>
               </DataTableFooter>
             </DataTable>
           )}

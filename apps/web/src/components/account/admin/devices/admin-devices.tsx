@@ -11,6 +11,7 @@ import {
   DataTableFooter,
   DataSearch,
   DataFilter,
+  Pagination,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -322,40 +323,7 @@ export function AdminDevices() {
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredDevices.length} из {total}</span>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
-                  >
-                    &larr;
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setPage(p)}
-                      className={`px-2 py-1 text-xs rounded-sm cursor-pointer ${
-                        p === page
-                          ? 'bg-[#D7102A] text-white'
-                          : 'border border-border-light hover:bg-gray-50'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
-                  >
-                    &rarr;
-                  </button>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
         </DataTable>
@@ -371,40 +339,7 @@ export function AdminDevices() {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-1 mt-6">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
-              >
-                &larr;
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPage(p)}
-                  className={`px-2 py-1 text-xs rounded-sm cursor-pointer ${
-                    p === page
-                      ? 'bg-[#D7102A] text-white'
-                      : 'border border-border-light hover:bg-gray-50'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-2 py-1 text-xs border border-border-light rounded-sm disabled:opacity-30 hover:bg-gray-50 cursor-pointer disabled:cursor-default"
-              >
-                &rarr;
-              </button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
     </PageContainer>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -27,6 +28,8 @@ import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, isExpired } from
 import { InvitationRow } from './invitation-row';
 import { InvitationCard } from './invitation-card';
 
+const PAGE_SIZE = 20;
+
 export function AdminInvitations() {
   const [invitations, setInvitations] = useState<IInvitationLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +37,7 @@ export function AdminInvitations() {
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
+  const [page, setPage] = useState(1);
 
   const [role, setRole] = useState('');
   const [ttl, setTtl] = useState<number | ''>('');
@@ -112,6 +116,15 @@ export function AdminInvitations() {
     return result;
   }, [invitations, filterValues.status, search]);
 
+  // Reset page on search/filter changes
+  useEffect(() => { setPage(1); }, [search, filterValues.status]);
+
+  const totalPages = Math.ceil(filteredInvitations.length / PAGE_SIZE);
+  const paginatedInvitations = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredInvitations.slice(start, start + PAGE_SIZE);
+  }, [filteredInvitations, page]);
+
   return (
     <PageContainer>
       <PageHeader>Приглашения</PageHeader>
@@ -183,10 +196,10 @@ export function AdminInvitations() {
             <div className="w-[180px] flex-shrink-0" />
           </DataTableHeader>
 
-          {filteredInvitations.length === 0 ? (
+          {paginatedInvitations.length === 0 ? (
             <DataTableEmpty>Нет приглашений</DataTableEmpty>
           ) : (
-            filteredInvitations.map((inv) => (
+            paginatedInvitations.map((inv) => (
               <InvitationRow
                 key={inv.id}
                 invitation={inv}
@@ -198,16 +211,19 @@ export function AdminInvitations() {
           )}
 
           <DataTableFooter>
-            Показано {filteredInvitations.length} из {invitations.length}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {paginatedInvitations.length} из {filteredInvitations.length}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
         <>
-          {filteredInvitations.length === 0 ? (
+          {paginatedInvitations.length === 0 ? (
             <p className="text-sm text-text-sub text-center py-8">Нет приглашений</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredInvitations.map((inv) => (
+              {paginatedInvitations.map((inv) => (
                 <InvitationCard
                   key={inv.id}
                   invitation={inv}
@@ -218,6 +234,7 @@ export function AdminInvitations() {
               ))}
             </div>
           )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
     </PageContainer>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import {
   Card,
-  Button,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -12,6 +11,7 @@ import {
   DataTable,
   DataTableHeader,
   DataTableFooter,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -170,22 +170,15 @@ export function RepairerRequests() {
                 />
               ))}
               <DataTableFooter>
-                Показано {filteredRequests.length} из {total}
+                <div className="flex items-center justify-between w-full">
+                  <span>Показано {filteredRequests.length} из {total}</span>
+                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+                </div>
               </DataTableFooter>
             </DataTable>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <Button variant="secondary" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
-                Назад
-              </Button>
-              <span className="text-sm text-text-sub">{page} / {totalPages}</span>
-              <Button variant="secondary" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
-                Далее
-              </Button>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
     </PageContainer>

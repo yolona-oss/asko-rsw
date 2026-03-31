@@ -11,6 +11,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -21,9 +22,13 @@ import { STATUS_FILTER } from './constants';
 import { CertificateRow } from './certificate-row';
 import { CertificateCard } from './certificate-card';
 
+const PAGE_SIZE = 20;
+
 export function AdminCertificates() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'active' });
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
@@ -31,13 +36,14 @@ export function AdminCertificates() {
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await certificateApi.getAll({ limit: 200 });
+      const { data } = await certificateApi.getAll({ offset: page, limit: PAGE_SIZE });
       setCertificates(data.data ?? []);
+      setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     fetchCertificates();
@@ -66,6 +72,10 @@ export function AdminCertificates() {
     return result;
   }, [certificates, filterValues.status, search]);
 
+  // Reset page on search/filter changes
+  useEffect(() => { setPage(1); }, [search, filterValues.status]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
   const totalInStatus = certificates.filter((c) => c.status === filterValues.status).length;
 
   return (
@@ -117,7 +127,10 @@ export function AdminCertificates() {
           )}
 
           <DataTableFooter>
-            Показано {filteredCerts.length} из {totalInStatus}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredCerts.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
@@ -135,6 +148,7 @@ export function AdminCertificates() {
               ))}
             </div>
           )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
     </PageContainer>

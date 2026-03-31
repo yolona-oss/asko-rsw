@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { Product, SpecRow } from '@/lib/products';
+import type { Product, SpecRow } from '@/lib/devices';
 import { Container } from '@asko/ui';
-import { ProductGallery } from '@/components/product/product-gallery';
-import { ProductInfo } from '@/components/product/product-info';
-import { ProductSpecs } from '@/components/product/product-specs';
-import { ProductCare } from '@/components/product/product-care';
-import { ProductAllSpecs } from '@/components/product/product-all-specs';
-import { ProductRecommendations } from '@/components/product/product-recommendations';
-import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/product.server';
+import { ProductGallery } from '@/components/devices/product-gallery';
+import { ProductInfo } from '@/components/devices/product-info';
+import { ProductSpecs } from '@/components/devices/product-specs';
+import { ProductCare } from '@/components/devices/product-care';
+import { ProductAllSpecs } from '@/components/devices/product-all-specs';
+import { ProductRecommendations } from '@/components/devices/product-recommendations';
+import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 
 const DEFAULT_BADGES: Product['badges'] = [

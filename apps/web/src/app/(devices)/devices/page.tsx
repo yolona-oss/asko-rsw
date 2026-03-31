@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Container } from '@asko/ui';
-import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/product.server';
+import { Container, Pagination } from '@asko/ui';
+import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 
 const LIMIT = 12;
 
-export default async function ProductListPage({
+export default async function DevicesListPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
@@ -44,7 +44,7 @@ export default async function ProductListPage({
                 return (
                   <Link
                     key={device.id}
-                    href={`/product/${device.slug}`}
+                    href={`/devices/${device.slug}`}
                     className="group flex flex-col bg-white border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
                     <div className="relative aspect-square bg-gray-50">
@@ -73,39 +73,12 @@ export default async function ProductListPage({
             </div>
           )}
 
-          {totalPages > 1 && (
-            <nav className="flex justify-center gap-2 mt-10">
-              {page > 1 && (
-                <Link
-                  href={`/product?page=${page - 1}`}
-                  className="px-3 py-2 text-sm border border-border-light/30 rounded-sm hover:bg-gray-50 text-text-main"
-                >
-                  &larr;
-                </Link>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={`/product?page=${p}`}
-                  className={`px-3 py-2 text-sm rounded-sm ${
-                    p === page
-                      ? 'bg-brand-red text-white'
-                      : 'border border-border-light/30 hover:bg-gray-50 text-text-main'
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
-              {page < totalPages && (
-                <Link
-                  href={`/product?page=${page + 1}`}
-                  className="px-3 py-2 text-sm border border-border-light/30 rounded-sm hover:bg-gray-50 text-text-main"
-                >
-                  &rarr;
-                </Link>
-              )}
-            </nav>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            getHref={(p) => `/devices?page=${p}`}
+            className="justify-center mt-10"
+          />
         </div>
       </Container>
     </div>

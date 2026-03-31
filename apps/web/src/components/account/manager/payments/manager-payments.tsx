@@ -15,6 +15,7 @@ import {
   DataTableCell,
   DataTableEmpty,
   DataTableFooter,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -33,7 +34,7 @@ export function ManagerPayments() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: '', provider: '' });
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [view, setView] = useState('table');
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
   const pageSize = 20;
@@ -112,7 +113,7 @@ export function ManagerPayments() {
     async function fetchData() {
       try {
         const res = await paymentApi.listPayments({
-          offset: page * pageSize,
+          offset: (page - 1) * pageSize,
           limit: pageSize,
           status: filterValues.status || undefined,
           provider: filterValues.provider || undefined,
@@ -131,17 +132,17 @@ export function ManagerPayments() {
   }, [page, filterValues, search]);
 
   const totalPages = Math.ceil(total / pageSize);
-  const showFrom = total > 0 ? page * pageSize + 1 : 0;
-  const showTo = Math.min((page + 1) * pageSize, total);
+  const showFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
+  const showTo = Math.min(page * pageSize, total);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
-    setPage(0);
+    setPage(1);
   };
 
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPage(0);
+    setPage(1);
   };
 
   return (
@@ -254,7 +255,10 @@ export function ManagerPayments() {
             ))
           )}
           <DataTableFooter>
-            Показаны платежи {showFrom}-{showTo} из {total}
+            <div className="flex items-center justify-between w-full">
+              <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : payments.length === 0 ? (
@@ -297,29 +301,7 @@ export function ManagerPayments() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-text-sub">
-          <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-            >
-              &larr;
-            </button>
-            <button
-              type="button"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-            >
-              &rarr;
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
 
       {/* Modals */}
       <PaymentDetailModal

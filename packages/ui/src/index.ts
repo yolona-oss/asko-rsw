@@ -137,3 +137,6 @@ export type {
 
 export { DataSearch } from './components/data-search';
 export type { DataSearchProps } from './components/data-search';
+
+export { Pagination } from './components/pagination';
+export type { PaginationProps } from './components/pagination';

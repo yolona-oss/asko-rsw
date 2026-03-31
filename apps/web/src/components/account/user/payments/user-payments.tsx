@@ -15,6 +15,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -32,7 +33,7 @@ export function UserPayments() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const pageSize = 20;
 
   // Payment modal state
@@ -46,7 +47,7 @@ export function UserPayments() {
   async function fetchPayments() {
     try {
       const { data: result } = await paymentApi.getMyPayments({
-        offset: page * pageSize,
+        offset: (page - 1) * pageSize,
         limit: pageSize,
       });
       setPayments(result.data ?? []);
@@ -190,7 +191,10 @@ export function UserPayments() {
                   )}
 
                   <DataTableFooter>
-                    Показано {filteredHistory.length} из {otherPayments.length}
+                    <div className="flex items-center justify-between w-full">
+                      <span>Показано {filteredHistory.length} из {total}</span>
+                      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
                   </DataTableFooter>
                 </DataTable>
               ) : (
@@ -221,29 +225,7 @@ export function UserPayments() {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between text-sm text-text-sub">
-              <span>Показаны платежи {page * pageSize + 1}-{Math.min((page + 1) * pageSize, total)} из {total}</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-                >
-                  &larr;
-                </button>
-                <button
-                  type="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1 border border-border-light disabled:opacity-40 cursor-pointer"
-                >
-                  &rarr;
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
 

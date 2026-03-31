@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Button,
   Select,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   DataSearch,
   DataFilter,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -127,31 +127,7 @@ export function DealerCertificates() {
       }
 
       {/* Pagination */}
-      {
-        totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Назад
-            </Button>
-            <span className="text-sm text-text-sub">
-              {page} / {totalPages}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Вперед
-            </Button>
-          </div>
-        )
-      }
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
     </PageContainer >
   );
 }

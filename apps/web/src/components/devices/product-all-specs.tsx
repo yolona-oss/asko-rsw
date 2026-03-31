@@ -1,4 +1,4 @@
-import type { SpecRow } from '@/lib/products';
+import type { SpecRow } from '@/lib/devices';
 
 interface ProductAllSpecsProps {
   specsLeft: SpecRow[];

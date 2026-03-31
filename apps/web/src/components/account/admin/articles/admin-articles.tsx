@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -21,27 +22,33 @@ import type { IArticle } from '@/lib/api/types';
 import { ArticleRow } from './article-row';
 import { ArticleCard } from './article-card';
 
+const PAGE_SIZE = 20;
+
 export function AdminArticles() {
   const [articles, setArticles] = useState<IArticle[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
 
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
+    setLoading(true);
     try {
-      const { data } = await articleApi.getAll({ limit: 100 });
+      const { data } = await articleApi.getAll({ offset: page, limit: PAGE_SIZE });
       setArticles(data.data ?? []);
+      setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     fetchArticles();
-  }, []);
+  }, [fetchArticles]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -63,6 +70,11 @@ export function AdminArticles() {
     }
   };
 
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
   const filteredArticles = useMemo(() => {
     if (!search) return articles;
     const q = search.toLowerCase();
@@ -72,6 +84,8 @@ export function AdminArticles() {
       || a.tags?.some((t) => t.toLowerCase().includes(q)),
     );
   }, [articles, search]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -154,7 +168,10 @@ export function AdminArticles() {
           )}
 
           <DataTableFooter>
-            Показано {filteredArticles.length} из {articles.length}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredArticles.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       ) : (
@@ -172,6 +189,7 @@ export function AdminArticles() {
               ))}
             </div>
           )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
     </PageContainer>

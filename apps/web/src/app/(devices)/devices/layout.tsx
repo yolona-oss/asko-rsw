@@ -1,7 +1,7 @@
 import { LandingFooter } from "@/components/landing/footer";
 import { LandingHeader } from "@/components/landing/header";
 
-export default function ProductLayout({ children }: { children: any }) {
+export default function DevicesLayout({ children }: { children: any }) {
   return (
     <>
       <LandingHeader />

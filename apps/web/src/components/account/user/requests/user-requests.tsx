@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -12,6 +12,7 @@ import {
   DataTable,
   DataTableHeader,
   DataTableFooter,
+  Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -22,8 +23,12 @@ import type { RepairRequest } from './types';
 import { RequestCard } from './request-card';
 import { RequestTableRow } from './request-table-row';
 
+const PAGE_SIZE = 20;
+
 export function UserRequests() {
   const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
@@ -31,18 +36,21 @@ export function UserRequests() {
 
   const statusFilter = filterValues.status as StatusFilter;
 
-  useEffect(() => {
-    async function fetchRequests() {
-      try {
-        const { data } = await repairRequestApi.getMy({ limit: 50 });
-        setRequests((data.data ?? []) as unknown as RepairRequest[]);
-      } catch {
-      } finally {
-        setLoading(false);
-      }
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await repairRequestApi.getMy({ offset: page, limit: PAGE_SIZE });
+      setRequests((data.data ?? []) as unknown as RepairRequest[]);
+      setTotal(data.overallCount ?? 0);
+    } catch {
+    } finally {
+      setLoading(false);
     }
+  }, [page]);
+
+  useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   const filteredRequests = useMemo(() => {
     let result = requests;
@@ -64,6 +72,11 @@ export function UserRequests() {
 
     return result;
   }, [requests, statusFilter, search]);
+
+  // Reset page on search/filter changes
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
@@ -113,11 +126,14 @@ export function UserRequests() {
           <p className="text-sm text-text-sub">Заявки не найдены</p>
         )
       ) : view === 'card' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRequests.map((req) => (
-            <RequestCard key={req.id} request={req} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredRequests.map((req) => (
+              <RequestCard key={req.id} request={req} />
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+        </>
       ) : (
         <DataTable>
           <DataTableHeader>
@@ -130,7 +146,10 @@ export function UserRequests() {
             <RequestTableRow key={req.id} request={req} />
           ))}
           <DataTableFooter>
-            Показано {filteredRequests.length} из {requests.length}
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredRequests.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </DataTableFooter>
         </DataTable>
       )}

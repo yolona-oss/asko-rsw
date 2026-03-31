@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   DataSearch,
@@ -14,6 +14,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  Pagination,
 } from '@asko/ui';
 import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
@@ -30,9 +31,13 @@ import { UserAvatar } from './user-avatar';
 import { StatusBadge } from './status-badge';
 import { UserCard } from './user-card';
 
+const PAGE_SIZE = 20;
+
 export function AdminUsers() {
   const [activeTab, setActiveTab] = useState<UserTab>('repairer');
   const [users, setUsers] = useState<IAuthUser[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -40,19 +45,22 @@ export function AdminUsers() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState('table');
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const { data } = await usersApi.getAll({ limit: 200 });
-        setUsers(data.data ?? []);
-      } catch (e: any) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await usersApi.getAll({ page, limit: PAGE_SIZE });
+      setUsers(data.data ?? []);
+      setTotal(data.overallCount ?? 0);
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  }, [page]);
+
+  useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   // Keep activeTab and filterValues.role in sync
   useEffect(() => {
@@ -107,6 +115,11 @@ export function AdminUsers() {
       { value: 'disabled', label: 'Заблокирован' },
     ],
   };
+
+  // Reset page on search/filter changes
+  useEffect(() => { setPage(1); }, [search, activeTab, filterValues.status]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   // Filter: tab -> role, then search, then status
   const statusFilter = filterValues.status as StatusFilter;
@@ -245,7 +258,10 @@ export function AdminUsers() {
           {/* Footer */}
           {filteredUsers.length > 0 && (
             <DataTableFooter>
-              Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
+              <div className="flex items-center justify-between w-full">
+                <span>Показано {filteredUsers.length} из {total}</span>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
             </DataTableFooter>
           )}
         </DataTable>
@@ -266,9 +282,7 @@ export function AdminUsers() {
                 />
               ))}
             </div>
-            <p className="text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px]">
-              Показаны пользователей {1}-{filteredUsers.length} из {filteredUsers.length}
-            </p>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
           </>
         )
       )}
