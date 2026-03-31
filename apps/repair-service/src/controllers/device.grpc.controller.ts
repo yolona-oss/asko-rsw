@@ -202,7 +202,13 @@ export class DeviceGrpcController {
         try {
             const products = JSON.parse(data.productsJson);
             const result = await this.deviceService.importDevices(products);
-            return { importedCount: result.imported };
+            return {
+                importedCount: result.imported,
+                imported: result.importedDevices.map((d) => ({
+                    id: d.id,
+                    imageUrls: d.imageUrls,
+                })),
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

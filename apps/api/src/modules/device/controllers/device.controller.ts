@@ -6,19 +6,41 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
+import { IsOptional, IsNumber, IsString, IsBoolean } from 'class-validator';
 import {
     CreateDeviceDto,
     UpdateDeviceDto,
     CreateDevicePartDto,
     UpdateDevicePartDto,
     RegisterUserDeviceDto,
-    PaginationDto,
     ALL_ROLES,
     ADMIN_ROLES,
     Role,
     JwtPayload,
     ImageTypeEnum,
 } from '@asko/shared';
+
+class DeviceQueryDto {
+    @IsOptional()
+    @IsNumber()
+    offset?: number = 1;
+
+    @IsOptional()
+    @IsNumber()
+    limit?: number = 20;
+
+    @IsOptional()
+    @IsString()
+    search?: string;
+
+    @IsOptional()
+    @IsString()
+    type?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isFeatured?: boolean;
+}
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { JwtAuthUser } from 'common/decorators/user.decorator';
 import { Public } from 'common/decorators/public.decorotor';
@@ -58,7 +80,18 @@ export class DeviceController {
     @Post('import')
     @ApiCreatedResponse({ type: ImportDevicesResponseDto })
     async importDevices(@Body() products: Record<string, any>[]) {
-        return this.deviceClient.importDevices(products);
+        const result = await this.deviceClient.importDevices(products);
+
+        // Link images from scraped URLs via file-service
+        for (const device of result.imported ?? []) {
+            for (let i = 0; i < (device.imageUrls ?? []).length; i++) {
+                try {
+                    await this.fileService.createFromUrl(device.imageUrls[i], ImageTypeEnum.Device, device.id, i);
+                } catch { /* skip failed images */ }
+            }
+        }
+
+        return { importedCount: result.importedCount, created: result.importedCount, errors: [] };
     }
 
     @RequiredRoles(...ADMIN_ROLES)
@@ -196,15 +229,13 @@ export class DeviceController {
     @Public()
     @Get()
     @ApiOkResponse({ type: PaginatedDevicesResponseDto })
-    async findAll(
-        @Query() pagination: PaginationDto,
-        @Query('type') type?: string,
-        @Query('isFeatured') isFeatured?: string,
-    ) {
+    async findAll(@Query() query: DeviceQueryDto) {
         return this.deviceClient.findAllDevices({
-            ...pagination,
-            type,
-            isFeatured: isFeatured === 'true',
+            offset: query.offset,
+            limit: query.limit,
+            search: query.search,
+            type: query.type,
+            isFeatured: query.isFeatured,
         });
     }
 

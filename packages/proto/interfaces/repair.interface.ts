@@ -123,6 +123,12 @@ export interface DeleteAllResponse {
 
 export interface ImportDevicesResponse {
     importedCount: number;
+    imported: ImportedDeviceInfo[];
+}
+
+export interface ImportedDeviceInfo {
+    id: string;
+    imageUrls: string[];
 }
 
 export interface DeviceRecord {

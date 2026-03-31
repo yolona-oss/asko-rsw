@@ -294,6 +294,12 @@ message DeleteAllResponse {
 
 message ImportDevicesResponse {
     int32 importedCount = 1;
+    repeated ImportedDeviceInfo imported = 2;
+}
+
+message ImportedDeviceInfo {
+    string id = 1;
+    repeated string imageUrls = 2;
 }
 
 message DeviceRecord {

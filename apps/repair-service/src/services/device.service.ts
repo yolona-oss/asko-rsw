@@ -64,9 +64,10 @@ export class DeviceService {
     }
 
     @CreateRequestContext()
-    async importDevices(products: Record<string, any>[]): Promise<{ imported: number; skipped: number }> {
+    async importDevices(products: Record<string, any>[]): Promise<{ imported: number; skipped: number; importedDevices: { id: string; imageUrls: string[] }[] }> {
         let imported = 0;
         let skipped = 0;
+        const importedDevices: { id: string; imageUrls: string[] }[] = [];
 
         for (const product of products) {
             try {
@@ -87,6 +88,7 @@ export class DeviceService {
                 const features = rawSpecs.features ?? product.features ?? undefined;
                 const parsedPrice = product.price ?? (rawSpecs.price ? parseFloat(rawSpecs.price) : null);
                 const price = parsedPrice || Math.floor(Math.random() * 190001) + 10000;
+                const imageUrls: string[] = (rawSpecs.images ?? []).filter((u: string) => typeof u === 'string' && !u.endsWith('.webm'));
 
                 const device = this.em.create(Device, {
                     name: product.name ?? '',
@@ -101,6 +103,7 @@ export class DeviceService {
                     isFeatured: product.isFeatured ?? false,
                 });
                 this.em.persist(device);
+                importedDevices.push({ id: device.id, imageUrls });
                 imported++;
             } catch {
                 skipped++;
@@ -108,7 +111,7 @@ export class DeviceService {
         }
 
         await this.em.flush();
-        return { imported, skipped };
+        return { imported, skipped, importedDevices };
     }
 
     @CreateRequestContext()

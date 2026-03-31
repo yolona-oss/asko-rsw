@@ -83,24 +83,20 @@ const EyeOffIcon = () => (
 function getDefaultRules(min: number, max: number): PasswordRule[] {
   return [
     {
-      label: `От ${min} до ${max} символов`,
+      label: `от ${min} до ${max} символов`,
       test: (v) => v.length >= min && v.length <= max,
     },
     {
-      label: 'Заглавная буква (A-Z)',
+      label: 'минимум одна заглавная буква (A-Z)',
       test: (v) => /[A-Z]/.test(v),
     },
     {
-      label: 'Строчная буква (a-z)',
+      label: 'минимум одна строчная буква (a-z)',
       test: (v) => /[a-z]/.test(v),
     },
     {
-      label: 'Цифра (0-9)',
-      test: (v) => /\d/.test(v),
-    },
-    {
-      label: 'Спецсимвол (!@#$%...)',
-      test: (v) => /[^A-Za-z0-9]/.test(v),
+      label: 'минимум одна цифра или спецсимвол',
+      test: (v) => /\d/.test(v) || /[^A-Za-z0-9]/.test(v),
     },
   ];
 }
@@ -181,7 +177,6 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 
         {showStrength && currentValue.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            {/* Strength bar */}
             <div className="flex gap-1">
               {Array.from({ length: total }).map((_, i) => (
                 <div
@@ -193,22 +188,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                 />
               ))}
             </div>
-
-            {/* Rules checklist */}
-            <ul className="flex flex-col gap-0.5">
-              {results.map((r) => (
-                <li
-                  key={r.label}
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs transition-colors',
-                    r.passed ? 'text-[#22C55E]' : 'text-[#999]',
-                  )}
-                >
-                  <span className="text-[10px] leading-none">{r.passed ? '\u2713' : '\u2022'}</span>
-                  {r.label}
-                </li>
-              ))}
-            </ul>
+            {passedCount < total && (
+              <p className="text-xs text-[#999]">
+                {results.find((r) => !r.passed)?.label}
+              </p>
+            )}
           </div>
         )}
       </div>
