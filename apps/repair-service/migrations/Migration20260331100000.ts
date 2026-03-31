@@ -21,7 +21,7 @@ export class Migration20260331100000 extends Migration {
 
     // 3. Add category_id to device, populate from old type column
     this.addSql(`alter table "device" add column "category_id" varchar(255);`);
-    this.addSql(`update "device" set "category_id" = dc."id" from "device_category" dc where "device"."type" = dc."name";`);
+    this.addSql(`update "device" set "category_id" = dc."id" from "device_category" dc where "device"."type"::text = dc."name";`);
     this.addSql(`update "device" set "category_id" = (select "id" from "device_category" where "name" = 'other') where "category_id" is null;`);
     this.addSql(`alter table "device" alter column "category_id" set not null;`);
     this.addSql(`alter table "device" add constraint "device_category_id_foreign" foreign key ("category_id") references "device_category" ("id") on update cascade;`);

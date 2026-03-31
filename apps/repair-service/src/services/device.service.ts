@@ -178,20 +178,21 @@ export class DeviceService {
             limit,
             offset,
             orderBy: { createdAt: 'DESC' },
+            populate: ['category'],
         });
         return { data, total };
     }
 
     @CreateRequestContext()
     async findById(id: string): Promise<Device> {
-        const device = await this.em.findOne(Device, { id });
+        const device = await this.em.findOne(Device, { id }, { populate: ['category'] });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         return device;
     }
 
     @CreateRequestContext()
     async findBySlug(slug: string): Promise<Device> {
-        const device = await this.em.findOne(Device, { slug });
+        const device = await this.em.findOne(Device, { slug }, { populate: ['category'] });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
         return device;
     }

@@ -301,21 +301,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -566,21 +551,6 @@
             "active",
             "expired",
             "revoked"
-          ]
-        },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
           ]
         },
         "points_transaction_type": {
@@ -958,21 +928,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -1140,21 +1095,6 @@
             "active",
             "expired",
             "revoked"
-          ]
-        },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
           ]
         },
         "points_transaction_type": {
@@ -1392,21 +1332,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -1490,33 +1415,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "string"
-        },
-        "type": {
-          "name": "type",
-          "type": "device_type",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ],
-          "mappedType": "unknown",
-          "nativeEnumName": "device_type"
         },
         "model": {
           "name": "model",
@@ -1677,6 +1575,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "device",
@@ -1704,7 +1618,21 @@
         }
       ],
       "checks": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "device_category_id_foreign": {
+          "columnNames": [
+            "category_id"
+          ],
+          "constraintName": "device_category_id_foreign",
+          "localTableName": "public.device",
+          "referencedTableName": "public.device_category",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
       "nativeEnums": {
         "broken_part_status": {
           "name": "broken_part_status",
@@ -1727,19 +1655,217 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
+        "points_transaction_type": {
+          "name": "points_transaction_type",
           "schema": "public",
           "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "paid",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "refund_requested",
+            "refunded",
+            "paused"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "label_plural": {
+          "name": "label_plural",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "order": {
+          "name": "order",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "device_category",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "device_category_name_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "device_category_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
           ]
         },
         "points_transaction_type": {
@@ -1973,21 +2099,6 @@
             "active",
             "expired",
             "revoked"
-          ]
-        },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
           ]
         },
         "points_transaction_type": {
@@ -2225,21 +2336,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -2461,21 +2557,6 @@
             "active",
             "expired",
             "revoked"
-          ]
-        },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
           ]
         },
         "points_transaction_type": {
@@ -3052,21 +3133,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -3334,21 +3400,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -3577,21 +3628,6 @@
             "active",
             "expired",
             "revoked"
-          ]
-        },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
           ]
         },
         "points_transaction_type": {
@@ -3888,21 +3924,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -4158,21 +4179,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -4328,21 +4334,6 @@
             "revoked"
           ]
         },
-        "device_type": {
-          "name": "device_type",
-          "schema": "public",
-          "items": [
-            "washing_machine",
-            "dryer",
-            "dishwasher",
-            "oven",
-            "cooktop",
-            "refrigerator",
-            "freezer",
-            "hood",
-            "other"
-          ]
-        },
         "points_transaction_type": {
           "name": "points_transaction_type",
           "schema": "public",
@@ -4414,21 +4405,6 @@
         "active",
         "expired",
         "revoked"
-      ]
-    },
-    "device_type": {
-      "name": "device_type",
-      "schema": "public",
-      "items": [
-        "washing_machine",
-        "dryer",
-        "dishwasher",
-        "oven",
-        "cooktop",
-        "refrigerator",
-        "freezer",
-        "hood",
-        "other"
       ]
     },
     "points_transaction_type": {
