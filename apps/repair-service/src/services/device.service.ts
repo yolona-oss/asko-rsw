@@ -81,15 +81,22 @@ export class DeviceService {
                     ?? await this.em.findOne(DeviceCategory, { name: 'other' });
                 if (!category) { skipped++; continue; }
 
+                // Extract nested fields from scraped data format
+                const rawSpecs = product.specifications ?? {};
+                const specifications = rawSpecs.technical ?? (typeof rawSpecs === 'object' && !rawSpecs.technical ? rawSpecs : undefined);
+                const features = rawSpecs.features ?? product.features ?? undefined;
+                const parsedPrice = product.price ?? (rawSpecs.price ? parseFloat(rawSpecs.price) : null);
+                const price = parsedPrice || Math.floor(Math.random() * 190001) + 10000;
+
                 const device = this.em.create(Device, {
                     name: product.name ?? '',
                     category,
                     model: product.model ?? '',
                     brand: product.brand ?? '',
-                    price: product.price ?? undefined,
+                    price: price || undefined,
                     description: product.description ?? undefined,
-                    specifications: product.specifications ?? undefined,
-                    features: product.features ?? undefined,
+                    specifications,
+                    features,
                     slug,
                     isFeatured: product.isFeatured ?? false,
                 });
