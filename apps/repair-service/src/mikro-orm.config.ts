@@ -5,6 +5,7 @@ import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import {
+    DeviceCategory,
     Device,
     Address,
     UserDevice,
@@ -30,6 +31,7 @@ const config = defineConfig<PostgreSqlDriver>({
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT || '5432'),
     entities: [
+        DeviceCategory,
         Device,
         Address,
         UserDevice,

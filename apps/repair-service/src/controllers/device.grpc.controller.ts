@@ -2,9 +2,11 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { DeviceService } from 'services/device.service';
+import { DeviceCategoryService } from 'services/device-category.service';
 import { AddressService } from 'services/address.service';
 import { AppError } from 'common/error';
 import type { Device } from 'entities/device.entity';
+import type { DeviceCategory } from 'entities/device-category.entity';
 import type { UserDevice } from 'entities/user-device.entity';
 import type { Address } from 'entities/address.entity';
 
@@ -27,6 +29,9 @@ import type {
     UpdateDevicePartRequest,
     DeleteDevicePartRequest,
     GetDevicePartsRequest,
+    CreateDeviceCategoryRequest,
+    UpdateDeviceCategoryRequest,
+    DeleteDeviceCategoryRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -50,7 +55,7 @@ function deviceToRecord(entity: Device) {
     return {
         id: entity.id,
         name: entity.name,
-        type: entity.type,
+        type: entity.category?.name ?? '',
         model: entity.model,
         brand: entity.brand,
         price: entity.price ?? 0,
@@ -59,6 +64,21 @@ function deviceToRecord(entity: Device) {
         features: entity.features ? JSON.stringify(entity.features) : '',
         slug: entity.slug,
         isFeatured: entity.isFeatured ?? false,
+        createdAt: entity.createdAt?.toISOString() ?? '',
+        updatedAt: entity.updatedAt?.toISOString() ?? '',
+        categoryId: entity.category?.id ?? '',
+        categoryName: entity.category?.name ?? '',
+        categoryLabel: entity.category?.label ?? '',
+    };
+}
+
+function categoryToRecord(entity: DeviceCategory) {
+    return {
+        id: entity.id,
+        name: entity.name,
+        label: entity.label,
+        labelPlural: entity.labelPlural,
+        order: entity.order,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
     };
@@ -120,6 +140,7 @@ function userDeviceToRecord(entity: UserDevice) {
 export class DeviceGrpcController {
     constructor(
         private readonly deviceService: DeviceService,
+        private readonly deviceCategoryService: DeviceCategoryService,
         private readonly addressService: AddressService,
     ) {}
 
@@ -356,6 +377,58 @@ export class DeviceGrpcController {
         try {
             const addresses = await this.addressService.findAll('');
             return { addresses: addresses.map(addressToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ── Device categories ──
+
+    @GrpcMethod('DeviceService', 'FindAllDeviceCategories')
+    async findAllDeviceCategories() {
+        try {
+            const categories = await this.deviceCategoryService.findAll();
+            return { categories: categories.map(categoryToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'FindDeviceCategoryById')
+    async findDeviceCategoryById(data: { id: string }) {
+        try {
+            const category = await this.deviceCategoryService.findById(data.id);
+            return { category: categoryToRecord(category) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'CreateDeviceCategory')
+    async createDeviceCategory(data: CreateDeviceCategoryRequest) {
+        try {
+            const category = await this.deviceCategoryService.create({
+                name: data.name,
+                label: data.label,
+                labelPlural: data.labelPlural,
+                order: data.order || 0,
+            });
+            return { category: categoryToRecord(category) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'UpdateDeviceCategory')
+    async updateDeviceCategory(data: UpdateDeviceCategoryRequest) {
+        try {
+            const dto: Record<string, any> = {};
+            if (data.name) dto.name = data.name;
+            if (data.label) dto.label = data.label;
+            if (data.labelPlural) dto.labelPlural = data.labelPlural;
+            if (data.order) dto.order = data.order;
+            const category = await this.deviceCategoryService.update(data.id, dto);
+            return { category: categoryToRecord(category) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'DeleteDeviceCategory')
+    async deleteDeviceCategory(data: DeleteDeviceCategoryRequest) {
+        try {
+            await this.deviceCategoryService.delete(data.id);
+            return {};
         } catch (e) { throw toGrpcError(e); }
     }
 }

@@ -7,16 +7,19 @@ import {
   DataTableCell,
 } from '@asko/ui';
 import type { Device } from './types';
-import { TYPE_LABELS } from './constants';
 
-export function DeviceRow({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
+export function DeviceRow({ device, categoryLabels, onDelete }: {
+  device: Device;
+  categoryLabels: Record<string, string>;
+  onDelete: (id: string) => void;
+}) {
   return (
     <DataTableRow>
       <DataTableCell mobileLabel="Название:" className="lg:w-35 lg:flex-shrink-0">
         <p className="text-sm font-medium text-text-main">{device.name}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Тип:" className="lg:flex-1 lg:px-4">
-        <p className="text-sm text-text-main">{TYPE_LABELS[device.type] ?? device.type}</p>
+        <p className="text-sm text-text-main">{categoryLabels[device.type ?? ''] ?? device.type}</p>
       </DataTableCell>
       <DataTableCell mobileLabel="Модель:" className="lg:flex-1 lg:px-4">
         <p className="text-sm text-text-main">{device.model}</p>

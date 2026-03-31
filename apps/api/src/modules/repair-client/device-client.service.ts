@@ -15,6 +15,9 @@ import type {
     DeleteAllResponse,
     DevicePartResponse,
     DevicePartListResponse,
+    DeviceCategoryResponse,
+    DeviceCategoryListResponse,
+    EmptyDeviceResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -180,5 +183,35 @@ export class DeviceClientService implements OnModuleInit {
 
     findAllAddresses(): Promise<AddressListResponse> {
         return grpcCall(this.deviceService.findAllAddresses({}));
+    }
+
+    // ── Device categories ──
+
+    findAllDeviceCategories(): Promise<DeviceCategoryListResponse> {
+        return grpcCall(this.deviceService.findAllDeviceCategories({}));
+    }
+
+    findDeviceCategoryById(id: string): Promise<DeviceCategoryResponse> {
+        return grpcCall(this.deviceService.findDeviceCategoryById({ id }));
+    }
+
+    createDeviceCategory(name: string, label: string, labelPlural: string, order?: number): Promise<DeviceCategoryResponse> {
+        return grpcCall(this.deviceService.createDeviceCategory({
+            name, label, labelPlural, order: order ?? 0,
+        }));
+    }
+
+    updateDeviceCategory(id: string, name?: string, label?: string, labelPlural?: string, order?: number): Promise<DeviceCategoryResponse> {
+        return grpcCall(this.deviceService.updateDeviceCategory({
+            id,
+            name: name ?? '',
+            label: label ?? '',
+            labelPlural: labelPlural ?? '',
+            order: order ?? 0,
+        }));
+    }
+
+    deleteDeviceCategory(id: string): Promise<EmptyDeviceResponse> {
+        return grpcCall(this.deviceService.deleteDeviceCategory({ id }));
     }
 }

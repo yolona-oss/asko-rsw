@@ -7,9 +7,9 @@ import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
-import type { DeviceType } from '@asko/shared/client';
+import { useDeviceCategories } from '@/hooks/use-device-categories';
 import type { FormData, AdminDeviceFormProps } from './types';
-import { INITIAL_DATA, DEVICE_TYPES } from './constants';
+import { INITIAL_DATA } from './constants';
 import { DeviceImages } from './device-images';
 import { DeviceParts } from './device-parts';
 
@@ -23,6 +23,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
   const [error, setError] = useState('');
 
   const isEdit = !!deviceId;
+  const { data: categories } = useDeviceCategories();
 
   useEffect(() => {
     if (!deviceId) return;
@@ -55,7 +56,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
     try {
       const payload = {
         name: data.name,
-        type: data.type as DeviceType,
+        type: data.type,
         model: data.model,
         brand: data.brand,
         description: data.description || undefined,
@@ -109,8 +110,8 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
             className="max-w-[500px]"
           >
             <option value="" disabled>Выберите тип</option>
-            {DEVICE_TYPES.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {(categories ?? []).map((cat) => (
+              <option key={cat.name} value={cat.name}>{cat.label}</option>
             ))}
           </Select>
         </FormField>

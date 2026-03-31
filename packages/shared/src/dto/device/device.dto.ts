@@ -1,12 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsObject, IsNumber, IsBoolean } from 'class-validator';
-import { DeviceType } from '../../types/device.type';
+import { IsString, IsOptional, IsDateString, IsObject, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreateDeviceDto {
     @IsString()
     name!: string;
 
-    @IsEnum(DeviceType)
-    type!: DeviceType;
+    @IsString()
+    type!: string;
 
     @IsString()
     model!: string;
@@ -37,8 +36,8 @@ export class UpdateDeviceDto {
     name?: string;
 
     @IsOptional()
-    @IsEnum(DeviceType)
-    type?: DeviceType;
+    @IsString()
+    type?: string;
 
     @IsOptional()
     @IsString()

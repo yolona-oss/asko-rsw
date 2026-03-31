@@ -94,7 +94,7 @@ pnpm run typecheck
 pnpm run api:generate        # Generate TS types from openapi.json
 ```
 
-Packages (proto, shared, ui):
+Packages (shared, ui — proto has no build step):
 
 ```bash
 pnpm run build
@@ -385,14 +385,16 @@ cd apps/web && pnpm run api:generate
 
 gRPC contracts shared between all backend services.
 
+**Not a compiled package** — has no build step. `main` and `types` in `package.json` point directly to `index.ts`. Consumers import raw TypeScript via workspace resolution. Do NOT run `pnpm run build` on this package (there is no build script). Changes take effect immediately without rebuilding.
+
 **.proto files** (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
 
-**Exports per service**: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME` + generated TS interfaces.
+**Exports per service**: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME` + hand-written TS interfaces (not auto-generated from proto).
 
 **Rules**:
 
-* All `.proto` files must live in `packages/proto/src/`
-* Generated types must be exported from `@asko/proto`
+* All `.proto` files must live in `packages/proto/`
+* TS interfaces are hand-written in `packages/proto/interfaces/` and must be kept in sync with `.proto` files manually
 * Never duplicate DTOs between services — use proto types for gRPC communication
 * Never import entities through proto — only transport types
 

@@ -29,6 +29,9 @@ export class DeviceRecordDto {
     features?: Record<string, any>;
     link?: string;
     isFeatured?: boolean;
+    categoryId?: string;
+    categoryName?: string;
+    categoryLabel?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -97,4 +100,19 @@ export class AddressListResponseDto {
 
 export class ImportDevicesResponseDto {
     importedCount: number;
+}
+
+export class DeviceCategoryRecordDto {
+    id: string;
+    name: string;
+    label: string;
+    labelPlural: string;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export class DeviceCategoryListResponseDto {
+    @ApiProperty({ type: [DeviceCategoryRecordDto] })
+    categories: DeviceCategoryRecordDto[];
 }

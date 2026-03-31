@@ -9,6 +9,7 @@ import { PaymentCommandService } from 'modules/payment-command.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
 import {
+    DeviceCategory,
     Device,
     Address,
     UserDevice,
@@ -43,6 +44,7 @@ import { WorkStepService } from 'services/work-step.service';
 import { DealerService } from 'services/dealer.service';
 import { BrokenPartService } from 'services/broken-part.service';
 import { SignatureService } from 'services/signature.service';
+import { DeviceCategoryService } from 'services/device-category.service';
 import { WScheduleService } from 'services/wschedule.service';
 
 @Module({
@@ -51,6 +53,7 @@ import { WScheduleService } from 'services/wschedule.service';
         MetricsModule.register({ serviceName: 'repair-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([
+            DeviceCategory,
             Device,
             Address,
             UserDevice,
@@ -118,6 +121,7 @@ import { WScheduleService } from 'services/wschedule.service';
     ],
     providers: [
         DeviceService,
+        DeviceCategoryService,
         AddressService,
         ExternalCertValidationService,
         CertificateService,

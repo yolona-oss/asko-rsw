@@ -37,6 +37,13 @@ service DeviceService {
     rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
     rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
     rpc FindAllAddresses(EmptyRequest) returns (AddressListResponse);
+
+    // Device categories
+    rpc FindAllDeviceCategories(EmptyRequest) returns (DeviceCategoryListResponse);
+    rpc FindDeviceCategoryById(FindByIdRequest) returns (DeviceCategoryResponse);
+    rpc CreateDeviceCategory(CreateDeviceCategoryRequest) returns (DeviceCategoryResponse);
+    rpc UpdateDeviceCategory(UpdateDeviceCategoryRequest) returns (DeviceCategoryResponse);
+    rpc DeleteDeviceCategory(DeleteDeviceCategoryRequest) returns (EmptyResponse);
 }
 
 service CertificateService {
@@ -292,7 +299,7 @@ message ImportDevicesResponse {
 message DeviceRecord {
     string id = 1;
     string name = 2;
-    string type = 3;
+    string type = 3;              // backward compat alias for categoryName
     string model = 4;
     string brand = 5;
     double price = 6;
@@ -303,6 +310,9 @@ message DeviceRecord {
     bool isFeatured = 11;
     string createdAt = 12;
     string updatedAt = 13;
+    string categoryId = 14;
+    string categoryName = 15;
+    string categoryLabel = 16;
 }
 
 message DeviceResponse {
@@ -1217,4 +1227,45 @@ message ScheduleListResponse {
 
 message ScheduleOccurrencesResponse {
     repeated string dates = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Device Category Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message DeviceCategoryRecord {
+    string id = 1;
+    string name = 2;
+    string label = 3;
+    string labelPlural = 4;
+    int32 order = 5;
+    string createdAt = 6;
+    string updatedAt = 7;
+}
+
+message CreateDeviceCategoryRequest {
+    string name = 1;
+    string label = 2;
+    string labelPlural = 3;
+    int32 order = 4;
+}
+
+message UpdateDeviceCategoryRequest {
+    string id = 1;
+    string name = 2;
+    string label = 3;
+    string labelPlural = 4;
+    int32 order = 5;
+}
+
+message DeleteDeviceCategoryRequest {
+    string id = 1;
+}
+
+message DeviceCategoryResponse {
+    DeviceCategoryRecord category = 1;
+}
+
+message DeviceCategoryListResponse {
+    repeated DeviceCategoryRecord categories = 1;
 }

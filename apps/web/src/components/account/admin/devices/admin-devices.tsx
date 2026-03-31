@@ -19,34 +19,23 @@ import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
+import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
 import type { Device, ImportStatus } from './types';
-import { TYPE_LABELS } from './constants';
 import { DeviceRow } from './device-row';
 import { DeviceCard } from './device-card';
 
 const PAGE_SIZE = 20;
 
-const FILTERS = [
-  {
-    key: 'type',
-    label: 'Тип',
-    type: 'select' as const,
-    options: [
-      { value: '', label: 'Все типы' },
-      ...Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label })),
-    ],
-  },
-  {
-    key: 'featured',
-    label: 'На главной',
-    type: 'tabs' as const,
-    options: [
-      { value: '', label: 'Все' },
-      { value: 'yes', label: 'Да' },
-      { value: 'no', label: 'Нет' },
-    ],
-  },
-];
+const FEATURED_FILTER = {
+  key: 'featured',
+  label: 'На главной',
+  type: 'tabs' as const,
+  options: [
+    { value: '', label: 'Все' },
+    { value: 'yes', label: 'Да' },
+    { value: 'no', label: 'Нет' },
+  ],
+};
 
 export function AdminDevices() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -61,6 +50,21 @@ export function AdminDevices() {
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ type: '', featured: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: categories } = useDeviceCategories();
+  const categoryLabels = useMemo(() => buildCategoryLabelMap(categories ?? []), [categories]);
+
+  const filters = useMemo(() => [
+    {
+      key: 'type',
+      label: 'Тип',
+      type: 'select' as const,
+      options: [
+        { value: '', label: 'Все типы' },
+        ...(categories ?? []).map((c) => ({ value: c.name, label: c.label })),
+      ],
+    },
+    FEATURED_FILTER,
+  ], [categories]);
 
   const fetchDevices = useCallback(async (p: number) => {
     setLoading(true);
@@ -175,6 +179,9 @@ export function AdminDevices() {
         <div className="flex-1 flex items-center gap-3">
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
             <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+            <Link href="/account/device-categories">
+              <Button variant="secondary" size="sm">Категории</Button>
+            </Link>
             <Link href="/account/devices/create">
               <Button size="sm">Добавить товар</Button>
             </Link>
@@ -204,7 +211,7 @@ export function AdminDevices() {
 
       {/* Filters */}
       <DataFilter
-        filters={FILTERS}
+        filters={filters}
         values={filterValues}
         onChange={handleFilterChange}
       />
@@ -308,7 +315,7 @@ export function AdminDevices() {
             <DataTableEmpty>Нет товаров</DataTableEmpty>
           ) : (
             filteredDevices.map((device) => (
-              <DeviceRow key={device.id} device={device} onDelete={handleDelete} />
+              <DeviceRow key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
             ))
           )}
 
@@ -359,7 +366,7 @@ export function AdminDevices() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDevices.map((device) => (
-                <DeviceCard key={device.id} device={device} onDelete={handleDelete} />
+                <DeviceCard key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
               ))}
             </div>
           )}

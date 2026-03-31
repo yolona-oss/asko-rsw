@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { Device, UserDevice, Address, DevicePart } from 'entities';
-import { DeviceType } from '@asko/shared';
+import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
 import { SignatureService } from './signature.service';
 
@@ -45,9 +44,12 @@ export class DeviceService {
         const existing = await this.em.findOne(Device, { slug });
         const finalSlug = existing ? `${slug}-${Date.now()}` : slug;
 
+        const category = await this.em.findOne(DeviceCategory, { name: dto.type });
+        if (!category) throw AppErrors.badRequest(`Unknown device category: ${dto.type}`);
+
         const device = this.em.create(Device, {
             name: dto.name,
-            type: dto.type as DeviceType,
+            category,
             model: dto.model,
             brand: dto.brand,
             price: dto.price,
@@ -75,9 +77,13 @@ export class DeviceService {
                     continue;
                 }
 
+                const category = await this.em.findOne(DeviceCategory, { name: product.type ?? 'other' })
+                    ?? await this.em.findOne(DeviceCategory, { name: 'other' });
+                if (!category) { skipped++; continue; }
+
                 const device = this.em.create(Device, {
                     name: product.name ?? '',
-                    type: (product.type as DeviceType) ?? DeviceType.OTHER,
+                    category,
                     model: product.model ?? '',
                     brand: product.brand ?? '',
                     price: product.price ?? undefined,
@@ -115,7 +121,10 @@ export class DeviceService {
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
 
         if (dto.name) device.name = dto.name;
-        if (dto.type) device.type = dto.type as DeviceType;
+        if (dto.type) {
+            const category = await this.em.findOne(DeviceCategory, { name: dto.type });
+            if (category) device.category = category;
+        }
         if (dto.model) device.model = dto.model;
         if (dto.brand) device.brand = dto.brand;
         if (dto.price !== undefined) device.price = dto.price;
@@ -156,7 +165,7 @@ export class DeviceService {
             ];
         }
         if (pagination.type) {
-            where.type = pagination.type;
+            where.category = { name: pagination.type };
         }
         if (pagination.isFeatured) {
             where.isFeatured = true;

@@ -1,11 +1,2 @@
-export const TYPE_LABELS: Record<string, string> = {
-  washing_machine: 'Стиральная машина',
-  dryer: 'Сушильная машина',
-  dishwasher: 'Посудомоечная машина',
-  oven: 'Духовой шкаф',
-  cooktop: 'Варочная панель',
-  refrigerator: 'Холодильник',
-  freezer: 'Морозильник',
-  hood: 'Вытяжка',
-  other: 'Другое',
-};
+// Device type labels are now fetched from the API via useDeviceCategories() hook.
+// This file is kept for non-label constants only.

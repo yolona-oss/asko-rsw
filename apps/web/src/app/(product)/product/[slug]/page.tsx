@@ -9,18 +9,7 @@ import { ProductCare } from '@/components/product/product-care';
 import { ProductAllSpecs } from '@/components/product/product-all-specs';
 import { ProductRecommendations } from '@/components/product/product-recommendations';
 import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug } from '@/lib/api/product.server';
-
-const TYPE_LABELS: Record<string, string> = {
-  washing_machine: 'Стиральная машина',
-  dryer: 'Сушильная машина',
-  dishwasher: 'Посудомоечная машина',
-  oven: 'Духовой шкаф',
-  cooktop: 'Варочная панель',
-  refrigerator: 'Холодильник',
-  freezer: 'Морозильник',
-  hood: 'Вытяжка',
-  other: 'Другое',
-};
+import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 
 const DEFAULT_BADGES: Product['badges'] = [
   { icon: 'shield', label: 'Оригинальные запчасти' },
@@ -36,7 +25,7 @@ function kvToSpecs(obj?: Record<string, any> | null): SpecRow[] {
   }));
 }
 
-function deviceToProduct(device: any, images: string[]): Product {
+function deviceToProduct(device: any, images: string[], typeLabels: Record<string, string>): Product {
   const specs = kvToSpecs(device.specifications);
   const features = kvToSpecs(device.features);
   const allSpecs = [...specs, ...features];
@@ -46,7 +35,7 @@ function deviceToProduct(device: any, images: string[]): Product {
   return {
     slug: device.id,
     title: `${device.name}`,
-    category: TYPE_LABELS[device.type] ?? device.type,
+    category: typeLabels[device.type] ?? device.type,
     subtitle: 'Официальные запчасти от производителя',
     rating: 5,
     images,
@@ -66,16 +55,18 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
-  const [device, images] = await Promise.all([
+  const [device, images, categories] = await Promise.all([
     fetchDeviceBySlug(slug),
     fetchDeviceImageUrlsBySlug(slug),
+    fetchDeviceCategories(),
   ]);
 
   if (!device) {
     notFound();
   }
 
-  const product = deviceToProduct(device, images);
+  const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
+  const product = deviceToProduct(device, images, typeLabels);
 
   return (
     <div className="bg-page-bg">

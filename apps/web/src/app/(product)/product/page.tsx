@@ -2,18 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
 import { fetchDevices, fetchFirstDeviceImage } from '@/lib/api/product.server';
-
-const TYPE_LABELS: Record<string, string> = {
-  washing_machine: 'Стиральная машина',
-  dryer: 'Сушильная машина',
-  dishwasher: 'Посудомоечная машина',
-  oven: 'Духовой шкаф',
-  cooktop: 'Варочная панель',
-  refrigerator: 'Холодильник',
-  freezer: 'Морозильник',
-  hood: 'Вытяжка',
-  other: 'Другое',
-};
+import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 
 const LIMIT = 12;
 
@@ -25,7 +14,11 @@ export default async function ProductListPage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
 
-  const { data: devices, overallCount: total } = await fetchDevices(page, LIMIT);
+  const [{ data: devices, overallCount: total }, categories] = await Promise.all([
+    fetchDevices(page, LIMIT),
+    fetchDeviceCategories(),
+  ]);
+  const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
   const totalPages = Math.ceil(total / LIMIT);
 
   const imageMap = new Map<string, string | null>();
@@ -65,7 +58,7 @@ export default async function ProductListPage({
                     </div>
                     <div className="p-3 md:p-4 flex flex-col gap-1">
                       <span className="text-[11px] text-text-sub uppercase tracking-wider">
-                        {TYPE_LABELS[device.type] ?? device.type}
+                        {typeLabels[device.type] ?? device.type}
                       </span>
                       <h2 className="text-sm font-medium text-text-main line-clamp-2 leading-tight">
                         {device.name}

@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import { Button, Card } from '@asko/ui';
 import type { Device } from './types';
-import { TYPE_LABELS } from './constants';
 
-export function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id: string) => void }) {
+export function DeviceCard({ device, categoryLabels, onDelete }: {
+  device: Device;
+  categoryLabels: Record<string, string>;
+  onDelete: (id: string) => void;
+}) {
   return (
     <Card padding="none" className="p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -19,7 +22,7 @@ export function DeviceCard({ device, onDelete }: { device: Device; onDelete: (id
       <div className="flex flex-col gap-1 text-sm">
         <div className="flex justify-between">
           <span className="text-text-sub">Тип</span>
-          <span className="text-text-main">{TYPE_LABELS[device.type] ?? device.type}</span>
+          <span className="text-text-main">{categoryLabels[device.type ?? ''] ?? device.type}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-text-sub">Модель</span>

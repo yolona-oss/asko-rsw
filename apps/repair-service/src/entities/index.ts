@@ -1,3 +1,4 @@
+export { DeviceCategory } from './device-category.entity';
 export { Device } from './device.entity';
 export { Address } from './address.entity';
 export { UserDevice } from './user-device.entity';

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Container, DataFilter } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { SkeletonImage } from '@/components/landing/skeleton-image';
 import { deviceApi } from '@/lib/api/device';
+import { useDeviceCategories } from '@/hooks/use-device-categories';
 
 interface DeviceModel {
   id: string;
@@ -14,23 +15,6 @@ interface DeviceModel {
   description: string;
   image: string | null;
 }
-
-const TYPE_FILTERS = [
-  {
-    key: 'type',
-    label: '',
-    type: 'tabs' as const,
-    options: [
-      { value: '', label: 'Все' },
-      { value: 'washing_machine', label: 'Стиральные машины' },
-      { value: 'dryer', label: 'Сушильные машины' },
-      { value: 'dishwasher', label: 'Посудомоечные машины' },
-      { value: 'oven', label: 'Духовые шкафы' },
-      { value: 'cooktop', label: 'Варочные панели' },
-      { value: 'refrigerator', label: 'Холодильники' },
-    ],
-  },
-];
 
 function ModelCard({ model }: { model: DeviceModel }) {
   return (
@@ -76,6 +60,17 @@ export function ModelsSection() {
   const [models, setModels] = useState<DeviceModel[]>([]);
   const [filterValues, setFilterValues] = useState<FilterValues>({ type: '' });
   const [loading, setLoading] = useState(true);
+  const { data: categories } = useDeviceCategories();
+
+  const typeFilters = useMemo(() => [{
+    key: 'type',
+    label: '',
+    type: 'tabs' as const,
+    options: [
+      { value: '', label: 'Все' },
+      ...(categories ?? []).map((c) => ({ value: c.name, label: c.labelPlural })),
+    ],
+  }], [categories]);
 
   useEffect(() => {
     (async () => {
@@ -125,7 +120,7 @@ export function ModelsSection() {
             </h2>
 
             <DataFilter
-              filters={TYPE_FILTERS}
+              filters={typeFilters}
               values={filterValues}
               onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
             />

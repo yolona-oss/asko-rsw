@@ -3,6 +3,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
 import {
+    DeviceCategory,
     Device,
     Address,
     UserDevice,
@@ -33,6 +34,7 @@ import { isProdEnv } from '@asko/shared';
                     host: config.database.host,
                     port: parseInt(config.database.port),
                     entities: [
+                        DeviceCategory,
                         Device,
                         Address,
                         UserDevice,

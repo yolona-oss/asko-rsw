@@ -77,7 +77,7 @@ function deviceToRecord(entity: Device) {
     return {
         id: entity.id,
         name: entity.name,
-        type: entity.type,
+        type: entity.category?.name ?? '',
         model: entity.model,
         brand: entity.brand,
         price: entity.price ?? 0,

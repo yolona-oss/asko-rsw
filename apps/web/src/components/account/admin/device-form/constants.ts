@@ -20,14 +20,3 @@ export const INITIAL_DATA: FormData = {
   isFeatured: false,
 };
 
-export const DEVICE_TYPES = [
-  { value: 'washing_machine', label: 'Стиральная машина' },
-  { value: 'dryer', label: 'Сушильная машина' },
-  { value: 'dishwasher', label: 'Посудомоечная машина' },
-  { value: 'oven', label: 'Духовой шкаф' },
-  { value: 'cooktop', label: 'Варочная панель' },
-  { value: 'refrigerator', label: 'Холодильник' },
-  { value: 'freezer', label: 'Морозильник' },
-  { value: 'hood', label: 'Вытяжка' },
-  { value: 'other', label: 'Другое' },
-];

@@ -1,6 +1,6 @@
-import { Entity, PrimaryKey, Property, Enum, OneToMany, Collection, OptionalProps } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
-import { DeviceType } from '@asko/shared';
+import { DeviceCategory } from './device-category.entity';
 import { DevicePart } from './device-part.entity';
 
 @Entity()
@@ -13,8 +13,8 @@ export class Device {
     @Property({ type: 'varchar', length: 255 })
     name!: string;
 
-    @Enum({ items: () => DeviceType, nativeEnumName: 'device_type' })
-    type!: DeviceType;
+    @ManyToOne(() => DeviceCategory, { eager: true })
+    category!: DeviceCategory;
 
     @Property({ type: 'varchar', length: 255 })
     model!: string;

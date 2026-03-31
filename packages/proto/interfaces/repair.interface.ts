@@ -139,6 +139,9 @@ export interface DeviceRecord {
     isFeatured: boolean;
     createdAt: string;
     updatedAt: string;
+    categoryId: string;
+    categoryName: string;
+    categoryLabel: string;
 }
 
 export interface DeviceResponse {
@@ -259,6 +262,52 @@ export interface DeviceServiceClient {
     createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
     findAddressById(request: FindByIdRequest): Observable<AddressResponse>;
     findAllAddresses(request: EmptyDeviceRequest): Observable<AddressListResponse>;
+
+    // Device categories
+    findAllDeviceCategories(request: EmptyDeviceRequest): Observable<DeviceCategoryListResponse>;
+    findDeviceCategoryById(request: FindByIdRequest): Observable<DeviceCategoryResponse>;
+    createDeviceCategory(request: CreateDeviceCategoryRequest): Observable<DeviceCategoryResponse>;
+    updateDeviceCategory(request: UpdateDeviceCategoryRequest): Observable<DeviceCategoryResponse>;
+    deleteDeviceCategory(request: DeleteDeviceCategoryRequest): Observable<EmptyDeviceResponse>;
+}
+
+// ─── Device Category Interfaces ────────────────────────────────────────
+
+export interface DeviceCategoryRecord {
+    id: string;
+    name: string;
+    label: string;
+    labelPlural: string;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateDeviceCategoryRequest {
+    name: string;
+    label: string;
+    labelPlural: string;
+    order: number;
+}
+
+export interface UpdateDeviceCategoryRequest {
+    id: string;
+    name: string;
+    label: string;
+    labelPlural: string;
+    order: number;
+}
+
+export interface DeleteDeviceCategoryRequest {
+    id: string;
+}
+
+export interface DeviceCategoryResponse {
+    category: DeviceCategoryRecord;
+}
+
+export interface DeviceCategoryListResponse {
+    categories: DeviceCategoryRecord[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

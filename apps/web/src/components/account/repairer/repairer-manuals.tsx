@@ -18,25 +18,16 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
 import type { IDevice } from '@/lib/api/types';
-
-const DEVICE_TYPE_LABEL: Record<string, string> = {
-  washing_machine: 'Стиральная машина',
-  dryer: 'Сушильная машина',
-  dishwasher: 'Посудомоечная машина',
-  oven: 'Духовой шкаф',
-  cooktop: 'Варочная поверхность',
-  refrigerator: 'Холодильник',
-  freezer: 'Морозильник',
-  hood: 'Вытяжка',
-  other: 'Прочее',
-};
 
 export function RepairerManuals() {
   const [devices, setDevices] = useState<IDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const { data: categories } = useDeviceCategories();
+  const categoryLabels = useMemo(() => buildCategoryLabelMap(categories ?? []), [categories]);
 
   useEffect(() => {
     deviceApi.getAll()
@@ -52,7 +43,7 @@ export function RepairerManuals() {
       d.name.toLowerCase().includes(q)
       || d.brand?.toLowerCase().includes(q)
       || d.model?.toLowerCase().includes(q)
-      || (DEVICE_TYPE_LABEL[d.type] ?? d.type).toLowerCase().includes(q),
+      || (categoryLabels[d.type] ?? d.type).toLowerCase().includes(q),
     );
   }, [devices, search]);
 
@@ -97,7 +88,7 @@ export function RepairerManuals() {
                     <p className="text-sm text-text-main">{device.brand} · {device.model}</p>
                   </DataTableCell>
                   <DataTableCell mobileLabel="Тип:" className="lg:w-[200px] lg:px-4">
-                    <p className="text-sm text-text-main">{DEVICE_TYPE_LABEL[device.type] ?? device.type}</p>
+                    <p className="text-sm text-text-main">{categoryLabels[device.type] ?? device.type}</p>
                   </DataTableCell>
                 </DataTableRow>
               </Link>
@@ -121,7 +112,7 @@ export function RepairerManuals() {
                       <p className="text-base font-medium text-text-main">{device.name}</p>
                       <p className="text-xs text-text-sub">{device.brand} · {device.model}</p>
                       <p className="text-xs text-text-sub">
-                        {DEVICE_TYPE_LABEL[device.type] ?? device.type}
+                        {categoryLabels[device.type] ?? device.type}
                       </p>
                     </div>
                     {device.description && (
