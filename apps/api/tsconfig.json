@@ -31,8 +31,6 @@
         "isolatedModules": true,
         "types": ["jest", "node", "multer"],
         "paths": {
-            "@entities/*": ["entities/*"],
-            "entities/*": ["entities/*"],
             "common/*": ["common/*"],
             "modules/*": ["modules/*"]
         }

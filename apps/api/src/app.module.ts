@@ -1,15 +1,13 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
-import { MikroOrmMiddleware } from '@mikro-orm/nestjs';
 import { MetricsModule } from '@asko/observability';
 
 import { AppConfig, AppConfigModule } from './app.config';
 
 import { JwtGuard } from './common/guards/jwt.guard';
 import { UserModule } from 'modules/user/user.module';
-import { DatabaseModule } from 'modules/database.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FileUploadModule } from 'modules/file-upload/file-upload.module';
 import { AddressModule } from 'modules/address/address.module';
@@ -37,7 +35,6 @@ console.debug("Videos path: ", join(process.cwd(), 'videos'))
         AppConfigModule,
         EventEmitterModule.forRoot(),
         MetricsModule.register({ serviceName: 'api' }),
-        DatabaseModule,
         JwtModule,
 
         TaskScheduleModule,
@@ -89,10 +86,4 @@ console.debug("Videos path: ", join(process.cwd(), 'videos'))
         },
     ],
 })
-export class AppModule {
-    configure(consumer: MiddlewareConsumer) {
-        consumer
-            .apply(MikroOrmMiddleware)
-            .forRoutes('*');
-    }
-}
+export class AppModule {}

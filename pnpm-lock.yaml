@@ -47,21 +47,6 @@ importers:
       '@grpc/proto-loader':
         specifier: ^0.7.15
         version: 0.7.15
-      '@mikro-orm/cli':
-        specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
-      '@mikro-orm/core':
-        specifier: ^6.5.9
-        version: 6.6.9
-      '@mikro-orm/migrations':
-        specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
-      '@mikro-orm/nestjs':
-        specifier: ^6.1.1
-        version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
-      '@mikro-orm/postgresql':
-        specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
       '@nestjs/axios':
         specifier: ^4.0.1
         version: 4.0.1(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.6)(rxjs@7.8.2)
@@ -260,13 +245,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -300,7 +285,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -366,13 +351,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -400,7 +385,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -466,13 +451,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -512,7 +497,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -581,13 +566,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -624,7 +609,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -690,13 +675,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -730,7 +715,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -796,13 +781,13 @@ importers:
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -839,7 +824,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@nestjs/cli':
         specifier: ^11.0.16
         version: 11.0.16(@types/node@24.12.0)
@@ -902,19 +887,19 @@ importers:
         version: 0.7.15
       '@mikro-orm/cli':
         specifier: ^6.5.9
-        version: 6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(pg@8.19.0)
       '@mikro-orm/core':
         specifier: ^6.5.9
         version: 6.6.9
       '@mikro-orm/migrations':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+        version: 6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)
       '@mikro-orm/nestjs':
         specifier: ^6.1.1
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
-        version: 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -7090,11 +7075,11 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0': {}
 
-  '@mikro-orm/cli@6.6.9(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)':
+  '@mikro-orm/cli@6.6.9(pg@8.19.0)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.6.9
-      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(pg@8.19.0)
       fs-extra: 11.3.3
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -7120,11 +7105,11 @@ snapshots:
       mikro-orm: 6.6.9
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)':
+  '@mikro-orm/knex@6.6.9(@mikro-orm/core@6.6.9)(pg@8.19.0)':
     dependencies:
       '@mikro-orm/core': 6.6.9
       fs-extra: 11.3.3
-      knex: 3.1.0(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+      knex: 3.1.0(pg@8.19.0)
       sqlstring: 2.3.3
     transitivePeerDependencies:
       - mysql
@@ -7135,10 +7120,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)':
+  '@mikro-orm/migrations@6.6.9(@mikro-orm/core@6.6.9)(@types/node@24.12.0)(pg@8.19.0)':
     dependencies:
       '@mikro-orm/core': 6.6.9
-      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(pg@8.19.0)
       fs-extra: 11.3.3
       umzug: 3.8.2(@types/node@24.12.0)
     transitivePeerDependencies:
@@ -7160,10 +7145,10 @@ snapshots:
       '@nestjs/common': 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2)
 
-  '@mikro-orm/postgresql@6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))':
+  '@mikro-orm/postgresql@6.6.9(@mikro-orm/core@6.6.9)':
     dependencies:
       '@mikro-orm/core': 6.6.9
-      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0)
+      '@mikro-orm/knex': 6.6.9(@mikro-orm/core@6.6.9)(pg@8.19.0)
       pg: 8.19.0
       postgres-array: 3.0.4
       postgres-date: 2.1.0
@@ -9823,7 +9808,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knex@3.1.0(mysql2@3.20.0(@types/node@24.12.0))(pg@8.19.0):
+  knex@3.1.0(pg@8.19.0):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -9840,7 +9825,6 @@ snapshots:
       tarn: 3.0.2
       tildify: 2.0.0
     optionalDependencies:
-      mysql2: 3.20.0(@types/node@24.12.0)
       pg: 8.19.0
     transitivePeerDependencies:
       - supports-color

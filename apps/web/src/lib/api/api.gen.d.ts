@@ -2775,6 +2775,7 @@ export interface components {
             title: string;
             slug: string;
             text: string;
+            description?: string;
             tags?: string[];
             createdAt: string;
             updatedAt: string;
