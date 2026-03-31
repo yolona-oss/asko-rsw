@@ -23,20 +23,20 @@ export function AccountHeader() {
   return (
     <>
       {/* Mobile header */}
-      <header className="lg:hidden sticky top-0 z-50 bg-brand-red">
-        <div className="flex items-center justify-between px-4 h-12">
+      <header className="lg:hidden sticky top-0 z-50 bg-page-bg border-b border-border-light">
+        <div className="flex items-center justify-between px-4 py-6">
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Открыть меню"
-            className="flex flex-col gap-[5px] p-1"
+            className="flex flex-col gap-1 p-1"
           >
-            <span className="block w-6 h-[2px] bg-white" />
-            <span className="block w-3 h-[2px] bg-white" />
-            <span className="block w-6 h-[2px] bg-white" />
+            <span className="block w-[33px] h-[5px] bg-[#323232]" />
+            <span className="block w-[16.5px] h-[5px] bg-[#323232]" />
+            <span className="block w-[33px] h-[5px] bg-[#323232]" />
           </button>
           <Link href="/">
-            <Image src="/images/logo.svg" alt="ASKO" width={65} height={20} className="brightness-0 invert" />
+            <Image src="/images/logo.svg" alt="ASKO" width={77} height={23} />
           </Link>
         </div>
 

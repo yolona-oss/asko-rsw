@@ -8,7 +8,7 @@ export interface PageHeaderProps {
 }
 
 const sizeStyles = {
-  default: 'text-[28px] lg:text-[36px] font-medium tracking-[-0.01em] text-text-main',
+  default: 'text-[32px] lg:text-[36px] font-medium leading-[36px] tracking-[-0.01em] text-text-main',
   large: 'text-[32px] lg:text-[42px] font-medium leading-tight tracking-[-0.01em] text-text-main',
 } as const;
 
