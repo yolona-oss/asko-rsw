@@ -40,19 +40,20 @@ export class CertificateService {
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
         if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
 
+        // TODO: re-enable after Nominatim User-Agent fix is deployed
         // Validate address
-        const address = typeof userDevice.address === 'object' ? userDevice.address : null;
-        if (address) {
-            if (address.validationStatus === 'invalid') {
-                throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (address.validationError || 'адрес не найден'));
-            }
-            if (address.validationStatus === 'pending') {
-                throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
-            }
-            if (address.validationStatus === 'error') {
-                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
-            }
-        }
+        // const address = typeof userDevice.address === 'object' ? userDevice.address : null;
+        // if (address) {
+        //     if (address.validationStatus === 'invalid') {
+        //         throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (address.validationError || 'адрес не найден'));
+        //     }
+        //     if (address.validationStatus === 'pending') {
+        //         throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
+        //     }
+        //     if (address.validationStatus === 'error') {
+        //         throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
+        //     }
+        // }
 
         // Check uniqueness
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
@@ -98,19 +99,20 @@ export class CertificateService {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
+        // TODO: re-enable after Nominatim User-Agent fix is deployed
         // Validate address
-        const addrForDealer = typeof userDevice.address === 'object' ? userDevice.address : null;
-        if (addrForDealer) {
-            if (addrForDealer.validationStatus === 'invalid') {
-                throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (addrForDealer.validationError || 'адрес не найден'));
-            }
-            if (addrForDealer.validationStatus === 'pending') {
-                throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
-            }
-            if (addrForDealer.validationStatus === 'error') {
-                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
-            }
-        }
+        // const addrForDealer = typeof userDevice.address === 'object' ? userDevice.address : null;
+        // if (addrForDealer) {
+        //     if (addrForDealer.validationStatus === 'invalid') {
+        //         throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (addrForDealer.validationError || 'адрес не найден'));
+        //     }
+        //     if (addrForDealer.validationStatus === 'pending') {
+        //         throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
+        //     }
+        //     if (addrForDealer.validationStatus === 'error') {
+        //         throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
+        //     }
+        // }
 
         const dealer = await this.em.findOne(DealerProfile, { id: dto.dealerId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');

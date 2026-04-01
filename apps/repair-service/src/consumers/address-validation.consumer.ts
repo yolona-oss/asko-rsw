@@ -78,7 +78,9 @@ export class AddressValidationConsumer {
             `q=${encodeURIComponent(query)}&format=json&addressdetails=1` +
             `&accept-language=ru&countrycodes=ru&limit=1`;
 
-        const res = await fetch(searchUrl);
+        const res = await fetch(searchUrl, {
+            headers: { 'User-Agent': 'ASKO-RepairService/1.0 (askoservis.ru)' },
+        });
 
         // Handle rate limiting
         if (res.status === 429) {
