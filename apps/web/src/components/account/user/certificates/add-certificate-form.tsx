@@ -17,10 +17,12 @@ export function AddCertificateForm({
   open,
   onClose,
   onSuccess,
+  onOpenAddDevice,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: (cert: ICertificate) => void;
+  onOpenAddDevice?: () => void;
 }) {
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
@@ -86,20 +88,42 @@ export function AddCertificateForm({
           {loadingDevices ? (
             <p className="text-sm text-text-sub">Загрузка...</p>
           ) : devices.length === 0 ? (
-            <p className="text-sm text-text-sub">Нет зарегистрированных устройств</p>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-text-sub">Нет зарегистрированных устройств</p>
+              {onOpenAddDevice && (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onOpenAddDevice(); }}
+                  className="text-sm text-brand-red hover:underline cursor-pointer text-left"
+                >
+                  + Добавить устройство
+                </button>
+              )}
+            </div>
           ) : (
-            <Select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
-              {devices.map((d) => {
-                const vs = d.address?.validationStatus;
-                const blocked = vs === 'invalid' || vs === 'error';
-                const suffix = blocked ? ' — адрес не подтверждён' : vs === 'pending' ? ' — проверка адреса...' : '';
-                return (
-                  <option key={d.id} value={d.id} disabled={blocked}>
-                    {d.device?.name ?? d.id}{suffix}
-                  </option>
-                );
-              })}
-            </Select>
+            <div className="flex flex-col gap-1">
+              <Select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
+                {devices.map((d) => {
+                  const vs = d.address?.validationStatus;
+                  const blocked = vs === 'invalid' || vs === 'error';
+                  const suffix = blocked ? ' — адрес не подтверждён' : vs === 'pending' ? ' — проверка адреса...' : '';
+                  return (
+                    <option key={d.id} value={d.id} disabled={blocked}>
+                      {d.device?.name ?? d.id}{suffix}
+                    </option>
+                  );
+                })}
+              </Select>
+              {onOpenAddDevice && (
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onOpenAddDevice(); }}
+                  className="text-sm text-brand-red hover:underline cursor-pointer text-left"
+                >
+                  + Добавить новое устройство
+                </button>
+              )}
+            </div>
           )}
         </FormField>
 

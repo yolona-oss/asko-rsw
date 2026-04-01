@@ -217,6 +217,7 @@ export function UserCertificates() {
             setPaymentCert(cert);
           }
         }}
+        onOpenAddDevice={() => setShowAddDevice(true)}
       />
 
       <AddDeviceForm
