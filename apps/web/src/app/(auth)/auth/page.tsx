@@ -28,11 +28,11 @@ export default function AuthPage() {
         >
           {/* Decorative blurred ellipses */}
           <div
-            className="absolute w-[631px] h-[329px] -left-[416px] top-[53px] rotate-[60deg]"
+            className="absolute w-[631px] h-[329px] -left-[416px] top-[53px] rotate-[60deg] pointer-events-none animate-[glow-drift-2_10s_ease-in-out_infinite]"
             style={{ background: 'rgba(235, 0, 28, 0.11)', filter: 'blur(61.6px)' }}
           />
           <div
-            className="absolute w-[1290px] h-[428px] -left-[125px] -top-[502px] -rotate-[150deg]"
+            className="absolute w-[1290px] h-[428px] -left-[125px] -top-[502px] -rotate-[150deg] pointer-events-none animate-[glow-drift-1_8s_ease-in-out_infinite]"
             style={{ background: 'rgba(235, 0, 28, 0.18)', filter: 'blur(69.3px)' }}
           />
 

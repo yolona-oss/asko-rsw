@@ -18,8 +18,6 @@ import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { AddDeviceForm } from '@/components/account/user/certificates/add-device-form';
-import { AddCertificateForm } from '@/components/account/user/certificates/add-certificate-form';
 import { STATUS_TAB_MAP, STATUS_FILTER, type StatusFilter } from './constants';
 import type { RepairRequest } from './types';
 import { RequestCard } from './request-card';
@@ -35,8 +33,6 @@ export function UserRequests() {
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
-  const [showAddDevice, setShowAddDevice] = useState(false);
-  const [showAddCert, setShowAddCert] = useState(false);
 
   const statusFilter = filterValues.status as StatusFilter;
 
@@ -108,8 +104,6 @@ export function UserRequests() {
           />
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
             <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Button variant="secondary" size="sm" onClick={() => setShowAddDevice(true)}>Добавить устройство</Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowAddCert(true)}>Добавить сертификат</Button>
             <Link href="/account/requests/create">
               <Button variant="primary">Создать заявку</Button>
             </Link>
@@ -159,18 +153,6 @@ export function UserRequests() {
           </DataTableFooter>
         </DataTable>
       )}
-      <AddDeviceForm
-        open={showAddDevice}
-        onClose={() => setShowAddDevice(false)}
-        onSuccess={() => setShowAddDevice(false)}
-      />
-
-      <AddCertificateForm
-        open={showAddCert}
-        onClose={() => setShowAddCert(false)}
-        onSuccess={() => setShowAddCert(false)}
-        onOpenAddDevice={() => setShowAddDevice(true)}
-      />
     </PageContainer>
   );
 }

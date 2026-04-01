@@ -10,6 +10,8 @@ import { userDeviceApi } from '@/lib/api/user-device';
 import { certificateApi } from '@/lib/api/certificate';
 import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { AddDeviceForm } from '@/components/account/user/certificates/add-device-form';
+import { AddCertificateForm } from '@/components/account/user/certificates/add-certificate-form';
 import { TERMINAL_STATUSES } from './constants';
 import type { UserDevice, Certificate, UploadedImage } from './types';
 
@@ -34,37 +36,35 @@ export function CreateRequest() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showAddDevice, setShowAddDevice] = useState(false);
+  const [showAddCert, setShowAddCert] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [devRes, certRes, reqRes] = await Promise.all([
-          userDeviceApi.getMy(),
-          certificateApi.getMy(),
-          repairRequestApi.getMy({ limit: 100 }),
-        ]);
-        const devList = devRes.data;
-        setDevices(devList);
+  const fetchData = async () => {
+    setLoadingDevices(true);
+    try {
+      const [devRes, certRes, reqRes] = await Promise.all([
+        userDeviceApi.getMy(),
+        certificateApi.getMy(),
+        repairRequestApi.getMy({ limit: 100 }),
+      ]);
+      setDevices(devRes.data);
+      setCertificates(certRes.data.filter((c) => c.status === 'active'));
 
-        const certList = certRes.data;
-        setCertificates(certList.filter((c) => c.status === 'active'));
-
-        // Determine which devices have active repair requests
-        const reqList = reqRes.data.data ?? [];
-        const activeDeviceIds = new Set<string>();
-        for (const req of reqList) {
-          if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {
-            activeDeviceIds.add(req.userDevice.id);
-          }
+      const reqList = reqRes.data.data ?? [];
+      const activeDeviceIds = new Set<string>();
+      for (const req of reqList) {
+        if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {
+          activeDeviceIds.add(req.userDevice.id);
         }
-        setDevicesInRepair(activeDeviceIds);
-      } catch {
-      } finally {
-        setLoadingDevices(false);
       }
+      setDevicesInRepair(activeDeviceIds);
+    } catch {
+    } finally {
+      setLoadingDevices(false);
     }
-    fetchData();
-  }, []);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   // Filter certificates by selected device
   const filteredCertificates = certificates.filter(
@@ -198,10 +198,19 @@ export function CreateRequest() {
           {loadingDevices ? (
             <p className="text-sm text-text-sub">Загрузка устройств...</p>
           ) : devices.length === 0 ? (
-            <p className="text-sm text-text-sub">
-              У вас нет зарегистрированных устройств. Сначала добавьте устройство в разделе
-              &laquo;Сертификаты&raquo;.
-            </p>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-text-sub">
+                У вас нет зарегистрированных устройств. Добавьте устройство и при необходимости зарегистрируйте сертификат.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="primary" size="sm" onClick={() => setShowAddDevice(true)}>
+                  Добавить устройство
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowAddCert(true)}>
+                  Добавить сертификат
+                </Button>
+              </div>
+            </div>
           ) : (
             <Select
               value={userDeviceId}
@@ -446,6 +455,19 @@ export function CreateRequest() {
           {submitting ? 'Отправка...' : 'Отправить заявку'}
         </Button>
       </div>
+
+      <AddDeviceForm
+        open={showAddDevice}
+        onClose={() => setShowAddDevice(false)}
+        onSuccess={() => { setShowAddDevice(false); fetchData(); }}
+      />
+
+      <AddCertificateForm
+        open={showAddCert}
+        onClose={() => setShowAddCert(false)}
+        onSuccess={() => { setShowAddCert(false); fetchData(); }}
+        onOpenAddDevice={() => setShowAddDevice(true)}
+      />
     </PageContainer>
   );
 }
