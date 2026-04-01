@@ -29,7 +29,7 @@ export const getMyWithdraws = createAsyncThunk(
   'withdraw/getMy',
   async () => {
     const { data } = await dealerApi.getMyWithdrawals();
-    return data;
+    return data.withdrawals ?? [];
   },
 );
 

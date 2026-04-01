@@ -25,9 +25,8 @@ export function DealerDashboard() {
           dealerApi.getProfile(),
         ]);
 
-        const clients = Array.isArray(clientsRes.data) ? clientsRes.data : [];
-        setClientsCount(clients.length);
-        setPointsBalance(profileRes.data?.pointsBalance ?? '-');
+        setClientsCount(clientsRes.data.clients?.length ?? 0);
+        setPointsBalance(profileRes.data.profile?.pointsBalance ?? 0);
       } catch {
       } finally {
         setLoading(false);

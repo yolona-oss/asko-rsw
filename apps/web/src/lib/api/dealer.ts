@@ -19,11 +19,11 @@ export type SearchedUser = Pick<IUser, 'id' | 'firstName' | 'lastName' | 'email'
 
 export const dealerApi = {
   getProfile() {
-    return api.get<IDealerProfile>('/dealers/profile');
+    return api.get<{ profile: IDealerProfile }>('/dealers/profile');
   },
 
   getClients() {
-    return api.get<IDealerClient[]>('/dealers/clients');
+    return api.get<{ clients: IDealerClient[] }>('/dealers/clients');
   },
 
   searchUser(email: string) {
@@ -54,6 +54,6 @@ export const dealerApi = {
   },
 
   getMyWithdrawals() {
-    return api.get<IPointsWithdrawal[]>('/dealers/withdrawals');
+    return api.get<{ withdrawals: IPointsWithdrawal[] }>('/dealers/withdrawals');
   },
 };

@@ -38,7 +38,7 @@ export function DealerPayments() {
           dealerApi.getProfile(),
         ]);
         setPayments(paymentsRes.data.data ?? []);
-        setPointsBalance(profileRes.data?.pointsBalance ?? 0);
+        setPointsBalance(profileRes.data.profile?.pointsBalance ?? 0);
       } catch {
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ export function DealerPayments() {
   const handleWithdrawClose = () => {
     setWithdrawOpen(false);
     // Refresh data
-    dealerApi.getProfile().then(({ data }) => setPointsBalance(data?.pointsBalance ?? 0));
+    dealerApi.getProfile().then(({ data }) => setPointsBalance(data.profile?.pointsBalance ?? 0));
     dispatch(getMyWithdraws());
   };
 
