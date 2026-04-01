@@ -12,7 +12,7 @@ export default function AccountLayout({
   return (
     <AccountProvider>
       <AuthGuard>
-        <div className="flex min-h-screen bg-page-bg lg:max-w-7xl lg:mx-auto min-w-[390px]">
+        <div className="flex min-h-screen bg-page-bg lg:w-[1280px] lg:mx-auto min-w-[390px]">
           <AccountSidebar />
           <div className="relative flex-1 min-w-0 flex flex-col">
             <AccountHeader />
