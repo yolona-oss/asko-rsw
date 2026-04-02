@@ -21,7 +21,6 @@ import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
 import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
-import type { UserTab, StatusFilter } from './types';
 import { ROLE_LABELS, ROLE_TAB_FILTER_DEF } from './constants';
 import { Checkbox } from './checkbox';
 import { SettingsDropdown } from './settings-dropdown';
@@ -33,7 +32,6 @@ import { UserCard } from './user-card';
 const PAGE_SIZE = 20;
 
 export function AdminUsers() {
-  const [activeTab, setActiveTab] = useState<UserTab>('repairer');
   const [users, setUsers] = useState<IAuthUser[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -47,7 +45,13 @@ export function AdminUsers() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await usersApi.getAll({ offset: page, limit: PAGE_SIZE });
+      const { data } = await usersApi.getAll({
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        role: filterValues.role || undefined,
+        status: filterValues.status !== 'all' ? (filterValues.status as string) : undefined,
+      });
       setUsers(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch (e: any) {
@@ -55,15 +59,14 @@ export function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, search, filterValues.role, filterValues.status]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Keep activeTab and filterValues.role in sync
+  // Reset selection when role changes
   useEffect(() => {
-    setActiveTab(filterValues.role as UserTab);
     setSelected(new Set());
   }, [filterValues.role]);
 
@@ -115,27 +118,7 @@ export function AdminUsers() {
     ],
   };
 
-  // Reset page on search/filter changes
-  useEffect(() => { setPage(1); }, [search, activeTab, filterValues.status]);
-
-  // Filter: tab -> role, then search, then status
-  const statusFilter = filterValues.status as StatusFilter;
-  const filteredUsers = users.filter((u) => {
-    if (!u.roles.includes(activeTab)) return false;
-    if (statusFilter === 'active' && (u as any).isActive === false) return false;
-    if (statusFilter === 'disabled' && (u as any).isActive !== false) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      const name = [u.firstName, u.lastName].join(' ').toLowerCase();
-      const phone = (u.phone ?? '').toLowerCase();
-      const email = (u.email ?? '').toLowerCase();
-      if (!name.includes(q) && !phone.includes(q) && !email.includes(q)) return false;
-    }
-    return true;
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
-  const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -145,15 +128,15 @@ export function AdminUsers() {
       <DataFilter
         filters={[ROLE_TAB_FILTER_DEF]}
         values={filterValues}
-        onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
       />
 
       {/* Search + Filters + ViewSwitcher + Invite button */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
         filters={[STATUS_FILTER_DEF]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         views={[VIEW_TABLE, VIEW_CARD]}
         activeView={view}
         onViewChange={setView}
@@ -181,10 +164,10 @@ export function AdminUsers() {
           </DataTableHeader>
 
           {/* Rows */}
-          {filteredUsers.length === 0 ? (
+          {users.length === 0 ? (
             <DataTableEmpty>Нет пользователей</DataTableEmpty>
           ) : (
-            paginatedUsers.map((user) => {
+            users.map((user) => {
               const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
               const isActive = (user as any).isActive !== false;
               const isLoading = actionLoading === user.id;
@@ -247,10 +230,10 @@ export function AdminUsers() {
           )}
 
           {/* Footer */}
-          {filteredUsers.length > 0 && (
+          {users.length > 0 && (
             <DataTableFooter>
               <div className="flex items-center justify-between w-full">
-                <span>Показано {paginatedUsers.length} из {filteredUsers.length}</span>
+                <span>Показано {users.length} из {total}</span>
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             </DataTableFooter>
@@ -258,12 +241,12 @@ export function AdminUsers() {
         </DataTable>
       ) : (
         /* Card view */
-        filteredUsers.length === 0 ? (
+        users.length === 0 ? (
           <p className="text-sm text-text-sub text-center py-8">Нет пользователей</p>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedUsers.map((user) => (
+              {users.map((user) => (
                 <UserCard
                   key={user.id}
                   user={user}

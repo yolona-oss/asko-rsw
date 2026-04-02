@@ -8,7 +8,6 @@ import type {
 } from '@asko/shared/client';
 import type {
   IRepairRequest,
-  IWorkStep,
   IRepairPayment,
   PaginatedRepairRequests,
   ProcessInvoiceResult,
@@ -21,15 +20,15 @@ import { api } from './client';
 
 export const repairRequestApi = {
   // List / Get
-  getAll(params?: { offset?: number; limit?: number; search?: string }) {
+  getAll(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests', { params });
   },
 
-  getMy(params?: { offset?: number; limit?: number }) {
+  getMy(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests/my', { params });
   },
 
-  getAssigned(params?: { offset?: number; limit?: number; status?: string }) {
+  getAssigned(params?: { offset?: number; limit?: number; status?: string; search?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests/assigned', { params });
   },
 
@@ -70,7 +69,7 @@ export const repairRequestApi = {
     return api.post(`/repair-requests/${requestId}/chat/detach`);
   },
 
-  getPaused(params?: { offset?: number; limit?: number }) {
+  getPaused(params?: { offset?: number; limit?: number; search?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests/paused', { params });
   },
 

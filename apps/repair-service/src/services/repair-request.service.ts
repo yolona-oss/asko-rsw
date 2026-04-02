@@ -587,10 +587,18 @@ export class RepairRequestService {
     // ── Queries ──
 
     @CreateRequestContext()
-    async findByUser(userId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByUser(userId: string, pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+        const where: Record<string, any> = { userId };
+        if (pagination.status) where.status = pagination.status;
+        if (pagination.search) {
+            where.$or = [
+                { description: { $ilike: `%${pagination.search}%` } },
+            ];
+        }
+
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
-            { userId },
+            where,
             {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
@@ -642,12 +650,17 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
         const where: Record<string, any> = { repairer: repairer.id };
         if (status) where.status = status;
+        if (search) {
+            where.$or = [
+                { description: { $ilike: `%${search}%` } },
+            ];
+        }
 
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
@@ -681,10 +694,18 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findAll(pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+        const where: Record<string, any> = {};
+        if (pagination.status) where.status = pagination.status;
+        if (pagination.search) {
+            where.$or = [
+                { description: { $ilike: `%${pagination.search}%` } },
+            ];
+        }
+
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
-            {},
+            where,
             {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),

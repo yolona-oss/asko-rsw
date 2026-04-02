@@ -45,10 +45,13 @@ export class UsersController {
     @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
-    async getAllUsers(@Query() pagination: PaginationDto = {}) {
+    async getAllUsers(@Query() pagination: PaginationDto, @Query('role') role?: string, @Query('status') status?: string) {
         return this.userClient.findAllUsers({
-            offset: pagination.offset ?? 0,
-            limit: pagination.limit ?? 10,
+            offset: pagination.offset,
+            limit: pagination.limit,
+            search: pagination.search,
+            role,
+            status,
         });
     }
 

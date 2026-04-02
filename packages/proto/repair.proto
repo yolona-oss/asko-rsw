@@ -487,6 +487,7 @@ message CertFindAllRequest {
     int32 offset = 1;
     int32 limit = 2;
     string search = 3;
+    string status = 4;
 }
 
 message CertValidateRequest {
@@ -885,6 +886,8 @@ message RepairFindByUserRequest {
     string userId = 1;
     int32 offset = 2;
     int32 limit = 3;
+    string search = 4;
+    string status = 5;
 }
 
 message RepairFindByRepairerRequest {
@@ -898,6 +901,7 @@ message RepairFindByRepairerFilteredRequest {
     int32 offset = 2;
     int32 limit = 3;
     string status = 4;
+    string search = 5;
 }
 
 message RepairFindActiveByRepairerRequest {
@@ -907,6 +911,8 @@ message RepairFindActiveByRepairerRequest {
 message RepairFindAllRequest {
     int32 offset = 1;
     int32 limit = 2;
+    string search = 3;
+    string status = 4;
 }
 
 message RepairCheckActiveForDeviceRequest {

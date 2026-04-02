@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   DataToolbar,
@@ -43,28 +43,36 @@ export function RepairerRequests() {
       .catch(() => {});
   }, []);
 
-  // Fetch list based on tab + page
-  useEffect(() => {
+  // Fetch list based on tab
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
-    const params = { offset: page, limit: PAGE_SIZE };
+    try {
+      const params = {
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+      };
 
-    let promise;
-    if (activeTab === 'paused') {
-      promise = repairRequestApi.getPaused(params);
-    } else if (activeTab === 'completed') {
-      promise = repairRequestApi.getAssigned({ ...params, status: RepairRequestStatus.COMPLETED });
-    } else {
-      promise = repairRequestApi.getAssigned(params);
+      let result;
+      if (activeTab === 'paused') {
+        result = await repairRequestApi.getPaused(params);
+      } else if (activeTab === 'completed') {
+        result = await repairRequestApi.getAssigned({ ...params, status: RepairRequestStatus.COMPLETED });
+      } else {
+        result = await repairRequestApi.getAssigned(params);
+      }
+
+      setRequests((result.data.data ?? []) as unknown as RepairRequest[]);
+      setTotal(result.data.overallCount ?? 0);
+    } catch {
+    } finally {
+      setLoading(false);
     }
+  }, [page, activeTab, search]);
 
-    promise
-      .then(({ data }) => {
-        setRequests((data.data ?? []) as unknown as RepairRequest[]);
-        setTotal(data.overallCount ?? 0);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [activeTab, page]);
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   const showActiveHighlight = activeTab === 'active' || activeTab === 'all';
 
@@ -73,23 +81,12 @@ export function RepairerRequests() {
     setPage(1);
   };
 
-  // Reset page on search change
-  useEffect(() => { setPage(1); }, [search]);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
-  // Client-side search filter
-  const filteredRequests = (() => {
-    if (!search.trim()) return requests;
-    const q = search.trim().toLowerCase();
-    return requests.filter((r) => {
-      const userName = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ').toLowerCase();
-      const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
-      const city = (r.address?.city ?? '').toLowerCase();
-      return userName.includes(q) || deviceName.includes(q) || city.includes(q);
-    });
-  })();
-
-  const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
-  const paginatedRequests = filteredRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -97,7 +94,7 @@ export function RepairerRequests() {
 
       {/* Toolbar */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск по клиенту, устройству или городу" }}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Поиск по клиенту, устройству или городу" }}
         filters={[TAB_FILTER]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
@@ -138,11 +135,11 @@ export function RepairerRequests() {
         <>
           {loading ? (
             <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : filteredRequests.length === 0 ? (
+          ) : requests.length === 0 ? (
             <p className="text-sm text-text-sub">Нет заявок</p>
           ) : view === 'card' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedRequests.map((req) => (
+              {requests.map((req) => (
                 <RequestCard
                   key={req.id}
                   request={req}
@@ -161,7 +158,7 @@ export function RepairerRequests() {
                 <div className="w-[140px] px-4">Дата</div>
                 <div className="w-[120px] flex-shrink-0" />
               </DataTableHeader>
-              {paginatedRequests.map((req) => (
+              {requests.map((req) => (
                 <RequestTableRow
                   key={req.id}
                   request={req}
@@ -170,7 +167,7 @@ export function RepairerRequests() {
               ))}
               <DataTableFooter>
                 <div className="flex items-center justify-between w-full">
-                  <span>Показано {paginatedRequests.length} из {filteredRequests.length}</span>
+                  <span>Показано {requests.length} из {total}</span>
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                 </div>
               </DataTableFooter>

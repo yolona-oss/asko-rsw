@@ -244,11 +244,14 @@ export class CertificateGrpcController {
     @GrpcMethod('CertificateService', 'FindAll')
     async findAll(data: CertFindAllRequest) {
         try {
-            const result = await this.certificateService.findAll({
-                offset: data.offset,
-                limit: data.limit,
-                search: data.search || undefined,
-            });
+            const result = await this.certificateService.findAll(
+                {
+                    offset: data.offset,
+                    limit: data.limit,
+                    search: data.search || undefined,
+                },
+                data.status || undefined,
+            );
             return {
                 data: result.data.map(certToRecord),
                 overallCount: result.total,

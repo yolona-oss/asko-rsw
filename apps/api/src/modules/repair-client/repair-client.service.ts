@@ -196,11 +196,13 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.findById({ id }));
     }
 
-    findByUser(userId: string, pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findByUser(userId: string, pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByUser({
             userId,
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 20,
+            search: pagination.search ?? '',
+            status: pagination.status ?? '',
         }));
     }
 
@@ -212,12 +214,13 @@ export class RepairClientService implements OnModuleInit {
         }));
     }
 
-    findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string): Promise<PaginatedRepairRequestsResponse> {
+    findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string, search?: string): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByRepairerFiltered({
             repairerUserId,
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 20,
             status: status ?? '',
+            search: search ?? '',
         }));
     }
 
@@ -233,10 +236,12 @@ export class RepairClientService implements OnModuleInit {
         }));
     }
 
-    findAll(pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findAll(pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findAll({
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 20,
+            search: pagination.search ?? '',
+            status: pagination.status ?? '',
         }));
     }
 

@@ -120,6 +120,14 @@ export interface PaginationRequest {
     limit: number;
 }
 
+export interface FindAllUsersRequest {
+    offset: number;
+    limit: number;
+    search: string;
+    role: string;
+    status: string;
+}
+
 export interface UpdateUserRequest {
     id: string;
     name: string;
@@ -442,7 +450,7 @@ export interface UserServiceClient {
     requestPhoneChange(request: RequestPhoneChangeRequest): Observable<RequestPhoneChangeResponse>;
     confirmPhoneChange(request: ConfirmPhoneChangeRequest): Observable<ConfirmPhoneChangeResponse>;
 
-    findAllUsers(request: PaginationRequest): Observable<PaginatedUsersResponse>;
+    findAllUsers(request: FindAllUsersRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;
     findUserByEmail(request: FindByEmailRequest): Observable<UserResponse>;
     deleteUser(request: UserIdRequest): Observable<EmptyResponse>;

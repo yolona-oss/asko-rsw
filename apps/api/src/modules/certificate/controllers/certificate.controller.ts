@@ -201,8 +201,8 @@ export class CertificateController {
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
     @RequiredRoles(...ADMIN_ROLES)
     @Get()
-    async findAll(@Query() pagination: PaginationDto) {
-        const result = await this.certificateClient.findAll(pagination);
+    async findAll(@Query() pagination: PaginationDto, @Query('status') status?: string) {
+        const result = await this.certificateClient.findAll({ ...pagination, status });
         result.data = result.data ?? [];
         await this.enrichCertificates(result.data);
         return result;

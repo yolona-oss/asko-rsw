@@ -505,6 +505,8 @@ export class RepairGrpcController {
             const result = await this.repairRequestService.findByUser(data.userId, {
                 offset: data.offset,
                 limit: data.limit,
+                search: data.search || undefined,
+                status: data.status || undefined,
             });
             return {
                 data: result.data.map(requestToRecord),
@@ -538,6 +540,7 @@ export class RepairGrpcController {
                 data.repairerUserId,
                 { offset: data.offset, limit: data.limit },
                 data.status || undefined,
+                data.search || undefined,
             );
             return {
                 data: result.data.map(requestToRecord),
@@ -578,6 +581,8 @@ export class RepairGrpcController {
             const result = await this.repairRequestService.findAll({
                 offset: data.offset,
                 limit: data.limit,
+                search: data.search || undefined,
+                status: data.status || undefined,
             });
             return {
                 data: result.data.map(requestToRecord),

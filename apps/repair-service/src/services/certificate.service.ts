@@ -283,8 +283,9 @@ export class CertificateService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Certificate[]; total: number }> {
+    async findAll(pagination: { offset?: number; limit?: number; search?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = {};
+        if (status) where.status = status;
         if (pagination.search) {
             where.$or = [
                 { certificateNumber: { $ilike: `%${pagination.search}%` } },

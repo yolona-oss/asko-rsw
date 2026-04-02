@@ -398,6 +398,7 @@ export interface CertFindAllRequest {
     offset: number;
     limit: number;
     search: string;
+    status: string;
 }
 
 export interface CertValidateRequest {
@@ -838,6 +839,8 @@ export interface RepairFindByUserRequest {
     userId: string;
     offset: number;
     limit: number;
+    search: string;
+    status: string;
 }
 
 export interface RepairFindByRepairerRequest {
@@ -851,6 +854,7 @@ export interface RepairFindByRepairerFilteredRequest {
     offset: number;
     limit: number;
     status: string;
+    search: string;
 }
 
 export interface RepairFindActiveByRepairerRequest {
@@ -860,6 +864,8 @@ export interface RepairFindActiveByRepairerRequest {
 export interface RepairFindAllRequest {
     offset: number;
     limit: number;
+    search: string;
+    status: string;
 }
 
 export interface RepairCheckActiveForDeviceRequest {

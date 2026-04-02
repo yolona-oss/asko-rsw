@@ -93,8 +93,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
-    async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.repairClient.findByUser(user.sub, pagination);
+    async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto, @Query('status') status?: string) {
+        return this.repairClient.findByUser(user.sub, { ...pagination, status });
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -148,8 +148,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
-    async findAll(@Query() pagination: PaginationDto) {
-        const result = await this.repairClient.findAll(pagination);
+    async findAll(@Query() pagination: PaginationDto, @Query('status') status?: string) {
+        const result = await this.repairClient.findAll({ ...pagination, status });
         result.data = result.data ?? [];
         // Collect all unique userIds to enrich (request owners + repairers)
         const enrichments: Promise<void>[] = [];
@@ -276,7 +276,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: AssignedQueryDto) {
-        return this.repairClient.findByRepairerFiltered(user.sub, query, query.status);
+        return this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })

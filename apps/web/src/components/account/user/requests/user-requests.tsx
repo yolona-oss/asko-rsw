@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -16,7 +16,7 @@ import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { STATUS_TAB_MAP, STATUS_FILTER, type StatusFilter } from './constants';
+import { STATUS_FILTER, type StatusFilter } from './constants';
 import type { RepairRequest } from './types';
 import { RequestCard } from './request-card';
 import { RequestTableRow } from './request-table-row';
@@ -37,48 +37,34 @@ export function UserRequests() {
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await repairRequestApi.getMy({ offset: page, limit: PAGE_SIZE });
+      const { data } = await repairRequestApi.getMy({
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      });
       setRequests((data.data ?? []) as unknown as RepairRequest[]);
       setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, search, statusFilter]);
 
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
 
-  const filteredRequests = useMemo(() => {
-    let result = requests;
-
-    // Filter by status tab
-    if (statusFilter !== 'all') {
-      result = result.filter((r) => STATUS_TAB_MAP[r.status] === statusFilter);
-    }
-
-    // Filter by search (device name / description)
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter((r) => {
-        const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
-        const description = (r.description ?? '').toLowerCase();
-        return deviceName.includes(q) || description.includes(q);
-      });
-    }
-
-    return result;
-  }, [requests, statusFilter, search]);
-
-  // Reset page on search/filter changes
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
-
-  const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
-  const paginatedRequests = filteredRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
   };
 
   return (
@@ -87,7 +73,7 @@ export function UserRequests() {
 
       {/* Toolbar */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск по устройству или описанию" }}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Поиск по устройству или описанию" }}
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
@@ -104,8 +90,8 @@ export function UserRequests() {
       {/* Data */}
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : filteredRequests.length === 0 ? (
-        requests.length === 0 ? (
+      ) : requests.length === 0 ? (
+        total === 0 && !search && statusFilter === 'all' ? (
           <div className="flex flex-col items-center gap-4 py-12">
             <p className="text-base text-text-sub">У вас пока нет заявок</p>
             <Link href="/account/requests/create">
@@ -118,7 +104,7 @@ export function UserRequests() {
       ) : view === 'card' ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedRequests.map((req) => (
+            {requests.map((req) => (
               <RequestCard key={req.id} request={req} />
             ))}
           </div>
@@ -132,12 +118,12 @@ export function UserRequests() {
             <div className="w-[160px] px-4">Статус</div>
             <div className="w-[120px] px-4">Дата</div>
           </DataTableHeader>
-          {paginatedRequests.map((req) => (
+          {requests.map((req) => (
             <RequestTableRow key={req.id} request={req} />
           ))}
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
-              <span>Показано {paginatedRequests.length} из {filteredRequests.length}</span>
+              <span>Показано {requests.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>

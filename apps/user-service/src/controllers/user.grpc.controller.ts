@@ -24,7 +24,7 @@ import type {
     AuthUserResponse,
     UserIdRequest,
     FindByEmailRequest,
-    PaginationRequest,
+    FindAllUsersRequest,
     PaginatedUsersResponse,
     UpdateUserRequest,
     ChangePasswordRequest,
@@ -406,9 +406,15 @@ export class UserGrpcController {
     // ─── User CRUD ───────────────────────────────────────────────────────
 
     @GrpcMethod('UserService', 'FindAllUsers')
-    async findAllUsers(data: PaginationRequest): Promise<PaginatedUsersResponse> {
+    async findAllUsers(data: FindAllUsersRequest): Promise<PaginatedUsersResponse> {
         try {
-            const result = await this.userService.findAll({ offset: data.offset, limit: data.limit });
+            const result = await this.userService.findAll({
+                offset: data.offset,
+                limit: data.limit,
+                search: data.search || undefined,
+                role: data.role || undefined,
+                status: data.status || undefined,
+            });
             return {
                 data: result.data.map(userToResponse),
                 overallCount: result.overallCount,

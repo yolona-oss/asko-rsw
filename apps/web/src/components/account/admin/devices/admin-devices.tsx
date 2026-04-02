@@ -66,47 +66,39 @@ export function AdminDevices() {
     FEATURED_FILTER,
   ], [categories]);
 
-  const fetchDevices = useCallback(async (p: number) => {
+  const fetchDevices = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await deviceApi.getAll({ offset: p, limit: PAGE_SIZE, search: search || undefined });
+      const { data } = await deviceApi.getAll({
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        type: filterValues.type || undefined,
+        isFeatured: filterValues.featured === 'yes' ? true : filterValues.featured === 'no' ? false : undefined,
+      });
       setDevices(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [page, search, filterValues.type, filterValues.featured]);
 
   useEffect(() => {
-    setPage(1);
-    fetchDevices(1);
-  }, [search, fetchDevices]);
-
-  useEffect(() => {
-    fetchDevices(page);
-  }, [page, fetchDevices]);
+    fetchDevices();
+  }, [fetchDevices]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };
 
-  const filteredDevices = useMemo(() => {
-    let result = devices;
-    if (filterValues.type) {
-      result = result.filter((d) => d.type === filterValues.type);
-    }
-    if (filterValues.featured === 'yes') {
-      result = result.filter((d) => d.isFeatured);
-    } else if (filterValues.featured === 'no') {
-      result = result.filter((d) => !d.isFeatured);
-    }
-    return result;
-  }, [devices, filterValues]);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
-  const totalPages = Math.ceil(filteredDevices.length / PAGE_SIZE);
-  const paginatedDevices = filteredDevices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -140,7 +132,7 @@ export function AdminDevices() {
       }
 
       setImporting(false);
-      await fetchDevices(page);
+      await fetchDevices();
     } catch {
       setImporting(false);
       setImportStatus({ total: 0, done: 0, errors: ['Ошибка чтения файла'] });
@@ -153,7 +145,6 @@ export function AdminDevices() {
     try {
       await deviceApi.delete(id);
       setDevices((prev) => prev.filter((d) => d.id !== id));
-      setTotal((prev) => prev - 1);
     } catch {
     }
   };
@@ -177,7 +168,7 @@ export function AdminDevices() {
 
       {/* Toolbar */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        search={{ value: search, onChange: handleSearchChange, placeholder: "Поиск" }}
         views={[VIEW_TABLE, VIEW_CARD]}
         activeView={view}
         onViewChange={setView}
@@ -313,28 +304,28 @@ export function AdminDevices() {
             <div className="w-[200px] flex-shrink-0" />
           </DataTableHeader>
 
-          {filteredDevices.length === 0 ? (
+          {devices.length === 0 ? (
             <DataTableEmpty>Нет товаров</DataTableEmpty>
           ) : (
-            paginatedDevices.map((device) => (
+            devices.map((device) => (
               <DeviceRow key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
             ))
           )}
 
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
-              <span>Показано {paginatedDevices.length} из {filteredDevices.length}</span>
+              <span>Показано {devices.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
         </DataTable>
       ) : (
         <>
-          {filteredDevices.length === 0 ? (
+          {devices.length === 0 ? (
             <p className="text-sm text-text-sub text-center py-8">Нет товаров</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedDevices.map((device) => (
+              {devices.map((device) => (
                 <DeviceCard key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
               ))}
             </div>

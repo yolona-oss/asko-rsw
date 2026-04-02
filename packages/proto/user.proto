@@ -122,6 +122,14 @@ message PaginationRequest {
     int32 limit = 2;
 }
 
+message FindAllUsersRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string search = 3;
+    string role = 4;
+    string status = 5;
+}
+
 message UpdateUserRequest {
     string id = 1;
     string name = 2;
@@ -442,7 +450,7 @@ service UserService {
     rpc ConfirmPhoneChange(ConfirmPhoneChangeRequest) returns (ConfirmPhoneChangeResponse);
 
     // User CRUD
-    rpc FindAllUsers(PaginationRequest) returns (PaginatedUsersResponse);
+    rpc FindAllUsers(FindAllUsersRequest) returns (PaginatedUsersResponse);
     rpc FindUserById(UserIdRequest) returns (UserResponse);
     rpc DeleteUser(UserIdRequest) returns (EmptyResponse);
     rpc UpdateUser(UpdateUserRequest) returns (UserResponse);

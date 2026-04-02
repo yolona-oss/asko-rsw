@@ -17,7 +17,6 @@ import type {
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
-    PaginationRequest,
     PaginatedUsersResponse,
     UpdateUserRequest,
     ChangePasswordRequest,
@@ -188,8 +187,14 @@ export class UserClientService implements OnModuleInit {
 
     // ─── User CRUD ───────────────────────────────────────────────────────
 
-    findAllUsers(data: PaginationRequest): Promise<PaginatedUsersResponse> {
-        return grpcCall(this.userService.findAllUsers(data));
+    findAllUsers(data: { offset?: number; limit?: number; search?: string; role?: string; status?: string }): Promise<PaginatedUsersResponse> {
+        return grpcCall(this.userService.findAllUsers({
+            offset: data.offset ?? 0,
+            limit: data.limit ?? 10,
+            search: data.search ?? '',
+            role: data.role ?? '',
+            status: data.status ?? '',
+        }));
     }
 
     findUserById(data: UserIdRequest): Promise<UserResponse> {

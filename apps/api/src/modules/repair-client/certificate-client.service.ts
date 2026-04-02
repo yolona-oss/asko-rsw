@@ -108,11 +108,13 @@ export class CertificateClientService implements OnModuleInit {
         offset?: number;
         limit?: number;
         search?: string;
+        status?: string;
     }): Promise<PaginatedCertificatesResponse> {
         return grpcCall(this.certificateService.findAll({
             offset: pagination.offset ?? 0,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
+            status: pagination.status ?? '',
         }));
     }
 

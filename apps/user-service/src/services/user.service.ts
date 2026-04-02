@@ -32,13 +32,31 @@ export class UserService {
     ) { }
 
     @CreateRequestContext()
-    async findAll(dto: PaginationDto,
+    async findAll(dto: PaginationDto & { search?: string; role?: string; status?: string },
         relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
         const offset = dto.offset ?? 0
         const limit = dto.limit ?? 10
 
-        const [entities, overallCount] = await this.em.findAndCount(User, {}, {
+        const where: Record<string, any> = {};
+        if (dto.search) {
+            where.$or = [
+                { firstName: { $ilike: `%${dto.search}%` } },
+                { lastName: { $ilike: `%${dto.search}%` } },
+                { email: { $ilike: `%${dto.search}%` } },
+                { phone: { $ilike: `%${dto.search}%` } },
+            ];
+        }
+        if (dto.role) {
+            where.roles = { $contains: [dto.role] };
+        }
+        if (dto.status === 'active') {
+            where.isActive = true;
+        } else if (dto.status === 'disabled') {
+            where.isActive = false;
+        }
+
+        const [entities, overallCount] = await this.em.findAndCount(User, where, {
             offset,
             limit,
             populate: relations,

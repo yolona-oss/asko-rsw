@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DataToolbar,
   VIEW_TABLE,
@@ -17,7 +17,7 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';
 import type { TabKey, RepairRequest, ConversationInfo } from './types';
-import { STATUS_MAP, PAGE_SIZE, TAB_FILTER } from './constants';
+import { PAGE_SIZE, TAB_FILTER } from './constants';
 import { RequestCardItem } from './request-card-item';
 import { RequestTableRow } from './request-table-row';
 
@@ -35,72 +35,53 @@ export function ManagerRequests() {
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    async function fetchRequests() {
-      setLoading(true);
-      try {
-        const { data } = await repairRequestApi.getAll({ offset: page, limit: PAGE_SIZE });
-        const items = (data.data ?? []) as unknown as RepairRequest[];
-        setRequests(items);
-        setTotal(data.overallCount ?? 0);
-
-        // Fetch conversation info for requests that have conversations
-        const withConv = items.filter(r => r.conversationId);
-        if (withConv.length > 0) {
-          const infoMap: Record<string, ConversationInfo> = {};
-          await Promise.all(withConv.map(async (r) => {
-            try {
-              const { data: conv } = await chatApi.getConversation(r.conversationId!, true);
-              infoMap[r.id] = {
-                unreadCount: conv.conversation.unreadCount ?? 0,
-                participantUserIds: conv.conversation.participants.map((p: any) => p.userId),
-              };
-            } catch {
-              // Manager may not be a participant - just check participants list
-              try {
-                const { data: parts } = await chatApi.listParticipants(r.conversationId!, true);
-                infoMap[r.id] = {
-                  unreadCount: 0,
-                  participantUserIds: (parts.participants ?? []).map((p: any) => p.userId),
-                };
-              } catch { }
-            }
-          }));
-          setConvInfoMap(infoMap);
-        }
-      } catch { } finally {
-        setLoading(false);
-      }
-    }
-    fetchRequests();
-  }, [page]);
-
-  // Client-side filtering by tab and search
-  const filteredRequests = (() => {
-    let result = requests;
-
-    if (activeTab !== 'all') {
-      result = result.filter((r) => STATUS_MAP[r.status] === activeTab);
-    }
-
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter((r) => {
-        const userName = [r.user?.lastName, r.user?.firstName].filter(Boolean).join(' ').toLowerCase();
-        const deviceName = (r.userDevice?.device?.name ?? '').toLowerCase();
-        const city = (r.address?.city ?? '').toLowerCase();
-        return userName.includes(q) || deviceName.includes(q) || city.includes(q);
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await repairRequestApi.getAll({
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        status: activeTab !== 'all' ? activeTab : undefined,
       });
+      const items = (data.data ?? []) as unknown as RepairRequest[];
+      setRequests(items);
+      setTotal(data.overallCount ?? 0);
+
+      // Fetch conversation info for requests that have conversations
+      const withConv = items.filter(r => r.conversationId);
+      if (withConv.length > 0) {
+        const infoMap: Record<string, ConversationInfo> = {};
+        await Promise.all(withConv.map(async (r) => {
+          try {
+            const { data: conv } = await chatApi.getConversation(r.conversationId!, true);
+            infoMap[r.id] = {
+              unreadCount: conv.conversation.unreadCount ?? 0,
+              participantUserIds: conv.conversation.participants.map((p: any) => p.userId),
+            };
+          } catch {
+            // Manager may not be a participant - just check participants list
+            try {
+              const { data: parts } = await chatApi.listParticipants(r.conversationId!, true);
+              infoMap[r.id] = {
+                unreadCount: 0,
+                participantUserIds: (parts.participants ?? []).map((p: any) => p.userId),
+              };
+            } catch { }
+          }
+        }));
+        setConvInfoMap(infoMap);
+      }
+    } catch { } finally {
+      setLoading(false);
     }
+  }, [page, search, activeTab]);
 
-    return result;
-  })();
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
-  const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
-  const paginatedRequests = filteredRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Reset page on search/filter changes
-  useEffect(() => { setPage(1); }, [search, activeTab]);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -108,10 +89,10 @@ export function ManagerRequests() {
 
       {/* Toolbar */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
         filters={[TAB_FILTER]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         views={[VIEW_TABLE, VIEW_CARD]}
         activeView={view}
         onViewChange={setView}
@@ -121,11 +102,11 @@ export function ManagerRequests() {
       {
         loading ? (
           <p className="text-sm text-text-sub">Загрузка...</p>
-        ) : filteredRequests.length === 0 ? (
+        ) : requests.length === 0 ? (
           <p className="text-sm text-text-sub">Нет заявок</p>
         ) : view === 'card' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedRequests.map((req) => (
+            {requests.map((req) => (
               <RequestCardItem
                 key={req.id}
                 request={req}
@@ -144,7 +125,7 @@ export function ManagerRequests() {
               <div className="w-[140px] px-4">Чат</div>
               <div className="w-[140px] px-4">Дата</div>
             </DataTableHeader>
-            {paginatedRequests.map((req) => (
+            {requests.map((req) => (
               <RequestTableRow
                 key={req.id}
                 request={req}
@@ -154,7 +135,7 @@ export function ManagerRequests() {
             ))}
             <DataTableFooter>
               <div className="flex items-center justify-between w-full">
-                <span>Показано {paginatedRequests.length} из {filteredRequests.length}</span>
+                <span>Показано {requests.length} из {total}</span>
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             </DataTableFooter>

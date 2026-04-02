@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DataTable,
   DataTableHeader,
@@ -34,14 +34,19 @@ export function AdminCertificates() {
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await certificateApi.getAll({ offset: page, limit: PAGE_SIZE });
+      const { data } = await certificateApi.getAll({
+        offset: page,
+        limit: PAGE_SIZE,
+        search: search || undefined,
+        status: filterValues.status as string,
+      });
       setCertificates(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, search, filterValues.status]);
 
   useEffect(() => {
     fetchCertificates();
@@ -55,27 +60,7 @@ export function AdminCertificates() {
     }
   };
 
-  const filteredCerts = useMemo(() => {
-    let result = certificates.filter((c) => c.status === filterValues.status);
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((c) => {
-        const userName = [c.user?.lastName, c.user?.firstName].filter(Boolean).join(' ').toLowerCase();
-        const deviceName = (c.userDevice?.device?.name ?? '').toLowerCase();
-        const dealerName = (c.dealer?.companyName ?? '').toLowerCase();
-        const certNum = c.certificateNumber.toLowerCase();
-        return userName.includes(q) || deviceName.includes(q) || dealerName.includes(q) || certNum.includes(q);
-      });
-    }
-    return result;
-  }, [certificates, filterValues.status, search]);
-
-  // Reset page on search/filter changes
-  useEffect(() => { setPage(1); }, [search, filterValues.status]);
-
-  const totalPages = Math.ceil(filteredCerts.length / PAGE_SIZE);
-  const paginatedCerts = filteredCerts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const totalInStatus = certificates.filter((c) => c.status === filterValues.status).length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -83,10 +68,10 @@ export function AdminCertificates() {
 
       {/* Toolbar */}
       <DataToolbar
-        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         views={[VIEW_TABLE, VIEW_CARD]}
         activeView={view}
         onViewChange={setView}
@@ -107,12 +92,12 @@ export function AdminCertificates() {
             <div className="w-[120px] flex-shrink-0" />
           </DataTableHeader>
 
-          {filteredCerts.length === 0 ? (
+          {certificates.length === 0 ? (
             <DataTableEmpty>
               Нет сертификатов в этой категории
             </DataTableEmpty>
           ) : (
-            paginatedCerts.map((cert) => (
+            certificates.map((cert) => (
               <CertificateRow
                 key={cert.id}
                 cert={cert}
@@ -123,18 +108,18 @@ export function AdminCertificates() {
 
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
-              <span>Показано {paginatedCerts.length} из {filteredCerts.length}</span>
+              <span>Показано {certificates.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
         </DataTable>
       ) : (
         <>
-          {filteredCerts.length === 0 ? (
+          {certificates.length === 0 ? (
             <p className="text-sm text-text-sub text-center py-8">Нет сертификатов в этой категории</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedCerts.map((cert) => (
+              {certificates.map((cert) => (
                 <CertificateCard
                   key={cert.id}
                   cert={cert}
