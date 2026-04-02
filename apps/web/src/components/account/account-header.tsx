@@ -28,12 +28,34 @@ export function AccountHeader() {
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Открыть меню"
-            className="flex flex-col gap-1 p-1"
+            aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            className="flex flex-col justify-center items-start w-[33px] h-[25px] relative cursor-pointer"
           >
-            <span className="block w-[33px] h-[5px] bg-[#323232]" />
-            <span className="block w-[16.5px] h-[5px] bg-[#323232]" />
-            <span className="block w-[33px] h-[5px] bg-[#323232]" />
+            <span
+              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              style={{
+                width: menuOpen ? '33px' : '33px',
+                top: menuOpen ? '10px' : '0px',
+                transform: menuOpen ? 'rotate(45deg)' : 'rotate(0)',
+              }}
+            />
+            <span
+              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out"
+              style={{
+                width: '16.5px',
+                top: '10px',
+                opacity: menuOpen ? 0 : 1,
+                transform: menuOpen ? 'translateX(-8px)' : 'translateX(0)',
+              }}
+            />
+            <span
+              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              style={{
+                width: menuOpen ? '33px' : '33px',
+                top: menuOpen ? '10px' : '20px',
+                transform: menuOpen ? 'rotate(-45deg)' : 'rotate(0)',
+              }}
+            />
           </button>
           <Link href="/">
             <Image src="/images/logo.svg" alt="ASKO" width={77} height={23} />
@@ -44,10 +66,10 @@ export function AccountHeader() {
         {menuOpen && (
           <>
             <div
-              className="fixed inset-0 z-40 bg-black/40"
+              className="fixed inset-0 z-40 bg-black/40 animate-[fade-in_200ms_ease-out]"
               onClick={() => setMenuOpen(false)}
             />
-            <div className="fixed top-0 left-0 z-50 w-64 h-full bg-page-bg shadow-lg">
+            <div className="fixed top-0 left-0 z-50 w-64 h-full bg-page-bg shadow-lg animate-[slide-in-left_300ms_ease-out]">
               <div className="px-4 pt-4 pb-6">
                 <Link href="/" onClick={() => setMenuOpen(false)}>
                   <Image src="/images/logo.svg" alt="ASKO" width={80} height={24} />

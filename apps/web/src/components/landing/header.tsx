@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from '@asko/ui';
@@ -17,21 +17,54 @@ export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated, authReady } = useAuth();
   const accountHref = isAuthenticated ? '/account' : '/auth';
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   return (
     <header className="sticky top-0 z-50 bg-page-bg border-b border-border-light">
       <Container>
         <div className="flex items-center justify-between h-10 my-2 md:my-2">
-          {/* Mobile: hamburger left, logo right */}
+          {/* Mobile: animated hamburger */}
           <button
             type="button"
-            className="md:hidden flex flex-col gap-1 p-1"
+            className="md:hidden flex flex-col justify-center items-start w-8 h-8 gap-0 p-0 relative cursor-pointer"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Открыть меню"
+            aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
-            <span className="block w-8 h-[5px] bg-text-main" />
-            <span className="block w-4 h-[5px] bg-text-main" />
-            <span className="block w-8 h-[5px] bg-text-main" />
+            <span
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              style={{
+                width: menuOpen ? '32px' : '32px',
+                top: menuOpen ? '12px' : '4px',
+                transform: menuOpen ? 'rotate(45deg)' : 'rotate(0)',
+              }}
+            />
+            <span
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out"
+              style={{
+                width: '16px',
+                top: '12px',
+                opacity: menuOpen ? 0 : 1,
+                transform: menuOpen ? 'translateX(-8px)' : 'translateX(0)',
+              }}
+            />
+            <span
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              style={{
+                width: menuOpen ? '32px' : '32px',
+                top: menuOpen ? '12px' : '20px',
+                transform: menuOpen ? 'rotate(-45deg)' : 'rotate(0)',
+              }}
+            />
           </button>
 
           {/* Desktop: logo left */}
@@ -72,8 +105,16 @@ export function LandingHeader() {
           </div>
         </div>
 
-        {menuOpen && (
-          <div className="md:hidden border-t border-border-light py-4">
+        {/* Mobile menu — slide down with fade */}
+        <div
+          ref={menuRef}
+          className="md:hidden overflow-hidden transition-all duration-300 ease-in-out"
+          style={{
+            maxHeight: menuOpen ? `${menuRef.current?.scrollHeight ?? 400}px` : '0px',
+            opacity: menuOpen ? 1 : 0,
+          }}
+        >
+          <div className="border-t border-border-light py-4">
             <nav className="flex flex-col gap-3">
               {navLinks.map((link) => (
                 <Link
@@ -101,7 +142,7 @@ export function LandingHeader() {
               )}
             </nav>
           </div>
-        )}
+        </div>
       </Container>
     </header>
   );
