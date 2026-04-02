@@ -98,6 +98,12 @@ export class AppConfig {
         };
     }
 
+    get rabbitmq() {
+        return {
+            url: this.configService.get<string>('RABBITMQ_URL') ?? 'amqp://localhost:5672',
+        };
+    }
+
     get defaultUser() {
         return {
             name: this.configService.getOrThrow<string>('DEFAULT_USER_NAME'),

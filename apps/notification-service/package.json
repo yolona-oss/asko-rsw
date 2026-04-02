@@ -25,23 +25,32 @@
         "@mikro-orm/migrations": "^6.5.9",
         "@mikro-orm/nestjs": "^6.1.1",
         "@mikro-orm/postgresql": "^6.5.9",
+        "@nestjs/bullmq": "^11.0.4",
         "@nestjs/common": "^11.1.5",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.5",
         "@nestjs/microservices": "^11.1.5",
         "amqp-connection-manager": "^4.1.14",
         "amqplib": "^0.10.4",
+        "bullmq": "^5.72.1",
         "cross-env": "^7.0.3",
         "ioredis": "^5.8.2",
+        "nodemailer": "^7.0.5",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "uuid": "^13.0.0"
     },
     "jest": {
         "rootDir": "src",
-        "moduleFileExtensions": ["ts", "js", "json"],
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json"
+        ],
         "testRegex": ".*\\.spec\\.ts$",
-        "transform": { "^.+\\.ts$": "ts-jest" },
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
         "moduleNameMapper": {
             "^entities$": "<rootDir>/entities",
             "^entities/(.*)$": "<rootDir>/entities/$1",
@@ -52,7 +61,9 @@
             "^consumers/(.*)$": "<rootDir>/consumers/$1",
             "^controllers/(.*)$": "<rootDir>/controllers/$1"
         },
-        "transformIgnorePatterns": ["node_modules/(?!uuid)"]
+        "transformIgnorePatterns": [
+            "node_modules/(?!uuid)"
+        ]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.5.9",
@@ -61,6 +72,7 @@
         "@nestjs/testing": "^11.0.16",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.1.0",
+        "@types/nodemailer": "^6.4.17",
         "@types/uuid": "^10.0.0",
         "jest": "^30.2.0",
         "rimraf": "^6.1.3",

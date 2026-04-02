@@ -23,14 +23,16 @@
         "@grpc/proto-loader": "^0.7.15",
         "@mikro-orm/cli": "^6.5.9",
         "@mikro-orm/core": "^6.5.9",
-        "@mikro-orm/nestjs": "^6.1.1",
         "@mikro-orm/migrations": "^6.5.9",
+        "@mikro-orm/nestjs": "^6.1.1",
         "@mikro-orm/postgresql": "^6.5.9",
         "@nestjs/common": "^11.1.5",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.5",
         "@nestjs/jwt": "^11.0.0",
         "@nestjs/microservices": "^11.1.5",
+        "amqp-connection-manager": "^4.1.14",
+        "amqplib": "^0.10.4",
         "argon2": "^0.44.0",
         "cross-env": "^7.0.3",
         "ioredis": "^5.8.2",
@@ -48,9 +50,15 @@
     },
     "jest": {
         "rootDir": "src",
-        "moduleFileExtensions": ["ts", "js", "json"],
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json"
+        ],
         "testRegex": ".*\\.spec\\.ts$",
-        "transform": { "^.+\\.ts$": "ts-jest" },
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
         "moduleNameMapper": {
             "^entities$": "<rootDir>/entities",
             "^entities/(.*)$": "<rootDir>/entities/$1",
@@ -62,7 +70,9 @@
             "^utils$": "<rootDir>/utils",
             "^utils/(.*)$": "<rootDir>/utils/$1"
         },
-        "transformIgnorePatterns": ["node_modules/(?!uuid)"]
+        "transformIgnorePatterns": [
+            "node_modules/(?!uuid)"
+        ]
     },
     "devDependencies": {
         "@nestjs/cli": "^11.0.16",

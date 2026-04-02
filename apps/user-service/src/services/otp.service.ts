@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 import crypto from 'crypto';
 
-import { EmailService } from 'common/email/email';
 import { AppConfig } from 'app.config';
+import { EmailEventService } from './email-event.service';
 import { SmsRu } from '@asko/shared';
 import {
     MfaMethod,
@@ -27,6 +27,7 @@ export class OtpService {
     constructor(
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
         private readonly config: AppConfig,
+        private readonly emailEvent: EmailEventService,
     ) {}
 
     private getSmsClient(): SmsRu {
@@ -174,8 +175,8 @@ export class OtpService {
         return num.toString().padStart(MFA_OTP_LENGTH, '0');
     }
 
-    private async sendEmailOtp(email: string, code: string): Promise<void> {
-        await EmailService.getInstance().sendMail({
+    private sendEmailOtp(email: string, code: string): void {
+        this.emailEvent.emit({
             to: email,
             from: this.config.email.from,
             subject: 'Код подтверждения — ASKO',
@@ -188,6 +189,7 @@ export class OtpService {
                 '<p style="color:#666;font-size:13px">Если вы не запрашивали код, проигнорируйте это письмо.</p>',
                 '</div>',
             ].join(''),
+            metadata: { type: 'otp', priority: 1 },
         });
     }
 

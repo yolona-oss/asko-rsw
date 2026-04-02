@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AppConfig } from 'app.config';
 import { UserService } from './user.service';
 import { User } from 'entities/auth/user.entity';
-import { EmailService } from 'common/email/email';
+import { EmailEventService } from './email-event.service';
 
 import { AppError, AppErrors, AppErrorTypeEnum } from 'common/error';
 import { LoginThrottleService } from './login-throttle.service';
@@ -78,6 +78,7 @@ export class AuthService {
         private readonly inviteService: InviteService,
         private readonly mfaService: MfaService,
         private readonly otpService: OtpService,
+        private readonly emailEvent: EmailEventService,
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
     ) { }
 
@@ -302,15 +303,22 @@ export class AuthService {
 
         const url = `${this.config.frontendUrl}/auth/confirm-email?token=${token}`
 
-        // just use some html templater and compiler lol
-        const conf = {
+        this.emailEvent.emit({
             to: user.email,
             from: this.config.email.from,
-            subject: 'Email confirmation',
-            text: `Please confirm your email by clicking ${url}`,
-            html: `Please confirm your email by clicking <a href="${url}">here</a>`,
-        }
-        await EmailService.getInstance().sendMail(conf)
+            subject: 'Подтверждение email — ASKO',
+            text: `Подтвердите ваш email для аккаунта ASKO.\nДля подтверждения перейдите по ссылке: ${url}\n\nЕсли вы не регистрировались в ASKO, проигнорируйте это письмо.`,
+            html: [
+                '<div style="font-family:sans-serif;max-width:480px;margin:0 auto">',
+                '<h2 style="color:#111">Подтверждение email</h2>',
+                '<p>Подтвердите ваш email для завершения регистрации в ASKO.</p>',
+                '<p>Для подтверждения нажмите на кнопку ниже:</p>',
+                `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#EB001C;color:#fff;text-decoration:none;border-radius:4px;font-weight:600">Подтвердить email</a>`,
+                '<p style="margin-top:16px;color:#666;font-size:13px">Если вы не регистрировались в ASKO, проигнорируйте это письмо.</p>',
+                '</div>',
+            ].join(''),
+            metadata: { type: 'confirmation', userId: user.id },
+        });
     }
 
     async resendConfirmEmailToken(email: string): Promise<{ retryAfter: number }> {
@@ -547,7 +555,7 @@ export class AuthService {
         const resetToken = await this.generageResetToken(user.id);
 
         const url = `${this.config.frontendUrl}/reset?token=${encodeURIComponent(resetToken)}`;
-        await EmailService.getInstance().sendMail({
+        this.emailEvent.emit({
             to: user.email!,
             from: this.config.email.from,
             subject: 'Сброс пароля — ASKO',
@@ -561,6 +569,7 @@ export class AuthService {
                 '<p style="color:#666;font-size:13px">Если вы не запрашивали сброс пароля, проигнорируйте это письмо.</p>',
                 '</div>',
             ].join(''),
+            metadata: { type: 'password-reset', userId: user.id },
         });
 
         await this.redis.set(redisKey, '1', 'EX', RESET_COOLDOWN_SECONDS);
@@ -628,7 +637,7 @@ export class AuthService {
 
         const url = `${this.config.frontendUrl}/auth/confirm-email-change?token=${token}`;
         // Send to the NEW email — clicking the link proves ownership of the new address
-        await EmailService.getInstance().sendMail({
+        this.emailEvent.emit({
             to: normalizedEmail,
             from: this.config.email.from,
             subject: 'Подтверждение смены email — ASKO',
@@ -642,6 +651,7 @@ export class AuthService {
                 '<p style="margin-top:16px;color:#666;font-size:13px">Если вы не запрашивали смену email, проигнорируйте это письмо.</p>',
                 '</div>',
             ].join(''),
+            metadata: { type: 'email-change' },
         });
 
         await this.redis.set(redisKey, '1', 'EX', EMAIL_CHANGE_COOLDOWN_SECONDS);

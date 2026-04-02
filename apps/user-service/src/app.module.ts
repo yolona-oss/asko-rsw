@@ -1,6 +1,7 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 
@@ -10,6 +11,7 @@ import { InviteService } from 'services/invite.service';
 import { LoginThrottleService } from 'services/login-throttle.service';
 import { OtpService } from 'services/otp.service';
 import { MfaService } from 'services/mfa.service';
+import { EmailEventService } from 'services/email-event.service';
 import { redisProvider } from 'providers/redis.provider';
 
 import { UserGrpcController } from 'controllers/user.grpc.controller';
@@ -28,11 +30,26 @@ import { DatabaseModule } from 'modules/database.module';
         LoginThrottleService,
         OtpService,
         MfaService,
+        EmailEventService,
     ],
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'user-service' }),
         DatabaseModule,
+        ClientsModule.registerAsync([
+            {
+                name: 'NOTIFICATION_SERVICE',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'notification_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
+        ]),
         MikroOrmModule.forFeature([
             User,
             Session,

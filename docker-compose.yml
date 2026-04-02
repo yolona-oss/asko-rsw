@@ -51,6 +51,7 @@ services:
       METRICS_PORT: 9104
       RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
       REDIS_URL: "redis://localhost:6379"
+      # EMAIL_* loaded from notification-service .env.prod via ConfigModule
 
   repair-service:
     build:
@@ -106,10 +107,13 @@ services:
     container_name: asko-user-service
     restart: unless-stopped
     network_mode: host
+    depends_on:
+      - rabbitmq
     environment:
       NODE_ENV: production
       GRPC_PORT: 5000
       METRICS_PORT: 9100
+      RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
   api:
     build:

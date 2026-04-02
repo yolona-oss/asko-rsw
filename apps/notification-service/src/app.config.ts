@@ -29,6 +29,16 @@ export class AppConfig {
     get redisUrl(): string {
         return this.configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379';
     }
+
+    get email() {
+        return {
+            host: this.configService.get<string>('EMAIL_HOST') ?? 'smtp.gmail.com',
+            port: parseInt(this.configService.get<string>('EMAIL_SMTP_PORT') ?? '587'),
+            user: this.configService.getOrThrow<string>('EMAIL_AUTH_USER'),
+            pass: this.configService.getOrThrow<string>('EMAIL_AUTH_PASS'),
+            from: this.configService.getOrThrow<string>('EMAIL_FROM'),
+        };
+    }
 }
 
 @Global()

@@ -12,6 +12,8 @@ import { NotificationGrpcController } from 'controllers/notification.grpc.contro
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { RepairEventConsumer } from 'consumers/repair-event.consumer';
 import { ChatEventConsumer } from 'consumers/chat-event.consumer';
+import { EmailEventConsumer } from 'consumers/email-event.consumer';
+import { EmailQueueModule } from 'modules/email-queue.module';
 
 @Module({
     imports: [
@@ -19,6 +21,7 @@ import { ChatEventConsumer } from 'consumers/chat-event.consumer';
         MetricsModule.register({ serviceName: 'notification-service' }),
         DatabaseModule,
         MikroOrmModule.forFeature([NotificationEntity]),
+        EmailQueueModule,
         ClientsModule.registerAsync([
             {
                 name: 'NOTIFICATION_EVENTS',
@@ -39,6 +42,7 @@ import { ChatEventConsumer } from 'consumers/chat-event.consumer';
         PaymentEventConsumer,
         RepairEventConsumer,
         ChatEventConsumer,
+        EmailEventConsumer,
     ],
     providers: [
         NotificationService,
