@@ -121,12 +121,10 @@ function LoadableImg({
   const [error, setError] = useState(false);
 
   /* reset state when src changes */
-  const prevSrc = useRef(src);
-  if (prevSrc.current !== src) {
-    prevSrc.current = src;
+  useEffect(() => {
     setLoaded(false);
     setError(false);
-  }
+  }, [src]);
 
   return (
     <>
@@ -260,7 +258,7 @@ function LightboxModal({
         onTouchEnd={(e) => {
           if (touchX.current === null) return;
           const d = touchX.current - e.changedTouches[0].clientX;
-          if (Math.abs(d) > 50) d > 0 ? next() : prev();
+          if (Math.abs(d) > 50) { d > 0 ? next() : prev(); }
           touchX.current = null;
         }}
       >

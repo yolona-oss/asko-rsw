@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -147,30 +149,89 @@ function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
   );
 }
 
-// ─── FilterBlock (large rectangular buttons, landing-style) ─────────────────
+// ─── FilterBlock (large rectangular buttons desktop, dropdown mobile) ────────
 
 function FilterBlock({ filter, value, onChange }: FilterTabsProps) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeLabel = filter.options.find((o) => o.value === value)?.label
+    ?? filter.options[0]?.label ?? '';
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
   return (
-    <div className="flex flex-wrap items-center gap-[15px]">
-      {filter.options.map((opt) => {
-        const isActive = opt.value === value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
-              isActive
-                ? 'bg-[#323232] text-white'
-                : 'bg-[#f1f1f1] text-[#323232] border border-[#d9d9d9] hover:border-[#323232]',
-            )}
+    <>
+      {/* Mobile: dropdown */}
+      <div className="md:hidden relative" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 px-4 py-[7.5px] bg-white border border-[#d9d9d9] text-lg font-medium text-[#323232] tracking-[0.005em] cursor-pointer"
+        >
+          <span className="leading-[18px]">{activeLabel}</span>
+          <svg
+            className={cn('w-[13px] h-[13px] transition-transform', open && 'rotate-180')}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
           >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        {open && (
+          <div className="absolute top-full left-0 mt-1 z-20 bg-white border border-[#d9d9d9] shadow-lg min-w-[200px]">
+            {filter.options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={cn(
+                  'block w-full px-4 py-2.5 text-left text-base transition-colors cursor-pointer',
+                  opt.value === value
+                    ? 'bg-[#323232] text-white'
+                    : 'text-[#323232] hover:bg-[#f1f1f1]',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: block buttons */}
+      <div className="hidden md:flex flex-wrap items-center gap-[15px]">
+        {filter.options.map((opt) => {
+          const isActive = opt.value === value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={cn(
+                'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
+                isActive
+                  ? 'bg-[#323232] text-white'
+                  : 'bg-[#f1f1f1] text-[#323232] border border-[#d9d9d9] hover:border-[#323232]',
+              )}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
