@@ -12,7 +12,7 @@ Communication patterns:
 
 * **REST + WebSocket** — web ↔ api gateway
 * **gRPC** — api gateway ↔ all microservices
-* **RabbitMQ** — async event-driven communication between services (payment events, image processing)
+* **RabbitMQ** — async event-driven communication between services (payment events, image processing, email delivery)
 
 Each microservice owns its own PostgreSQL database. Services never share database tables.
 
@@ -22,12 +22,12 @@ Each microservice owns its own PostgreSQL database. Services never share databas
 
 ```
 apps/
-  api/                    # REST + WebSocket gateway (:4000)
-  user-service/           # Auth, users, invitations (:5000, gRPC)
+  api/                    # REST + WebSocket gateway (:4000) — no database, pure proxy
+  user-service/           # Auth, users, invitations (:5000, gRPC + RabbitMQ publisher)
   payment-service/        # Payments, providers, webhooks (:5001, gRPC + RabbitMQ publisher)
   file-service/           # Images, video, storage (:5002, gRPC + RabbitMQ publisher/consumer)
-  repair-service/         # Repairs, dealers, devices, certificates (:5003, gRPC)
-  notification-service/   # Notifications (:5004, gRPC + RabbitMQ consumer)
+  repair-service/         # Repairs, dealers, devices, certificates (:5003, gRPC + RabbitMQ)
+  notification-service/   # Notifications + email delivery (:5004, gRPC + RabbitMQ + BullMQ)
   chat-service/           # Chat, presence, messaging (:5005, gRPC + RabbitMQ publisher/consumer)
   content-service/        # Articles, views, recommendations, weighted graph (:5010, gRPC)
   web/                    # Next.js frontend (:3000)
@@ -112,7 +112,6 @@ npx mikro-orm migration:up
 Databases (user: almagest_root):
 
 ```
-apps/api              → asko_rws_misc_db
 apps/user-service     → asko_rws_users_db
 apps/payment-service  → asko_rws_payment_db
 apps/file-service     → asko_rws_files_db
@@ -128,12 +127,7 @@ apps/content-service      → asko_rws_content_db
 
 ### API Gateway (`apps/api`)
 
-Main backend entrypoint. REST gateway + WebSocket server. Delegates all domain logic to microservices via gRPC.
-
-**Owns** (local entities):
-
-* Cursor
-* WSchedule
+Main backend entrypoint. REST gateway + WebSocket server. Pure proxy — no database, no local entities. Delegates all domain logic to microservices via gRPC.
 
 **Delegates via gRPC**:
 
@@ -156,7 +150,7 @@ Main backend entrypoint. REST gateway + WebSocket server. Delegates all domain l
 * `/images` → images directory (jpg, jpeg, png, gif, svg, ico)
 * `/videos` → images/videos directory (mp4, webm, mov)
 
-**Stack**: NestJS v11, MikroORM v6, PostgreSQL, Redis, Socket.io, Nodemailer, gRPC clients, @nestjs/swagger
+**Stack**: NestJS v11, Redis, Socket.io, gRPC clients, @nestjs/swagger
 
 **Env**: `.env.dev` / `.env.prod`, loaded via AppConfig. Service URLs: `USER_SERVICE_URL`, `PAYMENT_SERVICE_URL`, `FILE_SERVICE_URL`, `REPAIR_SERVICE_URL`, `NOTIFICATION_SERVICE_URL`, `CHAT_SERVICE_URL`, `CONTENT_SERVICE_URL`.
 
@@ -174,9 +168,11 @@ Auth, user management, invitations, JWT, password hashing, email verification.
 
 **Bootstrap**: Creates default super admin on startup from config.
 
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, argon2, passport, @nestjs/jwt, ioredis
+**Email**: User-service does NOT send emails directly. It publishes `email.send` events to RabbitMQ (`notification_queue`). Notification-service handles actual email delivery via BullMQ + nodemailer.
 
-**Transport**: gRPC only
+**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, RabbitMQ (publisher), argon2, passport, @nestjs/jwt, ioredis
+
+**Transport**: gRPC + RabbitMQ (publisher for email events)
 
 ---
 
@@ -231,9 +227,9 @@ File uploads, image processing, video management, storage providers.
 
 ### Repair Service (`apps/repair-service`)
 
-Core business logic: repairs, dealers, devices, certificates, repairers, reviews, points.
+Core business logic: repairs, dealers, devices, certificates, repairers, reviews, points, schedules.
 
-**Entities** (13): RepairRequest, Device, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart
+**Entities** (15): RepairRequest, Device, DeviceCategory, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart, WSchedule
 
 **Services**: DeviceService, AddressService, CertificateService, ExternalCertValidationService, RepairerService, ReviewService, RepairRequestService, WorkStepService, DealerService, BrokenPartService
 
@@ -249,11 +245,11 @@ Core business logic: repairs, dealers, devices, certificates, repairers, reviews
 
 ### Notification Service (`apps/notification-service`)
 
-Notification persistence, event consumption, lifecycle management.
+Notification persistence, event consumption, lifecycle management, **email delivery**.
 
 **Entities**: NotificationEntity
 
-**Services**: NotificationService
+**Services**: NotificationService, EmailTransportService (nodemailer), EmailProcessor (BullMQ worker)
 
 **gRPC controller**: NotificationGrpcController (create, list, mark read, delete, unread count)
 
@@ -261,10 +257,14 @@ Notification persistence, event consumption, lifecycle management.
 
 * PaymentEventConsumer — listens: `payment.paid`, `payment.failed` → creates notifications
 * RepairEventConsumer — listens: repair status change events
+* ChatEventConsumer — listens: `chat.message`, `chat.conversation_created` → creates notifications
+* EmailEventConsumer — listens: `email.send` → enqueues into BullMQ email queue
 
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, amqplib, amqp-connection-manager
+**BullMQ email queue**: Processes email delivery with 5 retries, exponential backoff (3s→48s), priority support (OTP emails = high priority). Uses Redis for job persistence. Any service can trigger emails by publishing `email.send` events to `notification_queue`.
 
-**Transport**: gRPC (CRUD) + RabbitMQ (event consumption via @EventPattern)
+**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, amqplib, amqp-connection-manager, BullMQ, nodemailer
+
+**Transport**: gRPC (CRUD) + RabbitMQ (event consumption) + BullMQ (email job queue)
 
 ---
 
@@ -306,7 +306,7 @@ Real-time chat, conversations, messaging, user presence, activity statuses.
 
 Article management, rich content (Lexical editor), view analytics, tag-based recommendations.
 
-**Entities** (3): Article, ArticleView, ArticleEdge
+**Entities** (4): Article, ArticleView, ArticleEdge, ArticleTag
 
 **Services**:
 * ContentService — CRUD, slug generation, plain-text extraction from Lexical JSON, view tracking (YouTube-style: 5s read time threshold, 5min dedup, bot filtering, race-safe SQL counter), graph-based related/recommended articles
@@ -426,7 +426,7 @@ DTOs, types, enums, constants, utilities shared across the monorepo.
 
 React component library. Tailwind classes only — no CSS files, no styled-components.
 
-**Components**: badge, button, card, container, crop-modal, data-table, dialog, email-input, form-field, input, key-value-editor, modal, name-input, password-input, pattern-input, phone-input, section, and more.
+**Components**: badge, button, card, container, crop-modal, data-table, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, view-switcher, and more.
 
 Must run `pnpm run build` after any change.
 
@@ -451,20 +451,20 @@ Must run `pnpm run build` after any change.
 
 | Service | Entities |
 |---|---|
-| api | Cursor, WSchedule |
+| api | *(none — pure proxy, no database)* |
 | user-service | User, Session, InvitationLink, UserAddress |
 | payment-service | PaymentEntity |
 | file-service | Image, Video |
-| repair-service | RepairRequest, Device, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart |
+| repair-service | RepairRequest, Device, DeviceCategory, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart, WSchedule |
 | notification-service | NotificationEntity |
 | chat-service | Conversation, ConversationParticipant, Message, UserPresence |
-| content-service | Article, ArticleView, ArticleEdge |
+| content-service | Article, ArticleView, ArticleEdge, ArticleTag |
 
 ---
 
 ## gRPC Rules
 
-* All `.proto` definitions must be in `packages/proto/src/*.proto`
+* All `.proto` definitions must be in `packages/proto/*.proto` (NOT in a `src/` subdirectory)
 * Proto files (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
 * Generated TS types are exported from `@asko/proto`
 * Never duplicate DTOs between services — always use proto types for gRPC
@@ -517,10 +517,12 @@ RabbitMQ is used for async event-driven communication. Not all services use it.
 
 | Service | Role | Queue | Events |
 |---|---|---|---|
-| payment-service | Publisher | notification_queue | payment.created, payment.paid, payment.failed, payment.refunded, withdraw.created, withdraw.paid |
+| user-service | Publisher | notification_queue | email.send (confirmation, password reset, OTP, email change) |
+| payment-service | Publisher | notification_queue, repair_queue | payment.created, payment.paid, payment.failed, payment.refunded, withdraw.created, withdraw.paid |
 | file-service | Publisher + Consumer | image_resize_queue | Image processing tasks |
-| notification-service | Consumer | notification_queue | payment.paid, payment.failed, repair status changes |
-| chat-service | Publisher + Consumer | notification_queue (pub), chat_queue (sub) | Chat message events for notifications |
+| repair-service | Publisher + Consumer | notification_queue (pub), payment_queue (pub), address_validation_queue | repair.status_changed, repair.assigned, repair.completed, address.validate |
+| notification-service | Consumer | notification_queue | payment.*, repair.*, chat.*, email.send → BullMQ email queue |
+| chat-service | Publisher + Consumer | notification_queue (pub), chat_queue (sub) | chat.message, chat.conversation_created, chat.participant_added/removed |
 
 **Rules**:
 
@@ -762,7 +764,7 @@ All Docker builds use turborepo prune.
 * Never use CSS files or styled-components in `packages/ui` — Tailwind classes only.
 * API must NEVER access chat-service database directly — always use gRPC.
 * API must NEVER access content-service database directly — always use gRPC.
-* content-service owns Article, ArticleView, and ArticleEdge entities.
+* content-service owns Article, ArticleView, ArticleEdge, and ArticleTag entities.
 * Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
 * **Client components (`'use client'`)** must use the Axios `api` instance from `src/lib/api/client.ts` for API calls — never raw `fetch()`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
 * **Server components** must use `serverGet()` from `src/lib/api/server-fetch.ts` for API calls — never the Axios client (it depends on Redux store which doesn't exist on the server). The `server-only` import prevents accidental use in client components.
@@ -770,3 +772,9 @@ All Docker builds use turborepo prune.
 * Always run `./scripts/openapi.sh` after changing backend endpoints or response types.
 * Always run `pnpm run build` in packages after changes.
 * `.env` files must never be committed to git.
+* **Email sending**: Never send emails directly from services. Publish `email.send` events to RabbitMQ (`notification_queue`). Notification-service handles delivery via BullMQ.
+* **Device types**: Use `DeviceCategory` table (repair-service) — not a hardcoded enum. Device has `@ManyToOne(() => DeviceCategory)` relation.
+* **Article tags**: Stored in `article_tag` junction table (content-service) — not JSONB on the article. Tags are normalized to lowercase on insert. Use `FindAllArticles` with `tags` param for tag-based search.
+* **API gateway has no database** — it's a pure REST/WebSocket proxy. All entities were moved to their owning microservices.
+* **Pagination in server components**: Use `hrefPattern="/path?page={page}"` (serializable string) instead of `getHref` function prop — functions can't cross the server→client boundary.
+* **Placeholder images**: Use `getPlaceholderSrc(category, idOrIndex)` from `@/lib/placeholders` or `<PlaceholderImage>` component. Images stored in `public/images/placeholders/placeholder-{category}-{variant}.webp`.

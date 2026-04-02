@@ -2,29 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { isProdEnv, isDevEnv } from './nodeEnv'
 
-let findRepoRoot: (d: string) => string
-
-function findMonorepoBaseRoot(startDir: string): string {
-    let dir = startDir
-
-    while (dir !== path.dirname(dir)) {
-        if (
-            fs.existsSync(path.join(dir, 'package.json')) &&
-            fs.existsSync(path.join(dir, 'apps'))
-        ) {
-            return dir
-        }
-        dir = path.dirname(dir)
-    }
-
-    throw new Error('Unable to locate monorepo root')
-}
-
-function findCurrentPaackageRoot(_: string) {
-    return './'
-}
-
-findRepoRoot = findCurrentPaackageRoot
+const findRepoRoot = (_: string) => './'
 
 export function getEnvFileDir(): string {
     return findRepoRoot(process.cwd())
@@ -39,7 +17,7 @@ function getExistsEnvPostfix(postfixes: string[]): string {
 
     for (const postfix of postfixes) {
         const file = path.join(baseDir, `.env.${postfix}`)
-        console.log(`Look up for: "${file}"`)
+        // console.log(`Look up for: "${file}"`)
 
         if (fs.existsSync(file)) {
             return postfix
@@ -79,7 +57,7 @@ function resolveEnvFile(): string {
 export function getEnvFilePath(): string | undefined {
     try {
         const dotenvpath = resolveEnvFile()
-        console.log(`ENV on use: ${dotenvpath}`)
+        // console.log(`ENV on use: ${dotenvpath}`)
         return dotenvpath
     } catch {
         return undefined;

@@ -64,7 +64,7 @@ export function ModelsSection() {
   const typeFilters = useMemo(() => [{
     key: 'type',
     label: '',
-    type: 'tabs' as const,
+    type: 'block' as const,
     options: [
       { value: '', label: 'Все' },
       ...(categories ?? []).map((c) => ({ value: c.name, label: c.labelPlural })),

@@ -15,8 +15,8 @@ export interface FilterDefinition {
   label: string;
   /** Available options (first is usually "All") */
   options: FilterOption[];
-  /** Display style: 'select' renders a <select>, 'tabs' renders inline buttons */
-  type: 'select' | 'tabs';
+  /** Display style: 'select' renders a <select>, 'tabs' renders inline buttons, 'block' renders large rectangular buttons (landing-style) */
+  type: 'select' | 'tabs' | 'block';
 }
 
 export type FilterValues = Record<string, string>;
@@ -50,6 +50,12 @@ export function DataFilter({ filters, values, onChange, trailing, className }: D
           )}
           {filter.type === 'select' ? (
             <FilterSelect
+              filter={filter}
+              value={values[filter.key] ?? ''}
+              onChange={(val) => onChange(filter.key, val)}
+            />
+          ) : filter.type === 'block' ? (
+            <FilterBlock
               filter={filter}
               value={values[filter.key] ?? ''}
               onChange={(val) => onChange(filter.key, val)}
@@ -131,6 +137,33 @@ function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
               isActive
                 ? 'bg-dark-deep text-white border-dark-deep'
                 : 'bg-white text-text-main border-border-light hover:border-text-main',
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── FilterBlock (large rectangular buttons, landing-style) ─────────────────
+
+function FilterBlock({ filter, value, onChange }: FilterTabsProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-[15px]">
+      {filter.options.map((opt) => {
+        const isActive = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
+              isActive
+                ? 'bg-[#323232] text-white'
+                : 'bg-[#f1f1f1] text-[#323232] border border-[#d9d9d9] hover:border-[#323232]',
             )}
           >
             {opt.label}
