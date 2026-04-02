@@ -73,7 +73,8 @@ export function AdminCertificates() {
   // Reset page on search/filter changes
   useEffect(() => { setPage(1); }, [search, filterValues.status]);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredCerts.length / PAGE_SIZE);
+  const paginatedCerts = filteredCerts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalInStatus = certificates.filter((c) => c.status === filterValues.status).length;
 
   return (
@@ -111,7 +112,7 @@ export function AdminCertificates() {
               Нет сертификатов в этой категории
             </DataTableEmpty>
           ) : (
-            filteredCerts.map((cert) => (
+            paginatedCerts.map((cert) => (
               <CertificateRow
                 key={cert.id}
                 cert={cert}
@@ -122,7 +123,7 @@ export function AdminCertificates() {
 
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
-              <span>Показано {filteredCerts.length} из {total}</span>
+              <span>Показано {paginatedCerts.length} из {filteredCerts.length}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
@@ -133,7 +134,7 @@ export function AdminCertificates() {
             <p className="text-sm text-text-sub text-center py-8">Нет сертификатов в этой категории</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCerts.map((cert) => (
+              {paginatedCerts.map((cert) => (
                 <CertificateCard
                   key={cert.id}
                   cert={cert}

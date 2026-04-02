@@ -96,7 +96,11 @@ export function ManagerRequests() {
     return result;
   })();
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
+  const paginatedRequests = filteredRequests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset page on search/filter changes
+  useEffect(() => { setPage(1); }, [search, activeTab]);
 
   return (
     <PageContainer>
@@ -121,7 +125,7 @@ export function ManagerRequests() {
           <p className="text-sm text-text-sub">Нет заявок</p>
         ) : view === 'card' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRequests.map((req) => (
+            {paginatedRequests.map((req) => (
               <RequestCardItem
                 key={req.id}
                 request={req}
@@ -140,7 +144,7 @@ export function ManagerRequests() {
               <div className="w-[140px] px-4">Чат</div>
               <div className="w-[140px] px-4">Дата</div>
             </DataTableHeader>
-            {filteredRequests.map((req) => (
+            {paginatedRequests.map((req) => (
               <RequestTableRow
                 key={req.id}
                 request={req}
@@ -150,7 +154,7 @@ export function ManagerRequests() {
             ))}
             <DataTableFooter>
               <div className="flex items-center justify-between w-full">
-                <span>Показано {filteredRequests.length} из {total}</span>
+                <span>Показано {paginatedRequests.length} из {filteredRequests.length}</span>
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             </DataTableFooter>

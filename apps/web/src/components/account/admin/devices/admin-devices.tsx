@@ -89,6 +89,7 @@ export function AdminDevices() {
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
   };
 
   const filteredDevices = useMemo(() => {
@@ -104,7 +105,8 @@ export function AdminDevices() {
     return result;
   }, [devices, filterValues]);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredDevices.length / PAGE_SIZE);
+  const paginatedDevices = filteredDevices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -314,14 +316,14 @@ export function AdminDevices() {
           {filteredDevices.length === 0 ? (
             <DataTableEmpty>Нет товаров</DataTableEmpty>
           ) : (
-            filteredDevices.map((device) => (
+            paginatedDevices.map((device) => (
               <DeviceRow key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
             ))
           )}
 
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
-              <span>Показано {filteredDevices.length} из {total}</span>
+              <span>Показано {paginatedDevices.length} из {filteredDevices.length}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
@@ -332,7 +334,7 @@ export function AdminDevices() {
             <p className="text-sm text-text-sub text-center py-8">Нет товаров</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredDevices.map((device) => (
+              {paginatedDevices.map((device) => (
                 <DeviceCard key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
               ))}
             </div>

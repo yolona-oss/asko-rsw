@@ -118,8 +118,6 @@ export function AdminUsers() {
   // Reset page on search/filter changes
   useEffect(() => { setPage(1); }, [search, activeTab, filterValues.status]);
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
   // Filter: tab -> role, then search, then status
   const statusFilter = filterValues.status as StatusFilter;
   const filteredUsers = users.filter((u) => {
@@ -135,6 +133,9 @@ export function AdminUsers() {
     }
     return true;
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -183,7 +184,7 @@ export function AdminUsers() {
           {filteredUsers.length === 0 ? (
             <DataTableEmpty>Нет пользователей</DataTableEmpty>
           ) : (
-            filteredUsers.map((user) => {
+            paginatedUsers.map((user) => {
               const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
               const isActive = (user as any).isActive !== false;
               const isLoading = actionLoading === user.id;
@@ -249,7 +250,7 @@ export function AdminUsers() {
           {filteredUsers.length > 0 && (
             <DataTableFooter>
               <div className="flex items-center justify-between w-full">
-                <span>Показано {filteredUsers.length} из {total}</span>
+                <span>Показано {paginatedUsers.length} из {filteredUsers.length}</span>
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             </DataTableFooter>
@@ -262,7 +263,7 @@ export function AdminUsers() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <UserCard
                   key={user.id}
                   user={user}
