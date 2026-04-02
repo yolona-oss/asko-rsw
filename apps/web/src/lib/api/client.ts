@@ -29,8 +29,8 @@ api.interceptors.response.use(
     const original = error.config;
 
     // Skip refresh for auth endpoints that don't use access tokens
-    if (original?.url === '/auth/refresh' || original?.url === '/auth/dev-switch') {
-      if (original?.url === '/auth/refresh') store.dispatch(logout());
+    if (original?.url === '/auth/refresh') {
+      store.dispatch(logout());
       return Promise.reject(error);
     }
 

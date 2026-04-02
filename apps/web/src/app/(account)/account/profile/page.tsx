@@ -3,7 +3,7 @@
 import { useAccount } from '@/components/account/account-provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { ProfileForm } from '@/components/account/profile-form';
-import { SkeletonBlock, SkeletonCircle } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 import { Card } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';

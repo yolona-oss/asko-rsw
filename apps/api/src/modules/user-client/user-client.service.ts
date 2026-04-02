@@ -7,7 +7,6 @@ import type {
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
-    AuthSessionResponse,
     AccessTokenResponse,
     ConfirmEmailRequest,
     ConfirmEmailResponse,
@@ -15,7 +14,6 @@ import type {
     ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
-    DevSwitchRequest,
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
@@ -108,10 +106,6 @@ export class UserClientService implements OnModuleInit {
 
     logout(data: LogoutRequest): Promise<EmptyResponse> {
         return grpcCall(this.userService.logout(data));
-    }
-
-    devSwitchAccount(data: DevSwitchRequest): Promise<AuthSessionResponse> {
-        return grpcCall(this.userService.devSwitchAccount(data));
     }
 
     findUserByAccessToken(data: FindByTokenRequest): Promise<AuthUserResponse> {

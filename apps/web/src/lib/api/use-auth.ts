@@ -9,18 +9,6 @@ import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 import type { IAuthSession } from './types';
-import { DEV_ACCOUNT_SWITCHER } from '@/lib/dev/constants';
-import { saveDevAccount } from '@/lib/dev/dev-accounts';
-
-function maybeSaveDevAccount(data: IAuthSession) {
-  if (!DEV_ACCOUNT_SWITCHER || !data.refresh_token) return;
-  saveDevAccount({
-    label: data.user.firstName ?? data.user.email ?? data.user.id,
-    email: data.user.email,
-    roles: data.user.roles,
-    refreshToken: data.refresh_token,
-  });
-}
 
 export function useAuth() {
   const { accessToken, user } = useAppSelector((s) => s.auth);
@@ -54,7 +42,6 @@ export function useLogin() {
         // Don't dispatch credentials — component reads mutation.data for MFA state
         return;
       }
-      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },
@@ -69,7 +56,6 @@ export function useVerifyMfaOtp() {
     mutationFn: (data: { mfaToken: string; code: string; trustDevice?: boolean }) =>
       authApi.verifyMfaOtp(data).then((r) => r.data),
     onSuccess: (data) => {
-      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },
@@ -87,7 +73,6 @@ export function useSignup(options?: { onSuccess?: (data: any) => void }) {
         options?.onSuccess?.(data);
         return;
       }
-      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       if (options?.onSuccess) {
         options.onSuccess(data);
@@ -106,7 +91,6 @@ export function useVerifyPhoneRegister() {
     mutationFn: (data: { pendingToken: string; code: string }) =>
       authApi.verifyPhoneRegister(data).then((r) => r.data),
     onSuccess: (data) => {
-      maybeSaveDevAccount(data);
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },

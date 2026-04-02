@@ -9,7 +9,7 @@ import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { MenuIcon } from './menu-icon';
-import { SkeletonCircle } from './skeleton';
+import { SkeletonCircle } from '@/components/skeleton';
 import { NotificationBell } from './notification-bell';
 
 export function AccountHeader() {

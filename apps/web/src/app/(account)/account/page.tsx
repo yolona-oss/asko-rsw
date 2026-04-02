@@ -7,7 +7,7 @@ import { DealerDashboard } from '@/components/account/dealer/dealer-dashboard';
 import { ManagerDashboard } from '@/components/account/manager/manager-dashboard';
 import { AdminDashboard } from '@/components/account/admin/admin-dashboard';
 import { RepairerDashboard } from '@/components/account/repairer/repairer-dashboard';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 
 function DashboardSkeleton() {

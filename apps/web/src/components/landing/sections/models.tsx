@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Container, DataFilter } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
-import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { SkeletonImage } from '@/components/skeleton';
 import { PlaceholderImage } from '@/components/placeholder-image';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories } from '@/hooks/use-device-categories';

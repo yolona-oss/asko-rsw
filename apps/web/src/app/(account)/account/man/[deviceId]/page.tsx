@@ -4,7 +4,7 @@ import { use } from 'react';
 import { useAccount } from '@/components/account/account-provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { RepairerManualDetail } from '@/components/account/repairer/repairer-manual-detail';
-import { SkeletonBlock } from '@/components/account/skeleton';
+import { SkeletonBlock } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 
 function DetailSkeleton() {

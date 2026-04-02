@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Container, DataFilter } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
-import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { SkeletonImage } from '@/components/skeleton';
 import { useDeviceCategories } from '@/hooks/use-device-categories';
 
 const fallbackService = {

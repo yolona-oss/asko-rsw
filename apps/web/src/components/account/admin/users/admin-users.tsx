@@ -19,7 +19,7 @@ import {
 import type { FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonCard } from '@/components/skeleton';
 import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
 import type { UserTab, StatusFilter } from './types';

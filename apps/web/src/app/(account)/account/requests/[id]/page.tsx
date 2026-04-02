@@ -6,7 +6,7 @@ import { primaryRole } from '@/lib/account';
 import { UserRequestStatus } from '@/components/account/user/user-request-status';
 import { ManagerRequestDetail } from '@/components/account/manager/manager-request-detail';
 import { RepairerRequestDetail } from '@/components/account/repairer/repairer-request-detail';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 
 export default function RequestDetailPage() {

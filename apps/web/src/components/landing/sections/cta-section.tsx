@@ -39,19 +39,20 @@ export function CtaSection() {
   };
 
   return (
-    <section id="cta" className="relative overflow-hidden bg-[#323232] lg:h-[534px]">
-      {/* Background image with overlay */}
-      <div className="absolute inset-0">
-        <img
-          src="/images/cta-bg.webp"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/62" />
-      </div>
+    <section id="cta" className="bg-[#323232]">
+      <div className="relative overflow-hidden mx-auto w-[358px] h-[652px] md:w-auto md:h-auto lg:w-[1120px] lg:h-[534px]">
+        {/* Background image with overlay — exact 1120x534 */}
+        <div className="absolute inset-0">
+          <img
+            src="/images/cta-bg.webp"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/62" />
+        </div>
 
-      {/* Content constrained to 1120px */}
-      <div className="relative flex items-center h-full mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-0 py-10 lg:py-0">
+        {/* Content */}
+        <div className="relative flex items-center h-full px-4 sm:px-6 lg:px-[83px] py-10 lg:py-0">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-[126px]">
           {/* Left: headline + description */}
           <div className="flex flex-col gap-[7px] lg:w-[377px] lg:flex-shrink-0">
@@ -108,6 +109,7 @@ export function CtaSection() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

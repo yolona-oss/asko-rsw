@@ -21,7 +21,7 @@ import {
 } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonCard } from '@/components/skeleton';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { STATUS_LABEL, STATUS_BADGE, formatDateShort, formatDateLong, LIMIT } from './constants';
 

@@ -5,7 +5,7 @@ import { primaryRole } from '@/lib/account';
 import { ManagerRequests } from '@/components/account/manager/manager-requests';
 import { RepairerRequest } from '@/components/account/repairer/repairer-request';
 import { UserRequests } from '@/components/account/user/user-requests';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 
 export default function RequestsPage() {

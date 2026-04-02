@@ -9,7 +9,7 @@ import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { MenuIcon } from './menu-icon';
-import { SkeletonBlock, SkeletonCircle } from './skeleton';
+import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 
 export function AccountSidebar() {
   const pathname = usePathname();

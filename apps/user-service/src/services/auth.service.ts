@@ -399,31 +399,7 @@ export class AuthService {
         }
     }
 
-    async devSwitchAccount(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<IAuthSession> {
-        const rTknPayload = this.jwtService.verify<JwtRefreshPayload>(
-            refreshToken,
-            { publicKey: Buffer.from(this.config.jwt.refresh_token.public_key, 'base64').toString('utf-8') }
-        );
-        const rTknHash = Crypto.createTokenHash(refreshToken);
 
-        const user = await this.userService.findByAssignedToken(rTknHash);
-        if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found for this refresh token');
-        }
-
-        const { access_token } = this.generateAccessToken(
-            user.id,
-            <Role[]>user.roles,
-            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider },
-            user.isActive,
-        );
-
-        return {
-            access_token,
-            user: toAuthUser(user),
-            refresh_token: refreshToken,
-        };
-    }
 
     async validateUserCredentials(email: string, pass: string): Promise<User> {
         const user = await this.userService.findByEmail(email, ['addresses', 'sessions']);

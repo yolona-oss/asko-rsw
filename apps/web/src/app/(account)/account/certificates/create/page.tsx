@@ -3,7 +3,7 @@
 import { useAccount } from '@/components/account/account-provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { CertificateWizard } from '@/components/account/dealer/certificate-wizard';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 
 export default function CreateCertificatePage() {

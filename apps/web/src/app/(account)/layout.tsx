@@ -2,7 +2,6 @@ import { AccountProvider } from '@/components/account/account-provider';
 import { AccountSidebar } from '@/components/account/sidebar';
 import { AccountHeader } from '@/components/account/account-header';
 import { AuthGuard } from '@/components/account/auth-guard';
-import { DevAccountSwitcher } from '@/components/dev/dev-account-switcher';
 
 export default function AccountLayout({
   children,
@@ -21,7 +20,6 @@ export default function AccountLayout({
             </main>
           </div>
         </div>
-        <DevAccountSwitcher />
       </AuthGuard>
     </AccountProvider>
   );

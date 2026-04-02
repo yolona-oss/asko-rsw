@@ -6,7 +6,7 @@ import { useAccount } from '@/components/account/account-provider';
 import { ChatLayout } from '@/components/chat/chat-layout';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonBlock } from '@/components/account/skeleton';
+import { SkeletonBlock } from '@/components/skeleton';
 
 function ChatSkeleton() {
   return (

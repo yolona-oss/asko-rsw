@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Container } from '@asko/ui';
-import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { SkeletonImage } from '@/components/skeleton';
 
 const faqs = [
   {

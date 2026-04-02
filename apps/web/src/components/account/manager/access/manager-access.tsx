@@ -16,7 +16,7 @@ import {
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonCard } from '@/components/skeleton';
 import { repairerApi } from '@/lib/api/repairer';
 import type { IRepairer } from '@/lib/api/types';
 import type { AccessTab } from './constants';

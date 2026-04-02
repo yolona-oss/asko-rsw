@@ -1,6 +1,6 @@
 'use client';
 
-import { SkeletonBlock, SkeletonCircle } from '../skeleton';
+import { SkeletonBlock, SkeletonCircle } from './skeleton';
 
 export function ProfileFormSkeleton() {
   return (

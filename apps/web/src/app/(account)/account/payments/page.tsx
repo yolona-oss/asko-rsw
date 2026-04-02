@@ -2,7 +2,7 @@
 
 import { useAccount } from '@/components/account/account-provider';
 import { primaryRole } from '@/lib/account';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { PageContainer } from '@/components/account/page-container';
 import { ManagerPayments } from '@/components/account/manager/manager-payments';
 import { UserPayments } from '@/components/account/user/user-payments';

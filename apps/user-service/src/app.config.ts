@@ -45,7 +45,7 @@ export class AppConfig {
                 public_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PUBLIC_KEY'),
                 private_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: parseInt(this.configService.getOrThrow<ms.StringValue>('ACCESS_JWT_TOKEN_OPTION_EXPIRES_IN')),
+                    expires_in: this.configService.getOrThrow<ms.StringValue>('ACCESS_JWT_TOKEN_OPTION_EXPIRES_IN'),
                 },
             },
             refresh_token: {

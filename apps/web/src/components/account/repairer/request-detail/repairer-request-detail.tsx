@@ -8,7 +8,7 @@ import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input, ImageGallery } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonBlock, SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { StepCircle } from './step-circle';

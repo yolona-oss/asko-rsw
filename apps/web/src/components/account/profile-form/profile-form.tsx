@@ -9,7 +9,7 @@ import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
 import type { StatusMessage } from './types';
-import { ProfileFormSkeleton } from './profile-form-skeleton';
+import { ProfileFormSkeleton } from '@/components/skeleton';
 import { AvatarSection } from './avatar-section';
 import { ChatPreferencesSection } from './chat-preferences-section';
 import { MfaSection } from './mfa-section';

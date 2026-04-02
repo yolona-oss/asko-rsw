@@ -20,7 +20,7 @@ import {
 import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/account/skeleton';
+import { SkeletonCard } from '@/components/skeleton';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';

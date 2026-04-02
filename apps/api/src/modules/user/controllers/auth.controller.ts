@@ -210,36 +210,6 @@ export class AuthController {
             .json({});
     }
 
-    @Public()
-    @ApiResponse({ status: 200, type: AuthSessionResponseDto })
-    @Post('/dev-switch')
-    async devSwitch(
-        @Body() body: { refresh_token: string },
-        @Req() request: Request,
-        @Res() response: Response,
-    ) {
-        try {
-            const result = await this.userClient.devSwitchAccount({
-                refreshToken: body.refresh_token,
-                deviceInfo: request.headers['user-agent'] ?? 'unknown',
-                ipAddress: request.ip ?? 'unknown',
-            });
-
-            if (result.refreshToken) {
-                this.setRefreshTokenCookie(request, response, result.refreshToken);
-            }
-
-            return response.status(200).json({
-                access_token: result.accessToken,
-                user: result.user,
-                refresh_token: result.refreshToken,
-            });
-        } catch (err: any) {
-            const status = err?.httpStatus ?? err?.status ?? err?.response?.status ?? 500;
-            return response.status(status).json({ message: err?.message ?? 'Dev switch failed' });
-        }
-    }
-
     @RequiredRoles(...ALL_ROLES)
     @Post('/master-logout')
     async logoutAll() {

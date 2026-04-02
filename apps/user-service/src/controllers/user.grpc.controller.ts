@@ -20,7 +20,6 @@ import type {
     ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
-    DevSwitchRequest,
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
@@ -230,22 +229,6 @@ export class UserGrpcController {
         try {
             await this.authService.logout(data.refreshToken);
             return {};
-        } catch (e) { throw toGrpcError(e); }
-    }
-
-    @GrpcMethod('UserService', 'DevSwitchAccount')
-    async devSwitchAccount(data: DevSwitchRequest): Promise<AuthSessionResponse> {
-        try {
-            const result = await this.authService.devSwitchAccount(
-                data.refreshToken,
-                data.deviceInfo || 'unknown',
-                data.ipAddress || 'unknown',
-            );
-            return {
-                accessToken: result.access_token,
-                refreshToken: result.refresh_token ?? '',
-                user: userToAuthUser(result.user),
-            };
         } catch (e) { throw toGrpcError(e); }
     }
 

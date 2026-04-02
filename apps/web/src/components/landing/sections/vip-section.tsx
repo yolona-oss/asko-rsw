@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { SkeletonImage } from '@/components/skeleton';
 
 const vipCards = [
   {

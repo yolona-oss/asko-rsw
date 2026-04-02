@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Container } from '@asko/ui';
-import { SkeletonImage } from '@/components/landing/skeleton-image';
+import { SkeletonImage } from '@/components/skeleton';
 import { PlaceholderImage } from '@/components/placeholder-image';
 
 import { articleApi } from '@/lib/api/article';
