@@ -1,4 +1,4 @@
-import { Res, Body, Controller, Post, NotImplementedException, Req, Get } from '@nestjs/common';
+import { Res, Body, Controller, Post, NotImplementedException, Req, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express'
 
@@ -244,6 +244,18 @@ export class AuthController {
     @Post('/master-logout')
     async logoutAll() {
         throw new NotImplementedException()
+    }
+
+    @Public()
+    @Get('/check-email')
+    async checkEmail(@Query('email') email: string) {
+        if (!email) return { available: false };
+        try {
+            await this.userClient.findUserByEmail(email.toLowerCase().trim());
+            return { available: false };
+        } catch {
+            return { available: true };
+        }
     }
 
     @Public()

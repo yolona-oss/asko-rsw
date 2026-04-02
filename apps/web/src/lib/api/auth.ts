@@ -27,6 +27,13 @@ export const authApi = {
     return api.post<IAuthSession>('/auth/dev-switch', { refresh_token: refreshToken });
   },
 
+  checkEmail(email: string) {
+    return api.get<{ available: boolean }>('/auth/check-email', {
+      params: { email },
+      _silent: true,
+    } as any);
+  },
+
   confirmEmail(token: string) {
     return api.post<{ message: string }>('/auth/confirm-email', { token });
   },

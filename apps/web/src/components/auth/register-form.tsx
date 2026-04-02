@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSignup, useVerifyPhoneRegister } from '@/lib/api/use-auth';
@@ -46,6 +46,33 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
 
   // Phone register OTP
   const [pendingToken, setPendingToken] = useState('');
+
+  // Email availability check
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const emailCheckTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    if (!email || authMethod !== 'email') {
+      setEmailStatus('idle');
+      return;
+    }
+    // Basic format check before hitting API
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailStatus('idle');
+      return;
+    }
+    setEmailStatus('checking');
+    clearTimeout(emailCheckTimer.current);
+    emailCheckTimer.current = setTimeout(async () => {
+      try {
+        const { data } = await authApi.checkEmail(email);
+        setEmailStatus(data.available ? 'available' : 'taken');
+      } catch {
+        setEmailStatus('idle'); // network error — don't block
+      }
+    }, 500);
+    return () => clearTimeout(emailCheckTimer.current);
+  }, [email, authMethod]);
 
   const passwordsMatch = password === confirmPassword;
   const showConfirmError = confirmTouched && confirmPassword.length > 0 && !passwordsMatch;
@@ -242,8 +269,18 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@email.com"
+                error={emailStatus === 'taken'}
                 required
               />
+              {emailStatus === 'checking' && (
+                <p className={`text-xs ${subColor}`}>Проверка доступности...</p>
+              )}
+              {emailStatus === 'taken' && (
+                <p className="text-xs text-brand-red">Этот email уже зарегистрирован</p>
+              )}
+              {emailStatus === 'available' && (
+                <p className="text-xs text-[#22C55E]">Email доступен</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -295,7 +332,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
 
       <button
         type="submit"
-        disabled={signup.isPending || (authMethod === 'email' && password.length > 0 && !passwordsMatch)}
+        disabled={signup.isPending || (authMethod === 'email' && (emailStatus === 'taken' || emailStatus === 'checking' || (password.length > 0 && !passwordsMatch)))}
         className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6'} h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60`}
         style={{ background: '#EB001C' }}
       >

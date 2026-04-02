@@ -26,12 +26,14 @@ export function AuthImageShell({ children }: AuthImageShellProps) {
       </div>
 
       {/* Desktop */}
-      <div className="hidden lg:flex items-center justify-center min-h-screen bg-page-bg">
-        <div className="relative w-[1120px] h-[676px] bg-white">
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 w-[446px]">
-            {children('desktop')}
+      <div className="hidden lg:flex items-center justify-center min-h-screen bg-page-bg py-10">
+        <div className="relative w-[1120px] min-h-[676px] bg-white flex">
+          <div className="flex items-center w-[569px] px-6 py-10">
+            <div className="w-[446px]">
+              {children('desktop')}
+            </div>
           </div>
-          <div className="absolute right-0 top-0 w-[551px] h-full flex flex-col justify-end items-center pb-10 overflow-hidden">
+          <div className="relative w-[551px] flex flex-col justify-end items-center pb-10 overflow-hidden">
             <Image src="/images/auth-img.webp" alt="" fill className="object-cover" />
             <div className="relative z-10">
               <Image src="/images/logo.svg" alt="ASKO" width={494} height={148} className="brightness-0 invert" />
