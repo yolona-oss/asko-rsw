@@ -141,5 +141,8 @@ export type { DataSearchProps } from './components/data-search';
 export { Pagination } from './components/pagination';
 export type { PaginationProps } from './components/pagination';
 
+export { DataToolbar } from './components/data-toolbar';
+export type { DataToolbarProps, DataToolbarSearchProps } from './components/data-toolbar';
+
 export { ImageGallery } from './components/image-gallery';
 export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/image-gallery';

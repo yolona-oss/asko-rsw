@@ -9,8 +9,7 @@ import {
   DataTableHeader,
   DataTableEmpty,
   DataTableFooter,
-  DataSearch,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -92,25 +91,25 @@ export function AdminArticles() {
       <PageHeader>Статьи</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Link href="/account/articles/graph">
-              <Button variant="secondary" size="sm">Граф связей</Button>
-            </Link>
-            <Link href="/account/articles/create">
-              <Button size="sm">Добавить статью</Button>
-            </Link>
-            {articles.length > 0 && (
-              <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
-                Удалить все
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+        actions={<>
+          <Link href="/account/articles/graph">
+            <Button variant="secondary" size="sm">Граф связей</Button>
+          </Link>
+          <Link href="/account/articles/create">
+            <Button size="sm">Добавить статью</Button>
+          </Link>
+          {articles.length > 0 && (
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
+              Удалить все
+            </Button>
+          )}
+        </>}
+      />
 
       <Modal
         open={showDeleteAll}

@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react';
 import {
   Card,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataSearch,
-  DataFilter,
   DataTable,
   DataTableHeader,
   DataTableFooter,
@@ -93,19 +91,15 @@ export function RepairerRequests() {
       <PageHeader>Мои заявки</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по клиенту, устройству или городу" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[TAB_FILTER]}
-            values={filterValues}
-            onChange={handleFilterChange}
-          />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск по клиенту, устройству или городу" }}
+        filters={[TAB_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       {/* Active request highlight */}
       {activeTab === 'active' && activeRequest && (

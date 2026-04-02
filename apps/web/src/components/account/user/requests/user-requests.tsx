@@ -4,11 +4,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Button,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataSearch,
-  DataFilter,
   DataTable,
   DataTableHeader,
   DataTableFooter,
@@ -87,29 +85,20 @@ export function UserRequests() {
       <PageHeader>Мои заявки</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <div className="flex-shrink-0">
-          <DataSearch
-            value={search}
-            onChange={setSearch}
-            placeholder="Поиск по устройству или описанию"
-            className="lg:w-[320px]"
-          />
-        </div>
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[STATUS_FILTER]}
-            values={filterValues}
-            onChange={handleFilterChange}
-          />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Link href="/account/requests/create">
-              <Button variant="primary">Создать заявку</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск по устройству или описанию" }}
+        filters={[STATUS_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+        actions={
+          <Link href="/account/requests/create">
+            <Button variant="primary">Создать заявку</Button>
+          </Link>
+        }
+      />
 
       {/* Data */}
       {loading ? (

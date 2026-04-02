@@ -6,9 +6,7 @@ import {
   DataTableHeader,
   DataTableEmpty,
   DataTableFooter,
-  DataSearch,
-  DataFilter,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -83,19 +81,15 @@ export function AdminCertificates() {
       <PageHeader>Управление сертификатами</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[STATUS_FILTER]}
-            values={filterValues}
-            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
-          />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        filters={[STATUS_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>

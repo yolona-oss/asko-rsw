@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import {
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataSearch,
-  DataFilter,
   DataTable,
   DataTableHeader,
   DataTableFooter,
@@ -105,26 +103,15 @@ export function ManagerRequests() {
       <PageHeader>Заявки на обслуживание</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <div className="flex-shrink-0">
-          <DataSearch
-            value={search}
-            onChange={setSearch}
-            placeholder="Поиск"
-            className="lg:w-[320px]"
-          />
-        </div>
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[TAB_FILTER]}
-            values={filterValues}
-            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
-          />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-3">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        filters={[TAB_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+      />
 
       {/* Request data */}
       {

@@ -7,8 +7,7 @@ import {
   DataTableHeader,
   DataTableEmpty,
   DataTableFooter,
-  DataSearch,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -105,17 +104,17 @@ export function UserCertificates() {
       <PageHeader>Мои сертификаты</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по номеру или устройству" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
-              Добавить сертификат
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск по номеру или устройству" }}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+        actions={
+          <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
+            Добавить сертификат
+          </Button>
+        }
+      />
 
       {view === 'card' ? (
         <>

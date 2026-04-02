@@ -9,10 +9,9 @@ import {
   DataTableHeader,
   DataTableEmpty,
   DataTableFooter,
-  DataSearch,
   DataFilter,
+  DataToolbar,
   Pagination,
-  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
@@ -175,40 +174,40 @@ export function AdminDevices() {
       <PageHeader>Товары</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            <Link href="/account/device-categories">
-              <Button variant="secondary" size="sm">Категории</Button>
-            </Link>
-            <Link href="/account/devices/create">
-              <Button size="sm">Добавить товар</Button>
-            </Link>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImport}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing}
-            >
-              Импорт JSON
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+        actions={<>
+          <Link href="/account/device-categories">
+            <Button variant="secondary" size="sm">Категории</Button>
+          </Link>
+          <Link href="/account/devices/create">
+            <Button size="sm">Добавить товар</Button>
+          </Link>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            Импорт JSON
+          </Button>
+          {devices.length > 0 && (
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
+              Удалить все
             </Button>
-            {devices.length > 0 && (
-              <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
-                Удалить все
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+          )}
+        </>}
+      />
 
       {/* Filters */}
       <DataFilter

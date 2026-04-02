@@ -3,11 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Select,
-  ViewSwitcher,
+  DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataSearch,
-  DataFilter,
   Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
@@ -79,41 +77,26 @@ export function DealerCertificates() {
       <PageHeader>Сертификаты</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-4 items-stretch">
-        <div className="flex flex-row">
-          <div className="flex-shrink-0">
-            <DataSearch
-              value={search}
-              onChange={setSearch}
-              placeholder="Поиск по номеру сертификата"
-              className="lg:w-[320px]"
-            />
-          </div>
-        </div>
-        <div className="flex-shrink-0">
-          <DataFilter
-            filters={[STATUS_FILTER_DEF]}
-            values={filterValues}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="flex-1 flex-row flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Select
-              value={sortField}
-              onChange={(e) => setSortField(e.target.value as SortField)}
-              className="w-52"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </Select>
-            <div className="self-end">
-              <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-            </div>
-          </div>
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск по номеру сертификата" }}
+        filters={[STATUS_FILTER_DEF]}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        views={[VIEW_TABLE, VIEW_CARD]}
+        activeView={view}
+        onViewChange={setView}
+        actions={
+          <Select
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value as SortField)}
+            className="w-52"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        }
+      />
 
       {/* Data */}
       {
