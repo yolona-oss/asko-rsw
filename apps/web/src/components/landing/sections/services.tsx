@@ -10,14 +10,14 @@ import { useDeviceCategories } from '@/hooks/use-device-categories';
 const fallbackService = {
   title: 'Ремонт бытовой техники ASKO',
   description: 'Диагностируем и устраняем неисправности техники любой сложности. Используем оригинальные комплектующие и соблюдаем стандарты производителя.',
-  image: '/images/04f9946e5d2fbe57ef5062dd4a4e7ce3ab905b81.webp',
+  image: '/images/services-repair.webp',
 };
 
 function buildService(label: string) {
   return {
     title: `Ремонт: ${label}`,
     description: `Диагностируем и устраняем неисправности. Используем оригинальные комплектующие и соблюдаем стандарты производителя. Гарантируем стабильную и надёжную работу техники после ремонта.`,
-    image: '/images/04f9946e5d2fbe57ef5062dd4a4e7ce3ab905b81.webp',
+    image: '/images/services-repair.webp',
   };
 }
 

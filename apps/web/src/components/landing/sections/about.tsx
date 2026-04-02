@@ -58,7 +58,7 @@ export function AboutSection() {
           {/* Mobile: single image */}
           <div className="lg:hidden relative w-full aspect-[358/190] overflow-hidden">
             <SkeletonImage
-              src="/images/9a636dc5cc219533f95472dfe1c7dc5fd95df0fc.webp"
+              src="/images/about-components.webp"
               alt="Комплектующие ASKO"
               fill
               className="object-cover"
@@ -88,14 +88,14 @@ export function AboutSection() {
           <div className="hidden lg:flex flex-row items-center gap-8 lg:gap-[306px]">
             <div className="flex gap-6">
               <div className="relative w-[262px] h-[262px] flex-shrink-0 overflow-hidden">
-                <SkeletonImage src="/images/1731b900ff4fac95565c50b611fe49f94d6da6dd.webp" alt="Барабан ASKO" fill className="object-cover" />
+                <SkeletonImage src="/images/about-drum.webp" alt="Барабан ASKO" fill className="object-cover" />
               </div>
               <div className="relative w-[262px] h-[262px] flex-shrink-0 overflow-hidden">
-                <SkeletonImage src="/images/627290432c697eefe0ffbdf9393e4915be997fc0.webp" alt="Запчасти ASKO" fill className="object-cover" />
+                <SkeletonImage src="/images/about-parts.webp" alt="Запчасти ASKO" fill className="object-cover" />
               </div>
             </div>
             <div className="relative w-[262px] h-[262px] flex-shrink-0 overflow-hidden">
-              <SkeletonImage src="/images/9a636dc5cc219533f95472dfe1c7dc5fd95df0fc.webp" alt="Комплектующие ASKO" fill className="object-cover" />
+              <SkeletonImage src="/images/about-components.webp" alt="Комплектующие ASKO" fill className="object-cover" />
             </div>
           </div>
         </div>

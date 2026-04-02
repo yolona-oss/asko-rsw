@@ -43,7 +43,7 @@ export function CtaSection() {
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         <img
-          src="/images/91a976b91feaec523511756feaddfcb4585e85ff.webp"
+          src="/images/cta-bg.webp"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
         />
