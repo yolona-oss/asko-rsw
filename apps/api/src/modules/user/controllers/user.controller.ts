@@ -9,6 +9,7 @@ import {
     Param,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { ChatPrivacyService } from 'modules/chat/services/chat-privacy.service';
@@ -33,6 +34,16 @@ import {
     MessageResponseDto,
 } from 'common/dto/responses';
 
+class UserQueryDto extends PaginationDto {
+    @IsOptional()
+    @IsString()
+    role?: string;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
+}
+
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
@@ -45,14 +56,8 @@ export class UsersController {
     @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
-    async getAllUsers(@Query() pagination: PaginationDto, @Query('role') role?: string, @Query('status') status?: string) {
-        return this.userClient.findAllUsers({
-            offset: pagination.offset,
-            limit: pagination.limit,
-            search: pagination.search,
-            role,
-            status,
-        });
+    async getAllUsers(@Query() query: UserQueryDto) {
+        return this.userClient.findAllUsers(query);
     }
 
     @RequiredRoles(...ADMIN_ROLES)

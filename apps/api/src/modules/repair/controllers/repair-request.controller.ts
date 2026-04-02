@@ -51,7 +51,7 @@ import {
     ImageListResponseDto,
 } from 'common/dto/responses';
 
-class AssignedQueryDto extends PaginationDto {
+class RepairQueryDto extends PaginationDto {
     @IsOptional()
     @IsString()
     status?: string;
@@ -93,8 +93,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
-    async findMy(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto, @Query('status') status?: string) {
-        return this.repairClient.findByUser(user.sub, { ...pagination, status });
+    async findMy(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
+        return this.repairClient.findByUser(user.sub, query);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -148,8 +148,8 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Get()
-    async findAll(@Query() pagination: PaginationDto, @Query('status') status?: string) {
-        const result = await this.repairClient.findAll({ ...pagination, status });
+    async findAll(@Query() query: RepairQueryDto) {
+        const result = await this.repairClient.findAll(query);
         result.data = result.data ?? [];
         // Collect all unique userIds to enrich (request owners + repairers)
         const enrichments: Promise<void>[] = [];
@@ -275,7 +275,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
-    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: AssignedQueryDto) {
+    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
         return this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
     }
 
