@@ -404,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/request-email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsersController_requestEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/profile": {
         parameters: {
             query?: never;
@@ -548,22 +564,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/dev-switch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["AuthController_devSwitch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/master-logout": {
         parameters: {
             query?: never;
@@ -574,6 +574,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AuthController_logoutAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/check-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthController_checkEmail"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -606,6 +622,230 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AuthController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_verifyMfaOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_resendMfaOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_enableMfa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/enable/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_verifyEnableMfa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_initiateDisableMfa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/disable/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_confirmDisableMfa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthController_getMfaStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/confirm-email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_confirmEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone-register/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_verifyPhoneRegister"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone-register/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_resendPhoneRegisterOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/send-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_sendPhoneVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/confirm-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_confirmPhoneVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/request-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_requestPhoneChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/confirm-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_confirmPhoneChange"];
         delete?: never;
         options?: never;
         head?: never;
@@ -884,6 +1124,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ArticlesController_linkArticle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/link/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ArticlesController_unlinkArticle"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/edges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticlesController_getEdges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/articles/{id}/images": {
         parameters: {
             query?: never;
@@ -932,6 +1220,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles/recommended": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticlesController_recommended"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticlesController_getGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/tags/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticlesController_getTagStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/articles/{slug}": {
         parameters: {
             query?: never;
@@ -942,6 +1278,38 @@ export interface paths {
         get: operations["ArticlesController_findOne"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{slug}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticlesController_findRelated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{slug}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ArticlesController_recordView"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1204,6 +1572,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/device-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DeviceCategoryController_findAll"];
+        put?: never;
+        post: operations["DeviceCategoryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/device-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DeviceCategoryController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["DeviceCategoryController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["DeviceCategoryController_update"];
+        trace?: never;
+    };
     "/certificates/add": {
         parameters: {
             query?: never;
@@ -1383,6 +1783,38 @@ export interface paths {
         };
         /** Get payments for a certificate */
         get: operations["CertificateController_getPayments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/public-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificateController_getPublicKey"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/verify/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificateController_verifySignature"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1657,6 +2089,22 @@ export interface paths {
         get: operations["RepairRequestController_findAssigned"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/accept-completion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_acceptCompletion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2127,6 +2575,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repairers/for-assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairerController_findForAssignment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dealers": {
         parameters: {
             query?: never;
@@ -2543,6 +3007,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhook/payment/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebhookController_handlePaymentWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2566,6 +3046,10 @@ export interface components {
             floor?: number;
             room?: number;
             postalCode?: string;
+            latitude?: number;
+            longitude?: number;
+            validationStatus?: string;
+            validationError?: string;
         };
         AddressResponseDto: {
             address: components["schemas"]["AddressRecordDto"];
@@ -2658,6 +3142,10 @@ export interface components {
             limit: number;
         };
         ChangePasswordDto: Record<string, never>;
+        RequestEmailChangeDto: Record<string, never>;
+        MessageResponseDto: {
+            message: string;
+        };
         LoginCredentials: Record<string, never>;
         AuthUserDto: {
             id: string;
@@ -2682,12 +3170,17 @@ export interface components {
             message: string;
         };
         ResendConfirmMailDto: Record<string, never>;
-        MessageResponseDto: {
-            message: string;
-        };
         AccessTokenResponseDto: {
             access_token: string;
         };
+        ForgotPasswordDto: Record<string, never>;
+        ResetPasswordDto: Record<string, never>;
+        VerifyMfaOtpDto: Record<string, never>;
+        ResendMfaOtpDto: Record<string, never>;
+        VerifyEnableMfaDto: Record<string, never>;
+        DisableMfaDto: Record<string, never>;
+        VerifyPhoneRegisterDto: Record<string, never>;
+        ResendPhoneRegisterOtpDto: Record<string, never>;
         CreateInvitationLinkDto: Record<string, never>;
         InviteLinkResponseDto: {
             id: string;
@@ -2776,7 +3269,9 @@ export interface components {
             slug: string;
             text: string;
             description?: string;
+            content?: Record<string, never>;
             tags?: string[];
+            viewCount: number;
             createdAt: string;
             updatedAt: string;
         };
@@ -2790,6 +3285,16 @@ export interface components {
             overallCount: number;
             offset: number;
             limit: number;
+        };
+        RecommendedArticlesResponseDto: {
+            data: components["schemas"]["ArticleResponseDto"][];
+        };
+        RelatedArticlesResponseDto: {
+            data: components["schemas"]["ArticleResponseDto"][];
+        };
+        RecordArticleViewDto: Record<string, never>;
+        ArticleViewResponseDto: {
+            message: string;
         };
         CreateDeviceDto: Record<string, never>;
         DeviceRecordDto: {
@@ -2805,6 +3310,9 @@ export interface components {
             features?: Record<string, never>;
             link?: string;
             isFeatured?: boolean;
+            categoryId?: string;
+            categoryName?: string;
+            categoryLabel?: string;
             createdAt: string;
             updatedAt: string;
         };
@@ -2847,12 +3355,28 @@ export interface components {
             warrantyUntil?: string;
             notes?: string;
             createdAt: string;
+            registrationSignature?: string;
+            registrationSignedPayload?: string;
             device?: components["schemas"]["DeviceRecordDto"];
             address?: components["schemas"]["AddressRecordDto"];
         };
         UserDeviceListResponseDto: {
             userDevices: components["schemas"]["UserDeviceRecordDto"][];
         };
+        DeviceCategoryRecordDto: {
+            id: string;
+            name: string;
+            label: string;
+            labelPlural: string;
+            order: number;
+            createdAt: string;
+            updatedAt: string;
+        };
+        DeviceCategoryListResponseDto: {
+            categories: components["schemas"]["DeviceCategoryRecordDto"][];
+        };
+        CreateDeviceCategoryDto: Record<string, never>;
+        UpdateDeviceCategoryDto: Record<string, never>;
         AddCertificateDto: Record<string, never>;
         DealerClientRecordDto: {
             id: string;
@@ -2868,6 +3392,8 @@ export interface components {
             companyName?: string;
             inn?: string;
             pointsBalance: number;
+            agreementSignature?: string;
+            agreementSignedPayload?: string;
             user?: components["schemas"]["AuthUserDto"];
             createdAt: string;
             updatedAt: string;
@@ -2885,6 +3411,8 @@ export interface components {
             description?: string;
             price?: number;
             paid: boolean;
+            signature?: string;
+            signedPayload?: string;
             user?: components["schemas"]["AuthUserDto"];
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             dealer?: components["schemas"]["DealerProfileRecordDto"];
@@ -2930,6 +3458,15 @@ export interface components {
         PaymentListResponseDto: {
             payments: components["schemas"]["PaymentRecordDto"][];
         };
+        PublicKeyResponseDto: {
+            publicKeyPem: string;
+            algorithm: string;
+        };
+        VerifySignatureResponseDto: {
+            valid: boolean;
+            reason?: string;
+            signedPayload?: string;
+        };
         CreateRepairRequestDto: Record<string, never>;
         WorkStepRecordDto: {
             id: string;
@@ -2964,6 +3501,8 @@ export interface components {
             longitude?: number;
             lastLocationUpdate?: string;
             user?: components["schemas"]["AuthUserDto"];
+            activeRequestCount?: number;
+            currentRequestStatus?: string;
             createdAt: string;
             updatedAt: string;
         };
@@ -2987,6 +3526,10 @@ export interface components {
             rejectedRepairers?: string[];
             completionNote?: string;
             stepsLocked: boolean;
+            completionSignature?: string;
+            completionSignedPayload?: string;
+            acceptanceSignature?: string;
+            acceptanceSignedPayload?: string;
             user?: components["schemas"]["AuthUserDto"];
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             repairer?: components["schemas"]["RepairerRecordDto"];
@@ -3785,6 +4328,35 @@ export interface operations {
             };
         };
     };
+    UsersController_requestEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestEmailChangeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     UsersController_getUserById: {
         parameters: {
             query?: never;
@@ -4006,31 +4578,6 @@ export interface operations {
             };
         };
     };
-    AuthController_devSwitch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthSessionResponseDto"];
-                };
-            };
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_logoutAll: {
         parameters: {
             query?: never;
@@ -4048,6 +4595,25 @@ export interface operations {
             };
         };
     };
+    AuthController_checkEmail: {
+        parameters: {
+            query: {
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_forgotPassword: {
         parameters: {
             query?: never;
@@ -4055,8 +4621,20 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordDto"];
+            };
+        };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -4072,13 +4650,347 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifyMfaOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyMfaOtpDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_resendMfaOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendMfaOtpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_enableMfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifyEnableMfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEnableMfaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_initiateDisableMfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_confirmDisableMfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisableMfaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_getMfaStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_confirmEmailChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifyPhoneRegister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyPhoneRegisterDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AuthController_resendPhoneRegisterOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendPhoneRegisterOtpDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_sendPhoneVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AuthController_confirmPhoneVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AuthController_requestPhoneChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    AuthController_confirmPhoneChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
             };
         };
     };
@@ -4509,7 +5421,9 @@ export interface operations {
     };
     ArticlesController_findAll: {
         parameters: {
-            query?: never;
+            query: {
+                tags: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4614,6 +5528,68 @@ export interface operations {
             };
         };
     };
+    ArticlesController_linkArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    ArticlesController_unlinkArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                targetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    ArticlesController_getEdges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ArticlesController_uploadImage: {
         parameters: {
             query?: never;
@@ -4682,6 +5658,59 @@ export interface operations {
             };
         };
     };
+    ArticlesController_recommended: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendedArticlesResponseDto"];
+                };
+            };
+        };
+    };
+    ArticlesController_getGraph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ArticlesController_getTagStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ArticlesController_findOne: {
         parameters: {
             query?: never;
@@ -4699,6 +5728,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArticleResponseDto"];
+                };
+            };
+        };
+    };
+    ArticlesController_findRelated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatedArticlesResponseDto"];
+                };
+            };
+        };
+    };
+    ArticlesController_recordView: {
+        parameters: {
+            query?: never;
+            header: {
+                "user-agent": string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordArticleViewDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleViewResponseDto"];
                 };
             };
         };
@@ -5247,6 +6324,115 @@ export interface operations {
             };
         };
     };
+    DeviceCategoryController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceCategoryListResponseDto"];
+                };
+            };
+        };
+    };
+    DeviceCategoryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeviceCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceCategoryRecordDto"];
+                };
+            };
+        };
+    };
+    DeviceCategoryController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceCategoryRecordDto"];
+                };
+            };
+        };
+    };
+    DeviceCategoryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    DeviceCategoryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDeviceCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceCategoryRecordDto"];
+                };
+            };
+        };
+    };
     CertificateController_addCertificate: {
         parameters: {
             query?: never;
@@ -5477,6 +6663,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentListResponseDto"];
+                };
+            };
+        };
+    };
+    CertificateController_getPublicKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicKeyResponseDto"];
+                };
+            };
+        };
+    };
+    CertificateController_verifySignature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifySignatureResponseDto"];
                 };
             };
         };
@@ -5859,6 +7085,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedRepairRequestsResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_acceptCompletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
                 };
             };
         };
@@ -6629,6 +7876,25 @@ export interface operations {
             };
         };
     };
+    RepairerController_findForAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRepairersResponseDto"];
+                };
+            };
+        };
+    };
     DealerController_findAll: {
         parameters: {
             query?: never;
@@ -7314,6 +8580,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentStatsResponseDto"];
+                };
+            };
+        };
+    };
+    WebhookController_handlePaymentWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhook acknowledged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

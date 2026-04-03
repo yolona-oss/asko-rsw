@@ -818,6 +818,40 @@
         ]
       }
     },
+    "/users/request-email-change": {
+      "post": {
+        "operationId": "UsersController_requestEmailChange",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestEmailChangeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/users/profile": {
       "get": {
         "operationId": "UsersController_getUserById",
@@ -1080,30 +1114,6 @@
         ]
       }
     },
-    "/auth/dev-switch": {
-      "post": {
-        "operationId": "AuthController_devSwitch",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthSessionResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
     "/auth/master-logout": {
       "post": {
         "operationId": "AuthController_logoutAll",
@@ -1118,11 +1128,54 @@
         ]
       }
     },
+    "/auth/check-email": {
+      "get": {
+        "operationId": "AuthController_checkEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/auth/forgot-password": {
       "post": {
         "operationId": "AuthController_forgotPassword",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
         "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
           "201": {
             "description": ""
           }
@@ -1136,9 +1189,387 @@
       "post": {
         "operationId": "AuthController_resetPassword",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "operationId": "AuthController_verifyMfaOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMfaOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/resend": {
+      "post": {
+        "operationId": "AuthController_resendMfaOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendMfaOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/enable": {
+      "post": {
+        "operationId": "AuthController_enableMfa",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/enable/verify": {
+      "post": {
+        "operationId": "AuthController_verifyEnableMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEnableMfaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/disable": {
+      "post": {
+        "operationId": "AuthController_initiateDisableMfa",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/disable/verify": {
+      "post": {
+        "operationId": "AuthController_confirmDisableMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisableMfaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/mfa/status": {
+      "get": {
+        "operationId": "AuthController_getMfaStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/confirm-email-change": {
+      "post": {
+        "operationId": "AuthController_confirmEmailChange",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone-register/verify": {
+      "post": {
+        "operationId": "AuthController_verifyPhoneRegister",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPhoneRegisterDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone-register/resend": {
+      "post": {
+        "operationId": "AuthController_resendPhoneRegisterOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendPhoneRegisterOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone/send-verification": {
+      "post": {
+        "operationId": "AuthController_sendPhoneVerification",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone/confirm-verification": {
+      "post": {
+        "operationId": "AuthController_confirmPhoneVerification",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone/request-change": {
+      "post": {
+        "operationId": "AuthController_requestPhoneChange",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/phone/confirm-change": {
+      "post": {
+        "operationId": "AuthController_confirmPhoneChange",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1776,7 +2207,16 @@
       },
       "get": {
         "operationId": "ArticlesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "tags",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1876,6 +2316,97 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/link": {
+      "post": {
+        "operationId": "ArticlesController_linkArticle",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/link/{targetId}": {
+      "delete": {
+        "operationId": "ArticlesController_unlinkArticle",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{id}/edges": {
+      "get": {
+        "operationId": "ArticlesController_getEdges",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "tags": [
@@ -1994,6 +2525,55 @@
         ]
       }
     },
+    "/articles/recommended": {
+      "get": {
+        "operationId": "ArticlesController_recommended",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendedArticlesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/graph": {
+      "get": {
+        "operationId": "ArticlesController_getGraph",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/tags/stats": {
+      "get": {
+        "operationId": "ArticlesController_getTagStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
     "/articles/{slug}": {
       "get": {
         "operationId": "ArticlesController_findOne",
@@ -2014,6 +2594,84 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ArticleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{slug}/related": {
+      "get": {
+        "operationId": "ArticlesController_findRelated",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelatedArticlesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/articles/{slug}/view": {
+      "post": {
+        "operationId": "ArticlesController_recordView",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user-agent",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordArticleViewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleViewResponseDto"
                 }
               }
             }
@@ -2802,6 +3460,152 @@
         ]
       }
     },
+    "/device-categories": {
+      "get": {
+        "operationId": "DeviceCategoryController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategoryListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Device Categories"
+        ]
+      },
+      "post": {
+        "operationId": "DeviceCategoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategoryRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Device Categories"
+        ]
+      }
+    },
+    "/device-categories/{id}": {
+      "get": {
+        "operationId": "DeviceCategoryController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategoryRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Device Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "DeviceCategoryController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategoryRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Device Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "DeviceCategoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Device Categories"
+        ]
+      }
+    },
     "/certificates/add": {
       "post": {
         "operationId": "CertificateController_addCertificate",
@@ -3131,6 +3935,57 @@
           }
         },
         "summary": "Get payments for a certificate",
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/public-key": {
+      "get": {
+        "operationId": "CertificateController_getPublicKey",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/verify/{id}": {
+      "get": {
+        "operationId": "CertificateController_verifySignature",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifySignatureResponseDto"
+                }
+              }
+            }
+          }
+        },
         "tags": [
           "Certificates"
         ]
@@ -3650,6 +4505,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaginatedRepairRequestsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/accept-completion": {
+      "post": {
+        "operationId": "RepairRequestController_acceptCompletion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
                 }
               }
             }
@@ -4800,6 +5685,27 @@
         ]
       }
     },
+    "/repairers/for-assignment": {
+      "get": {
+        "operationId": "RepairerController_findForAssignment",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRepairersResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repairers"
+        ]
+      }
+    },
     "/dealers": {
       "post": {
         "operationId": "DealerController_createProfile",
@@ -5740,6 +6646,39 @@
           "Payments"
         ]
       }
+    },
+    "/webhook/payment/{provider}": {
+      "post": {
+        "operationId": "WebhookController_handlePaymentWebhook",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook acknowledged"
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Webhooks"
+        ]
+      }
     }
   },
   "info": {
@@ -5822,6 +6761,18 @@
             "type": "number"
           },
           "postalCode": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "validationStatus": {
+            "type": "string"
+          },
+          "validationError": {
             "type": "string"
           }
         },
@@ -6181,6 +7132,21 @@
         "type": "object",
         "properties": {}
       },
+      "RequestEmailChangeDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "MessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "LoginCredentials": {
         "type": "object",
         "properties": {}
@@ -6274,17 +7240,6 @@
         "type": "object",
         "properties": {}
       },
-      "MessageResponseDto": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
       "AccessTokenResponseDto": {
         "type": "object",
         "properties": {
@@ -6295,6 +7250,38 @@
         "required": [
           "access_token"
         ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyMfaOtpDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResendMfaOtpDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyEnableMfaDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "DisableMfaDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "VerifyPhoneRegisterDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResendPhoneRegisterOtpDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateInvitationLinkDto": {
         "type": "object",
@@ -6634,11 +7621,20 @@
           "text": {
             "type": "string"
           },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "type": "object"
+          },
           "tags": {
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          "viewCount": {
+            "type": "number"
           },
           "createdAt": {
             "type": "string"
@@ -6652,6 +7648,7 @@
           "title",
           "slug",
           "text",
+          "viewCount",
           "createdAt",
           "updatedAt"
         ]
@@ -6701,6 +7698,49 @@
           "limit"
         ]
       },
+      "RecommendedArticlesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RelatedArticlesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "RecordArticleViewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ArticleViewResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "CreateDeviceDto": {
         "type": "object",
         "properties": {}
@@ -6743,6 +7783,15 @@
           },
           "isFeatured": {
             "type": "boolean"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "categoryLabel": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string"
@@ -6906,6 +7955,12 @@
           "createdAt": {
             "type": "string"
           },
+          "registrationSignature": {
+            "type": "string"
+          },
+          "registrationSignedPayload": {
+            "type": "string"
+          },
           "device": {
             "$ref": "#/components/schemas/DeviceRecordDto"
           },
@@ -6935,6 +7990,63 @@
         "required": [
           "userDevices"
         ]
+      },
+      "DeviceCategoryRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "labelPlural": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "label",
+          "labelPlural",
+          "order",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DeviceCategoryListResponseDto": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceCategoryRecordDto"
+            }
+          }
+        },
+        "required": [
+          "categories"
+        ]
+      },
+      "CreateDeviceCategoryDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDeviceCategoryDto": {
+        "type": "object",
+        "properties": {}
       },
       "AddCertificateDto": {
         "type": "object",
@@ -6989,6 +8101,12 @@
           },
           "pointsBalance": {
             "type": "number"
+          },
+          "agreementSignature": {
+            "type": "string"
+          },
+          "agreementSignedPayload": {
+            "type": "string"
           },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
@@ -7046,6 +8164,12 @@
           },
           "paid": {
             "type": "boolean"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "signedPayload": {
+            "type": "string"
           },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
@@ -7228,6 +8352,38 @@
           "payments"
         ]
       },
+      "PublicKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "publicKeyPem": {
+            "type": "string"
+          },
+          "algorithm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "publicKeyPem",
+          "algorithm"
+        ]
+      },
+      "VerifySignatureResponseDto": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "signedPayload": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "valid"
+        ]
+      },
       "CreateRepairRequestDto": {
         "type": "object",
         "properties": {}
@@ -7350,6 +8506,12 @@
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
           },
+          "activeRequestCount": {
+            "type": "number"
+          },
+          "currentRequestStatus": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -7436,6 +8598,18 @@
           },
           "stepsLocked": {
             "type": "boolean"
+          },
+          "completionSignature": {
+            "type": "string"
+          },
+          "completionSignedPayload": {
+            "type": "string"
+          },
+          "acceptanceSignature": {
+            "type": "string"
+          },
+          "acceptanceSignedPayload": {
+            "type": "string"
           },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
