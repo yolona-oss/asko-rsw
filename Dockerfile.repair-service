@@ -7,7 +7,7 @@ WORKDIR /app
 # ---------- prune ----------
 FROM base AS prune
 COPY . .
-RUN pnpm turbo prune repair-service --docker
+RUN pnpm dlx turbo prune repair-service --docker
 
 # ---------- deps ----------
 FROM base AS deps
