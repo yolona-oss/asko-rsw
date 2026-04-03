@@ -2,6 +2,7 @@ import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 
@@ -12,6 +13,7 @@ import { LoginThrottleService } from 'services/login-throttle.service';
 import { OtpService } from 'services/otp.service';
 import { MfaService } from 'services/mfa.service';
 import { EmailEventService } from 'services/email-event.service';
+import { TokenCleanupService } from 'services/token-cleanup.service';
 import { redisProvider } from 'providers/redis.provider';
 
 import { UserGrpcController } from 'controllers/user.grpc.controller';
@@ -31,9 +33,11 @@ import { DatabaseModule } from 'modules/database.module';
         OtpService,
         MfaService,
         EmailEventService,
+        TokenCleanupService,
     ],
     imports: [
         AppConfigModule,
+        ScheduleModule.forRoot(),
         MetricsModule.register({ serviceName: 'user-service' }),
         DatabaseModule,
         ClientsModule.registerAsync([
