@@ -78,8 +78,8 @@ export class FileClientService implements OnModuleInit {
         return this.parseImageResponse(res);
     }
 
-    async uploadProductImage(file: Express.Multer.File, ownerId: string) {
-        const res = await grpcCall(this.fileService.uploadProductImage({
+    async uploadDeviceCatalogImage(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadDeviceCatalogImage({
             file: this.toFileData(file),
             ownerId,
         }));

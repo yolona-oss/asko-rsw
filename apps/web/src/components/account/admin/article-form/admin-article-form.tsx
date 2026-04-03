@@ -7,7 +7,7 @@ import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
-import { RichTextEditor, plainTextToLexicalState } from './rich-text-editor';
+import { RichTextEditor, plainTextToLexicalState, type RichTextEditorHandle } from './rich-text-editor';
 import { ArticleImages } from './article-images';
 import { ArticleEdges } from './article-edges';
 import { TagInput } from './tag-input';
@@ -26,6 +26,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!!initialArticleId);
   const [error, setError] = useState('');
+  const editorRef = useRef<RichTextEditorHandle>(null);
   const contentReady = useRef(false);
 
   useEffect(() => {
@@ -156,6 +157,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
 
         <FormField label="Текст статьи" variant="bold">
           <RichTextEditor
+            ref={editorRef}
             content={content}
             onChange={handleContentChange}
             articleId={currentArticleId}
@@ -165,7 +167,10 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
 
         {currentArticleId && (
           <FormField label="Превью и основное изображение" variant="bold">
-            <ArticleImages articleId={currentArticleId} />
+            <ArticleImages
+              articleId={currentArticleId}
+              onInsertImage={(src) => editorRef.current?.insertImage(src)}
+            />
           </FormField>
         )}
 

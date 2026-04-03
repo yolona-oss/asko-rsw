@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfig } from 'app.config';
 import { CloudinaryUploadResult } from './cloudinary.service';
+import type { ResizeSizeConfig } from 'common/resize-config';
 import sharp from 'sharp';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
-interface ResizedImages {
-    thumbnail: CloudinaryUploadResult;
-    medium: CloudinaryUploadResult;
-    large: CloudinaryUploadResult;
-}
+const SUFFIX_MAP: Record<string, string> = {
+    thumbnail: '_thumb',
+    medium: '_medium',
+    large: '_large',
+};
 
 @Injectable()
 export class ImageResizeService {
@@ -23,21 +24,42 @@ export class ImageResizeService {
         return this.config.serverUrl;
     }
 
-    async generateSizes(originalPublicId: string): Promise<ResizedImages> {
+    async generateSizes(
+        originalPublicId: string,
+        sizes: ResizeSizeConfig[],
+    ): Promise<Record<string, CloudinaryUploadResult>> {
         const inputPath = path.join(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);
         const folder = path.dirname(originalPublicId);
 
-        const sizes = [
-            { suffix: '_thumb', width: 150, height: 150, fit: 'cover' as const },
-            { suffix: '_medium', width: 400, height: 300, fit: 'inside' as const },
-            { suffix: '_large', width: 800, height: 600, fit: 'inside' as const },
-        ];
+        const originalMeta = await sharp(inputPath).metadata();
+        const origW = originalMeta.width ?? 0;
+        const origH = originalMeta.height ?? 0;
 
-        const results: CloudinaryUploadResult[] = [];
+        const results: Record<string, CloudinaryUploadResult> = {};
 
         for (const size of sizes) {
-            const outputName = `${parsed.name}${size.suffix}${parsed.ext}`;
+            const suffix = SUFFIX_MAP[size.name] ?? `_${size.name}`;
+
+            // Skip resize if original already matches target
+            if (origW === size.width && origH === size.height) {
+                const originalUrl = `${this.serverUrl}/images/${originalPublicId}`;
+                results[size.name] = {
+                    public_id: originalPublicId,
+                    version: 1,
+                    signature: '',
+                    width: origW,
+                    height: origH,
+                    format: parsed.ext.replace('.', ''),
+                    resource_type: 'image',
+                    url: originalUrl,
+                    secure_url: originalUrl,
+                    original_filename: parsed.base,
+                };
+                continue;
+            }
+
+            const outputName = `${parsed.name}${suffix}${parsed.ext}`;
             const outputPath = path.join(parsed.dir, outputName);
             const relativePath = `${folder}/${outputName}`;
 
@@ -47,7 +69,7 @@ export class ImageResizeService {
 
             const meta = await sharp(outputPath).metadata();
 
-            results.push({
+            results[size.name] = {
                 public_id: relativePath,
                 version: 1,
                 signature: '',
@@ -58,14 +80,10 @@ export class ImageResizeService {
                 url: `${this.serverUrl}/images/${relativePath}`,
                 secure_url: `${this.serverUrl}/images/${relativePath}`,
                 original_filename: outputName,
-            });
+            };
         }
 
-        return {
-            thumbnail: results[0],
-            medium: results[1],
-            large: results[2],
-        };
+        return results;
     }
 
     async deleteResizedFiles(originalPublicId: string): Promise<void> {

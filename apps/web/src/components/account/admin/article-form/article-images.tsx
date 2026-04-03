@@ -17,6 +17,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const isPreviewUpload = images.length === 0;
   const fileRef = useRef<HTMLInputElement>(null);
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
@@ -178,7 +179,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
       <input
         ref={fileRef}
         type="file"
-        accept=".webp,.webp,.webp,.webp"
+        accept=".jpg,.jpeg,.png,.webp"
         className="hidden"
         onChange={handleFileSelect}
       />
@@ -199,10 +200,11 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
           shape="rectangle"
-          outputWidth={800}
-          outputHeight={600}
-          cropWidth={360}
-          cropHeight={270}
+          outputWidth={isPreviewUpload ? 524 : 800}
+          outputHeight={isPreviewUpload ? 408 : 600}
+          cropWidth={isPreviewUpload ? 262 : 360}
+          cropHeight={isPreviewUpload ? 204 : 270}
+          title={isPreviewUpload ? 'Превью статьи' : 'Изображение статьи'}
         />
       )}
     </div>

@@ -7,7 +7,7 @@ service FileService {
     rpc Upload(UploadFileRequest) returns (ImageResponse);
     rpc StreamUpload(UploadFileRequest) returns (ImageResponse);
     rpc UploadUserAvatar(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadProductImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc UploadDeviceCatalogImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadDeviceImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadArticleImage(UploadWithOwnerRequest) returns (ImageResponse);
     rpc UploadRepairRequestImage(UploadWithOwnerRequest) returns (ImageResponse);

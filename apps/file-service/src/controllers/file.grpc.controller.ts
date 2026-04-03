@@ -117,11 +117,11 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    @GrpcMethod('FileService', 'UploadProductImage')
-    async uploadProductImage(data: UploadWithOwnerRequest) {
+    @GrpcMethod('FileService', 'UploadDeviceCatalogImage')
+    async uploadDeviceCatalogImage(data: UploadWithOwnerRequest) {
         try {
             const file = toMulterFile(data.file);
-            const image = await this.imageService.uploadProductImage(file, data.ownerId);
+            const image = await this.imageService.uploadDeviceImage(file, data.ownerId);
             return { image: entityToRecord(image) };
         } catch (e) { throw toGrpcError(e); }
     }

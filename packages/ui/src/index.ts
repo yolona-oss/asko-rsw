@@ -146,3 +146,6 @@ export type { DataToolbarProps, DataToolbarSearchProps } from './components/data
 
 export { ImageGallery } from './components/image-gallery';
 export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/image-gallery';
+
+export { Tooltip } from './components/tooltip';
+export type { TooltipProps, TooltipPlacement, TooltipTrigger } from './components/tooltip';

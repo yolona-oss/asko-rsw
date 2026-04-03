@@ -95,6 +95,10 @@ export class LocalStorageService implements StorageProvider {
         return { thumbnail: url, medium: url, large: url };
     }
 
+    generateSizedUrl(url: string): string {
+        return url;
+    }
+
     private videoExtFromMime(mimeType: string): string {
         const map: Record<string, string> = {
             'video/mp4': 'mp4',

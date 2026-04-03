@@ -109,8 +109,6 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
     }
   };
 
-  console.log(images)
-
   return (
     <div className="flex flex-col gap-3 max-w-[500px]">
       {images.length > 0 && (
@@ -150,7 +148,7 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
       <input
         ref={fileRef}
         type="file"
-        accept=".webp,.webp,.webp,.webp"
+        accept=".jpg,.jpeg,.png,.webp"
         className="hidden"
         onChange={handleFileSelect}
       />
@@ -171,10 +169,10 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
           shape="rectangle"
-          outputWidth={800}
-          outputHeight={600}
-          cropWidth={360}
-          cropHeight={270}
+          outputWidth={468}
+          outputHeight={654}
+          cropWidth={234}
+          cropHeight={327}
         />
       )}
     </div>

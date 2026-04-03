@@ -19,6 +19,7 @@ export interface StorageProvider {
     deleteImages(ids: string[]): Promise<void>;
     generateThumbnail(url: string, width: number, height: number): Promise<string>;
     generateMultipleSizes(url: string): Promise<{ thumbnail: string; medium: string; large: string }>;
+    generateSizedUrl(url: string, width: number, height: number, fit: 'cover' | 'inside'): string;
 
     uploadVideo(file: Express.Multer.File, folder?: string): Promise<VideoUploadResult>;
     deleteVideo(id: string): Promise<void>;

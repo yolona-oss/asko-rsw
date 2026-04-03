@@ -1,6 +1,5 @@
 export const DefaultImages = {
     User: "user",
-    Product: "product",
     Category: "category"
 }
 

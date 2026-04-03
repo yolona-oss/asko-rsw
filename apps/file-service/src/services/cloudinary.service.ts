@@ -188,6 +188,17 @@ export class CloudinaryService implements StorageProvider {
         await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
     }
 
+    generateSizedUrl(url: string, width: number, height: number, fit: 'cover' | 'inside'): string {
+        const publicId = this.extractPublicIdFromUrl(url);
+        return cloudinary.url(publicId, {
+            width,
+            height,
+            crop: fit === 'cover' ? 'fill' : 'limit',
+            quality: 'auto',
+            fetch_format: 'auto',
+        });
+    }
+
     private extractPublicIdFromUrl(url: string): string {
         const matches = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
         return matches ? matches[1] : '';

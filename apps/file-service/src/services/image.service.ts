@@ -1,48 +1,40 @@
 import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
-import { Inject, Injectable, OnModuleInit } from "@nestjs/common";
-import { ClientProxy } from "@nestjs/microservices";
-import { ImageProcessingService } from "./image-processing.service";
+import { Inject, Injectable } from "@nestjs/common";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Queue } from "bullmq";
 import { ImageTypeEnum } from "@asko/shared";
 import { Image } from 'entities/image.entity';
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
-import { AppConfig } from "app.config";
+import { IMAGE_RESIZE_QUEUE } from "modules/image-resize-queue.module";
 import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
+import type { ImageResizeJobData } from "./image-resize.processor";
 import 'multer';
 
+const RESIZE_JOB_OPTS = {
+    attempts: 3,
+    backoff: { type: 'exponential' as const, delay: 5000 },
+    removeOnComplete: { count: 1000 },
+    removeOnFail: { count: 5000 },
+};
+
 @Injectable()
-export class ImageService implements OnModuleInit {
+export class ImageService {
     constructor(
         private readonly em: EntityManager,
-        private readonly imgProcessor: ImageProcessingService,
-        private readonly config: AppConfig,
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
-        @Inject('IMAGE_EVENTS') private readonly rmqClient: ClientProxy,
+        @InjectQueue(IMAGE_RESIZE_QUEUE) private readonly resizeQueue: Queue<ImageResizeJobData>,
     ) { }
 
-    async onModuleInit() {
-        try {
-            await this.rmqClient.connect();
-        } catch (e) {
-            console.error('[ImageService] Failed to connect to RabbitMQ, will retry on first emit:', e);
-        }
-    }
-
-    private emitResize(image: Image): void {
-        if (this.config.fileStorageMode !== 'local') return;
-        this.rmqClient.emit('image.resize', {
-            imageId: image.id,
-            originalPublicId: image.image.original.public_id,
-        });
+    private async enqueueResize(imageId: string): Promise<void> {
+        await this.resizeQueue.add('resize', { imageId }, RESIZE_JOB_OPTS);
     }
 
     @CreateRequestContext()
     async upload(file: Express.Multer.File, alt?: string) {
         const imageObj = await this.storage.uploadImage(file);
         const image = new Image();
-        image.image = {
-            original: imageObj,
-        };
+        image.image = { original: imageObj };
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
@@ -56,9 +48,7 @@ export class ImageService implements OnModuleInit {
             throw AppErrors.externalServiceUnavailable('Unable to upload image');
         }
         const image = new Image();
-        image.image = {
-            original: imageObj,
-        };
+        image.image = { original: imageObj };
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
@@ -97,125 +87,102 @@ export class ImageService implements OnModuleInit {
             ownerId: String(ownerId),
         });
         for (const old of existing) {
-            await this.imgProcessor.deleteImageFiles(old.image);
             this.em.remove(old);
         }
 
-        const imageObj = await this.imgProcessor.processUserAvatar(file);
+        const original = await this.storage.uploadImage(file, 'avatars');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.User;
         image.ownerId = String(ownerId);
         image.order = 0;
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
-        return image;
-    }
-
-    @CreateRequestContext()
-    async uploadProductImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
-        const image = new Image();
-
-        image.image = imageObj;
-        image.ownerType = ImageTypeEnum.Product;
-        image.ownerId = String(ownerId);
-        image.order = 0;
-
-        await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadDeviceImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'devices');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.Device;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Device);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadArticleImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'articles');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.Article;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Article);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'repairs');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.RepairRequest;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.RepairRequest);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'reviews');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.Review;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.Review);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadDevicePartImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'device-parts');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.DevicePart;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.DevicePart);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
     @CreateRequestContext()
     async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string) {
-        const imageObj = await this.imgProcessor.processProductImage(file);
+        const original = await this.storage.uploadImage(file, 'broken-parts');
         const image = new Image();
-
-        image.image = imageObj;
+        image.image = { original };
         image.ownerType = ImageTypeEnum.BrokenPart;
         image.ownerId = String(ownerId);
         image.order = await this.countAttached(ownerId, ImageTypeEnum.BrokenPart);
 
         await this.em.persistAndFlush(image);
-        this.emitResize(image);
+        await this.enqueueResize(image.id);
         return image;
     }
 
@@ -225,21 +192,19 @@ export class ImageService implements OnModuleInit {
 
         schema.sort((a, b) => a.order - b.order);
 
-        {
-            if (targets.length < schema.length) {
-                throw AppErrors.badRequest('Input order schema is invalid: not enough source images');
-            }
+        if (targets.length < schema.length) {
+            throw AppErrors.badRequest('Input order schema is invalid: not enough source images');
+        }
 
-            const isUniq = (a: any[]) => a.length === new Set(a).size;
-            const ids = schema.map(i => i.id);
-            const order_nums = schema.map(i => i.order);
-            if (!isUniq(ids) || !isUniq(order_nums)) {
-                throw AppErrors.badRequest('Input order schema is invalid');
-            }
+        const isUniq = (a: any[]) => a.length === new Set(a).size;
+        const ids = schema.map(i => i.id);
+        const order_nums = schema.map(i => i.order);
+        if (!isUniq(ids) || !isUniq(order_nums)) {
+            throw AppErrors.badRequest('Input order schema is invalid');
+        }
 
-            if (schema[schema.length - 1].order > Math.max(...targets.map(i => i.order))) {
-                throw AppErrors.badRequest('Input order schema is invalid: too big order number');
-            }
+        if (schema[schema.length - 1].order > Math.max(...targets.map(i => i.order))) {
+            throw AppErrors.badRequest('Input order schema is invalid: too big order number');
         }
 
         const swapImages = (a: Image, b: Image) => {
@@ -250,14 +215,10 @@ export class ImageService implements OnModuleInit {
 
         const ignore: string[] = [];
         for (const schemaItem of schema) {
-            if (ignore.includes(schemaItem.id)) {
-                continue;
-            }
+            if (ignore.includes(schemaItem.id)) continue;
 
             const image = targets.find(i => i.id === schemaItem.id);
-            if (!image) {
-                throw AppErrors.dbEntityNotFound(`Image ${schemaItem.id} not found`);
-            }
+            if (!image) throw AppErrors.dbEntityNotFound(`Image ${schemaItem.id} not found`);
 
             const pair = targets.find(i => i.order === schemaItem.order);
             if (pair) {
@@ -278,9 +239,7 @@ export class ImageService implements OnModuleInit {
 
         for (let i = 0; i < imageIds.length; i++) {
             const img = map.get(imageIds[i]);
-            if (img) {
-                img.order = i;
-            }
+            if (img) img.order = i;
         }
 
         await this.em.flush();
@@ -290,22 +249,15 @@ export class ImageService implements OnModuleInit {
     @CreateRequestContext()
     async remove(id: string) {
         const image = await this.em.findOne(Image, { id });
-        if (!image) {
-            throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
-        }
+        if (!image) throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
         await this.em.removeAndFlush(image);
     }
 
     @CreateRequestContext()
     async unattachImage(imageId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
-
-        if (!image) {
-            throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
-        }
-        if (!image.ownerType || !image.ownerId) {
-            throw AppErrors.badRequest(`Image ${imageId} not attached`);
-        }
+        if (!image) throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
+        if (!image.ownerType || !image.ownerId) throw AppErrors.badRequest(`Image ${imageId} not attached`);
 
         const prevOwnerType = image.ownerType;
         const prevOwnerId = image.ownerId;
@@ -316,24 +268,19 @@ export class ImageService implements OnModuleInit {
         const attachedImages = await this.findAttachedImages(prevOwnerType, prevOwnerId);
         for (let i = 0; i < attachedImages.length; i++) {
             attachedImages[i].order = i;
-            await this.em.persistAndFlush(attachedImages[i]);
         }
 
-        await this.em.persistAndFlush(image);
+        await this.em.flush();
     }
 
     @CreateRequestContext()
     async attachImage(imageId: string, ownerType: ImageTypeEnum, ownerId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
-        if (!image) {
-            throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
-        }
+        if (!image) throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
         image.ownerId = String(ownerId);
         image.ownerType = ownerType;
-
         image.order = await this.countAttached(image.ownerId, image.ownerType);
         await this.em.persistAndFlush(image);
-
         return image;
     }
 
@@ -344,12 +291,6 @@ export class ImageService implements OnModuleInit {
 
     @CreateRequestContext()
     async findAttachedImages(ownerType: ImageTypeEnum, ownerId: string) {
-        return await this.em.find(Image,
-            { ownerType, ownerId },
-            {
-                orderBy: { order: 'ASC' }
-            }
-        );
+        return await this.em.find(Image, { ownerType, ownerId }, { orderBy: { order: 'ASC' } });
     }
-
 }

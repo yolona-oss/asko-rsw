@@ -133,7 +133,7 @@ export interface FileServiceClient {
     upload(request: UploadFileRequest): Observable<ImageResponse>;
     streamUpload(request: UploadFileRequest): Observable<ImageResponse>;
     uploadUserAvatar(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadProductImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    uploadDeviceCatalogImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadDeviceImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadArticleImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
     uploadRepairRequestImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
