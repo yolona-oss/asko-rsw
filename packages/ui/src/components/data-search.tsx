@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, type InputHTMLAttributes } from 'react';
+import { useState, useEffect, type InputHTMLAttributes } from 'react';
 import { cn } from '../utils/cn';
 
 export interface DataSearchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -24,23 +24,20 @@ export function DataSearch({
   ...props
 }: DataSearchProps) {
   const [localValue, setLocalValue] = useState(value);
-  const isExternalUpdate = useRef(false);
+  const [lastSyncedValue, setLastSyncedValue] = useState(value);
 
-  // Sync external value changes
-  useEffect(() => {
-    isExternalUpdate.current = true;
+  // Sync external value → local (without triggering debounce back)
+  if (value !== lastSyncedValue) {
+    setLastSyncedValue(value);
     setLocalValue(value);
-  }, [value]);
+  }
 
   // Debounce local → external
   useEffect(() => {
-    if (isExternalUpdate.current) {
-      isExternalUpdate.current = false;
-      return;
-    }
+    if (localValue === value) return;
     const timer = setTimeout(() => onChange(localValue), debounce);
     return () => clearTimeout(timer);
-  }, [localValue, debounce]);
+  }, [localValue, debounce, value, onChange]);
 
   const handleClear = () => {
     setLocalValue('');

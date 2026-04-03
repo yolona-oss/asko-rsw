@@ -3,7 +3,6 @@
 import {
   useState,
   useEffect,
-  useMemo,
   forwardRef,
   KeyboardEvent,
   useRef,
@@ -29,23 +28,23 @@ export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(
     const wordIndex = words.length - 1;
 
     // ФИО order: Фамилия(0) Имя(1) Отчество(2)
-    const pool = wordIndex === 0 ? surnames : wordIndex === 1 ? names : wordIndex === 2 ? patronymics : [];
+    const pool = wordIndex === 0 ? [...surnames] : wordIndex === 1 ? [...names] : wordIndex === 2 ? [...patronymics] : [];
     const currentWord = (words[wordIndex] ?? '').toLowerCase();
 
-    const filtered = useMemo(() => {
+    const filtered = (() => {
       if (!currentWord) return pool.slice(0, 20);
       return pool.filter((s) => s.toLowerCase().startsWith(currentWord)).slice(0, 20);
-    }, [currentWord, pool]);
+    })();
 
     const isComplete = wordIndex >= 3 || (wordIndex === 2 && currentWord.length > 0 && filtered.length === 0);
 
     // Ghost text: top suggestion's untyped suffix
-    const ghostSuffix = useMemo(() => {
+    const ghostSuffix = (() => {
       if (!open || isComplete || !currentWord || filtered.length === 0) return '';
       const top = filtered[active >= 0 ? active : 0];
       if (!top || !top.toLowerCase().startsWith(currentWord)) return '';
       return top.slice(currentWord.length);
-    }, [open, isComplete, currentWord, filtered, active]);
+    })();
 
     // Build full ФИО line for a suggestion
     const completedWords = words.slice(0, wordIndex);
@@ -60,9 +59,11 @@ export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    useEffect(() => {
-      setActive(-1);
-    }, [currentWord]);
+    const [prevWord, setPrevWord] = useState(currentWord);
+    if (currentWord !== prevWord) {
+      setPrevWord(currentWord);
+      if (active !== -1) setActive(-1);
+    }
 
     const complete = (suggestion: string) => {
       const next = [...completedWords, suggestion].join(' ');

@@ -119,12 +119,14 @@ function LoadableImg({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
 
   /* reset state when src changes */
-  useEffect(() => {
+  if (src !== prevSrc) {
+    setPrevSrc(src);
     setLoaded(false);
     setError(false);
-  }, [src]);
+  }
 
   return (
     <>
@@ -258,7 +260,7 @@ function LightboxModal({
         onTouchEnd={(e) => {
           if (touchX.current === null) return;
           const d = touchX.current - e.changedTouches[0].clientX;
-          if (Math.abs(d) > 50) { d > 0 ? next() : prev(); }
+          if (Math.abs(d) > 50) { if (d > 0) next(); else prev(); }
           touchX.current = null;
         }}
       >
