@@ -12,6 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: 20
+  NEXT_TELEMETRY_DISABLED: 1
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
@@ -46,7 +47,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm dlx turbo run build --filter='./packages/*'
+        run: pnpm turbo run build --filter='./packages/*'
 
       - name: Cache workspace
         uses: actions/cache/save@v4
@@ -84,7 +85,7 @@ jobs:
           key: workspace-${{ github.sha }}
 
       - name: Lint
-        run: pnpm dlx turbo run lint
+        run: pnpm turbo run lint
 
   typecheck:
     needs: setup
@@ -112,7 +113,7 @@ jobs:
           key: workspace-${{ github.sha }}
 
       - name: Typecheck
-        run: pnpm dlx turbo run typecheck
+        run: pnpm turbo run typecheck
 
   test:
     needs: setup
@@ -140,4 +141,4 @@ jobs:
           key: workspace-${{ github.sha }}
 
       - name: Test
-        run: pnpm dlx turbo run test
+        run: pnpm turbo run test
