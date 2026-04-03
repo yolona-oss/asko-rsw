@@ -851,6 +851,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "points_awarded": {
+          "name": "points_awarded",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "certificate",
@@ -1308,7 +1324,14 @@
           "primary": true
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "chk_points_balance_non_negative",
+          "columnName": "points_balance",
+          "definition": "CHECK ((points_balance >= 0))",
+          "expression": "points_balance >= 0"
+        }
+      ],
       "foreignKeys": {},
       "nativeEnums": {
         "broken_part_status": {

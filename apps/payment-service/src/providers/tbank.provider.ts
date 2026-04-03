@@ -4,6 +4,7 @@ import {
     PaymentProvider,
     CreateProviderPaymentInput,
     ProviderPaymentResult,
+    PayoutResult,
     WebhookResult,
     RefundResult,
 } from './payment-provider.interface';
@@ -19,6 +20,11 @@ export class TbankProvider implements PaymentProvider {
         // const terminal = this.appConfig.payment.tbank.terminal;
         // const password = this.appConfig.payment.tbank.password;
         throw new Error('T-Bank provider not yet implemented');
+    }
+
+    async createPayout(_input: CreateProviderPaymentInput): Promise<PayoutResult> {
+        // TODO: integrate with T-Bank Payouts API
+        throw new Error('T-Bank payout not yet implemented');
     }
 
     verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {

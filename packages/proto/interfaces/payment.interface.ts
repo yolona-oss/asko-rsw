@@ -33,6 +33,7 @@ export interface ProcessPayoutRequest {
     amount: number;
     recipientUserId: string;
     currency: string;
+    provider: string;
 }
 
 export interface WebhookRequest {

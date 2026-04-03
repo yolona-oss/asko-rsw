@@ -24,9 +24,15 @@ export interface RefundResult {
     externalId?: string;
 }
 
+export interface PayoutResult {
+    externalId: string;
+    paid: boolean;
+}
+
 export interface PaymentProvider {
     readonly name: string;
     createPayment(input: CreateProviderPaymentInput): Promise<ProviderPaymentResult>;
+    createPayout(input: CreateProviderPaymentInput): Promise<PayoutResult>;
     verifyWebhook(body: any, headers?: Record<string, string>): boolean;
     handleWebhook(body: any, headers?: Record<string, string>): Promise<WebhookResult>;
     refund(externalId: string, amount?: number): Promise<RefundResult>;

@@ -4,6 +4,7 @@ import {
     PaymentProvider,
     CreateProviderPaymentInput,
     ProviderPaymentResult,
+    PayoutResult,
     WebhookResult,
     RefundResult,
 } from './payment-provider.interface';
@@ -19,6 +20,11 @@ export class YookassaProvider implements PaymentProvider {
         // const shopId = this.appConfig.payment.yookassa.shopId;
         // const secret = this.appConfig.payment.yookassa.secret;
         throw new Error('YooKassa provider not yet implemented');
+    }
+
+    async createPayout(_input: CreateProviderPaymentInput): Promise<PayoutResult> {
+        // TODO: integrate with YooKassa Payouts API
+        throw new Error('YooKassa payout not yet implemented');
     }
 
     verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {

@@ -175,11 +175,20 @@ export class CertificateService {
         cert.signedPayload = JSON.stringify(payload, Object.keys(payload).sort());
         cert.signature = this.signatureService.sign(payload);
 
-        // Award dealer points if certificate was created by dealer
-        if (cert.dealer && cert.price) {
+        // Award dealer points if certificate was created by dealer (idempotent)
+        if (cert.dealer && cert.price && !cert.pointsAwarded) {
             const points = Math.round(cert.price * 0.03);
             if (points > 0) {
+                // Pessimistic lock on dealer row to prevent concurrent balance drift
+                await this.em.getConnection().execute(
+                    `select 1 from "dealer_profile" where "id" = ? for update`,
+                    [cert.dealer.id],
+                );
+                // Re-read balance after lock
+                await this.em.refresh(cert.dealer);
+
                 cert.dealer.pointsBalance += points;
+                cert.pointsAwarded = true;
 
                 const transaction = this.em.create(PointsTransaction, {
                     dealer: cert.dealer,

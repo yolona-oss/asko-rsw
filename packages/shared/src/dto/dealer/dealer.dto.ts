@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { PointsTransactionType, WithdrawalStatus } from '../../types/dealer.type';
 
 export class CreateDealerProfileDto {
@@ -48,7 +48,9 @@ export class CreatePointsTransactionDto {
 }
 
 export class RequestPointsWithdrawalDto {
-    @IsNumber()
+    @IsInt()
+    @Min(1)
+    @Max(1000000)
     amount!: number;
 }
 

@@ -152,7 +152,7 @@ export class PaymentService {
         };
     }
 
-    /** Admin-initiated outgoing payment (e.g. dealer withdrawal payout) */
+    /** Admin-initiated outgoing payment (e.g. dealer withdrawal payout) via provider */
     @CreateRequestContext()
     async processPayout(_adminUserId: string, dto: {
         targetType: PaymentTargetType;
@@ -160,35 +160,88 @@ export class PaymentService {
         amount: number;
         recipientUserId: string;
         currency?: string;
+        provider?: string;
     }): Promise<{ paymentId: string; status: PaymentStatus }> {
         this.domainService.validateAmount(dto.amount);
 
-        const paymentRecord = this.em.create(PaymentEntity, {
-            userId: dto.recipientUserId,
-            targetType: dto.targetType,
-            targetId: dto.targetId,
-            amount: dto.amount,
-            currency: dto.currency ?? CurrencyEnum.DEFAULT,
-            status: PaymentStatus.PAID,
-            provider: 'manual',
-            paidAt: new Date(),
-        });
-        await this.domainService.recordTransition(paymentRecord.id, null, PaymentStatus.PAID, 'admin');
-        await this.em.persistAndFlush(paymentRecord);
+        // Lock to prevent double-payout on same target
+        const lockKey = `payment:lock:${dto.targetType}:${dto.targetId}`;
+        const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
+        if (!acquired) throw AppErrors.conflict('Payout already being processed for this target');
 
-        await this.eventService.emit({
-            type: PaymentEventType.WITHDRAW_PAID,
-            paymentId: paymentRecord.id,
-            userId: dto.recipientUserId,
-            targetType: dto.targetType,
-            targetId: dto.targetId,
-            amount: dto.amount,
-            currency: paymentRecord.currency,
-            provider: 'manual',
-            timestamp: new Date(),
-        });
+        try {
+            // Check for existing payout (idempotency)
+            const existing = await this.em.findOne(PaymentEntity, {
+                targetType: dto.targetType,
+                targetId: dto.targetId,
+                status: { $in: [PaymentStatus.PENDING, PaymentStatus.PAID] },
+            });
+            if (existing) {
+                return { paymentId: existing.id, status: existing.status };
+            }
 
-        return { paymentId: paymentRecord.id, status: PaymentStatus.PAID };
+            const providerType = dto.provider ?? this.providerService.getDefaultProvider();
+            const providerImpl = this.providerService.getProvider(providerType);
+            if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
+
+            const paymentRecord = this.em.create(PaymentEntity, {
+                userId: dto.recipientUserId,
+                targetType: dto.targetType,
+                targetId: dto.targetId,
+                amount: dto.amount,
+                currency: dto.currency ?? CurrencyEnum.DEFAULT,
+                status: PaymentStatus.PENDING,
+                provider: providerType,
+            });
+            await this.em.persistAndFlush(paymentRecord);
+
+            await this.eventService.emit({
+                type: PaymentEventType.WITHDRAW_CREATED,
+                paymentId: paymentRecord.id,
+                userId: dto.recipientUserId,
+                targetType: dto.targetType,
+                targetId: dto.targetId,
+                amount: dto.amount,
+                currency: paymentRecord.currency,
+                provider: providerType,
+                timestamp: new Date(),
+            });
+
+            const result = await providerImpl.createPayout({
+                amount: dto.amount,
+                currency: dto.currency ?? CurrencyEnum.DEFAULT,
+                description: `Payout for ${dto.targetType} ${dto.targetId}`,
+            });
+
+            paymentRecord.providerPaymentId = result.externalId;
+
+            if (result.paid) {
+                this.domainService.assertTransition(paymentRecord.status, PaymentStatus.PAID);
+                await this.domainService.recordTransition(paymentRecord.id, PaymentStatus.PENDING, PaymentStatus.PAID, 'admin');
+                paymentRecord.status = PaymentStatus.PAID;
+                paymentRecord.paidAt = new Date();
+                await this.em.flush();
+
+                await this.eventService.emit({
+                    type: PaymentEventType.WITHDRAW_PAID,
+                    paymentId: paymentRecord.id,
+                    userId: dto.recipientUserId,
+                    targetType: dto.targetType,
+                    targetId: dto.targetId,
+                    amount: dto.amount,
+                    currency: paymentRecord.currency,
+                    provider: providerType,
+                    timestamp: new Date(),
+                });
+
+                return { paymentId: paymentRecord.id, status: PaymentStatus.PAID };
+            }
+
+            await this.em.flush();
+            return { paymentId: paymentRecord.id, status: PaymentStatus.PENDING };
+        } finally {
+            await this.lockService.releaseLock(lockKey);
+        }
     }
 
     /** Create payment via selected provider (direct flow) */
@@ -296,6 +349,8 @@ export class PaymentService {
         const payment = await this.em.findOne(PaymentEntity, { providerPaymentId: result.externalId });
         if (!payment) return { ok: true };
 
+        const isWithdrawal = payment.targetType === PaymentTargetType.DEALER_WITHDRAWAL;
+
         if (result.paid && payment.status === PaymentStatus.PENDING) {
             this.domainService.assertTransition(payment.status, PaymentStatus.PAID);
             await this.domainService.recordTransition(payment.id, PaymentStatus.PENDING, PaymentStatus.PAID, `webhook:${providerType}`);
@@ -303,7 +358,7 @@ export class PaymentService {
             payment.paidAt = new Date();
 
             await this.eventService.emit({
-                type: PaymentEventType.PAYMENT_PAID,
+                type: isWithdrawal ? PaymentEventType.WITHDRAW_PAID : PaymentEventType.PAYMENT_PAID,
                 paymentId: payment.id,
                 userId: payment.userId,
                 targetType: payment.targetType,
@@ -355,8 +410,8 @@ export class PaymentService {
         const newStatus = isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED;
 
         this.domainService.assertTransition(payment.status, newStatus);
-        await this.domainService.recordTransition(payment.id, payment.status, newStatus, 'system', `Refund ${refundAmount}`);
 
+        // Call provider BEFORE updating DB to avoid double-refund on retry
         if (payment.provider && payment.providerPaymentId) {
             const provider = this.providerService.getProvider(payment.provider);
             if (provider) {
@@ -364,6 +419,8 @@ export class PaymentService {
             }
         }
 
+        // Only update DB after provider confirms
+        await this.domainService.recordTransition(payment.id, payment.status, newStatus, 'system', `Refund ${refundAmount}`);
         payment.status = newStatus;
         payment.refundedAmount += refundAmount;
         await this.em.flush();

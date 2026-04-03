@@ -92,6 +92,7 @@ export class PaymentClientService implements OnModuleInit {
         amount: number;
         recipientUserId: string;
         currency?: string;
+        provider?: string;
     }): Promise<PayoutResponse> {
         return grpcCall(this.paymentService.processPayout({
             adminUserId,
@@ -100,6 +101,7 @@ export class PaymentClientService implements OnModuleInit {
             amount: dto.amount,
             recipientUserId: dto.recipientUserId,
             currency: dto.currency ?? '',
+            provider: dto.provider ?? '',
         }));
     }
 

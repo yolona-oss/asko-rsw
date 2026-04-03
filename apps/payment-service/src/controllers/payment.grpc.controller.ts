@@ -116,6 +116,7 @@ export class PaymentGrpcController {
                 amount: data.amount,
                 recipientUserId: data.recipientUserId,
                 currency: data.currency || undefined,
+                provider: data.provider || undefined,
             });
         } catch (e) { throw toGrpcError(e); }
     }

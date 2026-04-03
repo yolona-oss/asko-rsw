@@ -4,6 +4,7 @@ import {
     PaymentProvider,
     CreateProviderPaymentInput,
     ProviderPaymentResult,
+    PayoutResult,
     WebhookResult,
     RefundResult,
 } from './payment-provider.interface';
@@ -19,6 +20,11 @@ export class DummyProvider implements PaymentProvider {
             externalId: `dummy_${uuid()}`,
             paid: true,
         };
+    }
+
+    async createPayout(_input: CreateProviderPaymentInput): Promise<PayoutResult> {
+        await new Promise((r) => setTimeout(r, 200));
+        return { externalId: `dummy_payout_${uuid()}`, paid: true };
     }
 
     verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {

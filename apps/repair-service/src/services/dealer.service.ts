@@ -184,8 +184,19 @@ export class DealerService {
     /** Dealer requests points withdrawal */
     @CreateRequestContext()
     async requestWithdrawal(dealerUserId: string, dto: RequestPointsWithdrawalDto): Promise<PointsWithdrawal> {
+        if (!Number.isInteger(dto.amount) || dto.amount < 1) {
+            throw AppErrors.invalidData('Withdrawal amount must be a positive integer');
+        }
+
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+
+        // Pessimistic lock on dealer row to prevent concurrent withdrawal race
+        await this.em.getConnection().execute(
+            `select 1 from "dealer_profile" where "id" = ? for update`,
+            [dealer.id],
+        );
+        await this.em.refresh(dealer);
 
         if (dealer.pointsBalance < dto.amount) {
             throw AppErrors.badRequest('Insufficient points balance');
@@ -212,7 +223,7 @@ export class DealerService {
         return withdrawal;
     }
 
-    /** Admin processes withdrawal */
+    /** Admin processes withdrawal (only PENDING → APPROVED or PENDING → REJECTED) */
     @CreateRequestContext()
     async processWithdrawal(withdrawalId: string, adminUserId: string, dto: ProcessWithdrawalDto): Promise<PointsWithdrawal> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
@@ -221,13 +232,24 @@ export class DealerService {
             throw AppErrors.badRequest('Withdrawal already processed');
         }
 
+        // Only allow valid transitions from PENDING
+        if (dto.status !== WithdrawalStatus.APPROVED && dto.status !== WithdrawalStatus.REJECTED) {
+            throw AppErrors.badRequest('Can only approve or reject a pending withdrawal');
+        }
+
         withdrawal.status = dto.status;
         withdrawal.processedAt = new Date();
         withdrawal.processedByUserId = adminUserId;
 
-        // If rejected, refund points
+        // If rejected, refund points with pessimistic lock
         if (dto.status === WithdrawalStatus.REJECTED) {
             const dealer = withdrawal.dealer;
+            await this.em.getConnection().execute(
+                `select 1 from "dealer_profile" where "id" = ? for update`,
+                [dealer.id],
+            );
+            await this.em.refresh(dealer);
+
             dealer.pointsBalance += withdrawal.amount;
 
             const transaction = this.em.create(PointsTransaction, {
@@ -248,19 +270,53 @@ export class DealerService {
     async getWithdrawalForPayout(withdrawalId: string): Promise<{ amount: number; dealerUserId: string }> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
         if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
+        if (withdrawal.status !== WithdrawalStatus.APPROVED) {
+            throw AppErrors.badRequest('Withdrawal must be approved before payout');
+        }
         return {
             amount: withdrawal.amount,
             dealerUserId: withdrawal.dealer.userId,
         };
     }
 
-    /** Called by PaymentService handler when payout is processed */
+    /** Called when payout is confirmed — only APPROVED → COMPLETED */
     @CreateRequestContext()
     async completeWithdrawal(withdrawalId: string): Promise<void> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId });
         if (!withdrawal) return;
+        if (withdrawal.status === WithdrawalStatus.COMPLETED) return; // idempotent
+        if (withdrawal.status !== WithdrawalStatus.APPROVED) return;
         withdrawal.status = WithdrawalStatus.COMPLETED;
         withdrawal.processedAt = new Date();
+        await this.em.flush();
+    }
+
+    /** Called when payout fails — refund points, APPROVED → REJECTED */
+    @CreateRequestContext()
+    async failWithdrawal(withdrawalId: string): Promise<void> {
+        const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
+        if (!withdrawal) return;
+        if (withdrawal.status !== WithdrawalStatus.APPROVED) return;
+
+        withdrawal.status = WithdrawalStatus.REJECTED;
+        withdrawal.processedAt = new Date();
+
+        const dealer = withdrawal.dealer;
+        await this.em.getConnection().execute(
+            `select 1 from "dealer_profile" where "id" = ? for update`,
+            [dealer.id],
+        );
+        await this.em.refresh(dealer);
+
+        dealer.pointsBalance += withdrawal.amount;
+
+        const transaction = this.em.create(PointsTransaction, {
+            dealer,
+            type: PointsTransactionType.ADJUSTMENT,
+            amount: withdrawal.amount,
+            reason: 'Payout failed - points refunded',
+        });
+        await this.em.persist(transaction);
         await this.em.flush();
     }
 
