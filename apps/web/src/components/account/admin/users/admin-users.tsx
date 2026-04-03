@@ -1,21 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
   DataFilter,
   DataToolbar,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { FilterDefinition, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterDefinition, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -120,6 +115,81 @@ export function AdminUsers() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const columns: DataGridColumn<IAuthUser>[] = useMemo(() => [
+    {
+      key: 'checkbox',
+      header: '',
+      width: 32,
+      render: (user) => (
+        <Checkbox checked={selected.has(user.id)} onChange={() => toggleSelect(user.id)} />
+      ),
+    },
+    {
+      key: 'user',
+      header: 'Пользователь',
+      render: (user) => {
+        const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
+        return (
+          <div className="flex items-center gap-3">
+            <UserAvatar />
+            <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'phone',
+      header: 'Телефон',
+      width: 160,
+      mobileLabel: 'Телефон:',
+      render: (user) => <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '-'}</p>,
+    },
+    {
+      key: 'role',
+      header: 'Роль',
+      width: 90,
+      mobileLabel: 'Роль:',
+      render: (user) => (
+        <p className="text-sm text-[#323232] tracking-[-0.14px]">
+          {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
+        </p>
+      ),
+    },
+    {
+      key: 'district',
+      header: 'Район',
+      width: 150,
+      mobileLabel: 'Район:',
+      render: () => <p className="text-sm text-[#323232] tracking-[-0.14px]">-</p>,
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 100,
+      mobileLabel: 'Статус:',
+      render: (user) => {
+        const isActive = (user as any).isActive !== false;
+        return <StatusBadge isActive={isActive} />;
+      },
+    },
+    {
+      key: 'actions',
+      header: 'Действия',
+      width: 90,
+      render: (user) => {
+        const isLoading = actionLoading === user.id;
+        return (
+          <SettingsDropdown
+            user={user}
+            onToggleActive={handleToggleActive}
+            onDelete={handleDelete}
+            loading={isLoading}
+          />
+        );
+      },
+    },
+  ], [selected, actionLoading]);
+
   return (
     <PageContainer>
       <PageHeader>Выдача доступов</PageHeader>
@@ -151,94 +221,19 @@ export function AdminUsers() {
           ))}
         </div>
       ) : view === 'table' ? (
-        <DataTable>
-          {/* Header */}
-          <DataTableHeader className="lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px]">
-            <span />
-            <span>Пользователь</span>
-            <span>Телефон</span>
-            <span>Роль</span>
-            <span>Район</span>
-            <span>Статус</span>
-            <span>Действия</span>
-          </DataTableHeader>
-
-          {/* Rows */}
-          {users.length === 0 ? (
-            <DataTableEmpty>Нет пользователей</DataTableEmpty>
-          ) : (
-            users.map((user) => {
-              const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
-              const isActive = (user as any).isActive !== false;
-              const isLoading = actionLoading === user.id;
-              const isSelected = selected.has(user.id);
-
-              return (
-                <DataTableRow
-                  key={user.id}
-                  className={`lg:grid lg:grid-cols-[32px_1fr_160px_90px_150px_100px_90px] ${
-                    !isActive ? 'opacity-50' : ''
-                  }`}
-                >
-                  {/* Checkbox */}
-                  <DataTableCell className="hidden lg:flex items-center">
-                    <Checkbox checked={isSelected} onChange={() => toggleSelect(user.id)} />
-                  </DataTableCell>
-
-                  {/* User */}
-                  <DataTableCell>
-                    <div className="flex items-center gap-3">
-                      <UserAvatar />
-                      <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
-                    </div>
-                  </DataTableCell>
-
-                  {/* Phone */}
-                  <DataTableCell mobileLabel="Телефон:">
-                    <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '-'}</p>
-                  </DataTableCell>
-
-                  {/* Role */}
-                  <DataTableCell mobileLabel="Роль:">
-                    <p className="text-sm text-[#323232] tracking-[-0.14px]">
-                      {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
-                    </p>
-                  </DataTableCell>
-
-                  {/* Район */}
-                  <DataTableCell mobileLabel="Район:">
-                    <p className="text-sm text-[#323232] tracking-[-0.14px]">-</p>
-                  </DataTableCell>
-
-                  {/* Status */}
-                  <DataTableCell mobileLabel="Статус:">
-                    <StatusBadge isActive={isActive} />
-                  </DataTableCell>
-
-                  {/* Actions */}
-                  <DataTableCell>
-                    <SettingsDropdown
-                      user={user}
-                      onToggleActive={handleToggleActive}
-                      onDelete={handleDelete}
-                      loading={isLoading}
-                    />
-                  </DataTableCell>
-                </DataTableRow>
-              );
-            })
-          )}
-
-          {/* Footer */}
-          {users.length > 0 && (
-            <DataTableFooter>
-              <div className="flex items-center justify-between w-full">
-                <span>Показано {users.length} из {total}</span>
-                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-              </div>
-            </DataTableFooter>
-          )}
-        </DataTable>
+        <DataGrid
+          columns={columns}
+          data={users}
+          keyExtractor={(user) => user.id}
+          emptyContent="Нет пользователей"
+          rowClassName={(user) => (user as any).isActive === false ? 'opacity-50' : undefined}
+          footer={users.length > 0 ? (
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {users.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          ) : undefined}
+        />
       ) : (
         /* Card view */
         users.length === 0 ? (

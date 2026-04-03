@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useRef, useEffect, useState, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 
 // ─── Grid columns ───────────────────────────────────────────────────────────
@@ -121,15 +123,39 @@ export function DataCard({
 
 export interface DataCardFieldProps {
   label: string;
+  /** Custom tooltip text. If omitted, auto-extracted from content */
+  tooltip?: string;
+  /** If true, content wraps instead of truncating */
+  multiline?: boolean;
   className?: string;
   children: ReactNode;
 }
 
-export function DataCardField({ label, className, children }: DataCardFieldProps) {
+export function DataCardField({ label, tooltip, multiline, className, children }: DataCardFieldProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [autoTitle, setAutoTitle] = useState('');
+
+  useEffect(() => {
+    if (tooltip != null) return;
+    const el = ref.current;
+    if (!el) return;
+    const text = el.textContent ?? '';
+    setAutoTitle((prev) => (prev !== text ? text : prev));
+  });
+
   return (
     <div className={className}>
       <p className="text-xs text-text-sub">{label}</p>
-      <div className="text-sm text-text-main">{children}</div>
+      <div
+        ref={ref}
+        title={tooltip ?? autoTitle}
+        className={cn(
+          'text-sm text-text-main',
+          multiline ? 'break-words' : 'truncate',
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

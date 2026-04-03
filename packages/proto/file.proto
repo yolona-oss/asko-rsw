@@ -25,6 +25,9 @@ service FileService {
     rpc FindAttachedImages(FindAttachedRequest) returns (ImageListResponse);
     rpc CountAttached(CountAttachedRequest) returns (CountResponse);
 
+    // Cleanup
+    rpc DeleteByOwner(FindAttachedRequest) returns (CountResponse);
+
     // Reorder operations
     rpc ReorderImages(ReorderImagesRequest) returns (EmptyResponse);
     rpc ReorderByIds(ReorderByIdsRequest) returns (ImageListResponse);

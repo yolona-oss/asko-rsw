@@ -2,28 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
+  Badge,
   Button,
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataTable,
-  DataTableHeader,
-  DataTableFooter,
+  DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { STATUS_FILTER, type StatusFilter } from './constants';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate, STATUS_FILTER, type StatusFilter } from './constants';
 import type { RepairRequest } from './types';
 import { RequestCard } from './request-card';
-import { RequestTableRow } from './request-table-row';
 
 const PAGE_SIZE = 20;
 
 export function UserRequests() {
+  const router = useRouter();
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,6 +56,42 @@ export function UserRequests() {
   }, [fetchRequests]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const requestColumns: DataGridColumn<RepairRequest>[] = [
+    {
+      key: 'device',
+      header: 'Устройство',
+      width: 200,
+      mobileLabel: 'Устройство:',
+      render: (req) => (
+        <p className="text-sm font-medium text-text-main">{req.userDevice?.device?.name ?? 'Устройство'}</p>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Описание',
+      mobileLabel: 'Описание:',
+      render: (req) => <p className="text-sm text-text-main truncate">{req.description}</p>,
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 160,
+      mobileLabel: 'Статус:',
+      render: (req) => (
+        <Badge variant={STATUS_BADGE_VARIANT[req.status] ?? 'neutral'} className="text-xs">
+          {STATUS_LABELS[req.status] ?? req.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Дата',
+      width: 120,
+      mobileLabel: 'Дата:',
+      render: (req) => <p className="text-sm text-text-main">{formatDate(req.createdAt)}</p>,
+    },
+  ];
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
@@ -111,23 +147,19 @@ export function UserRequests() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       ) : (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[200px] flex-shrink-0">Устройство</div>
-            <div className="flex-1 px-4">Описание</div>
-            <div className="w-[160px] px-4">Статус</div>
-            <div className="w-[120px] px-4">Дата</div>
-          </DataTableHeader>
-          {requests.map((req) => (
-            <RequestTableRow key={req.id} request={req} />
-          ))}
-          <DataTableFooter>
+        <DataGrid<RepairRequest>
+          columns={requestColumns}
+          data={requests}
+          keyExtractor={(req) => req.id}
+          onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
+          rowClassName={() => 'hover:bg-gray-50 transition-colors'}
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {requests.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       )}
     </PageContainer>
   );

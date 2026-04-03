@@ -3,13 +3,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
+  Badge,
   Card,
   Select,
   FormField,
-  DataTable,
-  DataTableHeader,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataSearch,
   DataFilter,
   ViewSwitcher,
@@ -17,15 +15,15 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';
-import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, isExpired } from './constants';
-import { InvitationRow } from './invitation-row';
+import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, formatDate, isExpired } from './constants';
+import { CopyButton } from './copy-button';
 import { InvitationCard } from './invitation-card';
 
 const PAGE_SIZE = 20;
@@ -120,6 +118,91 @@ export function AdminInvitations() {
   useEffect(() => { setPage(1); }, [search, filterValues.status]);
 
   const totalPages = Math.ceil(filteredInvitations.length / PAGE_SIZE);
+
+  const columns: DataGridColumn<IInvitationLink>[] = useMemo(() => [
+    {
+      key: 'role',
+      header: 'Роль',
+      width: 160,
+      mobileLabel: 'Роль:',
+      render: (inv) => (
+        <p className="text-sm font-medium text-text-main">
+          {ROLE_LABELS[inv.role] ?? inv.role}
+        </p>
+      ),
+    },
+    {
+      key: 'token',
+      header: 'Токен',
+      mobileLabel: 'Токен:',
+      render: (inv) => {
+        const link = newLinks[inv.id];
+        return (
+          <div>
+            <p className="text-sm font-mono text-text-sub truncate max-w-[140px]">
+              {inv.token.slice(0, 14)}...
+            </p>
+            {link && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1 p-1.5 bg-green-50 rounded">
+                <p className="text-xs font-mono text-text-main break-all flex-1 min-w-0">{link}</p>
+                <CopyButton text={link} />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'expiresAt',
+      header: 'Истекает',
+      width: 160,
+      mobileLabel: 'Истекает:',
+      render: (inv) => {
+        const expired = isExpired(inv.expiresAt);
+        return <p className={`text-sm ${expired ? 'text-brand-red' : 'text-text-main'}`}>{formatDate(inv.expiresAt)}</p>;
+      },
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 130,
+      mobileLabel: 'Статус:',
+      render: (inv) => {
+        const expired = isExpired(inv.expiresAt);
+        return inv.used ? (
+          <Badge variant="neutral">Использовано</Badge>
+        ) : expired ? (
+          <Badge variant="error">Истёк</Badge>
+        ) : (
+          <Badge variant="success">Активно</Badge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 180,
+      render: (inv) => {
+        const expired = isExpired(inv.expiresAt);
+        const inactive = inv.used || expired;
+        const resolvedLink = newLinks[inv.id] ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${inv.token}`;
+        return (
+          <div className="flex gap-2">
+            {!inactive && <CopyButton text={resolvedLink} />}
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={deleteLoading === inv.id}
+              onClick={() => handleDelete(inv.id)}
+            >
+              {deleteLoading === inv.id ? '...' : 'Удалить'}
+            </Button>
+          </div>
+        );
+      },
+    },
+  ], [newLinks, deleteLoading]);
+
   const paginatedInvitations = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return filteredInvitations.slice(start, start + PAGE_SIZE);
@@ -187,36 +270,19 @@ export function AdminInvitations() {
           ))}
         </div>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[160px] flex-shrink-0">Роль</div>
-            <div className="flex-1 px-4">Токен</div>
-            <div className="w-[160px] px-4">Истекает</div>
-            <div className="w-[130px] px-4">Статус</div>
-            <div className="w-[180px] flex-shrink-0" />
-          </DataTableHeader>
-
-          {paginatedInvitations.length === 0 ? (
-            <DataTableEmpty>Нет приглашений</DataTableEmpty>
-          ) : (
-            paginatedInvitations.map((inv) => (
-              <InvitationRow
-                key={inv.id}
-                invitation={inv}
-                link={newLinks[inv.id]}
-                onDelete={handleDelete}
-                deleteLoading={deleteLoading}
-              />
-            ))
-          )}
-
-          <DataTableFooter>
+        <DataGrid
+          columns={columns}
+          data={paginatedInvitations}
+          keyExtractor={(inv) => inv.id}
+          emptyContent="Нет приглашений"
+          rowClassName={(inv) => (inv.used || isExpired(inv.expiresAt)) ? 'opacity-50' : undefined}
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {paginatedInvitations.length} из {filteredInvitations.length}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : (
         <>
           {paginatedInvitations.length === 0 ? (

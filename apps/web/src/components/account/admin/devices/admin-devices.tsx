@@ -5,23 +5,19 @@ import Link from 'next/link';
 import {
   Button,
   Modal,
-  DataTable,
-  DataTableHeader,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataFilter,
   DataToolbar,
   Pagination,
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
 import type { Device, ImportStatus } from './types';
-import { DeviceRow } from './device-row';
 import { DeviceCard } from './device-card';
 
 const PAGE_SIZE = 20;
@@ -99,6 +95,59 @@ export function AdminDevices() {
   };
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const columns: DataGridColumn<Device>[] = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Название',
+      width: 140,
+      mobileLabel: 'Название:',
+      render: (device) => <p className="text-sm font-medium text-text-main">{device.name}</p>,
+    },
+    {
+      key: 'type',
+      header: 'Тип',
+      mobileLabel: 'Тип:',
+      render: (device) => <p className="text-sm text-text-main">{categoryLabels[device.type ?? ''] ?? device.type}</p>,
+    },
+    {
+      key: 'model',
+      header: 'Модель',
+      mobileLabel: 'Модель:',
+      render: (device) => <p className="text-sm text-text-main">{device.model}</p>,
+    },
+    {
+      key: 'brand',
+      header: 'Бренд',
+      width: 80,
+      mobileLabel: 'Бренд:',
+      render: (device) => <p className="text-sm text-text-main">{device.brand}</p>,
+    },
+    {
+      key: 'isFeatured',
+      header: 'Главная',
+      width: 96,
+      mobileLabel: 'Главная:',
+      render: (device) => device.isFeatured ? (
+        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-sm">Да</span>
+      ) : (
+        <span className="inline-block px-2 py-0.5 text-xs text-text-sub">Нет</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 200,
+      render: (device) => (
+        <div className="flex gap-2">
+          <Link href={`/account/devices/${device.id}`}>
+            <Button variant="secondary" size="sm">Изменить</Button>
+          </Link>
+          <Button variant="danger" size="sm" onClick={() => handleDelete(device.id)}>Удалить</Button>
+        </div>
+      ),
+    },
+  ], [categoryLabels]);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -294,31 +343,18 @@ export function AdminDevices() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-35 flex-shrink-0">Название</div>
-            <div className="flex-1 px-4">Тип</div>
-            <div className="flex-1 px-4">Модель</div>
-            <div className="w-20 px-4">Бренд</div>
-            <div className="w-24 px-4 text-center">Главная</div>
-            <div className="w-[200px] flex-shrink-0" />
-          </DataTableHeader>
-
-          {devices.length === 0 ? (
-            <DataTableEmpty>Нет товаров</DataTableEmpty>
-          ) : (
-            devices.map((device) => (
-              <DeviceRow key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
-            ))
-          )}
-
-          <DataTableFooter>
+        <DataGrid
+          columns={columns}
+          data={devices}
+          keyExtractor={(device) => device.id}
+          emptyContent="Нет товаров"
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {devices.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : (
         <>
           {devices.length === 0 ? (

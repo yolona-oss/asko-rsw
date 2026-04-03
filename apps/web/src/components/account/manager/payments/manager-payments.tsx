@@ -7,15 +7,10 @@ import {
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { FilterValues, DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
@@ -143,6 +138,78 @@ export function ManagerPayments() {
     setPage(1);
   };
 
+  const paymentColumns: DataGridColumn<PaymentRecord>[] = useMemo(() => [
+    {
+      key: 'id',
+      header: 'ID',
+      width: 80,
+      mobileLabel: 'ID:',
+      render: (p) => <span className="font-medium text-text-main text-sm">#{p.id.slice(0, 4)}</span>,
+    },
+    {
+      key: 'payer',
+      header: 'Плательщик',
+      mobileLabel: 'Плательщик:',
+      render: (p) => <span className="text-sm text-text-main">{payerName(p.user)}</span>,
+    },
+    {
+      key: 'amount',
+      header: 'Сумма',
+      width: 110,
+      mobileLabel: 'Сумма:',
+      render: (p) => (
+        <Badge
+          variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+          className="text-xs"
+        >
+          +{formatAmount(p.amount)} ₽
+        </Badge>
+      ),
+    },
+    {
+      key: 'provider',
+      header: 'Способ',
+      width: 100,
+      mobileLabel: 'Способ:',
+      render: (p) => <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 110,
+      mobileLabel: 'Статус:',
+      render: (p) => (
+        <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
+          {STATUS_LABELS[p.status] ?? p.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Дата платежа',
+      width: 140,
+      mobileLabel: 'Дата:',
+      render: (p) => <span className="text-sm text-text-main">{formatDateFull(p.paidAt ?? p.createdAt)}</span>,
+    },
+    {
+      key: 'actions',
+      header: 'Действия',
+      width: 100,
+      render: (p) => (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setSelectedPayment(p); }}
+          className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1 text-sm"
+        >
+          Подробнее
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      ),
+    },
+  ], []);
+
   return (
     <PageContainer>
       <PageHeader>Платежи</PageHeader>
@@ -188,68 +255,18 @@ export function ManagerPayments() {
       {loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[80px] flex-shrink-0">ID</div>
-            <div className="flex-1 px-4">Плательщик</div>
-            <div className="w-[110px] px-4">Сумма</div>
-            <div className="w-[100px] px-4">Способ</div>
-            <div className="w-[110px] px-4">Статус</div>
-            <div className="w-[140px] px-4">Дата платежа</div>
-            <div className="w-[100px] px-4">Действия</div>
-          </DataTableHeader>
-          {payments.length === 0 ? (
-            <DataTableEmpty>Платежи не найдены</DataTableEmpty>
-          ) : (
-            payments.map((p) => (
-              <DataTableRow key={p.id} className="hover:bg-gray-50 transition-colors">
-                <DataTableCell mobileLabel="ID:" className="lg:w-[80px] lg:flex-shrink-0">
-                  <span className="font-medium text-text-main text-sm">#{p.id.slice(0, 4)}</span>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Плательщик:" className="lg:flex-1 lg:px-4">
-                  <span className="text-sm text-text-main">{payerName(p.user)}</span>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Сумма:" className="lg:w-[110px] lg:px-4">
-                  <Badge
-                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                    className="text-xs"
-                  >
-                    +{formatAmount(p.amount)} ₽
-                  </Badge>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Способ:" className="lg:w-[100px] lg:px-4">
-                  <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}</span>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Статус:" className="lg:w-[110px] lg:px-4">
-                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
-                    {STATUS_LABELS[p.status] ?? p.status}
-                  </Badge>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">
-                  <span className="text-sm text-text-main">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
-                </DataTableCell>
-                <DataTableCell className="lg:w-[100px] lg:px-4">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPayment(p)}
-                    className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1 text-sm"
-                  >
-                    Подробнее
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </button>
-                </DataTableCell>
-              </DataTableRow>
-            ))
-          )}
-          <DataTableFooter>
+        <DataGrid<PaymentRecord>
+          columns={paymentColumns}
+          data={payments}
+          keyExtractor={(p) => p.id}
+          emptyContent="Платежи не найдены"
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : payments.length === 0 ? (
         <p className="text-sm text-text-sub">Платежи не найдены</p>
       ) : (

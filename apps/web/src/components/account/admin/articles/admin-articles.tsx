@@ -5,20 +5,17 @@ import Link from 'next/link';
 import {
   Button,
   Modal,
-  DataTable,
-  DataTableHeader,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { IArticle } from '@/lib/api/types';
-import { ArticleRow } from './article-row';
 import { ArticleCard } from './article-card';
 
 const PAGE_SIZE = 20;
@@ -86,6 +83,51 @@ export function AdminArticles() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const columns: DataGridColumn<IArticle>[] = useMemo(() => [
+    {
+      key: 'title',
+      header: 'Название',
+      mobileLabel: 'Название:',
+      render: (article) => <p className="text-sm font-medium text-text-main">{article.title}</p>,
+    },
+    {
+      key: 'slug',
+      header: 'Slug',
+      width: 192,
+      mobileLabel: 'Slug:',
+      render: (article) => <p className="text-sm text-text-sub">{article.slug}</p>,
+    },
+    {
+      key: 'tags',
+      header: 'Теги',
+      width: 192,
+      multiline: true,
+      mobileLabel: 'Теги:',
+      render: (article) => (
+        <div className="flex flex-wrap gap-1">
+          {article.tags?.map((tag) => (
+            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-100 text-text-sub rounded-sm">
+              {tag}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 200,
+      render: (article) => (
+        <div className="flex gap-2">
+          <Link href={`/account/articles/${article.id}`}>
+            <Button variant="secondary" size="sm">Изменить</Button>
+          </Link>
+          <Button variant="danger" size="sm" onClick={() => handleDelete(article.id)}>Удалить</Button>
+        </div>
+      ),
+    },
+  ], []);
+
   return (
     <PageContainer>
       <PageHeader>Статьи</PageHeader>
@@ -146,33 +188,18 @@ export function AdminArticles() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="flex-1">Название</div>
-            <div className="w-48 px-4">Slug</div>
-            <div className="w-48 px-4">Теги</div>
-            <div className="w-[200px] flex-shrink-0" />
-          </DataTableHeader>
-
-          {filteredArticles.length === 0 ? (
-            <DataTableEmpty>Нет статей</DataTableEmpty>
-          ) : (
-            filteredArticles.map((article) => (
-              <ArticleRow
-                key={article.id}
-                article={article}
-                onDelete={handleDelete}
-              />
-            ))
-          )}
-
-          <DataTableFooter>
+        <DataGrid
+          columns={columns}
+          data={filteredArticles}
+          keyExtractor={(article) => article.id}
+          emptyContent="Нет статей"
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredArticles.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : (
         <>
           {filteredArticles.length === 0 ? (

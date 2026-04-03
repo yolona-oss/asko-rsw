@@ -1,27 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
-  DataTable,
-  DataTableHeader,
-  DataTableFooter,
+  DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { FilterValues, DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';
 import type { TabKey, RepairRequest, ConversationInfo } from './types';
-import { PAGE_SIZE, TAB_FILTER } from './constants';
+import { PAGE_SIZE, TAB_FILTER, STATUS_MAP, STATUS_COLORS, STATUS_LABELS, formatDate } from './constants';
 import { RequestCardItem } from './request-card-item';
-import { RequestTableRow } from './request-table-row';
+import { ChatStatusBadges } from './chat-status-badges';
 
 export function ManagerRequests() {
+  const router = useRouter();
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
@@ -83,6 +83,63 @@ export function ManagerRequests() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const requestColumns: DataGridColumn<RepairRequest>[] = useMemo(() => [
+    {
+      key: 'client',
+      header: 'Клиент',
+      width: 180,
+      mobileLabel: 'Клиент:',
+      render: (req) => {
+        const userName = [req.user?.lastName, req.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
+        return <p className="text-sm font-medium text-text-main">{userName}</p>;
+      },
+    },
+    {
+      key: 'device',
+      header: 'Устройство',
+      mobileLabel: 'Устройство:',
+      render: (req) => {
+        const deviceName = req.userDevice?.device?.name || req.description;
+        return <p className="text-sm text-text-main truncate">{deviceName}</p>;
+      },
+    },
+    {
+      key: 'city',
+      header: 'Город',
+      width: 120,
+      mobileLabel: 'Город:',
+      render: (req) => <p className="text-sm text-text-main">{req.address?.city ?? '-'}</p>,
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 160,
+      mobileLabel: 'Статус:',
+      render: (req) => {
+        const tabKey = STATUS_MAP[req.status] ?? 'pending';
+        return (
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}>
+            {STATUS_LABELS[req.status] ?? req.status}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'chat',
+      header: 'Чат',
+      width: 140,
+      mobileLabel: 'Чат:',
+      render: (req) => req.conversationId ? <ChatStatusBadges convInfo={convInfoMap[req.id]} currentUserId={currentUserId} /> : null,
+    },
+    {
+      key: 'date',
+      header: 'Дата',
+      width: 140,
+      mobileLabel: 'Дата:',
+      render: (req) => <p className="text-sm text-text-main">{formatDate(req.createdAt)}</p>,
+    },
+  ], [convInfoMap, currentUserId]);
+
   return (
     <PageContainer>
       <PageHeader>Заявки на обслуживание</PageHeader>
@@ -116,30 +173,19 @@ export function ManagerRequests() {
             ))}
           </div>
         ) : (
-          <DataTable>
-            <DataTableHeader>
-              <div className="w-[180px] flex-shrink-0">Клиент</div>
-              <div className="flex-1 px-4">Устройство</div>
-              <div className="w-[120px] px-4">Город</div>
-              <div className="w-[160px] px-4">Статус</div>
-              <div className="w-[140px] px-4">Чат</div>
-              <div className="w-[140px] px-4">Дата</div>
-            </DataTableHeader>
-            {requests.map((req) => (
-              <RequestTableRow
-                key={req.id}
-                request={req}
-                convInfo={convInfoMap[req.id]}
-                currentUserId={currentUserId}
-              />
-            ))}
-            <DataTableFooter>
+          <DataGrid<RepairRequest>
+            columns={requestColumns}
+            data={requests}
+            keyExtractor={(req) => req.id}
+            emptyContent="Нет заявок"
+            onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
+            footer={
               <div className="flex items-center justify-between w-full">
                 <span>Показано {requests.length} из {total}</span>
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
-            </DataTableFooter>
-          </DataTable>
+            }
+          />
         )
       }
 

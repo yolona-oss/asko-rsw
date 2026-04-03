@@ -1,18 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Modal,
   Input,
   FormField,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
 } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceCategoryApi } from '@/lib/api/device-category';
@@ -100,6 +96,48 @@ export function AdminDeviceCategories() {
 
   const update = (partial: Partial<FormData>) => setForm((prev) => ({ ...prev, ...partial }));
 
+  const columns: DataGridColumn<DeviceCategoryRecord>[] = useMemo(() => [
+    {
+      key: 'order',
+      header: '#',
+      width: 64,
+      render: (cat) => <span className="text-sm text-text-sub">{cat.order}</span>,
+    },
+    {
+      key: 'name',
+      header: 'Slug',
+      mobileLabel: 'Slug:',
+      render: (cat) => <code className="text-sm text-text-main font-mono">{cat.name}</code>,
+    },
+    {
+      key: 'label',
+      header: 'Название',
+      mobileLabel: 'Название:',
+      render: (cat) => <span className="text-sm text-text-main">{cat.label}</span>,
+    },
+    {
+      key: 'labelPlural',
+      header: 'Мн. число',
+      mobileLabel: 'Мн. число:',
+      render: (cat) => <span className="text-sm text-text-main">{cat.labelPlural}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 160,
+      render: (cat) => (
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => openEdit(cat)}>
+            Изменить
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => handleDelete(cat.id)}>
+            Удалить
+          </Button>
+        </div>
+      ),
+    },
+  ], []);
+
   return (
     <PageContainer>
       <PageHeader>Категории товаров</PageHeader>
@@ -167,48 +205,13 @@ export function AdminDeviceCategories() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-16 flex-shrink-0">#</div>
-            <div className="flex-1 px-4">Slug</div>
-            <div className="flex-1 px-4">Название</div>
-            <div className="flex-1 px-4">Мн. число</div>
-            <div className="w-[160px] flex-shrink-0" />
-          </DataTableHeader>
-
-          {categories.length === 0 ? (
-            <DataTableEmpty>Нет категорий</DataTableEmpty>
-          ) : (
-            categories.map((cat) => (
-              <DataTableRow key={cat.id}>
-                <DataTableCell className="lg:w-16 lg:flex-shrink-0">
-                  <span className="text-sm text-text-sub">{cat.order}</span>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Slug:" className="lg:flex-1 lg:px-4">
-                  <code className="text-sm text-text-main font-mono">{cat.name}</code>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Название:" className="lg:flex-1 lg:px-4">
-                  <span className="text-sm text-text-main">{cat.label}</span>
-                </DataTableCell>
-                <DataTableCell mobileLabel="Мн. число:" className="lg:flex-1 lg:px-4">
-                  <span className="text-sm text-text-main">{cat.labelPlural}</span>
-                </DataTableCell>
-                <DataTableCell className="lg:w-[160px] lg:flex-shrink-0 lg:text-right flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => openEdit(cat)}>
-                    Изменить
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => handleDelete(cat.id)}>
-                    Удалить
-                  </Button>
-                </DataTableCell>
-              </DataTableRow>
-            ))
-          )}
-
-          <DataTableFooter>
-            Всего: {categories.length}
-          </DataTableFooter>
-        </DataTable>
+        <DataGrid
+          columns={columns}
+          data={categories}
+          keyExtractor={(cat) => cat.id}
+          emptyContent="Нет категорий"
+          footer={<span>Всего: {categories.length}</span>}
+        />
       )}
     </PageContainer>
   );

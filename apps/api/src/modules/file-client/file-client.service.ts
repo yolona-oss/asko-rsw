@@ -174,6 +174,10 @@ export class FileClientService implements OnModuleInit {
         return grpcCall(this.fileService.countAttached({ ownerId, ownerType }));
     }
 
+    deleteByOwner(ownerType: ImageTypeEnum, ownerId: string): Promise<CountResponse> {
+        return grpcCall(this.fileService.deleteByOwner({ ownerType, ownerId }));
+    }
+
     // ─── Reorder operations ─────────────────────────────────────────────
 
     reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]): Promise<EmptyFileResponse> {

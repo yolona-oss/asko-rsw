@@ -1,23 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  DataTable,
-  DataTableHeader,
-  DataTableEmpty,
-  DataTableFooter,
+  Button,
+  Badge,
+  DataGrid,
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues } from '@asko/ui';
+import { CertificateStatus } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { certificateApi } from '@/lib/api/certificate';
 import type { ICertificate } from '@/lib/api/types';
-import { STATUS_FILTER } from './constants';
-import { CertificateRow } from './certificate-row';
+import { STATUS_FILTER, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
+import type { CertTab } from './types';
 import { CertificateCard } from './certificate-card';
 
 const PAGE_SIZE = 20;
@@ -62,6 +62,81 @@ export function AdminCertificates() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const columns: DataGridColumn<ICertificate>[] = useMemo(() => [
+    {
+      key: 'certificateNumber',
+      header: 'Номер',
+      width: 140,
+      mobileLabel: 'Номер:',
+      render: (cert) => <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>,
+    },
+    {
+      key: 'user',
+      header: 'Пользователь',
+      mobileLabel: 'Пользователь:',
+      render: (cert) => {
+        const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '-';
+        return <p className="text-sm text-text-main">{userName}</p>;
+      },
+    },
+    {
+      key: 'device',
+      header: 'Устройство',
+      mobileLabel: 'Устройство:',
+      render: (cert) => <p className="text-sm text-text-main">{cert.userDevice?.device?.name ?? '-'}</p>,
+    },
+    {
+      key: 'dealer',
+      header: 'Дилер',
+      width: 150,
+      mobileLabel: 'Дилер:',
+      render: (cert) => {
+        const dealerName = cert.dealer?.companyName
+          || [cert.dealer?.user?.lastName, cert.dealer?.user?.firstName].filter(Boolean).join(' ')
+          || '-';
+        return <p className="text-sm text-text-main">{dealerName}</p>;
+      },
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 130,
+      mobileLabel: 'Статус:',
+      render: (cert) => (
+        <Badge variant={STATUS_BADGE_VARIANT[cert.status as CertTab] ?? 'neutral'}>
+          {STATUS_LABELS[cert.status] ?? cert.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'issuedAt',
+      header: 'Выдан',
+      width: 100,
+      mobileLabel: 'Выдан:',
+      render: (cert) => <p className="text-sm text-text-main">{formatDate(cert.issuedAt)}</p>,
+    },
+    {
+      key: 'expiresAt',
+      header: 'Истекает',
+      width: 100,
+      mobileLabel: 'Истекает:',
+      render: (cert) => <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 120,
+      render: (cert) => {
+        const showRevoke = cert.status === CertificateStatus.ACTIVE;
+        return showRevoke ? (
+          <Button variant="danger" size="sm" onClick={() => handleRevoke(cert.id)}>
+            Отозвать
+          </Button>
+        ) : null;
+      },
+    },
+  ], []);
+
   return (
     <PageContainer>
       <PageHeader>Управление сертификатами</PageHeader>
@@ -80,39 +155,18 @@ export function AdminCertificates() {
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="w-[140px] flex-shrink-0">Номер</div>
-            <div className="flex-1 px-4">Пользователь</div>
-            <div className="flex-1 px-4">Устройство</div>
-            <div className="w-[150px] px-4">Дилер</div>
-            <div className="w-[130px] px-4">Статус</div>
-            <div className="w-[100px] px-4">Выдан</div>
-            <div className="w-[100px] px-4">Истекает</div>
-            <div className="w-[120px] flex-shrink-0" />
-          </DataTableHeader>
-
-          {certificates.length === 0 ? (
-            <DataTableEmpty>
-              Нет сертификатов в этой категории
-            </DataTableEmpty>
-          ) : (
-            certificates.map((cert) => (
-              <CertificateRow
-                key={cert.id}
-                cert={cert}
-                onRevoke={handleRevoke}
-              />
-            ))
-          )}
-
-          <DataTableFooter>
+        <DataGrid
+          columns={columns}
+          data={certificates}
+          keyExtractor={(cert) => cert.id}
+          emptyContent="Нет сертификатов в этой категории"
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {certificates.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : (
         <>
           {certificates.length === 0 ? (

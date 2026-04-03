@@ -3,6 +3,7 @@ import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
+import { ImageCleanupService } from 'services/image-cleanup.service';
 import { AppError } from 'common/error';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
 import { Readable } from 'stream';
@@ -86,6 +87,7 @@ export class FileGrpcController {
     constructor(
         private readonly imageService: ImageService,
         private readonly videoService: VideoService,
+        private readonly cleanupService: ImageCleanupService,
     ) {}
 
     // ─── Upload operations ──────────────────────────────────────────────
@@ -242,6 +244,17 @@ export class FileGrpcController {
             const count = await this.imageService.countAttached(
                 data.ownerId,
                 data.ownerType as ImageTypeEnum,
+            );
+            return { count };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'DeleteByOwner')
+    async deleteByOwner(data: FindAttachedRequest) {
+        try {
+            const count = await this.cleanupService.deleteByOwner(
+                data.ownerType as ImageTypeEnum,
+                data.ownerId,
             );
             return { count };
         } catch (e) { throw toGrpcError(e); }

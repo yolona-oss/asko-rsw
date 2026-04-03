@@ -1,27 +1,25 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { deviceApi } from '@/lib/api/device';
 import {
   Card,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataSearch,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
 import type { IDevice } from '@/lib/api/types';
+import Link from 'next/link';
 
 export function RepairerManuals() {
+  const router = useRouter();
   const [devices, setDevices] = useState<IDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
@@ -47,6 +45,34 @@ export function RepairerManuals() {
     );
   }, [devices, search]);
 
+  const columns: DataGridColumn<IDevice>[] = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Название',
+      mobileLabel: 'Название:',
+      render: (device) => (
+        <p className="text-sm font-medium text-text-main">{device.name}</p>
+      ),
+    },
+    {
+      key: 'brandModel',
+      header: 'Бренд / Модель',
+      mobileLabel: 'Бренд / Модель:',
+      render: (device) => (
+        <p className="text-sm text-text-main">{device.brand} · {device.model}</p>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Тип',
+      width: 200,
+      mobileLabel: 'Тип:',
+      render: (device) => (
+        <p className="text-sm text-text-main">{categoryLabels[device.type] ?? device.type}</p>
+      ),
+    },
+  ], [categoryLabels]);
+
   return (
     <PageContainer>
       <PageHeader>Мануалы</PageHeader>
@@ -68,37 +94,14 @@ export function RepairerManuals() {
           ))}
         </div>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="flex-1">Название</div>
-            <div className="flex-1 px-4">Бренд / Модель</div>
-            <div className="w-[200px] px-4">Тип</div>
-          </DataTableHeader>
-
-          {filteredDevices.length === 0 ? (
-            <DataTableEmpty>Устройства не найдены</DataTableEmpty>
-          ) : (
-            filteredDevices.map((device) => (
-              <Link key={device.id} href={`/account/man/${device.id}`} className="block">
-                <DataTableRow className="hover:bg-gray-50 cursor-pointer transition-colors">
-                  <DataTableCell mobileLabel="Название:" className="lg:flex-1">
-                    <p className="text-sm font-medium text-text-main">{device.name}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Бренд / Модель:" className="lg:flex-1 lg:px-4">
-                    <p className="text-sm text-text-main">{device.brand} · {device.model}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Тип:" className="lg:w-[200px] lg:px-4">
-                    <p className="text-sm text-text-main">{categoryLabels[device.type] ?? device.type}</p>
-                  </DataTableCell>
-                </DataTableRow>
-              </Link>
-            ))
-          )}
-
-          <DataTableFooter>
-            Показано {filteredDevices.length} из {devices.length}
-          </DataTableFooter>
-        </DataTable>
+        <DataGrid
+          columns={columns}
+          data={filteredDevices}
+          keyExtractor={(device) => device.id}
+          emptyContent="Устройства не найдены"
+          onRowClick={(device) => router.push(`/account/man/${device.id}`)}
+          footer={<>Показано {filteredDevices.length} из {devices.length}</>}
+        />
       ) : (
         <>
           {filteredDevices.length === 0 ? (

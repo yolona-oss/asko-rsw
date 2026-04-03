@@ -59,22 +59,9 @@ export type { ModalProps } from './components/modal';
 export { Dialog } from './components/dialog';
 export type { DialogProps } from './components/dialog';
 
-export {
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
-} from './components/data-table';
-export type {
-  DataTableProps,
-  DataTableHeaderProps,
-  DataTableRowProps,
-  DataTableCellProps,
-  DataTableEmptyProps,
-  DataTableFooterProps,
-} from './components/data-table';
+
+export { DataGrid } from './components/data-grid';
+export type { DataGridProps, DataGridColumn } from './components/data-grid';
 
 export { Container } from './components/container';
 export type { ContainerProps } from './components/container';

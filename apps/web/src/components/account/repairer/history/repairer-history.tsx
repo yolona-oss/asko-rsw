@@ -7,23 +7,63 @@ import { reviewApi } from '@/lib/api/review';
 import {
   Card,
   Badge,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataSearch,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { STATUS_LABEL, STATUS_BADGE, formatDateShort, formatDateLong, LIMIT } from './constants';
+
+const columns: DataGridColumn<any>[] = [
+  {
+    key: 'device',
+    header: 'Устройство',
+    mobileLabel: 'Устройство:',
+    render: (req) => (
+      <p className="text-sm font-medium text-text-main truncate">
+        {req.device?.name ?? req.userDeviceId}
+      </p>
+    ),
+  },
+  {
+    key: 'description',
+    header: 'Описание',
+    mobileLabel: 'Описание:',
+    render: (req) => (
+      <p className="text-sm text-text-main line-clamp-1">{req.description}</p>
+    ),
+  },
+  {
+    key: 'status',
+    header: 'Статус',
+    width: 140,
+    mobileLabel: 'Статус:',
+    render: (req) => {
+      const status = req.status as RepairRequestStatus;
+      return (
+        <Badge variant={STATUS_BADGE[status] ?? 'neutral'}>
+          {STATUS_LABEL[status] ?? status}
+        </Badge>
+      );
+    },
+  },
+  {
+    key: 'date',
+    header: 'Дата',
+    width: 140,
+    mobileLabel: 'Дата:',
+    render: (req) => (
+      <p className="text-sm text-text-sub">{formatDateShort(req.updatedAt)}</p>
+    ),
+  },
+];
 
 export function RepairerHistory() {
   const { user } = useAccount();
@@ -118,49 +158,18 @@ export function RepairerHistory() {
           ))}
         </div>
       ) : view === 'table' ? (
-        <DataTable>
-          <DataTableHeader>
-            <div className="flex-1">Устройство</div>
-            <div className="flex-1 px-4">Описание</div>
-            <div className="w-[140px] px-4">Статус</div>
-            <div className="w-[140px] px-4">Дата</div>
-          </DataTableHeader>
-
-          {filteredRequests.length === 0 ? (
-            <DataTableEmpty>История заявок пуста</DataTableEmpty>
-          ) : (
-            filteredRequests.map((req) => {
-              const status = req.status as RepairRequestStatus;
-              return (
-                <DataTableRow key={req.id}>
-                  <DataTableCell mobileLabel="Устройство:" className="lg:flex-1">
-                    <p className="text-sm font-medium text-text-main truncate">
-                      {req.device?.name ?? req.userDeviceId}
-                    </p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Описание:" className="lg:flex-1 lg:px-4">
-                    <p className="text-sm text-text-main line-clamp-1">{req.description}</p>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Статус:" className="lg:w-[140px] lg:px-4">
-                    <Badge variant={STATUS_BADGE[status] ?? 'neutral'}>
-                      {STATUS_LABEL[status] ?? status}
-                    </Badge>
-                  </DataTableCell>
-                  <DataTableCell mobileLabel="Дата:" className="lg:w-[140px] lg:px-4">
-                    <p className="text-sm text-text-sub">{formatDateShort(req.updatedAt)}</p>
-                  </DataTableCell>
-                </DataTableRow>
-              );
-            })
-          )}
-
-          <DataTableFooter>
+        <DataGrid
+          columns={columns}
+          data={filteredRequests}
+          keyExtractor={(req) => req.id}
+          emptyContent="История заявок пуста"
+          footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredRequests.length} из {total}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
-          </DataTableFooter>
-        </DataTable>
+          }
+        />
       ) : (
         <>
           {filteredRequests.length === 0 ? (

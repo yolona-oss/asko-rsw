@@ -1,26 +1,106 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Card,
+  Badge,
   DataToolbar,
+  DataGrid,
   VIEW_TABLE,
   VIEW_CARD,
-  DataTable,
-  DataTableHeader,
-  DataTableFooter,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues } from '@asko/ui';
+import type { FilterValues, DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
-import { TAB_FILTER, PAGE_SIZE } from './constants';
+import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import type { TabKey } from './constants';
 import type { RepairRequest } from './types';
 import { RequestCard } from './request-card';
-import { RequestTableRow } from './request-table-row';
+
+function useRequestColumns(): DataGridColumn<RepairRequest>[] {
+  return useMemo(() => [
+    {
+      key: 'client',
+      header: 'Клиент',
+      width: 180,
+      mobileLabel: 'Клиент:',
+      render: (request) => {
+        const userName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Клиент';
+        return <p className="text-sm font-medium text-text-main">{userName}</p>;
+      },
+    },
+    {
+      key: 'device',
+      header: 'Устройство',
+      mobileLabel: 'Устройство:',
+      render: (request) => {
+        const deviceName = request.userDevice?.device?.name || request.description;
+        return <p className="text-sm text-text-main truncate">{deviceName}</p>;
+      },
+    },
+    {
+      key: 'city',
+      header: 'Город',
+      width: 120,
+      mobileLabel: 'Город:',
+      render: (request) => (
+        <p className="text-sm text-text-main">{request.address?.city ?? '-'}</p>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 160,
+      mobileLabel: 'Статус:',
+      render: (request) => (
+        <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
+          {STATUS_LABELS[request.status] ?? request.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'cost',
+      header: 'Стоимость',
+      width: 100,
+      mobileLabel: 'Стоимость:',
+      render: (request) => (
+        <p className="text-sm text-text-main">
+          {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '-'}
+        </p>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Дата',
+      width: 140,
+      mobileLabel: 'Дата:',
+      render: (request) => (
+        <p className="text-sm text-text-main">{formatDate(request.createdAt)}</p>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: 120,
+      render: (request) => (
+        <Link
+          href={`/account/requests/${request.id}`}
+          className="text-sm text-text-main hover:text-brand-red transition-colors flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Открыть
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </Link>
+      ),
+    },
+  ], []);
+}
 
 export function RepairerRequests() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'active' });
@@ -32,6 +112,8 @@ export function RepairerRequests() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+
+  const columns = useRequestColumns();
 
   // Fetch active request once
   useEffect(() => {
@@ -110,18 +192,12 @@ export function RepairerRequests() {
           {view === 'card' ? (
             <RequestCard request={activeRequest} highlight />
           ) : (
-            <DataTable>
-              <DataTableHeader>
-                <div className="w-[180px] flex-shrink-0">Клиент</div>
-                <div className="flex-1 px-4">Устройство</div>
-                <div className="w-[120px] px-4">Город</div>
-                <div className="w-[160px] px-4">Статус</div>
-                <div className="w-[100px] px-4">Стоимость</div>
-                <div className="w-[140px] px-4">Дата</div>
-                <div className="w-[120px] flex-shrink-0" />
-              </DataTableHeader>
-              <RequestTableRow request={activeRequest} highlight />
-            </DataTable>
+            <DataGrid
+              columns={columns}
+              data={[activeRequest]}
+              keyExtractor={(req) => req.id}
+              rowClassName={() => 'bg-brand-red/5'}
+            />
           )}
         </div>
       )}
@@ -148,30 +224,20 @@ export function RepairerRequests() {
               ))}
             </div>
           ) : (
-            <DataTable>
-              <DataTableHeader>
-                <div className="w-[180px] flex-shrink-0">Клиент</div>
-                <div className="flex-1 px-4">Устройство</div>
-                <div className="w-[120px] px-4">Город</div>
-                <div className="w-[160px] px-4">Статус</div>
-                <div className="w-[100px] px-4">Стоимость</div>
-                <div className="w-[140px] px-4">Дата</div>
-                <div className="w-[120px] flex-shrink-0" />
-              </DataTableHeader>
-              {requests.map((req) => (
-                <RequestTableRow
-                  key={req.id}
-                  request={req}
-                  highlight={showActiveHighlight && activeRequest?.id === req.id}
-                />
-              ))}
-              <DataTableFooter>
+            <DataGrid
+              columns={columns}
+              data={requests}
+              keyExtractor={(req) => req.id}
+              rowClassName={(req) =>
+                showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
+              }
+              footer={
                 <div className="flex items-center justify-between w-full">
                   <span>Показано {requests.length} из {total}</span>
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                 </div>
-              </DataTableFooter>
-            </DataTable>
+              }
+            />
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />

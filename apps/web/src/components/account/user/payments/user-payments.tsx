@@ -5,18 +5,14 @@ import {
   Badge,
   Card,
   Button,
-  DataTable,
-  DataTableHeader,
-  DataTableRow,
-  DataTableCell,
-  DataTableEmpty,
-  DataTableFooter,
+  DataGrid,
   DataSearch,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
@@ -78,6 +74,51 @@ export function UserPayments() {
   }, [otherPayments, search]);
 
   const totalPages = Math.ceil(total / pageSize);
+
+  const paymentColumns: DataGridColumn<PaymentRecord>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      width: 120,
+      mobileLabel: 'ID:',
+      render: (p) => <p className="text-sm text-text-sub font-mono truncate">{p.id.slice(0, 8)}</p>,
+    },
+    {
+      key: 'type',
+      header: 'Тип',
+      mobileLabel: 'Тип:',
+      render: (p) => (
+        <p className="text-sm font-medium text-text-main">
+          {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
+        </p>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Сумма',
+      width: 140,
+      mobileLabel: 'Сумма:',
+      render: (p) => <p className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</p>,
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: 140,
+      mobileLabel: 'Статус:',
+      render: (p) => (
+        <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+          {STATUS_LABELS[p.status] ?? p.status}
+        </Badge>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Дата',
+      width: 160,
+      mobileLabel: 'Дата:',
+      render: (p) => <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>,
+    },
+  ];
 
   const handlePay = (p: PaymentRecord) => {
     if (p.targetType && p.targetId) {
@@ -153,50 +194,18 @@ export function UserPayments() {
               </div>
 
               {view === 'table' ? (
-                <DataTable>
-                  <DataTableHeader>
-                    <div className="w-[120px] flex-shrink-0">ID</div>
-                    <div className="flex-1 px-4">Тип</div>
-                    <div className="w-[140px] px-4">Сумма</div>
-                    <div className="w-[140px] px-4">Статус</div>
-                    <div className="w-[160px] px-4">Дата</div>
-                  </DataTableHeader>
-
-                  {filteredHistory.length === 0 ? (
-                    <DataTableEmpty>Нет платежей</DataTableEmpty>
-                  ) : (
-                    filteredHistory.map((p) => (
-                      <DataTableRow key={p.id}>
-                        <DataTableCell mobileLabel="ID:" className="lg:w-[120px] lg:flex-shrink-0">
-                          <p className="text-sm text-text-sub font-mono truncate">{p.id.slice(0, 8)}</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Тип:" className="lg:flex-1 lg:px-4">
-                          <p className="text-sm font-medium text-text-main">
-                            {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
-                          </p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Сумма:" className="lg:w-[140px] lg:px-4">
-                          <p className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</p>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Статус:" className="lg:w-[140px] lg:px-4">
-                          <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                            {STATUS_LABELS[p.status] ?? p.status}
-                          </Badge>
-                        </DataTableCell>
-                        <DataTableCell mobileLabel="Дата:" className="lg:w-[160px] lg:px-4">
-                          <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                        </DataTableCell>
-                      </DataTableRow>
-                    ))
-                  )}
-
-                  <DataTableFooter>
+                <DataGrid<PaymentRecord>
+                  columns={paymentColumns}
+                  data={filteredHistory}
+                  keyExtractor={(p) => p.id}
+                  emptyContent="Нет платежей"
+                  footer={
                     <div className="flex items-center justify-between w-full">
                       <span>Показано {filteredHistory.length} из {total}</span>
                       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                     </div>
-                  </DataTableFooter>
-                </DataTable>
+                  }
+                />
               ) : (
                 <>
                   {filteredHistory.length === 0 ? (

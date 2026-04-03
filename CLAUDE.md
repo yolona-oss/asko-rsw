@@ -426,7 +426,31 @@ DTOs, types, enums, constants, utilities shared across the monorepo.
 
 React component library. Tailwind classes only — no CSS files, no styled-components.
 
-**Components**: badge, button, card, container, crop-modal, data-table, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, view-switcher, and more.
+**Components**: badge, button, card, container, crop-modal, data-grid, data-card-view, data-filter, data-search, data-toolbar, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, tooltip, view-switcher, and more.
+
+**DataGrid** (`DataGrid` component) — column-definition-driven data table used for all tabular data. Features: sticky header, auto-tooltips on every cell, truncation (default) or multiline per column, column resizing via drag handles, right-click context menu (remove/add columns, reset to defaults), `onSort` callback placeholder, `onRowClick` for clickable rows, `rowClassName` for per-row styling. All table views in the web app use `DataGrid` — there is no legacy `DataTable` component.
+
+```tsx
+import { DataGrid } from '@asko/ui';
+import type { DataGridColumn } from '@asko/ui';
+
+const columns: DataGridColumn<MyType>[] = [
+  { key: 'name', header: 'Название', mobileLabel: 'Название:', render: (item) => <p>{item.name}</p> },
+  { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (item) => <Badge>{item.status}</Badge> },
+];
+
+<DataGrid
+  columns={columns}
+  data={items}
+  keyExtractor={(item) => item.id}
+  emptyContent="Нет данных"
+  footer={<Pagination ... />}
+  onRowClick={(item) => router.push(`/path/${item.id}`)}
+  rowClassName={(item) => item.disabled ? 'opacity-50' : undefined}
+/>
+```
+
+**DataCardField** — label + value pair in card views. Supports `tooltip` (custom or auto-extracted from text content) and `multiline` (truncates by default).
 
 Must run `pnpm run build` after any change.
 
@@ -584,6 +608,8 @@ export class PaymentEventConsumer {
 * All components export from `packages/ui/src/components/`.
 * Must run `pnpm run build` after changes.
 * Used only by `apps/web`.
+* **DataGrid for all tables** — use `DataGrid` with column definitions (`DataGridColumn[]`) for any tabular data. Define columns with `key`, `header`, `width`, `render`, `mobileLabel`. Do not create separate row components — inline cell rendering into column `render` functions.
+* **No separate row component files** — all cell rendering logic lives in column definitions inside the parent component. This keeps column definitions, header, and cell rendering co-located.
 
 ---
 
@@ -778,3 +804,5 @@ All Docker builds use turborepo prune.
 * **API gateway has no database** — it's a pure REST/WebSocket proxy. All entities were moved to their owning microservices.
 * **Pagination in server components**: Use `hrefPattern="/path?page={page}"` (serializable string) instead of `getHref` function prop — functions can't cross the server→client boundary.
 * **Placeholder images**: Use `getPlaceholderSrc(category, idOrIndex)` from `@/lib/placeholders` or `<PlaceholderImage>` component. Images stored in `public/images/placeholders/placeholder-{category}-{variant}.webp`.
+* **No backward compatibility unless requested** — when updating or replacing a component/API/pattern, migrate all consumers to the new version and delete the old one. Do not keep old exports, aliases, or legacy wrappers "for backward compatibility" unless the user explicitly asks for it.
+* **DataGrid only** — never use or re-introduce the old `DataTable`/`DataTableHeader`/`DataTableRow`/`DataTableCell`/`DataTableEmpty`/`DataTableFooter` components. Use `DataGrid` with column definitions for all tabular data.

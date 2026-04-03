@@ -147,6 +147,7 @@ export interface FileServiceClient {
     attachImage(request: AttachImageRequest): Observable<ImageResponse>;
     findAttachedImages(request: FindAttachedRequest): Observable<ImageListResponse>;
     countAttached(request: CountAttachedRequest): Observable<CountResponse>;
+    deleteByOwner(request: FindAttachedRequest): Observable<CountResponse>;
 
     reorderImages(request: ReorderImagesRequest): Observable<EmptyFileResponse>;
     reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;
