@@ -1,6 +1,6 @@
-import { getImageUrl } from '@/lib/image-url';
 import Image from 'next/image';
 import type { IImageAttachment } from '@/lib/api/types';
+import { getImageUrl } from '@/lib/image-url';
 
 interface ArticleHeroImageProps {
     images: IImageAttachment[];

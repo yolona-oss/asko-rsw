@@ -1,5 +1,6 @@
-import { getImageUrl } from '@/lib/image-url';
 'use client';
+
+import { getImageUrl } from '@/lib/image-url';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';

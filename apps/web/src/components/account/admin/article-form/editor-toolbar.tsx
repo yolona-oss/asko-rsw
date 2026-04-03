@@ -1,5 +1,6 @@
-import { getImageUrl } from '@/lib/image-url';
 'use client';
+
+import { getImageUrl } from '@/lib/image-url';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
