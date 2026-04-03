@@ -8,6 +8,7 @@ import {
   fetchArticlePreviewImage,
   fetchRelatedArticles,
 } from '@/lib/api/article.server';
+import { getImageUrl } from '@/lib/image-url';
 import {
   ArticleBreadcrumb,
   ArticleHeroImage,
@@ -31,9 +32,7 @@ export async function generateMetadata({
 
   const description = article.description || article.text?.slice(0, 160).trim();
   const previewImage = images.sort((a, b) => a.order - b.order)[0];
-  const ogImage =
-    previewImage?.imageJson.medium?.secure_url ??
-    previewImage?.imageJson.original.secure_url;
+  const ogImage = getImageUrl(previewImage, 'medium');
 
   return {
     title: `${article.title} — ASKO`,

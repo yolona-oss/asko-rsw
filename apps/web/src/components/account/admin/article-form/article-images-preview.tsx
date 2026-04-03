@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -28,8 +29,8 @@ export function ArticleImagesPreview({ articleId }: { articleId: string }) {
             </p>
             <div className="flex gap-2 flex-wrap">
                 {images.map((img) => {
-                    const src = img.imageJson.thumbnail?.secure_url ?? img.imageJson.original.secure_url;
-                    const fullSrc = img.imageJson.large?.secure_url ?? img.imageJson.original.secure_url;
+                    const src = getImageUrl(img, 'thumbnail')!;
+                    const fullSrc = getImageUrl(img, 'large')!;
                     return (
                         <button
                             key={img.id}

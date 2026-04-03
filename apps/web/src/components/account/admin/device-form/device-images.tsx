@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -124,7 +125,7 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
               className="relative group border border-gray-200 rounded-sm overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
-                src={img.imageJson.thumbnail?.secure_url ?? img.imageJson.original.secure_url}
+                src={getImageUrl(img, 'thumbnail')!}
                 alt=""
                 width={150}
                 height={150}

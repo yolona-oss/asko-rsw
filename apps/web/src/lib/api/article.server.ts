@@ -1,5 +1,6 @@
 import type { IArticle, IImageAttachment, PaginatedArticles } from './types';
 import { serverGet } from './server-fetch';
+import { getImageUrl } from '@/lib/image-url';
 
 export async function fetchArticles(page: number, limit: number): Promise<PaginatedArticles> {
   const data = await serverGet<PaginatedArticles>(`/articles?page=${page}&limit=${limit}`);
@@ -19,7 +20,7 @@ export async function fetchArticlePreviewImage(slug: string): Promise<string | n
   const images = await fetchArticleImages(slug);
   if (!images.length) return null;
   const preview = images.sort((a, b) => a.order - b.order)[0];
-  return preview.imageJson.medium?.secure_url ?? preview.imageJson.original.secure_url;
+  return getImageUrl(preview, 'medium');
 }
 
 export async function fetchRelatedArticles(slug: string): Promise<IArticle[]> {

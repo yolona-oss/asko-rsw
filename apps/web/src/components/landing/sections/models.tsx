@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -100,7 +101,7 @@ export function ModelsSection() {
               const { data: imgData } = await deviceApi.getImages(d.id);
               const imgs = (imgData.images ?? []).sort((a, b) => a.order - b.order);
               if (imgs.length > 0) {
-                image = imgs[0].imageJson.medium?.secure_url ?? imgs[0].imageJson.original.secure_url;
+                image = getImageUrl(imgs[0], 'medium');
               }
             } catch { /* ignore */ }
             return {

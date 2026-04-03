@@ -1,6 +1,7 @@
 import type { IDevice, IImageAttachment, PaginatedDevices } from './types';
 import { serverGet } from './server-fetch';
 import { getPlaceholderSrc } from '@/lib/placeholders';
+import { getImageUrl } from '@/lib/image-url';
 
 export async function fetchDevices(page: number, limit: number): Promise<PaginatedDevices> {
   const data = await serverGet<PaginatedDevices>(`/devices?page=${page}&limit=${limit}`);
@@ -35,21 +36,17 @@ export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttac
 export async function fetchFirstDeviceImage(deviceId: string): Promise<string> {
   const images = await fetchDeviceImages(deviceId);
   if (!images.length) return getPlaceholderSrc('device', deviceId);
-  return images[0].imageJson.medium?.secure_url ?? images[0].imageJson.original.secure_url;
+  return getImageUrl(images[0], 'medium') ?? getPlaceholderSrc('device', deviceId);
 }
 
 export async function fetchDeviceImageUrls(id: string): Promise<string[]> {
   const images = await fetchDeviceImages(id);
-  const urls = images
-    .map((img) => img.imageJson?.large?.secure_url ?? img.imageJson?.original?.secure_url)
-    .filter(Boolean) as string[];
+  const urls = images.map((img) => getImageUrl(img, 'large')).filter(Boolean) as string[];
   return urls.length > 0 ? urls : [getPlaceholderSrc('device', id)];
 }
 
 export async function fetchDeviceImageUrlsBySlug(slug: string): Promise<string[]> {
   const images = await fetchDeviceImagesBySlug(slug);
-  const urls = images
-    .map((img) => img.imageJson?.large?.secure_url ?? img.imageJson?.original?.secure_url)
-    .filter(Boolean) as string[];
+  const urls = images.map((img) => getImageUrl(img, 'large')).filter(Boolean) as string[];
   return urls.length > 0 ? urls : [getPlaceholderSrc('device', slug)];
 }

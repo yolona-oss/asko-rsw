@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -141,7 +142,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
               className="relative group border border-gray-200 rounded-sm overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
-                src={img.imageJson.thumbnail?.secure_url ?? img.imageJson.original.secure_url}
+                src={getImageUrl(img, 'thumbnail')!}
                 alt=""
                 width={150}
                 height={150}
@@ -154,9 +155,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
                 <button
                   type="button"
                   onClick={() => {
-                    const src = img.imageJson.large?.secure_url
-                      ?? img.imageJson.medium?.secure_url
-                      ?? img.imageJson.original.secure_url;
+                    const src = getImageUrl(img, 'large')!;
                     onInsertImage(src);
                   }}
                   className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-white rounded-sm text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"

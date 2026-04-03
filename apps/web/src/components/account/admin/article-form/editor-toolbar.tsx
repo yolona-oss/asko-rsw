@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -135,9 +136,7 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
             if (!id) return;
 
             const { data } = await articleApi.uploadImage(id, file);
-            const src = data.imageJson.large?.secure_url
-                ?? data.imageJson.medium?.secure_url
-                ?? data.imageJson.original.secure_url;
+            const src = getImageUrl(data, 'large')!;
             editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
         } catch {
             // silently fail

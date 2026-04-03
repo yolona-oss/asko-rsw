@@ -1,3 +1,4 @@
+import { getImageUrl } from '@/lib/image-url';
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -68,7 +69,7 @@ export function ArticlesSection() {
               const { data: imgData } = await articleApi.getImages(a.id);
               const imgs = (imgData.images ?? []).sort((x, y) => x.order - y.order);
               if (imgs.length > 0) {
-                previewImage = imgs[0].imageJson.medium?.secure_url ?? imgs[0].imageJson.original.secure_url;
+                previewImage = getImageUrl(imgs[0], 'medium');
               }
             } catch {
               // ignore

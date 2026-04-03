@@ -12,6 +12,7 @@ import { ArticleRecommendations } from '@/components/articles/article-recommenda
 import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug, fetchDeviceImagesBySlug } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
 import { fetchArticles, fetchArticlesByTags, fetchArticlePreviewImage } from '@/lib/api/article.server';
+import { getImageUrl } from '@/lib/image-url';
 
 export async function generateMetadata({
   params,
@@ -28,9 +29,7 @@ export async function generateMetadata({
 
   const description = device.description?.slice(0, 160).trim() || `${device.name} — характеристики, цена, сервис ASKO`;
   const previewImage = images.sort((a, b) => a.order - b.order)[0];
-  const ogImage =
-    previewImage?.imageJson.medium?.secure_url ??
-    previewImage?.imageJson.original.secure_url;
+  const ogImage = getImageUrl(previewImage, 'medium');
 
   return {
     title: `${device.name} — ASKO`,
