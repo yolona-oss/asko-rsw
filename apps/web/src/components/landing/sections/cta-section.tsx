@@ -40,8 +40,8 @@ export function CtaSection() {
 
   return (
     <section id="cta" className="bg-[#323232]">
-      <div className="relative overflow-hidden mx-auto w-[358px] h-[652px] md:w-auto md:h-auto lg:w-[1120px] lg:h-[534px]">
-        {/* Background image with overlay — exact 1120x534 */}
+      <div className="relative overflow-hidden">
+        {/* Background image with overlay */}
         <div className="absolute inset-0">
           <img
             src="/images/cta-bg.webp"
@@ -51,65 +51,65 @@ export function CtaSection() {
           <div className="absolute inset-0 bg-black/62" />
         </div>
 
-        {/* Content */}
-        <div className="relative flex items-center h-full px-4 sm:px-6 lg:px-[83px] py-10 lg:py-0">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-[126px]">
-          {/* Left: headline + description */}
-          <div className="flex flex-col gap-[7px] lg:w-[377px] lg:flex-shrink-0">
-            <h2 className="text-[32px] leading-9 md:text-[42px] md:leading-[46px] font-medium text-[#f1f1f1]">
-              Доверьте ремонт техники ASKO профессионалам
-            </h2>
-            <p className="text-base lg:text-lg leading-[22px] tracking-[-0.01em] text-[#f1f1f1]/60">
-              Используем оригинальные комплектующие
-              и соблюдаем стандарты производителя.
-              Мастер свяжется с вами для диагностики
-              и согласования удобного времени выезда.
-            </p>
-          </div>
-
-          {/* Right: form */}
-          <div className="flex flex-col gap-8 w-full lg:w-[452px] lg:flex-shrink-0">
-            <h3 className="text-[28px] leading-8 md:text-[42px] md:leading-[46px] font-medium text-[#f1f1f1]">
-              Оставить заявку{'\n'}на ремонт
-            </h3>
-
-            <div className="flex flex-col gap-10">
-              {/* Inputs */}
-              <div className="flex flex-col gap-10">
-                <input
-                  type="text"
-                  placeholder="Ваше имя..."
-                  className="w-full px-3 py-[7.5px] min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
-                />
-                <div className="flex flex-col gap-4">
-                  <input
-                    type="text"
-                    placeholder="Телефон или логин в мессенджере..."
-                    className="w-full px-3 py-[7.5px] min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
-                  />
-                  <div className="flex items-center gap-6">
-                    <Checkbox checked={messengers.has('telegram')} onChange={() => toggleMessenger('telegram')} label="Telegram" />
-                    <Checkbox checked={messengers.has('whatsapp')} onChange={() => toggleMessenger('whatsapp')} label="Whatsapp" />
-                    <Checkbox checked={messengers.has('max')} onChange={() => toggleMessenger('max')} label="MAX" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit button */}
-              <button
-                type="button"
-                className="flex items-center justify-center w-full md:w-fit min-h-[40px] px-6 py-[9.5px] text-sm font-medium text-white bg-[#D7102A] shadow-sm cursor-pointer"
-              >
-                Вызвать мастера
-              </button>
+        {/* Content — constrained width */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-12 lg:py-20">
+          <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-24">
+            {/* Left: headline + description */}
+            <div className="flex flex-col gap-3 lg:w-[377px] lg:flex-shrink-0 lg:pt-8">
+              <h2 className="text-[28px] leading-8 lg:text-[42px] lg:leading-[46px] font-medium text-[#f1f1f1]">
+                Доверьте ремонт техники ASKO профессионалам
+              </h2>
+              <p className="text-sm lg:text-base leading-[22px] tracking-[-0.01em] text-[#f1f1f1]/60">
+                Используем оригинальные комплектующие
+                и&nbsp;соблюдаем стандарты производителя.
+                Мастер свяжется с&nbsp;вами для диагностики
+                и&nbsp;согласования удобного времени выезда.
+              </p>
             </div>
 
-            <p className="text-sm leading-[22px] tracking-[-0.01em] text-[#f1f1f1]/60">
-              Мы ответим в течение 5 минут. Без обязательств.
-            </p>
+            {/* Right: form */}
+            <div className="flex flex-col gap-6 w-full lg:w-[452px] lg:flex-shrink-0">
+              <h3 className="text-[24px] leading-7 lg:text-[36px] lg:leading-[40px] font-medium text-[#f1f1f1]">
+                Оставить заявку<br />на ремонт
+              </h3>
+
+              <div className="flex flex-col gap-6">
+                {/* Inputs */}
+                <div className="flex flex-col gap-6">
+                  <input
+                    type="text"
+                    placeholder="Ваше имя..."
+                    className="w-full px-3 py-2 min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
+                  />
+                  <div className="flex flex-col gap-3">
+                    <input
+                      type="text"
+                      placeholder="Телефон или логин в мессенджере..."
+                      className="w-full px-3 py-2 min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
+                    />
+                    <div className="flex items-center gap-6">
+                      <Checkbox checked={messengers.has('telegram')} onChange={() => toggleMessenger('telegram')} label="Telegram" />
+                      <Checkbox checked={messengers.has('whatsapp')} onChange={() => toggleMessenger('whatsapp')} label="Whatsapp" />
+                      <Checkbox checked={messengers.has('max')} onChange={() => toggleMessenger('max')} label="MAX" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-full lg:w-fit min-h-[40px] px-8 py-2.5 text-sm font-medium text-white bg-[#D7102A] shadow-sm cursor-pointer"
+                >
+                  Вызвать мастера
+                </button>
+              </div>
+
+              <p className="text-xs lg:text-sm leading-[18px] tracking-[-0.01em] text-[#f1f1f1]/60 text-center lg:text-left">
+                Мы ответим в течение 5 минут. Без обязательств.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </section>
   );

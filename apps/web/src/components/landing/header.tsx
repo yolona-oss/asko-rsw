@@ -3,21 +3,31 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { Container } from '@asko/ui';
 import { useAuth } from '@/lib/api/use-auth';
 
 const navLinks = [
-  { href: '/', label: 'Главная', active: true },
+  { href: '/', label: 'Главная' },
   { href: '/#services', label: 'Услуги' },
   { href: '/#about', label: 'О нас' },
-  { href: '/#models', label: 'Модели' },
+  { href: '/devices', label: 'Модели' },
+  { href: '/articles', label: 'Статьи' },
 ];
 
 export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeHash, setActiveHash] = useState('');
   const { isAuthenticated, authReady } = useAuth();
+  const pathname = usePathname();
   const accountHref = isAuthenticated ? '/account' : '/auth';
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/' && !activeHash;
+    if (href.startsWith('/#')) return pathname === '/' && activeHash === href.slice(1);
+    return pathname.startsWith(href);
+  };
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -77,8 +87,9 @@ export function LandingHeader() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => link.href.startsWith('/#') && setActiveHash(link.href.slice(1))}
                 className={`text-lg font-medium transition-colors ${
-                  link.active
+                  isActive(link.href)
                     ? 'text-brand-red/45 underline'
                     : 'text-text-main hover:text-brand-red'
                 }`}
@@ -121,9 +132,12 @@ export function LandingHeader() {
                   key={link.href}
                   href={link.href}
                   className={`text-base font-medium px-2 py-1 ${
-                    link.active ? 'text-brand-red/45 underline' : 'text-text-main'
+                    isActive(link.href) ? 'text-brand-red/45 underline' : 'text-text-main'
                   }`}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => {
+                    if (link.href.startsWith('/#')) setActiveHash(link.href.slice(1));
+                    setMenuOpen(false);
+                  }}
                 >
                   {link.label}
                 </Link>
