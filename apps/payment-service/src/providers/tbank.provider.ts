@@ -21,6 +21,11 @@ export class TbankProvider implements PaymentProvider {
         throw new Error('T-Bank provider not yet implemented');
     }
 
+    verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {
+        // TODO: implement token-based verification using sorted params + this.appConfig.payment.tbank.password
+        return true;
+    }
+
     async handleWebhook(_body: any): Promise<WebhookResult> {
         // TODO: parse T-Bank webhook notification
         throw new Error('T-Bank webhook not yet implemented');

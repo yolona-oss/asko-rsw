@@ -21,6 +21,10 @@ export class DummyProvider implements PaymentProvider {
         };
     }
 
+    verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {
+        return true;
+    }
+
     async handleWebhook(_body: any): Promise<WebhookResult> {
         return { externalId: '', paid: false, failed: false };
     }

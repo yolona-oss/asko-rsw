@@ -50,6 +50,7 @@ function entityToRecord(entity: PaymentEntity) {
         status: entity.status,
         provider: entity.provider ?? '',
         providerPaymentId: entity.providerPaymentId ?? '',
+        refundedAmount: entity.refundedAmount ?? 0,
         paidAt: entity.paidAt?.toISOString() ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
@@ -134,7 +135,7 @@ export class PaymentGrpcController {
     @GrpcMethod('PaymentService', 'RefundPayment')
     async refundPayment(data: RefundPaymentRequest) {
         try {
-            await this.paymentService.refundPayment(data.paymentId);
+            await this.paymentService.refundPayment(data.paymentId, data.amount || undefined);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

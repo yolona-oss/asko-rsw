@@ -30,6 +30,7 @@ export enum BrokenPartStatus {
 export enum PaymentStatus {
     PENDING = 'pending',
     PAID = 'paid',
+    PARTIALLY_REFUNDED = 'partially_refunded',
     REFUNDED = 'refunded',
     FAILED = 'failed',
 }

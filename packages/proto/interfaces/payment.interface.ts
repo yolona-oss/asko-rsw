@@ -43,6 +43,7 @@ export interface WebhookRequest {
 
 export interface RefundPaymentRequest {
     paymentId: string;
+    amount: number;
 }
 
 export interface GetPaymentsByTargetRequest {
@@ -89,6 +90,7 @@ export interface PaymentRecord {
     paidAt: string;
     createdAt: string;
     updatedAt: string;
+    refundedAmount: number;
 }
 
 export interface PaymentResponse {

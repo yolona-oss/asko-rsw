@@ -119,8 +119,8 @@ export class PaymentClientService implements OnModuleInit {
 
     // ─── Refund ───────────────────────────────────────────────────────────
 
-    refundPayment(paymentId: string): Promise<EmptyPaymentResponse> {
-        return grpcCall(this.paymentService.refundPayment({ paymentId }));
+    refundPayment(paymentId: string, amount?: number): Promise<EmptyPaymentResponse> {
+        return grpcCall(this.paymentService.refundPayment({ paymentId, amount: amount ?? 0 }));
     }
 
     // ─── Queries ──────────────────────────────────────────────────────────

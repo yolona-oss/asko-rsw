@@ -5,6 +5,8 @@ import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import { PaymentEntity } from 'entities/payment.entity';
+import { PaymentAuditEntity } from 'entities/payment-audit.entity';
+import { FailedEventEntity } from 'entities/failed-event.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 
@@ -20,7 +22,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [PaymentEntity],
+    entities: [PaymentEntity, PaymentAuditEntity, FailedEventEntity],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

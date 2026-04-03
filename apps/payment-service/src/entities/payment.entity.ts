@@ -4,7 +4,7 @@ import { PaymentStatus, CurrencyEnum } from '@asko/shared';
 
 @Entity({ tableName: 'payment' })
 export class PaymentEntity {
-    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'updatedAt' | 'targetType' | 'targetId' | 'userId' | 'metadata';
+    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'updatedAt' | 'targetType' | 'targetId' | 'userId' | 'metadata' | 'expiresAt' | 'refundedAmount';
 
     @PrimaryKey()
     id: string = uuid();
@@ -18,7 +18,7 @@ export class PaymentEntity {
     @Property({ type: 'varchar', length: 255, nullable: true })
     targetId?: string;
 
-    @Property({ type: 'float' })
+    @Property({ columnType: 'numeric(12,2)' })
     amount!: number;
 
     @Property({ type: 'varchar', length: 10, default: CurrencyEnum.DEFAULT })
@@ -36,8 +36,14 @@ export class PaymentEntity {
     @Property({ type: 'json', nullable: true })
     metadata?: Record<string, any>;
 
+    @Property({ columnType: 'numeric(12,2)', default: 0 })
+    refundedAmount: number = 0;
+
     @Property({ type: 'datetime', nullable: true })
     paidAt?: Date;
+
+    @Property({ type: 'datetime', nullable: true })
+    expiresAt?: Date;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

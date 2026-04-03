@@ -1,24 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { of } from 'rxjs';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { PaymentEventService, PaymentEventType, PaymentEvent } from './payment-event.service';
 
 describe('PaymentEventService', () => {
     let service: PaymentEventService;
     let notificationClient: { connect: jest.Mock; emit: jest.Mock };
     let repairClient: { connect: jest.Mock; emit: jest.Mock };
+    let emMock: Partial<EntityManager>;
 
     beforeEach(async () => {
         notificationClient = {
             connect: jest.fn().mockResolvedValue(undefined),
-            emit: jest.fn(),
+            emit: jest.fn().mockReturnValue(of(undefined)),
         };
         repairClient = {
             connect: jest.fn().mockResolvedValue(undefined),
-            emit: jest.fn(),
+            emit: jest.fn().mockReturnValue(of(undefined)),
+        };
+        emMock = {
+            create: jest.fn().mockReturnValue({}),
+            persistAndFlush: jest.fn().mockResolvedValue(undefined),
         };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 PaymentEventService,
+                { provide: EntityManager, useValue: emMock },
                 { provide: 'EVENTS_SERVICE', useValue: notificationClient },
                 { provide: 'REPAIR_EVENTS_SERVICE', useValue: repairClient },
             ],

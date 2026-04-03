@@ -64,6 +64,7 @@ message WebhookRequest {
 
 message RefundPaymentRequest {
     string paymentId = 1;
+    double amount = 2;
 }
 
 message GetPaymentsByTargetRequest {
@@ -112,6 +113,7 @@ message PaymentRecord {
     string paidAt = 10;
     string createdAt = 11;
     string updatedAt = 12;
+    double refundedAmount = 13;
 }
 
 message PaymentResponse {

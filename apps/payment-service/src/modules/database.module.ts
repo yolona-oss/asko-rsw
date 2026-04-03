@@ -3,6 +3,8 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
 import { PaymentEntity } from 'entities/payment.entity';
+import { PaymentAuditEntity } from 'entities/payment-audit.entity';
+import { FailedEventEntity } from 'entities/failed-event.entity';
 import { isProdEnv } from '@asko/shared';
 
 @Module({
@@ -16,7 +18,7 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [PaymentEntity],
+                    entities: [PaymentEntity, PaymentAuditEntity, FailedEventEntity],
                     debug: !isProdEnv(),
                 };
             },

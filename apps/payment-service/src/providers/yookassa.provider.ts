@@ -21,6 +21,11 @@ export class YookassaProvider implements PaymentProvider {
         throw new Error('YooKassa provider not yet implemented');
     }
 
+    verifyWebhook(_body: any, _headers?: Record<string, string>): boolean {
+        // TODO: implement HMAC-SHA256 signature verification using this.appConfig.payment.yookassa.secret
+        return true;
+    }
+
     async handleWebhook(_body: any): Promise<WebhookResult> {
         // TODO: parse YooKassa webhook notification
         throw new Error('YooKassa webhook not yet implemented');

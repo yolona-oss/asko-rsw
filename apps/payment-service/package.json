@@ -29,6 +29,8 @@
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.5",
         "@nestjs/microservices": "^11.1.5",
+        "@nestjs/schedule": "^5.0.1",
+        "ioredis": "^5.6.1",
         "amqp-connection-manager": "^4.1.14",
         "amqplib": "^0.10.4",
         "cross-env": "^7.0.3",
@@ -40,7 +42,7 @@
         "rootDir": "src",
         "moduleFileExtensions": ["ts", "js", "json"],
         "testRegex": ".*\\.spec\\.ts$",
-        "transform": { "^.+\\.ts$": "ts-jest" },
+        "transform": { "^.+\\.(ts|js)$": "ts-jest" },
         "moduleNameMapper": {
             "^entities$": "<rootDir>/entities",
             "^entities/(.*)$": "<rootDir>/entities/$1",

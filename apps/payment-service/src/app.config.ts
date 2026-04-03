@@ -26,9 +26,16 @@ export class AppConfig {
         };
     }
 
+    get redis() {
+        return {
+            url: this.configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
+        };
+    }
+
     get payment() {
         return {
             defaultProvider: this.configService.get<string>('PAYMENT_DEFAULT_PROVIDER') ?? 'dummy',
+            expirationMinutes: parseInt(this.configService.get<string>('PAYMENT_EXPIRATION_MINUTES') || '') || 30,
             yookassa: {
                 shopId: this.configService.get<string>('YOOKASSA_SHOP_ID'),
                 secret: this.configService.get<string>('YOOKASSA_SECRET'),

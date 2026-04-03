@@ -1,10 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { PaymentService } from 'services/payment.service';
 import { PaymentStatus, PaymentTargetType } from '@asko/shared';
 
 @Controller()
 export class RepairCommandConsumer {
+    private readonly logger = new Logger(RepairCommandConsumer.name);
+
     constructor(private readonly paymentService: PaymentService) {}
 
     @EventPattern('repair.create_invoice')
@@ -22,8 +24,8 @@ export class RepairCommandConsumer {
             );
             channel.ack(msg);
         } catch (e) {
-            console.error('[RepairCommandConsumer] repair.create_invoice error:', e);
-            channel.ack(msg);
+            this.logger.error(`repair.create_invoice error: ${e}`);
+            channel.nack(msg, false, false);
         }
     }
 
@@ -40,8 +42,8 @@ export class RepairCommandConsumer {
             }
             channel.ack(msg);
         } catch (e) {
-            console.error('[RepairCommandConsumer] repair.refund_target error:', e);
-            channel.ack(msg);
+            this.logger.error(`repair.refund_target error: ${e}`);
+            channel.nack(msg, false, false);
         }
     }
 }
