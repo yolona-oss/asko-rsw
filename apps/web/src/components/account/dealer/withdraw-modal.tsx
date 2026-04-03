@@ -26,13 +26,13 @@ export function WithdrawModal({ open, onClose, maxAmount }: WithdrawModalProps) 
 
   const handleSubmit = () => {
     setLocalError('');
-    const num = parseFloat(amount);
-    if (!num || num <= 0) {
-      setLocalError('Введите сумму');
+    const num = parseInt(amount, 10);
+    if (!num || num <= 0 || !Number.isInteger(num)) {
+      setLocalError('Введите целое число баллов');
       return;
     }
     if (num > maxAmount) {
-      setLocalError(`Максимальная сумма: ${maxAmount.toLocaleString('ru-RU')} ₽`);
+      setLocalError(`Максимальная сумма: ${maxAmount.toLocaleString('ru-RU')} баллов`);
       return;
     }
     dispatch(requestWithdraw(num)).then((result) => {
@@ -57,7 +57,7 @@ export function WithdrawModal({ open, onClose, maxAmount }: WithdrawModalProps) 
 
       <h2 className="text-xl lg:text-2xl font-bold text-text-main">Вывод средств</h2>
       <p className="text-sm text-text-sub mt-1">
-        Доступно для вывода: {maxAmount.toLocaleString('ru-RU')} ₽
+        Доступно для вывода: {maxAmount.toLocaleString('ru-RU')} баллов
       </p>
 
       <div className="mt-6 flex flex-col gap-4">

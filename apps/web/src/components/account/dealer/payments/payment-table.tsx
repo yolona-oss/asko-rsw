@@ -13,8 +13,10 @@ import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatDate, formatA
 
 export function PaymentTable({
   payments,
+  totalCount,
 }: {
   payments: PaymentRecord[];
+  totalCount?: number;
 }) {
   return (
     <DataTable>
@@ -47,7 +49,7 @@ export function PaymentTable({
       ))}
 
       <DataTableFooter>
-        Показано {payments.length} из {payments.length}
+        Показано {payments.length} из {totalCount ?? payments.length}
       </DataTableFooter>
     </DataTable>
   );

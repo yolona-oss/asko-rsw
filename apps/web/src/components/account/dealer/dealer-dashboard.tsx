@@ -53,11 +53,11 @@ export function DealerDashboard() {
           </span>
         </Card>
 
-        {/* Заработанные баллы */}
+        {/* Баланс баллов */}
         <Card className="flex flex-col gap-2">
-          <span className="text-base font-medium text-text-sub">Заработанные баллы</span>
+          <span className="text-base font-medium text-text-sub">Баланс баллов</span>
           <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
-            {loading ? '-' : pointsBalance}
+            {loading ? '-' : pointsBalance.toLocaleString('ru-RU')}
           </span>
         </Card>
       </div>

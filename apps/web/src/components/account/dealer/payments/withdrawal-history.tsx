@@ -23,7 +23,7 @@ export function WithdrawalHistory({
       {withdrawals.map((w) => (
         <Card key={w.id} className="flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <span className="text-base font-medium text-text-main">{formatAmount(w.amount)} ₽</span>
+            <span className="text-base font-medium text-text-main">{formatAmount(w.amount)} баллов</span>
             <span className="text-sm text-text-sub">{formatDate(w.requestedAt)}</span>
           </div>
           <Badge variant={WITHDRAW_BADGE_VARIANT[w.status] ?? 'neutral'}>
