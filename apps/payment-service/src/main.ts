@@ -27,11 +27,7 @@ async function bootstrap() {
         options: {
             urls: [config.rabbitmq.url],
             queue: 'payment_queue',
-            queueOptions: {
-                durable: true,
-                deadLetterExchange: 'payment_dlx',
-                deadLetterRoutingKey: 'payment.dead',
-            },
+            queueOptions: { durable: true },
             noAck: false,
         },
     });

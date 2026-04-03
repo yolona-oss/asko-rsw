@@ -189,7 +189,7 @@ export class CloudinaryService implements StorageProvider {
     }
 
     private extractPublicIdFromUrl(url: string): string {
-        const matches = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+        const matches = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
         return matches ? matches[1] : '';
     }
 }
