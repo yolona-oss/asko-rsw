@@ -8,15 +8,21 @@ export interface ResizeSizeConfig {
 }
 
 export const DEVICE_SIZES: ResizeSizeConfig[] = [
-    { name: 'thumbnail', width: 117, height: 164, fit: 'cover' },
-    { name: 'medium', width: 234, height: 327, fit: 'inside' },
-    { name: 'large', width: 468, height: 654, fit: 'inside' },
+    { name: 'thumbnail', width: 270, height: 378, fit: 'cover' },
+    { name: 'medium', width: 540, height: 756, fit: 'inside' },
+    { name: 'large', width: 1080, height: 1512, fit: 'inside' },
 ];
 
 export const ARTICLE_PREVIEW_SIZES: ResizeSizeConfig[] = [
-    { name: 'thumbnail', width: 131, height: 102, fit: 'cover' },
-    { name: 'medium', width: 262, height: 204, fit: 'inside' },
-    { name: 'large', width: 524, height: 408, fit: 'inside' },
+    { name: 'thumbnail', width: 480, height: 374, fit: 'cover' },
+    { name: 'medium', width: 960, height: 748, fit: 'inside' },
+    { name: 'large', width: 1920, height: 1496, fit: 'inside' },
+];
+
+export const ARTICLE_HERO_SIZES: ResizeSizeConfig[] = [
+    { name: 'thumbnail', width: 480, height: 133, fit: 'cover' },
+    { name: 'medium', width: 960, height: 266, fit: 'inside' },
+    { name: 'large', width: 1920, height: 531, fit: 'inside' },
 ];
 
 export const AVATAR_SIZES: ResizeSizeConfig[] = [
@@ -25,15 +31,18 @@ export const AVATAR_SIZES: ResizeSizeConfig[] = [
 ];
 
 export const DEFAULT_SIZES: ResizeSizeConfig[] = [
-    { name: 'thumbnail', width: 150, height: 150, fit: 'cover' },
-    { name: 'medium', width: 400, height: 300, fit: 'inside' },
-    { name: 'large', width: 800, height: 600, fit: 'inside' },
+    { name: 'thumbnail', width: 480, height: 270, fit: 'cover' },
+    { name: 'medium', width: 960, height: 540, fit: 'inside' },
+    { name: 'large', width: 1920, height: 1080, fit: 'inside' },
 ];
 
 export function getSizesForType(ownerType?: string, order?: number): ResizeSizeConfig[] {
     switch (ownerType) {
         case ImageTypeEnum.Device: return DEVICE_SIZES;
-        case ImageTypeEnum.Article: return order === 0 ? ARTICLE_PREVIEW_SIZES : DEFAULT_SIZES;
+        case ImageTypeEnum.Article:
+            if (order === 0) return ARTICLE_PREVIEW_SIZES;
+            if (order === 1) return ARTICLE_HERO_SIZES;
+            return DEFAULT_SIZES;
         case ImageTypeEnum.User: return AVATAR_SIZES;
         default: return DEFAULT_SIZES;
     }

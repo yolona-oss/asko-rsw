@@ -17,7 +17,6 @@ export function AvatarCropModal({ imageSrc, onConfirm, onCancel }: AvatarCropMod
       shape="circle"
       outputWidth={512}
       cropWidth={256}
-      resizable
       minCropSize={80}
       maxCropSize={400}
       title="Выберите область"

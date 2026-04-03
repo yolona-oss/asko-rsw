@@ -24,15 +24,13 @@ export interface CropModalProps {
   outputWidth?: number;
   /** Output height in px. Default: 600. Ignored for circle (uses outputWidth). */
   outputHeight?: number;
-  /** Visible crop area width. Default: 360 */
+  /** Initial visible crop area width. Default: 360 */
   cropWidth?: number;
-  /** Visible crop area height. Default: 270. Ignored for circle (uses cropWidth). */
+  /** Initial visible crop area height. Default: 270. Ignored for circle (uses cropWidth). */
   cropHeight?: number;
-  /** Allow resizing the crop area (circle only). Default: false */
-  resizable?: boolean;
-  /** Min crop size when resizable. Default: 80 */
+  /** Min crop size (shortest side). Default: 80 */
   minCropSize?: number;
-  /** Max crop size when resizable. Default: 400 */
+  /** Max crop size (longest side). Default: 400 */
   maxCropSize?: number;
   /** Viewport container size. Default: 420 */
   containerSize?: number;
@@ -63,7 +61,6 @@ export function CropModal({
   outputHeight = 600,
   cropWidth: initialCropW = 360,
   cropHeight: initialCropH = 270,
-  resizable = false,
   minCropSize = 80,
   maxCropSize = 400,
   containerSize = 420,
@@ -73,6 +70,7 @@ export function CropModal({
   const isCircle = shape === 'circle';
   const outW = outputWidth;
   const outH = isCircle ? outputWidth : outputHeight;
+  const ratio = isCircle ? 1 : outW / outH;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -86,7 +84,7 @@ export function CropModal({
   const dragMode = useRef<DragMode>('none');
   const activeCorner = useRef<Corner | null>(null);
   const lastPointer = useRef({ x: 0, y: 0 });
-  const resizeStart = useRef({ size: 0, px: 0, py: 0 });
+  const resizeStart = useRef({ w: 0, h: 0, px: 0, py: 0 });
 
   const containerH = isCircle ? containerSize : containerSize * (cropH / cropW);
 
@@ -108,7 +106,7 @@ export function CropModal({
     img.src = imageSrc;
   }, [imageSrc]);
 
-  // Clamp offset
+  // Clamp offset so image covers the crop area
   const clampOffset = useCallback(
     (ox: number, oy: number, s: number, cw: number, ch: number) => {
       if (!imgNatural.w) return { x: ox, y: oy };
@@ -122,31 +120,51 @@ export function CropModal({
     [imgNatural],
   );
 
+  // Resize crop area with aspect ratio lock
+  const resizeCrop = useCallback(
+    (delta: number) => {
+      let newW: number;
+      let newH: number;
+
+      if (isCircle) {
+        newW = Math.round(Math.max(minCropSize, Math.min(maxCropSize, resizeStart.current.w + delta)));
+        newH = newW;
+      } else {
+        newW = Math.round(Math.max(minCropSize, Math.min(maxCropSize, resizeStart.current.w + delta)));
+        newH = Math.round(newW / ratio);
+      }
+
+      setCropW(newW);
+      setCropH(newH);
+      setOffset((prev) => clampOffset(prev.x, prev.y, scale, newW, newH));
+    },
+    [isCircle, ratio, minCropSize, maxCropSize, clampOffset, scale],
+  );
+
   // Pointer handlers
   const handlePointerDown = (e: ReactPointerEvent) => {
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 
-    if (isCircle && resizable) {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        const px = e.clientX - rect.left - containerSize / 2;
-        const py = e.clientY - rect.top - containerSize / 2;
-        const half = cropW / 2;
-        const corners: { key: Corner; cx: number; cy: number }[] = [
-          { key: 'tl', cx: -half, cy: -half },
-          { key: 'tr', cx: half, cy: -half },
-          { key: 'bl', cx: -half, cy: half },
-          { key: 'br', cx: half, cy: half },
-        ];
-        for (const c of corners) {
-          if (Math.abs(px - c.cx) < HANDLE_SIZE && Math.abs(py - c.cy) < HANDLE_SIZE) {
-            dragMode.current = 'resize';
-            activeCorner.current = c.key;
-            resizeStart.current = { size: cropW, px: e.clientX, py: e.clientY };
-            lastPointer.current = { x: e.clientX, y: e.clientY };
-            return;
-          }
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const px = e.clientX - rect.left - containerSize / 2;
+      const py = e.clientY - rect.top - containerH / 2;
+      const halfW = cropW / 2;
+      const halfH = cropH / 2;
+      const corners: { key: Corner; cx: number; cy: number }[] = [
+        { key: 'tl', cx: -halfW, cy: -halfH },
+        { key: 'tr', cx: halfW, cy: -halfH },
+        { key: 'bl', cx: -halfW, cy: halfH },
+        { key: 'br', cx: halfW, cy: halfH },
+      ];
+      for (const c of corners) {
+        if (Math.abs(px - c.cx) < HANDLE_SIZE && Math.abs(py - c.cy) < HANDLE_SIZE) {
+          dragMode.current = 'resize';
+          activeCorner.current = c.key;
+          resizeStart.current = { w: cropW, h: cropH, px: e.clientX, py: e.clientY };
+          lastPointer.current = { x: e.clientX, y: e.clientY };
+          return;
         }
       }
     }
@@ -179,10 +197,7 @@ export function CropModal({
         case 'tl': delta = Math.max(-dx, -dy); break;
       }
 
-      const newSize = Math.round(Math.max(minCropSize, Math.min(maxCropSize, resizeStart.current.size + delta)));
-      setCropW(newSize);
-      setCropH(newSize);
-      setOffset((prev) => clampOffset(prev.x, prev.y, scale, newSize, newSize));
+      resizeCrop(delta);
     }
   };
 
@@ -211,7 +226,7 @@ export function CropModal({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
-  // Confirm - render to canvas
+  // Confirm — render to canvas
   const handleConfirm = () => {
     const img = imgRef.current;
     if (!img) return;
@@ -255,7 +270,8 @@ export function CropModal({
   if (!imgNatural.w) return null;
 
   const maskId = `crop-mask-${isCircle ? 'circle' : 'rect'}`;
-  const half = cropW / 2;
+  const halfW = cropW / 2;
+  const halfH = cropH / 2;
 
   const cursorForCorner: Record<Corner, string> = {
     tl: 'nwse-resize', br: 'nwse-resize',
@@ -303,119 +319,66 @@ export function CropModal({
             <mask id={maskId}>
               <rect width={containerSize} height={containerH} fill="white" />
               {isCircle ? (
-                <circle
-                  cx={containerSize / 2}
-                  cy={containerH / 2}
-                  r={cropW / 2 - 1}
-                  fill="black"
-                />
+                <circle cx={containerSize / 2} cy={containerH / 2} r={halfW - 1} fill="black" />
               ) : (
-                <rect
-                  x={(containerSize - cropW) / 2}
-                  y={(containerH - cropH) / 2}
-                  width={cropW}
-                  height={cropH}
-                  fill="black"
-                />
+                <rect x={(containerSize - cropW) / 2} y={(containerH - cropH) / 2} width={cropW} height={cropH} fill="black" />
               )}
             </mask>
           </defs>
-
-          <rect
-            width={containerSize}
-            height={containerH}
-            fill="rgba(0,0,0,0.55)"
-            mask={`url(#${maskId})`}
-          />
+          <rect width={containerSize} height={containerH} fill="rgba(0,0,0,0.55)" mask={`url(#${maskId})`} />
 
           {/* Crop border */}
           {isCircle ? (
-            <>
-              <circle
-                cx={containerSize / 2}
-                cy={containerH / 2}
-                r={cropW / 2 - 1}
-                fill="none"
-                stroke="white"
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                opacity={0.7}
-              />
-              {resizable && (
-                <rect
-                  x={containerSize / 2 - half}
-                  y={containerH / 2 - half}
-                  width={cropW}
-                  height={cropW}
-                  fill="none"
-                  stroke="white"
-                  strokeWidth={1}
-                  strokeDasharray="4 3"
-                  opacity={0.4}
-                />
-              )}
-            </>
+            <circle
+              cx={containerSize / 2} cy={containerH / 2} r={halfW - 1}
+              fill="none" stroke="white" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7}
+            />
           ) : (
             <rect
-              x={(containerSize - cropW) / 2}
-              y={(containerH - cropH) / 2}
-              width={cropW}
-              height={cropH}
-              fill="none"
-              stroke="white"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              opacity={0.7}
+              x={(containerSize - cropW) / 2} y={(containerH - cropH) / 2} width={cropW} height={cropH}
+              fill="none" stroke="white" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7}
             />
           )}
         </svg>
 
-        {/* Corner resize handles (circle + resizable only) */}
-        {isCircle && resizable && (
-          [
-            { key: 'tl' as Corner, cx: -half, cy: -half },
-            { key: 'tr' as Corner, cx: half, cy: -half },
-            { key: 'bl' as Corner, cx: -half, cy: half },
-            { key: 'br' as Corner, cx: half, cy: half },
-          ].map((c) => {
-            const left = containerSize / 2 + c.cx;
-            const top = containerH / 2 + c.cy;
-            return (
-              <div
-                key={c.key}
-                style={{
-                  position: 'absolute',
-                  left: left - HANDLE_SIZE / 2,
-                  top: top - HANDLE_SIZE / 2,
-                  width: HANDLE_SIZE,
-                  height: HANDLE_SIZE,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: cursorForCorner[c.key],
-                  zIndex: 10,
-                }}
-              >
-                <div
-                  style={{
-                    width: HANDLE_VISUAL,
-                    height: HANDLE_VISUAL,
-                    backgroundColor: 'white',
-                    border: '1.5px solid rgba(0,0,0,0.3)',
-                    borderRadius: 2,
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                  }}
-                />
-              </div>
-            );
-          })
-        )}
+        {/* Corner resize handles */}
+        {[
+          { key: 'tl' as Corner, cx: -halfW, cy: -halfH },
+          { key: 'tr' as Corner, cx: halfW, cy: -halfH },
+          { key: 'bl' as Corner, cx: -halfW, cy: halfH },
+          { key: 'br' as Corner, cx: halfW, cy: halfH },
+        ].map((c) => (
+          <div
+            key={c.key}
+            style={{
+              position: 'absolute',
+              left: containerSize / 2 + c.cx - HANDLE_SIZE / 2,
+              top: containerH / 2 + c.cy - HANDLE_SIZE / 2,
+              width: HANDLE_SIZE,
+              height: HANDLE_SIZE,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: cursorForCorner[c.key],
+              zIndex: 10,
+            }}
+          >
+            <div
+              style={{
+                width: HANDLE_VISUAL,
+                height: HANDLE_VISUAL,
+                backgroundColor: 'white',
+                border: '1.5px solid rgba(0,0,0,0.3)',
+                borderRadius: 2,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+              }}
+            />
+          </div>
+        ))}
       </div>
 
       <p className="text-xs text-text-sub text-center">
-        {isCircle && resizable
-          ? 'Перетащите для перемещения, прокрутите для масштабирования, потяните за углы для изменения размера'
-          : 'Перетащите для перемещения, прокрутите для масштабирования'}
+        Перетащите для перемещения, прокрутите для масштабирования, потяните за углы для изменения размера
       </p>
 
       <div className="flex gap-4 w-full">

@@ -18,7 +18,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const isPreviewUpload = images.length === 0;
+  const nextImageIndex = images.length;
   const fileRef = useRef<HTMLInputElement>(null);
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
@@ -193,17 +193,43 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
       </Button>
       {error && <p className="text-xs text-brand-red">{error}</p>}
 
-      {cropSrc && (
+      {cropSrc && nextImageIndex === 0 && (
         <CropModal
           imageSrc={cropSrc}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
           shape="rectangle"
-          outputWidth={isPreviewUpload ? 524 : 800}
-          outputHeight={isPreviewUpload ? 408 : 600}
-          cropWidth={isPreviewUpload ? 262 : 360}
-          cropHeight={isPreviewUpload ? 204 : 270}
-          title={isPreviewUpload ? 'Превью статьи' : 'Изображение статьи'}
+          outputWidth={524}
+          outputHeight={408}
+          cropWidth={262}
+          cropHeight={204}
+          title="Превью статьи"
+        />
+      )}
+      {cropSrc && nextImageIndex === 1 && (
+        <CropModal
+          imageSrc={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+          shape="rectangle"
+          outputWidth={1920}
+          outputHeight={531}
+          cropWidth={384}
+          cropHeight={106}
+          title="Основное изображение"
+        />
+      )}
+      {cropSrc && nextImageIndex >= 2 && (
+        <CropModal
+          imageSrc={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+          shape="rectangle"
+          outputWidth={1920}
+          outputHeight={1080}
+          cropWidth={384}
+          cropHeight={216}
+          title="Изображение статьи"
         />
       )}
     </div>
