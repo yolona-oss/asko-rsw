@@ -226,17 +226,30 @@ export class DeviceController {
 
     // ── Public: browse catalog ──
 
+    private parseDeviceJson(device: any) {
+        if (!device) return device;
+        if (typeof device.specifications === 'string' && device.specifications) {
+            try { device.specifications = JSON.parse(device.specifications); } catch { /* keep string */ }
+        }
+        if (typeof device.features === 'string' && device.features) {
+            try { device.features = JSON.parse(device.features); } catch { /* keep string */ }
+        }
+        return device;
+    }
+
     @Public()
     @Get()
     @ApiOkResponse({ type: PaginatedDevicesResponseDto })
     async findAll(@Query() query: DeviceQueryDto) {
-        return this.deviceClient.findAllDevices({
+        const result = await this.deviceClient.findAllDevices({
             offset: query.offset,
             limit: query.limit,
             search: query.search,
             type: query.type,
             isFeatured: query.isFeatured,
         });
+        if (result.data) result.data = result.data.map((d: any) => this.parseDeviceJson(d));
+        return result;
     }
 
     @Public()
@@ -244,7 +257,7 @@ export class DeviceController {
     @ApiOkResponse({ type: DeviceRecordDto })
     async findBySlug(@Param('slug') slug: string) {
         const result = await this.deviceClient.findDeviceBySlug(slug);
-        return result.device;
+        return this.parseDeviceJson(result.device);
     }
 
     @Public()
@@ -260,7 +273,7 @@ export class DeviceController {
     @ApiOkResponse({ type: DeviceRecordDto })
     async findOne(@Param('id') id: string) {
         const result = await this.deviceClient.findDeviceById(id);
-        return result.device;
+        return this.parseDeviceJson(result.device);
     }
 
     @Public()

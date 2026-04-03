@@ -11,7 +11,7 @@ import { ProductAllSpecs } from '@/components/devices/product-all-specs';
 import { ArticleRecommendations } from '@/components/articles/article-recommendations';
 import { fetchDeviceBySlug, fetchDeviceImageUrlsBySlug, fetchDeviceImagesBySlug } from '@/lib/api/device.server';
 import { fetchDeviceCategories } from '@/lib/api/device-category.server';
-import { fetchArticlesByTags, fetchArticlePreviewImage } from '@/lib/api/article.server';
+import { fetchArticles, fetchArticlesByTags, fetchArticlePreviewImage } from '@/lib/api/article.server';
 
 export async function generateMetadata({
   params,
@@ -101,14 +101,22 @@ export default async function ProductPage({
   const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
   const product = deviceToProduct(device, images, typeLabels);
 
-  // Fetch related articles by device tags
+  // Fetch related articles by device tags, fallback to latest if fewer than 4
   const deviceTags = [
     typeLabels[device.type]?.toLowerCase(),
     device.brand?.toLowerCase(),
     device.model?.toLowerCase(),
   ].filter(Boolean) as string[];
 
-  const relatedArticles = deviceTags.length > 0 ? await fetchArticlesByTags(deviceTags, 4) : [];
+  let relatedArticles = deviceTags.length > 0 ? await fetchArticlesByTags(deviceTags, 4) : [];
+
+  if (relatedArticles.length < 4) {
+    const existing = new Set(relatedArticles.map((a) => a.id));
+    const fallback = await fetchArticles(1, 4);
+    const extra = (fallback.data ?? []).filter((a) => !existing.has(a.id));
+    relatedArticles = [...relatedArticles, ...extra].slice(0, 4);
+  }
+
   const articleImageMap = new Map<string, string | null>();
   const articleImgResults = await Promise.all(
     relatedArticles.map((a) => fetchArticlePreviewImage(a.slug)),
