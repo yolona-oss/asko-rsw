@@ -42,7 +42,7 @@ export class PaginatedConversationsResponseDto {
     @ApiProperty({ type: [ConversationRecordDto] })
     data: ConversationRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -54,7 +54,7 @@ export class PaginatedMessagesResponseDto {
     @ApiProperty({ type: [ChatMessageRecordDto] })
     data: ChatMessageRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

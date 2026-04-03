@@ -165,7 +165,7 @@ export class DeviceService {
     // ── Device catalog (public queries) ─────────────────────────────────
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<{ data: Device[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<{ data: Device[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
             where.$or = [
@@ -182,7 +182,7 @@ export class DeviceService {
         }
 
         const limit = pagination.limit ?? 20;
-        const offset = ((pagination.offset ?? 1) - 1) * limit;
+        const offset = ((pagination.page ?? 1) - 1) * limit;
 
         const [data, total] = await this.em.findAndCount(Device, where, {
             limit,

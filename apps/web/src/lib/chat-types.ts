@@ -34,14 +34,14 @@ export interface ChatConversation {
 export interface PaginatedConversations {
   data: ChatConversation[];
   overallCount: number;
-  offset: number;
+  page: number;
   limit: number;
 }
 
 export interface PaginatedMessages {
   data: ChatMessage[];
   overallCount: number;
-  offset: number;
+  page: number;
   limit: number;
 }
 

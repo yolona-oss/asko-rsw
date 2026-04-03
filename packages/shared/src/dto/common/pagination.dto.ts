@@ -3,7 +3,7 @@ import { IsOptional, IsNumber, IsString } from 'class-validator';
 export class PaginationDto {
     @IsOptional()
     @IsNumber()
-    offset?: number = 1;
+    page?: number = 1;
 
     @IsOptional()
     @IsNumber()
@@ -26,6 +26,6 @@ export interface ListResponseDto<T> {
 }
 
 export const DefaultedPagination: PaginationDto = {
-    offset: 1,
+    page: 1,
     limit: 10
 }

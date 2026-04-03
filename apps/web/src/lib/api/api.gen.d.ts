@@ -3138,7 +3138,7 @@ export interface components {
         PaginatedUsersResponseDto: {
             data: components["schemas"]["UserResponseDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         ChangePasswordDto: Record<string, never>;
@@ -3231,7 +3231,7 @@ export interface components {
         PaginatedConversationsResponseDto: {
             data: components["schemas"]["ConversationRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         ParticipantListResponseDto: {
@@ -3243,7 +3243,7 @@ export interface components {
         PaginatedMessagesResponseDto: {
             data: components["schemas"]["ChatMessageRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         ChatUnreadCountResponseDto: {
@@ -3283,7 +3283,7 @@ export interface components {
         PaginatedArticlesResponseDto: {
             data: components["schemas"]["ArticleResponseDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         RecommendedArticlesResponseDto: {
@@ -3341,7 +3341,7 @@ export interface components {
         PaginatedDevicesResponseDto: {
             data: components["schemas"]["DeviceRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         RegisterUserDeviceDto: Record<string, never>;
@@ -3432,7 +3432,7 @@ export interface components {
         PaginatedCertificatesResponseDto: {
             data: components["schemas"]["CertificateRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         ProcessInvoiceResponseDto: {
@@ -3544,7 +3544,7 @@ export interface components {
         PaginatedRepairRequestsResponseDto: {
             data: components["schemas"]["RepairRequestRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         RequestRefundDto: Record<string, never>;
@@ -3588,7 +3588,7 @@ export interface components {
         PaginatedNotificationsResponseDto: {
             data: components["schemas"]["NotificationRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         UnreadCountResponseDto: {
@@ -3603,7 +3603,7 @@ export interface components {
         PaginatedRepairersResponseDto: {
             data: components["schemas"]["RepairerRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         RepairerListResponseDto: {
@@ -3616,7 +3616,7 @@ export interface components {
         PaginatedDealersResponseDto: {
             data: components["schemas"]["DealerProfileRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         WithdrawalRecordDto: {
@@ -3631,7 +3631,7 @@ export interface components {
         PaginatedWithdrawalsResponseDto: {
             data: components["schemas"]["WithdrawalRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         ProcessWithdrawalDto: Record<string, never>;
@@ -3674,7 +3674,7 @@ export interface components {
         PaginatedPointsResponseDto: {
             data: components["schemas"]["PointsTransactionRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         RequestPointsWithdrawalDto: Record<string, never>;
@@ -3704,7 +3704,7 @@ export interface components {
         PaginatedReviewsResponseDto: {
             data: components["schemas"]["ReviewRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         PaymentOptionsResponseDto: {
@@ -3715,7 +3715,7 @@ export interface components {
         PaginatedPaymentsResponseDto: {
             data: components["schemas"]["PaymentRecordDto"][];
             overallCount: number;
-            offset: number;
+            page: number;
             limit: number;
         };
         PaymentStatsResponseDto: {
@@ -5100,7 +5100,7 @@ export interface operations {
     ChatController_listConversations: {
         parameters: {
             query: {
-                offset: string;
+                page: string;
                 limit: string;
             };
             header?: never;
@@ -5247,7 +5247,7 @@ export interface operations {
     ChatController_listMessages: {
         parameters: {
             query: {
-                offset: string;
+                page: string;
                 limit: string;
                 beforeId: string;
             };
@@ -7609,7 +7609,7 @@ export interface operations {
     NotificationController_list: {
         parameters: {
             query: {
-                offset: string;
+                page: string;
                 limit: string;
                 unreadOnly: string;
             };
@@ -8501,7 +8501,7 @@ export interface operations {
     PaymentController_listPayments: {
         parameters: {
             query: {
-                offset: number;
+                page: number;
                 limit: number;
                 status: string;
                 provider: string;
@@ -8545,7 +8545,7 @@ export interface operations {
     PaymentController_getMyPayments: {
         parameters: {
             query: {
-                offset: number;
+                page: number;
                 limit: number;
                 status: string;
             };

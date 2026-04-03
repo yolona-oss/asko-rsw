@@ -152,7 +152,7 @@ export type IAddressBook = AddressRecord;
 /** @deprecated Use specific paginated type (PaginatedDevices, PaginatedCertificates, etc.) */
 export type ListResponseDto<T> = { data: T[]; total: number };
 /** @deprecated Use specific paginated type */
-export type PaginatedResponseDto<T> = { data: T[]; overallCount: number; pagination: { offset?: number; limit?: number } };
+export type PaginatedResponseDto<T> = { data: T[]; overallCount: number; pagination: { page?: number; limit?: number } };
 
 export type ProcessInvoiceResult = ProcessInvoice;
 export type PaymentOptionsDto = PaymentOptions;

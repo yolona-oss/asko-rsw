@@ -3,12 +3,12 @@ import { serverGet } from './server-fetch';
 import { getPlaceholderSrc } from '@/lib/placeholders';
 
 export async function fetchDevices(page: number, limit: number): Promise<PaginatedDevices> {
-  const data = await serverGet<PaginatedDevices>(`/devices?offset=${page}&limit=${limit}`);
-  return data ?? { data: [] as IDevice[], overallCount: 0, offset: 0, limit };
+  const data = await serverGet<PaginatedDevices>(`/devices?page=${page}&limit=${limit}`);
+  return data ?? { data: [] as IDevice[], overallCount: 0, page: 1, limit };
 }
 
 export async function fetchFeaturedDevices(type?: string): Promise<IDevice[]> {
-  const params = new URLSearchParams({ isFeatured: 'true', limit: '20', offset: '1' });
+  const params = new URLSearchParams({ isFeatured: 'true', limit: '20', page: '1' });
   if (type) params.set('type', type);
   const data = await serverGet<PaginatedDevices>(`/devices?${params}`);
   return data?.data ?? [];

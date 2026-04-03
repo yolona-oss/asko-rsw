@@ -48,7 +48,7 @@ export function RepairerRequests() {
     setLoading(true);
     try {
       const params = {
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
       };

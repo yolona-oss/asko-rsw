@@ -189,13 +189,13 @@ export class DealerGrpcController {
     async getPointsHistory(data: DealerPointsHistoryRequest) {
         try {
             const result = await this.dealerService.getPointsHistory(data.userId, {
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(transactionToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -235,13 +235,13 @@ export class DealerGrpcController {
     async getAllWithdrawals(data: DealerPaginationRequest) {
         try {
             const result = await this.dealerService.getAllWithdrawals({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(withdrawalToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -267,13 +267,13 @@ export class DealerGrpcController {
     async findAllDealers(data: DealerPaginationRequest) {
         try {
             const result = await this.dealerService.findAll({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(profileToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

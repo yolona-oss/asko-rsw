@@ -48,13 +48,13 @@ export class NotificationClientService implements OnModuleInit {
 
     listUserNotifications(
         userId: string,
-        offset?: number,
+        page?: number,
         limit?: number,
         unreadOnly?: boolean,
     ): Promise<PaginatedNotificationsResponse> {
         return grpcCall(this.notificationService.listUserNotifications({
             userId,
-            offset: offset ?? 0,
+            page: page ?? 0,
             limit: limit ?? 20,
             unreadOnly: unreadOnly ?? false,
         }));

@@ -56,9 +56,9 @@ export class ReviewService {
     }
 
     @CreateRequestContext()
-    async findByRepairer(repairerId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: Review[]; total: number }> {
+    async findByRepairer(repairerId: string, pagination: { page?: number; limit?: number }): Promise<{ data: Review[]; total: number }> {
         const limit = pagination.limit ?? 20;
-        const offset = ((pagination.offset ?? 1) - 1) * limit;
+        const offset = ((pagination.page ?? 1) - 1) * limit;
 
         const [data, total] = await this.em.findAndCount(
             Review,

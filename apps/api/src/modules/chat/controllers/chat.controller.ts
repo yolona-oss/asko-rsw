@@ -62,13 +62,13 @@ export class ChatController {
     @Get('conversations')
     async listConversations(
         @Req() req: any,
-        @Query('offset') offset?: string,
+        @Query('page') page?: string,
         @Query('limit') limit?: string,
     ) {
         const userId = req.user?.id;
         return this.chatClient.listUserConversations(
             userId,
-            offset ? parseInt(offset) : 0,
+            page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 20,
         );
     }
@@ -142,14 +142,14 @@ export class ChatController {
     async listMessages(
         @Param('id') conversationId: string,
         @Req() req: any,
-        @Query('offset') offset?: string,
+        @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('beforeId') beforeId?: string,
     ) {
         const userId = req.user?.id;
         return this.chatClient.listMessages(
             conversationId, userId,
-            offset ? parseInt(offset) : 0,
+            page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 50,
             beforeId,
         );

@@ -35,7 +35,7 @@ export class UserService {
     async findAll(dto: PaginationDto & { search?: string; role?: string; status?: string },
         relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
-        const offset = dto.offset ?? 0
+        const offset = dto.page ?? 0
         const limit = dto.limit ?? 10
 
         const where: Record<string, any> = {};
@@ -66,7 +66,7 @@ export class UserService {
             data: entities,
             overallCount,
             pagination: {
-                offset,
+                page: offset,
                 limit
             }
         }

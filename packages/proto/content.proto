@@ -59,7 +59,7 @@ message DeleteArticleRequest {
 }
 
 message FindAllArticlesRequest {
-    int32 offset = 1;
+    int32 page = 1;
     int32 limit = 2;
     string search = 3;
     repeated string tags = 4;
@@ -130,7 +130,7 @@ message ArticleResponse {
 message PaginatedArticlesResponse {
     repeated ArticleRecord data = 1;
     int32 overallCount = 2;
-    int32 offset = 3;
+    int32 page = 3;
     int32 limit = 4;
 }
 

@@ -118,12 +118,12 @@ message FindByEmailRequest {
 }
 
 message PaginationRequest {
-    int32 offset = 1;
+    int32 page = 1;
     int32 limit = 2;
 }
 
 message FindAllUsersRequest {
-    int32 offset = 1;
+    int32 page = 1;
     int32 limit = 2;
     string search = 3;
     string role = 4;
@@ -255,7 +255,7 @@ message UserResponse {
 message PaginatedUsersResponse {
     repeated UserResponse data = 1;
     int32 overall_count = 2;
-    int32 offset = 3;
+    int32 page = 3;
     int32 limit = 4;
 }
 

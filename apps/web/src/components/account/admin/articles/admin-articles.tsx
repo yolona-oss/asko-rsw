@@ -36,7 +36,7 @@ export function AdminArticles() {
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await articleApi.getAll({ offset: page, limit: PAGE_SIZE });
+      const { data } = await articleApi.getAll({ page: page, limit: PAGE_SIZE });
       setArticles(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch {

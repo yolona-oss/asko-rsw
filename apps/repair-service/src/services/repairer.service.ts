@@ -59,7 +59,7 @@ export class RepairerService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string }): Promise<{ data: Repairer[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string }): Promise<{ data: Repairer[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
             where.$or = [
@@ -68,7 +68,7 @@ export class RepairerService {
         }
 
         const limit = pagination.limit ?? 20;
-        const offset = ((pagination.offset ?? 1) - 1) * limit;
+        const offset = ((pagination.page ?? 1) - 1) * limit;
 
         const [data, total] = await this.em.findAndCount(Repairer, where, {
             limit,

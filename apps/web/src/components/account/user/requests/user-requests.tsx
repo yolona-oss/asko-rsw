@@ -38,7 +38,7 @@ export function UserRequests() {
     setLoading(true);
     try {
       const { data } = await repairRequestApi.getMy({
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,

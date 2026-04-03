@@ -409,7 +409,7 @@ export class UserGrpcController {
     async findAllUsers(data: FindAllUsersRequest): Promise<PaginatedUsersResponse> {
         try {
             const result = await this.userService.findAll({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
                 role: data.role || undefined,
@@ -418,7 +418,7 @@ export class UserGrpcController {
             return {
                 data: result.data.map(userToResponse),
                 overallCount: result.overallCount,
-                offset: result.pagination.offset ?? 0,
+                page: result.pagination.page ?? 0,
                 limit: result.pagination.limit ?? 10,
             };
         } catch (e) { throw toGrpcError(e); }

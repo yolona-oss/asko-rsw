@@ -56,7 +56,7 @@ export function ArticlesSection() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: resp } = await articleApi.getAll({ limit: 4, offset: 1 });
+        const { data: resp } = await articleApi.getAll({ limit: 4, page: 1 });
         const data = resp.data;
         if (!data || data.length === 0) return;
 

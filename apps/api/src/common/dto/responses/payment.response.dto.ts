@@ -26,7 +26,7 @@ export class PaginatedPaymentsResponseDto {
     @ApiProperty({ type: [PaymentRecordDto] })
     data: PaymentRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

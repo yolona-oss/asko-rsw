@@ -47,7 +47,7 @@ export function UserPayments() {
   async function fetchPayments() {
     try {
       const { data: result } = await paymentApi.getMyPayments({
-        offset: (page - 1) * pageSize,
+        page: (page - 1) * pageSize,
         limit: pageSize,
       });
       setPayments(result.data ?? []);

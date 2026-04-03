@@ -154,12 +154,12 @@ export class PaymentGrpcController {
         try {
             const result = await this.paymentService.listPayments(
                 { status: data.status || undefined, provider: data.provider || undefined },
-                { offset: data.offset, limit: data.limit, search: data.search || undefined },
+                { page: data.page, limit: data.limit, search: data.search || undefined },
             );
             return {
                 data: result.data.map(entityToRecord),
                 overallCount: result.overallCount,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -171,12 +171,12 @@ export class PaymentGrpcController {
             const result = await this.paymentService.listUserPayments(
                 data.userId,
                 { status: data.status || undefined },
-                { offset: data.offset, limit: data.limit },
+                { page: data.page, limit: data.limit },
             );
             return {
                 data: result.data.map(entityToRecord),
                 overallCount: result.overallCount,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

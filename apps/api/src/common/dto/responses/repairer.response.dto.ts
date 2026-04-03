@@ -32,6 +32,6 @@ export class PaginatedRepairersResponseDto {
     @ApiProperty({ type: [RepairerRecordDto] })
     data: RepairerRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }

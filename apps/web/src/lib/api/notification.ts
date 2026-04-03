@@ -2,7 +2,7 @@ import { api } from './client';
 import type { NotificationRecord, PaginatedNotifications, UnreadCount } from './types';
 
 export const notificationApi = {
-  list(params?: { offset?: number; limit?: number; unreadOnly?: boolean }) {
+  list(params?: { page?: number; limit?: number; unreadOnly?: boolean }) {
     return api.get<PaginatedNotifications>('/notifications', { params });
   },
 

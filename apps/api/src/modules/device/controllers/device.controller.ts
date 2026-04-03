@@ -23,7 +23,7 @@ import {
 class DeviceQueryDto {
     @IsOptional()
     @IsNumber()
-    offset?: number = 1;
+    page?: number = 1;
 
     @IsOptional()
     @IsNumber()
@@ -242,7 +242,7 @@ export class DeviceController {
     @ApiOkResponse({ type: PaginatedDevicesResponseDto })
     async findAll(@Query() query: DeviceQueryDto) {
         const result = await this.deviceClient.findAllDevices({
-            offset: query.offset,
+            page: query.page,
             limit: query.limit,
             search: query.search,
             type: query.type,

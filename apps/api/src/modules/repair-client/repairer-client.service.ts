@@ -49,9 +49,9 @@ export class RepairerClientService implements OnModuleInit {
         return grpcCall(this.repairerService.getMyProfile({ userId }));
     }
 
-    findAllRepairers(pagination: { offset?: number; limit?: number; search?: string }): Promise<PaginatedRepairersResponse> {
+    findAllRepairers(pagination: { page?: number; limit?: number; search?: string }): Promise<PaginatedRepairersResponse> {
         return grpcCall(this.repairerService.findAllRepairers({
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
         }));
@@ -89,10 +89,10 @@ export class RepairerClientService implements OnModuleInit {
         }));
     }
 
-    findReviewsByRepairer(repairerId: string, pagination: { offset?: number; limit?: number }): Promise<PaginatedReviewsResponse> {
+    findReviewsByRepairer(repairerId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedReviewsResponse> {
         return grpcCall(this.repairerService.findReviewsByRepairer({
             repairerId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
         }));
     }

@@ -14,7 +14,7 @@ export interface CreateNotificationRequest {
 
 export interface ListUserNotificationsRequest {
     userId: string;
-    offset: number;
+    page: number;
     limit: number;
     unreadOnly: boolean;
 }
@@ -62,7 +62,7 @@ export interface NotificationResponse {
 export interface PaginatedNotificationsResponse {
     data: NotificationRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

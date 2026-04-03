@@ -174,7 +174,7 @@ export class DealerService {
             { dealer: dealer.id },
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
             }
         );
@@ -336,7 +336,7 @@ export class DealerService {
             {},
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { requestedAt: 'DESC' },
                 populate: ['dealer'],
             }
@@ -352,7 +352,7 @@ export class DealerService {
             {},
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
             }
         );

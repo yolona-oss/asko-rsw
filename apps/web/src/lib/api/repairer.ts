@@ -10,11 +10,11 @@ import type {
 import { api } from './client';
 
 export const repairerApi = {
-  getAll(params?: { offset?: number; limit?: number; search?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string }) {
     return api.get<PaginatedRepairers>('/repairers', { params });
   },
 
-  getForAssignment(params?: { offset?: number; limit?: number }) {
+  getForAssignment(params?: { page?: number; limit?: number }) {
     return api.get<PaginatedRepairers>('/repairers/for-assignment', { params });
   },
 

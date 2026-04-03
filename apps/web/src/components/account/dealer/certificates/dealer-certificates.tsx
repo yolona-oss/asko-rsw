@@ -33,7 +33,7 @@ export function DealerCertificates() {
     setLoading(true);
     try {
       const params: Record<string, any> = {
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
       };
       if (statusFilter !== 'all') params.status = statusFilter;

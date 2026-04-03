@@ -33,15 +33,15 @@ export const dealerApi = {
     } as any);
   },
 
-  getPointsHistory(params?: { offset?: number; limit?: number }) {
+  getPointsHistory(params?: { page?: number; limit?: number }) {
     return api.get<PaginatedPoints>('/dealers/points', { params });
   },
 
-  getCertificates(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
+  getCertificates(params?: { page?: number; limit?: number; search?: string; status?: string }) {
     return api.get<PaginatedCertificates>('/certificates/dealer', { params });
   },
 
-  getDeviceCatalog(params?: { offset?: number; limit?: number }) {
+  getDeviceCatalog(params?: { page?: number; limit?: number }) {
     return api.get<PaginatedDevices>('/devices', { params });
   },
 

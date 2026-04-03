@@ -46,11 +46,11 @@ export class ChatClientService implements OnModuleInit {
 
     listUserConversations(
         userId: string,
-        offset?: number,
+        page?: number,
         limit?: number,
     ): Promise<PaginatedConversationsResponse> {
         return grpcCall(this.chatService.listUserConversations({
-            userId, offset: offset ?? 0, limit: limit ?? 20,
+            userId, page: page ?? 0, limit: limit ?? 20,
         }));
     }
 
@@ -97,14 +97,14 @@ export class ChatClientService implements OnModuleInit {
     listMessages(
         conversationId: string,
         userId: string,
-        offset?: number,
+        page?: number,
         limit?: number,
         beforeId?: string,
     ): Promise<PaginatedMessagesResponse> {
         return grpcCall(this.chatService.listMessages({
             conversationId,
             userId,
-            offset: offset ?? 0,
+            page: page ?? 0,
             limit: limit ?? 50,
             beforeId: beforeId ?? '',
         }));

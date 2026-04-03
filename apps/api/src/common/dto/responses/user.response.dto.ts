@@ -10,6 +10,6 @@ export class PaginatedUsersResponseDto {
     @ApiProperty({ type: [UserResponseDto] })
     data: UserResponseDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }

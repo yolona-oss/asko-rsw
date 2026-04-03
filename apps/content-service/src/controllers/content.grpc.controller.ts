@@ -111,7 +111,7 @@ export class ContentGrpcController {
     async findAllArticles(data: FindAllArticlesRequest) {
         try {
             const result = await this.contentService.findAll({
-                offset: data.offset || undefined,
+                page: data.page || undefined,
                 limit: data.limit || undefined,
                 search: data.search || undefined,
                 tags: data.tags?.length ? data.tags : undefined,
@@ -122,7 +122,7 @@ export class ContentGrpcController {
             return {
                 data: result.data.map((a) => articleToRecord(a, tagMap.get(a.id) ?? [])),
                 overallCount: result.total,
-                offset: data.offset ?? 0,
+                page: data.page ?? 0,
                 limit: data.limit ?? 20,
             };
         } catch (e) { throw toGrpcError(e); }

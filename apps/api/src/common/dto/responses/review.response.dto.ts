@@ -23,7 +23,7 @@ export class PaginatedReviewsResponseDto {
     @ApiProperty({ type: [ReviewRecordDto] })
     data: ReviewRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

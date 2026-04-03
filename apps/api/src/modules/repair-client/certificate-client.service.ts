@@ -91,13 +91,13 @@ export class CertificateClientService implements OnModuleInit {
     }
 
     findByDealer(dealerId: string, pagination: {
-        offset?: number;
+        page?: number;
         limit?: number;
         search?: string;
     }, status?: string): Promise<PaginatedCertificatesResponse> {
         return grpcCall(this.certificateService.findByDealer({
             dealerId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: status ?? '',
@@ -105,13 +105,13 @@ export class CertificateClientService implements OnModuleInit {
     }
 
     findAll(pagination: {
-        offset?: number;
+        page?: number;
         limit?: number;
         search?: string;
         status?: string;
     }): Promise<PaginatedCertificatesResponse> {
         return grpcCall(this.certificateService.findAll({
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: pagination.status ?? '',

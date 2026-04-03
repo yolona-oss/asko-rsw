@@ -96,7 +96,7 @@ export class ConversationService {
     @CreateRequestContext()
     async listUserConversations(
         userId: string,
-        offset: number,
+        page: number,
         limit: number,
     ): Promise<{ data: Conversation[]; overallCount: number }> {
         // Find conversation IDs where user is a participant
@@ -111,7 +111,7 @@ export class ConversationService {
         const [data, overallCount] = await this.em.findAndCount(Conversation, where, {
             populate: ['participants'],
             orderBy: { updatedAt: 'DESC' },
-            offset,
+            offset: page,
             limit,
         });
 

@@ -132,7 +132,7 @@ export class ChatGrpcController {
     async listUserConversations(data: ListUserConversationsRequest) {
         try {
             const result = await this.conversationService.listUserConversations(
-                data.userId, data.offset ?? 0, data.limit ?? 20,
+                data.userId, data.page ?? 0, data.limit ?? 20,
             );
             const records = await Promise.all(
                 result.data.map(async (conv) => {
@@ -144,7 +144,7 @@ export class ChatGrpcController {
             return {
                 data: records,
                 overallCount: result.overallCount,
-                offset: data.offset ?? 0,
+                page: data.page ?? 0,
                 limit: data.limit ?? 20,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -210,13 +210,13 @@ export class ChatGrpcController {
         try {
             const result = await this.messageService.listMessages(
                 data.conversationId, data.userId,
-                data.offset ?? 0, data.limit ?? 50,
+                data.page ?? 0, data.limit ?? 50,
                 data.beforeId || undefined,
             );
             return {
                 data: result.data.map(messageToRecord),
                 overallCount: result.overallCount,
-                offset: data.offset ?? 0,
+                page: data.page ?? 0,
                 limit: data.limit ?? 50,
             };
         } catch (e) { throw toGrpcError(e); }

@@ -503,7 +503,7 @@ export class RepairGrpcController {
     async findByUser(data: RepairFindByUserRequest) {
         try {
             const result = await this.repairRequestService.findByUser(data.userId, {
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
                 status: data.status || undefined,
@@ -511,7 +511,7 @@ export class RepairGrpcController {
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -521,13 +521,13 @@ export class RepairGrpcController {
     async findByRepairer(data: RepairFindByRepairerRequest) {
         try {
             const result = await this.repairRequestService.findByRepairer(data.repairerUserId, {
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -538,14 +538,14 @@ export class RepairGrpcController {
         try {
             const result = await this.repairRequestService.findByRepairerFiltered(
                 data.repairerUserId,
-                { offset: data.offset, limit: data.limit },
+                { page: data.page, limit: data.limit },
                 data.status || undefined,
                 data.search || undefined,
             );
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -555,13 +555,13 @@ export class RepairGrpcController {
     async findPausedByRepairer(data: RepairFindPausedByRepairerRequest) {
         try {
             const result = await this.repairRequestService.findPausedByRepairer(data.repairerUserId, {
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -579,7 +579,7 @@ export class RepairGrpcController {
     async findAll(data: RepairFindAllRequest) {
         try {
             const result = await this.repairRequestService.findAll({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
                 status: data.status || undefined,
@@ -587,7 +587,7 @@ export class RepairGrpcController {
             return {
                 data: result.data.map(requestToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

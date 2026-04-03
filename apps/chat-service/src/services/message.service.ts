@@ -75,7 +75,7 @@ export class MessageService {
     async listMessages(
         conversationId: string,
         userId: string,
-        offset: number,
+        page: number,
         limit: number,
         beforeId?: string,
     ): Promise<{ data: Message[]; overallCount: number }> {
@@ -97,7 +97,7 @@ export class MessageService {
 
         const [data, overallCount] = await this.em.findAndCount(Message, where, {
             orderBy: { createdAt: 'DESC' },
-            offset,
+            offset: page,
             limit,
         });
 

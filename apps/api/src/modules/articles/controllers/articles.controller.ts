@@ -177,7 +177,7 @@ export class ArticlesController {
     async findAll(@Query() pagination: PaginationDto, @Query('tags') tags?: string) {
         const tagList = tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined;
         const result = await this.contentClient.findAllArticles(
-            pagination.offset,
+            pagination.page,
             pagination.limit,
             pagination.search,
             tagList,

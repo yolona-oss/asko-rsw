@@ -45,7 +45,7 @@ message GetConversationRequest {
 
 message ListUserConversationsRequest {
     string userId = 1;
-    int32 offset = 2;
+    int32 page = 2;
     int32 limit = 3;
 }
 
@@ -86,7 +86,7 @@ message SendMessageRequest {
 message ListMessagesRequest {
     string conversationId = 1;
     string userId = 2;
-    int32 offset = 3;
+    int32 page = 3;
     int32 limit = 4;
     string beforeId = 5;
 }
@@ -151,7 +151,7 @@ message ConversationResponse {
 message PaginatedConversationsResponse {
     repeated ConversationRecord data = 1;
     int32 overallCount = 2;
-    int32 offset = 3;
+    int32 page = 3;
     int32 limit = 4;
 }
 
@@ -187,7 +187,7 @@ message MessageResponse {
 message PaginatedMessagesResponse {
     repeated MessageRecord data = 1;
     int32 overallCount = 2;
-    int32 offset = 3;
+    int32 page = 3;
     int32 limit = 4;
 }
 

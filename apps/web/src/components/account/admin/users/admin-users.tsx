@@ -46,7 +46,7 @@ export function AdminUsers() {
     setLoading(true);
     try {
       const { data } = await usersApi.getAll({
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
         role: filterValues.role || undefined,

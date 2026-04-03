@@ -37,7 +37,7 @@ export class PaginatedCertificatesResponseDto {
     @ApiProperty({ type: [CertificateRecordDto] })
     data: CertificateRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

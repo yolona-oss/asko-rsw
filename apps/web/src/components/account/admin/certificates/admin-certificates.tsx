@@ -35,7 +35,7 @@ export function AdminCertificates() {
     setLoading(true);
     try {
       const { data } = await certificateApi.getAll({
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
         status: filterValues.status as string,

@@ -78,9 +78,9 @@ export class DeviceClientService implements OnModuleInit {
 
     // ── Device catalog (public) ──
 
-    findAllDevices(pagination: { offset?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<PaginatedDevicesResponse> {
+    findAllDevices(pagination: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<PaginatedDevicesResponse> {
         return grpcCall(this.deviceService.findAllDevices({
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             type: pagination.type ?? '',

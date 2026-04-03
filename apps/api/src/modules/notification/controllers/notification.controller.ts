@@ -20,14 +20,14 @@ export class NotificationController {
     @Get()
     async list(
         @Req() req: any,
-        @Query('offset') offset?: string,
+        @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('unreadOnly') unreadOnly?: string,
     ) {
         const userId = req.user?.id;
         return this.notificationClient.listUserNotifications(
             userId,
-            offset ? parseInt(offset) : 0,
+            page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 20,
             unreadOnly === 'true',
         );

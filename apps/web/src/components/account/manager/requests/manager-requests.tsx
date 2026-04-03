@@ -39,7 +39,7 @@ export function ManagerRequests() {
     setLoading(true);
     try {
       const { data } = await repairRequestApi.getAll({
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
         status: activeTab !== 'all' ? activeTab : undefined,

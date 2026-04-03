@@ -38,7 +38,7 @@ export class ListMessagesDto {
     @IsInt()
     @Min(0)
     @IsOptional()
-    offset?: number;
+    page?: number;
 
     @IsInt()
     @Min(1)
@@ -54,7 +54,7 @@ export class ListConversationsDto {
     @IsInt()
     @Min(0)
     @IsOptional()
-    offset?: number;
+    page?: number;
 
     @IsInt()
     @Min(1)

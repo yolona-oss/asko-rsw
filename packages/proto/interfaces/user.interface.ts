@@ -116,12 +116,12 @@ export interface FindByEmailRequest {
 }
 
 export interface PaginationRequest {
-    offset: number;
+    page: number;
     limit: number;
 }
 
 export interface FindAllUsersRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     role: string;
@@ -253,7 +253,7 @@ export interface UserResponse {
 export interface PaginatedUsersResponse {
     data: UserResponse[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

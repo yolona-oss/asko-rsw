@@ -79,7 +79,7 @@ export function ModelsSection() {
 
         // Fetch featured first
         const { data: featuredResp } = await deviceApi.getAll({
-          isFeatured: true, limit: 4, offset: 1, type: typeParam,
+          isFeatured: true, limit: 4, page: 1, type: typeParam,
         });
         let devices = featuredResp.data ?? [];
 
@@ -87,7 +87,7 @@ export function ModelsSection() {
         if (devices.length < 4) {
           const featuredIds = new Set(devices.map((d) => d.id));
           const { data: allResp } = await deviceApi.getAll({
-            limit: 4, offset: 1, type: typeParam,
+            limit: 4, page: 1, type: typeParam,
           });
           const extra = (allResp.data ?? []).filter((d) => !featuredIds.has(d.id));
           devices = [...devices, ...extra].slice(0, 4);

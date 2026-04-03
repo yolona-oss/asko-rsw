@@ -18,4 +18,4 @@ echo "  redis                -> localhost:6379"
 echo "  rabbitmq             -> localhost:5672 (management: localhost:15672)"
 echo ""
 
-pnpm dlx turbo run start:dev --filter='!@asko/web' --filter='!@asko/ui' --filter='!@asko/shared' --filter='!@asko/proto'
+pnpm turbo run start:dev --filter='!@asko/web' --filter='!@asko/ui' --filter='!@asko/shared' --filter='!@asko/proto'

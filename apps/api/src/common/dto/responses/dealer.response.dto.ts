@@ -24,7 +24,7 @@ export class PaginatedDealersResponseDto {
     @ApiProperty({ type: [DealerProfileRecordDto] })
     data: DealerProfileRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -74,7 +74,7 @@ export class PaginatedPointsResponseDto {
     @ApiProperty({ type: [PointsTransactionRecordDto] })
     data: PointsTransactionRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -101,6 +101,6 @@ export class PaginatedWithdrawalsResponseDto {
     @ApiProperty({ type: [WithdrawalRecordDto] })
     data: WithdrawalRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }

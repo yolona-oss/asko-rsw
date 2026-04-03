@@ -1735,7 +1735,7 @@
         "operationId": "ChatController_listConversations",
         "parameters": [
           {
-            "name": "offset",
+            "name": "page",
             "required": true,
             "in": "query",
             "schema": {
@@ -1963,7 +1963,7 @@
             }
           },
           {
-            "name": "offset",
+            "name": "page",
             "required": true,
             "in": "query",
             "schema": {
@@ -5322,7 +5322,7 @@
         "operationId": "NotificationController_list",
         "parameters": [
           {
-            "name": "offset",
+            "name": "page",
             "required": true,
             "in": "query",
             "schema": {
@@ -6502,7 +6502,7 @@
         "operationId": "PaymentController_listPayments",
         "parameters": [
           {
-            "name": "offset",
+            "name": "page",
             "required": true,
             "in": "query",
             "schema": {
@@ -6585,7 +6585,7 @@
         "operationId": "PaymentController_getMyPayments",
         "parameters": [
           {
-            "name": "offset",
+            "name": "page",
             "required": true,
             "in": "query",
             "schema": {
@@ -7114,7 +7114,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -7124,7 +7124,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -7475,7 +7475,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -7485,7 +7485,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -7526,7 +7526,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -7536,7 +7536,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -7684,7 +7684,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -7694,7 +7694,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -7907,7 +7907,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -7917,7 +7917,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -8252,7 +8252,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -8262,7 +8262,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -8668,7 +8668,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -8678,7 +8678,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -8842,7 +8842,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -8852,7 +8852,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -8902,7 +8902,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -8912,7 +8912,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -8957,7 +8957,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -8967,7 +8967,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -9016,7 +9016,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -9026,7 +9026,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -9188,7 +9188,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -9198,7 +9198,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -9310,7 +9310,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -9320,7 +9320,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },
@@ -9358,7 +9358,7 @@
           "overallCount": {
             "type": "number"
           },
-          "offset": {
+          "page": {
             "type": "number"
           },
           "limit": {
@@ -9368,7 +9368,7 @@
         "required": [
           "data",
           "overallCount",
-          "offset",
+          "page",
           "limit"
         ]
       },

@@ -456,7 +456,7 @@ export class PaymentService {
 
         const [data, overallCount] = await this.em.findAndCount(PaymentEntity, where, {
             orderBy: { createdAt: 'DESC' },
-            offset: pagination.offset ?? 0,
+            offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 50),
             limit: pagination.limit ?? 50,
         });
         return {
@@ -476,7 +476,7 @@ export class PaymentService {
 
         const [data, overallCount] = await this.em.findAndCount(PaymentEntity, where, {
             orderBy: { createdAt: 'DESC' },
-            offset: pagination.offset ?? 0,
+            offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 50),
             limit: pagination.limit ?? 50,
         });
         return {

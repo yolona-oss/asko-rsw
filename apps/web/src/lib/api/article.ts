@@ -5,7 +5,7 @@ import { api } from './client';
 // ── Client-side API (uses axios — requires Redux store) ──────────────
 
 export const articleApi = {
-  getAll(params?: { offset?: number; limit?: number; search?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string }) {
     return api.get<PaginatedArticles>('/articles', { params });
   },
 

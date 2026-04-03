@@ -54,7 +54,7 @@ export class PaymentController {
     @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @Get('list')
     async listPayments(
-        @Query('offset') offset?: number,
+        @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,
         @Query('provider') provider?: string,
@@ -62,7 +62,7 @@ export class PaymentController {
     ) {
         const result = await this.paymentService.listPayments(
             { status, provider },
-            { offset, limit, search },
+            { page, limit, search },
         );
         result.data = result.data ?? [];
         await this.enrichPayments(result.data);
@@ -81,14 +81,14 @@ export class PaymentController {
     @Get('my')
     async getMyPayments(
         @JwtAuthUser() user: JwtPayload,
-        @Query('offset') offset?: number,
+        @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,
     ) {
         return this.paymentService.listUserPayments(
             user.sub,
             { status },
-            { offset, limit },
+            { page, limit },
         );
     }
 

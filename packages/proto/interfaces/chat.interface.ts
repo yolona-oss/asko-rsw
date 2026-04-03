@@ -16,7 +16,7 @@ export interface GetConversationRequest {
 
 export interface ListUserConversationsRequest {
     userId: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -57,7 +57,7 @@ export interface SendMessageRequest {
 export interface ListMessagesRequest {
     conversationId: string;
     userId: string;
-    offset: number;
+    page: number;
     limit: number;
     beforeId: string;
 }
@@ -122,7 +122,7 @@ export interface ConversationResponse {
 export interface PaginatedConversationsResponse {
     data: ConversationRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -158,7 +158,7 @@ export interface MessageResponse {
 export interface PaginatedMessagesResponse {
     data: MessageRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

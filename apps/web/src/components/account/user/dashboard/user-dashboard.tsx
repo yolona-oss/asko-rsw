@@ -45,7 +45,7 @@ export function UserDashboard() {
     async function fetchData() {
       try {
         const [reqRes, certRes] = await Promise.all([
-          repairRequestApi.getMy({ offset: 1, limit: 1 }),
+          repairRequestApi.getMy({ page: 1, limit: 1 }),
           certificateApi.getMy(),
           fetchPendingPayments(),
         ]);

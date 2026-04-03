@@ -61,7 +61,7 @@ export class NotificationService {
     @CreateRequestContext()
     async listUserNotifications(
         userId: string,
-        offset: number,
+        page: number,
         limit: number,
         unreadOnly: boolean,
     ): Promise<{ data: NotificationEntity[]; overallCount: number }> {
@@ -70,7 +70,7 @@ export class NotificationService {
 
         const [data, overallCount] = await this.em.findAndCount(NotificationEntity, where, {
             orderBy: { createdAt: 'DESC' },
-            offset,
+            offset: page,
             limit,
         });
 

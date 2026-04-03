@@ -111,7 +111,7 @@ export function ManagerPayments() {
     async function fetchData() {
       try {
         const res = await paymentApi.listPayments({
-          offset: (page - 1) * pageSize,
+          page: (page - 1) * pageSize,
           limit: pageSize,
           status: filterValues.status || undefined,
           provider: filterValues.provider || undefined,

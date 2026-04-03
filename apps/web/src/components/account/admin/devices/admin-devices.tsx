@@ -70,7 +70,7 @@ export function AdminDevices() {
     setLoading(true);
     try {
       const { data } = await deviceApi.getAll({
-        offset: page,
+        page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
         type: filterValues.type || undefined,

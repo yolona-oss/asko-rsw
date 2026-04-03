@@ -55,7 +55,7 @@ export interface GetPaymentsByTargetRequest {
 export interface ListPaymentsRequest {
     status: string;
     provider: string;
-    offset: number;
+    page: number;
     limit: number;
     search: string;
 }
@@ -63,7 +63,7 @@ export interface ListPaymentsRequest {
 export interface ListUserPaymentsRequest {
     userId: string;
     status: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -120,7 +120,7 @@ export interface PaymentListResponse {
 export interface PaginatedPaymentsResponse {
     data: PaymentRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

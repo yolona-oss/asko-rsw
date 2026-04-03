@@ -14,7 +14,7 @@ import type {
 export const chatApi = {
   // ─── Conversations ──────────────────────────────────────────
 
-  listConversations(params?: { offset?: number; limit?: number }) {
+  listConversations(params?: { page?: number; limit?: number }) {
     return api.get<PaginatedConversations>('/chat/conversations', { params });
   },
 
@@ -34,7 +34,7 @@ export const chatApi = {
 
   // ─── Messages ───────────────────────────────────────────────
 
-  listMessages(conversationId: string, params?: { offset?: number; limit?: number; beforeId?: string }) {
+  listMessages(conversationId: string, params?: { page?: number; limit?: number; beforeId?: string }) {
     return api.get<PaginatedMessages>(`/chat/conversations/${conversationId}/messages`, { params });
   },
 

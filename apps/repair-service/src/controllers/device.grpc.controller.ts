@@ -218,7 +218,7 @@ export class DeviceGrpcController {
     async findAllDevices(data: FindAllDevicesRequest) {
         try {
             const result = await this.deviceService.findAll({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
                 type: data.type || undefined,
@@ -227,7 +227,7 @@ export class DeviceGrpcController {
             return {
                 data: result.data.map(deviceToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

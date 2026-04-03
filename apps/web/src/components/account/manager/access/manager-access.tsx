@@ -47,7 +47,7 @@ export function ManagerAccess() {
   const fetchRepairers = useCallback(() => {
     setLoading(true);
     setError('');
-    repairerApi.getAll({ offset: page, limit: LIMIT, search: debouncedSearch || undefined })
+    repairerApi.getAll({ page: page, limit: LIMIT, search: debouncedSearch || undefined })
       .then(({ data }) => {
         setRepairers(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);

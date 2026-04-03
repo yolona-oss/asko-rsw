@@ -17,7 +17,7 @@ export class PaginatedArticlesResponseDto {
     @ApiProperty({ type: [ArticleResponseDto] })
     data: ArticleResponseDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

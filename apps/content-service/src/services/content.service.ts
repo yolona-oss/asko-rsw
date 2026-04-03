@@ -154,7 +154,7 @@ export class ContentService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string; tags?: string[] }): Promise<{ data: Article[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; tags?: string[] }): Promise<{ data: Article[]; total: number }> {
         if (pagination.tags?.length) {
             return this.findByTags(pagination.tags, pagination.limit ?? 20);
         }
@@ -165,7 +165,7 @@ export class ContentService {
                 : {},
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
             },
         );

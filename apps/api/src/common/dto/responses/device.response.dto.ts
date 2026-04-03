@@ -40,7 +40,7 @@ export class PaginatedDevicesResponseDto {
     @ApiProperty({ type: [DeviceRecordDto] })
     data: DeviceRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

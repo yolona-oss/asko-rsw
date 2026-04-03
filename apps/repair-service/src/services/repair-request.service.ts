@@ -587,7 +587,7 @@ export class RepairRequestService {
     // ── Queries ──
 
     @CreateRequestContext()
-    async findByUser(userId: string, pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = { userId };
         if (pagination.status) where.status = pagination.status;
         if (pagination.search) {
@@ -601,7 +601,7 @@ export class RepairRequestService {
             where,
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
                 populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
@@ -632,7 +632,7 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findPausedByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findPausedByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
@@ -641,7 +641,7 @@ export class RepairRequestService {
             { repairer: repairer.id, status: RepairRequestStatus.PAUSED },
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
                 populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
@@ -650,7 +650,7 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
@@ -667,7 +667,7 @@ export class RepairRequestService {
             where,
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
                 populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
@@ -676,7 +676,7 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
@@ -685,7 +685,7 @@ export class RepairRequestService {
             { repairer: repairer.id },
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
                 populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }
@@ -694,7 +694,7 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.status) where.status = pagination.status;
         if (pagination.search) {
@@ -708,7 +708,7 @@ export class RepairRequestService {
             where,
             {
                 limit: pagination.limit ?? 20,
-                offset: ((pagination.offset ?? 1) - 1) * (pagination.limit ?? 20),
+                offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
                 orderBy: { createdAt: 'DESC' },
                 populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'],
             }

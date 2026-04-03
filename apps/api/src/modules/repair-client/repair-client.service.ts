@@ -196,28 +196,28 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.findById({ id }));
     }
 
-    findByUser(userId: string, pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
+    findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByUser({
             userId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: pagination.status ?? '',
         }));
     }
 
-    findByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByRepairer({
             repairerUserId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
         }));
     }
 
-    findByRepairerFiltered(repairerUserId: string, pagination: { offset?: number; limit?: number }, status?: string, search?: string): Promise<PaginatedRepairRequestsResponse> {
+    findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number }, status?: string, search?: string): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByRepairerFiltered({
             repairerUserId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             status: status ?? '',
             search: search ?? '',
@@ -228,17 +228,17 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.findActiveByRepairer({ repairerUserId }));
     }
 
-    findPausedByRepairer(repairerUserId: string, pagination: { offset?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findPausedByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findPausedByRepairer({
             repairerUserId,
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
         }));
     }
 
-    findAll(pagination: { offset?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
+    findAll(pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findAll({
-            offset: pagination.offset ?? 0,
+            page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: pagination.status ?? '',

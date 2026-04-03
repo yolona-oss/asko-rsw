@@ -39,7 +39,7 @@ export interface ImportDevicesRequest {
 }
 
 export interface FindAllDevicesRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     type: string;
@@ -161,7 +161,7 @@ export interface DevicePriceResponse {
 export interface PaginatedDevicesResponse {
     data: DeviceRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -388,14 +388,14 @@ export interface CertFindByUserRequest {
 
 export interface CertFindByDealerRequest {
     dealerId: string;
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     status: string;
 }
 
 export interface CertFindAllRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     status: string;
@@ -418,7 +418,7 @@ export interface CertificateListResponse {
 export interface PaginatedCertificatesResponse {
     data: CertificateRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -515,7 +515,7 @@ export interface RepairerFindByIdRequest {
 }
 
 export interface FindAllRepairersRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
 }
@@ -534,7 +534,7 @@ export interface CreateReviewRequest {
 
 export interface FindReviewsByRepairerRequest {
     repairerId: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -559,7 +559,7 @@ export interface RepairerListResponse {
 export interface PaginatedRepairersResponse {
     data: RepairerRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -574,7 +574,7 @@ export interface ReviewListResponse {
 export interface PaginatedReviewsResponse {
     data: ReviewRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -755,7 +755,7 @@ export interface RepairReassignRepairerRequest {
 
 export interface RepairFindPausedByRepairerRequest {
     repairerUserId: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -837,7 +837,7 @@ export interface RepairFindByIdRequest {
 
 export interface RepairFindByUserRequest {
     userId: string;
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     status: string;
@@ -845,13 +845,13 @@ export interface RepairFindByUserRequest {
 
 export interface RepairFindByRepairerRequest {
     repairerUserId: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
 export interface RepairFindByRepairerFilteredRequest {
     repairerUserId: string;
-    offset: number;
+    page: number;
     limit: number;
     status: string;
     search: string;
@@ -862,7 +862,7 @@ export interface RepairFindActiveByRepairerRequest {
 }
 
 export interface RepairFindAllRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     status: string;
@@ -907,7 +907,7 @@ export interface RepairRequestResponse {
 export interface PaginatedRepairRequestsResponse {
     data: RepairRequestRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -1097,7 +1097,7 @@ export interface AwardPointsRequest {
 
 export interface DealerPointsHistoryRequest {
     userId: string;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -1113,7 +1113,7 @@ export interface ProcessWithdrawalRequest {
 }
 
 export interface DealerPaginationRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
 }
@@ -1145,7 +1145,7 @@ export interface DealerUserDeviceListResponse {
 export interface PaginatedPointsResponse {
     data: PointsTransactionRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -1160,7 +1160,7 @@ export interface WithdrawalListResponse {
 export interface PaginatedWithdrawalsResponse {
     data: WithdrawalRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 
@@ -1172,7 +1172,7 @@ export interface WithdrawalPayoutResponse {
 export interface PaginatedDealersResponse {
     data: DealerProfileRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

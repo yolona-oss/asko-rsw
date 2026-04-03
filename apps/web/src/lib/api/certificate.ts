@@ -10,7 +10,7 @@ import type {
 import { api } from './client';
 
 export const certificateApi = {
-  getAll(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; status?: string }) {
     return api.get<PaginatedCertificates>('/certificates', { params });
   },
 
@@ -19,7 +19,7 @@ export const certificateApi = {
     return { data: (data?.certificates ?? []) as ICertificate[] };
   },
 
-  getDealer(params?: { offset?: number; limit?: number; search?: string; status?: string }) {
+  getDealer(params?: { page?: number; limit?: number; search?: string; status?: string }) {
     return api.get<PaginatedCertificates>('/certificates/dealer', { params });
   },
 

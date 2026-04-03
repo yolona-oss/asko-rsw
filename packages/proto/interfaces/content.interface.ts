@@ -25,7 +25,7 @@ export interface DeleteArticleRequest {
 }
 
 export interface FindAllArticlesRequest {
-    offset: number;
+    page: number;
     limit: number;
     search: string;
     tags: string[];
@@ -112,7 +112,7 @@ export interface ArticleResponse {
 export interface PaginatedArticlesResponse {
     data: ArticleRecord[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

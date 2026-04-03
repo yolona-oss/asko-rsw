@@ -118,14 +118,14 @@ export class RepairerGrpcController {
     async findAllRepairers(data: FindAllRepairersRequest) {
         try {
             const result = await this.repairerService.findAll({
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
             });
             return {
                 data: result.data.map(repairerToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -191,13 +191,13 @@ export class RepairerGrpcController {
     async findReviewsByRepairer(data: FindReviewsByRepairerRequest) {
         try {
             const result = await this.reviewService.findByRepairer(data.repairerId, {
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             });
             return {
                 data: result.data.map(reviewToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

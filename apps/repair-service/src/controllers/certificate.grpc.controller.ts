@@ -229,13 +229,13 @@ export class CertificateGrpcController {
         try {
             const result = await this.certificateService.findByDealer(
                 data.dealerId,
-                { offset: data.offset, limit: data.limit, search: data.search || undefined },
+                { page: data.page, limit: data.limit, search: data.search || undefined },
                 data.status || undefined,
             );
             return {
                 data: result.data.map(certToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }
@@ -246,7 +246,7 @@ export class CertificateGrpcController {
         try {
             const result = await this.certificateService.findAll(
                 {
-                    offset: data.offset,
+                    page: data.page,
                     limit: data.limit,
                     search: data.search || undefined,
                 },
@@ -255,7 +255,7 @@ export class CertificateGrpcController {
             return {
                 data: result.data.map(certToRecord),
                 overallCount: result.total,
-                offset: data.offset,
+                page: data.page,
                 limit: data.limit,
             };
         } catch (e) { throw toGrpcError(e); }

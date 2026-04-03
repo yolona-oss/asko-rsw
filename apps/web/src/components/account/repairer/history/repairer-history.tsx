@@ -30,7 +30,7 @@ export function RepairerHistory() {
 
   const [requests, setRequests] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(1);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
   const [view, setView] = useState('card');
@@ -45,14 +45,14 @@ export function RepairerHistory() {
 
   useEffect(() => {
     setLoading(true);
-    repairRequestApi.getAssigned({ offset, limit: LIMIT })
+    repairRequestApi.getAssigned({ page, limit: LIMIT })
       .then(({ data }) => {
         setRequests(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [offset]);
+  }, [page]);
 
   const filteredRequests = useMemo(() => {
     if (!search) return requests;
@@ -157,7 +157,7 @@ export function RepairerHistory() {
           <DataTableFooter>
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredRequests.length} из {total}</span>
-              <Pagination page={offset} totalPages={totalPages} onPageChange={setOffset} />
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           </DataTableFooter>
         </DataTable>
@@ -194,7 +194,7 @@ export function RepairerHistory() {
       )}
 
       {/* Pagination */}
-      <Pagination page={offset} totalPages={totalPages} onPageChange={setOffset} className="justify-center mt-6" />
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
     </PageContainer>
   );
 }

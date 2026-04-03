@@ -18,7 +18,7 @@ export class PaginatedNotificationsResponseDto {
     @ApiProperty({ type: [NotificationRecordDto] })
     data: NotificationRecordDto[];
     overallCount: number;
-    offset: number;
+    page: number;
     limit: number;
 }
 

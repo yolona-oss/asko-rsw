@@ -4,7 +4,7 @@ export class ListNotificationsDto {
     @IsInt()
     @Min(0)
     @IsOptional()
-    offset?: number;
+    page?: number;
 
     @IsInt()
     @Min(1)
