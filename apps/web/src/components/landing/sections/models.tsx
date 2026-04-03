@@ -75,11 +75,23 @@ export function ModelsSection() {
     (async () => {
       setLoading(true);
       try {
-        const params: Record<string, any> = { isFeatured: true, limit: 8, offset: 1 };
-        if (filterValues.type) params.type = filterValues.type;
+        const typeParam = filterValues.type || undefined;
 
-        const { data: resp } = await deviceApi.getAll(params);
-        const devices = resp.data ?? [];
+        // Fetch featured first
+        const { data: featuredResp } = await deviceApi.getAll({
+          isFeatured: true, limit: 4, offset: 1, type: typeParam,
+        });
+        let devices = featuredResp.data ?? [];
+
+        // Backfill with non-featured if fewer than 4
+        if (devices.length < 4) {
+          const featuredIds = new Set(devices.map((d) => d.id));
+          const { data: allResp } = await deviceApi.getAll({
+            limit: 4, offset: 1, type: typeParam,
+          });
+          const extra = (allResp.data ?? []).filter((d) => !featuredIds.has(d.id));
+          devices = [...devices, ...extra].slice(0, 4);
+        }
 
         const mapped: DeviceModel[] = await Promise.all(
           devices.map(async (d) => {
