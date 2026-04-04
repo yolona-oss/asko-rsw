@@ -5,6 +5,7 @@ import {
   useRef,
   useCallback,
   useEffect,
+  useMemo,
   type ReactNode,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -22,10 +23,12 @@ export interface DataGridColumn<T = any> {
   key: string;
   /** Header label */
   header: string;
-  /** Initial width in pixels. Omit for flexible (1fr) sizing (default: 100) */
+  /** Fixed width in pixels. Omit for auto-sized flexible columns */
   width?: number;
-  /** Minimum width for resizing (default: 60) */
+  /** Minimum width in pixels (default: 60) */
   minWidth?: number;
+  /** Importance coefficient for auto-sizing (default: 1). Higher = more space */
+  weight?: number;
   /** If true, content wraps instead of truncating */
   multiline?: boolean;
   /** Render function for cell content */
@@ -36,6 +39,62 @@ export interface DataGridColumn<T = any> {
   mobileLabel?: string;
   /** If false, this column cannot be sorted. Default: true */
   sortable?: boolean;
+}
+
+// ─── Auto-sizing helpers ───────────────────────────────────────────────────
+
+const AUTO_SAMPLE_ROWS = 30;
+const MIN_FR = 0.5;
+
+/** Extract plain text from a ReactNode tree without rendering to DOM */
+function extractText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (typeof node === 'object' && 'props' in node) {
+    return extractText((node as any).props.children);
+  }
+  return '';
+}
+
+/** Compute weighted fr values for flexible columns based on content + importance */
+function computeAutoFr<T>(
+  columns: DataGridColumn<T>[],
+  data: T[],
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  const sample = data.slice(0, AUTO_SAMPLE_ROWS);
+
+  for (const col of columns) {
+    if (col.width != null) continue; // fixed-width columns are skipped
+
+    // Start with header length as baseline
+    let maxLen = col.header.length;
+
+    // Sample data rows to find longest content
+    for (let i = 0; i < sample.length; i++) {
+      const text = extractText(col.render(sample[i], i));
+      if (text.length > maxLen) maxLen = text.length;
+    }
+
+    // Apply importance coefficient
+    const weight = col.weight ?? 1;
+    result[col.key] = Math.max(MIN_FR, maxLen * weight);
+  }
+
+  // Normalize so the average is ~1fr (keeps values readable)
+  const values = Object.values(result);
+  if (values.length > 0) {
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    if (avg > 0) {
+      for (const key in result) {
+        result[key] = Math.round((result[key] / avg) * 100) / 100;
+      }
+    }
+  }
+
+  return result;
 }
 
 export interface DataGridProps<T = any> {
@@ -207,15 +266,22 @@ export function DataGrid<T>({
   const visibleColumns = columns.filter((c) => !hiddenKeys.has(c.key));
   const hiddenColumnsList = columns.filter((c) => hiddenKeys.has(c.key));
 
-  // Grid template — columns with explicit width get fixed size,
-  // flexible columns get minmax with their minWidth floor (default 100px),
-  // last column always stretches to fill remaining space.
+  // Auto-compute fr weights from content length + importance coefficient
+  const autoFr = useMemo(
+    () => computeAutoFr(visibleColumns, data),
+    // Recompute when columns change or data length changes (not on every data update)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visibleColumns.map((c) => c.key).join(','), data.length],
+  );
+
+  // Grid template — fixed-width columns use px, flexible columns use weighted fr
   const gridTemplate = visibleColumns
-    .map((col, i) => {
+    .map((col) => {
       const w = widths[col.key] ?? col.width;
+      if (w != null) return `${w}px`;
       const min = col.minWidth ?? 100;
-      if (i === visibleColumns.length - 1) return `minmax(${min}px, 1fr)`;
-      return w != null ? `${w}px` : `minmax(${min}px, 1fr)`;
+      const fr = autoFr[col.key] ?? 1;
+      return `minmax(${min}px, ${fr}fr)`;
     })
     .join(' ');
 

@@ -124,9 +124,9 @@ interface FilterTabsProps {
 
 function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center">
       {filter.label && (
-        <span className="font-medium text-text-main mr-1">{filter.label}:</span>
+        <span className="font-medium text-text-main mr-2">{filter.label}:</span>
       )}
       {filter.options.map((opt) => {
         const isActive = opt.value === value;
@@ -136,9 +136,9 @@ function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'px-3 py-1.5 text-xs font-medium border transition-colors cursor-pointer',
+              'px-3 py-1.5 text-xs font-medium border transition-colors cursor-pointer -ml-px first:ml-0',
               isActive
-                ? 'bg-dark-deep text-white border-dark-deep'
+                ? 'bg-dark-deep text-white border-dark-deep relative z-[1]'
                 : 'bg-white text-text-main border-border-light hover:border-text-main',
             )}
           >

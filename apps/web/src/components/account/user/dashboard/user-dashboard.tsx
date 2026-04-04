@@ -140,7 +140,7 @@ export function UserDashboard() {
         {/* Мои заявки */}
         <StatCard title="Мои заявки:" value={loading ? '-' : requestsCount}>
           {lastRequest && (
-            <div className="mt-auto pt-4 flex flex-col gap-1">
+            <div className="mt-auto pt-4 flex flex-col lg:hidden gap-1">
               <p className="text-[14px] leading-[18px] font-bold text-text-main">{lastRequest.deviceName}</p>
               {lastRequest.address && (
                 <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
@@ -156,13 +156,14 @@ export function UserDashboard() {
         </StatCard>
 
         {/* Активные сертификаты */}
-        <StatCard title="Активные сертификаты:">
-          <div className="flex items-center justify-end">
-            <span className="text-[82px] font-normal leading-[86px] text-text-main">
-              {loading ? '-' : certsCount}
-            </span>
-          </div>
-        </StatCard>
+        <Card className="flex flex-row items-center justify-between gap-4 lg:flex-col lg:items-start lg:gap-2">
+          <span className="text-[24px] font-normal leading-[28px] tracking-[-0.24px] text-text-main whitespace-pre-wrap">
+            {'Активные\nсертификаты:'}
+          </span>
+          <span className="text-[82px] font-normal leading-[86px] tracking-[-0.82px] text-text-main">
+            {loading ? '-' : certsCount}
+          </span>
+        </Card>
 
         {/* Счет на оплату */}
         <Card className="flex flex-col gap-3">
