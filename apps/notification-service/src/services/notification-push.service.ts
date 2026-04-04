@@ -1,18 +1,17 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 import { AppConfig } from '../app.config';
 
 const NOTIFICATION_CHANNEL = 'notifications:push';
 
 @Injectable()
-export class NotificationPushService implements OnModuleInit, OnModuleDestroy {
-    private redis!: Redis;
+export class NotificationPushService implements OnModuleDestroy {
+    private readonly redis: Redis;
 
-    constructor(private readonly config: AppConfig) {}
-
-    onModuleInit() {
+    constructor(private readonly config: AppConfig) {
         this.redis = new Redis(this.config.redisUrl);
         this.redis.on('error', (err) => console.error('[NotificationPush] Redis error:', err));
+        this.redis.on('ready', () => console.log('[NotificationPush] Redis connected'));
     }
 
     async onModuleDestroy() {
