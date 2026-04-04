@@ -21,10 +21,11 @@ export class NotificationPushService implements OnModuleInit, OnModuleDestroy {
 
     async pushToUser(userId: string, notification: any): Promise<void> {
         try {
-            await this.redis.publish(NOTIFICATION_CHANNEL, JSON.stringify({
+            const receivers = await this.redis.publish(NOTIFICATION_CHANNEL, JSON.stringify({
                 userId,
                 notification,
             }));
+            console.debug(`[NotificationPush] Published to ${NOTIFICATION_CHANNEL}, receivers: ${receivers}, userId: ${userId}`);
         } catch (e) {
             console.error('[NotificationPush] Failed to publish:', e);
         }

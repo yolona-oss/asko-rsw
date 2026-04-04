@@ -8,7 +8,7 @@ import {
     OnGatewayInit,
     OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Inject } from '@nestjs/common';
+import { Inject, OnModuleDestroy } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { AppConfig } from 'app.config';
@@ -17,7 +17,7 @@ import Redis from 'ioredis';
 const NOTIFICATION_CHANNEL = 'notifications:push';
 
 @WebSocketGateway({ namespace: '/notifications', cors: { origin: '*' } })
-export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
+export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect, OnModuleDestroy {
     @WebSocketServer()
     server!: Server;
     private connections = new Map<string, string[]>();
@@ -31,11 +31,21 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, 
     ) { }
 
     afterInit() {
-        // Dedicated subscriber connection for notification push from notification-service
-        this.redisSubscriber = this.redis.duplicate();
-        this.redisSubscriber.subscribe(NOTIFICATION_CHANNEL, (err) => {
-            if (err) console.error('[NotificationGateway] Failed to subscribe to Redis channel:', err);
-            else console.log(`[NotificationGateway] Subscribed to ${NOTIFICATION_CHANNEL}`);
+        // Dedicated subscriber connection — create fresh instead of duplicate()
+        // to avoid issues with the shared connection being in non-subscriber mode
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+        this.redisSubscriber = new Redis(redisUrl);
+
+        this.redisSubscriber.on('error', (err) => {
+            console.error('[NotificationGateway] Redis subscriber error:', err.message);
+        });
+
+        this.redisSubscriber.on('ready', () => {
+            console.log('[NotificationGateway] Redis subscriber connected');
+            this.redisSubscriber.subscribe(NOTIFICATION_CHANNEL, (err) => {
+                if (err) console.error('[NotificationGateway] Failed to subscribe:', err);
+                else console.log(`[NotificationGateway] Subscribed to ${NOTIFICATION_CHANNEL}`);
+            });
         });
 
         this.redisSubscriber.on('message', (channel, message) => {
@@ -115,6 +125,10 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, 
         } else {
             this.connections.set(userId, updated);
         }
+    }
+
+    async onModuleDestroy() {
+        await this.redisSubscriber?.quit();
     }
 
     // ─── Server → Client Emissions (called from API controllers) ─────
