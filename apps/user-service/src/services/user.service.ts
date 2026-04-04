@@ -308,21 +308,23 @@ export class UserService {
 
     @CreateRequestContext()
     async setEmailConfirmed(id: string) {
-        const user = await this.findById(id)
-        if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
-        }
+        const user = await this.em.findOne(User, { id })
+        if (!user) throw AppErrors.dbEntityNotFound('User not found')
         user.emailVerified = true
+        if (!user.providers.includes(AuthProvider.EMAIL)) {
+            user.providers = [...user.providers, AuthProvider.EMAIL]
+        }
         await this.em.persistAndFlush(user)
     }
 
     @CreateRequestContext()
     async setPhoneConfirmed(id: string) {
-        const user = await this.findById(id)
-        if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
-        }
+        const user = await this.em.findOne(User, { id })
+        if (!user) throw AppErrors.dbEntityNotFound('User not found')
         user.phoneVerified = true
+        if (!user.providers.includes(AuthProvider.PHONE)) {
+            user.providers = [...user.providers, AuthProvider.PHONE]
+        }
         await this.em.persistAndFlush(user)
     }
 

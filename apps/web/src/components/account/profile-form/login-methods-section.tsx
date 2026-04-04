@@ -32,8 +32,11 @@ export function LoginMethodsSection({
   phoneChangePending,
   onPhoneChangeConfirmed,
 }: LoginMethodsSectionProps) {
-  const hasEmail = providers.includes('EMAIL');
-  const hasPhone = providers.includes('PHONE');
+  // Determine login method availability from actual data, not just providers array
+  const hasEmail = !!email;
+  const emailActive = hasEmail && emailVerified;
+  const hasPhone = !!phone;
+  const phoneActive = hasPhone && phoneVerified;
   const hasGoogle = providers.includes('GOOGLE');
 
   // Phone verification OTP state
@@ -107,13 +110,13 @@ export function LoginMethodsSection({
         {/* Email */}
         <div className="flex items-center justify-between py-2.5">
           <div className="flex items-center gap-3">
-            <MethodIcon active={hasEmail} />
+            <MethodIcon active={emailActive} />
             <div>
-              <p className="text-sm font-medium text-text-main">Email</p>
+              <p className="text-sm font-medium text-text-main">Email + Пароль</p>
               {email && <p className="text-xs text-text-sub">{email}</p>}
             </div>
           </div>
-          {hasEmail && email ? (
+          {hasEmail ? (
             <div className="flex items-center gap-3">
               <VerificationBadge verified={emailVerified} />
               {!emailVerified && onResendEmailConfirmation && (
@@ -132,7 +135,7 @@ export function LoginMethodsSection({
               )}
             </div>
           ) : (
-            <span className="text-xs text-text-sub">Не подключён</span>
+            <span className="text-xs text-text-sub">Укажите email в профиле</span>
           )}
         </div>
 
@@ -140,9 +143,9 @@ export function LoginMethodsSection({
         <div className="flex flex-col gap-2 py-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <MethodIcon active={hasPhone || !!phone} />
+              <MethodIcon active={phoneActive} />
               <div>
-                <p className="text-sm font-medium text-text-main">Телефон</p>
+                <p className="text-sm font-medium text-text-main">Телефон (СМС-код)</p>
                 {phone && <p className="text-xs text-text-sub">{phone}</p>}
               </div>
             </div>
@@ -165,7 +168,7 @@ export function LoginMethodsSection({
                 )}
               </div>
             ) : (
-              <span className="text-xs text-text-sub">Не указан</span>
+              <span className="text-xs text-text-sub">Укажите телефон в профиле</span>
             )}
           </div>
 
