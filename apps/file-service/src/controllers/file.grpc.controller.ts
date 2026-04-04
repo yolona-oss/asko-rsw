@@ -395,7 +395,8 @@ export class FileGrpcController {
     @GrpcMethod('FileService', 'GetFileAccess')
     async getFileAccess(data: GetFileAccessRequest): Promise<FileAccessResponse> {
         try {
-            const access = await this.em.findOne(FileAccess, { fileId: data.id, fileType: data.type });
+            const fork = this.em.fork();
+            const access = await fork.findOne(FileAccess, { fileId: data.id, fileType: data.type });
 
             let storageUrl = '';
             let publicId = '';
