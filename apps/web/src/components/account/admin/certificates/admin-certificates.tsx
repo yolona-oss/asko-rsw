@@ -77,6 +77,7 @@ export function AdminCertificates() {
       key: 'user',
       header: 'Пользователь',
       mobileLabel: 'Пользователь:',
+      width: 100,
       render: (cert) => {
         const userName = [cert.user?.lastName, cert.user?.firstName].filter(Boolean).join(' ') || '-';
         return <p className="text-sm text-text-main">{userName}</p>;
@@ -86,6 +87,7 @@ export function AdminCertificates() {
       key: 'device',
       header: 'Устройство',
       mobileLabel: 'Устройство:',
+      width: 150,
       render: (cert) => <p className="text-sm text-text-main">{cert.userDevice?.device?.name ?? '-'}</p>,
     },
     {
