@@ -48,7 +48,7 @@ export function ViewSwitcher({ views, activeView, onViewChange, className }: Vie
   return (
     <div
       className={cn(
-        'inline-flex items-center border border-border-light rounded-sm overflow-hidden',
+        'inline-flex items-center border border-border-light rounded-sm overflow-hidden self-start',
         className,
       )}
     >
