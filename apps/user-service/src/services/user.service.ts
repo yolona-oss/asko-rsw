@@ -37,8 +37,8 @@ export class UserService {
     async findAll(dto: PaginationDto & { search?: string; role?: string; status?: string; sortBy?: string; sortOrder?: string },
         relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
-        const offset = dto.page ?? 0
         const limit = dto.limit ?? 10
+        const offset = ((dto.page ?? 1) - 1) * limit
 
         const where: Record<string, any> = {};
         if (dto.search) {

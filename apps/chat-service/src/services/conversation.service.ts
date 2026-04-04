@@ -111,7 +111,7 @@ export class ConversationService {
         const [data, overallCount] = await this.em.findAndCount(Conversation, where, {
             populate: ['participants'],
             orderBy: { updatedAt: 'DESC' },
-            offset: page,
+            offset: ((page ?? 1) - 1) * limit,
             limit,
         });
 

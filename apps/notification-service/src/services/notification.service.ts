@@ -78,7 +78,7 @@ export class NotificationService {
 
         const [data, overallCount] = await this.em.findAndCount(NotificationEntity, where, {
             orderBy,
-            offset: page,
+            offset: ((page ?? 1) - 1) * limit,
             limit,
         });
 

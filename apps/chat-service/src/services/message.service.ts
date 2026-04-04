@@ -97,7 +97,7 @@ export class MessageService {
 
         const [data, overallCount] = await this.em.findAndCount(Message, where, {
             orderBy: { createdAt: 'DESC' },
-            offset: page,
+            offset: ((page ?? 1) - 1) * limit,
             limit,
         });
 
