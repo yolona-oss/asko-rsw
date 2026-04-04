@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Registry, collectDefaultMetrics, Histogram, Counter } from 'prom-client';
 
 export const METRICS_OPTIONS = Symbol('METRICS_OPTIONS');
@@ -8,7 +8,7 @@ export interface MetricsModuleOptions {
 }
 
 @Injectable()
-export class MetricsService implements OnModuleInit {
+export class MetricsService {
     readonly registry: Registry;
     readonly httpDuration: Histogram;
     readonly httpTotal: Counter;
@@ -18,6 +18,8 @@ export class MetricsService implements OnModuleInit {
     constructor(@Inject(METRICS_OPTIONS) private options: MetricsModuleOptions) {
         this.registry = new Registry();
         this.registry.setDefaultLabels({ service: options.serviceName });
+
+        collectDefaultMetrics({ register: this.registry });
 
         this.httpDuration = new Histogram({
             name: 'http_request_duration_seconds',
@@ -48,10 +50,6 @@ export class MetricsService implements OnModuleInit {
             labelNames: ['grpc_service', 'grpc_method', 'status'],
             registers: [this.registry],
         });
-    }
-
-    onModuleInit() {
-        collectDefaultMetrics({ register: this.registry });
     }
 
     async getMetrics(): Promise<string> {
