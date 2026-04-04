@@ -6,6 +6,8 @@ import { ArticleTag } from 'entities/article-tag.entity';
 import { AppErrors } from 'common/error';
 import { GraphService } from './graph.service';
 
+const ARTICLE_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'title', 'viewCount'] as const;
+
 const BOT_PATTERNS = [
     /bot/i, /crawl/i, /spider/i, /headless/i, /phantom/i, /puppet/i,
     /selenium/i, /playwright/i, /wget/i, /curl/i, /python-requests/i,
@@ -154,10 +156,15 @@ export class ContentService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string; tags?: string[] }): Promise<{ data: Article[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; tags?: string[]; sortBy?: string; sortOrder?: string }): Promise<{ data: Article[]; total: number }> {
         if (pagination.tags?.length) {
             return this.findByTags(pagination.tags, pagination.limit ?? 20);
         }
+
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (ARTICLE_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, total] = await this.em.findAndCount(
             Article,
             pagination.search
@@ -166,7 +173,7 @@ export class ContentService {
             {
                 limit: pagination.limit ?? 20,
                 offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 20),
-                orderBy: { createdAt: 'DESC' },
+                orderBy,
             },
         );
         return { data, total };

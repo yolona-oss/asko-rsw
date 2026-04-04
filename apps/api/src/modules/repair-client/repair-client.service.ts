@@ -196,31 +196,37 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.findById({ id }));
     }
 
-    findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
+    findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByUser({
             userId,
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: pagination.status ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
-    findByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByRepairer({
             repairerUserId,
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
-    findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number }, status?: string, search?: string): Promise<PaginatedRepairRequestsResponse> {
+    findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }, status?: string, search?: string): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findByRepairerFiltered({
             repairerUserId,
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             status: status ?? '',
             search: search ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
@@ -228,20 +234,24 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.findActiveByRepairer({ repairerUserId }));
     }
 
-    findPausedByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedRepairRequestsResponse> {
+    findPausedByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findPausedByRepairer({
             repairerUserId,
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
-    findAll(pagination: { page?: number; limit?: number; search?: string; status?: string }): Promise<PaginatedRepairRequestsResponse> {
+    findAll(pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedRepairRequestsResponse> {
         return grpcCall(this.repairService.findAll({
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
             status: pagination.status ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 

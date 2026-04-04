@@ -118,6 +118,8 @@ export interface FindByEmailRequest {
 export interface PaginationRequest {
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface FindAllUsersRequest {
@@ -126,6 +128,8 @@ export interface FindAllUsersRequest {
     search: string;
     role: string;
     status: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface UpdateUserRequest {
@@ -255,6 +259,8 @@ export interface PaginatedUsersResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface EmptyRequest {}

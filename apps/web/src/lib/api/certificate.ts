@@ -10,7 +10,7 @@ import type {
 import { api } from './client';
 
 export const certificateApi = {
-  getAll(params?: { page?: number; limit?: number; search?: string; status?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) {
     return api.get<PaginatedCertificates>('/certificates', { params });
   },
 

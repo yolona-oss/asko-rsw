@@ -115,6 +115,8 @@ export class ContentGrpcController {
                 limit: data.limit || undefined,
                 search: data.search || undefined,
                 tags: data.tags?.length ? data.tags : undefined,
+                sortBy: data.sortBy || undefined,
+                sortOrder: data.sortOrder || undefined,
             });
             const tagMap = result.data.length
                 ? await this.contentService.getArticleTagsBatch(result.data.map((a) => a.id))

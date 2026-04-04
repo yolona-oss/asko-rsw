@@ -18,6 +18,7 @@ import { PaymentEventService, PaymentEventType } from './payment-event.service';
 import { PaymentLockService } from './payment-lock.service';
 
 const LOCK_TTL_MS = 30_000;
+const PAYMENT_SORTABLE_FIELDS = ['createdAt', 'amount', 'status', 'provider'] as const;
 
 @Injectable()
 export class PaymentService {
@@ -449,13 +450,17 @@ export class PaymentService {
     async listPayments(params: {
         status?: string;
         provider?: string;
-    }, pagination: PaginationDto): Promise<PaginatedResponseDto<PaymentEntity>> {
+    }, pagination: PaginationDto & { sortBy?: string; sortOrder?: string }): Promise<PaginatedResponseDto<PaymentEntity>> {
         const where: FilterQuery<PaymentEntity> = {};
         if (params.status) where.status = params.status as PaymentStatus;
         if (params.provider) where.provider = params.provider;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (PAYMENT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, overallCount] = await this.em.findAndCount(PaymentEntity, where, {
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 50),
             limit: pagination.limit ?? 50,
         });
@@ -470,12 +475,16 @@ export class PaymentService {
     @CreateRequestContext()
     async listUserPayments(userId: string, params: {
         status?: string;
-    }, pagination: PaginationDto): Promise<PaginatedResponseDto<PaymentEntity>> {
+    }, pagination: PaginationDto & { sortBy?: string; sortOrder?: string }): Promise<PaginatedResponseDto<PaymentEntity>> {
         const where: FilterQuery<PaymentEntity> = { userId };
         if (params.status) where.status = params.status as PaymentStatus;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (PAYMENT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, overallCount] = await this.em.findAndCount(PaymentEntity, where, {
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             offset: ((pagination.page ?? 1) - 1) * (pagination.limit ?? 50),
             limit: pagination.limit ?? 50,
         });

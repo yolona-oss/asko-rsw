@@ -71,11 +71,13 @@ export class DealerClientService implements OnModuleInit {
         return grpcCall(this.dealerService.awardPointsForCertificate({ dealerId, certificatePrice, certificateNumber }));
     }
 
-    getPointsHistory(userId: string, pagination: { page?: number; limit?: number }): Promise<PaginatedPointsResponse> {
+    getPointsHistory(userId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }): Promise<PaginatedPointsResponse> {
         return grpcCall(this.dealerService.getPointsHistory({
             userId,
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
@@ -99,11 +101,13 @@ export class DealerClientService implements OnModuleInit {
         return grpcCall(this.dealerService.getWithdrawals({ userId }));
     }
 
-    getAllWithdrawals(pagination: { page?: number; limit?: number; search?: string }): Promise<PaginatedWithdrawalsResponse> {
+    getAllWithdrawals(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedWithdrawalsResponse> {
         return grpcCall(this.dealerService.getAllWithdrawals({
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
@@ -117,11 +121,13 @@ export class DealerClientService implements OnModuleInit {
 
     // ── Queries ──
 
-    findAllDealers(pagination: { page?: number; limit?: number; search?: string }): Promise<PaginatedDealersResponse> {
+    findAllDealers(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedDealersResponse> {
         return grpcCall(this.dealerService.findAllDealers({
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 20,
             search: pagination.search ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 }

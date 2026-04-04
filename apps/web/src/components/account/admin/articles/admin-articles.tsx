@@ -11,7 +11,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
@@ -29,18 +29,20 @@ export function AdminArticles() {
   const [deletingAll, setDeletingAll] = useState(false);
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await articleApi.getAll({ page: page, limit: PAGE_SIZE });
+      const { data } = await articleApi.getAll({ page: page, limit: PAGE_SIZE, sortBy: sortBy ?? undefined, sortOrder: sortOrder ?? undefined });
       setArticles(data.data ?? []);
       setTotal(data.overallCount ?? 0);
     } catch {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchArticles();
@@ -117,6 +119,7 @@ export function AdminArticles() {
       key: 'actions',
       header: '',
       width: 200,
+      sortable: false,
       render: (article) => (
         <div className="flex gap-2">
           <Link href={`/account/articles/${article.id}`}>
@@ -193,6 +196,9 @@ export function AdminArticles() {
           data={filteredArticles}
           keyExtractor={(article) => article.id}
           emptyContent="Нет статей"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredArticles.length} из {total}</span>

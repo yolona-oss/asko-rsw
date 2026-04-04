@@ -47,6 +47,8 @@ message ListUserConversationsRequest {
     string userId = 1;
     int32 page = 2;
     int32 limit = 3;
+    string sort_by = 4;
+    string sort_order = 5;
 }
 
 message DeleteConversationRequest {
@@ -89,6 +91,8 @@ message ListMessagesRequest {
     int32 page = 3;
     int32 limit = 4;
     string beforeId = 5;
+    string sort_by = 6;
+    string sort_order = 7;
 }
 
 message UpdateMessageRequest {

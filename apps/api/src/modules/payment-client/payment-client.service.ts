@@ -138,6 +138,8 @@ export class PaymentClientService implements OnModuleInit {
         page?: number;
         limit?: number;
         search?: string;
+        sortBy?: string;
+        sortOrder?: string;
     }): Promise<PaginatedPaymentsResponse> {
         return grpcCall(this.paymentService.listPayments({
             status: params.status ?? '',
@@ -145,6 +147,8 @@ export class PaymentClientService implements OnModuleInit {
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 50,
             search: pagination.search ?? '',
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 
@@ -153,12 +157,16 @@ export class PaymentClientService implements OnModuleInit {
     }, pagination: {
         page?: number;
         limit?: number;
+        sortBy?: string;
+        sortOrder?: string;
     }): Promise<PaginatedPaymentsResponse> {
         return grpcCall(this.paymentService.listUserPayments({
             userId,
             status: params.status ?? '',
             page: pagination.page ?? 1,
             limit: pagination.limit ?? 50,
+            sortBy: pagination.sortBy ?? '',
+            sortOrder: pagination.sortOrder ?? '',
         }));
     }
 

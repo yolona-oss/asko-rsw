@@ -5,6 +5,8 @@ import { AppErrors } from 'common/error';
 import { NotificationPushService } from './notification-push.service';
 import { NotificationEventPublisher } from './notification-event.publisher';
 
+const NOTIFICATION_SORTABLE_FIELDS = ['createdAt', 'isRead'] as const;
+
 @Injectable()
 export class NotificationService {
     constructor(
@@ -64,12 +66,18 @@ export class NotificationService {
         page: number,
         limit: number,
         unreadOnly: boolean,
+        sortBy?: string,
+        sortOrder?: string,
     ): Promise<{ data: NotificationEntity[]; overallCount: number }> {
         const where: FilterQuery<NotificationEntity> = { userId };
         if (unreadOnly) where.isRead = false;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = sortBy && (NOTIFICATION_SORTABLE_FIELDS as readonly string[]).includes(sortBy)
+            ? { [sortBy]: sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, overallCount] = await this.em.findAndCount(NotificationEntity, where, {
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             offset: page,
             limit,
         });

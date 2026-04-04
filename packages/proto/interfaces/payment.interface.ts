@@ -58,6 +58,8 @@ export interface ListPaymentsRequest {
     page: number;
     limit: number;
     search: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface ListUserPaymentsRequest {
@@ -65,6 +67,8 @@ export interface ListUserPaymentsRequest {
     status: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface GetPaymentStatsRequest {
@@ -122,6 +126,8 @@ export interface PaginatedPaymentsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface PaymentStatsResponse {

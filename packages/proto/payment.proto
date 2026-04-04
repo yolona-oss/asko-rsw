@@ -79,6 +79,8 @@ message ListPaymentsRequest {
     int32 page = 3;
     int32 limit = 4;
     string search = 5;
+    string sort_by = 6;
+    string sort_order = 7;
 }
 
 message ListUserPaymentsRequest {
@@ -86,6 +88,8 @@ message ListUserPaymentsRequest {
     string status = 2;
     int32 page = 3;
     int32 limit = 4;
+    string sort_by = 5;
+    string sort_order = 6;
 }
 
 message GetPaymentStatsRequest {

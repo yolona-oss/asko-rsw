@@ -12,7 +12,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
@@ -45,6 +45,8 @@ export function AdminDevices() {
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ type: '', featured: '' });
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: categories } = useDeviceCategories();
   const categoryLabels = useMemo(() => buildCategoryLabelMap(categories ?? []), [categories]);
@@ -71,6 +73,8 @@ export function AdminDevices() {
         search: search || undefined,
         type: filterValues.type || undefined,
         isFeatured: filterValues.featured === 'yes' ? true : filterValues.featured === 'no' ? false : undefined,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       setDevices(data.data ?? []);
       setTotal(data.overallCount ?? 0);
@@ -78,7 +82,7 @@ export function AdminDevices() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterValues.type, filterValues.featured]);
+  }, [page, search, filterValues.type, filterValues.featured, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchDevices();
@@ -138,6 +142,7 @@ export function AdminDevices() {
       key: 'actions',
       header: '',
       width: 200,
+      sortable: false,
       render: (device) => (
         <div className="flex gap-2">
           <Link href={`/account/devices/${device.id}`}>
@@ -348,6 +353,9 @@ export function AdminDevices() {
           data={devices}
           keyExtractor={(device) => device.id}
           emptyContent="Нет товаров"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {devices.length} из {total}</span>

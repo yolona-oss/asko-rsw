@@ -9,7 +9,7 @@ import {
   DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn } from '@asko/ui';
+import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -34,6 +34,8 @@ export function ManagerRequests() {
   const [convInfoMap, setConvInfoMap] = useState<Record<string, ConversationInfo>>({});
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -43,6 +45,8 @@ export function ManagerRequests() {
         limit: PAGE_SIZE,
         search: search || undefined,
         status: activeTab !== 'all' ? activeTab : undefined,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       const items = (data.data ?? []) as unknown as RepairRequest[];
       setRequests(items);
@@ -75,7 +79,7 @@ export function ManagerRequests() {
     } catch { } finally {
       setLoading(false);
     }
-  }, [page, search, activeTab]);
+  }, [page, search, activeTab, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchRequests();
@@ -178,6 +182,9 @@ export function ManagerRequests() {
             data={requests}
             keyExtractor={(req) => req.id}
             emptyContent="Нет заявок"
+            sortKey={sortBy ?? undefined}
+            sortOrder={sortOrder ?? undefined}
+            onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
             onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
             footer={
               <div className="flex items-center justify-between w-full">

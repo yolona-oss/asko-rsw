@@ -11,7 +11,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
@@ -24,6 +24,8 @@ export function RepairerManuals() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
   const { data: categories } = useDeviceCategories();
   const categoryLabels = useMemo(() => buildCategoryLabelMap(categories ?? []), [categories]);
 
@@ -44,6 +46,16 @@ export function RepairerManuals() {
       || (categoryLabels[d.type] ?? d.type).toLowerCase().includes(q),
     );
   }, [devices, search]);
+
+  const sortedDevices = useMemo(() => {
+    if (!sortBy) return filteredDevices;
+    return [...filteredDevices].sort((a, b) => {
+      const av = (a as any)[sortBy] ?? '';
+      const bv = (b as any)[sortBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+  }, [filteredDevices, sortBy, sortOrder]);
 
   const columns: DataGridColumn<IDevice>[] = useMemo(() => [
     {
@@ -96,19 +108,22 @@ export function RepairerManuals() {
       ) : view === 'table' ? (
         <DataGrid
           columns={columns}
-          data={filteredDevices}
+          data={sortedDevices}
           keyExtractor={(device) => device.id}
           emptyContent="Устройства не найдены"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
           onRowClick={(device) => router.push(`/account/man/${device.id}`)}
-          footer={<>Показано {filteredDevices.length} из {devices.length}</>}
+          footer={<>Показано {sortedDevices.length} из {devices.length}</>}
         />
       ) : (
         <>
-          {filteredDevices.length === 0 ? (
+          {sortedDevices.length === 0 ? (
             <Card className="text-text-sub text-sm">Устройства не найдены</Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredDevices.map((device) => (
+              {sortedDevices.map((device) => (
                 <Link key={device.id} href={`/account/man/${device.id}`} className="block h-full">
                   <Card padding="none" className="p-5 flex flex-col gap-3 h-full cursor-pointer hover:border-brand-red transition-colors">
                     <div className="flex flex-col gap-1">

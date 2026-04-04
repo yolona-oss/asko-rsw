@@ -28,6 +28,8 @@ message ListUserNotificationsRequest {
     int32 page = 2;
     int32 limit = 3;
     bool unreadOnly = 4;
+    string sort_by = 5;
+    string sort_order = 6;
 }
 
 message MarkAsReadRequest {

@@ -17,6 +17,8 @@ export interface ListUserNotificationsRequest {
     page: number;
     limit: number;
     unreadOnly: boolean;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface MarkAsReadRequest {
@@ -64,6 +66,8 @@ export interface PaginatedNotificationsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface UnreadCountResponse {

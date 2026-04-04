@@ -187,13 +187,15 @@ export class UserClientService implements OnModuleInit {
 
     // ─── User CRUD ───────────────────────────────────────────────────────
 
-    findAllUsers(data: { page?: number; limit?: number; search?: string; role?: string; status?: string }): Promise<PaginatedUsersResponse> {
+    findAllUsers(data: { page?: number; limit?: number; search?: string; role?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedUsersResponse> {
         return grpcCall(this.userService.findAllUsers({
             page: data.page ?? 0,
             limit: data.limit ?? 10,
             search: data.search ?? '',
             role: data.role ?? '',
             status: data.status ?? '',
+            sortBy: data.sortBy ?? '',
+            sortOrder: data.sortOrder ?? '',
         }));
     }
 

@@ -51,12 +51,16 @@ export class NotificationClientService implements OnModuleInit {
         page?: number,
         limit?: number,
         unreadOnly?: boolean,
+        sortBy?: string,
+        sortOrder?: string,
     ): Promise<PaginatedNotificationsResponse> {
         return grpcCall(this.notificationService.listUserNotifications({
             userId,
             page: page ?? 0,
             limit: limit ?? 20,
             unreadOnly: unreadOnly ?? false,
+            sortBy: sortBy ?? '',
+            sortOrder: sortOrder ?? '',
         }));
     }
 

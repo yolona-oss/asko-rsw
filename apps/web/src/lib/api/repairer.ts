@@ -10,7 +10,7 @@ import type {
 import { api } from './client';
 
 export const repairerApi = {
-  getAll(params?: { page?: number; limit?: number; search?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }) {
     return api.get<PaginatedRepairers>('/repairers', { params });
   },
 

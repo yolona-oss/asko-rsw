@@ -10,7 +10,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { CTABanner } from '@/components/account/cta-banner';
@@ -39,6 +39,8 @@ export function UserCertificates() {
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const handlePay = (cert: ICertificate) => {
     setPaymentCert(cert);
@@ -92,11 +94,21 @@ export function UserCertificates() {
   // Reset page on search change
   useEffect(() => { setPage(1); }, [search]);
 
-  const totalPages = Math.ceil(filteredCertificates.length / PAGE_SIZE);
+  const sortedCertificates = useMemo(() => {
+    if (!sortBy) return filteredCertificates;
+    return [...filteredCertificates].sort((a, b) => {
+      const av = (a as any)[sortBy] ?? '';
+      const bv = (b as any)[sortBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+  }, [filteredCertificates, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(sortedCertificates.length / PAGE_SIZE);
   const paginatedCertificates = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return filteredCertificates.slice(start, start + PAGE_SIZE);
-  }, [filteredCertificates, page]);
+    return sortedCertificates.slice(start, start + PAGE_SIZE);
+  }, [sortedCertificates, page]);
 
   const exportPdf = useCallback((cert: ICertificate) => {
     const device = cert.userDevice?.device;
@@ -201,6 +213,7 @@ export function UserCertificates() {
       key: 'actions',
       header: '',
       width: 220,
+      sortable: false,
       render: (cert) => (
         <div className="flex gap-2">
           {cert.status === CertificateStatus.PENDING_PAYMENT && handlePay && (
@@ -300,9 +313,12 @@ export function UserCertificates() {
               data={paginatedCertificates}
               keyExtractor={(cert) => cert.id}
               emptyContent="У вас нет сертификатов"
+              sortKey={sortBy ?? undefined}
+              sortOrder={sortOrder ?? undefined}
+              onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
               footer={
                 <div className="flex items-center justify-between w-full">
-                  <span>Показано {paginatedCertificates.length} из {filteredCertificates.length}</span>
+                  <span>Показано {paginatedCertificates.length} из {sortedCertificates.length}</span>
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                 </div>
               }

@@ -14,7 +14,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -75,6 +75,8 @@ export function RepairerHistory() {
   const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -85,14 +87,14 @@ export function RepairerHistory() {
 
   useEffect(() => {
     setLoading(true);
-    repairRequestApi.getAssigned({ page, limit: LIMIT })
+    repairRequestApi.getAssigned({ page, limit: LIMIT, sortBy: sortBy ?? undefined, sortOrder: sortOrder ?? undefined })
       .then(({ data }) => {
         setRequests(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, sortBy, sortOrder]);
 
   const filteredRequests = useMemo(() => {
     if (!search) return requests;
@@ -163,6 +165,9 @@ export function RepairerHistory() {
           data={filteredRequests}
           keyExtractor={(req) => req.id}
           emptyContent="История заявок пуста"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredRequests.length} из {total}</span>

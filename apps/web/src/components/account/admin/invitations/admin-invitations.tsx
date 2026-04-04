@@ -15,7 +15,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -46,6 +46,8 @@ export function AdminInvitations() {
   const [newLinks, setNewLinks] = useState<Record<string, string>>({});
 
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   useEffect(() => {
     invitationApi.getAll()
@@ -117,7 +119,17 @@ export function AdminInvitations() {
   // Reset page on search/filter changes
   useEffect(() => { setPage(1); }, [search, filterValues.status]);
 
-  const totalPages = Math.ceil(filteredInvitations.length / PAGE_SIZE);
+  const sortedInvitations = useMemo(() => {
+    if (!sortBy) return filteredInvitations;
+    return [...filteredInvitations].sort((a, b) => {
+      const av = (a as any)[sortBy] ?? '';
+      const bv = (b as any)[sortBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+  }, [filteredInvitations, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(sortedInvitations.length / PAGE_SIZE);
 
   const columns: DataGridColumn<IInvitationLink>[] = useMemo(() => [
     {
@@ -182,6 +194,7 @@ export function AdminInvitations() {
       key: 'actions',
       header: '',
       width: 180,
+      sortable: false,
       render: (inv) => {
         const expired = isExpired(inv.expiresAt);
         const inactive = inv.used || expired;
@@ -205,8 +218,8 @@ export function AdminInvitations() {
 
   const paginatedInvitations = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return filteredInvitations.slice(start, start + PAGE_SIZE);
-  }, [filteredInvitations, page]);
+    return sortedInvitations.slice(start, start + PAGE_SIZE);
+  }, [sortedInvitations, page]);
 
   return (
     <PageContainer>
@@ -275,10 +288,13 @@ export function AdminInvitations() {
           data={paginatedInvitations}
           keyExtractor={(inv) => inv.id}
           emptyContent="Нет приглашений"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           rowClassName={(inv) => (inv.used || isExpired(inv.expiresAt)) ? 'opacity-50' : undefined}
           footer={
             <div className="flex items-center justify-between w-full">
-              <span>Показано {paginatedInvitations.length} из {filteredInvitations.length}</span>
+              <span>Показано {paginatedInvitations.length} из {sortedInvitations.length}</span>
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           }

@@ -11,7 +11,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn } from '@asko/ui';
+import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -86,6 +86,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
       key: 'actions',
       header: '',
       width: 120,
+      sortable: false,
       render: (request) => (
         <Link
           href={`/account/requests/${request.id}`}
@@ -112,6 +113,8 @@ export function RepairerRequests() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const columns = useRequestColumns();
 
@@ -133,6 +136,8 @@ export function RepairerRequests() {
         page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       };
 
       let result;
@@ -150,7 +155,7 @@ export function RepairerRequests() {
     } finally {
       setLoading(false);
     }
-  }, [page, activeTab, search]);
+  }, [page, activeTab, search, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchRequests();
@@ -228,6 +233,9 @@ export function RepairerRequests() {
               columns={columns}
               data={requests}
               keyExtractor={(req) => req.id}
+              sortKey={sortBy ?? undefined}
+              sortOrder={sortOrder ?? undefined}
+              onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
               rowClassName={(req) =>
                 showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
               }

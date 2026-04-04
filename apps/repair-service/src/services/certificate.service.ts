@@ -15,6 +15,8 @@ import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { SignatureService } from './signature.service';
 
+const CERT_SORTABLE_FIELDS = ['createdAt', 'issuedAt', 'expiresAt', 'status', 'certificateNumber'] as const;
+
 /** Certificate price = device price * years * 0.05. Minimum 1000. */
 function calculateCertificatePrice(devicePrice: number, years: number): number {
     const base = devicePrice * years * 0.05;
@@ -270,7 +272,7 @@ export class CertificateService {
     }
 
     @CreateRequestContext()
-    async findByDealer(dealerId: string, pagination: { page?: number; limit?: number; search?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
+    async findByDealer(dealerId: string, pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = { dealer: dealerId };
         if (status) where.status = status;
         if (pagination.search) {
@@ -282,17 +284,21 @@ export class CertificateService {
         const limit = pagination.limit ?? 20;
         const offset = ((pagination.page ?? 1) - 1) * limit;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (CERT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, total] = await this.em.findAndCount(Certificate, where, {
             limit,
             offset,
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             populate: ['userDevice', 'userDevice.device', 'dealer'],
         });
         return { data, total };
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = {};
         if (status) where.status = status;
         if (pagination.search) {
@@ -304,10 +310,14 @@ export class CertificateService {
         const limit = pagination.limit ?? 20;
         const offset = ((pagination.page ?? 1) - 1) * limit;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (CERT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, total] = await this.em.findAndCount(Certificate, where, {
             limit,
             offset,
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             populate: ['userDevice', 'userDevice.device', 'dealer'],
         });
         return { data, total };

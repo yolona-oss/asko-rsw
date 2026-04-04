@@ -61,7 +61,7 @@ export type { DialogProps } from './components/dialog';
 
 
 export { DataGrid } from './components/data-grid';
-export type { DataGridProps, DataGridColumn } from './components/data-grid';
+export type { DataGridProps, DataGridColumn, SortOrder } from './components/data-grid';
 
 export { Container } from './components/container';
 export type { ContainerProps } from './components/container';

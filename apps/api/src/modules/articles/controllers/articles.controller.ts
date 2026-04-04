@@ -181,6 +181,8 @@ export class ArticlesController {
             pagination.limit,
             pagination.search,
             tagList,
+            pagination.sortBy,
+            pagination.sortOrder,
         );
         return {
             ...result,

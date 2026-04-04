@@ -10,7 +10,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterDefinition, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -36,6 +36,8 @@ export function AdminUsers() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', role: 'repairer' });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState('table');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -46,6 +48,8 @@ export function AdminUsers() {
         search: search || undefined,
         role: filterValues.role || undefined,
         status: filterValues.status !== 'all' ? (filterValues.status as string) : undefined,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       setUsers(data.data ?? []);
       setTotal(data.overallCount ?? 0);
@@ -54,7 +58,7 @@ export function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterValues.role, filterValues.status]);
+  }, [page, search, filterValues.role, filterValues.status, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchUsers();
@@ -120,6 +124,7 @@ export function AdminUsers() {
       key: 'checkbox',
       header: '',
       width: 32,
+      sortable: false,
       render: (user) => (
         <Checkbox checked={selected.has(user.id)} onChange={() => toggleSelect(user.id)} />
       ),
@@ -176,6 +181,7 @@ export function AdminUsers() {
       key: 'actions',
       header: 'Действия',
       width: 90,
+      sortable: false,
       render: (user) => {
         const isLoading = actionLoading === user.id;
         return (
@@ -226,6 +232,9 @@ export function AdminUsers() {
           data={users}
           keyExtractor={(user) => user.id}
           emptyContent="Нет пользователей"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           rowClassName={(user) => (user as any).isActive === false ? 'opacity-50' : undefined}
           footer={users.length > 0 ? (
             <div className="flex items-center justify-between w-full">

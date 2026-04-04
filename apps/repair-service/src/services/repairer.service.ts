@@ -3,6 +3,8 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Repairer } from 'entities/repairer.entity';
 import { AppErrors } from 'common/error';
 
+const REPAIRER_SORTABLE_FIELDS = ['createdAt', 'city', 'completedRepairs', 'isActive'] as const;
+
 @Injectable()
 export class RepairerService {
     constructor(private readonly em: EntityManager) {}
@@ -59,7 +61,7 @@ export class RepairerService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string }): Promise<{ data: Repairer[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }): Promise<{ data: Repairer[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
             where.$or = [
@@ -70,10 +72,14 @@ export class RepairerService {
         const limit = pagination.limit ?? 20;
         const offset = ((pagination.page ?? 1) - 1) * limit;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (REPAIRER_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, total] = await this.em.findAndCount(Repairer, where, {
             limit,
             offset,
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
         });
         return { data, total };
     }

@@ -10,7 +10,7 @@ import {
   DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn } from '@asko/ui';
+import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
@@ -30,6 +30,8 @@ export function ManagerPayments() {
   const [page, setPage] = useState(1);
   const [view, setView] = useState('table');
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
   const pageSize = 20;
 
   // Chart state
@@ -111,6 +113,8 @@ export function ManagerPayments() {
           status: filterValues.status || undefined,
           provider: filterValues.provider || undefined,
           search: search || undefined,
+          sortBy: sortBy ?? undefined,
+          sortOrder: sortOrder ?? undefined,
         });
         const result = res.data;
         setPayments(result.data ?? []);
@@ -122,7 +126,7 @@ export function ManagerPayments() {
     }
     setLoading(true);
     fetchData();
-  }, [page, filterValues, search]);
+  }, [page, filterValues, search, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(total / pageSize);
   const showFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
@@ -195,6 +199,7 @@ export function ManagerPayments() {
       key: 'actions',
       header: 'Действия',
       width: 100,
+      sortable: false,
       render: (p) => (
         <button
           type="button"
@@ -260,6 +265,9 @@ export function ManagerPayments() {
           data={payments}
           keyExtractor={(p) => p.id}
           emptyContent="Платежи не найдены"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показаны платежи {showFrom}-{showTo} из {total}</span>

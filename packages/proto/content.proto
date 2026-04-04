@@ -63,6 +63,8 @@ message FindAllArticlesRequest {
     int32 limit = 2;
     string search = 3;
     repeated string tags = 4;
+    string sort_by = 5;
+    string sort_order = 6;
 }
 
 message FindArticleBySlugRequest {

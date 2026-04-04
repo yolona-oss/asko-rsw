@@ -44,6 +44,8 @@ export interface FindAllDevicesRequest {
     search: string;
     type: string;
     isFeatured: boolean;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface FindBySlugRequest {
@@ -163,6 +165,8 @@ export interface PaginatedDevicesResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface AddressRecord {
@@ -392,6 +396,8 @@ export interface CertFindByDealerRequest {
     limit: number;
     search: string;
     status: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface CertFindAllRequest {
@@ -399,6 +405,8 @@ export interface CertFindAllRequest {
     limit: number;
     search: string;
     status: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface CertValidateRequest {
@@ -420,6 +428,8 @@ export interface PaginatedCertificatesResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface CertPriceResponse {
@@ -518,6 +528,8 @@ export interface FindAllRepairersRequest {
     page: number;
     limit: number;
     search: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface FindInCityRequest {
@@ -536,6 +548,8 @@ export interface FindReviewsByRepairerRequest {
     repairerId: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface FindUserReviewRequest {
@@ -561,6 +575,8 @@ export interface PaginatedRepairersResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface ReviewResponse {
@@ -576,6 +592,8 @@ export interface PaginatedReviewsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RatingResponse {
@@ -757,6 +775,8 @@ export interface RepairFindPausedByRepairerRequest {
     repairerUserId: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RepairAddStepRequest {
@@ -841,12 +861,16 @@ export interface RepairFindByUserRequest {
     limit: number;
     search: string;
     status: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RepairFindByRepairerRequest {
     repairerUserId: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RepairFindByRepairerFilteredRequest {
@@ -855,6 +879,8 @@ export interface RepairFindByRepairerFilteredRequest {
     limit: number;
     status: string;
     search: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RepairFindActiveByRepairerRequest {
@@ -866,6 +892,8 @@ export interface RepairFindAllRequest {
     limit: number;
     search: string;
     status: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RepairCheckActiveForDeviceRequest {
@@ -909,6 +937,8 @@ export interface PaginatedRepairRequestsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface WorkStepResponse {
@@ -1099,6 +1129,8 @@ export interface DealerPointsHistoryRequest {
     userId: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface RequestWithdrawalRequest {
@@ -1116,6 +1148,8 @@ export interface DealerPaginationRequest {
     page: number;
     limit: number;
     search: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface DealerFindByIdRequest {
@@ -1147,6 +1181,8 @@ export interface PaginatedPointsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface WithdrawalResponse {
@@ -1162,6 +1198,8 @@ export interface PaginatedWithdrawalsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface WithdrawalPayoutResponse {
@@ -1174,6 +1212,8 @@ export interface PaginatedDealersResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 // ─── Dealer gRPC Service Interface ──────────────────────────────────────

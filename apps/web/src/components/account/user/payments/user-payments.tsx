@@ -12,7 +12,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
@@ -39,12 +39,16 @@ export function UserPayments() {
   // View state
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   async function fetchPayments() {
     try {
       const { data: result } = await paymentApi.getMyPayments({
         page: (page - 1) * pageSize,
         limit: pageSize,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       setPayments(result.data ?? []);
       setTotal(result.overallCount ?? 0);
@@ -57,7 +61,7 @@ export function UserPayments() {
   useEffect(() => {
     setLoading(true);
     fetchPayments();
-  }, [page]);
+  }, [page, sortBy, sortOrder]);
 
   const pendingPayments = payments.filter((p) => p.status === 'pending');
   const otherPayments = payments.filter((p) => p.status !== 'pending');
@@ -199,6 +203,9 @@ export function UserPayments() {
                   data={filteredHistory}
                   keyExtractor={(p) => p.id}
                   emptyContent="Нет платежей"
+                  sortKey={sortBy ?? undefined}
+                  sortOrder={sortOrder ?? undefined}
+                  onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
                   footer={
                     <div className="flex items-center justify-between w-full">
                       <span>Показано {filteredHistory.length} из {total}</span>

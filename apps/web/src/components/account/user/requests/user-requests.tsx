@@ -12,7 +12,7 @@ import {
   DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -31,6 +31,8 @@ export function UserRequests() {
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const statusFilter = filterValues.status as StatusFilter;
 
@@ -42,6 +44,8 @@ export function UserRequests() {
         limit: PAGE_SIZE,
         search: search || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       setRequests((data.data ?? []) as unknown as RepairRequest[]);
       setTotal(data.overallCount ?? 0);
@@ -49,7 +53,7 @@ export function UserRequests() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchRequests();
@@ -151,6 +155,9 @@ export function UserRequests() {
           columns={requestColumns}
           data={requests}
           keyExtractor={(req) => req.id}
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
           rowClassName={() => 'hover:bg-gray-50 transition-colors'}
           footer={

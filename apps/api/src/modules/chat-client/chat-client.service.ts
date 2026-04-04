@@ -48,9 +48,11 @@ export class ChatClientService implements OnModuleInit {
         userId: string,
         page?: number,
         limit?: number,
+        sortBy?: string,
+        sortOrder?: string,
     ): Promise<PaginatedConversationsResponse> {
         return grpcCall(this.chatService.listUserConversations({
-            userId, page: page ?? 0, limit: limit ?? 20,
+            userId, page: page ?? 0, limit: limit ?? 20, sortBy: sortBy ?? '', sortOrder: sortOrder ?? '',
         }));
     }
 
@@ -100,6 +102,8 @@ export class ChatClientService implements OnModuleInit {
         page?: number,
         limit?: number,
         beforeId?: string,
+        sortBy?: string,
+        sortOrder?: string,
     ): Promise<PaginatedMessagesResponse> {
         return grpcCall(this.chatService.listMessages({
             conversationId,
@@ -107,6 +111,8 @@ export class ChatClientService implements OnModuleInit {
             page: page ?? 0,
             limit: limit ?? 50,
             beforeId: beforeId ?? '',
+            sortBy: sortBy ?? '',
+            sortOrder: sortOrder ?? '',
         }));
     }
 

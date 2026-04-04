@@ -28,11 +28,11 @@ export const paymentApi = {
     return api.post<ProcessInvoiceResult>('/payment/create', data);
   },
 
-  listPayments(params?: { page?: number; limit?: number; status?: string; provider?: string; search?: string }) {
+  listPayments(params?: { page?: number; limit?: number; status?: string; provider?: string; search?: string; sortBy?: string; sortOrder?: string }) {
     return api.get<PaginatedPayments>('/payment/list', { params });
   },
 
-  getMyPayments(params?: { page?: number; limit?: number; status?: string }) {
+  getMyPayments(params?: { page?: number; limit?: number; status?: string; sortBy?: string; sortOrder?: string }) {
     return api.get<PaginatedPayments>('/payment/my', { params });
   },
 

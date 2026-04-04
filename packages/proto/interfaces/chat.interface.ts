@@ -18,6 +18,8 @@ export interface ListUserConversationsRequest {
     userId: string;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface DeleteConversationRequest {
@@ -60,6 +62,8 @@ export interface ListMessagesRequest {
     page: number;
     limit: number;
     beforeId: string;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface UpdateMessageRequest {
@@ -124,6 +128,8 @@ export interface PaginatedConversationsResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface ParticipantRecord {
@@ -160,6 +166,8 @@ export interface PaginatedMessagesResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface ChatUnreadCountResponse {

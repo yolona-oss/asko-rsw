@@ -10,7 +10,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues } from '@asko/ui';
+import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -30,6 +30,8 @@ export function AdminCertificates() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
@@ -39,6 +41,8 @@ export function AdminCertificates() {
         limit: PAGE_SIZE,
         search: search || undefined,
         status: filterValues.status as string,
+        sortBy: sortBy ?? undefined,
+        sortOrder: sortOrder ?? undefined,
       });
       setCertificates(data.data ?? []);
       setTotal(data.overallCount ?? 0);
@@ -46,7 +50,7 @@ export function AdminCertificates() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterValues.status]);
+  }, [page, search, filterValues.status, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchCertificates();
@@ -126,6 +130,7 @@ export function AdminCertificates() {
       key: 'actions',
       header: '',
       width: 120,
+      sortable: false,
       render: (cert) => {
         const showRevoke = cert.status === CertificateStatus.ACTIVE;
         return showRevoke ? (
@@ -160,6 +165,9 @@ export function AdminCertificates() {
           data={certificates}
           keyExtractor={(cert) => cert.id}
           emptyContent="Нет сертификатов в этой категории"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {certificates.length} из {total}</span>

@@ -120,6 +120,8 @@ message FindByEmailRequest {
 message PaginationRequest {
     int32 page = 1;
     int32 limit = 2;
+    string sort_by = 3;
+    string sort_order = 4;
 }
 
 message FindAllUsersRequest {
@@ -128,6 +130,8 @@ message FindAllUsersRequest {
     string search = 3;
     string role = 4;
     string status = 5;
+    string sort_by = 6;
+    string sort_order = 7;
 }
 
 message UpdateUserRequest {

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { DataGrid } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import type { Certificate } from './types';
 import { STATUS_LABELS, STATUS_COLORS, formatDate } from './constants';
 
@@ -72,12 +73,28 @@ export function CertificateTable({
   certificates: Certificate[];
   total: number;
 }) {
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+
+  const sortedCertificates = useMemo(() => {
+    if (!sortBy) return certificates;
+    return [...certificates].sort((a, b) => {
+      const av = (a as any)[sortBy] ?? '';
+      const bv = (b as any)[sortBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+  }, [certificates, sortBy, sortOrder]);
+
   return (
     <DataGrid
       columns={columns}
-      data={certificates}
+      data={sortedCertificates}
       keyExtractor={(cert) => cert.id}
       emptyContent="Нет сертификатов"
+      sortKey={sortBy ?? undefined}
+      sortOrder={sortOrder ?? undefined}
+      onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
       footer={<>Показано {certificates.length} из {total}</>}
     />
   );

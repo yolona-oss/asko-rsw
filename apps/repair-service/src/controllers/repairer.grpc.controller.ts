@@ -121,6 +121,8 @@ export class RepairerGrpcController {
                 page: data.page,
                 limit: data.limit,
                 search: data.search || undefined,
+                sortBy: data.sortBy || undefined,
+                sortOrder: data.sortOrder || undefined,
             });
             return {
                 data: result.data.map(repairerToRecord),

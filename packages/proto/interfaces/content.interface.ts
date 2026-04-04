@@ -29,6 +29,8 @@ export interface FindAllArticlesRequest {
     limit: number;
     search: string;
     tags: string[];
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface FindArticleBySlugRequest {
@@ -114,6 +116,8 @@ export interface PaginatedArticlesResponse {
     overallCount: number;
     page: number;
     limit: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
 export interface ArticleListResponse {

@@ -17,6 +17,8 @@ function slugify(text: string): string {
         .replace(/-+$/, '');
 }
 
+const DEVICE_SORTABLE_FIELDS = ['createdAt', 'name', 'brand', 'model', 'isFeatured'] as const;
+
 @Injectable()
 export class DeviceService {
     constructor(
@@ -165,7 +167,7 @@ export class DeviceService {
     // ── Device catalog (public queries) ─────────────────────────────────
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }): Promise<{ data: Device[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean; sortBy?: string; sortOrder?: string }): Promise<{ data: Device[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.search) {
             where.$or = [
@@ -184,10 +186,14 @@ export class DeviceService {
         const limit = pagination.limit ?? 20;
         const offset = ((pagination.page ?? 1) - 1) * limit;
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (DEVICE_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
+            ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [data, total] = await this.em.findAndCount(Device, where, {
             limit,
             offset,
-            orderBy: { createdAt: 'DESC' },
+            orderBy,
             populate: ['category'],
         });
         return { data, total };

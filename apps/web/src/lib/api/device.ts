@@ -11,7 +11,7 @@ import type {
 import { api } from './client';
 
 export const deviceApi = {
-  getAll(params?: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; type?: string; isFeatured?: boolean; sortBy?: string; sortOrder?: string }) {
     return api.get<PaginatedDevices>('/devices', { params });
   },
 

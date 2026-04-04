@@ -11,7 +11,7 @@ import {
   DataGrid,
   Pagination,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn } from '@asko/ui';
+import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -32,6 +32,8 @@ export function ManagerAccess() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const activeTab = (filterValues.status ?? 'inactive') as AccessTab;
 
@@ -44,14 +46,14 @@ export function ManagerAccess() {
   const fetchRepairers = useCallback(() => {
     setLoading(true);
     setError('');
-    repairerApi.getAll({ page: page, limit: LIMIT, search: debouncedSearch || undefined })
+    repairerApi.getAll({ page: page, limit: LIMIT, search: debouncedSearch || undefined, sortBy: sortBy ?? undefined, sortOrder: sortOrder ?? undefined })
       .then(({ data }) => {
         setRepairers(data?.data ?? []);
         setTotal(data?.overallCount ?? 0);
       })
       .catch(() => setError('Не удалось загрузить данные'))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchRepairers();
@@ -144,6 +146,7 @@ export function ManagerAccess() {
       key: 'actions',
       header: '',
       width: 130,
+      sortable: false,
       render: (rep) => {
         const isLoading = actionLoading === rep.id;
         return (
@@ -205,6 +208,9 @@ export function ManagerAccess() {
           data={displayed}
           keyExtractor={(rep) => rep.id}
           emptyContent={activeTab === 'inactive' ? 'Нет новых мастеров' : 'Нет активных мастеров'}
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {displayed.length} из {total}</span>

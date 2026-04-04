@@ -25,6 +25,8 @@ import { CreateRequestContext, Populate } from '@mikro-orm/core';
 
 import { Session, UserAddress } from 'entities';
 
+const USER_SORTABLE_FIELDS = ['createdAt', 'firstName', 'lastName', 'email', 'phone', 'isActive'] as const;
+
 @Injectable()
 export class UserService {
     constructor(
@@ -32,7 +34,7 @@ export class UserService {
     ) { }
 
     @CreateRequestContext()
-    async findAll(dto: PaginationDto & { search?: string; role?: string; status?: string },
+    async findAll(dto: PaginationDto & { search?: string; role?: string; status?: string; sortBy?: string; sortOrder?: string },
         relations?: Populate<User, "sessions" | "addresses" | "roles">
     ): Promise<PaginatedResponseDto<User>> {
         const offset = dto.page ?? 0
@@ -56,9 +58,14 @@ export class UserService {
             where.isActive = false;
         }
 
+        const orderBy: Record<string, 'ASC' | 'DESC'> = dto.sortBy && (USER_SORTABLE_FIELDS as readonly string[]).includes(dto.sortBy)
+            ? { [dto.sortBy]: dto.sortOrder === 'asc' ? 'ASC' : 'DESC' }
+            : { createdAt: 'DESC' };
+
         const [entities, overallCount] = await this.em.findAndCount(User, where, {
             offset,
             limit,
+            orderBy,
             populate: relations,
         })
 

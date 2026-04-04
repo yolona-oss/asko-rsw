@@ -229,7 +229,7 @@ export class CertificateGrpcController {
         try {
             const result = await this.certificateService.findByDealer(
                 data.dealerId,
-                { page: data.page, limit: data.limit, search: data.search || undefined },
+                { page: data.page, limit: data.limit, search: data.search || undefined, sortBy: data.sortBy || undefined, sortOrder: data.sortOrder || undefined },
                 data.status || undefined,
             );
             return {
@@ -249,6 +249,8 @@ export class CertificateGrpcController {
                     page: data.page,
                     limit: data.limit,
                     search: data.search || undefined,
+                    sortBy: data.sortBy || undefined,
+                    sortOrder: data.sortOrder || undefined,
                 },
                 data.status || undefined,
             );

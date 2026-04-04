@@ -8,7 +8,7 @@ import {
   FormField,
   DataGrid,
 } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
+import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceCategoryApi } from '@/lib/api/device-category';
@@ -31,6 +31,8 @@ export function AdminDeviceCategories() {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const fetchCategories = async () => {
     try {
@@ -96,6 +98,16 @@ export function AdminDeviceCategories() {
 
   const update = (partial: Partial<FormData>) => setForm((prev) => ({ ...prev, ...partial }));
 
+  const sortedCategories = useMemo(() => {
+    if (!sortBy) return categories;
+    return [...categories].sort((a, b) => {
+      const av = (a as any)[sortBy] ?? '';
+      const bv = (b as any)[sortBy] ?? '';
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+  }, [categories, sortBy, sortOrder]);
+
   const columns: DataGridColumn<DeviceCategoryRecord>[] = useMemo(() => [
     {
       key: 'order',
@@ -125,6 +137,7 @@ export function AdminDeviceCategories() {
       key: 'actions',
       header: '',
       width: 160,
+      sortable: false,
       render: (cat) => (
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => openEdit(cat)}>
@@ -207,9 +220,12 @@ export function AdminDeviceCategories() {
       ) : (
         <DataGrid
           columns={columns}
-          data={categories}
+          data={sortedCategories}
           keyExtractor={(cat) => cat.id}
           emptyContent="Нет категорий"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
           footer={<span>Всего: {categories.length}</span>}
         />
       )}

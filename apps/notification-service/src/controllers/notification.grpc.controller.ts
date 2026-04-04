@@ -75,6 +75,8 @@ export class NotificationGrpcController {
                 data.page ?? 0,
                 data.limit ?? 20,
                 data.unreadOnly ?? false,
+                data.sortBy || undefined,
+                data.sortOrder || undefined,
             );
             return {
                 data: result.data.map(entityToRecord),
