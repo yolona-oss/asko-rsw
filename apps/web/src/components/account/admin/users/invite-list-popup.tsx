@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { invitationApi } from '@/lib/api/invitation';
 import { INVITE_ROLE_LABELS, formatDateTime, isExpired } from './constants';
 
@@ -45,9 +46,7 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#edeff1]">
           <h3 className="text-lg font-medium text-[#323232]">Все приглашения</h3>
           <button type="button" onClick={onClose} className="text-text-sub hover:text-text-main cursor-pointer">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 

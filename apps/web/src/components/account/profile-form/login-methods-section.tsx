@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { authApi } from '@/lib/api/auth';
 import { Input } from '@asko/ui';
+import { Check, Minus } from 'lucide-react';
 
 interface LoginMethodsSectionProps {
   providers: string[];
@@ -237,17 +238,13 @@ function MethodIcon({ active }: { active: boolean }) {
   if (active) {
     return (
       <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        <Check className="w-4 h-4 text-green-600" strokeWidth={2} />
       </div>
     );
   }
   return (
     <div className="w-8 h-8 rounded-full bg-[#F0F0F1] flex items-center justify-center shrink-0">
-      <svg className="w-4 h-4 text-text-sub" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H6" />
-      </svg>
+      <Minus className="w-4 h-4 text-text-sub" strokeWidth={2} />
     </div>
   );
 }
@@ -256,9 +253,7 @@ function VerificationBadge({ verified }: { verified: boolean }) {
   if (verified) {
     return (
       <div className="flex items-center gap-1.5">
-        <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        <Check className="w-3.5 h-3.5 text-green-600" strokeWidth={2} />
         <span className="text-xs text-green-600">Подтверждён</span>
       </div>
     );

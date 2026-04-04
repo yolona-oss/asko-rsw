@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Select } from '@asko/ui';
+import { X } from 'lucide-react';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import { ROLE_OPTIONS, TTL_OPTIONS } from './constants';
@@ -49,9 +50,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium text-[#323232]">Создать приглашение</h3>
           <button type="button" onClick={onClose} className="text-text-sub hover:text-text-main cursor-pointer">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 

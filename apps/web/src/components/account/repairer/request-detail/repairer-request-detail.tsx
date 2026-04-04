@@ -6,6 +6,7 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input, ImageGallery } from '@asko/ui';
+import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
@@ -239,9 +240,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         </Badge>
         <span className="text-sm text-text-sub">{formatDate(request.createdAt)}</span>
         <Link href="/account/requests" className="ml-auto text-sm text-text-sub hover:text-brand-red transition-colors flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
+          <ArrowLeft className="w-4 h-4" />
           Назад
         </Link>
       </div>

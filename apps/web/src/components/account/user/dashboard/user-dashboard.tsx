@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { Card, Button, Modal } from '@asko/ui';
+import { X } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { CTABanner } from '@/components/account/cta-banner';
@@ -193,9 +194,7 @@ export function UserDashboard() {
           className="absolute top-4 right-4 text-text-sub hover:text-text-main"
           aria-label="Закрыть"
         >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-6 h-6" />
         </button>
         <h2 className="text-xl font-bold text-text-main mb-4">Выберите платёж</h2>
         <div className="flex flex-col gap-3">

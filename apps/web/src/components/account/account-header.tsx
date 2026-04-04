@@ -4,10 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Dialog } from '@asko/ui';
+import { Dialog, DropdownMenu } from '@asko/ui';
+import type { DropdownMenuEntry } from '@asko/ui';
 import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
+import { useRouter } from 'next/navigation';
+import { User, LogOut, ArrowLeft } from 'lucide-react';
 import { MenuIcon } from './menu-icon';
 import { SkeletonCircle } from '@/components/skeleton';
 import { NotificationBell } from './notification-bell';
@@ -17,8 +20,26 @@ export function AccountHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const menu = user ? menuByRole[primaryRole(user)] : [];
   const logout = useLogout();
+
+  const avatarDropdownItems: DropdownMenuEntry[] = [
+    {
+      key: 'profile',
+      label: 'Профиль',
+      icon: <User className="w-4 h-4" />,
+      onClick: () => router.push('/account/profile'),
+    },
+    'separator',
+    {
+      key: 'logout',
+      label: 'Выйти',
+      variant: 'danger',
+      icon: <LogOut className="w-4 h-4" />,
+      onClick: () => setLogoutDialogOpen(true),
+    },
+  ];
 
   const avatarElement = stage === 'loaded' ? (
     <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C4C4C4]">
@@ -80,18 +101,15 @@ export function AccountHeader() {
             ) : (
               <SkeletonCircle className="w-6 h-6" />
             )}
-            {avatarElement}
-            {/* Logout — desktop only */}
-            <button
-              type="button"
-              onClick={() => setLogoutDialogOpen(true)}
-              aria-label="Выйти"
-              className="hidden lg:block text-text-main hover:text-brand-red transition-colors cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
-            </button>
+            <DropdownMenu
+              trigger={
+                <button type="button" className="cursor-pointer" aria-label="Меню пользователя">
+                  {avatarElement}
+                </button>
+              }
+              items={avatarDropdownItems}
+              placement="bottom-end"
+            />
           </div>
         </div>
       </header>
@@ -137,9 +155,7 @@ export function AccountHeader() {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-1 text-sm text-text-main"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
+                <ArrowLeft className="w-4 h-4" />
                 Вернуться на сайт
               </Link>
               <button
@@ -147,9 +163,7 @@ export function AccountHeader() {
                 onClick={() => { setMenuOpen(false); setLogoutDialogOpen(true); }}
                 className="flex items-center gap-1 text-sm text-text-main"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                </svg>
+                <LogOut className="w-4 h-4" />
                 Выйти
               </button>
             </div>

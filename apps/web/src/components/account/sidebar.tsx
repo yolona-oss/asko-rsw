@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Dialog } from '@asko/ui';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { useAccount } from './account-provider';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
@@ -76,9 +77,7 @@ export function AccountSidebar() {
               href="/"
               className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
+              <ArrowLeft className="w-4 h-4" />
               Вернуться на сайт
             </Link>
             <button
@@ -86,9 +85,7 @@ export function AccountSidebar() {
               onClick={() => setLogoutDialogOpen(true)}
               className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
+              <LogOut className="w-4 h-4" />
               Выйти
             </button>
           </>

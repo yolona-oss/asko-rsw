@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Badge, Button, Input, Select, Textarea, FormField } from '@asko/ui';
+import { X, Plus } from 'lucide-react';
 import type { BadgeVariant } from '@asko/ui';
 import { repairRequestApi } from '@/lib/api/repair-request';
 
@@ -138,9 +139,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
                       className="text-text-sub hover:text-red-600 transition-colors cursor-pointer"
                       title="Удалить запчасть"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -177,9 +176,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
                     className="w-14 h-14 rounded-sm border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
                     title="Добавить фото"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
               </div>

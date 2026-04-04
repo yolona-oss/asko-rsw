@@ -22,7 +22,7 @@ export interface DataGridColumn<T = any> {
   key: string;
   /** Header label */
   header: string;
-  /** Initial width in pixels. Omit for flexible (1fr) sizing */
+  /** Initial width in pixels. Omit for flexible (1fr) sizing (default: 100) */
   width?: number;
   /** Minimum width for resizing (default: 60) */
   minWidth?: number;
@@ -211,7 +211,7 @@ export function DataGrid<T>({
   const gridTemplate = visibleColumns
     .map((col, i) => {
       if (i === visibleColumns.length - 1) return 'minmax(0, 1fr)';
-      const w = widths[col.key] ?? col.width;
+      const w = widths[col.key] ?? col.width ?? 100;
       return w != null ? `${w}px` : 'minmax(0, 1fr)';
     })
     .join(' ');

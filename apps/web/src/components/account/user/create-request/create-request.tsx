@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Select, Textarea, FormField, Input } from '@asko/ui';
+import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -377,9 +378,7 @@ export function CreateRequest() {
                 onClick={() => setShowCustomPartInput(true)}
                 className="flex items-center gap-2 mt-2 text-sm font-medium text-text-sub hover:text-text-main transition-colors cursor-pointer"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
+                <Plus className="w-4 h-4" />
                 Добавить свою запчасть
               </button>
             )}
@@ -434,9 +433,7 @@ export function CreateRequest() {
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <Plus className="w-5 h-5" />
             Добавить фото
           </button>
         </FormField>

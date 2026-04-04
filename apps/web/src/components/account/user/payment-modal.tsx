@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Modal } from '@asko/ui';
+import { X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
 import { PaymentTargetType } from '@asko/shared/client';
@@ -91,9 +92,7 @@ export function PaymentModal({
         className="absolute top-4 right-4 text-text-sub hover:text-text-main"
         aria-label="Закрыть"
       >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X className="w-6 h-6" />
       </button>
 
       <h2 className="text-xl lg:text-2xl font-bold text-text-main">

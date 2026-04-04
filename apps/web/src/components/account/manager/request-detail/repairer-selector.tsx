@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Badge } from '@asko/ui';
+import { ChevronDown } from 'lucide-react';
 import type { RepairerOption } from './types';
 import { REPAIRER_REQUEST_STATUS_LABELS } from './constants';
 
@@ -129,9 +130,7 @@ export function RepairerSelector({
         <span className={selected ? 'text-text-main' : 'text-text-sub'}>
           {selected ? getRepairerName(selected) + (selected.city ? ` (${selected.city})` : '') : placeholder}
         </span>
-        <svg className={`w-4 h-4 text-text-sub transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown className={`w-4 h-4 text-text-sub transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown panel */}

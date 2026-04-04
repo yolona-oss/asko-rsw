@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Textarea } from '@asko/ui';
+import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { PaymentModal } from '@/components/account/user/payment-modal';
@@ -275,9 +276,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
               onClick={() => reviewFileRef.current?.click()}
               className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
+              <Plus className="w-5 h-5" />
               {reviewFiles.length > 0
                 ? `Выбрано фото: ${reviewFiles.length}`
                 : 'Добавить фото'}

@@ -192,7 +192,7 @@ function MainImage({
    Fullscreen Lightbox Modal
    ═══════════════════════════════════════════════════════ */
 
-function LightboxModal({
+export function LightboxModal({
   images,
   alt,
   startIndex,

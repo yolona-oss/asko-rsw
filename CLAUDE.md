@@ -426,7 +426,7 @@ DTOs, types, enums, constants, utilities shared across the monorepo.
 
 React component library. Tailwind classes only — no CSS files, no styled-components.
 
-**Components**: badge, button, card, container, crop-modal, data-grid, data-card-view, data-filter, data-search, data-toolbar, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, tooltip, view-switcher, and more.
+**Components**: badge, button, card, container, crop-modal, data-grid, data-card-view, data-filter, data-search, data-toolbar, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, tooltip, view-switcher, dropdown, and more.
 
 **DataGrid** (`DataGrid` component) — column-definition-driven data table used for all tabular data. Features: sticky header, auto-tooltips on every cell, truncation (default) or multiline per column, column resizing via drag handles, right-click context menu (remove/add columns, reset to defaults), `onSort` callback placeholder, `onRowClick` for clickable rows, `rowClassName` for per-row styling. All table views in the web app use `DataGrid` — there is no legacy `DataTable` component.
 
