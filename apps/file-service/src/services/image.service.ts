@@ -74,6 +74,11 @@ export class ImageService {
     }
 
     @CreateRequestContext()
+    async findAccess(fileId: string): Promise<FileAccess | null> {
+        return this.em.findOne(FileAccess, { fileId, fileType: 'image' });
+    }
+
+    @CreateRequestContext()
     async upload(file: Express.Multer.File, alt?: string, access?: AccessParams) {
         const imageObj = await this.storage.uploadImage(file);
         const image = new Image();

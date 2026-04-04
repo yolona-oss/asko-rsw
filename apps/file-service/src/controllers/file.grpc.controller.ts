@@ -1,13 +1,11 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { EntityManager } from '@mikro-orm/postgresql';
 import { status } from '@grpc/grpc-js';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
 import { AppError } from 'common/error';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
-import { FileAccess } from 'entities/file-access.entity';
 import { Readable } from 'stream';
 import type {
     UploadFileRequest,
@@ -92,7 +90,6 @@ export class FileGrpcController {
         private readonly imageService: ImageService,
         private readonly videoService: VideoService,
         private readonly cleanupService: ImageCleanupService,
-        private readonly em: EntityManager,
     ) {}
 
     // ─── Upload operations ──────────────────────────────────────────────
@@ -395,19 +392,20 @@ export class FileGrpcController {
     @GrpcMethod('FileService', 'GetFileAccess')
     async getFileAccess(data: GetFileAccessRequest): Promise<FileAccessResponse> {
         try {
-            const fork = this.em.fork();
-            const access = await fork.findOne(FileAccess, { fileId: data.id, fileType: data.type });
-
             let storageUrl = '';
             let publicId = '';
+            let access: any = null;
+
             if (data.type === 'video') {
                 const video = await this.videoService.findOne(data.id);
                 storageUrl = video.video?.secure_url ?? video.video?.url ?? '';
                 publicId = video.video?.public_id ?? '';
+                access = await this.videoService.findAccess(data.id);
             } else {
                 const image = await this.imageService.findOne(data.id);
                 storageUrl = image.image?.original?.secure_url ?? image.image?.original?.url ?? '';
                 publicId = image.image?.original?.public_id ?? '';
+                access = await this.imageService.findAccess(data.id);
             }
 
             return {

@@ -20,6 +20,11 @@ export class VideoService {
     }
 
     @CreateRequestContext()
+    async findAccess(fileId: string): Promise<FileAccess | null> {
+        return this.em.findOne(FileAccess, { fileId, fileType: 'video' });
+    }
+
+    @CreateRequestContext()
     async upload(
         file: Express.Multer.File,
         creatorId?: string,
