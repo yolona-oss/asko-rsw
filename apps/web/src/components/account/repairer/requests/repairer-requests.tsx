@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Badge,
@@ -82,28 +82,11 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
         <p className="text-sm text-text-main">{formatDate(request.createdAt)}</p>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 120,
-      sortable: false,
-      render: (request) => (
-        <Link
-          href={`/account/requests/${request.id}`}
-          className="text-sm text-text-main hover:text-brand-red transition-colors flex items-center gap-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Открыть
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </Link>
-      ),
-    },
   ], []);
 }
 
 export function RepairerRequests() {
+  const router = useRouter();
   const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'active' });
   const activeTab = filterValues.tab as TabKey;
   const [activeRequest, setActiveRequest] = useState<RepairRequest | null>(null);
@@ -202,6 +185,9 @@ export function RepairerRequests() {
               data={[activeRequest]}
               keyExtractor={(req) => req.id}
               rowClassName={() => 'bg-brand-red/5'}
+              rowMenu={(req) => [
+                { key: 'open', label: 'Открыть', onClick: () => router.push(`/account/requests/${req.id}`) },
+              ]}
             />
           )}
         </div>
@@ -236,6 +222,9 @@ export function RepairerRequests() {
               sortKey={sortBy ?? undefined}
               sortOrder={sortOrder ?? undefined}
               onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+              rowMenu={(req) => [
+                { key: 'open', label: 'Открыть', onClick: () => router.push(`/account/requests/${req.id}`) },
+              ]}
               rowClassName={(req) =>
                 showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
               }

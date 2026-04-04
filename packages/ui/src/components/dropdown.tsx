@@ -419,3 +419,70 @@ export function ContextMenu({
     document.body,
   );
 }
+
+// ─── ContextMenuArea (wrapper for right-click + long-press) ─────────────────
+
+export interface ContextMenuAreaProps {
+  /** Menu items to show. Can be a function receiving position */
+  items: DropdownMenuEntry[];
+  /** Side panel items */
+  aside?: DropdownMenuEntry[];
+  asideTitle?: string;
+  onSelect?: (key: string) => void;
+  children: ReactNode;
+  className?: string;
+  /** Long press duration in ms (default: 500) */
+  longPressDuration?: number;
+}
+
+export function ContextMenuArea({
+  items,
+  aside,
+  asideTitle,
+  onSelect,
+  children,
+  className,
+  longPressDuration = 500,
+}: ContextMenuAreaProps) {
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const lpRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLp = useCallback(() => {
+    if (lpRef.current) {
+      clearTimeout(lpRef.current);
+      lpRef.current = null;
+    }
+  }, []);
+
+  return (
+    <div
+      className={className}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setMenu({ x: e.clientX, y: e.clientY });
+      }}
+      onTouchStart={(e) => {
+        const touch = e.touches[0];
+        lpRef.current = setTimeout(
+          () => setMenu({ x: touch.clientX, y: touch.clientY }),
+          longPressDuration,
+        );
+      }}
+      onTouchEnd={clearLp}
+      onTouchMove={clearLp}
+    >
+      {children}
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={items}
+          aside={aside}
+          asideTitle={asideTitle}
+          onSelect={onSelect}
+          onClose={() => setMenu(null)}
+        />
+      )}
+    </div>
+  );
+}

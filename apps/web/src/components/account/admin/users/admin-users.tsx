@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Button,
   DataFilter,
   DataToolbar,
   DataGrid,
@@ -10,15 +9,13 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
 import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
 import { ROLE_LABELS, ROLE_TAB_FILTER_DEF } from './constants';
-import { Checkbox } from './checkbox';
-import { SettingsDropdown } from './settings-dropdown';
 import { InviteDropdown } from './invite-dropdown';
 import { UserAvatar } from './user-avatar';
 import { StatusBadge } from './status-badge';
@@ -34,7 +31,6 @@ export function AdminUsers() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', role: 'repairer' });
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState('table');
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
@@ -64,11 +60,6 @@ export function AdminUsers() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Reset selection when role changes
-  useEffect(() => {
-    setSelected(new Set());
-  }, [filterValues.role]);
-
   const handleToggleActive = async (id: string, active: boolean) => {
     setActionLoading(id);
     try {
@@ -91,19 +82,10 @@ export function AdminUsers() {
     try {
       await usersApi.delete(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
-      setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
     } catch {
     } finally {
       setActionLoading(null);
     }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelected((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      return n;
-    });
   };
 
   const STATUS_FILTER_DEF: FilterDefinition = {
@@ -120,15 +102,6 @@ export function AdminUsers() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: DataGridColumn<IAuthUser>[] = useMemo(() => [
-    {
-      key: 'checkbox',
-      header: '',
-      width: 32,
-      sortable: false,
-      render: (user) => (
-        <Checkbox checked={selected.has(user.id)} onChange={() => toggleSelect(user.id)} />
-      ),
-    },
     {
       key: 'user',
       header: 'Пользователь',
@@ -177,24 +150,24 @@ export function AdminUsers() {
         return <StatusBadge isActive={isActive} />;
       },
     },
-    {
-      key: 'actions',
-      header: 'Действия',
-      width: 90,
-      sortable: false,
-      render: (user) => {
-        const isLoading = actionLoading === user.id;
-        return (
-          <SettingsDropdown
-            user={user}
-            onToggleActive={handleToggleActive}
-            onDelete={handleDelete}
-            loading={isLoading}
-          />
-        );
+  ], [actionLoading]);
+
+  const rowMenu = (user: IAuthUser): DropdownMenuEntry[] => {
+    const isActive = (user as any).isActive !== false;
+    return [
+      {
+        key: 'toggle-active',
+        label: isActive ? 'Заблокировать' : 'Разблокировать',
+        onClick: () => handleToggleActive(user.id, !isActive),
       },
-    },
-  ], [selected, actionLoading]);
+      {
+        key: 'delete',
+        label: 'Удалить',
+        variant: 'danger',
+        onClick: () => handleDelete(user.id),
+      },
+    ];
+  };
 
   return (
     <PageContainer>
@@ -236,6 +209,7 @@ export function AdminUsers() {
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           rowClassName={(user) => (user as any).isActive === false ? 'opacity-50' : undefined}
+          rowMenu={rowMenu}
           footer={users.length > 0 ? (
             <div className="flex items-center justify-between w-full">
               <span>Показано {users.length} из {total}</span>

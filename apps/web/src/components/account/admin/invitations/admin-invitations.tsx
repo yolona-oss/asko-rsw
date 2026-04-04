@@ -15,7 +15,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { SkeletonCard } from '@/components/skeleton';
@@ -190,31 +190,29 @@ export function AdminInvitations() {
         );
       },
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 180,
-      sortable: false,
-      render: (inv) => {
-        const expired = isExpired(inv.expiresAt);
-        const inactive = inv.used || expired;
-        const resolvedLink = newLinks[inv.id] ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${inv.token}`;
-        return (
-          <div className="flex gap-2">
-            {!inactive && <CopyButton text={resolvedLink} />}
-            <Button
-              variant="danger"
-              size="sm"
-              disabled={deleteLoading === inv.id}
-              onClick={() => handleDelete(inv.id)}
-            >
-              {deleteLoading === inv.id ? '...' : 'Удалить'}
-            </Button>
-          </div>
-        );
-      },
-    },
-  ], [newLinks, deleteLoading]);
+  ], [newLinks]);
+
+  const rowMenu = (inv: IInvitationLink): DropdownMenuEntry[] => {
+    const expired = isExpired(inv.expiresAt);
+    const inactive = inv.used || expired;
+    const resolvedLink = newLinks[inv.id] ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${inv.token}`;
+    const items: DropdownMenuEntry[] = [];
+    if (!inactive) {
+      items.push({
+        key: 'copy',
+        label: 'Копировать ссылку',
+        onClick: () => navigator.clipboard.writeText(resolvedLink),
+      });
+    }
+    items.push({
+      key: 'delete',
+      label: 'Удалить',
+      variant: 'danger',
+      disabled: deleteLoading === inv.id,
+      onClick: () => handleDelete(inv.id),
+    });
+    return items;
+  };
 
   const paginatedInvitations = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
@@ -292,6 +290,7 @@ export function AdminInvitations() {
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           rowClassName={(inv) => (inv.used || isExpired(inv.expiresAt)) ? 'opacity-50' : undefined}
+          rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {paginatedInvitations.length} из {sortedInvitations.length}</span>

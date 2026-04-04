@@ -59,6 +59,8 @@ export interface DataGridProps<T = any> {
   onRowClick?: (item: T) => void;
   /** Custom className per row (e.g. highlight, opacity) */
   rowClassName?: (item: T) => string | undefined;
+  /** Returns context menu items for a row (right-click / long-press) */
+  rowMenu?: (item: T) => DropdownMenuEntry[];
 }
 
 // ─── Inline SVG icons ───────────────────────────────────────────────────────
@@ -199,9 +201,12 @@ export function DataGrid<T>({
   onSort,
   onRowClick,
   rowClassName,
+  rowMenu: rowMenuFn,
 }: DataGridProps<T>) {
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [widths, setWidths] = useState<Record<string, number>>({});
+  const [rowMenuState, setRowMenuState] = useState<{ x: number; y: number; item: T } | null>(null);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{
     x: number;
     y: number;
@@ -389,6 +394,22 @@ export function DataGrid<T>({
             )}
             style={{ gridTemplateColumns: gridTemplate }}
             onClick={onRowClick ? () => onRowClick(item) : undefined}
+            onContextMenu={rowMenuFn ? (e) => {
+              e.preventDefault();
+              setRowMenuState({ x: e.clientX, y: e.clientY, item });
+            } : undefined}
+            onTouchStart={rowMenuFn ? (e) => {
+              const touch = e.touches[0];
+              longPressRef.current = setTimeout(() => {
+                setRowMenuState({ x: touch.clientX, y: touch.clientY, item });
+              }, 500);
+            } : undefined}
+            onTouchEnd={rowMenuFn ? () => {
+              if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
+            } : undefined}
+            onTouchMove={rowMenuFn ? () => {
+              if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
+            } : undefined}
           >
             {visibleColumns.map((col) => (
               <div key={col.key} className="min-w-0 overflow-hidden">
@@ -416,7 +437,17 @@ export function DataGrid<T>({
         </div>
       )}
 
-      {/* Context menu */}
+      {/* Row context menu */}
+      {rowMenuState && rowMenuFn && (
+        <ContextMenu
+          x={rowMenuState.x}
+          y={rowMenuState.y}
+          items={rowMenuFn(rowMenuState.item)}
+          onClose={() => setRowMenuState(null)}
+        />
+      )}
+
+      {/* Header context menu */}
       {ctxMenu && (() => {
         const columnSortable =
           onSort != null &&

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Button,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -142,40 +141,7 @@ export function ManagerAccess() {
       mobileLabel: 'Геопозиция:',
       render: (rep) => <p className="text-sm text-text-main">{formatDate(rep.lastLocationUpdate)}</p>,
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 130,
-      sortable: false,
-      render: (rep) => {
-        const isLoading = actionLoading === rep.id;
-        return (
-          <>
-            {activeTab === 'inactive' && (
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={isLoading}
-                onClick={(e) => { e.stopPropagation(); handleActivate(rep.id); }}
-              >
-                {isLoading ? '...' : 'Активировать'}
-              </Button>
-            )}
-            {activeTab === 'active' && (
-              <Button
-                variant="danger"
-                size="sm"
-                disabled={isLoading}
-                onClick={(e) => { e.stopPropagation(); handleDeactivate(rep.id); }}
-              >
-                {isLoading ? '...' : 'Деактивировать'}
-              </Button>
-            )}
-          </>
-        );
-      },
-    },
-  ], [activeTab, actionLoading, handleActivate, handleDeactivate]);
+  ], []);
 
   return (
     <PageContainer>
@@ -211,6 +177,11 @@ export function ManagerAccess() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          rowMenu={(rep) => [
+            activeTab === 'inactive'
+              ? { key: 'activate', label: 'Активировать', onClick: () => handleActivate(rep.id) }
+              : { key: 'deactivate', label: 'Деактивировать', onClick: () => handleDeactivate(rep.id) },
+          ]}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {displayed.length} из {total}</span>
@@ -230,9 +201,11 @@ export function ManagerAccess() {
                 <RepairerCard
                   key={rep.id}
                   repairer={rep}
-                  onActivate={activeTab === 'inactive' ? handleActivate : undefined}
-                  onDeactivate={activeTab === 'active' ? handleDeactivate : undefined}
-                  actionLoading={actionLoading}
+                  menuItems={[
+                    activeTab === 'inactive'
+                      ? { key: 'activate', label: 'Активировать', onClick: () => handleActivate(rep.id) }
+                      : { key: 'deactivate', label: 'Деактивировать', onClick: () => handleDeactivate(rep.id) },
+                  ]}
                 />
               ))}
             </div>

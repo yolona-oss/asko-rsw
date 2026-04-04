@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Badge,
   Card,
+  ContextMenuArea,
   DataToolbar,
   VIEW_TABLE,
   VIEW_CARD,
@@ -195,24 +196,6 @@ export function ManagerPayments() {
       mobileLabel: 'Дата:',
       render: (p) => <span className="text-sm text-text-main">{formatDateFull(p.paidAt ?? p.createdAt)}</span>,
     },
-    {
-      key: 'actions',
-      header: 'Действия',
-      width: 100,
-      sortable: false,
-      render: (p) => (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setSelectedPayment(p); }}
-          className="text-[#1855a4] font-medium hover:underline text-left cursor-pointer flex items-center gap-1 text-sm"
-        >
-          Подробнее
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
-      ),
-    },
   ], []);
 
   return (
@@ -268,6 +251,9 @@ export function ManagerPayments() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          rowMenu={(p) => [
+            { key: 'view', label: 'Подробнее', onClick: () => setSelectedPayment(p) },
+          ]}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
@@ -280,36 +266,33 @@ export function ManagerPayments() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {payments.map((p) => (
-            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xs text-text-sub">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
-                <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
-                  {STATUS_LABELS[p.status] ?? p.status}
-                </Badge>
-              </div>
-              <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
-              <div className="flex items-center gap-3">
-                <Badge
-                  variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
-                  className="text-xs"
-                >
-                  +{formatAmount(p.amount)} ₽
-                </Badge>
-                <span className="text-sm text-text-sub">
-                  {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPayment(p)}
-                className="flex items-center gap-1 text-sm text-text-main hover:text-brand-red transition-colors mt-auto pt-2 cursor-pointer"
-              >
-                Подробнее
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </button>
-            </Card>
+            <ContextMenuArea
+              key={p.id}
+              items={[
+                { key: 'view', label: 'Подробнее', onClick: () => setSelectedPayment(p) },
+              ]}
+            >
+              <Card padding="none" className="p-5 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs text-text-sub">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
+                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
+                    {STATUS_LABELS[p.status] ?? p.status}
+                  </Badge>
+                </div>
+                <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                    className="text-xs"
+                  >
+                    +{formatAmount(p.amount)} ₽
+                  </Badge>
+                  <span className="text-sm text-text-sub">
+                    {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
+                  </span>
+                </div>
+              </Card>
+            </ContextMenuArea>
           ))}
         </div>
       )}

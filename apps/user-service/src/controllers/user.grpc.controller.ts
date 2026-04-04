@@ -414,12 +414,16 @@ export class UserGrpcController {
                 search: data.search || undefined,
                 role: data.role || undefined,
                 status: data.status || undefined,
+                sortBy: data.sortBy || undefined,
+                sortOrder: (data.sortOrder || undefined) as 'asc' | 'desc' | undefined,
             });
             return {
                 data: result.data.map(userToResponse),
                 overallCount: result.overallCount,
                 page: result.pagination.page ?? 0,
                 limit: result.pagination.limit ?? 10,
+                sortBy: data.sortBy ?? '',
+                sortOrder: data.sortOrder ?? '',
             };
         } catch (e) { throw toGrpcError(e); }
     }

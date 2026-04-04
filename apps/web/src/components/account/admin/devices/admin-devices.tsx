@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Modal,
@@ -12,7 +13,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
@@ -34,6 +35,7 @@ const FEATURED_FILTER = {
 };
 
 export function AdminDevices() {
+  const router = useRouter();
   const [devices, setDevices] = useState<Device[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -138,21 +140,12 @@ export function AdminDevices() {
         <span className="inline-block px-2 py-0.5 text-xs text-text-sub">Нет</span>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 200,
-      sortable: false,
-      render: (device) => (
-        <div className="flex gap-2">
-          <Link href={`/account/devices/${device.id}`}>
-            <Button variant="secondary" size="sm">Изменить</Button>
-          </Link>
-          <Button variant="danger" size="sm" onClick={() => handleDelete(device.id)}>Удалить</Button>
-        </div>
-      ),
-    },
   ], [categoryLabels]);
+
+  const rowMenu = (device: Device): DropdownMenuEntry[] => [
+    { key: 'edit', label: 'Изменить', onClick: () => router.push(`/account/devices/${device.id}`) },
+    { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(device.id) },
+  ];
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -356,6 +349,7 @@ export function AdminDevices() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {devices.length} из {total}</span>

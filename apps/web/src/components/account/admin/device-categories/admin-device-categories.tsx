@@ -8,7 +8,7 @@ import {
   FormField,
   DataGrid,
 } from '@asko/ui';
-import type { DataGridColumn, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceCategoryApi } from '@/lib/api/device-category';
@@ -133,23 +133,12 @@ export function AdminDeviceCategories() {
       mobileLabel: 'Мн. число:',
       render: (cat) => <span className="text-sm text-text-main">{cat.labelPlural}</span>,
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 160,
-      sortable: false,
-      render: (cat) => (
-        <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={() => openEdit(cat)}>
-            Изменить
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => handleDelete(cat.id)}>
-            Удалить
-          </Button>
-        </div>
-      ),
-    },
   ], []);
+
+  const rowMenu = (cat: DeviceCategoryRecord): DropdownMenuEntry[] => [
+    { key: 'edit', label: 'Изменить', onClick: () => openEdit(cat) },
+    { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(cat.id) },
+  ];
 
   return (
     <PageContainer>
@@ -226,6 +215,7 @@ export function AdminDeviceCategories() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
+          rowMenu={rowMenu}
           footer={<span>Всего: {categories.length}</span>}
         />
       )}

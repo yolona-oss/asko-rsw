@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Button,
   Badge,
   DataGrid,
   DataToolbar,
@@ -10,7 +9,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -126,21 +125,15 @@ export function AdminCertificates() {
       mobileLabel: 'Истекает:',
       render: (cert) => <p className="text-sm text-text-main">{formatDate(cert.expiresAt)}</p>,
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 120,
-      sortable: false,
-      render: (cert) => {
-        const showRevoke = cert.status === CertificateStatus.ACTIVE;
-        return showRevoke ? (
-          <Button variant="danger" size="sm" onClick={() => handleRevoke(cert.id)}>
-            Отозвать
-          </Button>
-        ) : null;
-      },
-    },
   ], []);
+
+  const rowMenu = (cert: ICertificate): DropdownMenuEntry[] => {
+    const items: DropdownMenuEntry[] = [];
+    if (cert.status === CertificateStatus.ACTIVE) {
+      items.push({ key: 'revoke', label: 'Отозвать', variant: 'danger', onClick: () => handleRevoke(cert.id) });
+    }
+    return items;
+  };
 
   return (
     <PageContainer>
@@ -168,6 +161,7 @@ export function AdminCertificates() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {certificates.length} из {total}</span>

@@ -10,7 +10,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, SortOrder } from '@asko/ui';
+import type { DataGridColumn, SortOrder, DropdownMenuEntry } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { CTABanner } from '@/components/account/cta-banner';
@@ -209,24 +209,6 @@ export function UserCertificates() {
       mobileLabel: 'Истекает:',
       render: (cert) => <p className="text-sm text-text-sub">{formatDate(cert.expiresAt)}</p>,
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 220,
-      sortable: false,
-      render: (cert) => (
-        <div className="flex gap-2">
-          {cert.status === CertificateStatus.PENDING_PAYMENT && handlePay && (
-            <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); handlePay(cert); }}>
-              Оплатить
-            </Button>
-          )}
-          <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); exportPdf(cert); }}>
-            PDF
-          </Button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -261,7 +243,7 @@ export function UserCertificates() {
               ) : (
                 <>
                   {paginatedCertificates.map((cert) => (
-                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} />
+                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} onExportPdf={exportPdf} />
                   ))}
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
                 </>
@@ -316,6 +298,14 @@ export function UserCertificates() {
               sortKey={sortBy ?? undefined}
               sortOrder={sortOrder ?? undefined}
               onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+              rowMenu={(cert) => {
+                const items: DropdownMenuEntry[] = [];
+                if (cert.status === CertificateStatus.PENDING_PAYMENT) {
+                  items.push({ key: 'pay', label: 'Оплатить', onClick: () => handlePay(cert) });
+                }
+                items.push({ key: 'pdf', label: 'Скачать PDF', onClick: () => exportPdf(cert) });
+                return items;
+              }}
               footer={
                 <div className="flex items-center justify-between w-full">
                   <span>Показано {paginatedCertificates.length} из {sortedCertificates.length}</span>

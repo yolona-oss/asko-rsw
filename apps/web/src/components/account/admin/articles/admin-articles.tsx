@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Modal,
@@ -11,7 +12,7 @@ import {
   VIEW_CARD,
   Pagination,
 } from '@asko/ui';
-import type { DataGridColumn, SortOrder } from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { articleApi } from '@/lib/api/article';
@@ -21,6 +22,7 @@ import { ArticleCard } from './article-card';
 const PAGE_SIZE = 20;
 
 export function AdminArticles() {
+  const router = useRouter();
   const [articles, setArticles] = useState<IArticle[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -115,21 +117,12 @@ export function AdminArticles() {
         </div>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      width: 200,
-      sortable: false,
-      render: (article) => (
-        <div className="flex gap-2">
-          <Link href={`/account/articles/${article.id}`}>
-            <Button variant="secondary" size="sm">Изменить</Button>
-          </Link>
-          <Button variant="danger" size="sm" onClick={() => handleDelete(article.id)}>Удалить</Button>
-        </div>
-      ),
-    },
   ], []);
+
+  const rowMenu = (article: IArticle): DropdownMenuEntry[] => [
+    { key: 'edit', label: 'Изменить', onClick: () => router.push(`/account/articles/${article.id}`) },
+    { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(article.id) },
+  ];
 
   return (
     <PageContainer>
@@ -199,6 +192,7 @@ export function AdminArticles() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredArticles.length} из {total}</span>
