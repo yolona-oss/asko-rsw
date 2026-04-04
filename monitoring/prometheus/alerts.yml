@@ -1,0 +1,94 @@
+groups:
+  - name: service_health
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "{{ $labels.job }} ({{ $labels.instance }}) has been unreachable for more than 1 minute."
+
+      - alert: HighHttpErrorRate
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} has >5% server error rate (current: {{ $value | humanizePercentage }})."
+
+      - alert: HighHttpLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP p95 latency on {{ $labels.job }}"
+          description: "{{ $labels.job }} p95 latency >2s (current: {{ $value | humanizeDuration }})."
+
+      - alert: HighGrpcErrorRate
+        expr: sum(rate(grpc_calls_total{status="error"}[5m])) by (job) / sum(rate(grpc_calls_total[5m])) by (job) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High gRPC error rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} has >5% gRPC error rate (current: {{ $value | humanizePercentage }})."
+
+      - alert: HighGrpcLatency
+        expr: histogram_quantile(0.95, sum(rate(grpc_call_duration_seconds_bucket[5m])) by (le, job)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High gRPC p95 latency on {{ $labels.job }}"
+          description: "{{ $labels.job }} gRPC p95 latency >1s (current: {{ $value | humanizeDuration }})."
+
+  - name: resource_usage
+    rules:
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes > 1073741824
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.job }}"
+          description: "{{ $labels.job }} RSS >1GB (current: {{ $value | humanize1024 }}B)."
+
+      - alert: HighCpuUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.job }}"
+          description: "{{ $labels.job }} CPU >90% (current: {{ $value | humanizePercentage }})."
+
+      - alert: HighEventLoopLag
+        expr: nodejs_eventloop_lag_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event loop lag on {{ $labels.job }}"
+          description: "{{ $labels.job }} event loop lag >500ms (current: {{ $value | humanizeDuration }})."
+
+      - alert: HighFileDescriptors
+        expr: process_open_fds / process_max_fds > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Running out of file descriptors on {{ $labels.job }}"
+          description: "{{ $labels.job }} using >80% of max file descriptors."
+
+      - alert: FrequentRestarts
+        expr: changes(process_start_time_seconds[1h]) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frequent restarts detected for {{ $labels.job }}"
+          description: "{{ $labels.job }} restarted {{ $value }} times in the last hour."

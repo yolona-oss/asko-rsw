@@ -25,6 +25,7 @@
 
 body {
   @apply bg-page-bg text-text-main antialiased;
+  line-height: 4px;
 }
 
 @keyframes glow-drift-1 {

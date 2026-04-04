@@ -11,7 +11,7 @@ export class PinoLogger implements LoggerService {
                 require.resolve('pino-pretty');
                 transport = { target: 'pino-pretty', options: { colorize: true } };
             } catch {
-                // pino-pretty not installed, use JSON output
+                console.error('Pino not installed')
             }
         }
 
