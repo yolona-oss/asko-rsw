@@ -80,7 +80,7 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
       cbRef.current.onUserPresence?.(data);
     });
 
-    socket.on('message:read', (data: { userId: string; conversationId: string; messageId: string }) => {
+    socket.on('message:read', (data: { userId: string; conversationId: string; messageId: string; affectedMessageIds?: string[] }) => {
       cbRef.current.onMessageRead?.(data);
     });
 

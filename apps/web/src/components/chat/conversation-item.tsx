@@ -25,6 +25,8 @@ interface ConversationItemProps {
   active: boolean;
   currentUserId: string;
   presenceMap: Record<string, boolean>;
+  /** Map of userId → avatar URL for direct chat participants */
+  avatarMap?: Record<string, string | null>;
   onClick: () => void;
 }
 
@@ -33,6 +35,7 @@ export function ConversationItem({
   active,
   currentUserId,
   presenceMap,
+  avatarMap,
   onClick,
 }: ConversationItemProps) {
   // Derive display name
@@ -57,7 +60,11 @@ export function ConversationItem({
       }`}
     >
       <div className="relative flex-shrink-0">
-        <Avatar size="md" fallback={displayName.slice(0, 2)} />
+        <Avatar
+          size="md"
+          src={isDirect && otherParticipant ? (avatarMap?.[otherParticipant.userId] ?? undefined) : conversation.avatarUrl}
+          fallback={displayName.slice(0, 2)}
+        />
         {isDirect && (
           <PresenceDot
             online={isOnline}

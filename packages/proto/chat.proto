@@ -20,7 +20,7 @@ service ChatService {
     rpc ListMessages(ListMessagesRequest) returns (PaginatedMessagesResponse);
     rpc UpdateMessage(UpdateMessageRequest) returns (MessageResponse);
     rpc DeleteMessage(DeleteMessageRequest) returns (EmptyChatResponse);
-    rpc MarkAsRead(MarkAsReadRequest) returns (EmptyChatResponse);
+    rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
     rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse);
 
     // ─── Presence ─────────────────────────────────────────────────────
@@ -36,6 +36,7 @@ message CreateConversationRequest {
     string type = 2;           // direct | group
     string name = 3;
     repeated string participantIds = 4;
+    string avatarUrl = 5;
 }
 
 message GetConversationRequest {
@@ -135,6 +136,10 @@ message GetBulkPresenceRequest {
 
 message EmptyChatResponse {}
 
+message MarkAsReadResponse {
+    repeated string affectedMessageIds = 1;
+}
+
 message ConversationRecord {
     string id = 1;
     string type = 2;
@@ -146,6 +151,7 @@ message ConversationRecord {
     string createdAt = 8;
     string updatedAt = 9;
     string closedAt = 10;
+    string avatarUrl = 11;
 }
 
 message ConversationResponse {
@@ -180,8 +186,11 @@ message MessageRecord {
     string text = 5;
     string attachmentJson = 6;
     bool isEdited = 7;
-    string createdAt = 8;
-    string updatedAt = 9;
+    string status = 8;
+    string deliveredAt = 9;
+    string readAt = 10;
+    string createdAt = 11;
+    string updatedAt = 12;
 }
 
 message MessageResponse {

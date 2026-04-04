@@ -17,6 +17,9 @@ export class ChatMessageRecordDto {
     text?: string;
     attachmentJson?: string;
     isEdited: boolean;
+    status?: string;
+    deliveredAt?: string;
+    readAt?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -30,6 +33,7 @@ export class ConversationRecordDto {
     participants: ParticipantRecordDto[];
     lastMessage?: ChatMessageRecordDto;
     unreadCount: number;
+    avatarUrl?: string;
     createdAt: string;
     updatedAt: string;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@asko/ui';
 import { PresenceDot } from './presence-dot';
@@ -9,6 +9,7 @@ import { MessageInput } from './message-input';
 import { TypingIndicator } from './typing-indicator';
 import { notificationApi } from '@/lib/api/notification';
 import { setActiveConversation } from '@/lib/active-conversation';
+import { useUserAvatars } from '@/hooks/use-user-avatars';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
@@ -103,6 +104,9 @@ export function ConversationPanel({
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';
   const isDirect = conversation.type === 'direct';
+  const otherIds = useMemo(() => otherParticipant && isDirect ? [otherParticipant.userId] : [], [otherParticipant, isDirect]);
+  const avatarMap = useUserAvatars(otherIds);
+  const headerAvatarSrc = isDirect && otherParticipant ? (avatarMap[otherParticipant.userId] ?? undefined) : conversation.avatarUrl;
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
   const isGroup = conversation.type === 'group';
 
@@ -144,7 +148,7 @@ export function ConversationPanel({
           </button>
         )}
         <div className="relative flex-shrink-0">
-          <Avatar size="md" fallback={displayName.slice(0, 2)} />
+          <Avatar size="md" src={headerAvatarSrc} fallback={displayName.slice(0, 2)} />
           {isDirect && (
             <PresenceDot online={isOnline} className="absolute -bottom-0.5 -right-0.5" />
           )}

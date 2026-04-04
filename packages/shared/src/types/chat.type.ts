@@ -10,6 +10,12 @@ export enum MessageType {
     SYSTEM = 'system',
 }
 
+export enum MessageStatus {
+    SENDING = 'sending',
+    DELIVERED = 'delivered',
+    SEEN = 'seen',
+}
+
 export enum PresenceStatus {
     ONLINE = 'online',
     OFFLINE = 'offline',

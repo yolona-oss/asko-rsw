@@ -1,11 +1,11 @@
 import { Entity, PrimaryKey, Property, Index, ManyToOne, Enum, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 import { Conversation } from './conversation.entity';
-import { MessageType } from '@asko/shared';
+import { MessageType, MessageStatus } from '@asko/shared';
 
 @Entity({ tableName: 'message' })
 export class Message {
-    [OptionalProps]?: 'text' | 'attachmentJson' | 'isEdited' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'text' | 'attachmentJson' | 'isEdited' | 'status' | 'deliveredAt' | 'readAt' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -28,6 +28,15 @@ export class Message {
 
     @Property({ type: 'boolean', default: false })
     isEdited: boolean = false;
+
+    @Enum({ items: () => MessageStatus, nativeEnumName: 'message_status', default: MessageStatus.DELIVERED })
+    status: MessageStatus = MessageStatus.DELIVERED;
+
+    @Property({ type: 'datetime', nullable: true })
+    deliveredAt?: Date;
+
+    @Property({ type: 'datetime', nullable: true })
+    readAt?: Date;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

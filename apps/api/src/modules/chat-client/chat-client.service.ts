@@ -13,6 +13,7 @@ import type {
     ParticipantListResponse,
     PresenceResponse,
     BulkPresenceResponse,
+    MarkAsReadResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -34,9 +35,10 @@ export class ChatClientService implements OnModuleInit {
         type: string,
         name: string,
         participantIds: string[],
+        avatarUrl?: string,
     ): Promise<ConversationResponse> {
         return grpcCall(this.chatService.createConversation({
-            creatorId, type, name, participantIds,
+            creatorId, type, name, participantIds, avatarUrl,
         }));
     }
 
@@ -124,7 +126,7 @@ export class ChatClientService implements OnModuleInit {
         return grpcCall(this.chatService.deleteMessage({ messageId, userId }));
     }
 
-    markAsRead(conversationId: string, userId: string, messageId: string): Promise<EmptyChatResponse> {
+    markAsRead(conversationId: string, userId: string, messageId: string): Promise<MarkAsReadResponse> {
         return grpcCall(this.chatService.markAsRead({ conversationId, userId, messageId }));
     }
 

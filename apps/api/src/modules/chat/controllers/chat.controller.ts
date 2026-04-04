@@ -32,7 +32,7 @@ export class ChatController {
     @Post('conversations')
     async createConversation(
         @Req() req: any,
-        @Body() body: { type: string; name?: string; participantIds: string[] },
+        @Body() body: { type: string; name?: string; participantIds: string[]; avatarUrl?: string },
     ) {
         const userId = req.user?.id;
         const userRoles: string[] = req.user?.roles ?? [];
@@ -46,7 +46,7 @@ export class ChatController {
         }
 
         const result = await this.chatClient.createConversation(
-            userId, body.type, body.name ?? '', body.participantIds,
+            userId, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
         );
 
         // Emit to other participants via WebSocket

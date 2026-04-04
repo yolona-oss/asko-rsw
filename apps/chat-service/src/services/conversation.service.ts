@@ -20,6 +20,7 @@ export class ConversationService {
         type: string,
         name: string,
         participantIds: string[],
+        avatarUrl?: string,
     ): Promise<Conversation> {
         const convType = type as ConversationType;
 
@@ -35,11 +36,11 @@ export class ConversationService {
             }
         }
 
-        const conversation = this.em.create(Conversation, {
-            type: convType,
-            name: name || undefined,
-            creatorId,
-        });
+        const conversation = new Conversation();
+        conversation.type = convType;
+        conversation.name = name || undefined;
+        conversation.creatorId = creatorId;
+        if (avatarUrl) conversation.avatarUrl = avatarUrl;
         await this.em.persistAndFlush(conversation);
 
         // Add creator as owner

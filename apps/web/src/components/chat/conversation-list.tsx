@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '@/lib/api/chat';
 import { ConversationItem } from './conversation-item';
 import { Input, Button } from '@asko/ui';
+import { useUserAvatars } from '@/hooks/use-user-avatars';
 import type { ChatConversation } from '@/lib/chat-types';
 
 interface ConversationListProps {
@@ -44,6 +45,16 @@ export function ConversationList({
     })
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
+  // Collect other participant IDs from direct conversations for avatar fetching
+  const otherUserIds = useMemo(() => {
+    return conversations
+      .filter((c) => c.type === 'direct')
+      .map((c) => c.participants.find((p) => p.userId !== currentUserId)?.userId)
+      .filter((id): id is string => !!id);
+  }, [conversations, currentUserId]);
+
+  const avatarMap = useUserAvatars(otherUserIds);
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border-light flex flex-col gap-2">
@@ -73,6 +84,7 @@ export function ConversationList({
               active={c.id === activeId}
               currentUserId={currentUserId}
               presenceMap={presenceMap}
+              avatarMap={avatarMap}
               onClick={() => onSelect(c)}
             />
           ))

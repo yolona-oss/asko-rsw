@@ -241,8 +241,8 @@ export class ChatGrpcController {
     @GrpcMethod('ChatService', 'MarkAsRead')
     async markAsRead(data: ChatMarkAsReadRequest) {
         try {
-            await this.messageService.markAsRead(data.conversationId, data.userId, data.messageId);
-            return {};
+            const affectedMessageIds = await this.messageService.markAsRead(data.conversationId, data.userId, data.messageId);
+            return { affectedMessageIds };
         } catch (e) { throw toGrpcError(e); }
     }
 

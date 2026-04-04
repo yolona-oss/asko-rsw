@@ -4,7 +4,7 @@ import { Message } from 'entities/message.entity';
 import { Conversation } from 'entities/conversation.entity';
 import { ConversationParticipant } from 'entities/conversation-participant.entity';
 import { AppErrors } from 'common/error';
-import { MessageType } from '@asko/shared';
+import { MessageType, MessageStatus } from '@asko/shared';
 import { ChatEventService, ChatEventType } from './chat-event.service';
 
 @Injectable()
@@ -33,14 +33,16 @@ export class MessageService {
         });
         if (!participant) throw AppErrors.notParticipant();
 
-        const message = this.em.create(Message, {
-            conversation,
-            senderId,
-            type: type as MessageType,
-            text: text || undefined,
-            attachmentJson,
-        });
-        await this.em.persistAndFlush(message);
+        const message = new Message();
+        message.conversation = conversation;
+        message.senderId = senderId;
+        message.type = type as MessageType;
+        message.text = text || undefined;
+        message.attachmentJson = attachmentJson;
+        message.status = MessageStatus.DELIVERED;
+        message.deliveredAt = new Date();
+        this.em.persist(message);
+        await this.em.flush();
 
         // Update conversation's updatedAt
         conversation.updatedAt = new Date();
@@ -127,7 +129,7 @@ export class MessageService {
     }
 
     @CreateRequestContext()
-    async markAsRead(conversationId: string, userId: string, messageId: string): Promise<void> {
+    async markAsRead(conversationId: string, userId: string, messageId: string): Promise<string[]> {
         const participant = await this.em.findOne(ConversationParticipant, {
             conversation: { id: conversationId },
             userId,
@@ -135,7 +137,29 @@ export class MessageService {
         if (!participant) throw AppErrors.notParticipant();
 
         participant.lastReadMessageId = messageId;
+
+        // Mark unread messages from others as seen
+        const targetMessage = await this.em.findOne(Message, { id: messageId });
+        if (targetMessage) {
+            const unreadMessages = await this.em.find(Message, {
+                conversation: { id: conversationId },
+                senderId: { $ne: userId },
+                status: { $ne: MessageStatus.SEEN },
+                createdAt: { $lte: targetMessage.createdAt },
+            });
+            const now = new Date();
+            const affectedIds: string[] = [];
+            for (const msg of unreadMessages) {
+                msg.status = MessageStatus.SEEN;
+                msg.readAt = now;
+                affectedIds.push(msg.id);
+            }
+            await this.em.flush();
+            return affectedIds;
+        }
+
         await this.em.flush();
+        return [];
     }
 
     @CreateRequestContext()

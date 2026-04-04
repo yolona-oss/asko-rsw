@@ -7,6 +7,7 @@ export interface CreateConversationRequest {
     type: string;
     name: string;
     participantIds: string[];
+    avatarUrl?: string;
 }
 
 export interface GetConversationRequest {
@@ -106,6 +107,10 @@ export interface GetBulkPresenceRequest {
 
 export interface EmptyChatResponse {}
 
+export interface MarkAsReadResponse {
+    affectedMessageIds: string[];
+}
+
 export interface ConversationRecord {
     id: string;
     type: string;
@@ -117,6 +122,7 @@ export interface ConversationRecord {
     createdAt: string;
     updatedAt: string;
     closedAt: string;
+    avatarUrl: string;
 }
 
 export interface ConversationResponse {
@@ -153,6 +159,9 @@ export interface MessageRecord {
     text: string;
     attachmentJson: string;
     isEdited: boolean;
+    status: string;
+    deliveredAt: string;
+    readAt: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -205,7 +214,7 @@ export interface ChatServiceClient {
     listMessages(request: ListMessagesRequest): Observable<PaginatedMessagesResponse>;
     updateMessage(request: UpdateMessageRequest): Observable<MessageResponse>;
     deleteMessage(request: DeleteMessageRequest): Observable<EmptyChatResponse>;
-    markAsRead(request: ChatMarkAsReadRequest): Observable<EmptyChatResponse>;
+    markAsRead(request: ChatMarkAsReadRequest): Observable<MarkAsReadResponse>;
     getUnreadCount(request: ChatGetUnreadCountRequest): Observable<ChatUnreadCountResponse>;
     updatePresence(request: UpdatePresenceRequest): Observable<EmptyChatResponse>;
     getPresence(request: GetPresenceRequest): Observable<PresenceResponse>;

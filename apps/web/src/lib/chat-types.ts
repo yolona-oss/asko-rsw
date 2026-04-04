@@ -15,6 +15,9 @@ export interface ChatMessage {
   text?: string;
   attachmentJson?: string;
   isEdited: boolean;
+  status?: 'sending' | 'delivered' | 'seen';
+  deliveredAt?: string;
+  readAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +26,7 @@ export interface ChatConversation {
   id: string;
   type: string;
   name?: string;
+  avatarUrl?: string;
   creatorId: string;
   participants: ChatParticipant[];
   lastMessage?: ChatMessage;

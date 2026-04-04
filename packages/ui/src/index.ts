@@ -142,7 +142,7 @@ export type { PaginationProps } from './components/pagination';
 export { DataToolbar } from './components/data-toolbar';
 export type { DataToolbarProps, DataToolbarSearchProps } from './components/data-toolbar';
 
-export { ImageGallery } from './components/image-gallery';
+export { ImageGallery, LightboxModal } from './components/image-gallery';
 export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/image-gallery';
 
 export { Tooltip } from './components/tooltip';

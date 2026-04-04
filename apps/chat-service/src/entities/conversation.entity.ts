@@ -6,7 +6,7 @@ import { ConversationType } from '@asko/shared';
 
 @Entity({ tableName: 'conversation' })
 export class Conversation {
-    [OptionalProps]?: 'name' | 'closedAt' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'name' | 'avatarUrl' | 'closedAt' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -16,6 +16,9 @@ export class Conversation {
 
     @Property({ type: 'varchar', length: 255, nullable: true })
     name?: string;
+
+    @Property({ type: 'varchar', length: 500, nullable: true })
+    avatarUrl?: string;
 
     @Index()
     @Property({ type: 'varchar', length: 255 })

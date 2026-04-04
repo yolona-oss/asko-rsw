@@ -106,12 +106,6 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     <PageContainer>
       <div className="flex items-center justify-between gap-4">
         <PageHeader>{title}</PageHeader>
-        {canEdit && (
-          <Button size="sm" onClick={() => openCreate()}>
-            <Plus className="w-4 h-4 mr-1" />
-            Добавить
-          </Button>
-        )}
       </div>
 
       {/* Weekly template grid */}
@@ -146,6 +140,14 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
             })}
           </div>
         )}
+        <div>
+          {canEdit && (
+            <Button size="sm" onClick={() => openCreate()}>
+              <Plus className="w-4 h-4 mr-1" />
+              Добавить
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Date-specific entries */}
