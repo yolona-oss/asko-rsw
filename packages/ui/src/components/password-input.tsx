@@ -1,6 +1,7 @@
 'use client'
 
 import { type InputHTMLAttributes, forwardRef, useState, useMemo } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 export interface PasswordRule {
@@ -21,64 +22,6 @@ export interface PasswordInputProps
   maxLength?: number;
 }
 
-const EyeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 4.375C3.75 4.375 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C16.25 15.625 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M10 13.125C11.7259 13.125 13.125 11.7259 13.125 10C13.125 8.27411 11.7259 6.875 10 6.875C8.27411 6.875 6.875 8.27411 6.875 10C6.875 11.7259 8.27411 13.125 10 13.125Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3.75 3.75L16.25 16.25"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M11.7678 11.7678C11.2989 12.2366 10.6629 12.5 10 12.5C9.33696 12.5 8.70107 12.2366 8.23223 11.7678C7.76339 11.2989 7.5 10.663 7.5 10C7.5 9.33696 7.76339 8.70107 8.23223 8.23223"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M5.94531 5.62891C3.11719 7.19141 1.25 10 1.25 10C1.25 10 3.75 15.625 10 15.625C11.5234 15.625 12.8359 15.2344 13.9453 14.6094"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M16.168 13.168C17.8398 11.6445 18.75 10 18.75 10C18.75 10 16.25 4.375 10 4.375C9.47656 4.375 8.97656 4.42578 8.5 4.51953"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M10.5859 7.5625C11.2187 7.72656 11.7656 8.10156 12.1406 8.625C12.5156 9.14844 12.6953 9.78906 12.6484 10.4336"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 function getDefaultRules(min: number, max: number): PasswordRule[] {
   return [
@@ -171,7 +114,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-text-main transition-colors cursor-pointer"
             aria-label={visible ? 'Скрыть пароль' : 'Показать пароль'}
           >
-            {visible ? <EyeOffIcon /> : <EyeIcon />}
+            {visible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
 

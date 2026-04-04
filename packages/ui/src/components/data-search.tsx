@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, type InputHTMLAttributes } from 'react';
+import { Search, X } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 export interface DataSearchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -47,19 +48,7 @@ export function DataSearch({
   return (
     <div className={cn('relative', className)}>
       {/* Search icon */}
-      <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-sub pointer-events-none"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-        />
-      </svg>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-sub pointer-events-none" />
 
       <input
         type="text"
@@ -84,9 +73,7 @@ export function DataSearch({
           className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main cursor-pointer"
           aria-label="Очистить поиск"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, X, Loader2 } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 /* ═══════════════════════════════════════════════════════
@@ -57,38 +58,23 @@ function resolveZoom(z?: boolean | ImageGalleryZoomConfig): { scale: number } | 
 }
 
 /* ═══════════════════════════════════════════════════════
-   Icons (inline SVGs)
+   Icons (lucide-react)
    ═══════════════════════════════════════════════════════ */
 
 function ChevronIcon({ direction, className }: { direction: 'up' | 'down' | 'left' | 'right'; className?: string }) {
-  const paths: Record<string, string> = {
-    up: 'M4.5 15.75l7.5-7.5 7.5 7.5',
-    down: 'M19.5 8.25l-7.5 7.5-7.5-7.5',
-    left: 'M15.75 19.5L8.25 12l7.5-7.5',
-    right: 'M8.25 4.5l7.5 7.5-7.5 7.5',
-  };
-  return (
-    <svg className={cn('w-5 h-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d={paths[direction]} />
-    </svg>
-  );
+  const iconClass = cn('w-5 h-5', className);
+  const icons = { up: ChevronUp, down: ChevronDown, left: ChevronLeft, right: ChevronRight };
+  const Icon = icons[direction];
+  return <Icon className={iconClass} />;
 }
 
 function ArrowIcon({ direction, className }: { direction: 'left' | 'right'; className?: string }) {
-  const d = direction === 'left' ? 'M19 12H5M5 12l7 7M5 12l7-7' : 'M5 12h14M19 12l-7-7M19 12l-7 7';
-  return (
-    <svg className={cn('w-6 h-6', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
-    </svg>
-  );
+  const Icon = direction === 'left' ? ArrowLeft : ArrowRight;
+  return <Icon className={cn('w-6 h-6', className)} />;
 }
 
 function CloseIcon({ className }: { className?: string }) {
-  return (
-    <svg className={cn('w-8 h-8', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  );
+  return <X className={cn('w-8 h-8', className)} />;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -96,12 +82,7 @@ function CloseIcon({ className }: { className?: string }) {
    ═══════════════════════════════════════════════════════ */
 
 function Spinner({ className }: { className?: string }) {
-  return (
-    <svg className={cn('w-8 h-8 animate-spin text-[#A6A6A6]', className)} viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-    </svg>
-  );
+  return <Loader2 className={cn('w-8 h-8 animate-spin text-[#A6A6A6]', className)} />;
 }
 
 function LoadableImg({

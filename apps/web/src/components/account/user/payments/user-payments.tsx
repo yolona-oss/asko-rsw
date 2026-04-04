@@ -45,7 +45,7 @@ export function UserPayments() {
   async function fetchPayments() {
     try {
       const { data: result } = await paymentApi.getMyPayments({
-        page: (page - 1) * pageSize,
+        page: page,
         limit: pageSize,
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,

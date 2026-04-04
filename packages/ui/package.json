@@ -11,7 +11,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc --watch --project tsconfig.json",
@@ -20,6 +22,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "lucide-react": "^1.7.0",
     "react": "^19",
     "react-dom": "^19"
   },
