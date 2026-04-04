@@ -45,3 +45,13 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9110"]
     metrics_path: /metrics
+
+  - job_name: "rabbitmq"
+    static_configs:
+      - targets: ["localhost:15692"]
+    metrics_path: /metrics
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["localhost:9121"]
+    metrics_path: /metrics

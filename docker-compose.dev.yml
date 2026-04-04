@@ -6,9 +6,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_PLUGINS: "rabbitmq_management rabbitmq_prometheus"
 
   redis:
     image: redis:7-alpine
@@ -16,6 +18,17 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: asko-redis-exporter-dev
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      REDIS_ADDR: "redis://localhost:6379"
+    command: ["--web.listen-address=:9121"]
+    depends_on:
+      - redis
 
   prometheus:
     image: prom/prometheus:latest
