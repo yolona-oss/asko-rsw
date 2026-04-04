@@ -55,9 +55,6 @@ export function NotificationBell() {
         return;
       }
 
-      queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
-        count: (old?.count ?? 0) + 1,
-      }));
       queryClient.setQueryData<ListCache>(
         ['notifications-unread-list'],
         (old) => {
