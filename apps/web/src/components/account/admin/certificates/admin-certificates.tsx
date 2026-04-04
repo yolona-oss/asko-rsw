@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { CertificateDetail, fetchCertificateOne } from '@/components/account/shared/certificate-detail';
 import {
   Badge,
   DataGrid,
@@ -23,6 +26,7 @@ import { CertificateCard } from './certificate-card';
 const PAGE_SIZE = 20;
 
 export function AdminCertificates() {
+  const detail = useEntityDetail<ICertificate>();
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'active' });
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [total, setTotal] = useState(0);
@@ -164,6 +168,7 @@ export function AdminCertificates() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
           rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
@@ -190,6 +195,14 @@ export function AdminCertificates() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали сертификата"
+        fetchOne={fetchCertificateOne}
+        renderContent={(item, loading) => <CertificateDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

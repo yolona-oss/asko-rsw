@@ -3,6 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { ArticleDetail, fetchArticleOne } from './article-detail';
 import {
   Button,
   Modal,
@@ -24,6 +27,7 @@ const PAGE_SIZE = 20;
 
 export function AdminArticles() {
   const router = useRouter();
+  const detail = useEntityDetail<IArticle>();
   const [articles, setArticles] = useState<IArticle[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -121,7 +125,6 @@ export function AdminArticles() {
   ], []);
 
   const rowMenu = (article: IArticle): DropdownMenuEntry[] => [
-    { key: 'edit', label: 'Изменить', onClick: () => router.push(`/account/articles/${article.id}`) },
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(article.id) },
   ];
 
@@ -193,6 +196,8 @@ export function AdminArticles() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(article) => router.push(`/account/articles/${article.id}`)}
           rowMenu={rowMenu}
           footer={
             <div className="flex items-center justify-between w-full">
@@ -219,6 +224,14 @@ export function AdminArticles() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали статьи"
+        fetchOne={fetchArticleOne}
+        renderContent={(item, loading) => <ArticleDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { UserDetail } from './user-detail';
 import {
   DataFilter,
   DataToolbar,
@@ -25,6 +28,7 @@ import { UserCard } from './user-card';
 const PAGE_SIZE = 20;
 
 export function AdminUsers() {
+  const detail = useEntityDetail<IAuthUser>();
   const [users, setUsers] = useState<IAuthUser[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -209,6 +213,7 @@ export function AdminUsers() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
           rowClassName={(user) => (user as any).isActive === false ? 'opacity-50' : undefined}
           rowMenu={rowMenu}
           footer={users.length > 0 ? (
@@ -239,6 +244,13 @@ export function AdminUsers() {
           </>
         )
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали пользователя"
+        renderContent={(item, loading) => <UserDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

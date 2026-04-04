@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
 import {
   DataToolbar,
   ViewSwitcher,
@@ -23,6 +26,7 @@ import { ChatStatusBadges } from './chat-status-badges';
 
 export function ManagerRequests() {
   const router = useRouter();
+  const detail = useEntityDetail<RepairRequest>();
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
@@ -186,7 +190,8 @@ export function ManagerRequests() {
             sortKey={sortBy ?? undefined}
             sortOrder={sortOrder ?? undefined}
             onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-            onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
+            onRowClick={detail.onRowClick}
+            onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
             footer={
               <div className="flex items-center justify-between w-full">
                 <span>Показано {requests.length} из {total}</span>
@@ -199,6 +204,14 @@ export function ManagerRequests() {
 
       {/* Pagination */}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали заявки"
+        fetchOne={fetchRepairRequestOne}
+        renderContent={(item, loading) => <RepairRequestDetail item={item} loading={loading} />}
+      />
     </PageContainer >
   );
 }

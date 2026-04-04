@@ -3,6 +3,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import { useAccount } from '@/components/account/account-provider';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import {
@@ -68,6 +71,7 @@ const columns: DataGridColumn<any>[] = [
 
 export function RepairerHistory() {
   const { user } = useAccount();
+  const detail = useEntityDetail<any>();
 
   const [requests, setRequests] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -163,6 +167,7 @@ export function RepairerHistory() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {filteredRequests.length} из {total}</span>
@@ -204,6 +209,15 @@ export function RepairerHistory() {
 
       {/* Pagination */}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали заявки"
+        fetchOne={fetchRepairRequestOne}
+        renderContent={(item, loading) => <RepairRequestDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { CertificateDetail, fetchCertificateOne } from '@/components/account/shared/certificate-detail';
 import {
   Badge,
   Button,
@@ -30,6 +33,7 @@ import type { UserDevice } from './types';
 const PAGE_SIZE = 20;
 
 export function UserCertificates() {
+  const detail = useEntityDetail<ICertificate>();
   const [certificates, setCertificates] = useState<ICertificate[]>([]);
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,6 +303,7 @@ export function UserCertificates() {
               sortKey={sortBy ?? undefined}
               sortOrder={sortOrder ?? undefined}
               onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+              onRowClick={detail.onRowClick}
               rowMenu={(cert) => {
                 const items: DropdownMenuEntry[] = [];
                 if (cert.status === CertificateStatus.PENDING_PAYMENT) {
@@ -345,6 +350,15 @@ export function UserCertificates() {
           amount={paymentCert.price ?? 0}
         />
       )}
+
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали сертификата"
+        fetchOne={fetchCertificateOne}
+        renderContent={(item, loading) => <CertificateDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

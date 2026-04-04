@@ -8,6 +8,7 @@ import { deviceApi } from '@/lib/api/device';
 import type { ICertificate } from '@/lib/api/types';
 import { getPlaceholderSrc } from '@/lib/placeholders';
 import { STATUS_LABELS, formatDate, formatDateLong } from './constants';
+import { getImageUrl } from '@/lib/image-url';
 
 export function CertificateCard({
   cert,
@@ -38,7 +39,7 @@ export function CertificateCard({
       const images = Array.isArray(data) ? data : [];
       if (images.length > 0) {
         const img = images[0];
-        const url = img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url;
+        const url = getImageUrl(img, 'medium')
         if (url) setDeviceImageUrl(url);
       }
     }).catch(() => { });

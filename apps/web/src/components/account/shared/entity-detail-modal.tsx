@@ -1,0 +1,86 @@
+'use client';
+
+import { useState, useEffect, type ReactNode } from 'react';
+import { Modal } from '@asko/ui';
+import { ShieldAlert } from 'lucide-react';
+
+export interface EntityDetailModalProps<T> {
+  open: boolean;
+  onClose: () => void;
+  /** Item from the list (always available for immediate display) */
+  item: T | null;
+  /** Modal title */
+  title: string;
+  /** Fetch full entity data by ID. Receives the item, should return enriched data. Errors with status 403 show "Нет доступа". */
+  fetchOne?: (item: T) => Promise<T>;
+  /** Render detail content. Receives the (possibly fetched) item and loading state */
+  renderContent: (item: T, loading: boolean) => ReactNode;
+}
+
+export function EntityDetailModal<T>({
+  open,
+  onClose,
+  item,
+  title,
+  fetchOne,
+  renderContent,
+}: EntityDetailModalProps<T>) {
+  const [fetched, setFetched] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  useEffect(() => {
+    if (!open || !item) {
+      setFetched(null);
+      setAccessDenied(false);
+      return;
+    }
+    if (!fetchOne) {
+      setFetched(null);
+      return;
+    }
+
+    setLoading(true);
+    setFetched(null);
+    setAccessDenied(false);
+
+    fetchOne(item)
+      .then((data) => setFetched(data))
+      .catch((err: any) => {
+        if (err?.response?.status === 403) {
+          setAccessDenied(true);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [open, item, fetchOne]);
+
+  if (!item) return null;
+
+  const displayItem = fetched ?? item;
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <div className="flex flex-col gap-5 p-6 w-full sm:w-[520px]">
+        <h2 className="text-lg font-medium text-text-main">{title}</h2>
+
+        {accessDenied ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <ShieldAlert className="w-10 h-10 text-text-sub" />
+            <p className="text-sm font-medium text-text-main">Нет доступа</p>
+            <p className="text-sm text-text-sub">У вас нет прав для просмотра данного объекта.</p>
+          </div>
+        ) : (
+          renderContent(displayItem, loading)
+        )}
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="self-end px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+          Закрыть
+        </button>
+      </div>
+    </Modal>
+  );
+}

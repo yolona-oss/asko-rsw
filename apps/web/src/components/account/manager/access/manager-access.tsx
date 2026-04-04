@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { RepairerDetail, fetchRepairerOne } from './repairer-detail';
 import {
   ViewSwitcher,
   VIEW_TABLE,
@@ -22,6 +25,7 @@ import { TAB_FILTER, LIMIT, repairerName, formatDate } from './constants';
 import { RepairerCard } from './repairer-card';
 
 export function ManagerAccess() {
+  const detail = useEntityDetail<IRepairer>();
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'inactive' });
@@ -176,6 +180,7 @@ export function ManagerAccess() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
           rowMenu={(rep) => [
             activeTab === 'inactive'
               ? { key: 'activate', label: 'Активировать', onClick: () => handleActivate(rep.id) }
@@ -213,6 +218,15 @@ export function ManagerAccess() {
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали мастера"
+        fetchOne={fetchRepairerOne}
+        renderContent={(item, loading) => <RepairerDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

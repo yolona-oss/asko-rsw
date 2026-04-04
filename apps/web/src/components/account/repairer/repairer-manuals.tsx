@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { DeviceDetail, fetchDeviceOne } from '@/components/account/admin/devices/device-detail';
 import { deviceApi } from '@/lib/api/device';
 import {
   Card,
@@ -20,6 +23,7 @@ import Link from 'next/link';
 
 export function RepairerManuals() {
   const router = useRouter();
+  const detail = useEntityDetail<IDevice>();
   const [devices, setDevices] = useState<IDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
@@ -112,7 +116,8 @@ export function RepairerManuals() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
-          onRowClick={(device) => router.push(`/account/man/${device.id}`)}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(device) => router.push(`/account/man/${device.id}`)}
           footer={<>Показано {sortedDevices.length} из {devices.length}</>}
         />
       ) : (
@@ -141,6 +146,14 @@ export function RepairerManuals() {
           )}
         </>
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали устройства"
+        fetchOne={fetchDeviceOne}
+        renderContent={(item, loading) => <DeviceDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { CategoryDetail, fetchCategoryOne } from './category-detail';
 import {
   Button,
   Modal,
@@ -24,6 +27,7 @@ interface FormData {
 const EMPTY_FORM: FormData = { name: '', label: '', labelPlural: '', order: '0' };
 
 export function AdminDeviceCategories() {
+  const detail = useEntityDetail<DeviceCategoryRecord>();
   const [categories, setCategories] = useState<DeviceCategoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -136,7 +140,6 @@ export function AdminDeviceCategories() {
   ], []);
 
   const rowMenu = (cat: DeviceCategoryRecord): DropdownMenuEntry[] => [
-    { key: 'edit', label: 'Изменить', onClick: () => openEdit(cat) },
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(cat.id) },
   ];
 
@@ -215,10 +218,20 @@ export function AdminDeviceCategories() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(cat) => openEdit(cat)}
           rowMenu={rowMenu}
           footer={<span>Всего: {categories.length}</span>}
         />
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали категории"
+        fetchOne={fetchCategoryOne}
+        renderContent={(item, loading) => <CategoryDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

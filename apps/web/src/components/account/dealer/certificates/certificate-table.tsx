@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { CertificateDetail, fetchCertificateOne } from '@/components/account/shared/certificate-detail';
 import { DataGrid } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import type { Certificate } from './types';
@@ -73,6 +76,7 @@ export function CertificateTable({
   certificates: Certificate[];
   total: number;
 }) {
+  const detail = useEntityDetail<Certificate>();
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
@@ -87,15 +91,26 @@ export function CertificateTable({
   }, [certificates, sortBy, sortOrder]);
 
   return (
-    <DataGrid
-      columns={columns}
-      data={sortedCertificates}
-      keyExtractor={(cert) => cert.id}
-      emptyContent="Нет сертификатов"
-      sortKey={sortBy ?? undefined}
-      sortOrder={sortOrder ?? undefined}
-      onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
-      footer={<>Показано {certificates.length} из {total}</>}
-    />
+    <>
+      <DataGrid
+        columns={columns}
+        data={sortedCertificates}
+        keyExtractor={(cert) => cert.id}
+        emptyContent="Нет сертификатов"
+        sortKey={sortBy ?? undefined}
+        sortOrder={sortOrder ?? undefined}
+        onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
+        onRowClick={detail.onRowClick}
+        footer={<>Показано {certificates.length} из {total}</>}
+      />
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали сертификата"
+        fetchOne={fetchCertificateOne}
+        renderContent={(item, loading) => <CertificateDetail item={item} loading={loading} />}
+      />
+    </>
   );
 }

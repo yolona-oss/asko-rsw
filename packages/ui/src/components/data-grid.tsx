@@ -115,8 +115,12 @@ export interface DataGridProps<T = any> {
   sortOrder?: SortOrder;
   /** Called when sort changes. key=null means clear sort */
   onSort?: (key: string | null, order: SortOrder | null) => void;
-  /** Called when a row is clicked. Adds cursor-pointer to rows */
+  /** Called on single click (opens detail). When onRowDoubleClick is also set, fires after 250ms debounce */
   onRowClick?: (item: T) => void;
+  /** Called on double click (opens editor/navigates). When set, single click is debounced */
+  onRowDoubleClick?: (item: T) => void;
+  /** If true, DataGrid will NOT auto-add "Подробнее" to context menu. Default: false */
+  suppressDetailMenuItem?: boolean;
   /** Custom className per row (e.g. highlight, opacity) */
   rowClassName?: (item: T) => string | undefined;
   /** Returns context menu items for a row (right-click / long-press) */
@@ -231,6 +235,9 @@ function buildContextMenuItems(
 
 // ─── DataGrid ───────────────────────────────────────────────────────────────
 
+const CLICK_DEBOUNCE_MS = 250;
+const detailIcon = <Eye className="w-4 h-4 shrink-0" />;
+
 export function DataGrid<T>({
   columns,
   data,
@@ -242,6 +249,8 @@ export function DataGrid<T>({
   sortOrder,
   onSort,
   onRowClick,
+  onRowDoubleClick,
+  suppressDetailMenuItem,
   rowClassName,
   rowMenu: rowMenuFn,
 }: DataGridProps<T>) {
@@ -249,6 +258,7 @@ export function DataGrid<T>({
   const [widths, setWidths] = useState<Record<string, number>>({});
   const [rowMenuState, setRowMenuState] = useState<{ x: number; y: number; item: T } | null>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{
     x: number;
     y: number;
@@ -265,6 +275,28 @@ export function DataGrid<T>({
   // Derived
   const visibleColumns = columns.filter((c) => !hiddenKeys.has(c.key));
   const hiddenColumnsList = columns.filter((c) => hiddenKeys.has(c.key));
+
+  // Auto-inject "Подробнее" into row context menu when onRowClick is provided
+  const resolvedRowMenuFn = useMemo(() => {
+    const autoDetail = onRowClick && !suppressDetailMenuItem;
+    if (!rowMenuFn && !autoDetail) return undefined;
+    return (item: T): DropdownMenuEntry[] => {
+      const userItems = rowMenuFn ? rowMenuFn(item) : [];
+      if (!autoDetail) return userItems;
+      const detailItem: DropdownMenuEntry = {
+        key: '__detail',
+        label: 'Подробнее',
+        icon: detailIcon,
+        onClick: () => onRowClick(item),
+      };
+      return userItems.length > 0
+        ? [detailItem, 'separator', ...userItems]
+        : [detailItem];
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowMenuFn, onRowClick, suppressDetailMenuItem]);
+
+  const hasRowMenu = resolvedRowMenuFn != null;
 
   // Auto-compute fr weights from content length + importance coefficient
   const autoFr = useMemo(
@@ -445,25 +477,37 @@ export function DataGrid<T>({
             key={keyExtractor(item)}
             className={cn(
               'flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-6 py-2.5 border-b border-[#edeff1] last:border-b-0 bg-white hover:bg-[#fafafa] transition-colors min-w-max',
-              onRowClick && 'cursor-pointer',
+              (onRowClick || onRowDoubleClick) && 'cursor-pointer',
               rowClassName?.(item),
             )}
             style={{ gridTemplateColumns: gridTemplate }}
-            onClick={onRowClick ? () => onRowClick(item) : undefined}
-            onContextMenu={rowMenuFn ? (e) => {
+            onClick={onRowClick ? () => {
+              if (onRowDoubleClick) {
+                // Debounce: wait to see if double click follows
+                if (clickTimer.current) clearTimeout(clickTimer.current);
+                clickTimer.current = setTimeout(() => { clickTimer.current = null; onRowClick(item); }, CLICK_DEBOUNCE_MS);
+              } else {
+                onRowClick(item);
+              }
+            } : undefined}
+            onDoubleClick={onRowDoubleClick ? () => {
+              if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; }
+              onRowDoubleClick(item);
+            } : undefined}
+            onContextMenu={(hasRowMenu) ? (e) => {
               e.preventDefault();
               setRowMenuState({ x: e.clientX, y: e.clientY, item });
             } : undefined}
-            onTouchStart={rowMenuFn ? (e) => {
+            onTouchStart={(hasRowMenu) ? (e) => {
               const touch = e.touches[0];
               longPressRef.current = setTimeout(() => {
                 setRowMenuState({ x: touch.clientX, y: touch.clientY, item });
               }, 500);
             } : undefined}
-            onTouchEnd={rowMenuFn ? () => {
+            onTouchEnd={(hasRowMenu) ? () => {
               if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
             } : undefined}
-            onTouchMove={rowMenuFn ? () => {
+            onTouchMove={(hasRowMenu) ? () => {
               if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
             } : undefined}
           >
@@ -494,11 +538,11 @@ export function DataGrid<T>({
       )}
 
       {/* Row context menu */}
-      {rowMenuState && rowMenuFn && (
+      {rowMenuState && resolvedRowMenuFn && (
         <ContextMenu
           x={rowMenuState.x}
           y={rowMenuState.y}
-          items={rowMenuFn(rowMenuState.item)}
+          items={resolvedRowMenuFn(rowMenuState.item)}
           onClose={() => setRowMenuState(null)}
         />
       )}

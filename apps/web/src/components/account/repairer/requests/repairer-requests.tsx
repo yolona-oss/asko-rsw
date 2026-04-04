@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
 import {
   Card,
   Badge,
@@ -88,6 +91,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
 
 export function RepairerRequests() {
   const router = useRouter();
+  const detail = useEntityDetail<RepairRequest>();
   const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'active' });
   const activeTab = filterValues.tab as TabKey;
   const [activeRequest, setActiveRequest] = useState<RepairRequest | null>(null);
@@ -186,9 +190,8 @@ export function RepairerRequests() {
               data={[activeRequest]}
               keyExtractor={(req) => req.id}
               rowClassName={() => 'bg-brand-red/5'}
-              rowMenu={(req) => [
-                { key: 'open', label: 'Открыть', onClick: () => router.push(`/account/requests/${req.id}`) },
-              ]}
+              onRowClick={detail.onRowClick}
+              onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
             />
           )}
         </div>
@@ -223,9 +226,8 @@ export function RepairerRequests() {
               sortKey={sortBy ?? undefined}
               sortOrder={sortOrder ?? undefined}
               onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-              rowMenu={(req) => [
-                { key: 'open', label: 'Открыть', onClick: () => router.push(`/account/requests/${req.id}`) },
-              ]}
+              onRowClick={detail.onRowClick}
+              onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
               rowClassName={(req) =>
                 showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
               }
@@ -241,6 +243,14 @@ export function RepairerRequests() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали заявки"
+        fetchOne={fetchRepairRequestOne}
+        renderContent={(item, loading) => <RepairRequestDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

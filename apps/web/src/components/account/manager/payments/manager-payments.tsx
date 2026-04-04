@@ -252,9 +252,8 @@ export function ManagerPayments() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-          rowMenu={(p) => [
-            { key: 'view', label: 'Подробнее', onClick: () => setSelectedPayment(p) },
-          ]}
+          onRowClick={(p) => setSelectedPayment(p)}
+          suppressDetailMenuItem
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показаны платежи {showFrom}-{showTo} из {total}</span>

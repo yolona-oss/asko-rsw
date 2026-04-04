@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { InvitationDetail } from './invitation-detail';
 import {
   Button,
   Badge,
@@ -29,6 +32,7 @@ import { InvitationCard } from './invitation-card';
 const PAGE_SIZE = 20;
 
 export function AdminInvitations() {
+  const detail = useEntityDetail<IInvitationLink>();
   const [invitations, setInvitations] = useState<IInvitationLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -289,6 +293,7 @@ export function AdminInvitations() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
           rowClassName={(inv) => (inv.used || isExpired(inv.expiresAt)) ? 'opacity-50' : undefined}
           rowMenu={rowMenu}
           footer={
@@ -318,6 +323,13 @@ export function AdminInvitations() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали приглашения"
+        renderContent={(item, loading) => <InvitationDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

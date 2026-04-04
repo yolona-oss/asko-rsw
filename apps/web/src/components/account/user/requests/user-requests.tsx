@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
 import {
   Badge,
   Button,
@@ -25,6 +28,7 @@ const PAGE_SIZE = 20;
 
 export function UserRequests() {
   const router = useRouter();
+  const detail = useEntityDetail<RepairRequest>();
   const [requests, setRequests] = useState<RepairRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -159,7 +163,8 @@ export function UserRequests() {
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-          onRowClick={(req) => router.push(`/account/requests/${req.id}`)}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
           rowClassName={() => 'hover:bg-gray-50 transition-colors'}
           footer={
             <div className="flex items-center justify-between w-full">
@@ -169,6 +174,14 @@ export function UserRequests() {
           }
         />
       )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали заявки"
+        fetchOne={fetchRepairRequestOne}
+        renderContent={(item, loading) => <RepairRequestDetail item={item} loading={loading} />}
+      />
     </PageContainer>
   );
 }

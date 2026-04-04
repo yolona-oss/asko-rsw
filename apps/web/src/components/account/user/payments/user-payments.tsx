@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { DetailRow } from '@/components/account/shared/detail-row';
 import {
   Badge,
   Card,
@@ -26,6 +29,7 @@ import {
 } from './constants';
 
 export function UserPayments() {
+  const detail = useEntityDetail<PaymentRecord>();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -204,6 +208,7 @@ export function UserPayments() {
                   sortKey={sortBy ?? undefined}
                   sortOrder={sortOrder ?? undefined}
                   onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+                  onRowClick={detail.onRowClick}
                   footer={
                     <div className="flex items-center justify-between w-full">
                       <span>Показано {filteredHistory.length} из {total}</span>
@@ -242,6 +247,29 @@ export function UserPayments() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали платежа"
+        renderContent={(item) => (
+          <div className="flex flex-col">
+            <DetailRow label="Тип" value={TARGET_LABELS[item.targetType ?? ''] ?? 'Платёж'} />
+            <DetailRow label="Сумма" value={`${formatAmount(item.amount)} \u20BD`} />
+            <DetailRow
+              label="Статус"
+              value={
+                <Badge variant={STATUS_BADGE_VARIANT[item.status] ?? 'neutral'}>
+                  {STATUS_LABELS[item.status] ?? item.status}
+                </Badge>
+              }
+            />
+            <DetailRow label="Провайдер" value={item.provider ?? '-'} />
+            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+          </div>
+        )}
+      />
 
       {/* Payment modal */}
       {payTarget && (

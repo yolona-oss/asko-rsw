@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { DetailRow } from '@/components/account/shared/detail-row';
 import {
   Badge,
   DataGrid,
@@ -58,6 +61,7 @@ export function PaymentTable({
   payments: PaymentRecord[];
   totalCount?: number;
 }) {
+  const detail = useEntityDetail<PaymentRecord>();
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
@@ -72,14 +76,38 @@ export function PaymentTable({
   }, [payments, sortBy, sortOrder]);
 
   return (
-    <DataGrid
-      columns={columns}
-      data={sortedPayments}
-      keyExtractor={(p) => p.id}
-      sortKey={sortBy ?? undefined}
-      sortOrder={sortOrder ?? undefined}
-      onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
-      footer={<>Показано {payments.length} из {totalCount ?? payments.length}</>}
-    />
+    <>
+      <DataGrid
+        columns={columns}
+        data={sortedPayments}
+        keyExtractor={(p) => p.id}
+        sortKey={sortBy ?? undefined}
+        sortOrder={sortOrder ?? undefined}
+        onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
+        onRowClick={detail.onRowClick}
+        footer={<>Показано {payments.length} из {totalCount ?? payments.length}</>}
+      />
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали платежа"
+        renderContent={(item) => (
+          <div className="flex flex-col">
+            <DetailRow label="Тип" value={TARGET_LABELS[item.targetType ?? ''] ?? 'Платёж'} />
+            <DetailRow label="Сумма" value={`${formatAmount(item.amount)} \u20BD`} />
+            <DetailRow
+              label="Статус"
+              value={
+                <Badge variant={STATUS_BADGE_VARIANT[item.status] ?? 'neutral'}>
+                  {STATUS_LABELS[item.status] ?? item.status}
+                </Badge>
+              }
+            />
+            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+          </div>
+        )}
+      />
+    </>
   );
 }
