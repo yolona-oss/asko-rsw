@@ -119,8 +119,8 @@ export class AuthService {
             throw AppErrors.forbidden('Account is disabled');
         }
 
-        // MFA check — populate lazy preferences for MFA method lookup
-        await this.userService.populatePreferences(user);
+        // MFA check — reload with lazy preferences for MFA method lookup
+        user = (await this.userService.findByIdWithPreferences(user.id)) ?? user;
         if (this.mfaService.isMfaEnabled(user)) {
             const needsChallenge = await this.mfaService.shouldChallenge(
                 user.id,
@@ -677,9 +677,8 @@ export class AuthService {
     }> {
         const { userId, method: tokenMethod } = this.mfaService.verifyMfaChallengeToken(mfaToken);
 
-        const user = await this.userService.findById(userId);
+        const user = await this.userService.findByIdWithPreferences(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        await this.userService.populatePreferences(user);
 
         // Use method from token (handles phone-login users who have no MFA preferences)
         const method = tokenMethod ?? this.mfaService.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;

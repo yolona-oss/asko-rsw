@@ -137,9 +137,8 @@ export class MfaService {
 
     async resendLoginOtp(mfaToken: string): Promise<{ retryAfter: number }> {
         const { userId, method: tokenMethod } = this.verifyMfaChallengeToken(mfaToken);
-        const user = await this.userService.findById(userId);
+        const user = await this.userService.findByIdWithPreferences(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        await this.userService.populatePreferences(user);
 
         const method = tokenMethod ?? this.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
         const cooldown = await this.otpService.checkCooldown(userId, method);
@@ -156,9 +155,8 @@ export class MfaService {
     // ─── Enable MFA ──────────────────────────────────────────────────────
 
     async initiateEnableMfa(userId: string): Promise<{ message: string; retryAfter: number }> {
-        const user = await this.userService.findById(userId);
+        const user = await this.userService.findByIdWithPreferences(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        await this.userService.populatePreferences(user);
         if (!user.email || !user.emailVerified) {
             throw AppErrors.badRequest('Для включения MFA необходимо подтвердить email');
         }
@@ -188,9 +186,8 @@ export class MfaService {
     // ─── Disable MFA ─────────────────────────────────────────────────────
 
     async initiateDisableMfa(userId: string): Promise<{ message: string; retryAfter: number }> {
-        const user = await this.userService.findById(userId);
+        const user = await this.userService.findByIdWithPreferences(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        await this.userService.populatePreferences(user);
         if (!this.isMfaEnabled(user)) {
             throw AppErrors.badRequest('MFA не включена');
         }
@@ -217,9 +214,8 @@ export class MfaService {
     // ─── MFA status ──────────────────────────────────────────────────────
 
     async getMfaStatus(userId: string): Promise<{ enabled: boolean; methods: string[] }> {
-        const user = await this.userService.findById(userId);
+        const user = await this.userService.findByIdWithPreferences(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        await this.userService.populatePreferences(user);
         const methods = this.getMfaMethods(user);
         return { enabled: methods.length > 0, methods };
     }

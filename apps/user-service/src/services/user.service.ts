@@ -84,8 +84,9 @@ export class UserService {
         return await this.em.findOne(User, { id }, { populate: relations })
     }
 
-    async populatePreferences(user: User): Promise<void> {
-        await this.em.populate(user, ['preferences' as any]);
+    @CreateRequestContext()
+    async findByIdWithPreferences(id: string): Promise<User | null> {
+        return await this.em.findOne(User, { id }, { populate: ['preferences' as any] });
     }
 
     @CreateRequestContext()
@@ -229,7 +230,8 @@ export class UserService {
 
     @CreateRequestContext()
     async updateSafe(id: string, _newUserInfo: DeepPartial<UpdateUserDto>, currentPassword?: string): Promise<User> {
-        const user = await this.findById(id)
+        const needsPrefs = !!((_newUserInfo as any).preferences);
+        const user = await this.em.findOne(User, { id }, needsPrefs ? { populate: ['preferences' as any] } : {})
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found')
         }
@@ -293,7 +295,6 @@ export class UserService {
         }
 
         if ((newUserInfo as any).preferences) {
-            await this.em.populate(user, ['preferences']);
             user.preferences = {
                 ...(user.preferences ?? {}),
                 ...(newUserInfo as any).preferences,
@@ -465,11 +466,10 @@ export class UserService {
 
     @CreateRequestContext()
     async setMfaPreferences(userId: string, methods: string[]) {
-        const user = await this.findById(userId);
+        const user = await this.em.findOne(User, { id: userId }, { populate: ['preferences' as any] });
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found');
         }
-        await this.em.populate(user, ['preferences']);
         user.preferences = {
             ...(user.preferences ?? {}),
             mfa: { methods },

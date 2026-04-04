@@ -440,9 +440,8 @@ export class UserGrpcController {
     @GrpcMethod('UserService', 'FindUserById')
     async findUserById(data: UserIdRequest): Promise<UserResponse> {
         try {
-            const user = await this.userService.findById(data.id);
+            const user = await this.userService.findByIdWithPreferences(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
-            await this.userService.populatePreferences(user);
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
     }
@@ -498,9 +497,8 @@ export class UserGrpcController {
     @GrpcMethod('UserService', 'GetProfile')
     async getProfile(data: UserIdRequest): Promise<UserResponse> {
         try {
-            const user = await this.userService.findById(data.id);
+            const user = await this.userService.findByIdWithPreferences(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
-            await this.userService.populatePreferences(user);
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
     }
