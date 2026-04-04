@@ -1,0 +1,421 @@
+'use client';
+
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { cn } from '../utils/cn';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+export type DropdownPlacement =
+  | 'bottom-start'
+  | 'bottom-end'
+  | 'top-start'
+  | 'top-end';
+
+// ─── Dropdown (generic floating container) ──────────────────────────────────
+
+export interface DropdownProps {
+  /** Element that triggers the dropdown on click */
+  trigger: ReactNode;
+  /** Dropdown content */
+  children: ReactNode;
+  /** Controlled open state */
+  open?: boolean;
+  /** Called when open state changes */
+  onOpenChange?: (open: boolean) => void;
+  /** Placement relative to trigger (default: bottom-start) */
+  placement?: DropdownPlacement;
+  /** className on trigger wrapper */
+  className?: string;
+  /** className on floating panel */
+  contentClassName?: string;
+}
+
+export function Dropdown({
+  trigger,
+  children,
+  open: controlledOpen,
+  onOpenChange,
+  placement = 'bottom-start',
+  className,
+  contentClassName,
+}: DropdownProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+
+  const setOpen = useCallback(
+    (v: boolean) => {
+      if (controlledOpen === undefined) setUncontrolledOpen(v);
+      onOpenChange?.(v);
+    },
+    [controlledOpen, onOpenChange],
+  );
+
+  // Position panel relative to trigger
+  useEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    const t = triggerRef.current;
+    const p = panelRef.current;
+    if (!t || !p) return;
+
+    const tR = t.getBoundingClientRect();
+    const pR = p.getBoundingClientRect();
+
+    let x = placement.endsWith('end') ? tR.right - pR.width : tR.left;
+    let y = placement.startsWith('top')
+      ? tR.top - pR.height - 4
+      : tR.bottom + 4;
+
+    // Clamp to viewport
+    if (x + pR.width > window.innerWidth - 8)
+      x = window.innerWidth - pR.width - 8;
+    if (y + pR.height > window.innerHeight - 8)
+      y = window.innerHeight - pR.height - 8;
+    if (x < 8) x = 8;
+    if (y < 8) y = 8;
+
+    setPos({ x, y });
+  }, [open, placement]);
+
+  // Close on outside click + escape
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (triggerRef.current?.contains(e.target as Node)) return;
+      if (panelRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open, setOpen]);
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        className={cn('inline-flex', className)}
+        onClick={() => setOpen(!open)}
+      >
+        {trigger}
+      </div>
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className={cn('fixed z-[9999]', contentClassName)}
+            style={
+              pos
+                ? { left: pos.x, top: pos.y }
+                : { left: -9999, top: -9999 }
+            }
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+// ─── DropdownMenu types ─────────────────────────────────────────────────────
+
+export interface DropdownMenuItem {
+  key: string;
+  label: ReactNode;
+  icon?: ReactNode;
+  disabled?: boolean;
+  /** If true, rendered with active/selected highlight */
+  active?: boolean;
+  variant?: 'default' | 'danger';
+  onClick?: () => void;
+  /** Nested submenu items (appears on hover to the side) */
+  children?: DropdownMenuItem[];
+}
+
+export type DropdownMenuEntry = DropdownMenuItem | 'separator';
+
+export interface DropdownMenuProps {
+  /** Element that triggers the menu on click */
+  trigger: ReactNode;
+  /** Menu items */
+  items: DropdownMenuEntry[];
+  /** Side panel items — rendered as a separate block beside the main menu */
+  aside?: DropdownMenuEntry[];
+  /** Title shown above the aside panel */
+  asideTitle?: string;
+  /** Called when a menu item is selected */
+  onSelect?: (key: string) => void;
+  placement?: DropdownPlacement;
+  /** className on trigger wrapper */
+  className?: string;
+}
+
+// ─── Internal icons ─────────────────────────────────────────────────────────
+
+function ChevronRight() {
+  return (
+    <svg
+      className="w-3 h-3 shrink-0 text-[#999]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+      />
+    </svg>
+  );
+}
+
+// ─── MenuPanel (internal) ───────────────────────────────────────────────────
+
+function MenuPanel({
+  items,
+  title,
+  onSelect,
+}: {
+  items: DropdownMenuEntry[];
+  title?: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div className="bg-white border border-[#e0e0e0] rounded-md shadow-lg py-1 min-w-[180px] text-sm">
+      {title && (
+        <div className="px-3 py-1.5 text-xs font-medium text-[#999] uppercase tracking-wide">
+          {title}
+        </div>
+      )}
+      {items.map((entry, i) => {
+        if (entry === 'separator') {
+          return (
+            <div key={`sep-${i}`} className="border-t border-[#edeff1] my-1" />
+          );
+        }
+        return (
+          <MenuItemEl key={entry.key} item={entry} onSelect={onSelect} />
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MenuItemEl (internal) ──────────────────────────────────────────────────
+
+function MenuItemEl({
+  item,
+  onSelect,
+}: {
+  item: DropdownMenuItem;
+  onSelect: (key: string) => void;
+}) {
+  const [showSub, setShowSub] = useState(false);
+  const subRef = useRef<HTMLDivElement>(null);
+  const [subSide, setSubSide] = useState<'right' | 'left'>('right');
+  const hasChildren = item.children && item.children.length > 0;
+
+  // Check if submenu fits to the right
+  useEffect(() => {
+    if (!showSub || !subRef.current) return;
+    const rect = subRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      setSubSide('left');
+    } else {
+      setSubSide('right');
+    }
+  }, [showSub]);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={hasChildren ? () => setShowSub(true) : undefined}
+      onMouseLeave={hasChildren ? () => setShowSub(false) : undefined}
+    >
+      <button
+        type="button"
+        disabled={item.disabled}
+        className={cn(
+          'w-full text-left px-3 py-2 flex items-center gap-2.5 transition-colors',
+          item.disabled
+            ? 'text-[#aaa] cursor-default'
+            : 'hover:bg-[#f5f5f5] cursor-pointer',
+          item.variant === 'danger' &&
+            !item.disabled &&
+            'text-red-600 hover:bg-red-50',
+          item.active && !item.disabled && 'text-blue-600 font-medium',
+          !item.active && item.variant !== 'danger' && !item.disabled && 'text-[#323232]',
+        )}
+        onClick={
+          item.disabled
+            ? undefined
+            : () => {
+                if (!hasChildren) {
+                  item.onClick?.();
+                  onSelect(item.key);
+                }
+              }
+        }
+      >
+        {item.icon}
+        <span className="flex-1 truncate">{item.label}</span>
+        {hasChildren && <ChevronRight />}
+      </button>
+
+      {/* Submenu */}
+      {hasChildren && showSub && (
+        <div
+          ref={subRef}
+          className={cn(
+            'absolute top-0 z-[1]',
+            subSide === 'right' ? 'left-full ml-1' : 'right-full mr-1',
+          )}
+        >
+          <MenuPanel items={item.children!} onSelect={onSelect} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── DropdownMenu ───────────────────────────────────────────────────────────
+
+export function DropdownMenu({
+  trigger,
+  items,
+  aside,
+  asideTitle,
+  onSelect,
+  placement = 'bottom-start',
+  className,
+}: DropdownMenuProps) {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = useCallback(
+    (key: string) => {
+      onSelect?.(key);
+      setOpen(false);
+    },
+    [onSelect],
+  );
+
+  return (
+    <Dropdown
+      trigger={trigger}
+      open={open}
+      onOpenChange={setOpen}
+      placement={placement}
+      className={className}
+      contentClassName="flex items-start gap-1"
+    >
+      {/* Main menu panel */}
+      <MenuPanel items={items} onSelect={handleSelect} />
+
+      {/* Aside panel (separate block beside the main menu) */}
+      {aside && aside.length > 0 && (
+        <MenuPanel items={aside} title={asideTitle} onSelect={handleSelect} />
+      )}
+    </Dropdown>
+  );
+}
+
+// ─── ContextMenu (right-click menu, positioned at x/y) ─────────────────────
+
+export interface ContextMenuProps {
+  x: number;
+  y: number;
+  items: DropdownMenuEntry[];
+  /** Side panel items */
+  aside?: DropdownMenuEntry[];
+  asideTitle?: string;
+  onSelect?: (key: string) => void;
+  onClose: () => void;
+}
+
+export function ContextMenu({
+  x,
+  y,
+  items,
+  aside,
+  asideTitle,
+  onSelect,
+  onClose,
+}: ContextMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ x, y });
+
+  // Adjust position to stay within viewport
+  useEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    let nx = x;
+    let ny = y;
+    if (x + rect.width > window.innerWidth - 8)
+      nx = window.innerWidth - rect.width - 8;
+    if (y + rect.height > window.innerHeight - 8)
+      ny = window.innerHeight - rect.height - 8;
+    if (nx < 8) nx = 8;
+    if (ny < 8) ny = 8;
+    setPos({ x: nx, y: ny });
+  }, [x, y]);
+
+  // Close on escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleSelect = useCallback(
+    (key: string) => {
+      onSelect?.(key);
+      onClose();
+    },
+    [onSelect, onClose],
+  );
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999]" onMouseDown={onClose}>
+      <div
+        ref={menuRef}
+        className="fixed z-[10000] flex items-start gap-1"
+        style={{ left: pos.x, top: pos.y }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <MenuPanel items={items} onSelect={handleSelect} />
+        {aside && aside.length > 0 && (
+          <MenuPanel
+            items={aside}
+            title={asideTitle}
+            onSelect={handleSelect}
+          />
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}

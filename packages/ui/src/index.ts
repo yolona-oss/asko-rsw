@@ -60,6 +60,16 @@ export { Dialog } from './components/dialog';
 export type { DialogProps } from './components/dialog';
 
 
+export { Dropdown, DropdownMenu, ContextMenu } from './components/dropdown';
+export type {
+  DropdownProps,
+  DropdownPlacement,
+  DropdownMenuProps,
+  DropdownMenuItem,
+  DropdownMenuEntry,
+  ContextMenuProps,
+} from './components/dropdown';
+
 export { DataGrid } from './components/data-grid';
 export type { DataGridProps, DataGridColumn, SortOrder } from './components/data-grid';
 

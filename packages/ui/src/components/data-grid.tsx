@@ -8,8 +8,9 @@ import {
   type ReactNode,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
+import { ContextMenu } from './dropdown';
+import type { DropdownMenuEntry } from './dropdown';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -61,39 +62,6 @@ export interface DataGridProps<T = any> {
 }
 
 // ─── Inline SVG icons ───────────────────────────────────────────────────────
-
-function EyeOffIcon() {
-  return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-    </svg>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-}
-
-function ResetIcon() {
-  return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-    </svg>
-  );
-}
 
 function SortAscIcon() {
   return (
@@ -147,177 +115,74 @@ function CellContent({
   );
 }
 
-// ─── HeaderContextMenu (internal) ───────────────────────────────────────────
+// ─── Context menu icon helpers ──────────────────────────────────────────────
 
-interface ContextMenuProps {
-  x: number;
-  y: number;
-  columnKey: string | null;
-  columnSortable: boolean;
-  sortKey?: string;
-  sortOrder?: SortOrder;
-  hiddenColumns: DataGridColumn[];
-  onSort: (key: string, order: SortOrder) => void;
-  onRemove: (key: string) => void;
-  onShow: (key: string) => void;
-  onReset: () => void;
-  onClose: () => void;
-}
+const eyeOffSvg = <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>;
+const eyeSvg = <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+const resetSvg = <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>;
+const sortAscSvg = <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>;
+const sortDescSvg = <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>;
 
-function HeaderContextMenu({
-  x,
-  y,
-  columnKey,
-  columnSortable,
-  sortKey,
-  sortOrder,
-  hiddenColumns,
-  onSort,
-  onRemove,
-  onShow,
-  onReset,
-  onClose,
-}: ContextMenuProps) {
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [showSubmenu, setShowSubmenu] = useState(false);
-  const [pos, setPos] = useState({ x, y });
-  const [submenuSide, setSubmenuSide] = useState<'right' | 'left'>('right');
+// ─── Build context menu items ───────────────────────────────────────────────
 
-  // Adjust position to stay within viewport
-  useEffect(() => {
-    const el = menuRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let nx = x;
-    let ny = y;
-    if (x + rect.width > window.innerWidth - 8) nx = window.innerWidth - rect.width - 8;
-    if (y + rect.height > window.innerHeight - 8) ny = window.innerHeight - rect.height - 8;
-    if (nx < 8) nx = 8;
-    if (ny < 8) ny = 8;
-    setPos({ x: nx, y: ny });
-  }, [x, y]);
+function buildContextMenuItems(
+  columnKey: string | null,
+  columnSortable: boolean,
+  sortKey: string | undefined,
+  sortOrder: SortOrder | undefined,
+  hiddenColumns: DataGridColumn[],
+  handlers: {
+    onSort: (key: string, order: SortOrder) => void;
+    onRemove: (key: string) => void;
+    onShow: (key: string) => void;
+    onReset: () => void;
+  },
+): { items: DropdownMenuEntry[]; aside: DropdownMenuEntry[] } {
+  const items: DropdownMenuEntry[] = [];
 
-  // Check submenu fits to the right
-  useEffect(() => {
-    if (!showSubmenu || !menuRef.current) return;
-    const rect = menuRef.current.getBoundingClientRect();
-    setSubmenuSide(window.innerWidth - rect.right > 190 ? 'right' : 'left');
-  }, [showSubmenu]);
+  if (columnKey && columnSortable) {
+    items.push({
+      key: 'sort-asc',
+      label: 'По возрастанию',
+      icon: sortAscSvg,
+      active: sortKey === columnKey && sortOrder === 'asc',
+      onClick: () => handlers.onSort(columnKey, 'asc'),
+    });
+    items.push({
+      key: 'sort-desc',
+      label: 'По убыванию',
+      icon: sortDescSvg,
+      active: sortKey === columnKey && sortOrder === 'desc',
+      onClick: () => handlers.onSort(columnKey, 'desc'),
+    });
+  }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999]" onMouseDown={onClose}>
-      <div
-        ref={menuRef}
-        className="fixed bg-white border border-[#e0e0e0] rounded-md shadow-lg py-1 min-w-[200px] text-sm z-[10000]"
-        style={{ left: pos.x, top: pos.y }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {/* Sort options */}
-        {columnKey && columnSortable && (
-          <>
-            <button
-              type="button"
-              className={cn(
-                'w-full text-left px-3 py-2 hover:bg-[#f5f5f5] flex items-center gap-2.5 cursor-pointer transition-colors',
-                sortKey === columnKey && sortOrder === 'asc' ? 'text-blue-600 font-medium' : 'text-[#323232]',
-              )}
-              onClick={() => { onSort(columnKey, 'asc'); onClose(); }}
-            >
-              <SortAscIcon />
-              <span>По возрастанию</span>
-            </button>
-            <button
-              type="button"
-              className={cn(
-                'w-full text-left px-3 py-2 hover:bg-[#f5f5f5] flex items-center gap-2.5 cursor-pointer transition-colors',
-                sortKey === columnKey && sortOrder === 'desc' ? 'text-blue-600 font-medium' : 'text-[#323232]',
-              )}
-              onClick={() => { onSort(columnKey, 'desc'); onClose(); }}
-            >
-              <SortDescIcon />
-              <span>По убыванию</span>
-            </button>
-          </>
-        )}
+  if (columnKey) {
+    items.push({
+      key: 'remove',
+      label: 'Убрать столбец',
+      icon: eyeOffSvg,
+      onClick: () => handlers.onRemove(columnKey),
+    });
+    items.push('separator');
+  }
 
-        {/* Remove column */}
-        {columnKey && (
-          <button
-            type="button"
-            className="w-full text-left px-3 py-2 hover:bg-[#f5f5f5] text-[#323232] flex items-center gap-2.5 cursor-pointer transition-colors"
-            onClick={() => {
-              onRemove(columnKey);
-              onClose();
-            }}
-          >
-            <EyeOffIcon />
-            <span>Убрать столбец</span>
-          </button>
-        )}
+  items.push({
+    key: 'reset',
+    label: 'Сброс настроек',
+    icon: resetSvg,
+    onClick: () => handlers.onReset(),
+  });
 
-        {columnKey && <div className="border-t border-[#edeff1] my-1" />}
+  // Hidden columns as aside panel
+  const aside: DropdownMenuEntry[] = hiddenColumns.map((col) => ({
+    key: `show-${col.key}`,
+    label: col.header,
+    icon: eyeSvg,
+    onClick: () => handlers.onShow(col.key),
+  }));
 
-        {/* Reset */}
-        <button
-          type="button"
-          className="w-full text-left px-3 py-2 hover:bg-[#f5f5f5] text-[#323232] flex items-center gap-2.5 cursor-pointer transition-colors"
-          onClick={() => {
-            onReset();
-            onClose();
-          }}
-        >
-          <ResetIcon />
-          <span>Сброс настроек</span>
-        </button>
-
-        {/* Hidden columns submenu */}
-        {hiddenColumns.length > 0 && (
-          <>
-            <div className="border-t border-[#edeff1] my-1" />
-            <div
-              className="relative"
-              onMouseEnter={() => setShowSubmenu(true)}
-              onMouseLeave={() => setShowSubmenu(false)}
-            >
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 hover:bg-[#f5f5f5] text-[#323232] flex items-center gap-2.5 cursor-pointer transition-colors"
-              >
-                <EyeIcon />
-                <span className="flex-1">Скрытые столбцы</span>
-                <ChevronRightIcon />
-              </button>
-
-              {showSubmenu && (
-                <div
-                  className={cn(
-                    'absolute top-0 bg-white border border-[#e0e0e0] rounded-md shadow-lg py-1 min-w-[180px] z-[10001]',
-                    submenuSide === 'right' ? 'left-full ml-1' : 'right-full mr-1',
-                  )}
-                >
-                  {hiddenColumns.map((col) => (
-                    <button
-                      key={col.key}
-                      type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-[#f5f5f5] text-[#323232] flex items-center gap-2.5 cursor-pointer transition-colors"
-                      onClick={() => {
-                        onShow(col.key);
-                        onClose();
-                      }}
-                    >
-                      <EyeIcon />
-                      <span>{col.header}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>,
-    document.body,
-  );
+  return { items, aside };
 }
 
 // ─── DataGrid ───────────────────────────────────────────────────────────────
@@ -552,26 +417,37 @@ export function DataGrid<T>({
       )}
 
       {/* Context menu */}
-      {ctxMenu && (
-        <HeaderContextMenu
-          x={ctxMenu.x}
-          y={ctxMenu.y}
-          columnKey={ctxMenu.columnKey}
-          columnSortable={
-            onSort != null &&
-            ctxMenu.columnKey != null &&
-            columns.find((c) => c.key === ctxMenu.columnKey)?.sortable !== false
-          }
-          sortKey={sortKey}
-          sortOrder={sortOrder}
-          hiddenColumns={hiddenColumnsList}
-          onSort={(key, order) => onSort?.(key, order)}
-          onRemove={handleRemove}
-          onShow={handleShow}
-          onReset={handleReset}
-          onClose={() => setCtxMenu(null)}
-        />
-      )}
+      {ctxMenu && (() => {
+        const columnSortable =
+          onSort != null &&
+          ctxMenu.columnKey != null &&
+          columns.find((c) => c.key === ctxMenu.columnKey)?.sortable !== false;
+
+        const { items: menuItems, aside: menuAside } = buildContextMenuItems(
+          ctxMenu.columnKey,
+          columnSortable,
+          sortKey,
+          sortOrder,
+          hiddenColumnsList,
+          {
+            onSort: (key, order) => onSort?.(key, order),
+            onRemove: handleRemove,
+            onShow: handleShow,
+            onReset: handleReset,
+          },
+        );
+
+        return (
+          <ContextMenu
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            items={menuItems}
+            aside={menuAside.length > 0 ? menuAside : undefined}
+            asideTitle="Скрытые столбцы"
+            onClose={() => setCtxMenu(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

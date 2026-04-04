@@ -154,7 +154,7 @@ export class PaymentGrpcController {
         try {
             const result = await this.paymentService.listPayments(
                 { status: data.status || undefined, provider: data.provider || undefined },
-                { page: data.page, limit: data.limit, search: data.search || undefined, sortBy: data.sortBy || undefined, sortOrder: data.sortOrder || undefined },
+                { page: data.page, limit: data.limit, search: data.search || undefined, sortBy: data.sortBy || undefined, sortOrder: (data.sortOrder || undefined) as 'asc' | 'desc' | undefined },
             );
             return {
                 data: result.data.map(entityToRecord),
@@ -171,7 +171,7 @@ export class PaymentGrpcController {
             const result = await this.paymentService.listUserPayments(
                 data.userId,
                 { status: data.status || undefined },
-                { page: data.page, limit: data.limit, sortBy: data.sortBy || undefined, sortOrder: data.sortOrder || undefined },
+                { page: data.page, limit: data.limit, sortBy: data.sortBy || undefined, sortOrder: (data.sortOrder || undefined) as 'asc' | 'desc' | undefined },
             );
             return {
                 data: result.data.map(entityToRecord),
