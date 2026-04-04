@@ -84,6 +84,10 @@ export class UserService {
         return await this.em.findOne(User, { id }, { populate: relations })
     }
 
+    async populatePreferences(user: User): Promise<void> {
+        await this.em.populate(user, ['preferences' as any]);
+    }
+
     @CreateRequestContext()
     async findByPhone(phone: string,
         relations?: Populate<User, UserPopulateHints>
@@ -289,6 +293,7 @@ export class UserService {
         }
 
         if ((newUserInfo as any).preferences) {
+            await this.em.populate(user, ['preferences']);
             user.preferences = {
                 ...(user.preferences ?? {}),
                 ...(newUserInfo as any).preferences,
@@ -464,6 +469,7 @@ export class UserService {
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found');
         }
+        await this.em.populate(user, ['preferences']);
         user.preferences = {
             ...(user.preferences ?? {}),
             mfa: { methods },

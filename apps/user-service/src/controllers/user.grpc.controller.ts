@@ -87,6 +87,15 @@ function toGrpcError(error: unknown): RpcException {
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
 
+// Serialize preferences only if the lazy field has been populated (not a Reference proxy)
+function serializePrefs(user: any): string {
+    const prefs = user.preferences;
+    if (prefs && typeof prefs === 'object' && !prefs.__helper) {
+        return JSON.stringify(prefs);
+    }
+    return '';
+}
+
 function userToResponse(user: any): UserResponse {
     return {
         id: user.id,
@@ -103,7 +112,7 @@ function userToResponse(user: any): UserResponse {
         isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
-        preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
+        preferencesJson: serializePrefs(user),
     };
 }
 
@@ -121,7 +130,7 @@ function userToAuthUser(user: any) {
         isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
-        preferencesJson: user.preferences ? JSON.stringify(user.preferences) : '',
+        preferencesJson: serializePrefs(user),
     };
 }
 
@@ -433,6 +442,7 @@ export class UserGrpcController {
         try {
             const user = await this.userService.findById(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
+            await this.userService.populatePreferences(user);
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
     }
@@ -490,6 +500,7 @@ export class UserGrpcController {
         try {
             const user = await this.userService.findById(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
+            await this.userService.populatePreferences(user);
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
     }

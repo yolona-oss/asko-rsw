@@ -51,7 +51,7 @@ export class User {
     @Enum({ items: () => Role, array: true, default: [DEFAULT_USER_ROLE], nativeEnumName: 'role' })
     roles: Role[] = [DEFAULT_USER_ROLE];
 
-    @Property({ type: 'json', nullable: true })
+    @Property({ type: 'json', nullable: true, lazy: true })
     preferences?: Record<string, any>;
 
     @OneToMany(() => Session, s => s.user, { cascade: [Cascade.REMOVE], lazy: true })
