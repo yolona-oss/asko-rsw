@@ -1,808 +1,142 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
----
-
 ## Project Overview
 
-ASKO — repair management platform. A pnpm + Turborepo monorepo with microservice architecture using NestJS, Next.js, gRPC, RabbitMQ, and shared packages.
+ASKO — repair management platform. pnpm + Turborepo monorepo: NestJS microservices, Next.js frontend, gRPC, RabbitMQ, shared packages.
 
-Communication patterns:
+Communication: REST+WebSocket (web↔api), gRPC (api↔services), RabbitMQ (async events). Each microservice owns its own PostgreSQL database.
 
-* **REST + WebSocket** — web ↔ api gateway
-* **gRPC** — api gateway ↔ all microservices
-* **RabbitMQ** — async event-driven communication between services (payment events, image processing, email delivery)
-
-Each microservice owns its own PostgreSQL database. Services never share database tables.
-
----
-
-## Monorepo Structure
+## Structure
 
 ```
 apps/
-  api/                    # REST + WebSocket gateway (:4000) — no database, pure proxy
-  user-service/           # Auth, users, invitations (:5000, gRPC + RabbitMQ publisher)
-  payment-service/        # Payments, providers, webhooks (:5001, gRPC + RabbitMQ publisher)
-  file-service/           # Images, video, storage (:5002, gRPC + RabbitMQ publisher/consumer)
-  repair-service/         # Repairs, dealers, devices, certificates (:5003, gRPC + RabbitMQ)
-  notification-service/   # Notifications + email delivery (:5004, gRPC + RabbitMQ + BullMQ)
-  chat-service/           # Chat, presence, messaging (:5005, gRPC + RabbitMQ publisher/consumer)
-  content-service/        # Articles, views, recommendations, weighted graph (:5010, gRPC)
+  api/                    # REST+WS gateway (:4000), pure proxy, no DB
+  user-service/           # Auth, users, invitations (:5000, gRPC+RMQ)
+  payment-service/        # Payments, providers (:5001, gRPC+RMQ)
+  file-service/           # Images, video, storage (:5002, gRPC+RMQ)
+  repair-service/         # Repairs, dealers, devices, certs (:5003, gRPC+RMQ)
+  notification-service/   # Notifications, email (:5004, gRPC+RMQ+BullMQ)
+  chat-service/           # Chat, presence (:5005, gRPC+RMQ)
+  content-service/        # Articles, recommendations (:5010, gRPC)
   web/                    # Next.js frontend (:3000)
-
 packages/
-  proto/                  # gRPC .proto files + generated TS types (@asko/proto)
-  shared/                 # DTOs, types, enums, utils (@asko/shared)
-  ui/                     # React component library (@asko/ui)
-
-scripts/
-  build.sh               # Full monorepo build in dependency order
-  dev.sh                  # Start dev environment (docker infra + all services)
-  openapi.sh              # Regenerate OpenAPI spec + frontend types
-  setup-dev.sh            # Create PostgreSQL databases + run migrations
+  proto/                  # .proto files + TS interfaces (@asko/proto, no build step)
+  shared/                 # DTOs, types, enums (@asko/shared)
+  ui/                     # React components (@asko/ui)
+  observability/          # Prometheus metrics + Pino logger (@asko/observability)
+monitoring/
+  prometheus/             # prometheus.yml + alerts.yml
+  grafana/                # Dashboards + provisioning
 ```
-
----
 
 ## Commands
 
-### Root-level (from repo root)
-
 ```bash
-pnpm install
-turbo run build
-turbo run typecheck
-turbo run lint
-turbo run clean
+pnpm install && turbo run build          # Install + build all
+./scripts/dev.sh                          # Docker infra + all services (excl web)
+./scripts/openapi.sh                      # Regenerate OpenAPI spec + frontend types
+./scripts/setup-dev.sh                    # Create DBs + run migrations
+npx mikro-orm migration:create/up         # Per-service migrations
 ```
 
-### Scripts
+## Services
 
-```bash
-./scripts/build.sh           # Build: shared → proto → ui → services + api
-./scripts/dev.sh             # Start docker-compose.dev.yml + all services (excluding web)
-./scripts/openapi.sh         # Regenerate OpenAPI spec + frontend types
-./scripts/setup-dev.sh       # Create PostgreSQL databases, run migrations, create DB user
-```
+### API Gateway (`apps/api` :4000)
+REST+WebSocket proxy. No database. Delegates all logic to microservices via gRPC. Handles auth guards, validation, pagination normalization, Swagger docs. Static files: `/images`, `/videos`. WebSocket chat via ChatGateway (`/chat` namespace). Env: `*_SERVICE_URL` vars for each microservice.
 
-### Per-app commands
+### User Service (`apps/user-service` :5000)
+Auth, users, invitations, JWT RS256, argon2. Entities: User, Session, InvitationLink, UserAddress. Creates default super admin on startup. Publishes `email.send` to RMQ (never sends email directly). gRPC + RMQ publisher.
 
-All NestJS apps (api, user-service, payment-service, file-service, repair-service, notification-service, content-service):
+### Payment Service (`apps/payment-service` :5001)
+Payments, webhooks. Entities: PaymentEntity. Providers: Dummy, Yookassa, Tbank. Publishes payment.*/withdraw.* events. gRPC + RMQ publisher.
 
-```bash
-pnpm run start:dev           # Dev mode with watch
-pnpm run start:prod          # Production mode
-pnpm run build
-pnpm run lint
-```
+### File Service (`apps/file-service` :5002)
+Image/video upload + processing. Entities: Image, Video. Storage: local or Cloudinary (factory). Consumes image_resize_queue for async processing. gRPC + RMQ pub+con.
 
-API-specific:
+### Repair Service (`apps/repair-service` :5003)
+Core business: repairs, dealers, devices, certificates, repairers, reviews, points, schedules. 16 entities (RepairRequest, Device, DeviceCategory, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart, WSchedule). 5 gRPC controllers. Calls payment-service + file-service via gRPC. gRPC + RMQ pub+con.
 
-```bash
-pnpm run openapi:generate    # Generate openapi.json from controllers
-pnpm run test                # Run tests
-```
+### Notification Service (`apps/notification-service` :5004)
+Notifications + email delivery. Entities: NotificationEntity. Consumes payment.*, repair.*, chat.*, email.send from RMQ. Email via BullMQ queue (5 retries, exponential backoff, priority). gRPC + RMQ consumer + BullMQ.
 
-Web-specific:
+### Chat Service (`apps/chat-service` :5005)
+Conversations, messages, presence. Entities: Conversation, ConversationParticipant, Message, UserPresence. Types: direct/group conversations, text/image/video/system messages, online/offline presence, typing/uploading activity. Publishes chat.* events. gRPC + RMQ pub+con.
 
-```bash
-pnpm run dev                 # Next.js dev (turbopack, :3000)
-pnpm run build
-pnpm run typecheck
-pnpm run api:generate        # Generate TS types from openapi.json
-```
+### Content Service (`apps/content-service` :5010)
+Articles (Lexical JSON), view analytics, tag-based recommendations. Entities: Article, ArticleView, ArticleEdge, ArticleTag. Weighted article graph (tag overlap 40% + co-view Jaccard 60% + manual links). YouTube-style view tracking (5s threshold, 5min dedup, bot filtering, race-safe SQL counter). gRPC only.
 
-Packages (shared, ui — proto has no build step):
-
-```bash
-pnpm run build
-```
-
-### Database migrations
-
-Each service that owns a DB runs migrations independently from its directory:
-
-```bash
-npx mikro-orm migration:create
-npx mikro-orm migration:up
-```
-
-Databases (user: almagest_root):
-
-```
-apps/user-service     → asko_rws_users_db
-apps/payment-service  → asko_rws_payment_db
-apps/file-service     → asko_rws_files_db
-apps/repair-service   → asko_rws_db
-apps/notification-service → asko_rws_notify_db
-apps/chat-service         → asko_rws_chat_db
-apps/content-service      → asko_rws_content_db
-```
-
----
-
-## Apps
-
-### API Gateway (`apps/api`)
-
-Main backend entrypoint. REST gateway + WebSocket server. Pure proxy — no database, no local entities. Delegates all domain logic to microservices via gRPC.
-
-**Delegates via gRPC**:
-
-| Domain | gRPC Client Module | Target Service |
-|---|---|---|
-| Auth / Users / Invitations | UserClientModule | user-service |
-| Payments | PaymentClientModule | payment-service |
-| File uploads / Images / Video | FileClientModule | file-service |
-| Repairs | RepairClientModule | repair-service |
-| Dealers | DealerClientModule | repair-service |
-| Devices | DeviceClientModule | repair-service |
-| Certificates | CertificateClientModule | repair-service |
-| Repairers | RepairerClientModule | repair-service |
-| Notifications | NotificationClientModule | notification-service |
-| Chat / Messaging / Presence | ChatClientModule | chat-service |
-| Articles / Views / Recommendations | ContentClientModule | content-service |
-
-**Static file serving**:
-
-* `/images` → images directory (jpg, jpeg, png, gif, svg, ico)
-* `/videos` → images/videos directory (mp4, webm, mov)
-
-**Stack**: NestJS v11, Redis, Socket.io, gRPC clients, @nestjs/swagger
-
-**Env**: `.env.dev` / `.env.prod`, loaded via AppConfig. Service URLs: `USER_SERVICE_URL`, `PAYMENT_SERVICE_URL`, `FILE_SERVICE_URL`, `REPAIR_SERVICE_URL`, `NOTIFICATION_SERVICE_URL`, `CHAT_SERVICE_URL`, `CONTENT_SERVICE_URL`.
-
----
-
-### User Service (`apps/user-service`)
-
-Auth, user management, invitations, JWT, password hashing, email verification.
-
-**Entities**: User, Session, InvitationLink, UserAddress
-
-**Services**: UserService, AuthService (JWT RS256, argon2), InviteService, LoginThrottleService (Redis), CryptoService
-
-**gRPC controller**: UserGrpcController
-
-**Bootstrap**: Creates default super admin on startup from config.
-
-**Email**: User-service does NOT send emails directly. It publishes `email.send` events to RabbitMQ (`notification_queue`). Notification-service handles actual email delivery via BullMQ + nodemailer.
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, RabbitMQ (publisher), argon2, passport, @nestjs/jwt, ioredis
-
-**Transport**: gRPC + RabbitMQ (publisher for email events)
-
----
-
-### Payment Service (`apps/payment-service`)
-
-Payment processing, provider management, webhook handling, event emission.
-
-**Entities**: PaymentEntity
-
-**Services**: PaymentService, PaymentDomainService, PaymentEventService, PaymentProviderService
-
-**Providers**: DummyProvider, YookassaProvider, TbankProvider
-
-**gRPC controller**: PaymentGrpcController
-
-**RabbitMQ publisher** — queue: `notification_queue` (durable). Events emitted:
-
-* `payment.created`
-* `payment.paid`
-* `payment.failed`
-* `payment.refunded`
-* `withdraw.created`
-* `withdraw.paid`
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, amqplib, amqp-connection-manager
-
-**Transport**: gRPC + RabbitMQ (publisher)
-
----
-
-### File Service (`apps/file-service`)
-
-File uploads, image processing, video management, storage providers.
-
-**Entities**: Image, Video
-
-**Services**: ImageService, VideoService, ImageProcessingService, ImageResizeService, CloudinaryService, LocalStorageService
-
-**Storage providers**: Local storage or Cloudinary (factory pattern, controlled by `config.fileStorageMode`)
-
-**Video support**: Upload to local (repair-request-videos, review-videos) or cloudinary. VideoTypeEnum (RepairRequest, Review, etc.)
-
-**gRPC controller**: FileGrpcController
-
-**RabbitMQ** — queue: `image_resize_queue` (durable). ImageResizeConsumer listens for image processing events.
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, sharp, cloudinary, amqplib, amqp-connection-manager
-
-**Transport**: gRPC + RabbitMQ (publisher + consumer for image processing)
-
----
-
-### Repair Service (`apps/repair-service`)
-
-Core business logic: repairs, dealers, devices, certificates, repairers, reviews, points, schedules.
-
-**Entities** (15): RepairRequest, Device, DeviceCategory, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart, WSchedule
-
-**Services**: DeviceService, AddressService, CertificateService, ExternalCertValidationService, RepairerService, ReviewService, RepairRequestService, WorkStepService, DealerService, BrokenPartService
-
-**gRPC controllers** (5): DeviceGrpcController, CertificateGrpcController, RepairerGrpcController, RepairGrpcController, DealerGrpcController
-
-**Imports**: PaymentClientModule, FileClientModule (calls payment-service and file-service via gRPC)
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC
-
-**Transport**: gRPC only
-
----
-
-### Notification Service (`apps/notification-service`)
-
-Notification persistence, event consumption, lifecycle management, **email delivery**.
-
-**Entities**: NotificationEntity
-
-**Services**: NotificationService, EmailTransportService (nodemailer), EmailProcessor (BullMQ worker)
-
-**gRPC controller**: NotificationGrpcController (create, list, mark read, delete, unread count)
-
-**RabbitMQ consumers**:
-
-* PaymentEventConsumer — listens: `payment.paid`, `payment.failed` → creates notifications
-* RepairEventConsumer — listens: repair status change events
-* ChatEventConsumer — listens: `chat.message`, `chat.conversation_created` → creates notifications
-* EmailEventConsumer — listens: `email.send` → enqueues into BullMQ email queue
-
-**BullMQ email queue**: Processes email delivery with 5 retries, exponential backoff (3s→48s), priority support (OTP emails = high priority). Uses Redis for job persistence. Any service can trigger emails by publishing `email.send` events to `notification_queue`.
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, amqplib, amqp-connection-manager, BullMQ, nodemailer
-
-**Transport**: gRPC (CRUD) + RabbitMQ (event consumption) + BullMQ (email job queue)
-
----
-
-### Chat Service (`apps/chat-service`)
-
-Real-time chat, conversations, messaging, user presence, activity statuses.
-
-**Entities** (4): Conversation, ConversationParticipant, Message, UserPresence
-
-**Services**: ConversationService, MessageService, PresenceService
-
-**gRPC controller**: ChatGrpcController
-
-**RabbitMQ**: Publisher to `notification_queue` (for notification-service integration). Consumer on `chat_queue`.
-
-**Conversation types**: direct, group
-
-**Message types**: text, image, video, system
-
-**Presence statuses**: online, offline
-
-**Activity statuses**: idle, typing, uploading_image, uploading_video
-
-**WebSocket**: Handled at API gateway level (`/chat` namespace). ChatGateway manages:
-* Connection auth via JWT
-* Online/offline presence tracking
-* Real-time message delivery
-* Typing, uploading image/video indicators
-* Conversation room join/leave
-* Mark as read events
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC, amqplib, amqp-connection-manager
-
-**Transport**: gRPC (CRUD) + RabbitMQ (publisher for notifications, consumer for future events)
-
----
-
-### Content Service (`apps/content-service`)
-
-Article management, rich content (Lexical editor), view analytics, tag-based recommendations.
-
-**Entities** (4): Article, ArticleView, ArticleEdge, ArticleTag
-
-**Services**:
-* ContentService — CRUD, slug generation, plain-text extraction from Lexical JSON, view tracking (YouTube-style: 5s read time threshold, 5min dedup, bot filtering, race-safe SQL counter), graph-based related/recommended articles
-* GraphService — weighted article graph management. Recalculates tag edges on article create/update, rebuilds co-view edges every hour. Supports manual admin linking.
-
-**gRPC controller**: ContentGrpcController (13 methods: CreateArticle, UpdateArticle, DeleteArticle, DeleteAllArticles, FindAllArticles, FindArticleBySlug, RecordView, FindRelatedArticles, FindRecommendedArticles, LinkArticles, UnlinkArticles, GetArticleEdges, GetArticleGraph)
-
-**Article content**: Stored as Lexical editor state JSON in `content` (JSONB) column. Plain text auto-extracted to `text` column for search/preview/SEO. Images uploaded via file-service and inserted inline into Lexical content (no separate image management). Backward compatible with legacy plain-text articles.
-
-**Weighted article graph** (ArticleEdge entity):
-* Three signal types: tag overlap (40% weight), co-view Jaccard similarity (60% weight), manual admin links (overrides)
-* Combined weight: `max(manual, tag * 0.4 + coview * 0.6)`
-* Tag edges recalculated on article create/update (immediate)
-* Co-view edges rebuilt every hour (periodic)
-* Related articles and recommendations powered by graph traversal
-
-**View tracking** (YouTube-style):
-* 5-second minimum read time threshold (frontend timer)
-* 5-minute dedup window per user/session per article
-* Race-safe counter via raw SQL `UPDATE ... SET view_count = view_count + 1`
-* Bot filtering via user-agent pattern matching (15+ patterns)
-
-**Stack**: NestJS, MikroORM, PostgreSQL, gRPC
-
-**Transport**: gRPC only
-
----
-
-### Web (`apps/web`)
-
-Next.js App Router frontend. Communicates with API gateway only. Never calls microservices directly.
-
-**Stack**: Next.js v16, React 19, Redux Toolkit v2, React Query v5, Tailwind v4, Socket.io-client, openapi-fetch, Axios (legacy), Framer Motion, Lexical (rich text editor)
-
-**API clients** (two separate clients for server vs client):
-
-* **Client-side Axios: `src/lib/api/client.ts`** — auto-attaches access token, auto-refreshes on 401. Used by all `'use client'` components. API modules (e.g., `articleApi` in `article.ts`) use this.
-* **Server-side fetch: `src/lib/api/server-fetch.ts`** — lightweight `fetch` wrapper for server components. Protected with `import 'server-only'` — importing in a client component causes a build error. Standalone `fetch*` functions (e.g., `fetchArticle`, `fetchDevices`) use this.
-* Generated types: `src/lib/api/api.gen.d.ts` — auto-generated, do NOT edit
-
-**API module pattern** (e.g., `src/lib/api/article.ts`):
-* `articleApi.*` — client-side methods using Axios (for `'use client'` components)
-* `fetchArticle()`, `fetchArticles()`, etc. — server-side standalone functions using `serverGet()` (for server components)
-
-**State management**: Redux Toolkit for auth state, React Query for server state.
-
-**Rich text editor**: Lexical (Meta) for article content creation. Editor components in `src/components/account/admin/article-form/`. Images uploaded via toolbar directly into article content (no separate image management). Server-side HTML generation in `src/lib/lexical/generate-html.ts` (pure function, no DOM required).
-
-**Article graph admin UI**:
-* Interactive force-directed graph visualization at `/account/articles/graph` using `react-force-graph-2d`. Nodes sized by viewCount, edges color-coded (green=tag, blue=view, red=manual).
-* Edge management table on article edit page (`src/components/account/admin/article-form/article-edges.tsx`). Shows connections, allows manual linking/unlinking with weight slider.
-
-**Analytics**: Yandex Metrika integration via `src/components/YandexMetrika.tsx`. Configured with `NEXT_PUBLIC_YM_ID` env var. YouTube-style view tracking via `src/components/articles/article-view-tracker.tsx` (5s threshold, dedup, bot filtering).
-
-**Env**: `NEXT_PUBLIC_API_URL` — API gateway URL (default: `http://localhost:4000`), `NEXT_PUBLIC_YM_ID` — Yandex Metrika counter ID (optional)
-
-**Generating API types** after backend changes:
-
-```bash
-./scripts/openapi.sh
-```
-
-Or manually:
-
-```bash
-cd apps/api && pnpm run openapi:generate
-cp apps/api/openapi.json apps/web/openapi.json
-cd apps/web && pnpm run api:generate
-```
-
----
-
-## Packages
-
-### Proto (`packages/proto` / `@asko/proto`)
-
-gRPC contracts shared between all backend services.
-
-**Not a compiled package** — has no build step. `main` and `types` in `package.json` point directly to `index.ts`. Consumers import raw TypeScript via workspace resolution. Do NOT run `pnpm run build` on this package (there is no build script). Changes take effect immediately without rebuilding.
-
-**.proto files** (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
-
-**Exports per service**: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME` + hand-written TS interfaces (not auto-generated from proto).
-
-**Rules**:
-
-* All `.proto` files must live in `packages/proto/`
-* TS interfaces are hand-written in `packages/proto/interfaces/` and must be kept in sync with `.proto` files manually
-* Never duplicate DTOs between services — use proto types for gRPC communication
-* Never import entities through proto — only transport types
-
----
-
-### Shared (`packages/shared` / `@asko/shared`)
-
-DTOs, types, enums, constants, utilities shared across the monorepo.
-
-**Subpath exports**:
-
-```
-@asko/shared           # full export (backend services)
-@asko/shared/client    # client-safe export (web app) — type-only DTOs, no server utils
-@asko/shared/server    # server-only export — full DTOs + server utils
-```
-
-**Structure**:
-
-* `constants/` — pagination, password, refresh-token, regex, default-user-role
-* `dto/` — organized by domain: auth, user, payment, image, video, repair, device, dealer, certificate, repairer, review, notification, address, article, wschedule, common (PaginationDto)
-* `types/` — domain interfaces: user, image, video, repair, payment, device, dealer, repairer, certificate, review, notification, currency, roles, week-schedule, util
-* `utils/` — extractDomain, httpUtils, isDefined, toURL, nodeEnv, toAuthUser, extractToken, currentUrl, envFile
-* `lang/` — i18n/localization
-
----
-
-### UI (`packages/ui` / `@asko/ui`)
-
-React component library. Tailwind classes only — no CSS files, no styled-components.
-
-**Components**: badge, button, card, container, crop-modal, data-grid, data-card-view, data-filter, data-search, data-toolbar, dialog, email-input, form-field, image-gallery, input, key-value-editor, modal, name-input, pagination, password-input, pattern-input, phone-input, section, tooltip, view-switcher, dropdown, and more.
-
-**DataGrid** (`DataGrid` component) — column-definition-driven data table used for all tabular data. Features: sticky header, auto-tooltips on every cell, truncation (default) or multiline per column, column resizing via drag handles, right-click context menu (remove/add columns, reset to defaults), `onSort` callback placeholder, `onRowClick` for clickable rows, `rowClassName` for per-row styling. All table views in the web app use `DataGrid` — there is no legacy `DataTable` component.
-
-```tsx
-import { DataGrid } from '@asko/ui';
-import type { DataGridColumn } from '@asko/ui';
-
-const columns: DataGridColumn<MyType>[] = [
-  { key: 'name', header: 'Название', mobileLabel: 'Название:', render: (item) => <p>{item.name}</p> },
-  { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (item) => <Badge>{item.status}</Badge> },
-];
-
-<DataGrid
-  columns={columns}
-  data={items}
-  keyExtractor={(item) => item.id}
-  emptyContent="Нет данных"
-  footer={<Pagination ... />}
-  onRowClick={(item) => router.push(`/path/${item.id}`)}
-  rowClassName={(item) => item.disabled ? 'opacity-50' : undefined}
-/>
-```
-
-**DataCardField** — label + value pair in card views. Supports `tooltip` (custom or auto-extracted from text content) and `multiline` (truncates by default).
-
-Must run `pnpm run build` after any change.
-
----
-
-## Microservices Rules
-
-* Each microservice owns its own database. No cross-service table access.
-* API gateway must NOT access any microservice database directly.
-* API gateway communicates with microservices exclusively via gRPC.
-* Microservices must NOT call each other directly without proto or RabbitMQ events.
-* Exception: repair-service imports PaymentClientModule and FileClientModule (calls via gRPC).
-* Each microservice owns its entities — no shared entities between services.
-* All domain logic lives in the owning microservice, not in the API gateway.
-* API must NOT access chat tables directly — must call chat-service via gRPC.
-* chat-service owns Conversation, ConversationParticipant, Message, UserPresence entities.
-* chat-service publishes events to RabbitMQ for notification-service.
-* WebSocket for chat is handled at the API gateway level (ChatGateway).
-* API gateway handles REST serialization, auth guards, pagination normalization, and Swagger docs.
-
-**Entity ownership**:
-
-| Service | Entities |
-|---|---|
-| api | *(none — pure proxy, no database)* |
-| user-service | User, Session, InvitationLink, UserAddress |
-| payment-service | PaymentEntity |
-| file-service | Image, Video |
-| repair-service | RepairRequest, Device, DeviceCategory, UserDevice, Address, Certificate, Repairer, Review, WorkStep, DealerProfile, DealerClient, PointsTransaction, PointsWithdrawal, DevicePart, BrokenPart, WSchedule |
-| notification-service | NotificationEntity |
-| chat-service | Conversation, ConversationParticipant, Message, UserPresence |
-| content-service | Article, ArticleView, ArticleEdge, ArticleTag |
-
----
-
-## gRPC Rules
-
-* All `.proto` definitions must be in `packages/proto/*.proto` (NOT in a `src/` subdirectory)
-* Proto files (11): user, payment, file, device, repairer, certificate, repair, dealer, notification, chat, content
-* Generated TS types are exported from `@asko/proto`
-* Never duplicate DTOs between services — always use proto types for gRPC
-* Never import entities through proto — only transport types
-* Each proto file exports constants: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME`
-
-### Connecting a gRPC client in the API gateway
-
-```typescript
-// Create a client module in apps/api/src/modules/<domain>/
-@Module({
-  imports: [
-    ClientsModule.register([
-      {
-        name: '<SERVICE_NAME>',
-        transport: Transport.GRPC,
-        options: {
-          package: XXXX_PACKAGE_NAME,
-          protoPath: XXXX_PROTO_PATH,
-          url: config.<service>.url,
-        },
-      },
-    ]),
-  ],
-  exports: [ClientsModule],
-})
-export class XxxxClientModule {}
-```
-
-### Exposing a gRPC service in a microservice
-
-```typescript
-// Create a gRPC controller in the microservice
-@Controller()
-export class XxxxGrpcController {
-  @GrpcMethod('XxxxService', 'MethodName')
-  async methodName(data: RequestType): Promise<ResponseType> {
-    // ...
-  }
-}
-```
-
----
-
-## RabbitMQ Rules
-
-RabbitMQ is used for async event-driven communication. Not all services use it.
-
-**Services with RabbitMQ**:
+## RabbitMQ Queues
 
 | Service | Role | Queue | Events |
 |---|---|---|---|
-| user-service | Publisher | notification_queue | email.send (confirmation, password reset, OTP, email change) |
-| payment-service | Publisher | notification_queue, repair_queue | payment.created, payment.paid, payment.failed, payment.refunded, withdraw.created, withdraw.paid |
-| file-service | Publisher + Consumer | image_resize_queue | Image processing tasks |
-| repair-service | Publisher + Consumer | notification_queue (pub), payment_queue (pub), address_validation_queue | repair.status_changed, repair.assigned, repair.completed, address.validate |
-| notification-service | Consumer | notification_queue | payment.*, repair.*, chat.*, email.send → BullMQ email queue |
-| chat-service | Publisher + Consumer | notification_queue (pub), chat_queue (sub) | chat.message, chat.conversation_created, chat.participant_added/removed |
+| user-service | Pub | notification_queue | email.send |
+| payment-service | Pub | notification_queue, repair_queue | payment.*, withdraw.* |
+| file-service | Pub+Con | image_resize_queue | image processing |
+| repair-service | Pub+Con | notification_queue, payment_queue, address_validation_queue | repair.* |
+| notification-service | Con | notification_queue | payment.*, repair.*, chat.*, email.send → BullMQ |
+| chat-service | Pub+Con | notification_queue, chat_queue | chat.* |
 
-**Rules**:
+## Web App (`apps/web`)
 
-* RabbitMQ queues must be durable.
-* Event names follow `domain.action` pattern (e.g., `payment.paid`).
-* Consumers use `@EventPattern` decorator from `@nestjs/microservices`.
-* Publishers register a `ClientsModule` with `Transport.RMQ`.
-* Never use RabbitMQ for synchronous request/response — use gRPC for that.
+Next.js App Router. Communicates with API gateway only.
 
-### Publishing events
+**Stack**: Next.js v16, React 19, Redux Toolkit v2, React Query v5, Tailwind v4, Socket.io-client, Axios, Framer Motion, Lexical, lucide-react
 
-```typescript
-// Register RMQ client in module
-ClientsModule.register([{
-  name: 'EVENTS_SERVICE',
-  transport: Transport.RMQ,
-  options: {
-    urls: [config.rabbitmq.url],
-    queue: 'notification_queue',
-    queueOptions: { durable: true },
-  },
-}])
+**API clients**: Client-side Axios (`src/lib/api/client.ts`) for `'use client'` components. Server-side fetch (`src/lib/api/server-fetch.ts`) for server components. Types auto-generated in `api.gen.d.ts`.
 
-// Emit from service
-@Inject('EVENTS_SERVICE') private readonly eventsClient: ClientProxy;
-this.eventsClient.emit('payment.paid', payload);
-```
+**Env**: `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`), `NEXT_PUBLIC_YM_ID` (Yandex Metrika, optional)
 
-### Consuming events
+## Monitoring
 
-```typescript
-@Controller()
-export class PaymentEventConsumer {
-  @EventPattern('payment.paid')
-  async handlePaymentPaid(data: PaymentEventPayload) {
-    // ...
-  }
-}
-```
+`@asko/observability` — each service registers `MetricsModule.register({ serviceName })` + `createMetricsServer(metricsService, port)`. Metrics: `http_request_duration_seconds`, `http_requests_total`, `grpc_call_duration_seconds`, `grpc_calls_total` + default Node.js metrics. `collectDefaultMetrics()` runs in constructor (not `onModuleInit`).
 
----
+Metrics ports: API 4000, user 9100, payment 9101, file 9102, repair 9103, notification 9104, chat 9105, content 9110, RabbitMQ 15692, Redis 9121 (redis_exporter sidecar).
 
-## Shared Code Rules
+Prometheus scrapes all targets. Grafana dashboard (`asko-services-overview`) with `$service` variable. Alerts in `alerts.yml`.
 
-* Shared DTOs, types, enums, and constants live in `packages/shared`.
-* Backend services import from `@asko/shared` (full export).
-* Web app imports from `@asko/shared/client` (type-only, no server deps).
-* Server-only utilities import from `@asko/shared/server`.
-* DTOs organized by domain in `packages/shared/src/dto/<domain>/`.
-* Types organized by domain in `packages/shared/src/types/<domain>/`.
-* Never put service-specific logic in shared — only transport types and validation.
-* Must run `pnpm run build` after changes.
+## UI Design Rules
 
----
+* **No border-radius** — sharp corners everywhere. Only `rounded-full` for avatars/circles and status badges.
+* **Icons via lucide-react** — never inline `<svg>` for standard icons. Inline SVG only for charts/animated framer-motion paths.
+* **DataGrid for all tables** — column definitions with `key`, `header`, `width`, `render`, `mobileLabel`. Column sizing: `minmax(<minWidth>px, 1fr)` default 100px.
+* **ViewSwitcher is standalone** — placed above data view, not inside `DataToolbar`. `DataToolbar` has search, filters, actions only.
+* **No separate row components** — cell rendering lives in column `render` functions.
+* Tailwind only — no CSS files, no styled-components.
+* Must run `pnpm run build` after changes to packages.
 
-## UI Package Rules
+## Account Layout
 
-* Tailwind classes only — no CSS files, no styled-components.
-* All components export from `packages/ui/src/components/`.
-* Must run `pnpm run build` after changes.
-* Used only by `apps/web`.
-* **DataGrid for all tables** — use `DataGrid` with column definitions (`DataGridColumn[]`) for any tabular data. Define columns with `key`, `header`, `width`, `render`, `mobileLabel`. Do not create separate row components — inline cell rendering into column `render` functions.
-* **No separate row component files** — all cell rendering logic lives in column definitions inside the parent component. This keeps column definitions, header, and cell rendering co-located.
+* Full-width adaptive — no max-width cap.
+* Sidebar: 200px, `bg-[#fff]`, `sticky top-0 h-screen overflow-y-auto`.
+* Header avatar: `DropdownMenu` with "Профиль" + "Выйти".
+* Dashboard typography: big numbers `text-[82px] leading-[86px]`, titles `text-[24px] leading-[28px]`, text `text-[14px] leading-[18px]`.
 
----
+## Rules
 
-## Adding New Service
+**Architecture**:
+* API gateway is a pure proxy — no database, no domain logic. Delegates via gRPC.
+* Each microservice owns its DB and entities. No cross-service table access.
+* Microservices communicate via gRPC or RabbitMQ events only.
+* Exception: repair-service calls payment-service + file-service via gRPC.
+* Email: publish `email.send` to RabbitMQ → notification-service handles delivery via BullMQ.
+* WebSocket chat handled at API gateway level (ChatGateway).
 
-1. Create directory: `apps/<service-name>/`
-2. Initialize NestJS app with gRPC transport.
-3. Add `package.json` with deps: `@asko/shared`, `@asko/proto`, MikroORM, PostgreSQL driver.
-4. Create `.proto` file in `packages/proto/src/<service>.proto`.
-5. Export constants from `@asko/proto`: `XXXX_PROTO_PATH`, `XXXX_PACKAGE_NAME`, `XXXX_SERVICE_NAME`.
-6. Create gRPC client module in `apps/api/src/modules/<domain>/`.
-7. Register the client module in `apps/api/src/app.module.ts`.
-8. Create a `Dockerfile.<service-name>` at repo root using turborepo prune.
-9. Add service to `docker-compose.yml`.
-10. Create the PostgreSQL database in `scripts/setup-dev.sh`.
-11. Run `turbo run build` to verify.
+**Code**:
+* Russian UI strings. TypeScript strict. ESM. ES2022.
+* MikroORM v6. class-validator on all DTOs. argon2 for passwords. JWT RS256.
+* `.proto` files in `packages/proto/`. TS interfaces hand-written, kept in sync manually.
+* `@asko/shared` for DTOs/types, `@asko/shared/client` for web, `@asko/shared/server` for server-only utils.
+* Swagger CLI plugin auto-adds `@ApiProperty`. Manual only for array props in paginated responses.
+* Paginated gRPC responses: normalize `data: result.data ?? []`.
+* `@Public()` bypasses JWT. `@OptionalAuth()` tries JWT silently.
+* DeviceCategory is a table, not enum. Article tags in junction table, not JSONB.
 
----
+**Frontend**:
+* `'use client'` components: Axios client from `src/lib/api/client.ts`. Never raw `fetch()`.
+* Server components: `serverGet()` from `src/lib/api/server-fetch.ts`. Never Axios.
+* Never edit `api.gen.d.ts`. Run `./scripts/openapi.sh` after backend changes.
+* Pagination in server components: `hrefPattern` string, not `getHref` function.
+* No backward compatibility unless requested — migrate consumers, delete old code.
+* DataGrid only — no legacy DataTable components.
 
-## Adding New Package
-
-1. Create directory: `packages/<package-name>/`
-2. Add `package.json` with name `@asko/<package-name>`.
-3. Configure `tsconfig.json` extending root config.
-4. Add build script.
-5. Reference from consuming apps via workspace dependency: `"@asko/<package-name>": "workspace:*"`.
-6. Add to build order in `scripts/build.sh` if needed.
-
----
-
-## Coding Rules
-
-* Language: Russian UI strings
-* TypeScript strict mode
-* ESM modules
-* Decorators enabled
-* ES2022 target
-* class-validator for DTO validation
-* argon2 for password hashing
-* JWT RS256 algorithm
-* Redis optional (used for caching, throttling)
-* `.env` files not committed to git
-* Docker uses turborepo prune
-
----
-
-## NestJS Rules
-
-* All microservices use NestJS with gRPC transport.
-* API gateway uses NestJS with Express adapter.
-* Modules must be self-contained — declare providers, controllers, imports, exports.
-* gRPC controllers use `@GrpcMethod` decorator.
-* REST controllers use standard NestJS decorators.
-* Guards, interceptors, and pipes are app-specific — not shared between services.
-* MikroORM v6 for all database operations.
-* `@Public()` decorator bypasses JWT entirely. `@OptionalAuth()` tries JWT silently — attaches user if valid, allows request without user if not. Use `@OptionalAuth()` for endpoints that work for both authenticated and anonymous users (e.g., personalized recommendations).
-
----
-
-## DTO / Entity Rules
-
-**DTOs** (Data Transfer Objects):
-
-* Live in `packages/shared/src/dto/<domain>/` — shared across all services.
-* **Every** DTO property **must** have `class-validator` decorators (`@IsString()`, `@IsNumber()`, `@IsBoolean()`, `@IsEmail()`, `@IsEnum()`, `@IsOptional()`, etc.). The API gateway uses `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true` — properties without decorators are silently stripped and undecorated DTOs will break at runtime.
-* Swagger CLI plugin auto-adds `@ApiProperty()` to typed class properties in `*.dto.ts` files.
-* Manual `@ApiProperty({ type: [RecordDto] })` only needed on array properties in paginated responses.
-* Must use `PaginationDto` and `PaginatedResponseDto` from `@asko/shared`.
-
-**Entities**:
-
-* Live in the owning microservice only: `apps/<service>/src/entities/`.
-* Never share entities between services.
-* Never import entities through `@asko/proto`.
-* Use MikroORM decorators (`@Entity`, `@Property`, `@ManyToOne`, etc.).
-
-**Response DTOs** (API gateway only):
-
-* Live in `apps/api/src/common/dto/responses/`.
-* Mirror proto `*Record` interfaces as classes for Swagger schema generation.
-
----
-
-## OpenAPI / Swagger
-
-The API gateway uses `@nestjs/swagger` with the CLI plugin.
-
-**Configuration**:
-
-* Swagger CLI plugin enabled in `apps/api/nest-cli.json` (`classValidatorShim`, `introspectComments`)
-* Swagger UI at `/doc` (all environments)
-* OpenAPI JSON spec at `/doc/openapi.json`
-* Standalone spec generator: `apps/api/src/generate-openapi.ts`
-
-**Rules for controllers**:
-
-* Every controller must have `@ApiTags('...')` for grouping.
-* Every endpoint must have a response decorator:
-  * `@ApiOkResponse({ type: X })` for GET, PUT, PATCH, DELETE
-  * `@ApiCreatedResponse({ type: X })` for POST
-  * `@ApiResponse({ status: N, type: X })` for controllers using `@Res()`
-* Response DTO must match what the controller actually returns.
-* Avoid `@Res()` in controllers — it prevents Swagger auto-detection of return types.
-
-**When adding a new endpoint**:
-
-1. Create or reuse a response DTO class in `apps/api/src/common/dto/responses/`.
-2. Add the appropriate `@ApiOkResponse`/`@ApiCreatedResponse` decorator.
-3. Run `./scripts/openapi.sh` to regenerate the spec and frontend types.
-
----
-
-## Pagination
-
-All paginated gRPC responses may omit the `data` field when the array is empty (protobuf3 default behavior). Controllers must normalize:
-
-```typescript
-const result = await this.someClient.findAll(pagination);
-return { ...result, data: result.data ?? [] };
-```
-
-Must use `PaginationDto` and `PaginatedResponseDto` from `@asko/shared`.
-
----
-
-## Package Dependencies
-
-```
-web         → ui + shared/client
-api         → shared + proto
-user-service → shared + proto
-payment-service → shared + proto
-file-service → shared + proto
-repair-service → shared + proto + (calls payment-service + file-service via gRPC)
-notification-service → shared + proto
-chat-service → shared + proto
-content-service → shared + proto
-proto       → standalone
-ui          → standalone
-shared      → standalone
-```
-
----
-
-## Docker
-
-Dockerfiles at root (one per app):
-
-```
-Dockerfile.api
-Dockerfile.web
-Dockerfile.user-service
-Dockerfile.payment-service
-Dockerfile.file-service
-Dockerfile.repair-service
-Dockerfile.notification-service
-Dockerfile.chat-service
-Dockerfile.content-service
-```
-
-**docker-compose.yml** — production: all services + RabbitMQ, network_mode: host, shared `images-data` volume.
-
-**docker-compose.dev.yml** — development: RabbitMQ (amqp://guest:guest@localhost:5672) + Redis (localhost:6379).
-
-All Docker builds use turborepo prune.
-
----
-
-## IMPORTANT Restrictions
-
-* API gateway must NEVER access microservice databases directly — always use gRPC.
-* Microservices must NEVER expose REST endpoints — only gRPC (and RabbitMQ where applicable).
-* Web app must NEVER call microservices directly — only the API gateway.
-* Never duplicate DTOs between services — use `@asko/shared` and `@asko/proto`.
-* Never share entities between services — each service owns its own.
-* Never import entities through `@asko/proto` — only transport types.
-* Never put service-specific logic in `packages/shared`.
-* Never use CSS files or styled-components in `packages/ui` — Tailwind classes only.
-* API must NEVER access chat-service database directly — always use gRPC.
-* API must NEVER access content-service database directly — always use gRPC.
-* content-service owns Article, ArticleView, ArticleEdge, and ArticleTag entities.
-* Never edit `apps/web/src/lib/api/api.gen.d.ts` — it is auto-generated.
-* **Client components (`'use client'`)** must use the Axios `api` instance from `src/lib/api/client.ts` for API calls — never raw `fetch()`. This ensures access tokens are attached, 401s trigger auto-refresh, and errors are handled globally.
-* **Server components** must use `serverGet()` from `src/lib/api/server-fetch.ts` for API calls — never the Axios client (it depends on Redux store which doesn't exist on the server). The `server-only` import prevents accidental use in client components.
-* Never import `server-fetch.ts` or standalone `fetch*` functions in `'use client'` components — it will cause a build error.
-* Always run `./scripts/openapi.sh` after changing backend endpoints or response types.
-* Always run `pnpm run build` in packages after changes.
-* `.env` files must never be committed to git.
-* **Email sending**: Never send emails directly from services. Publish `email.send` events to RabbitMQ (`notification_queue`). Notification-service handles delivery via BullMQ.
-* **Device types**: Use `DeviceCategory` table (repair-service) — not a hardcoded enum. Device has `@ManyToOne(() => DeviceCategory)` relation.
-* **Article tags**: Stored in `article_tag` junction table (content-service) — not JSONB on the article. Tags are normalized to lowercase on insert. Use `FindAllArticles` with `tags` param for tag-based search.
-* **API gateway has no database** — it's a pure REST/WebSocket proxy. All entities were moved to their owning microservices.
-* **Pagination in server components**: Use `hrefPattern="/path?page={page}"` (serializable string) instead of `getHref` function prop — functions can't cross the server→client boundary.
-* **Placeholder images**: Use `getPlaceholderSrc(category, idOrIndex)` from `@/lib/placeholders` or `<PlaceholderImage>` component. Images stored in `public/images/placeholders/placeholder-{category}-{variant}.webp`.
-* **No backward compatibility unless requested** — when updating or replacing a component/API/pattern, migrate all consumers to the new version and delete the old one. Do not keep old exports, aliases, or legacy wrappers "for backward compatibility" unless the user explicitly asks for it.
-* **DataGrid only** — never use or re-introduce the old `DataTable`/`DataTableHeader`/`DataTableRow`/`DataTableCell`/`DataTableEmpty`/`DataTableFooter` components. Use `DataGrid` with column definitions for all tabular data.
+**Docker**: One Dockerfile per app at repo root. `docker-compose.yml` (prod) and `docker-compose.dev.yml` (dev) include all services + Prometheus + Grafana + redis-exporter. Turborepo prune for builds.
