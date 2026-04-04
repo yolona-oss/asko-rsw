@@ -207,12 +207,15 @@ export function DataGrid<T>({
   const visibleColumns = columns.filter((c) => !hiddenKeys.has(c.key));
   const hiddenColumnsList = columns.filter((c) => hiddenKeys.has(c.key));
 
-  // Grid template — last column always stretches (1fr)
+  // Grid template — columns with explicit width get fixed size,
+  // flexible columns get minmax with their minWidth floor (default 100px),
+  // last column always stretches to fill remaining space.
   const gridTemplate = visibleColumns
     .map((col, i) => {
-      if (i === visibleColumns.length - 1) return 'minmax(0, 1fr)';
-      const w = widths[col.key] ?? col.width ?? 100;
-      return w != null ? `${w}px` : 'minmax(0, 1fr)';
+      const w = widths[col.key] ?? col.width;
+      const min = col.minWidth ?? 100;
+      if (i === visibleColumns.length - 1) return `minmax(${min}px, 1fr)`;
+      return w != null ? `${w}px` : `minmax(${min}px, 1fr)`;
     })
     .join(' ');
 

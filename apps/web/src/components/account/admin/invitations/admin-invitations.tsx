@@ -268,11 +268,11 @@ export function AdminInvitations() {
             values={filterValues}
             onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
           />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
         </div>
       </div>
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {loading ? (
         <div className="flex flex-col gap-3">

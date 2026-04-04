@@ -113,12 +113,8 @@ export function DealerPayments() {
       <div className="flex flex-col gap-4">
         <h3 className="text-lg font-medium text-text-main">История платежей</h3>
 
-        {/* Toolbar */}
-        <div className="flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
-        </div>
+        {/* ViewSwitcher — above data view */}
+        <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
         {loading ? (
           <p className="text-sm text-text-sub">Загрузка...</p>

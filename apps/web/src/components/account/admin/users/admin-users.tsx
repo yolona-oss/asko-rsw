@@ -5,6 +5,7 @@ import {
   DataFilter,
   DataToolbar,
   DataGrid,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -186,11 +187,11 @@ export function AdminUsers() {
         filters={[STATUS_FILTER_DEF]}
         filterValues={filterValues}
         onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
         actions={<InviteDropdown />}
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Content */}
       {loading ? (

@@ -6,6 +6,7 @@ import {
   Card,
   ContextMenuArea,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   DataGrid,
@@ -234,10 +235,10 @@ export function ManagerPayments() {
         filters={FILTERS}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Data */}
       {loading ? (

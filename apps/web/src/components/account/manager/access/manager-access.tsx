@@ -151,15 +151,15 @@ export function ManagerAccess() {
         <DataSearch value={search} onChange={setSearch} placeholder="Поиск по городу..." className="lg:w-[320px] flex-shrink-0" />
         <div className="flex-1 flex items-center gap-3">
           <DataFilter filters={[TAB_FILTER]} values={filterValues} onChange={handleFilterChange} />
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
         </div>
       </div>
 
       {error && (
         <p className="text-sm text-brand-red">{error}</p>
       )}
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {loading ? (
         <div className="flex flex-col gap-3">

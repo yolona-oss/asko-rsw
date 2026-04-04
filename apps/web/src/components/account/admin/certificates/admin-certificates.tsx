@@ -5,6 +5,7 @@ import {
   Badge,
   DataGrid,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -147,10 +148,10 @@ export function AdminCertificates() {
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
         onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>

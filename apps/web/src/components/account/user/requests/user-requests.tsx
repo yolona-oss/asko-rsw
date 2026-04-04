@@ -7,6 +7,7 @@ import {
   Badge,
   Button,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   DataGrid,
@@ -117,15 +118,15 @@ export function UserRequests() {
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
         actions={
           <Link href="/account/requests/create">
             <Button variant="primary">Создать заявку</Button>
           </Link>
         }
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Data */}
       {loading ? (

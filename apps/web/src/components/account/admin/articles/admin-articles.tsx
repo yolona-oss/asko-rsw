@@ -8,6 +8,7 @@ import {
   Modal,
   DataGrid,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -131,9 +132,6 @@ export function AdminArticles() {
       {/* Toolbar */}
       <DataToolbar
         search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
         actions={<>
           <Link href="/account/articles/graph">
             <Button variant="secondary" size="sm">Граф связей</Button>
@@ -180,6 +178,9 @@ export function AdminArticles() {
           </Button>
         </div>
       </Modal>
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {loading ? (
         <p className="text-sm text-text-sub p-4">Загрузка...</p>

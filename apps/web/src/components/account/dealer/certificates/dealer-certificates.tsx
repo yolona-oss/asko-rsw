@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Select,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -82,9 +83,6 @@ export function DealerCertificates() {
         filters={[STATUS_FILTER_DEF]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
         actions={
           <Select
             value={sortField}
@@ -97,6 +95,9 @@ export function DealerCertificates() {
           </Select>
         }
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Data */}
       {

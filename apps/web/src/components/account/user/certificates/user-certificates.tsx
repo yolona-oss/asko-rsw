@@ -6,6 +6,7 @@ import {
   Button,
   DataGrid,
   DataToolbar,
+  ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
@@ -218,15 +219,15 @@ export function UserCertificates() {
       {/* Toolbar */}
       <DataToolbar
         search={{ value: search, onChange: setSearch, placeholder: "Поиск по номеру или устройству" }}
-        views={[VIEW_TABLE, VIEW_CARD]}
-        activeView={view}
-        onViewChange={setView}
         actions={
           <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
             Добавить сертификат
           </Button>
         }
       />
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'card' ? (
         <>

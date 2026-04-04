@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { cn } from '../utils/cn';
 import { DataSearch } from './data-search';
 import { DataFilter, type FilterDefinition, type FilterValues } from './data-filter';
-import { ViewSwitcher, type ViewDefinition } from './view-switcher';
 
 export interface DataToolbarSearchProps {
   value: string;
@@ -20,12 +19,6 @@ export interface DataToolbarProps {
   filterValues?: FilterValues;
   /** Filter change handler */
   onFilterChange?: (key: string, value: string) => void;
-  /** View switcher options. Omit to hide view switcher. */
-  views?: ViewDefinition[];
-  /** Current active view */
-  activeView?: string;
-  /** View change handler */
-  onViewChange?: (view: string) => void;
   /** Action buttons rendered at the right end */
   actions?: ReactNode;
   /** Extra class on the root container */
@@ -37,14 +30,9 @@ export function DataToolbar({
   filters,
   filterValues,
   onFilterChange,
-  views,
-  activeView,
-  onViewChange,
   actions,
   className,
 }: DataToolbarProps) {
-  const hasRight = views || actions;
-
   return (
     <div className={cn('flex flex-col lg:flex-row gap-4 items-stretch', className)}>
       {search && (
@@ -63,11 +51,8 @@ export function DataToolbar({
             onChange={onFilterChange}
           />
         )}
-        {hasRight && (
+        {actions && (
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            {views && activeView !== undefined && onViewChange && (
-              <ViewSwitcher views={views} activeView={activeView} onViewChange={onViewChange} />
-            )}
             {actions}
           </div>
         )}

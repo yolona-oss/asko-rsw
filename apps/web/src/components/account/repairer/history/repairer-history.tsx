@@ -142,12 +142,10 @@ export function RepairerHistory() {
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch">
         <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-            <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
-          </div>
-        </div>
       </div>
+
+      {/* ViewSwitcher — above data view */}
+      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Request list */}
       {loading ? (
