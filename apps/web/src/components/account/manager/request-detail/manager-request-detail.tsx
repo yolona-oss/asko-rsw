@@ -298,7 +298,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 </div>
               </div>
               {chatOpen && chatAttached && request.conversationId && (
-                <div className="border border-border-main rounded-sm overflow-hidden">
+                <div className="border border-border-main overflow-hidden">
                   <RequestChat conversationId={request.conversationId} currentUserId={currentUserId} />
                 </div>
               )}
@@ -374,7 +374,7 @@ function AssignSection({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
-            className="flex flex-col items-center justify-center gap-3 py-6 px-4 border border-border-main rounded-sm bg-bg-sub"
+            className="flex flex-col items-center justify-center gap-3 py-6 px-4 border border-border-main bg-bg-sub"
           >
             {/* Spinner */}
             <motion.div
@@ -416,7 +416,7 @@ function AssignSection({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center gap-2 py-3 px-4 border border-green-300 rounded-sm bg-green-50 text-green-700"
+            className="flex items-center gap-2 py-3 px-4 border border-green-300 bg-green-50 text-green-700"
           >
             <motion.svg
               className="w-5 h-5 flex-shrink-0"

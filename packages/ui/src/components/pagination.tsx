@@ -47,11 +47,11 @@ function getPageRange(page: number, totalPages: number, maxVisible: number): (nu
   return pages;
 }
 
-const prevNextBase = 'flex items-center justify-center min-h-[36px] px-4 py-2 rounded-lg text-sm font-medium select-none transition-opacity';
+const prevNextBase = 'flex items-center justify-center min-h-[36px] px-4 py-2 text-sm font-medium select-none transition-opacity';
 const prevNextEnabled = 'text-[#404040] hover:text-[#0a0a0a] cursor-pointer';
 const prevNextDisabled = 'opacity-50 cursor-default pointer-events-none text-[#404040]';
 
-const pageBase = 'flex items-center justify-center min-h-[36px] w-[34px] rounded-lg text-sm font-medium select-none transition-colors cursor-pointer';
+const pageBase = 'flex items-center justify-center min-h-[36px] w-[34px] text-sm font-medium select-none transition-colors cursor-pointer';
 const pageActive = 'border border-[#D7102A] text-[#0a0a0a] shadow-sm';
 const pageInactive = 'text-[#404040] hover:text-[#0a0a0a]';
 

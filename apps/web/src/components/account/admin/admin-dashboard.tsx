@@ -15,10 +15,10 @@ function StatCard({ title, value, href }: { title: string; value: number | strin
   return (
     <Link
       href={href}
-      className="bg-white rounded-sm border border-border-light p-6 flex flex-col gap-2 hover:border-text-main transition-colors"
+      className="bg-white border border-border-light p-6 flex flex-col gap-2 hover:border-text-main transition-colors"
     >
-      <span className="text-base font-medium leading-5 text-text-sub">{title}</span>
-      <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
+      <span className="text-[24px] font-medium leading-[28px] text-text-sub">{title}</span>
+      <span className="text-[82px] font-normal leading-[86px] text-text-main">
         {value}
       </span>
     </Link>
@@ -75,25 +75,25 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <Link
           href="/account/devices"
-          className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red cursor-pointer"
+          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
         >
           Управление товарами
         </Link>
         <Link
           href="/account/invitations"
-          className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red cursor-pointer"
+          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
         >
           Создать приглашение
         </Link>
         <Link
           href="/account/users"
-          className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red cursor-pointer"
+          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
         >
           Управление пользователями
         </Link>
         <Link
           href="/account/manage-certificates"
-          className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red cursor-pointer"
+          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
         >
           Проверка сертификатов
         </Link>

@@ -102,7 +102,7 @@ export function Tooltip({
           role="tooltip"
           className={cn(
             'absolute z-50 pointer-events-none',
-            'px-3 py-1.5 text-xs text-white bg-[#323232] rounded-sm shadow-lg',
+            'px-3 py-1.5 text-xs text-white bg-[#323232] shadow-lg',
             'whitespace-nowrap animate-[fade-in_150ms_ease-out]',
             placementStyles[placement],
             contentClassName,

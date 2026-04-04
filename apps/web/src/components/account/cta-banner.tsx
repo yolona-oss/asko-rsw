@@ -15,7 +15,7 @@ export interface CTABannerProps {
 export function CTABanner({ title, description, linkHref, linkLabel, variant = 'default', className = '' }: CTABannerProps) {
   if (variant === 'compact') {
     return (
-      <div className={`relative overflow-hidden bg-[#151515] rounded-sm ${className}`}>
+      <div className={`relative overflow-hidden bg-[#151515] ${className}`}>
         {/* Decorative red glow - top right */}
         <div className="absolute -top-[100px] -right-[100px] w-[800px] h-[500px] -rotate-[150deg] pointer-events-none animate-[glow-drift-1_8s_ease-in-out_infinite]">
           <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.38)_0%,_transparent_70%)] blur-[69px]" />
@@ -47,7 +47,7 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
   }
 
   return (
-    <div className={`relative overflow-hidden bg-[#151515] rounded-sm ${className}`}>
+    <div className={`relative overflow-hidden bg-[#151515] ${className}`}>
       {/* Decorative red glow - top right */}
       <div className="absolute -top-[100px] -right-[100px] w-[800px] h-[500px] -rotate-[150deg] pointer-events-none animate-[glow-drift-1_8s_ease-in-out_infinite]">
         <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.38)_0%,_transparent_70%)] blur-[69px]" />

@@ -136,7 +136,7 @@ export function AdminDevices() {
       width: 96,
       mobileLabel: 'Главная:',
       render: (device) => device.isFeatured ? (
-        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-sm">Да</span>
+        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700">Да</span>
       ) : (
         <span className="inline-block px-2 py-0.5 text-xs text-text-sub">Нет</span>
       ),
@@ -287,7 +287,7 @@ export function AdminDevices() {
             </div>
 
             {importStatus.errors.length > 0 && (
-              <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-sm p-3 mb-4">
+              <div className="max-h-48 overflow-y-auto border border-gray-200 p-3 mb-4">
                 <ul className="space-y-1">
                   {importStatus.errors.map((err, i) => (
                     <li key={i} className="text-xs text-red-600">{err}</li>

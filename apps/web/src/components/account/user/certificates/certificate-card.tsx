@@ -56,7 +56,7 @@ export function CertificateCard({
     <ContextMenuArea items={menuItems}>
       <div
         ref={cardRef}
-        className="relative overflow-hidden border border-border-light bg-white rounded-sm p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
+        className="relative overflow-hidden border border-border-light bg-white p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
       >
         {/* Title + description - full width */}
         <div className="flex flex-col gap-2">
@@ -111,7 +111,7 @@ export function CertificateCard({
               <img
                 src={deviceImageUrl}
                 alt={deviceName}
-                className="w-full h-auto max-h-[448px] object-contain rounded-lg"
+                className="w-full h-auto max-h-[448px] object-contain"
               />
             </div>
           </div>
@@ -121,7 +121,7 @@ export function CertificateCard({
             <img
               src={deviceImageUrl}
               alt={deviceName}
-              className="w-full h-auto max-h-[332px] object-contain rounded-lg"
+              className="w-full h-auto max-h-[332px] object-contain"
             />
           </div>
         </div>

@@ -237,7 +237,7 @@ export function NotificationBell() {
             className={`fixed inset-0 z-[9999] bg-black/40 ${overlayAnimation}`}
             onClick={handleClose}
           />
-          <div className={`fixed inset-x-0 bottom-0 z-[10000] bg-white rounded-t-2xl max-h-[85vh] flex flex-col ${panelAnimation}`}>
+          <div className={`fixed inset-x-0 bottom-0 z-[10000] bg-white max-h-[85vh] flex flex-col ${panelAnimation}`}>
             {/* Drag handle */}
             <div className="flex justify-center py-3">
               <div className="w-10 h-1 rounded-full bg-border-light" />
@@ -254,7 +254,7 @@ export function NotificationBell() {
       {open && createPortal(
         <div
           ref={desktopPanelRef}
-          className={`hidden lg:flex fixed z-[10000] flex-col w-80 max-h-[420px] bg-white rounded-sm shadow-lg border border-border-light overflow-hidden ${panelAnimation}`}
+          className={`hidden lg:flex fixed z-[10000] flex-col w-80 max-h-[420px] bg-white shadow-lg border border-border-light overflow-hidden ${panelAnimation}`}
           style={desktopPos ? { left: desktopPos.x, top: desktopPos.y } : { left: -9999, top: -9999 }}
         >
           {panelHeader}

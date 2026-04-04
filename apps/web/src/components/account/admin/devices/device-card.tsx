@@ -23,7 +23,7 @@ export function DeviceCard({ device, categoryLabels, onDelete }: {
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium text-text-main">{device.name}</p>
           {device.isFeatured && (
-            <span className="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-sm">
+            <span className="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700">
               Главная
             </span>
           )}

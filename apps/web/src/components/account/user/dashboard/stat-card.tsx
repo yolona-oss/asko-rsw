@@ -13,9 +13,9 @@ export function StatCard({
 }) {
   return (
     <Card className="flex flex-col gap-2">
-      <span className="text-base font-medium leading-5 text-text-sub">{title}</span>
+      <span className="text-[24px] font-medium leading-[28px] text-text-sub">{title}</span>
       {value !== undefined && (
-        <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
+        <span className="text-[82px] font-normal leading-[86px] text-text-main">
           {value}
         </span>
       )}

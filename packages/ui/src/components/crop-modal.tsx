@@ -284,7 +284,7 @@ export function CropModal({
 
       <div
         ref={containerRef}
-        className="relative select-none touch-none overflow-hidden rounded-sm bg-black/20"
+        className="relative select-none touch-none overflow-hidden bg-black/20"
         style={{ width: containerSize, height: containerH, cursor: 'grab' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

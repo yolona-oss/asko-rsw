@@ -87,7 +87,7 @@ export function AvatarSection({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center gap-2 px-6 py-6 border-2 border-dashed rounded-sm cursor-pointer transition-colors ${
+          className={`flex flex-col items-center justify-center gap-2 px-6 py-6 border-2 border-dashed cursor-pointer transition-colors ${
             dragOver
               ? 'border-brand-red bg-primary-50'
               : 'border-border-light hover:border-text-sub'

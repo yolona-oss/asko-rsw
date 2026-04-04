@@ -63,7 +63,7 @@ export function DateRangeModal({
               key={p.key}
               type="button"
               onClick={() => handlePreset(p)}
-              className={`px-3 py-1.5 text-sm rounded-sm border transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 text-sm border transition-colors cursor-pointer ${
                 activePreset === p.key
                   ? 'border-brand-red bg-brand-red/5 text-brand-red font-medium'
                   : 'border-border-light text-text-main hover:border-text-sub'

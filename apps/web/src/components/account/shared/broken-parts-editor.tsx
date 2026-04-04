@@ -122,7 +122,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
           {parts.map((part) => {
             const images = partImages[part.id] ?? [];
             return (
-              <div key={part.id} className="flex flex-col gap-2 p-4 rounded-sm border border-border-light bg-white">
+              <div key={part.id} className="flex flex-col gap-2 p-4 border border-border-light bg-white">
                 {/* Header: name + badge + delete */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -158,7 +158,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
                     const src = getImageSrc(img);
                     if (!src) return null;
                     return (
-                      <div key={img.id ?? idx} className="relative w-14 h-14 rounded-sm overflow-hidden border border-border-light">
+                      <div key={img.id ?? idx} className="relative w-14 h-14 overflow-hidden border border-border-light">
                         <Image src={src} alt="" fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       </div>
                     );
@@ -173,7 +173,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
                   <button
                     type="button"
                     onClick={() => partFileRefs.current[part.id]?.click()}
-                    className="w-14 h-14 rounded-sm border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
+                    className="w-14 h-14 border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
                     title="Добавить фото"
                   >
                     <Plus className="w-5 h-5" />

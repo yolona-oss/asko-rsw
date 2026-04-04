@@ -57,7 +57,7 @@ export function DataSearch({
         placeholder={placeholder}
         className={cn(
           'w-full pl-10 pr-4 py-2.5 text-sm text-text-main bg-white',
-          'border border-border-light rounded-sm outline-none transition-colors',
+          'border border-border-light outline-none transition-colors',
           'placeholder:text-text-sub',
           'focus:border-text-main',
           clearable && localValue && 'pr-9',

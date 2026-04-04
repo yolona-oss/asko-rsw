@@ -125,7 +125,7 @@ export function RepairerSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left border border-border-main rounded-sm bg-white hover:border-text-sub transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left border border-border-main bg-white hover:border-text-sub transition-colors cursor-pointer"
       >
         <span className={selected ? 'text-text-main' : 'text-text-sub'}>
           {selected ? getRepairerName(selected) + (selected.city ? ` (${selected.city})` : '') : placeholder}
@@ -135,7 +135,7 @@ export function RepairerSelector({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-border-main rounded-sm shadow-lg max-h-80 flex flex-col">
+        <div className="absolute z-50 mt-1 w-full bg-white border border-border-main shadow-lg max-h-80 flex flex-col">
           {/* Search */}
           <div className="p-2 border-b border-border-main">
             <input
@@ -145,7 +145,7 @@ export function RepairerSelector({
               onChange={(e) => { setSearch(e.target.value); setFocusIndex(-1); }}
               onKeyDown={handleKeyDown}
               placeholder="Поиск по имени или городу..."
-              className="w-full px-2.5 py-1.5 text-sm border border-border-main rounded-sm outline-none focus:border-text-sub"
+              className="w-full px-2.5 py-1.5 text-sm border border-border-main outline-none focus:border-text-sub"
             />
           </div>
 

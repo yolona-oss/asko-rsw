@@ -158,7 +158,7 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
         }`;
 
     return (
-        <div className="flex flex-wrap gap-1 p-2 border-b border-border-light/30 bg-gray-50 rounded-t">
+        <div className="flex flex-wrap gap-1 p-2 border-b border-border-light/30 bg-gray-50">
             <button type="button" className={btn(isBold)} onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')} title="Жирный">
                 <strong>B</strong>
             </button>

@@ -190,7 +190,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </>
         )}
         {request.status === RepairRequestStatus.PAID && (
-          <div className="mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-sm">
+          <div className="mt-4 px-4 py-3 bg-green-50 border border-green-200">
             <p className="text-sm text-green-700 font-medium">Заявка оплачена</p>
           </div>
         )}
@@ -250,7 +250,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* Review form (COMPLETED status) */}
       {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
-        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light rounded-sm bg-white">
+        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light bg-white">
           <h3 className="text-lg font-medium text-text-main">Оставить отзыв</h3>
           <div className="flex flex-col gap-1">
             <p className="text-sm text-text-sub">Оцените работу мастера</p>
@@ -274,7 +274,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             <button
               type="button"
               onClick={() => reviewFileRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light hover:border-text-sub transition-colors cursor-pointer"
             >
               <Plus className="w-5 h-5" />
               {reviewFiles.length > 0
@@ -294,7 +294,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       )}
 
       {reviewSubmitted && request.status === RepairRequestStatus.COMPLETED && (
-        <div className="max-w-lg mt-6 p-4 bg-green-50 border border-green-200 rounded-sm">
+        <div className="max-w-lg mt-6 p-4 bg-green-50 border border-green-200">
           <p className="text-sm text-green-700 font-medium">Спасибо за ваш отзыв!</p>
         </div>
       )}

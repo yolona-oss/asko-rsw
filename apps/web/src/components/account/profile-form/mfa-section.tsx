@@ -112,7 +112,7 @@ export function MfaSection({ emailVerified }: MfaSectionProps) {
           </div>
 
           {mfaOtpStep && (
-            <div className="flex flex-col gap-3 p-4 border border-border-light rounded-sm">
+            <div className="flex flex-col gap-3 p-4 border border-border-light">
               <p className="text-sm text-text-main">
                 {mfaOtpStep === 'enable' ? 'Введите код для включения MFA' : 'Введите код для отключения MFA'}
               </p>

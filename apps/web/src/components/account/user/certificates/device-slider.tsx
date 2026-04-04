@@ -23,7 +23,7 @@ export function DeviceSlider({
           return (
             <div
               key={ud.id}
-              className="flex-shrink-0 w-[260px] border border-border-light rounded-sm p-4 flex flex-col gap-2"
+              className="flex-shrink-0 w-[260px] border border-border-light p-4 flex flex-col gap-2"
             >
               <p className="text-sm font-medium text-text-main truncate">{name}</p>
               {subtitle && <p className="text-xs text-text-sub truncate">{subtitle}</p>}

@@ -97,7 +97,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             value={value}
             className={cn(
               'w-full px-4 py-2.5 pr-11 text-sm text-text-main bg-white',
-              'border rounded-sm outline-none transition-colors',
+              'border outline-none transition-colors',
               'placeholder:text-[#999]',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               error

@@ -101,7 +101,7 @@ function FilterSelect({ filter, value, onChange }: FilterSelectProps) {
         onChange={(e) => onChange(e.target.value)}
         className={cn(
           'px-3 py-1.5 text-sm text-text-main bg-white',
-          'border border-border-light rounded-sm outline-none',
+          'border border-border-light outline-none',
           'transition-colors focus:border-text-main',
           'appearance-none cursor-pointer min-w-[100px]',
         )}
@@ -136,7 +136,7 @@ function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-sm border transition-colors cursor-pointer',
+              'px-3 py-1.5 text-xs font-medium border transition-colors cursor-pointer',
               isActive
                 ? 'bg-dark-deep text-white border-dark-deep'
                 : 'bg-white text-text-main border-border-light hover:border-text-main',
@@ -249,7 +249,7 @@ export function ActiveFilters({ filters, values, onChange, className }: ActiveFi
         return (
           <span
             key={filter.key}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-xs text-text-main rounded-sm"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-xs text-text-main"
           >
             <span className="text-text-sub">{filter.label}:</span>
             {option.label}

@@ -98,23 +98,23 @@ export function RepairerDashboard() {
       {/* Location card */}
       <Card className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <span className="text-base font-medium text-text-sub">Моя геопозиция</span>
+          <span className="text-[24px] font-medium leading-[28px] text-text-sub">Моя геопозиция</span>
           <button
             type="button"
             onClick={sendLocation}
-            className="text-sm text-brand-red hover:underline cursor-pointer"
+            className="text-[14px] leading-[18px] text-brand-red hover:underline cursor-pointer"
           >
             Обновить
           </button>
         </div>
         {locationError ? (
-          <p className="text-sm text-brand-red">{locationError}</p>
+          <p className="text-[14px] leading-[18px] text-brand-red">{locationError}</p>
         ) : (
           <div className="flex flex-col gap-1">
             {detectedAddress && (
-              <p className="text-sm text-text-main">{detectedAddress}</p>
+              <p className="text-[14px] leading-[18px] text-text-main">{detectedAddress}</p>
             )}
-            <p className="text-sm text-text-sub">
+            <p className="text-[14px] leading-[18px] text-text-sub">
               {lastLocationUpdate
                 ? `Последнее обновление: ${formatTime(lastLocationUpdate)}`
                 : 'Получение геопозиции...'}
@@ -127,16 +127,16 @@ export function RepairerDashboard() {
       {activeRequest ? (
         <Card className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-text-main">Текущая заявка</span>
+            <span className="text-[24px] font-medium leading-[28px] text-text-main">Текущая заявка</span>
             <Badge variant="warning">
               {STATUS_LABEL[activeRequest.status as RepairRequestStatus] ?? activeRequest.status}
             </Badge>
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-text-main">
+            <p className="text-[14px] leading-[18px] font-medium text-text-main">
               {activeRequest.device?.name ?? activeRequest.userDeviceId}
             </p>
-            <p className="text-sm text-text-sub line-clamp-2">{activeRequest.description}</p>
+            <p className="text-[14px] leading-[18px] text-text-sub line-clamp-2">{activeRequest.description}</p>
           </div>
           <Link href="/account/requests">
             <Button variant="primary" className="w-full lg:w-fit">
@@ -145,14 +145,14 @@ export function RepairerDashboard() {
           </Link>
         </Card>
       ) : (
-        <Card className="text-text-sub text-sm">Нет активных заявок</Card>
+        <Card className="text-text-sub text-[14px] leading-[18px]">Нет активных заявок</Card>
       )}
 
       {/* Completed count + history */}
       <Card className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="text-base font-medium text-text-sub">Выполненные заявки</span>
-          <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
+          <span className="text-[24px] font-medium leading-[28px] text-text-sub">Выполненные заявки</span>
+          <span className="text-[82px] font-normal leading-[86px] text-text-main">
             {completedCount ?? '-'}
           </span>
         </div>

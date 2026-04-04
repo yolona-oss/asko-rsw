@@ -27,7 +27,7 @@ export function Tab({ active, onClick, className, children }: TabProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        'px-4 py-2 text-sm font-medium rounded-sm border transition-colors cursor-pointer',
+        'px-4 py-2 text-sm font-medium border transition-colors cursor-pointer',
         active
           ? 'bg-dark-deep text-white border-dark-deep'
           : 'bg-white text-text-main border-border-light hover:border-text-main',

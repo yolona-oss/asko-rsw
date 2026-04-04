@@ -36,7 +36,7 @@ export function DataListView<T>({
   return (
     <div
       className={cn(
-        'flex flex-col border border-border-light rounded-sm overflow-hidden bg-white',
+        'flex flex-col border border-border-light overflow-hidden bg-white',
         className,
       )}
     >

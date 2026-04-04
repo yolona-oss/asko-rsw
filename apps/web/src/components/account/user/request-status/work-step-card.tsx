@@ -9,7 +9,7 @@ export function WorkStepCard({ step }: { step: WorkStep }) {
   const isInProgress = step.status === 'in_progress';
 
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-sm border transition-colors ${isCompleted ? 'border-green-200 bg-green-50/50' : isInProgress ? 'border-green-400 bg-white' : 'border-border-light bg-white'}`}>
+    <div className={`flex items-start gap-3 p-4 border transition-colors ${isCompleted ? 'border-green-200 bg-green-50/50' : isInProgress ? 'border-green-400 bg-white' : 'border-border-light bg-white'}`}>
       <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 ${isCompleted ? 'bg-green-600' : isInProgress ? 'bg-green-600' : 'bg-[#E8E8E8]'}`}>
         {isCompleted ? (
           <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />

@@ -183,7 +183,7 @@ function MenuPanel({
   onSelect: (key: string) => void;
 }) {
   return (
-    <div className="bg-white border border-[#e0e0e0] rounded-md shadow-lg py-1 min-w-[180px] text-sm">
+    <div className="bg-white border border-[#e0e0e0] shadow-lg py-1 min-w-[180px] text-sm">
       {title && (
         <div className="px-3 py-1.5 text-xs font-medium text-[#999] uppercase tracking-wide">
           {title}

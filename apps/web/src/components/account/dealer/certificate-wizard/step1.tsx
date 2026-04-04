@@ -65,7 +65,7 @@ export function Step1({
             <button
               type="button"
               onClick={() => handleSelect(results)}
-              className={`text-left px-4 py-2.5 text-sm rounded-sm border transition-colors ${isSelected
+              className={`text-left px-4 py-2.5 text-sm border transition-colors ${isSelected
                 ? 'border-brand-red bg-brand-red/5 text-text-main'
                 : 'border-border-light hover:border-text-sub text-text-main'
                 }`}

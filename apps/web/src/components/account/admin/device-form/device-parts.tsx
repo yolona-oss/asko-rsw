@@ -149,7 +149,7 @@ export function DeviceParts({ deviceId }: { deviceId: string }) {
           {parts.map((part) => (
             <div key={part.id}>
               {editingId === part.id ? (
-                <div className="border border-gray-200 rounded-sm p-3 flex flex-col gap-3">
+                <div className="border border-gray-200 p-3 flex flex-col gap-3">
                   {partFormFields}
                   <div className="flex items-center gap-2">
                     <Button
@@ -166,7 +166,7 @@ export function DeviceParts({ deviceId }: { deviceId: string }) {
                   </div>
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-sm p-3 flex items-start justify-between gap-3">
+                <div className="border border-gray-200 p-3 flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5 text-sm min-w-0">
                     <span className="font-medium">{part.name}</span>
                     {part.partNumber && (
@@ -195,7 +195,7 @@ export function DeviceParts({ deviceId }: { deviceId: string }) {
       )}
 
       {adding && (
-        <div className="border border-gray-200 rounded-sm p-3 flex flex-col gap-3">
+        <div className="border border-gray-200 p-3 flex flex-col gap-3">
           {partFormFields}
           <div className="flex items-center gap-2">
             <Button

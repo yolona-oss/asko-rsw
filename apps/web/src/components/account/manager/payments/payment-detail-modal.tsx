@@ -98,7 +98,7 @@ export function PaymentDetailModal({
           ) : !target ? (
             <p className="text-sm text-text-sub">ID: {payment.targetId}</p>
           ) : payment.targetType === 'repairRequest' ? (
-            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+            <div className="flex flex-col bg-gray-50 p-4">
               <DetailRow label="ID заявки" value={`#${target.id?.slice(0, 8)}`} />
               <DetailRow label="Статус" value={target.status ?? '-'} />
               {target.description && <DetailRow label="Описание" value={target.description} />}
@@ -123,7 +123,7 @@ export function PaymentDetailModal({
               </div>
             </div>
           ) : payment.targetType === 'certificate' ? (
-            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+            <div className="flex flex-col bg-gray-50 p-4">
               <DetailRow label="Номер сертификата" value={target.certificateNumber ?? '-'} />
               <DetailRow label="Статус" value={target.status ?? '-'} />
               {target.userDevice?.device?.name && <DetailRow label="Устройство" value={target.userDevice.device.name} />}
@@ -133,7 +133,7 @@ export function PaymentDetailModal({
               {target.price != null && <DetailRow label="Стоимость" value={`${formatAmount(target.price)} ₽`} />}
             </div>
           ) : (
-            <div className="flex flex-col bg-gray-50 rounded-sm p-4">
+            <div className="flex flex-col bg-gray-50 p-4">
               <DetailRow label="ID" value={payment.targetId} />
             </div>
           )}

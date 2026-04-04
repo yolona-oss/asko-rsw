@@ -114,13 +114,13 @@ export function PaymentModal({
                 key={provider}
                 type="button"
                 onClick={() => setSelectedProvider(provider)}
-                className={`flex flex-col items-center gap-3 p-4 rounded-sm border-2 transition-colors cursor-pointer ${
+                className={`flex flex-col items-center gap-3 p-4 border-2 transition-colors cursor-pointer ${
                   isSelected
                     ? 'border-brand-red bg-[#FFF5F5]'
                     : 'border-border-light/30 hover:border-text-sub'
                 }`}
               >
-                <div className="w-full aspect-[4/3] bg-[#F5F5F5] rounded-sm flex items-center justify-center">
+                <div className="w-full aspect-[4/3] bg-[#F5F5F5] flex items-center justify-center">
                   <span className="text-xs text-text-sub text-center px-1">
                     {PROVIDER_LABELS[provider] ?? provider}
                   </span>
@@ -142,7 +142,7 @@ export function PaymentModal({
         type="button"
         onClick={handlePay}
         disabled={!selectedProvider || creating}
-        className={`w-full mt-6 py-3 text-sm font-medium rounded-sm cursor-pointer transition-colors ${
+        className={`w-full mt-6 py-3 text-sm font-medium cursor-pointer transition-colors ${
           selectedProvider && !creating
             ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-white')
             : 'bg-gray-200 text-text-sub cursor-not-allowed'

@@ -47,16 +47,16 @@ export function DealerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Мои клиенты */}
         <Card className="flex flex-col gap-2">
-          <span className="text-base font-medium text-text-sub">Мои клиенты</span>
-          <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
+          <span className="text-[24px] font-medium leading-[28px] text-text-sub">Мои клиенты</span>
+          <span className="text-[82px] font-normal leading-[86px] text-text-main">
             {loading ? '-' : clientsCount}
           </span>
         </Card>
 
         {/* Баланс баллов */}
         <Card className="flex flex-col gap-2">
-          <span className="text-base font-medium text-text-sub">Баланс баллов</span>
-          <span className="text-[72px] lg:text-[96px] font-normal leading-none text-text-main">
+          <span className="text-[24px] font-medium leading-[28px] text-text-sub">Баланс баллов</span>
+          <span className="text-[82px] font-normal leading-[86px] text-text-main">
             {loading ? '-' : pointsBalance.toLocaleString('ru-RU')}
           </span>
         </Card>

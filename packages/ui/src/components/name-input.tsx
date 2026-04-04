@@ -138,7 +138,7 @@ export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(
             className={cn(
               'absolute z-50 mt-1 w-full',
               'bg-white border border-border-light',
-              'rounded-sm shadow-md',
+              'shadow-md',
               'max-h-60 overflow-auto',
             )}
           >

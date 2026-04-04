@@ -20,7 +20,7 @@ export function AccountSidebar() {
   const logout = useLogout();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[200px] flex-shrink-0 bg-page-bg border-r border-border-light sticky top-0 h-screen overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-[200px] flex-shrink-0 bg-[#fff] border-r border-border-light sticky top-0 h-screen overflow-y-auto">
       {/* Logo */}
       <div className="px-6 pt-6 pb-8">
         {stage === 'skeleton' ? (

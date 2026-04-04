@@ -123,7 +123,7 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
               onDragEnter={() => handleDragEnter(i)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              className="relative group border border-gray-200 rounded-sm overflow-hidden cursor-grab active:cursor-grabbing"
+              className="relative group border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
                 src={getImageUrl(img, 'thumbnail')!}

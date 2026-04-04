@@ -20,7 +20,7 @@ export function BarChart({ buckets, color }: { buckets: Bucket[]; color: string 
         {buckets.map((b, i) => (
           <div
             key={i}
-            className="flex-1 min-w-0 rounded-t-sm transition-all cursor-pointer"
+            className="flex-1 min-w-0 transition-all cursor-pointer"
             style={{
               height: `${Math.max((b.total / max) * 100, b.total > 0 ? 4 : 0)}%`,
               backgroundColor: color,

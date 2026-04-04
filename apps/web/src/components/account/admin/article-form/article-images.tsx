@@ -140,7 +140,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
               onDragEnter={() => handleDragEnter(i)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              className="relative group border border-gray-200 rounded-sm overflow-hidden cursor-grab active:cursor-grabbing"
+              className="relative group border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
                 src={getImageUrl(img, 'thumbnail')!}
@@ -149,7 +149,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
                 height={150}
                 className="w-full h-auto object-cover aspect-square pointer-events-none"
               />
-              <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/50 text-white rounded-sm text-[10px] font-medium">
+              <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/50 text-white text-[10px] font-medium">
                 {imageLabel(i)}
               </div>
               {onInsertImage && (
@@ -159,7 +159,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
                     const src = getImageUrl(img, 'large')!;
                     onInsertImage(src);
                   }}
-                  className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-white rounded-sm text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   Вставить
                 </button>

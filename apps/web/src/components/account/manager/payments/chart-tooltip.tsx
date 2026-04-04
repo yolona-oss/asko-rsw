@@ -7,7 +7,7 @@ export function ChartTooltip({ bucket, x, visible }: { bucket: Bucket | null; x:
   if (!visible || !bucket) return null;
   return (
     <div
-      className="absolute z-10 pointer-events-none bg-white border border-border-light rounded-sm shadow-md px-3 py-2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap"
+      className="absolute z-10 pointer-events-none bg-white border border-border-light shadow-md px-3 py-2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap"
       style={{ left: `${x}%` }}
     >
       <p className="text-xs font-medium text-text-main">{bucket.label}</p>

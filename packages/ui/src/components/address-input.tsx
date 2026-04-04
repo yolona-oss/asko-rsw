@@ -369,7 +369,7 @@ export function AddressInput({
 
         <div className="flex items-center gap-2">
           {/* Mode toggle */}
-          <div className="flex rounded-sm border border-border-main text-xs overflow-hidden">
+          <div className="flex border border-border-main text-xs overflow-hidden">
             <button
               type="button"
               onClick={() => setInputMode('address')}
@@ -433,7 +433,7 @@ export function AddressInput({
               className={cn(
                 'absolute z-50 mt-1 w-full',
                 'bg-white border border-border-light',
-                'rounded-sm shadow-md',
+                'shadow-md',
                 'max-h-60 overflow-auto',
               )}
             >

@@ -13,10 +13,38 @@ import { PaymentModal } from '@/components/account/user/payment-modal';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
-import type { RepairRequestStatus } from '@asko/shared/client';
+import { RepairRequestStatus } from '@asko/shared/client';
 import { TARGET_LABELS, pluralPayments, formatAmount, formatDate } from './constants';
 import type { RequestSummary } from './types';
 import { StatCard } from './stat-card';
+
+const STATUS_LABELS: Record<string, string> = {
+  [RepairRequestStatus.PENDING]: 'В обработке',
+  [RepairRequestStatus.PAID]: 'Оплачена',
+  [RepairRequestStatus.ASSIGNED]: 'Назначен мастер',
+  [RepairRequestStatus.ACCEPTED]: 'Мастер выехал',
+  [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'Завершается',
+  [RepairRequestStatus.COMPLETED]: 'Завершена',
+  [RepairRequestStatus.CANCELLED]: 'Отменена',
+  [RepairRequestStatus.REFUSED]: 'Отказ мастера',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос возврата',
+  [RepairRequestStatus.REFUNDED]: 'Возврат',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  [RepairRequestStatus.PENDING]: 'bg-yellow-400',
+  [RepairRequestStatus.PAID]: 'bg-yellow-400',
+  [RepairRequestStatus.ASSIGNED]: 'bg-blue-400',
+  [RepairRequestStatus.ACCEPTED]: 'bg-blue-400',
+  [RepairRequestStatus.IN_PROGRESS]: 'bg-blue-500',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'bg-blue-500',
+  [RepairRequestStatus.COMPLETED]: 'bg-green-500',
+  [RepairRequestStatus.CANCELLED]: 'bg-gray-400',
+  [RepairRequestStatus.REFUSED]: 'bg-red-500',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'bg-yellow-400',
+  [RepairRequestStatus.REFUNDED]: 'bg-gray-400',
+};
 
 export function UserDashboard() {
   const { user } = useAccount();
@@ -55,7 +83,14 @@ export function UserDashboard() {
         setRequestsCount(reqData.overallCount ?? 0);
         if (reqData.data?.length > 0) {
           const r = reqData.data[0];
-          setLastRequest({ id: r.id, description: r.description, status: r.status as RepairRequestStatus });
+          const addr = (r as any).address;
+          const addrStr = addr ? [addr.city, addr.street, addr.house].filter(Boolean).join(', ') : '';
+          setLastRequest({
+            id: r.id,
+            status: r.status as RepairRequestStatus,
+            deviceName: (r as any).userDevice?.device?.name ?? 'Устройство',
+            address: addrStr,
+          });
         }
 
         const certs = certRes.data ?? [];
@@ -106,13 +141,13 @@ export function UserDashboard() {
         <StatCard title="Мои заявки:" value={loading ? '-' : requestsCount}>
           {lastRequest && (
             <div className="mt-auto pt-4 flex flex-col gap-1">
-              <p className="text-sm font-bold text-text-main">Последняя заявка:</p>
-              <p className="text-sm text-text-main">
-                {lastRequest.description}
-              </p>
+              <p className="text-[14px] leading-[18px] font-bold text-text-main">{lastRequest.deviceName}</p>
+              {lastRequest.address && (
+                <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
+              )}
               <Link
                 href="/account/requests"
-                className="text-sm text-text-sub underline mt-1 lg:hidden"
+                className="text-[14px] leading-[18px] text-text-sub underline mt-1 lg:hidden"
               >
                 Смотреть все заявки...
               </Link>
@@ -123,7 +158,7 @@ export function UserDashboard() {
         {/* Активные сертификаты */}
         <StatCard title="Активные сертификаты:">
           <div className="flex items-center justify-end">
-            <span className="text-[56px] lg:text-[72px] font-normal leading-none text-text-main">
+            <span className="text-[82px] font-normal leading-[86px] text-text-main">
               {loading ? '-' : certsCount}
             </span>
           </div>
@@ -132,8 +167,8 @@ export function UserDashboard() {
         {/* Счет на оплату */}
         <Card className="flex flex-col gap-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-medium text-text-sub">Счет на оплату:</span>
-            <span className="text-2xl font-bold text-text-main">
+            <span className="text-[24px] font-medium leading-[28px] text-text-sub">Счет на оплату:</span>
+            <span className="text-[24px] font-bold leading-[28px] text-text-main">
               {loading ? '-' : pendingCount === 0 ? '-' : pendingCount === 1
                 ? `${formatAmount(pendingTotal)} ₽`
                 : `${formatAmount(pendingTotal)}₽ x ${pendingCount} ${pluralPayments(pendingCount)}`
@@ -141,8 +176,8 @@ export function UserDashboard() {
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-text-main">Статус:</span>
-            <span className="text-sm text-text-sub">
+            <span className="text-[14px] leading-[18px] font-bold text-text-main">Статус:</span>
+            <span className="text-[14px] leading-[18px] text-text-sub">
               {pendingCount === 0 ? 'Нет активных счетов' : pendingCount === 1 ? 'Ожидает оплаты' : 'Ожидают оплаты'}
             </span>
           </div>
@@ -162,18 +197,22 @@ export function UserDashboard() {
         <div className="hidden lg:block">
           <Card className="flex items-start justify-between">
             <div className="flex flex-col gap-2">
-              <p className="text-lg font-bold text-text-main">Последняя заявка:</p>
-              <p className="text-base text-text-main">
-                {lastRequest.description}
+              <p className="text-[24px] font-bold leading-[28px] text-text-main">Последняя заявка:</p>
+              <p className="text-[14px] leading-[18px] text-text-main">{lastRequest.deviceName}</p>
+              {lastRequest.address && (
+                <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
+              )}
+              <p className="text-[14px] leading-[18px] text-text-sub">
+                {STATUS_LABELS[lastRequest.status] ?? lastRequest.status}
               </p>
               <Link
                 href="/account/requests"
-                className="text-sm text-text-sub underline mt-2"
+                className="text-[14px] leading-[18px] text-text-sub underline mt-2"
               >
                 Смотреть все заявки...
               </Link>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#4ADE80] flex-shrink-0" />
+            <div className={`w-8 h-8 rounded-full flex-shrink-0 ${STATUS_COLOR[lastRequest.status] ?? 'bg-gray-400'}`} />
           </Card>
         </div>
       )}
@@ -209,7 +248,7 @@ export function UserDashboard() {
                 <span className="text-base font-medium text-text-main">
                   {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
                 </span>
-                <span className="text-sm text-text-sub">{formatDate(p.createdAt)}</span>
+                <span className="text-[14px] leading-[18px] text-text-sub">{formatDate(p.createdAt)}</span>
               </div>
               <span className="text-lg font-bold text-text-main flex-shrink-0">
                 {formatAmount(p.amount)} ₽

@@ -251,12 +251,12 @@ export function CreateRequest() {
           const sel = devices.find((d) => d.id === userDeviceId);
           const vs = sel?.address?.validationStatus;
           if (vs === 'pending') return (
-            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-sm text-sm text-yellow-800">
+            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
               Адрес устройства проходит проверку. Отправка заявки будет доступна после подтверждения.
             </div>
           );
           if (vs === 'invalid' || vs === 'error') return (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-sm text-sm text-red-800">
+            <div className="px-4 py-3 bg-red-50 border border-red-200 text-sm text-red-800">
               Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}. Обновите адрес в разделе «Сертификаты».
             </div>
           );
@@ -320,7 +320,7 @@ export function CreateRequest() {
                   .map((sp, idx) => (
                     <span
                       key={`custom-${idx}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-bg-alt border border-border-light rounded-sm"
+                      className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-bg-alt border border-border-light"
                     >
                       {sp.name}
                       <button
@@ -367,7 +367,7 @@ export function CreateRequest() {
                       setCustomPartName('');
                     }
                   }}
-                  className="flex items-center justify-center w-9 h-9 text-lg font-medium border border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
+                  className="flex items-center justify-center w-9 h-9 text-lg font-medium border border-border-light hover:border-text-sub transition-colors cursor-pointer"
                 >
                   +
                 </button>
@@ -410,7 +410,7 @@ export function CreateRequest() {
           {images.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {images.map((img) => (
-                <div key={img.id} className="relative w-24 h-24 rounded-sm overflow-hidden border border-border-light">
+                <div key={img.id} className="relative w-24 h-24 overflow-hidden border border-border-light">
                   <img
                     src={img.preview}
                     alt=""
@@ -431,7 +431,7 @@ export function CreateRequest() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light rounded-sm hover:border-text-sub transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light hover:border-text-sub transition-colors cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             Добавить фото

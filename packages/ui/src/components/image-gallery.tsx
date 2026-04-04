@@ -462,7 +462,7 @@ export function ImageGallery({
         zoomCfg={zoomCfg}
         clickable={fullscreen}
         onClick={() => openModal(active)}
-        className="w-[468px] h-[656px] flex-shrink-0 bg-white rounded-sm"
+        className="w-[468px] h-[656px] flex-shrink-0 bg-white"
       />
     </div>
   );
@@ -476,7 +476,7 @@ export function ImageGallery({
         zoomCfg={zoomCfg}
         clickable={fullscreen}
         onClick={() => openModal(active)}
-        className="w-full aspect-video bg-[#E8E8E8] rounded-sm"
+        className="w-full aspect-video bg-[#E8E8E8]"
       />
       {images.length > 1 && (
         <div className="flex gap-2 flex-wrap">
@@ -486,7 +486,7 @@ export function ImageGallery({
               type="button"
               {...thumbProps(i)}
               className={cn(
-                'relative w-20 h-16 flex-shrink-0 rounded-sm overflow-hidden border-2 transition-colors cursor-pointer',
+                'relative w-20 h-16 flex-shrink-0 overflow-hidden border-2 transition-colors cursor-pointer',
                 i === active ? 'border-brand-red' : 'border-transparent hover:border-text-sub/30',
               )}
             >
