@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
+import { join } from 'path';
 
-import { AppConfigModule } from './app.config';
+import { AppConfig, AppConfigModule } from './app.config';
 
 import { JwtGuard } from './common/guards/jwt.guard';
 import { UserModule } from 'modules/user/user.module';
@@ -32,6 +34,23 @@ import { PaymentModule } from 'modules/payment/payment.module';
         EventEmitterModule.forRoot(),
         MetricsModule.register({ serviceName: 'api' }),
         JwtModule,
+
+        // Legacy static file serving for old URLs in DB (/images/*, /videos/*)
+        ServeStaticModule.forRootAsync({
+            inject: [AppConfig],
+            useFactory: (config: AppConfig) => [
+                {
+                    rootPath: join(process.cwd(), config.staticPath),
+                    serveRoot: '/images',
+                    serveStaticOptions: { cacheControl: true, extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'webp'] },
+                },
+                {
+                    rootPath: join(process.cwd(), config.staticPath, 'videos'),
+                    serveRoot: '/videos',
+                    serveStaticOptions: { cacheControl: true, extensions: ['mp4', 'webm', 'mov'] },
+                },
+            ],
+        }),
 
         TaskScheduleModule,
         WScheduleModule,

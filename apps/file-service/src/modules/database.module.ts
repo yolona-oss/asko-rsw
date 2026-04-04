@@ -19,6 +19,7 @@ import { isProdEnv } from '@asko/shared';
                     host: config.database.host,
                     port: parseInt(config.database.port),
                     entities: [Image, Video, FileAccess],
+                    allowGlobalContext: true,
                     debug: !isProdEnv(),
                 };
             },
@@ -26,4 +27,4 @@ import { isProdEnv } from '@asko/shared';
         }),
     ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }
