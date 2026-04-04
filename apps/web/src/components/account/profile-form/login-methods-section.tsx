@@ -32,12 +32,14 @@ export function LoginMethodsSection({
   phoneChangePending,
   onPhoneChangeConfirmed,
 }: LoginMethodsSectionProps) {
-  // Determine login method availability from actual data, not just providers array
-  const hasEmail = !!email;
-  const emailActive = hasEmail && emailVerified;
-  const hasPhone = !!phone;
-  const phoneActive = hasPhone && phoneVerified;
-  const hasGoogle = providers.includes('GOOGLE');
+  // providers array = source of truth for active login methods
+  const emailEnabled = providers.includes('EMAIL');   // can login with email+password
+  const phoneEnabled = providers.includes('PHONE');   // can login with phone OTP
+  const googleEnabled = providers.includes('GOOGLE');
+
+  // contact exists but not yet an active login method (needs verification to unlock)
+  const emailPending = !!email && !emailEnabled;
+  const phonePending = !!phone && !phoneEnabled;
 
   // Phone verification OTP state
   const [phoneOtpStep, setPhoneOtpStep] = useState<'idle' | 'sent' | 'verifying'>('idle');
@@ -107,19 +109,21 @@ export function LoginMethodsSection({
       <h3 className="text-base font-medium text-text-main">Способы входа</h3>
 
       <div className="flex flex-col gap-1">
-        {/* Email */}
+        {/* Email + Password */}
         <div className="flex items-center justify-between py-2.5">
           <div className="flex items-center gap-3">
-            <MethodIcon active={emailActive} />
+            <MethodIcon active={emailEnabled} />
             <div>
               <p className="text-sm font-medium text-text-main">Email + Пароль</p>
               {email && <p className="text-xs text-text-sub">{email}</p>}
             </div>
           </div>
-          {hasEmail ? (
+          {emailEnabled ? (
+            <span className="text-xs text-green-600">Активен</span>
+          ) : emailPending ? (
             <div className="flex items-center gap-3">
-              <VerificationBadge verified={emailVerified} />
-              {!emailVerified && onResendEmailConfirmation && (
+              <span className="text-xs text-amber-600">Требуется подтверждение</span>
+              {onResendEmailConfirmation && (
                 <button
                   type="button"
                   onClick={onResendEmailConfirmation}
@@ -143,20 +147,22 @@ export function LoginMethodsSection({
         <div className="flex flex-col gap-2 py-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <MethodIcon active={phoneActive} />
+              <MethodIcon active={phoneEnabled} />
               <div>
                 <p className="text-sm font-medium text-text-main">Телефон (СМС-код)</p>
                 {phone && <p className="text-xs text-text-sub">{phone}</p>}
               </div>
             </div>
-            {phone ? (
+            {phoneEnabled ? (
+              <span className="text-xs text-green-600">Активен</span>
+            ) : phonePending ? (
               <div className="flex items-center gap-3">
                 {phoneSuccess ? (
                   <span className="text-xs text-green-600">{phoneSuccess}</span>
                 ) : (
-                  <VerificationBadge verified={phoneVerified} />
+                  <span className="text-xs text-amber-600">Требуется подтверждение</span>
                 )}
-                {!phoneVerified && phoneOtpStep === 'idle' && !phoneSuccess && (
+                {phoneOtpStep === 'idle' && !phoneSuccess && (
                   <button
                     type="button"
                     onClick={handleSendPhoneOtp}
@@ -172,8 +178,8 @@ export function LoginMethodsSection({
             )}
           </div>
 
-          {/* Phone OTP input */}
-          {phoneOtpStep !== 'idle' && !phoneVerified && (
+          {/* Phone OTP input — only show when phone is pending (not yet a provider) */}
+          {phoneOtpStep !== 'idle' && !phoneEnabled && (
             <div className="flex flex-col gap-2 ml-11">
               <div className="flex items-center gap-2">
                 <Input
@@ -225,11 +231,11 @@ export function LoginMethodsSection({
         {/* Google */}
         <div className="flex items-center justify-between py-2.5">
           <div className="flex items-center gap-3">
-            <MethodIcon active={hasGoogle} />
+            <MethodIcon active={googleEnabled} />
             <p className="text-sm font-medium text-text-main">Google</p>
           </div>
-          <span className={`text-xs ${hasGoogle ? 'text-green-600' : 'text-text-sub'}`}>
-            {hasGoogle ? 'Подключён' : 'Не подключён'}
+          <span className={`text-xs ${googleEnabled ? 'text-green-600' : 'text-text-sub'}`}>
+            {googleEnabled ? 'Подключён' : 'Не подключён'}
           </span>
         </div>
       </div>
@@ -252,16 +258,3 @@ function MethodIcon({ active }: { active: boolean }) {
   );
 }
 
-function VerificationBadge({ verified }: { verified: boolean }) {
-  if (verified) {
-    return (
-      <div className="flex items-center gap-1.5">
-        <Check className="w-3.5 h-3.5 text-green-600" strokeWidth={2} />
-        <span className="text-xs text-green-600">Подтверждён</span>
-      </div>
-    );
-  }
-  return (
-    <span className="text-xs text-amber-600">Не подтверждён</span>
-  );
-}
