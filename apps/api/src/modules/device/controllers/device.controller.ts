@@ -6,13 +6,14 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
-import { IsOptional, IsNumber, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsBoolean } from 'class-validator';
 import {
     CreateDeviceDto,
     UpdateDeviceDto,
     CreateDevicePartDto,
     UpdateDevicePartDto,
     RegisterUserDeviceDto,
+    PaginationDto,
     ALL_ROLES,
     ADMIN_ROLES,
     Role,
@@ -20,19 +21,7 @@ import {
     ImageTypeEnum,
 } from '@asko/shared';
 
-class DeviceQueryDto {
-    @IsOptional()
-    @IsNumber()
-    page?: number = 1;
-
-    @IsOptional()
-    @IsNumber()
-    limit?: number = 20;
-
-    @IsOptional()
-    @IsString()
-    search?: string;
-
+class DeviceQueryDto extends PaginationDto {
     @IsOptional()
     @IsString()
     type?: string;
@@ -247,6 +236,8 @@ export class DeviceController {
             search: query.search,
             type: query.type,
             isFeatured: query.isFeatured,
+            sortBy: query.sortBy,
+            sortOrder: query.sortOrder,
         });
         if (result.data) result.data = result.data.map((d: any) => this.parseDeviceJson(d));
         return result;

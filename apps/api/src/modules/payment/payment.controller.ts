@@ -59,10 +59,12 @@ export class PaymentController {
         @Query('status') status?: string,
         @Query('provider') provider?: string,
         @Query('search') search?: string,
+        @Query('sortBy') sortBy?: string,
+        @Query('sortOrder') sortOrder?: string,
     ) {
         const result = await this.paymentService.listPayments(
             { status, provider },
-            { page, limit, search },
+            { page, limit, search, sortBy, sortOrder },
         );
         result.data = result.data ?? [];
         await this.enrichPayments(result.data);
@@ -84,11 +86,13 @@ export class PaymentController {
         @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,
+        @Query('sortBy') sortBy?: string,
+        @Query('sortOrder') sortOrder?: string,
     ) {
         return this.paymentService.listUserPayments(
             user.sub,
             { status },
-            { page, limit },
+            { page, limit, sortBy, sortOrder },
         );
     }
 
