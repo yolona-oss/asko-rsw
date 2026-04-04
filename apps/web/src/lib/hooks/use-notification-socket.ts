@@ -22,34 +22,48 @@ export function useNotificationSocket(
   onCountDelta: (delta: number) => void,
 ) {
   const accessToken = useAppSelector((s) => s.auth.accessToken);
-  const socketRef = useRef<Socket | null>(null);
+
+  // Store callbacks in refs to avoid stale closures
+  const onNotificationRef = useRef(onNotification);
+  const onCountDeltaRef = useRef(onCountDelta);
+  onNotificationRef.current = onNotification;
+  onCountDeltaRef.current = onCountDelta;
 
   useEffect(() => {
     if (!accessToken) return;
 
-    const socket = io(`${SOCKET_ORIGIN}/notifications`, {
+    const socket: Socket = io(`${SOCKET_ORIGIN}/notifications`, {
       path: SOCKET_PATH,
       auth: { token: accessToken },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
     });
 
-    socketRef.current = socket;
+    socket.on('connect', () => {
+      console.debug('[NotificationSocket] Connected, id:', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.debug('[NotificationSocket] Connect error:', err.message);
+    });
+
+    socket.on('auth_error', (data) => {
+      console.debug('[NotificationSocket] Auth error:', data.reason);
+    });
 
     socket.on('notification', (data: NotificationRecord) => {
-      onNotification(data);
+      onNotificationRef.current(data);
     });
 
     socket.on('notification:count', (data: { delta: number }) => {
-      onCountDelta(data.delta);
+      onCountDeltaRef.current(data.delta);
     });
 
     return () => {
       socket.disconnect();
       socket.removeAllListeners();
-      socketRef.current = null;
     };
   }, [accessToken]);
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, X, ChevronRight } from 'lucide-react';
-import { Dropdown } from '@asko/ui';
 import { notificationApi } from '@/lib/api/notification';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
 import { getActiveConversation } from '@/lib/active-conversation';
@@ -17,6 +17,10 @@ export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const desktopPanelRef = useRef<HTMLDivElement>(null);
+  const [desktopPos, setDesktopPos] = useState<{ x: number; y: number } | null>(null);
 
   const { data: countData } = useQuery({
     queryKey: ['notifications-unread-count'],
@@ -24,8 +28,7 @@ export function NotificationBell() {
       const { data } = await notificationApi.unreadCount();
       return data;
     },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
+    refetchInterval: 30_000,
   });
 
   const { data: listData } = useQuery({
@@ -35,8 +38,7 @@ export function NotificationBell() {
       return data;
     },
     enabled: open,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
+    staleTime: 0,
   });
 
   const unreadCount = countData?.count ?? 0;
@@ -75,15 +77,10 @@ export function NotificationBell() {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
   const markRead = useCallback((id: string) => {
-    // Start exit animation
     setRemovingIds((prev) => new Set(prev).add(id));
-
-    // Update count immediately
     queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
       count: Math.max(0, (old?.count ?? 1) - 1),
     }));
-
-    // Remove from list after animation finishes (400ms matches the CSS animation)
     setTimeout(() => {
       queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
         if (!old) return old;
@@ -92,7 +89,6 @@ export function NotificationBell() {
       });
       setRemovingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }, 400);
-
     notificationApi.markAsRead(id);
   }, [queryClient]);
 
@@ -109,6 +105,44 @@ export function NotificationBell() {
     notificationApi.markAllAsRead().finally(() => setMarkingAll(false));
   }, [queryClient]);
 
+  // ── Open / Close ─────────────────────────────────────────────
+  const handleClose = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => { setOpen(false); setClosing(false); }, 200);
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    if (open) handleClose();
+    else setOpen(true);
+  }, [open, handleClose]);
+
+  // ── Desktop panel positioning ────────────────────────────────
+  useEffect(() => {
+    if (!open || !triggerRef.current) { setDesktopPos(null); return; }
+    const rect = triggerRef.current.getBoundingClientRect();
+    setDesktopPos({ x: rect.right - 320, y: rect.bottom + 8 });
+  }, [open]);
+
+  // ── Outside click (desktop panel + trigger) ──────────────────
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (triggerRef.current?.contains(e.target as Node)) return;
+      if (desktopPanelRef.current?.contains(e.target as Node)) return;
+      handleClose();
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open, handleClose]);
+
+  // ── Escape key ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    document.addEventListener('keydown', handle);
+    return () => document.removeEventListener('keydown', handle);
+  }, [open, handleClose]);
+
   // ── Lock body scroll on mobile when open ─────────────────────
   useEffect(() => {
     if (!open) return;
@@ -119,11 +153,12 @@ export function NotificationBell() {
     }
   }, [open]);
 
+  // ── Notification click handler ───────────────────────────────
   function handleNotificationClick(n: NotificationRecord) {
     const config = NOTIFICATION_TYPE_CONFIG[n.type];
     const href = config?.href?.(n);
     markRead(n.id);
-    setOpen(false);
+    handleClose();
     if (href) router.push(href);
   }
 
@@ -132,75 +167,107 @@ export function NotificationBell() {
     return !!config?.href;
   }
 
-  // ── Bell trigger ─────────────────────────────────────────────
-  const trigger = (
-    <button
-      type="button"
-      aria-label="Уведомления"
-      className="relative cursor-pointer group"
-    >
-      <Bell
-        className={`w-6 h-6 text-amber-400 transition-transform duration-200 ${open ? 'scale-110' : 'group-hover:scale-110'}`}
-        strokeWidth={1.5}
-      />
-      {unreadCount > 0 && (
-        <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-brand-red text-white text-[10px] font-medium px-1 leading-none animate-[badge-pop_300ms_ease-out]">
-          {unreadCount > 99 ? '99+' : unreadCount}
-        </span>
-      )}
-    </button>
-  );
+  // ── Animations ───────────────────────────────────────────────
+  const panelAnimation = closing
+    ? 'animate-[notification-out_200ms_ease-in_forwards]'
+    : 'animate-[notification-in_250ms_ease-out]';
 
-  // ── Dropdown content ─────────────────────────────────────────
-  const panelContent = (
-    <div className="w-80 max-h-[420px] bg-white rounded-sm shadow-lg border border-border-light flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
-        <span className="text-sm font-medium text-text-main">Уведомления</span>
-        <div className="flex items-center gap-3">
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); markAllRead(); }}
-              disabled={markingAll}
-              className="text-xs text-brand-red hover:underline cursor-pointer disabled:opacity-50"
-            >
-              Прочитать все
-            </button>
-          )}
+  const overlayAnimation = closing
+    ? 'animate-[fade-out_200ms_ease-in_forwards]'
+    : 'animate-[fade-in_200ms_ease-out]';
+
+  // ── Shared panel header ──────────────────────────────────────
+  const panelHeader = (
+    <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
+      <span className="text-sm font-medium text-text-main">Уведомления</span>
+      <div className="flex items-center gap-3">
+        {unreadCount > 0 && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setOpen(false); }}
-            className="text-text-sub hover:text-text-main cursor-pointer"
-            aria-label="Закрыть"
+            onClick={markAllRead}
+            disabled={markingAll}
+            className="text-xs text-brand-red hover:underline cursor-pointer disabled:opacity-50"
           >
-            <X className="w-4 h-4" />
+            Прочитать все
           </button>
-        </div>
-      </div>
-
-      {/* List */}
-      <div className="flex-1 overflow-y-auto">
-        <NotificationList
-          notifications={notifications}
-          removingIds={removingIds}
-          onNotificationClick={handleNotificationClick}
-          isClickable={isClickable}
-        />
+        )}
+        <button
+          type="button"
+          onClick={handleClose}
+          className="text-text-sub hover:text-text-main cursor-pointer"
+          aria-label="Закрыть"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
 
+  const notificationList = (
+    <NotificationList
+      notifications={notifications}
+      removingIds={removingIds}
+      onNotificationClick={handleNotificationClick}
+      isClickable={isClickable}
+    />
+  );
+
   return (
-    <Dropdown
-      trigger={trigger}
-      open={open}
-      onOpenChange={setOpen}
-      placement="bottom-end"
-      contentClassName="z-[10000]"
-    >
-      {panelContent}
-    </Dropdown>
+    <>
+      {/* Bell trigger */}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={handleToggle}
+        aria-label="Уведомления"
+        className="relative cursor-pointer group"
+      >
+        <Bell
+          className={`w-6 h-6 text-amber-400 transition-transform duration-200 ${open ? 'scale-110' : 'group-hover:scale-110'}`}
+          strokeWidth={1.5}
+        />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-brand-red text-white text-[10px] font-medium px-1 leading-none animate-[badge-pop_300ms_ease-out]">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Mobile: full-screen bottom sheet */}
+      {open && (
+        <div className="lg:hidden">
+          <div
+            className={`fixed inset-0 z-[9999] bg-black/40 ${overlayAnimation}`}
+            onClick={handleClose}
+          />
+          <div className={`fixed inset-x-0 bottom-0 z-[10000] bg-white rounded-t-2xl max-h-[85vh] flex flex-col ${panelAnimation}`}>
+            {/* Drag handle */}
+            <div className="flex justify-center py-3">
+              <div className="w-10 h-1 rounded-full bg-border-light" />
+            </div>
+            {panelHeader}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {notificationList}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop: portal-based floating panel */}
+      {open && createPortal(
+        <div
+          ref={desktopPanelRef}
+          className={`hidden lg:flex fixed z-[10000] flex-col w-80 max-h-[420px] bg-white rounded-sm shadow-lg border border-border-light overflow-hidden ${panelAnimation}`}
+          style={desktopPos ? { left: desktopPos.x, top: desktopPos.y } : { left: -9999, top: -9999 }}
+        >
+          {panelHeader}
+          <div className="flex-1 overflow-y-auto">
+            {notificationList}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 
