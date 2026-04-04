@@ -1,25 +1,26 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Card, ContextMenuArea } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
+import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { Device } from './types';
 
-export function DeviceCard({ device, categoryLabels, onDelete }: {
+export function DeviceCard({ device, categoryLabels, onDelete, onClick, onDoubleClick }: {
   device: Device;
   categoryLabels: Record<string, string>;
   onDelete: (id: string) => void;
+  onClick?: () => void;
+  onDoubleClick?: () => void;
 }) {
-  const router = useRouter();
+  const { handleClick, handleDoubleClick } = useClickHandlers(onClick, onDoubleClick);
 
   const menuItems: DropdownMenuEntry[] = [
-    { key: 'edit', label: 'Изменить', onClick: () => router.push(`/account/devices/${device.id}`) },
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => onDelete(device.id) },
   ];
 
   return (
     <ContextMenuArea items={menuItems}>
-      <Card padding="none" className="p-5 flex flex-col gap-3">
+      <Card padding="none" className={`p-5 flex flex-col gap-3${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium text-text-main">{device.name}</p>
           {device.isFeatured && (

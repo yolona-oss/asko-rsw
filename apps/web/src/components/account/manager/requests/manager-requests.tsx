@@ -178,6 +178,8 @@ export function ManagerRequests() {
                 request={req}
                 convInfo={convInfoMap[req.id]}
                 currentUserId={currentUserId}
+                onClick={() => detail.onRowClick(req)}
+                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
               />
             ))}
           </div>

@@ -217,6 +217,8 @@ export function AdminArticles() {
                   key={article.id}
                   article={article}
                   onDelete={handleDelete}
+                  onClick={() => detail.onRowClick(article)}
+                  onDoubleClick={() => router.push(`/account/articles/${article.id}`)}
                 />
               ))}
             </div>

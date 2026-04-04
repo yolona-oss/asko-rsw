@@ -1,27 +1,30 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Card, ContextMenuArea } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
+import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { IArticle } from '@/lib/api/types';
 
 export function ArticleCard({
   article,
   onDelete,
+  onClick,
+  onDoubleClick,
 }: {
   article: IArticle;
   onDelete: (id: string) => void;
+  onClick?: () => void;
+  onDoubleClick?: () => void;
 }) {
-  const router = useRouter();
+  const { handleClick, handleDoubleClick } = useClickHandlers(onClick, onDoubleClick);
 
   const menuItems: DropdownMenuEntry[] = [
-    { key: 'edit', label: 'Изменить', onClick: () => router.push(`/account/articles/${article.id}`) },
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => onDelete(article.id) },
   ];
 
   return (
     <ContextMenuArea items={menuItems}>
-      <Card padding="none" className="p-5 flex flex-col gap-3">
+      <Card padding="none" className={`p-5 flex flex-col gap-3${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
         <p className="text-sm font-medium text-text-main">{article.title}</p>
         <p className="text-sm text-text-sub">{article.slug}</p>
         {article.tags && article.tags.length > 0 && (

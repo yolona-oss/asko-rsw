@@ -210,6 +210,7 @@ export function ManagerAccess() {
                       ? { key: 'activate', label: 'Активировать', onClick: () => handleActivate(rep.id) }
                       : { key: 'deactivate', label: 'Деактивировать', onClick: () => handleDeactivate(rep.id) },
                   ]}
+                  onClick={() => detail.onRowClick(rep)}
                 />
               ))}
             </div>

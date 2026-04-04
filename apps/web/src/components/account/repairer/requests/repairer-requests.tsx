@@ -183,7 +183,12 @@ export function RepairerRequests() {
         <div className="mb-2">
           <p className="text-sm font-bold text-text-main mb-2">Текущая активная заявка</p>
           {view === 'card' ? (
-            <RequestCard request={activeRequest} highlight />
+            <RequestCard
+              request={activeRequest}
+              highlight
+              onClick={() => detail.onRowClick(activeRequest)}
+              onDoubleClick={() => router.push(`/account/requests/${activeRequest.id}`)}
+            />
           ) : (
             <DataGrid
               columns={columns}
@@ -215,6 +220,8 @@ export function RepairerRequests() {
                   key={req.id}
                   request={req}
                   highlight={showActiveHighlight && activeRequest?.id === req.id}
+                  onClick={() => detail.onRowClick(req)}
+                  onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
                 />
               ))}
             </div>

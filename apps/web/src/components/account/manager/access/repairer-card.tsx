@@ -6,6 +6,7 @@ import {
   ContextMenuArea,
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
+import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { User } from 'lucide-react';
 import type { IRepairer } from '@/lib/api/types';
 import { repairerName } from './constants';
@@ -13,13 +14,17 @@ import { repairerName } from './constants';
 export function RepairerCard({
   repairer,
   menuItems,
+  onClick,
 }: {
   repairer: IRepairer;
   menuItems: DropdownMenuEntry[];
+  onClick?: () => void;
 }) {
+  const { handleClick } = useClickHandlers(onClick);
+
   return (
     <ContextMenuArea items={menuItems}>
-      <Card padding="none" className="p-5 flex flex-col gap-3">
+      <Card padding="none" className={`p-5 flex flex-col gap-3${onClick ? ' cursor-pointer' : ''}`} onClick={handleClick}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#E8E8E8] flex items-center justify-center flex-shrink-0">

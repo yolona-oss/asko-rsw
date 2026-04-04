@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { ContextMenuArea } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
+import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { deviceApi } from '@/lib/api/device';
 import type { ICertificate } from '@/lib/api/types';
 import { getPlaceholderSrc } from '@/lib/placeholders';
@@ -14,11 +15,14 @@ export function CertificateCard({
   cert,
   onPay,
   onExportPdf,
+  onClick,
 }: {
   cert: ICertificate;
   onPay?: (cert: ICertificate) => void;
   onExportPdf?: (cert: ICertificate) => void;
+  onClick?: () => void;
 }) {
+  const { handleClick } = useClickHandlers(onClick);
   const isActive = cert.status === CertificateStatus.ACTIVE;
   const isPendingPayment = cert.status === CertificateStatus.PENDING_PAYMENT;
   const device = cert.userDevice?.device;
@@ -57,7 +61,8 @@ export function CertificateCard({
     <ContextMenuArea items={menuItems}>
       <div
         ref={cardRef}
-        className="relative overflow-hidden border border-border-light bg-white p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]"
+        className={`relative overflow-hidden border border-border-light bg-white p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]${onClick ? ' cursor-pointer' : ''}`}
+        onClick={handleClick}
       >
         {/* Title + description - full width */}
         <div className="flex flex-col gap-2">

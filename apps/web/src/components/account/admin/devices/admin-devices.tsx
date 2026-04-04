@@ -370,7 +370,14 @@ export function AdminDevices() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {devices.map((device) => (
-                <DeviceCard key={device.id} device={device} categoryLabels={categoryLabels} onDelete={handleDelete} />
+                <DeviceCard
+                  key={device.id}
+                  device={device}
+                  categoryLabels={categoryLabels}
+                  onDelete={handleDelete}
+                  onClick={() => detail.onRowClick(device)}
+                  onDoubleClick={() => router.push(`/account/devices/${device.id}`)}
+                />
               ))}
             </div>
           )}

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
+import { CertificateDetail, fetchCertificateOne } from '@/components/account/shared/certificate-detail';
 import {
   Select,
   DataToolbar,
@@ -19,6 +22,7 @@ import { CertificateTable } from './certificate-table';
 import { CertificateCards } from './certificate-cards';
 
 export function DealerCertificates() {
+  const detail = useEntityDetail<Certificate>();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -106,12 +110,20 @@ export function DealerCertificates() {
         ) : view === 'table' ? (
           <CertificateTable certificates={sorted} total={total} />
         ) : (
-          <CertificateCards certificates={sorted} />
+          <CertificateCards certificates={sorted} onCardClick={detail.onRowClick} />
         )
       }
 
       {/* Pagination */}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали сертификата"
+        fetchOne={fetchCertificateOne}
+        renderContent={(item, loading) => <CertificateDetail item={item} loading={loading} />}
+      />
     </PageContainer >
   );
 }

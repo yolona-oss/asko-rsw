@@ -6,6 +6,7 @@ import {
   ContextMenuArea,
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
+import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { IInvitationLink } from '@/lib/api/types';
 import { ROLE_LABELS, formatDate, isExpired } from './constants';
 
@@ -14,12 +15,15 @@ export function InvitationCard({
   link,
   onDelete,
   deleteLoading,
+  onClick,
 }: {
   invitation: IInvitationLink;
   link?: string;
   onDelete: (id: string) => void;
   deleteLoading: string | null;
+  onClick?: () => void;
 }) {
+  const { handleClick } = useClickHandlers(onClick);
   const expired = isExpired(invitation.expiresAt);
   const inactive = invitation.used || expired;
   const resolvedLink = link ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${invitation.token}`;
@@ -42,7 +46,7 @@ export function InvitationCard({
 
   return (
     <ContextMenuArea items={menuItems}>
-      <Card padding="none" className={`p-5 flex flex-col gap-3 ${inactive ? 'opacity-50' : ''}`}>
+      <Card padding="none" className={`p-5 flex flex-col gap-3 ${inactive ? 'opacity-50' : ''}${onClick ? ' cursor-pointer' : ''}`} onClick={handleClick}>
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm font-medium text-text-main">
             {ROLE_LABELS[invitation.role] ?? invitation.role}

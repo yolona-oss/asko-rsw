@@ -316,6 +316,7 @@ export function AdminInvitations() {
                   link={newLinks[inv.id]}
                   onDelete={handleDelete}
                   deleteLoading={deleteLoading}
+                  onClick={() => detail.onRowClick(inv)}
                 />
               ))}
             </div>

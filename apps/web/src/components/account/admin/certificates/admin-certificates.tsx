@@ -188,6 +188,7 @@ export function AdminCertificates() {
                   key={cert.id}
                   cert={cert}
                   onRevoke={handleRevoke}
+                  onClick={() => detail.onRowClick(cert)}
                 />
               ))}
             </div>

@@ -248,7 +248,7 @@ export function UserCertificates() {
               ) : (
                 <>
                   {paginatedCertificates.map((cert) => (
-                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} onExportPdf={exportPdf} />
+                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} onExportPdf={exportPdf} onClick={() => detail.onRowClick(cert)} />
                   ))}
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
                 </>

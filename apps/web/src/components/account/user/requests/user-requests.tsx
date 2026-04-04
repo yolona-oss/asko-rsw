@@ -150,7 +150,12 @@ export function UserRequests() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {requests.map((req) => (
-              <RequestCard key={req.id} request={req} />
+              <RequestCard
+                key={req.id}
+                request={req}
+                onClick={() => detail.onRowClick(req)}
+                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
+              />
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
