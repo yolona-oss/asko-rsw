@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
 import { ScheduleDetail, fetchScheduleOne } from './schedule-detail';
@@ -125,6 +126,21 @@ export function SchedulePage() {
   const columns: DataGridColumn<ScheduleEntry>[] = useMemo(
     () => [
       {
+        key: 'userId',
+        header: 'Пользователь',
+        width: 120,
+        mobileLabel: 'Пользователь:',
+        render: (entry: ScheduleEntry) => (
+          <Link
+            href={`/account/schedule/${entry.userId}`}
+            className="text-sm text-text-main hover:text-brand-red underline"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            {entry.userId.slice(0, 8)}...
+          </Link>
+        ),
+      },
+      {
         key: 'type',
         header: 'Тип',
         width: 160,
@@ -243,11 +259,14 @@ export function SchedulePage() {
       <PageHeader>Расписание</PageHeader>
 
       <DataToolbar
-        actions={
+        actions={<>
+          <Link href="/account/schedule/my">
+            <Button variant="secondary" size="sm">Моё расписание</Button>
+          </Link>
           <Button size="sm" onClick={openCreate}>
             Создать запись
           </Button>
-        }
+        </>}
       />
 
       <DataFilter filters={filters} values={filterValues} onChange={handleFilterChange} />
