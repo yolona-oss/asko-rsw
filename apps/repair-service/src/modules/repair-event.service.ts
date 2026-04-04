@@ -5,6 +5,10 @@ export enum RepairEventType {
     STATUS_CHANGED = 'repair.status_changed',
     ASSIGNED = 'repair.assigned',
     COMPLETED = 'repair.completed',
+    SCHEDULE_CREATED = 'schedule.created',
+    SCHEDULE_UPDATED = 'schedule.updated',
+    SCHEDULE_APPROVED = 'schedule.approved',
+    SCHEDULE_REJECTED = 'schedule.rejected',
 }
 
 export interface RepairEvent {
@@ -14,6 +18,15 @@ export interface RepairEvent {
     oldStatus?: string;
     newStatus?: string;
     repairerId?: string;
+    timestamp: Date;
+}
+
+export interface ScheduleEvent {
+    type: string;
+    scheduleId: string;
+    userId: string;
+    actorId?: string;
+    scheduleType: string;
     timestamp: Date;
 }
 
@@ -33,6 +46,11 @@ export class RepairEventService implements OnModuleInit {
 
     async emit(event: RepairEvent): Promise<void> {
         console.log(`[RepairEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
+    }
+
+    async emitScheduleEvent(event: ScheduleEvent): Promise<void> {
+        console.log(`[ScheduleEvent] ${event.type}`, JSON.stringify(event));
         this.rmqClient.emit(event.type, event);
     }
 }

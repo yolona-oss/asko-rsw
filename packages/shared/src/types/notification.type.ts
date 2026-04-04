@@ -12,6 +12,10 @@ export enum NotificationType {
     CHAT_PARTICIPANT_REMOVED = 'chat_participant_removed',
     MESSAGE = 'message',
     SYSTEM = 'system',
+    SCHEDULE_CREATED = 'schedule_created',
+    SCHEDULE_APPROVED = 'schedule_approved',
+    SCHEDULE_REJECTED = 'schedule_rejected',
+    SCHEDULE_UPDATED = 'schedule_updated',
 }
 
 export enum NotificationTargetType {
@@ -19,5 +23,6 @@ export enum NotificationTargetType {
     PAYMENT = 'payment',
     CERTIFICATE = 'certificate',
     CONVERSATION = 'conversation',
+    SCHEDULE = 'schedule',
     SYSTEM = 'system',
 }

@@ -1,4 +1,4 @@
-import { Home, ShieldCheck, CreditCard, User, ClipboardList, Users, Box, Mail, Settings, Wrench, Clock, BookOpen, MessageCircle } from 'lucide-react';
+import { Home, ShieldCheck, CreditCard, User, ClipboardList, Users, Box, Mail, Settings, Wrench, Clock, BookOpen, MessageCircle, Calendar } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; color?: string }>> = {
   home: Home,
@@ -14,6 +14,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; color?:
   history: Clock,
   manual: BookOpen,
   chat: MessageCircle,
+  schedule: Calendar,
 };
 
 export function MenuIcon({ icon, active = false }: { icon: string; active?: boolean }) {

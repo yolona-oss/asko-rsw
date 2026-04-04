@@ -43,6 +43,17 @@ async function bootstrap() {
         },
     });
 
+    // RabbitMQ transport for schedule commands from other services
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.RMQ,
+        options: {
+            urls: [config.rabbitmq.url],
+            queue: 'schedule_queue',
+            queueOptions: { durable: true },
+            noAck: false,
+        },
+    });
+
     await app.startAllMicroservices();
 
     const metricsService = app.get(MetricsService);

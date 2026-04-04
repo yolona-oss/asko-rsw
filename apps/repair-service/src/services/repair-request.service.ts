@@ -13,6 +13,7 @@ import { RepairEventService, RepairEventType } from 'modules/repair-event.servic
 import { WorkStep } from 'entities/work-step.entity';
 import { BrokenPartService } from './broken-part.service';
 import { SignatureService } from './signature.service';
+import { WScheduleService } from './wschedule.service';
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
 
@@ -30,6 +31,7 @@ export class RepairRequestService {
         private readonly repairEventService: RepairEventService,
         private readonly brokenPartService: BrokenPartService,
         private readonly signatureService: SignatureService,
+        private readonly scheduleService: WScheduleService,
     ) {}
 
     /** User creates a repair request */
@@ -447,6 +449,33 @@ export class RepairRequestService {
             newStatus: RepairRequestStatus.COMPLETED,
             timestamp: new Date(),
         });
+
+        // Auto-record overtime if work extended past schedule
+        if (repairerId) {
+            try {
+                const repairer = await this.em.findOne(Repairer, { id: repairerId });
+                if (repairer) {
+                    const now = new Date();
+                    const dayOfWeek = (now.getDay() + 6) % 7; // JS Sun=0 → Mon=0
+                    const weekly = await this.scheduleService.getWeeklyTemplate(repairer.userId);
+                    const todaySchedule = weekly.find((s) => s.dayOfWeek === dayOfWeek);
+                    if (todaySchedule) {
+                        const nowTime = now.toTimeString().slice(0, 5); // "HH:MM"
+                        if (nowTime > todaySchedule.endTime) {
+                            await this.scheduleService.recordOvertime(
+                                repairer.userId,
+                                now,
+                                todaySchedule.endTime,
+                                nowTime,
+                                request.id,
+                            );
+                        }
+                    }
+                }
+            } catch {
+                // Non-critical: don't fail completion if overtime recording fails
+            }
+        }
 
         return request;
     }

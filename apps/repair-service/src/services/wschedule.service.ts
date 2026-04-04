@@ -1,48 +1,116 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { WSchedule } from 'entities/wschedule.entity';
-import { RRule } from 'rrule';
-
-function combineDateAndTime(date: string, time: string): Date {
-    return new Date(`${date}T${time}:00`);
-}
+import { WSchedule, ScheduleEntryType, ScheduleStatus } from 'entities/wschedule.entity';
+import type { CreateScheduleRequest, UpdateScheduleRequest, FindAllSchedulesRequest } from '@asko/proto';
 
 @Injectable()
 export class WScheduleService {
     constructor(private readonly em: EntityManager) {}
 
     @CreateRequestContext()
-    async create(dto: { date: string; startTime: string; endTime: string; repeatRule?: string }): Promise<WSchedule> {
-        const schedule = this.em.create(WSchedule, {
-            startTime: combineDateAndTime(dto.date, dto.startTime),
-            endTime: combineDateAndTime(dto.date, dto.endTime),
-            repeatRule: dto.repeatRule,
+    async create(data: CreateScheduleRequest): Promise<WSchedule> {
+        const entry = new WSchedule();
+        entry.userId = data.userId;
+        entry.type = data.type as ScheduleEntryType;
+        entry.dayOfWeek = data.dayOfWeek ?? null;
+        entry.date = data.date ? new Date(data.date) : null;
+        entry.startTime = data.startTime;
+        entry.endTime = data.endTime;
+        entry.note = data.note || null;
+        entry.status = ScheduleStatus.PENDING;
+        await this.em.persistAndFlush(entry);
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async findAll(query: FindAllSchedulesRequest): Promise<{ data: WSchedule[]; overallCount: number; page: number; limit: number }> {
+        const page = query.page || 1;
+        const limit = query.limit || 20;
+        const where: any = {};
+        if (query.userId) where.userId = query.userId;
+        if (query.type) where.type = query.type;
+        if (query.status) where.status = query.status;
+        if (query.dateFrom || query.dateTo) {
+            where.date = {};
+            if (query.dateFrom) where.date.$gte = new Date(query.dateFrom);
+            if (query.dateTo) where.date.$lte = new Date(query.dateTo);
+        }
+        const orderBy: any = {};
+        if (query.sortBy) orderBy[query.sortBy] = query.sortOrder === 'desc' ? 'DESC' : 'ASC';
+        else orderBy.createdAt = 'DESC';
+
+        const [data, overallCount] = await this.em.findAndCount(WSchedule, where, {
+            orderBy,
+            limit,
+            offset: (page - 1) * limit,
         });
-        await this.em.persistAndFlush(schedule);
-        return schedule;
+        return { data, overallCount, page, limit };
     }
 
     @CreateRequestContext()
-    async findAll(): Promise<WSchedule[]> {
-        return this.em.find(WSchedule, {});
+    async findOne(id: string): Promise<WSchedule> {
+        return this.em.findOneOrFail(WSchedule, { id });
     }
 
     @CreateRequestContext()
-    async findOne(id: string): Promise<WSchedule | null> {
-        return this.em.findOne(WSchedule, { id });
+    async update(id: string, data: UpdateScheduleRequest): Promise<WSchedule> {
+        const entry = await this.em.findOneOrFail(WSchedule, { id });
+        if (data.type !== undefined) entry.type = data.type as ScheduleEntryType;
+        if (data.dayOfWeek !== undefined) entry.dayOfWeek = data.dayOfWeek;
+        if (data.date !== undefined) entry.date = data.date ? new Date(data.date) : null;
+        if (data.startTime !== undefined) entry.startTime = data.startTime;
+        if (data.endTime !== undefined) entry.endTime = data.endTime;
+        if (data.status !== undefined) entry.status = data.status as ScheduleStatus;
+        if (data.note !== undefined) entry.note = data.note || null;
+        await this.em.flush();
+        return entry;
     }
 
     @CreateRequestContext()
     async delete(id: string): Promise<void> {
-        await this.em.nativeDelete(WSchedule, { id });
+        const entry = await this.em.findOneOrFail(WSchedule, { id });
+        await this.em.removeAndFlush(entry);
     }
 
     @CreateRequestContext()
-    async getNextOccurrences(id: string, count = 5): Promise<Date[]> {
-        const schedule = await this.em.findOne(WSchedule, { id });
-        if (!schedule || !schedule.repeatRule) return [];
+    async approve(id: string, approvedBy: string): Promise<WSchedule> {
+        const entry = await this.em.findOneOrFail(WSchedule, { id });
+        entry.status = ScheduleStatus.APPROVED;
+        entry.approvedBy = approvedBy;
+        await this.em.flush();
+        return entry;
+    }
 
-        const rule = RRule.fromString(schedule.repeatRule);
-        return rule.all().slice(0, count);
+    @CreateRequestContext()
+    async reject(id: string, approvedBy: string): Promise<WSchedule> {
+        const entry = await this.em.findOneOrFail(WSchedule, { id });
+        entry.status = ScheduleStatus.REJECTED;
+        entry.approvedBy = approvedBy;
+        await this.em.flush();
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async getWeeklyTemplate(userId: string): Promise<WSchedule[]> {
+        return this.em.find(WSchedule, {
+            userId,
+            type: ScheduleEntryType.WORK,
+            status: ScheduleStatus.APPROVED,
+        }, { orderBy: { dayOfWeek: 'ASC' } });
+    }
+
+    @CreateRequestContext()
+    async recordOvertime(userId: string, date: Date, startTime: string, endTime: string, requestId: string): Promise<WSchedule> {
+        const entry = new WSchedule();
+        entry.userId = userId;
+        entry.type = ScheduleEntryType.OVERTIME;
+        entry.date = date;
+        entry.startTime = startTime;
+        entry.endTime = endTime;
+        entry.status = ScheduleStatus.APPROVED;
+        entry.autoGenerated = true;
+        entry.note = `Авто: заявка #${requestId.slice(0, 8)}`;
+        await this.em.persistAndFlush(entry);
+        return entry;
     }
 }

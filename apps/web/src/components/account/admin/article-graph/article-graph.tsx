@@ -63,6 +63,7 @@ export function ArticleGraph() {
         };
         updateDimensions();
         window.addEventListener('resize', updateDimensions);
+        setTimeout(updateDimensions, 1000)
         return () => window.removeEventListener('resize', updateDimensions);
     }, []);
 
@@ -191,14 +192,14 @@ export function ArticleGraph() {
                     <button
                         type="button"
                         onClick={() => router.push(`/account/articles/${selectedNode.id}`)}
-                        className="text-brand-red underline text-xs"
+                        className="text-brand-red underline text-xs cursor-pointer"
                     >
                         Редактировать
                     </button>
                     <button
                         type="button"
                         onClick={() => window.open(`/articles/${selectedNode.slug}`, '_blank')}
-                        className="text-text-sub underline text-xs"
+                        className="text-text-sub underline text-xs cursor-pointer"
                     >
                         Открыть
                     </button>

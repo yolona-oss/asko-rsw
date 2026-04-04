@@ -4,9 +4,12 @@ import { grpcCall } from 'common/grpc';
 
 import type {
     ScheduleServiceClient,
+    CreateScheduleRequest,
+    UpdateScheduleRequest,
+    FindAllSchedulesRequest,
     ScheduleResponse,
+    SchedulePaginatedResponse,
     ScheduleListResponse,
-    ScheduleOccurrencesResponse,
     ScheduleEmptyResponse,
 } from '@asko/proto';
 
@@ -22,17 +25,16 @@ export class ScheduleClientService implements OnModuleInit {
         this.scheduleService = this.client.getService<ScheduleServiceClient>('ScheduleService');
     }
 
-    createSchedule(date: string, startTime: string, endTime: string, repeatRule?: string): Promise<ScheduleResponse> {
-        return grpcCall(this.scheduleService.createSchedule({
-            date,
-            startTime,
-            endTime,
-            repeatRule: repeatRule ?? '',
-        }));
+    create(data: CreateScheduleRequest): Promise<ScheduleResponse> {
+        return grpcCall(this.scheduleService.createSchedule(data));
     }
 
-    findAll(): Promise<ScheduleListResponse> {
-        return grpcCall(this.scheduleService.findAllSchedules({}));
+    update(data: UpdateScheduleRequest): Promise<ScheduleResponse> {
+        return grpcCall(this.scheduleService.updateSchedule(data));
+    }
+
+    findAll(data: FindAllSchedulesRequest): Promise<SchedulePaginatedResponse> {
+        return grpcCall(this.scheduleService.findAllSchedules(data));
     }
 
     findById(id: string): Promise<ScheduleResponse> {
@@ -43,7 +45,15 @@ export class ScheduleClientService implements OnModuleInit {
         return grpcCall(this.scheduleService.deleteSchedule({ id }));
     }
 
-    getOccurrences(id: string, count?: number): Promise<ScheduleOccurrencesResponse> {
-        return grpcCall(this.scheduleService.getOccurrences({ id, count: count ?? 5 }));
+    approve(id: string, approvedBy: string): Promise<ScheduleResponse> {
+        return grpcCall(this.scheduleService.approveSchedule({ id, approvedBy }));
+    }
+
+    reject(id: string, approvedBy: string): Promise<ScheduleResponse> {
+        return grpcCall(this.scheduleService.rejectSchedule({ id, approvedBy }));
+    }
+
+    getWeeklyTemplate(userId: string): Promise<ScheduleListResponse> {
+        return grpcCall(this.scheduleService.getWeeklyTemplate({ userId }));
     }
 }

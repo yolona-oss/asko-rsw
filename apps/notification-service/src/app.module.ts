@@ -13,6 +13,7 @@ import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { RepairEventConsumer } from 'consumers/repair-event.consumer';
 import { ChatEventConsumer } from 'consumers/chat-event.consumer';
 import { EmailEventConsumer } from 'consumers/email-event.consumer';
+import { ScheduleEventConsumer } from 'consumers/schedule-event.consumer';
 import { EmailQueueModule } from 'modules/email-queue.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { EmailQueueModule } from 'modules/email-queue.module';
         RepairEventConsumer,
         ChatEventConsumer,
         EmailEventConsumer,
+        ScheduleEventConsumer,
     ],
     providers: [
         NotificationService,

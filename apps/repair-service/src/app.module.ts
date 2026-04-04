@@ -33,6 +33,7 @@ import { RepairGrpcController } from 'controllers/repair.grpc.controller';
 import { DealerGrpcController } from 'controllers/dealer.grpc.controller';
 import { ScheduleGrpcController } from 'controllers/schedule.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
+import { ScheduleCommandConsumer } from 'consumers/schedule-command.consumer';
 import { DeviceService } from 'services/device.service';
 import { AddressService } from 'services/address.service';
 import { ExternalCertValidationService } from 'services/external-cert-validation.service';
@@ -118,6 +119,7 @@ import { WScheduleService } from 'services/wschedule.service';
         ScheduleGrpcController,
         PaymentEventConsumer,
         AddressValidationConsumer,
+        ScheduleCommandConsumer,
     ],
     providers: [
         DeviceService,
