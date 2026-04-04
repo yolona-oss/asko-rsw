@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Button, CropModal } from '@asko/ui';
 import { deviceApi } from '@/lib/api/device';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import type { IImageAttachment } from '@/lib/api/types';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
@@ -56,7 +57,7 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
     setUploading(true);
     try {
       const file = new File([blob], 'image.webp', { type: 'image/jpeg' });
-      await deviceApi.uploadImage(deviceId, file);
+      await fileUploadApi.uploadDeviceImage(file, deviceId);
       await fetchImages();
     } catch {
       setError('Ошибка загрузки изображения');

@@ -1,9 +1,7 @@
 import {
     Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Headers,
-    UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentClientService } from 'modules/content-client/content-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import {
@@ -28,7 +26,6 @@ import {
     DeleteCountResponseDto,
     MessageResponseDto,
     EmptyResponseDto,
-    ImageRecordDto,
     ImageListResponseDto,
 } from 'common/dto/responses';
 
@@ -128,27 +125,6 @@ export class ArticlesController {
     }
 
     // ── Admin: images ──
-
-    @RequiredRoles(...ADMIN_ROLES)
-    @Post(':id/images')
-    @UseInterceptors(FileInterceptor('file'))
-    @ApiCreatedResponse({ type: ImageRecordDto })
-    async uploadImage(
-        @Param('id') id: string,
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            }),
-        )
-        file: Express.Multer.File,
-    ) {
-        // Verify article exists via content-service
-        await this.contentClient.findArticleBySlug(id);
-        return this.fileService.uploadArticleImage(file, id);
-    }
 
     @RequiredRoles(...ADMIN_ROLES)
     @Put(':id/images/reorder')

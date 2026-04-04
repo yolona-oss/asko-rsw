@@ -23,7 +23,7 @@ import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $getNearestNodeOfType } from '@lexical/utils';
 import { $createParagraphNode } from 'lexical';
 import { INSERT_IMAGE_COMMAND } from './image-node';
-import { articleApi } from '@/lib/api/article';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
 type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'ul' | 'ol';
@@ -136,8 +136,8 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
             const id = await ensureArticleId();
             if (!id) return;
 
-            const { data } = await articleApi.uploadImage(id, file);
-            const src = getImageUrl(data, 'large')!;
+            const { data } = await fileUploadApi.uploadArticleImage(file, id);
+            const src = getImageUrl(data.image, 'large')!;
             editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src, altText: '' });
         } catch {
             // silently fail

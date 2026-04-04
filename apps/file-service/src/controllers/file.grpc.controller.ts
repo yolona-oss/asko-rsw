@@ -1,11 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { status } from '@grpc/grpc-js';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
 import { AppError } from 'common/error';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
+import { FileAccess } from 'entities/file-access.entity';
 import { Readable } from 'stream';
 import type {
     UploadFileRequest,
@@ -20,6 +22,8 @@ import type {
     UploadVideoRequest,
     VideoIdRequest,
     AttachVideoRequest,
+    GetFileAccessRequest,
+    FileAccessResponse,
 } from '@asko/proto';
 import type { Image } from 'entities/image.entity';
 import type { Video } from 'entities/video.entity';
@@ -88,6 +92,7 @@ export class FileGrpcController {
         private readonly imageService: ImageService,
         private readonly videoService: VideoService,
         private readonly cleanupService: ImageCleanupService,
+        private readonly em: EntityManager,
     ) {}
 
     // ─── Upload operations ──────────────────────────────────────────────
@@ -96,7 +101,11 @@ export class FileGrpcController {
     async upload(data: UploadFileRequest) {
         try {
             const file = toMulterFile(data.file);
-            const image = await this.imageService.upload(file, data.alt || undefined);
+            const image = await this.imageService.upload(file, data.alt || undefined, {
+                creatorId: data.creatorId || undefined,
+                visibility: data.visibility || undefined,
+                conversationId: data.conversationId || undefined,
+            });
             return { image: entityToRecord(image) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -105,7 +114,11 @@ export class FileGrpcController {
     async streamUpload(data: UploadFileRequest) {
         try {
             const file = toMulterFile(data.file);
-            const image = await this.imageService.streamUpload(file, data.alt || undefined);
+            const image = await this.imageService.streamUpload(file, data.alt || undefined, {
+                creatorId: data.creatorId || undefined,
+                visibility: data.visibility || undefined,
+                conversationId: data.conversationId || undefined,
+            });
             return { image: entityToRecord(image) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -292,7 +305,12 @@ export class FileGrpcController {
     async uploadVideo(data: UploadVideoRequest) {
         try {
             const file = toMulterFile(data.file);
-            const video = await this.videoService.upload(file);
+            const video = await this.videoService.upload(
+                file,
+                data.creatorId || undefined,
+                data.visibility || undefined,
+                data.conversationId || undefined,
+            );
             return { video: videoEntityToRecord(video) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -369,6 +387,36 @@ export class FileGrpcController {
         try {
             await this.videoService.unattachVideo(data.id);
             return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Access control ─────────────────────────────────────────────────
+
+    @GrpcMethod('FileService', 'GetFileAccess')
+    async getFileAccess(data: GetFileAccessRequest): Promise<FileAccessResponse> {
+        try {
+            const access = await this.em.findOne(FileAccess, { fileId: data.id, fileType: data.type });
+
+            let storageUrl = '';
+            let publicId = '';
+            if (data.type === 'video') {
+                const video = await this.videoService.findOne(data.id);
+                storageUrl = video.video?.secure_url ?? video.video?.url ?? '';
+                publicId = video.video?.public_id ?? '';
+            } else {
+                const image = await this.imageService.findOne(data.id);
+                storageUrl = image.image?.original?.secure_url ?? image.image?.original?.url ?? '';
+                publicId = image.image?.original?.public_id ?? '';
+            }
+
+            return {
+                id: data.id,
+                visibility: access?.visibility ?? 'public',
+                creatorId: access?.creatorId ?? '',
+                conversationId: access?.conversationId ?? '',
+                storageUrl,
+                publicId,
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 }

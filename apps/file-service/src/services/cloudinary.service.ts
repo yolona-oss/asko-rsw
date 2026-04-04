@@ -199,6 +199,15 @@ export class CloudinaryService implements StorageProvider {
         });
     }
 
+    generateSignedUrl(publicId: string, resourceType: string = 'image'): string {
+        return cloudinary.url(publicId, {
+            type: 'authenticated',
+            sign_url: true,
+            resource_type: resourceType as 'image' | 'video' | 'raw',
+            secure: true,
+        });
+    }
+
     private extractPublicIdFromUrl(url: string): string {
         const matches = url.match(/\/upload\/(?:v\d+\/)?([^.]+)/);
         return matches ? matches[1] : '';

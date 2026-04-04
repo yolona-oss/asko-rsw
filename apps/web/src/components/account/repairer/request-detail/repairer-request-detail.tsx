@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { getImageUrl } from '@/lib/file-url';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input, ImageGallery } from '@asko/ui';
 import { ArrowLeft } from 'lucide-react';
@@ -68,7 +69,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           repairRequestApi.getSteps(requestId).catch(() => ({ data: { steps: [] } })),
           fileUploadApi.getAttachedImages('repair_request', requestId, true).then(({ data }) => {
             const urls = (data.images ?? [])
-              .map((img) => img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url)
+              .map((img) => getImageUrl(img.id))
               .filter(Boolean);
             setPhotos(urls);
           }).catch(() => {}),

@@ -22,32 +22,108 @@ interface VideoResponse {
   };
 }
 
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
+
+function toForm(file: File | Blob, name = 'file') {
+  const form = new FormData();
+  form.append(name, file);
+  return form;
+}
+
 export const fileUploadApi = {
+  // ── Generic uploads ───────────────────────────────────────────────────
+
   uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<ImageResponse>('/file-upload/image/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return api.post<ImageResponse>('/file-upload/image/upload', toForm(file), MULTIPART);
   },
 
   uploadVideo(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<VideoResponse>('/file-upload/video/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return api.post<VideoResponse>('/file-upload/video/upload', toForm(file), MULTIPART);
   },
 
+  // ── Image uploads by target ───────────────────────────────────────────
+
+  uploadAvatar(file: File | Blob, userId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/avatar/${userId}`, toForm(file), MULTIPART);
+  },
+
+  uploadDeviceImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/device/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadArticleImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/article/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadRepairRequestImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/repair-request/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadReviewImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/review/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadDevicePartImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/device-part/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadBrokenPartImage(file: File, ownerId: string) {
+    return api.post<ImageResponse>(`/file-upload/image/upload/broken-part/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  // ── Video uploads by target ───────────────────────────────────────────
+
+  uploadRepairRequestVideo(file: File, ownerId: string) {
+    return api.post<VideoResponse>(`/file-upload/video/upload/repair-request/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadReviewVideo(file: File, ownerId: string) {
+    return api.post<VideoResponse>(`/file-upload/video/upload/review/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadDeviceVideo(file: File, ownerId: string) {
+    return api.post<VideoResponse>(`/file-upload/video/upload/device/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  uploadArticleVideo(file: File, ownerId: string) {
+    return api.post<VideoResponse>(`/file-upload/video/upload/article/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  // ── Attach / detach / query ───────────────────────────────────────────
+
   attachImage(imageId: string, ownerType: string, ownerId: string) {
-    return api.post<ImageResponse>(`/file-upload/image/attach/${imageId}`, {
-      ownerType,
-      ownerId,
-    });
+    return api.post<ImageResponse>(`/file-upload/image/attach/${imageId}`, { ownerType, ownerId });
+  },
+
+  unattachImage(imageId: string) {
+    return api.put(`/file-upload/image/unattach/${imageId}`);
+  },
+
+  deleteImage(imageId: string) {
+    return api.delete(`/file-upload/image/delete/${imageId}`);
   },
 
   getAttachedImages(ownerType: string, ownerId: string, silent?: boolean) {
     return api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
+      params: { ownerType, ownerId },
+      ...(silent ? { _silent: true } : {}),
+    } as any);
+  },
+
+  attachVideo(videoId: string, ownerType: string, ownerId: string) {
+    return api.post(`/file-upload/video/attach/${videoId}`, { ownerType, ownerId });
+  },
+
+  unattachVideo(videoId: string) {
+    return api.put(`/file-upload/video/unattach/${videoId}`);
+  },
+
+  deleteVideo(videoId: string) {
+    return api.delete(`/file-upload/video/delete/${videoId}`);
+  },
+
+  getAttachedVideos(ownerType: string, ownerId: string, silent?: boolean) {
+    return api.get<{ videos: any[] }>('/file-upload/video/attached', {
       params: { ownerType, ownerId },
       ...(silent ? { _silent: true } : {}),
     } as any);

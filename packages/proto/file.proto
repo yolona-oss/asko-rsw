@@ -44,6 +44,9 @@ service FileService {
     rpc FindAttachedVideos(FindAttachedRequest) returns (VideoListResponse);
     rpc AttachVideo(AttachVideoRequest) returns (VideoResponse);
     rpc UnattachVideo(VideoIdRequest) returns (EmptyResponse);
+
+    // Access control
+    rpc GetFileAccess(GetFileAccessRequest) returns (FileAccessResponse);
 }
 
 // ─── Common ────────────────────────────────────────────────────────────
@@ -59,11 +62,17 @@ message FileData {
 message UploadFileRequest {
     FileData file = 1;
     string alt = 2;
+    string visibility = 3;
+    string creatorId = 4;
+    string conversationId = 5;
 }
 
 message UploadWithOwnerRequest {
     FileData file = 1;
     string ownerId = 2;
+    string visibility = 3;
+    string creatorId = 4;
+    string conversationId = 5;
 }
 
 message CreateFromUrlRequest {
@@ -123,6 +132,9 @@ message ImageRecord {
     string ownerId = 6;
     string createdAt = 8;
     string updatedAt = 9;
+    string visibility = 10;
+    string creatorId = 11;
+    string conversationId = 12;
 }
 
 message ImageResponse {
@@ -141,6 +153,9 @@ message CountResponse {
 
 message UploadVideoRequest {
     FileData file = 1;
+    string visibility = 2;
+    string creatorId = 3;
+    string conversationId = 4;
 }
 
 message VideoIdRequest {
@@ -161,6 +176,9 @@ message VideoRecord {
     string ownerId = 5;
     string createdAt = 6;
     string updatedAt = 7;
+    string visibility = 8;
+    string creatorId = 9;
+    string conversationId = 10;
 }
 
 message VideoResponse {
@@ -169,4 +187,20 @@ message VideoResponse {
 
 message VideoListResponse {
     repeated VideoRecord videos = 1;
+}
+
+// ─── Access control ──────────────────────────────────────────────────
+
+message GetFileAccessRequest {
+    string id = 1;
+    string type = 2;
+}
+
+message FileAccessResponse {
+    string id = 1;
+    string visibility = 2;
+    string creatorId = 3;
+    string conversationId = 4;
+    string storageUrl = 5;
+    string publicId = 6;
 }

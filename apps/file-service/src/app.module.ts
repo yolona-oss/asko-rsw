@@ -7,6 +7,7 @@ import { DatabaseModule } from 'modules/database.module';
 import { ImageResizeQueueModule } from 'modules/image-resize-queue.module';
 import { Image } from 'entities/image.entity';
 import { Video } from 'entities/video.entity';
+import { FileAccess } from 'entities/file-access.entity';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
@@ -21,7 +22,7 @@ import { FileGrpcController } from 'controllers/file.grpc.controller';
         ScheduleModule.forRoot(),
         MetricsModule.register({ serviceName: 'file-service' }),
         DatabaseModule,
-        MikroOrmModule.forFeature([Image, Video]),
+        MikroOrmModule.forFeature([Image, Video, FileAccess]),
         ImageResizeQueueModule,
     ],
     controllers: [FileGrpcController],

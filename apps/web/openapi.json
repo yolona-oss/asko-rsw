@@ -21,14 +21,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WScheduleResponseDto"
+                  "$ref": "#/components/schemas/WScheduleRecordDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Work Schedule"
+          "Schedule"
         ]
       },
       "get": {
@@ -40,9 +40,39 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/PaginatedScheduleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/weekly/{userId}": {
+      "get": {
+        "operationId": "WScheduleController_getWeeklyTemplate",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/WScheduleResponseDto"
+                    "$ref": "#/components/schemas/WScheduleRecordDto"
                   }
                 }
               }
@@ -50,7 +80,7 @@
           }
         },
         "tags": [
-          "Work Schedule"
+          "Schedule"
         ]
       }
     },
@@ -73,20 +103,56 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WScheduleResponseDto"
+                  "$ref": "#/components/schemas/WScheduleRecordDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Work Schedule"
+          "Schedule"
         ]
-      }
-    },
-    "/schedule/{id}/occurrences": {
-      "get": {
-        "operationId": "WScheduleController_getOccurrences",
+      },
+      "put": {
+        "operationId": "WScheduleController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WScheduleRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      },
+      "delete": {
+        "operationId": "WScheduleController_delete",
         "parameters": [
           {
             "name": "id",
@@ -99,11 +165,91 @@
         ],
         "responses": {
           "200": {
-            "description": "Next schedule occurrences"
+            "description": ""
           }
         },
         "tags": [
-          "Work Schedule"
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/{id}/approve": {
+      "post": {
+        "operationId": "WScheduleController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WScheduleRecordDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/{id}/reject": {
+      "post": {
+        "operationId": "WScheduleController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WScheduleRecordDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
         ]
       }
     },
@@ -714,6 +860,52 @@
         },
         "tags": [
           "Video Upload"
+        ]
+      }
+    },
+    "/files/image/{id}": {
+      "get": {
+        "operationId": "FileAccessController_getImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Files"
+        ]
+      }
+    },
+    "/files/video/{id}": {
+      "get": {
+        "operationId": "FileAccessController_getVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Files"
         ]
       }
     },
@@ -6540,6 +6732,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6602,6 +6810,22 @@
           },
           {
             "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
@@ -6702,14 +6926,23 @@
         "type": "object",
         "properties": {}
       },
-      "WScheduleResponseDto": {
+      "WScheduleRecordDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string"
           },
+          "userId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
           "dayOfWeek": {
             "type": "number"
+          },
+          "date": {
+            "type": "string"
           },
           "startTime": {
             "type": "string"
@@ -6717,17 +6950,66 @@
           "endTime": {
             "type": "string"
           },
-          "isActive": {
+          "status": {
+            "type": "string"
+          },
+          "approvedBy": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "autoGenerated": {
             "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "dayOfWeek",
+          "userId",
+          "type",
           "startTime",
           "endTime",
-          "isActive"
+          "status",
+          "autoGenerated",
+          "createdAt",
+          "updatedAt"
         ]
+      },
+      "PaginatedScheduleResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WScheduleRecordDto"
+            }
+          },
+          "overallCount": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "overallCount",
+          "page",
+          "limit"
+        ]
+      },
+      "UpdateWScheduleDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateAddressDto": {
         "type": "object",
@@ -7391,6 +7673,15 @@
           "isEdited": {
             "type": "boolean"
           },
+          "status": {
+            "type": "string"
+          },
+          "deliveredAt": {
+            "type": "string"
+          },
+          "readAt": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -7434,6 +7725,9 @@
           },
           "unreadCount": {
             "type": "number"
+          },
+          "avatarUrl": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string"

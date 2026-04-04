@@ -13,11 +13,17 @@ export interface FileData {
 export interface UploadFileRequest {
     file: FileData;
     alt: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
 }
 
 export interface UploadWithOwnerRequest {
     file: FileData;
     ownerId: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
 }
 
 export interface CreateFromUrlRequest {
@@ -77,6 +83,9 @@ export interface ImageRecord {
     ownerId: string;
     createdAt: string;
     updatedAt: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
 }
 
 export interface ImageResponse {
@@ -95,6 +104,9 @@ export interface CountResponse {
 
 export interface UploadVideoRequest {
     file: FileData;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
 }
 
 export interface VideoIdRequest {
@@ -117,6 +129,9 @@ export interface VideoRecord {
     ownerId: string;
     createdAt: string;
     updatedAt: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
 }
 
 export interface VideoResponse {
@@ -125,6 +140,22 @@ export interface VideoResponse {
 
 export interface VideoListResponse {
     videos: VideoRecord[];
+}
+
+// ─── Access control ──────────────────────────────────────────────────
+
+export interface GetFileAccessRequest {
+    id: string;
+    type: string;
+}
+
+export interface FileAccessResponse {
+    id: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
+    storageUrl: string;
+    publicId: string;
 }
 
 // ─── gRPC Service Interface ────────────────────────────────────────────
@@ -162,4 +193,7 @@ export interface FileServiceClient {
     findAttachedVideos(request: FindAttachedRequest): Observable<VideoListResponse>;
     attachVideo(request: AttachVideoRequest): Observable<VideoResponse>;
     unattachVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
+
+    // Access control
+    getFileAccess(request: GetFileAccessRequest): Observable<FileAccessResponse>;
 }

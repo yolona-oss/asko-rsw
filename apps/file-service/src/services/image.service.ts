@@ -2,8 +2,9 @@ import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
-import { ImageTypeEnum } from "@asko/shared";
+import { ImageTypeEnum, FileVisibility } from "@asko/shared";
 import { Image } from 'entities/image.entity';
+import { FileAccess } from 'entities/file-access.entity';
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
 import { IMAGE_RESIZE_QUEUE } from "modules/image-resize-queue.module";
@@ -18,6 +19,12 @@ const RESIZE_JOB_OPTS = {
     removeOnFail: { count: 5000 },
 };
 
+interface AccessParams {
+    creatorId?: string;
+    visibility?: string;
+    conversationId?: string;
+}
+
 @Injectable()
 export class ImageService {
     constructor(
@@ -30,206 +37,132 @@ export class ImageService {
         await this.resizeQueue.add('resize', { imageId }, RESIZE_JOB_OPTS);
     }
 
+    private async createFileAccess(fileId: string, params: AccessParams): Promise<void> {
+        if (!params.creatorId && !params.visibility && !params.conversationId) return;
+        const access = new FileAccess();
+        access.fileId = fileId;
+        access.fileType = 'image';
+        if (params.visibility) access.visibility = params.visibility as FileVisibility;
+        if (params.creatorId) access.creatorId = params.creatorId;
+        if (params.conversationId) access.conversationId = params.conversationId;
+        this.em.persist(access);
+        await this.em.flush();
+    }
+
+    private async uploadOwned(
+        file: Express.Multer.File,
+        ownerType: ImageTypeEnum,
+        ownerId: string,
+        folder: string,
+        access?: AccessParams,
+    ): Promise<Image> {
+        const original = await this.storage.uploadImage(file, folder);
+        const image = new Image();
+        image.image = { original };
+        image.ownerType = ownerType;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ownerType);
+        await this.em.persistAndFlush(image);
+        await this.enqueueResize(image.id);
+        if (access) await this.createFileAccess(image.id, access);
+        return image;
+    }
+
     @CreateRequestContext()
-    async upload(file: Express.Multer.File, alt?: string) {
+    async findOne(id: string): Promise<Image> {
+        return this.em.findOneOrFail(Image, { id });
+    }
+
+    @CreateRequestContext()
+    async upload(file: Express.Multer.File, alt?: string, access?: AccessParams) {
         const imageObj = await this.storage.uploadImage(file);
         const image = new Image();
         image.image = { original: imageObj };
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
+        if (access) await this.createFileAccess(image.id, access);
         return image;
     }
 
     @CreateRequestContext()
-    async streamUpload(file: Express.Multer.File, alt?: string) {
+    async streamUpload(file: Express.Multer.File, alt?: string, access?: AccessParams) {
         const imageObj = await this.storage.uploadStream(file.stream, file.mimetype);
-        if (!imageObj) {
-            throw AppErrors.externalServiceUnavailable('Unable to upload image');
-        }
+        if (!imageObj) throw AppErrors.externalServiceUnavailable('Unable to upload image');
         const image = new Image();
         image.image = { original: imageObj };
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
+        if (access) await this.createFileAccess(image.id, access);
         return image;
     }
 
     @CreateRequestContext()
     async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number): Promise<Image> {
         const defaultEntry = {
-            public_id: 'external',
-            version: 1,
-            signature: '',
-            width: 0,
-            height: 0,
-            format: '',
-            resource_type: 'image',
-            url,
-            secure_url: url,
-            original_filename: '',
+            public_id: 'external', version: 1, signature: '', width: 0, height: 0,
+            format: '', resource_type: 'image', url, secure_url: url, original_filename: '',
         };
-
         const image = new Image();
         image.image = { original: defaultEntry } as ImageObj;
         if (ownerType) image.ownerType = ownerType;
         if (ownerId) image.ownerId = ownerId;
         image.order = order ?? 0;
-
         await this.em.persistAndFlush(image);
         return image;
     }
 
     @CreateRequestContext()
-    async uploadUserAvatar(file: Express.Multer.File, ownerId: string) {
-        const existing = await this.em.find(Image, {
-            ownerType: ImageTypeEnum.User,
-            ownerId: String(ownerId),
-        });
-        for (const old of existing) {
-            this.em.remove(old);
-        }
-
-        const original = await this.storage.uploadImage(file, 'avatars');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.User;
-        image.ownerId = String(ownerId);
-        image.order = 0;
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadUserAvatar(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        // Remove existing avatars before uploading new one
+        const existing = await this.em.find(Image, { ownerType: ImageTypeEnum.User, ownerId: String(ownerId) });
+        for (const old of existing) this.remove(old.id);
+        return this.uploadOwned(file, ImageTypeEnum.User, ownerId, 'avatars', access);
     }
 
     @CreateRequestContext()
-    async uploadDeviceImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'devices');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.Device;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.Device);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadDeviceImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.Device, ownerId, 'devices', access);
     }
 
     @CreateRequestContext()
-    async uploadArticleImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'articles');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.Article;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.Article);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadArticleImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.Article, ownerId, 'articles', access);
     }
 
     @CreateRequestContext()
-    async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'repairs');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.RepairRequest;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.RepairRequest);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.RepairRequest, ownerId, 'repairs', access);
     }
 
     @CreateRequestContext()
-    async uploadReviewImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'reviews');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.Review;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.Review);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadReviewImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.Review, ownerId, 'reviews', access);
     }
 
     @CreateRequestContext()
-    async uploadDevicePartImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'device-parts');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.DevicePart;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.DevicePart);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadDevicePartImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.DevicePart, ownerId, 'device-parts', access);
     }
 
     @CreateRequestContext()
-    async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string) {
-        const original = await this.storage.uploadImage(file, 'broken-parts');
-        const image = new Image();
-        image.image = { original };
-        image.ownerType = ImageTypeEnum.BrokenPart;
-        image.ownerId = String(ownerId);
-        image.order = await this.countAttached(ownerId, ImageTypeEnum.BrokenPart);
-
-        await this.em.persistAndFlush(image);
-        await this.enqueueResize(image.id);
-        return image;
+    async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
+        return this.uploadOwned(file, ImageTypeEnum.BrokenPart, ownerId, 'broken-parts', access);
     }
 
     @CreateRequestContext()
     async reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]) {
-        const targets = await this.findAttachedImages(ownerType, ownerId);
+        const images = await this.findAttachedImages(ownerType, ownerId);
+        const map = new Map(images.map(img => [img.id, img]));
 
-        schema.sort((a, b) => a.order - b.order);
-
-        if (targets.length < schema.length) {
-            throw AppErrors.badRequest('Input order schema is invalid: not enough source images');
+        for (const { id, order } of schema) {
+            const img = map.get(id);
+            if (!img) throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
+            img.order = order;
         }
 
-        const isUniq = (a: any[]) => a.length === new Set(a).size;
-        const ids = schema.map(i => i.id);
-        const order_nums = schema.map(i => i.order);
-        if (!isUniq(ids) || !isUniq(order_nums)) {
-            throw AppErrors.badRequest('Input order schema is invalid');
-        }
-
-        if (schema[schema.length - 1].order > Math.max(...targets.map(i => i.order))) {
-            throw AppErrors.badRequest('Input order schema is invalid: too big order number');
-        }
-
-        const swapImages = (a: Image, b: Image) => {
-            const tmp = a.order;
-            a.order = b.order;
-            b.order = tmp;
-        };
-
-        const ignore: string[] = [];
-        for (const schemaItem of schema) {
-            if (ignore.includes(schemaItem.id)) continue;
-
-            const image = targets.find(i => i.id === schemaItem.id);
-            if (!image) throw AppErrors.dbEntityNotFound(`Image ${schemaItem.id} not found`);
-
-            const pair = targets.find(i => i.order === schemaItem.order);
-            if (pair) {
-                ignore.push(pair.id);
-                swapImages(pair, image);
-            } else {
-                throw AppErrors.badRequest('Input order schema is invalid: not enough target images');
-            }
-        }
-
-        await this.em.persistAndFlush(targets);
+        await this.em.flush();
     }
 
     @CreateRequestContext()
@@ -250,6 +183,7 @@ export class ImageService {
     async remove(id: string) {
         const image = await this.em.findOne(Image, { id });
         if (!image) throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
+        this.storage.deleteImage(image.id);
         await this.em.removeAndFlush(image);
     }
 
@@ -258,18 +192,12 @@ export class ImageService {
         const image = await this.em.findOne(Image, { id: imageId });
         if (!image) throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
         if (!image.ownerType || !image.ownerId) throw AppErrors.badRequest(`Image ${imageId} not attached`);
-
         const prevOwnerType = image.ownerType;
         const prevOwnerId = image.ownerId;
-
         image.ownerId = undefined;
         image.ownerType = undefined;
-
         const attachedImages = await this.findAttachedImages(prevOwnerType, prevOwnerId);
-        for (let i = 0; i < attachedImages.length; i++) {
-            attachedImages[i].order = i;
-        }
-
+        for (let i = 0; i < attachedImages.length; i++) attachedImages[i].order = i;
         await this.em.flush();
     }
 

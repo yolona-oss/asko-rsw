@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Badge } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
+import { getImageUrl as getFileImageUrl } from '@/lib/file-url';
 
 const STATUS_LABELS: Record<string, string> = {
   added: 'Добавлена', ordered: 'Заказана', shipped: 'Доставляется', replaced: 'Заменена',
@@ -25,6 +26,7 @@ export interface BrokenPartImage {
 }
 
 function getImageSrc(img: BrokenPartImage): string | undefined {
+  if (img.id) return getFileImageUrl(img.id);
   return img.image?.thumbnail?.secure_url ?? img.image?.small?.secure_url ?? img.image?.original?.secure_url ?? img.url;
 }
 

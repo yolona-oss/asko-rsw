@@ -1,9 +1,7 @@
 import {
     Body, Controller, Delete, Get, Param, Patch, Post, Put, Query,
-    UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { IsOptional, IsString, IsBoolean } from 'class-validator';
@@ -44,7 +42,6 @@ import {
     DeleteCountResponseDto,
     MessageResponseDto,
     EmptyResponseDto,
-    ImageRecordDto,
     ImageListResponseDto,
 } from 'common/dto/responses';
 
@@ -109,26 +106,6 @@ export class DeviceController {
     // ── Admin: device images (stays in gateway - uses FileClientService) ──
 
     @RequiredRoles(...ADMIN_ROLES)
-    @Post(':id/images')
-    @UseInterceptors(FileInterceptor('file'))
-    @ApiCreatedResponse({ type: ImageRecordDto })
-    async uploadImage(
-        @Param('id') id: string,
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            })
-        )
-        file: Express.Multer.File,
-    ) {
-        await this.deviceClient.findDeviceById(id); // validate exists
-        return this.fileService.uploadDeviceImage(file, id);
-    }
-
-    @RequiredRoles(...ADMIN_ROLES)
     @Put(':id/images/reorder')
     @ApiOkResponse({ type: ImageListResponseDto })
     async reorderImages(
@@ -179,25 +156,6 @@ export class DeviceController {
     }
 
     // ── Admin/Manager: device part images ──
-
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
-    @Post(':id/parts/:partId/images')
-    @UseInterceptors(FileInterceptor('file'))
-    @ApiCreatedResponse({ type: ImageRecordDto })
-    async uploadPartImage(
-        @Param('partId') partId: string,
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            })
-        )
-        file: Express.Multer.File,
-    ) {
-        return this.fileService.uploadDevicePartImage(file, partId);
-    }
 
     @Public()
     @Get(':id/parts/:partId/images')

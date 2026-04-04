@@ -9,6 +9,7 @@ import { PaymentModal } from '@/components/account/user/payment-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import { RepairRequestStatus } from '@asko/shared/client';
 import {
   POLL_INTERVAL,
@@ -121,7 +122,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       // Upload review images
       for (const file of reviewFiles) {
         try {
-          await reviewApi.uploadImage(review.id, file);
+          await fileUploadApi.uploadReviewImage(file, review.id);
         } catch {
           // continue
         }

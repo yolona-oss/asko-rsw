@@ -12,6 +12,7 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { getImageUrl } from '@/lib/file-url';
 import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
 import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption } from './types';
@@ -89,7 +90,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         try {
           const { data } = await fileUploadApi.getAttachedImages('repair_request', requestId, true);
           const urls = (data.images ?? [])
-            .map((img) => img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url)
+            .map((img) => getImageUrl(img.id))
             .filter(Boolean);
           setPhotos(urls);
         } catch { }

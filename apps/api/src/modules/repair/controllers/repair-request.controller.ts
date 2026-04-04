@@ -1,9 +1,8 @@
 import {
     Body, Controller, Get, Param, Post, Query, UseInterceptors, UploadedFiles,
-    UploadedFile, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { UserClientService } from 'modules/user-client/user-client.service';
@@ -47,7 +46,6 @@ import {
     EmptyResponseDto,
     ProcessInvoiceResponseDto,
     PaymentListResponseDto,
-    ImageRecordDto,
     ImageListResponseDto,
 } from 'common/dto/responses';
 
@@ -466,25 +464,6 @@ export class RepairRequestController {
     }
 
     // ── Broken part images ──
-
-    @ApiCreatedResponse({ type: ImageRecordDto })
-    @RequiredRoles(...ALL_ROLES)
-    @Post(':id/broken-parts/:partId/images')
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadBrokenPartImage(
-        @Param('partId') partId: string,
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            })
-        )
-        file: Express.Multer.File,
-    ) {
-        return this.fileService.uploadBrokenPartImage(file, partId);
-    }
 
     @ApiOkResponse({ type: ImageListResponseDto })
     @RequiredRoles(...ALL_ROLES)

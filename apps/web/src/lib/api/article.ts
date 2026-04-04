@@ -33,14 +33,6 @@ export const articleApi = {
     return api.get<{ images: IImageAttachment[] }>(`/articles/${articleId}/images`);
   },
 
-  uploadImage(articleId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/articles/${articleId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-
   deleteImage(articleId: string, imageId: string) {
     return api.delete<void>(`/articles/${articleId}/images/${imageId}`);
   },

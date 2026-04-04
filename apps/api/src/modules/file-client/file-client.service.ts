@@ -13,6 +13,7 @@ import type {
     VideoRecord,
     VideoResponse,
     VideoListResponse,
+    FileAccessResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -270,5 +271,11 @@ export class FileClientService implements OnModuleInit {
     async findAttachedVideos(ownerType: string, ownerId: string) {
         const res = await grpcCall(this.fileService.findAttachedVideos({ ownerType, ownerId }));
         return this.parseVideoListResponse(res);
+    }
+
+    // ─── Access control ──────────────────────────────────────────────────
+
+    getFileAccess(id: string, type: string): Promise<FileAccessResponse> {
+        return grpcCall(this.fileService.getFileAccess({ id, type }));
     }
 }

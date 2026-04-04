@@ -162,11 +162,10 @@ export function CreateRequest() {
       });
       const request = data.request;
 
-      // 2. Upload and attach images
+      // 2. Upload images directly to repair request
       for (const img of images) {
         try {
-          const { data: uploaded } = await fileUploadApi.uploadImage(img.file);
-          await fileUploadApi.attachImage(uploaded.image.id, 'repair_request', request.id);
+          await fileUploadApi.uploadRepairRequestImage(img.file, request.id);
         } catch {
           // continue even if single image fails
         }

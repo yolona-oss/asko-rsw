@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Button, CropModal } from '@asko/ui';
 import { articleApi } from '@/lib/api/article';
+import { fileUploadApi } from '@/lib/api/file-upload';
 import type { IImageAttachment } from '@/lib/api/types';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
@@ -62,7 +63,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
     setUploading(true);
     try {
       const file = new File([blob], 'image.webp', { type: 'image/jpeg' });
-      await articleApi.uploadImage(articleId, file);
+      await fileUploadApi.uploadArticleImage(file, articleId);
       await fetchImages();
     } catch {
       setError('Ошибка загрузки изображения');

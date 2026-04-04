@@ -157,14 +157,6 @@ export const repairRequestApi = {
     return api.post<void>(`/repair-requests/${requestId}/broken-parts/${partId}/delete`);
   },
 
-  uploadBrokenPartImage(requestId: string, partId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<any>(`/repair-requests/${requestId}/broken-parts/${partId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-
   getBrokenPartImages(requestId: string, partId: string) {
     return api.get<{ images: any[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
   },

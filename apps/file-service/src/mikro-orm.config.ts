@@ -6,6 +6,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import { Image } from 'entities/image.entity';
 import { Video } from 'entities/video.entity';
+import { FileAccess } from 'entities/file-access.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 
@@ -21,7 +22,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [Image, Video],
+    entities: [Image, Video, FileAccess],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

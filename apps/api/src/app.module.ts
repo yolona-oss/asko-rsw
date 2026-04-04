@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
 
-import { AppConfig, AppConfigModule } from './app.config';
+import { AppConfigModule } from './app.config';
 
 import { JwtGuard } from './common/guards/jwt.guard';
 import { UserModule } from 'modules/user/user.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FileUploadModule } from 'modules/file-upload/file-upload.module';
+import { FileAccessModule } from 'modules/file-access/file-access.module';
 import { AddressModule } from 'modules/address/address.module';
 import { WScheduleModule } from 'modules/wschedule/wschedule.module';
 import { TaskScheduleModule } from 'modules/task-schedule/task.module';
@@ -23,7 +23,6 @@ import { ReviewModule } from 'modules/review/review.module';
 import { NotificationModule } from 'modules/notification/notification.module';
 import { ChatModule } from 'modules/chat/chat.module';
 
-import { join } from 'path';
 import { HealthModule } from 'modules/health/health.module';
 import { PaymentModule } from 'modules/payment/payment.module';
 
@@ -38,6 +37,7 @@ import { PaymentModule } from 'modules/payment/payment.module';
         WScheduleModule,
         AddressModule,
         FileUploadModule,
+        FileAccessModule,
         UserModule,
         ArticlesModule,
         DeviceModule,
@@ -51,30 +51,6 @@ import { PaymentModule } from 'modules/payment/payment.module';
 
         HealthModule,
         PaymentModule,
-
-        ServeStaticModule.forRootAsync({
-            inject: [AppConfig],
-            useFactory: (config: AppConfig) => {
-                return [
-                    {
-                        rootPath: join(process.cwd(), config.staticPath),
-                        serveRoot: '/images',
-                        serveStaticOptions: {
-                            cacheControl: true,
-                            extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico']
-                        }
-                    },
-                    {
-                        rootPath: join(process.cwd(), config.staticPath, 'videos'),
-                        serveRoot: '/videos',
-                        serveStaticOptions: {
-                            cacheControl: true,
-                            extensions: ['mp4', 'webm', 'mov']
-                        }
-                    },
-                ]
-            }
-        }),
     ],
     providers: [
         {

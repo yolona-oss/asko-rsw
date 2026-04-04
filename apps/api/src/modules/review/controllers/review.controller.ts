@@ -1,9 +1,7 @@
 import {
     Body, Controller, Get, Param, Post, Query, Delete,
-    UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
@@ -15,7 +13,6 @@ import { Public } from 'common/decorators/public.decorotor';
 import {
     ReviewResponseDto,
     ReviewListResponseDto,
-    ImageRecordDto,
     EmptyResponseDto,
     ImageListResponseDto,
     RatingResponseDto,
@@ -60,27 +57,6 @@ export class ReviewController {
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
         return this.repairerClient.findReviewsByUser(user.sub);
-    }
-
-    @ApiCreatedResponse({ type: ImageRecordDto })
-    @RequiredRoles(...ALL_ROLES)
-    @Post(':id/images')
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadImage(
-        @JwtAuthUser() user: JwtPayload,
-        @Param('id') id: string,
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-                ],
-            })
-        )
-        file: Express.Multer.File,
-    ) {
-        await this.repairerClient.findUserReview(user.sub, id);
-        return this.fileService.uploadReviewImage(file, id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })

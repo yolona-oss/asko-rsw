@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from 'react';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/jpg';
 const VIDEO_ACCEPT = 'video/mp4,video/webm,video/mov,video/quicktime';
@@ -110,9 +111,9 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
             text: trimmed || undefined,
             attachment: {
               imageId: img.id,
-              url: img.imageJson?.medium?.secure_url ?? img.imageJson?.original?.secure_url,
-              thumbnailUrl: img.imageJson?.thumbnail?.secure_url,
-              originalUrl: img.imageJson?.original?.secure_url,
+              url: getImageUrl(img.id),
+              thumbnailUrl: getImageUrl(img.id),
+              originalUrl: getImageUrl(img.id),
               width: img.imageJson?.original?.width,
               height: img.imageJson?.original?.height,
             },
@@ -125,7 +126,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
             text: trimmed || undefined,
             attachment: {
               videoId: vid.id,
-              url: vid.videoJson?.secure_url,
+              url: getVideoUrl(vid.id),
               format: vid.videoJson?.format,
               duration: vid.videoJson?.duration,
               originalFilename: vid.videoJson?.original_filename,

@@ -5,7 +5,9 @@ import Image from 'next/image';
 import { Badge, Button, Input, Select, Textarea, FormField } from '@asko/ui';
 import { X, Plus } from 'lucide-react';
 import type { BadgeVariant } from '@asko/ui';
+import { getImageUrl as getFileImageUrl } from '@/lib/file-url';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { fileUploadApi } from '@/lib/api/file-upload';
 
 const STATUS_LABELS: Record<string, string> = {
   added: 'Добавлена', ordered: 'Заказана', shipped: 'Доставляется', replaced: 'Заменена',
@@ -29,6 +31,7 @@ export interface BrokenPartImage {
 }
 
 function getImageSrc(img: BrokenPartImage): string | undefined {
+  if (img.id) return getFileImageUrl(img.id);
   return img.image?.thumbnail?.secure_url ?? img.image?.small?.secure_url ?? img.image?.original?.secure_url ?? img.url;
 }
 
@@ -104,10 +107,12 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
 
   const handleUploadImage = useCallback(async (partId: string, file: File) => {
     try {
-      const { data } = await repairRequestApi.uploadBrokenPartImage(requestId, partId, file);
-      setPartImages((prev) => ({ ...prev, [partId]: [...(prev[partId] ?? []), data] }));
+      const { data } = await fileUploadApi.uploadBrokenPartImage(file, partId);
+      const img = data.image;
+      const entry: BrokenPartImage = { id: img.id };
+      setPartImages((prev) => ({ ...prev, [partId]: [...(prev[partId] ?? []), entry] }));
     } catch {}
-  }, [requestId]);
+  }, []);
 
   if (loading) return <p className="text-sm text-text-sub">Загрузка запчастей...</p>;
 

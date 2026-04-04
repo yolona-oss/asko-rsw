@@ -4,7 +4,6 @@ import type {
 } from '@asko/shared/client';
 import type {
   IDevice,
-  IImage,
   IImageAttachment,
   PaginatedDevices,
 } from './types';
@@ -61,14 +60,6 @@ export const deviceApi = {
     return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/images`);
   },
 
-  uploadImage(deviceId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<IImage>(`/devices/${deviceId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-
   deleteImage(deviceId: string, imageId: string) {
     return api.delete<void>(`/devices/${deviceId}/images/${imageId}`);
   },
@@ -80,14 +71,6 @@ export const deviceApi = {
   // Part images
   getPartImages(deviceId: string, partId: string) {
     return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/parts/${partId}/images`);
-  },
-
-  uploadPartImage(deviceId: string, partId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<IImage>(`/devices/${deviceId}/parts/${partId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
   },
 
   deletePartImage(deviceId: string, partId: string, imageId: string) {

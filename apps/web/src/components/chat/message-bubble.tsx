@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { LightboxModal } from '@asko/ui';
 import type { ChatMessage } from '@/lib/chat-types';
+import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 import { MessageStatusIcon } from './message-status-icon';
 
 function formatTime(dateStr: string): string {
@@ -55,7 +56,10 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
   }
 
   const isMedia = message.type === 'image' || message.type === 'video';
-  const imageSrc = attachment?.url || attachment?.originalUrl || '';
+  const imageSrc = (attachment?.imageId ? getImageUrl(attachment.imageId) : null)
+    ?? (attachment?.url ?? attachment?.originalUrl ?? '');
+  const videoSrc = (attachment?.videoId ? getVideoUrl(attachment.videoId) : null)
+    ?? (attachment?.url ?? '');
   const allImages = conversationImages ?? [];
   const imageIndex = imageSrc ? allImages.indexOf(imageSrc) : -1;
 
@@ -89,10 +93,10 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
         )}
 
         {/* Video attachment — no horizontal padding */}
-        {isMedia && attachment && message.type === 'video' && attachment.url && (
+        {isMedia && attachment && message.type === 'video' && videoSrc && (
           <div className="max-w-[300px]">
             <video
-              src={attachment.url}
+              src={videoSrc}
               controls
               preload="metadata"
               className="w-full"

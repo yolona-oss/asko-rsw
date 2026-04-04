@@ -1,7 +1,6 @@
 import type { CreateReviewDto } from '@asko/shared/client';
 import type {
   IReview,
-  IImage,
   PaginatedReviews,
 } from './types';
 import { api } from './client';
@@ -23,11 +22,4 @@ export const reviewApi = {
     return api.get<{ average: number; count: number }>(`/reviews/rating/repairer/${repairerId}`);
   },
 
-  uploadImage(reviewId: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post<IImage>(`/reviews/${reviewId}/images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
 };

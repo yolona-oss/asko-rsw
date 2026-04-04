@@ -1,6 +1,8 @@
 import type { UpdateUserDto } from '@asko/shared/client';
-import type { IAuthUser, IImage, IImageAttachment, PaginatedUsers, UserResponse } from './types';
+import type { IAuthUser, IImageAttachment, PaginatedUsers, UserResponse } from './types';
 import { api } from './client';
+import { fileUploadApi } from './file-upload';
+import { getImageUrl } from '@/lib/file-url';
 
 export const usersApi = {
   getProfile() {
@@ -28,11 +30,7 @@ export const usersApi = {
   },
 
   uploadAvatar(file: Blob, userId: string) {
-    const form = new FormData();
-    form.append('file', file, 'avatar.webp');
-    return api.post<IImage>(`/file-upload/image/upload/avatar/${userId}`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return fileUploadApi.uploadAvatar(file as File, userId);
   },
 
   requestEmailChange(newEmail: string) {
@@ -51,9 +49,7 @@ export const usersApi = {
       } as any);
       const images = data.images ?? [];
       if (images.length === 0) return null;
-      return images[0].imageJson?.thumbnail?.secure_url
-        ?? images[0].imageJson?.original?.secure_url
-        ?? null;
+      return getImageUrl(images[0].id);
     } catch {
       return null;
     }

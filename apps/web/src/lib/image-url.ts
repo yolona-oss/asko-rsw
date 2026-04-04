@@ -1,32 +1,24 @@
 import type { IImageAttachment } from '@/lib/api/types';
+import { getImageUrl as getFileImageUrl } from '@/lib/file-url';
 
 type ImageSize = 'thumbnail' | 'medium' | 'large' | 'original';
 
 /**
- * Extract a secure_url from an image attachment by preferred size,
- * falling back through larger/smaller sizes to original.
+ * Returns the access-controlled URL for an image attachment.
+ * Uses the authenticated file endpoint when an image ID is available,
+ * falling back to extracting secure_url from imageJson for legacy data.
  */
 export function getImageUrl(
     image: IImageAttachment | null | undefined,
-    size: ImageSize = 'medium',
+    _size: ImageSize = 'medium',
 ): string | null {
     if (!image) return null;
+
+    // Prefer access-controlled URL via image entity ID
+    if (image.id) return getFileImageUrl(image.id);
+
+    // Fallback for legacy data without ID
     const json = image.imageJson;
     if (!json?.original) return null;
-
-    if (size === 'original') return json.original.secure_url;
-
-    const fallbackChains: Record<ImageSize, ImageSize[]> = {
-        thumbnail: ['thumbnail', 'medium', 'original'],
-        medium: ['medium', 'large', 'original'],
-        large: ['large', 'medium', 'original'],
-        original: ['original'],
-    };
-
-    for (const s of fallbackChains[size]) {
-        const entry = json[s];
-        if (entry?.secure_url) return entry.secure_url;
-    }
-
     return json.original.secure_url;
 }
