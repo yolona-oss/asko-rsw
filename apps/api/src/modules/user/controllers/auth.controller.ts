@@ -24,9 +24,11 @@ import {
     extractToken,
     getHostUrl,
     Role,
+    JwtPayload,
 } from '@asko/shared';
 import { RequiredRoles } from 'common/decorators/role.decorator';
 import { Public } from 'common/decorators/public.decorotor';
+import { JwtAuthUser } from 'common/decorators/user.decorator';
 import { AppErrors } from 'common/error';
 import { CookieOptions } from 'express';
 import {
@@ -295,8 +297,7 @@ export class AuthController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable')
-    async enableMfa(@Req() request: Request) {
-        const user = (request as any).user;
+    async enableMfa(@JwtAuthUser() user: JwtPayload) {
         const result = await this.userClient.enableMfa({ userId: user.id });
         return { message: result.message, retryAfter: result.retryAfter };
     }
@@ -304,8 +305,7 @@ export class AuthController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable/verify')
-    async verifyEnableMfa(@Req() request: Request, @Body() dto: VerifyEnableMfaDto) {
-        const user = (request as any).user;
+    async verifyEnableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: VerifyEnableMfaDto) {
         const result = await this.userClient.verifyEnableMfa({ userId: user.id, code: dto.code });
         return { message: result.message };
     }
@@ -313,8 +313,7 @@ export class AuthController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable')
-    async initiateDisableMfa(@Req() request: Request) {
-        const user = (request as any).user;
+    async initiateDisableMfa(@JwtAuthUser() user: JwtPayload) {
         const result = await this.userClient.initiateDisableMfa({ userId: user.id });
         return { message: result.message, retryAfter: result.retryAfter };
     }
@@ -322,8 +321,7 @@ export class AuthController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable/verify')
-    async confirmDisableMfa(@Req() request: Request, @Body() dto: DisableMfaDto) {
-        const user = (request as any).user;
+    async confirmDisableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: DisableMfaDto) {
         const result = await this.userClient.confirmDisableMfa({ userId: user.id, code: dto.code });
         return { message: result.message };
     }
@@ -331,8 +329,7 @@ export class AuthController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Get('/mfa/status')
-    async getMfaStatus(@Req() request: Request) {
-        const user = (request as any).user;
+    async getMfaStatus(@JwtAuthUser() user: JwtPayload) {
         return await this.userClient.getMfaStatus({ userId: user.id });
     }
 
@@ -386,39 +383,35 @@ export class AuthController {
 
     @RequiredRoles(...ALL_ROLES)
     @Post('/phone/send-verification')
-    async sendPhoneVerification(@Req() request: Request) {
-        const userId = (request as any).user?.id ?? (request as any).userId;
-        return await this.userClient.sendPhoneVerification({ userId });
+    async sendPhoneVerification(@JwtAuthUser() user: JwtPayload) {
+        return await this.userClient.sendPhoneVerification({ userId: user.id });
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post('/phone/confirm-verification')
     async confirmPhoneVerification(
-        @Req() request: Request,
+        @JwtAuthUser() user: JwtPayload,
         @Body() dto: { code: string },
     ) {
-        const userId = (request as any).user?.id ?? (request as any).userId;
-        return await this.userClient.confirmPhoneVerification({ userId, code: dto.code });
+        return await this.userClient.confirmPhoneVerification({ userId: user.id, code: dto.code });
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post('/phone/request-change')
     async requestPhoneChange(
-        @Req() request: Request,
+        @JwtAuthUser() user: JwtPayload,
         @Body() dto: { newPhone: string },
     ) {
-        const userId = (request as any).user?.id ?? (request as any).userId;
-        return await this.userClient.requestPhoneChange({ userId, newPhone: dto.newPhone });
+        return await this.userClient.requestPhoneChange({ userId: user.id, newPhone: dto.newPhone });
     }
 
     @RequiredRoles(...ALL_ROLES)
     @Post('/phone/confirm-change')
     async confirmPhoneChange(
-        @Req() request: Request,
+        @JwtAuthUser() user: JwtPayload,
         @Body() dto: { code: string },
     ) {
-        const userId = (request as any).user?.id ?? (request as any).userId;
-        return await this.userClient.confirmPhoneChange({ userId, code: dto.code });
+        return await this.userClient.confirmPhoneChange({ userId: user.id, code: dto.code });
     }
 
     @ApiOkResponse({ type: AuthUserDto })

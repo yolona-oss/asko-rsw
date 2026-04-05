@@ -4,6 +4,7 @@ import { Article } from 'entities/article.entity';
 import { ArticleView } from 'entities/article-view.entity';
 import { ArticleTag } from 'entities/article-tag.entity';
 import { AppErrors } from 'common/error';
+import { slugify } from '@asko/shared';
 import { GraphService } from './graph.service';
 
 const ARTICLE_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'title', 'viewCount'] as const;
@@ -18,16 +19,6 @@ const BOT_PATTERNS = [
 function isBot(userAgent: string): boolean {
     if (!userAgent) return false;
     return BOT_PATTERNS.some((p) => p.test(userAgent));
-}
-
-function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim()
-        .slice(0, 200);
 }
 
 function extractPlainText(editorState: Record<string, any>): string {

@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Delete, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { NotificationClientService } from 'modules/notification-client/notification-client.service';
 import { NotificationService } from '../services/common-notification.service';
+import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { JwtPayload } from '@asko/shared';
 import {
     PaginatedNotificationsResponseDto,
     UnreadCountResponseDto,
@@ -19,14 +21,13 @@ export class NotificationController {
     @ApiOkResponse({ type: PaginatedNotificationsResponseDto })
     @Get()
     async list(
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('unreadOnly') unreadOnly?: string,
     ) {
-        const userId = req.user?.id;
         return this.notificationClient.listUserNotifications(
-            userId,
+            user.id,
             page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 20,
             unreadOnly === 'true',
@@ -35,29 +36,25 @@ export class NotificationController {
 
     @ApiOkResponse({ type: UnreadCountResponseDto })
     @Get('unread-count')
-    async unreadCount(@Req() req: any) {
-        const userId = req.user?.id;
-        return this.notificationClient.getUnreadCount(userId);
+    async unreadCount(@JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.getUnreadCount(user.id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Post(':id/read')
-    async markAsRead(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id;
-        return this.notificationClient.markAsRead(id, userId);
+    async markAsRead(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.markAsRead(id, user.id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Post('read-all')
-    async markAllAsRead(@Req() req: any) {
-        const userId = req.user?.id;
-        return this.notificationClient.markAllAsRead(userId);
+    async markAllAsRead(@JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.markAllAsRead(user.id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete(':id')
-    async delete(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id;
-        return this.notificationClient.deleteNotification(id, userId);
+    async delete(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.deleteNotification(id, user.id);
     }
 }

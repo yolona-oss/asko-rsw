@@ -2,20 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
+import { slugify } from '@asko/shared';
 import { SignatureService } from './signature.service';
-
-/** Simple slugify helper: lowercase, replace non-alphanum with dashes, trim dashes */
-function slugify(text: string): string {
-    return text
-        .toString()
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-}
 
 const DEVICE_SORTABLE_FIELDS = ['createdAt', 'name', 'brand', 'model', 'isFeatured'] as const;
 

@@ -6,6 +6,7 @@ export * from './utils/toURL'
 export * from './utils/nodeEnv'
 export * from './utils/to-auth-user'
 export * from './utils/extract-token'
+export * from './utils/slugify'
 
 // Types and constants
 export * from './types'

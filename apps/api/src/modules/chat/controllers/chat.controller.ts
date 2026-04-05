@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { ChatGateway } from '../gateways/chat.gateway';
 import { ChatPrivacyService } from '../services/chat-privacy.service';
+import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { JwtPayload } from '@asko/shared';
 import {
     ConversationResponseDto,
     PaginatedConversationsResponseDto,
@@ -31,26 +33,23 @@ export class ChatController {
     @ApiCreatedResponse({ type: ConversationResponseDto })
     @Post('conversations')
     async createConversation(
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Body() body: { type: string; name?: string; participantIds: string[]; avatarUrl?: string },
     ) {
-        const userId = req.user?.id;
-        const userRoles: string[] = req.user?.roles ?? [];
-
         // Privacy check: verify each participant accepts conversations
         for (const participantId of body.participantIds) {
-            const allowed = await this.chatPrivacy.canCreateConversation(userRoles, participantId);
+            const allowed = await this.chatPrivacy.canCreateConversation(user.roles, participantId);
             if (!allowed) {
                 throw new ForbiddenException('Пользователь не принимает новые чаты');
             }
         }
 
         const result = await this.chatClient.createConversation(
-            userId, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
+            user.id, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
         );
 
         // Emit to other participants via WebSocket
-        const recipientIds = body.participantIds.filter(id => id !== userId);
+        const recipientIds = body.participantIds.filter(id => id !== user.id);
         if (recipientIds.length > 0 && result.conversation) {
             this.chatGateway.emitConversationCreated(recipientIds, result.conversation);
         }
@@ -61,13 +60,12 @@ export class ChatController {
     @ApiOkResponse({ type: PaginatedConversationsResponseDto })
     @Get('conversations')
     async listConversations(
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
     ) {
-        const userId = req.user?.id;
         return this.chatClient.listUserConversations(
-            userId,
+            user.id,
             page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 20,
         );
@@ -75,16 +73,14 @@ export class ChatController {
 
     @ApiOkResponse({ type: ConversationResponseDto })
     @Get('conversations/:id')
-    async getConversation(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id;
-        return this.chatClient.getConversation(id, userId);
+    async getConversation(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
+        return this.chatClient.getConversation(id, user.id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('conversations/:id')
-    async deleteConversation(@Param('id') id: string, @Req() req: any) {
-        const userId = req.user?.id;
-        return this.chatClient.deleteConversation(id, userId);
+    async deleteConversation(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
+        return this.chatClient.deleteConversation(id, user.id);
     }
 
     // ─── Participants ─────────────────────────────────────────────────
@@ -100,21 +96,19 @@ export class ChatController {
     async addParticipant(
         @Param('id') id: string,
         @Body() body: { userId: string },
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
     ) {
-        const addedBy = req.user?.id;
-        return this.chatClient.addParticipant(id, body.userId, addedBy);
+        return this.chatClient.addParticipant(id, body.userId, user.id);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('conversations/:id/participants/:userId')
     async removeParticipant(
         @Param('id') id: string,
-        @Param('userId') userId: string,
-        @Req() req: any,
+        @Param('userId') targetUserId: string,
+        @JwtAuthUser() user: JwtPayload,
     ) {
-        const removedBy = req.user?.id;
-        return this.chatClient.removeParticipant(id, userId, removedBy);
+        return this.chatClient.removeParticipant(id, targetUserId, user.id);
     }
 
     // ─── Messages ─────────────────────────────────────────────────────
@@ -123,12 +117,11 @@ export class ChatController {
     @Post('conversations/:id/messages')
     async sendMessage(
         @Param('id') conversationId: string,
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Body() body: { type: string; text?: string; attachment?: Record<string, any> },
     ) {
-        const userId = req.user?.id;
         const result = await this.chatClient.sendMessage(
-            conversationId, userId, body.type, body.text ?? '', body.attachment,
+            conversationId, user.id, body.type, body.text ?? '', body.attachment,
         );
 
         // Emit via WebSocket
@@ -141,14 +134,13 @@ export class ChatController {
     @Get('conversations/:id/messages')
     async listMessages(
         @Param('id') conversationId: string,
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('beforeId') beforeId?: string,
     ) {
-        const userId = req.user?.id;
         return this.chatClient.listMessages(
-            conversationId, userId,
+            conversationId, user.id,
             page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 50,
             beforeId,
@@ -160,10 +152,9 @@ export class ChatController {
     async updateMessage(
         @Param('id') messageId: string,
         @Body() body: { text: string },
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
     ) {
-        const userId = req.user?.id;
-        const result = await this.chatClient.updateMessage(messageId, userId, body.text);
+        const result = await this.chatClient.updateMessage(messageId, user.id, body.text);
 
         // Emit via WebSocket
         if (result.message) {
@@ -175,18 +166,16 @@ export class ChatController {
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('messages/:id')
-    async deleteMessage(@Param('id') messageId: string, @Req() req: any) {
-        const userId = req.user?.id;
+    async deleteMessage(@Param('id') messageId: string, @JwtAuthUser() user: JwtPayload) {
         // We need the message's conversation ID before deleting
-        const result = await this.chatClient.deleteMessage(messageId, userId);
+        const result = await this.chatClient.deleteMessage(messageId, user.id);
         return result;
     }
 
     @ApiOkResponse({ type: ChatUnreadCountResponseDto })
     @Get('unread-count')
-    async getUnreadCount(@Req() req: any) {
-        const userId = req.user?.id;
-        return this.chatClient.getUnreadCount(userId);
+    async getUnreadCount(@JwtAuthUser() user: JwtPayload) {
+        return this.chatClient.getUnreadCount(user.id);
     }
 
     // ─── Presence ─────────────────────────────────────────────────────
@@ -208,16 +197,14 @@ export class ChatController {
     @ApiOkResponse()
     @Get('search-users')
     async searchUsers(
-        @Req() req: any,
+        @JwtAuthUser() user: JwtPayload,
         @Query('q') query: string,
         @Query('limit') limit?: string,
     ) {
-        const userId = req.user?.id;
-        const userRoles: string[] = req.user?.roles ?? [];
         const result = await this.userClient.searchUsersForChat({
             query: query || '',
-            requesterId: userId,
-            requesterRoles: userRoles,
+            requesterId: user.id,
+            requesterRoles: user.roles,
             limit: limit ? parseInt(limit) : 20,
         });
         return { users: result.users ?? [] };
