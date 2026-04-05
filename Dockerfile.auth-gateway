@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+
+FROM node:20-alpine AS base
+RUN corepack enable
+WORKDIR /app
+
+# ---------- prune ----------
+FROM base AS prune
+COPY . .
+RUN pnpm dlx turbo prune auth-gateway --docker
+
+# ---------- deps ----------
+FROM base AS deps
+COPY --from=prune /app/out/full/ .
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY .npmrc .npmrc
+COPY tsconfig.json tsconfig.json
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm config set store-dir /root/.local/share/pnpm/store && \
+    pnpm install --frozen-lockfile
+
+# ---------- builder ----------
+FROM base AS builder
+COPY --from=deps /app ./
+RUN pnpm turbo run build --filter=auth-gateway...
+
+# ---------- runner ----------
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/auth-gateway/dist ./apps/auth-gateway/dist
+COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
+COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
+COPY --from=builder /app/packages/proto ./packages/proto
+
+COPY apps/auth-gateway/.env.prod ./apps/auth-gateway/.env.prod
+
+WORKDIR /app/apps/auth-gateway
+
+CMD ["node", "dist/main.js"]

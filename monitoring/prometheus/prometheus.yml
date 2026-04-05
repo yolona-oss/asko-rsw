@@ -11,6 +11,11 @@ scrape_configs:
       - targets: ["localhost:4000"]
     metrics_path: /metrics
 
+  - job_name: "auth-gateway"
+    static_configs:
+      - targets: ["localhost:9120"]
+    metrics_path: /metrics
+
   - job_name: "user-service"
     static_configs:
       - targets: ["localhost:9100"]

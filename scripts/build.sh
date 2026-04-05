@@ -50,6 +50,7 @@ pnpm --filter repair-service run build
 pnpm --filter notification-service run build
 pnpm --filter chat-service run build
 pnpm --filter api run build
+pnpm --filter auth-gateway run build
 
 echo ""
 echo "=== Build complete ==="

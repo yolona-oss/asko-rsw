@@ -125,6 +125,26 @@ services:
       METRICS_PORT: 9100
       RABBITMQ_URL: "amqp://asko:asko_rmq_pass@localhost:5672"
 
+  auth-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth-gateway
+    container_name: asko-auth-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - user-service
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      METRICS_PORT: 9120
+      USER_SERVICE_URL: "localhost:5000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
