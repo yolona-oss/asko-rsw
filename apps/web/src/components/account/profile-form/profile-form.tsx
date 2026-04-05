@@ -294,6 +294,12 @@ export function ProfileForm() {
               originalPhoneVerified.current = data.phoneVerified ?? false;
             });
           }}
+          onUnlinkOAuth={async (provider) => {
+            try {
+              await authApi.unlinkOAuth(provider);
+              setProviders((prev) => prev.filter((p) => p !== provider.toUpperCase()));
+            } catch { /* handled by interceptor */ }
+          }}
         />
 
         {/* Chat privacy */}

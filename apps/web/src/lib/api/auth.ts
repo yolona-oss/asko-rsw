@@ -105,4 +105,13 @@ export const authApi = {
   confirmPhoneChange(code: string) {
     return api.post<{ message: string }>('/auth/phone/confirm-change', { code });
   },
+
+  // OAuth
+  getOAuthLinks() {
+    return api.get<{ links: { id: string; provider: string; providerId: string; email?: string; avatarUrl?: string; createdAt: string }[] }>('/auth/oauth/links');
+  },
+
+  unlinkOAuth(provider: string) {
+    return api.delete(`/auth/oauth/${provider}`);
+  },
 };
