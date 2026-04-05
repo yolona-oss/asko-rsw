@@ -39,6 +39,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@asko/gateway-common':
+        specifier: workspace:*
+        version: link:../../packages/gateway-common
       '@asko/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -232,6 +235,9 @@ importers:
 
   apps/auth-gateway:
     dependencies:
+      '@asko/gateway-common':
+        specifier: workspace:*
+        version: link:../../packages/gateway-common
       '@asko/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -1240,6 +1246,37 @@ importers:
       typescript:
         specifier: ^5.8
         version: 5.9.3
+
+  packages/gateway-common:
+    dependencies:
+      '@asko/proto':
+        specifier: workspace:*
+        version: link:../proto
+      '@asko/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@nestjs/common':
+        specifier: ^11.0.0
+        version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.0.0
+        version: 11.1.17(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.17)(@nestjs/platform-express@11.1.17)(@nestjs/websockets@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/jwt':
+        specifier: ^11.0.0
+        version: 11.0.2(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/microservices':
+        specifier: ^11.0.0
+        version: 11.1.17(@grpc/grpc-js@1.14.3)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)(@nestjs/websockets@11.1.17)(amqp-connection-manager@4.1.15(amqplib@0.10.9))(amqplib@0.10.9)(ioredis@5.10.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.2
+    devDependencies:
+      '@types/node':
+        specifier: ^24.1.0
+        version: 24.12.0
 
   packages/observability:
     dependencies:

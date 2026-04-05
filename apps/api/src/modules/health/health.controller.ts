@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
-import { Public } from 'common/decorators/public.decorotor';
+import { Public } from '@asko/gateway-common';
 
 @ApiTags('Health')
 @Controller('health')

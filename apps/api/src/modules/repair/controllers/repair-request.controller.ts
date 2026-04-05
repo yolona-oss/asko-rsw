@@ -5,7 +5,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { NotificationService } from 'modules/notification/services/common-notification.service';
@@ -31,8 +31,7 @@ import {
     JwtPayload,
 } from '@asko/shared';
 import { IsOptional, IsString } from 'class-validator';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 
 import {
     RepairRequestResponseDto,

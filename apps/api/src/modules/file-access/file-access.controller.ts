@@ -4,8 +4,7 @@ import { Response } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { OptionalAuth } from 'common/decorators/optional-auth.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { OptionalAuth, JwtAuthUser } from '@asko/gateway-common';
 import { JwtPayload, Role } from '@asko/shared';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';

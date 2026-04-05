@@ -1,21 +1,12 @@
-import { AppError } from './app-error';
-import { AppErrorTypeEnum } from './error-type.enum';
+import { AppErrors as BaseAppErrors, createAppError } from '@asko/shared';
+import { RepairErrorTypeEnum } from './error-type.enum';
 
-function createAppError(type: AppErrorTypeEnum, message?: string): AppError {
-    return new AppError(type, message ? { message } : undefined);
-}
+export { createAppError } from '@asko/shared';
 
 export const AppErrors = {
-    badRequest: (msg?: string) => createAppError(AppErrorTypeEnum.BAD_REQUEST, msg),
-    notFound: (msg?: string) => createAppError(AppErrorTypeEnum.NOT_FOUND, msg),
-    conflict: (msg?: string) => createAppError(AppErrorTypeEnum.CONFLICT, msg),
-    internalError: (msg?: string) => createAppError(AppErrorTypeEnum.INTERNAL_ERROR, msg),
+    ...BaseAppErrors,
 
-    dbEntityNotFound: (msg?: string) => createAppError(AppErrorTypeEnum.DB_ENTITY_NOT_FOUND, msg),
-    dbEntityExists: (msg?: string) => createAppError(AppErrorTypeEnum.DB_ENTITY_EXISTS, msg),
-
-    invalidData: (msg?: string) => createAppError(AppErrorTypeEnum.INVALID_DATA, msg),
-
-    repairNotFound: (msg?: string) => createAppError(AppErrorTypeEnum.REPAIR_NOT_FOUND, msg),
-    repairInvalidStatus: (msg?: string) => createAppError(AppErrorTypeEnum.REPAIR_INVALID_STATUS, msg),
+    // --- Repair ---
+    repairNotFound: (msg?: string) => createAppError(RepairErrorTypeEnum.REPAIR_NOT_FOUND, msg),
+    repairInvalidStatus: (msg?: string) => createAppError(RepairErrorTypeEnum.REPAIR_INVALID_STATUS, msg),
 };

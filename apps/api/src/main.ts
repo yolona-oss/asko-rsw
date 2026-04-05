@@ -6,10 +6,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
 
-import { GlobalExceptionFilter } from './common/filters/global.filter';
-
-import { corsOptions } from './config/cors.config';
-import { helmetOptions } from './config/helmet.config';
+import { GlobalExceptionFilter, corsOptions, helmetOptions } from '@asko/gateway-common';
 import { ValidationPipe, } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { urlencoded } from 'express';

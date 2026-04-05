@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { ChatGateway } from '../gateways/chat.gateway';
 import { ChatPrivacyService } from '../services/chat-privacy.service';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { JwtAuthUser } from '@asko/gateway-common';
 import { JwtPayload } from '@asko/shared';
 import {
     ConversationResponseDto,

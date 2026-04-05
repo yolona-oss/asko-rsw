@@ -2,8 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto, ADMIN_ROLES } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { Public } from 'common/decorators/public.decorotor';
+import { RequiredRoles, Public } from '@asko/gateway-common';
 import {
     DeviceCategoryRecordDto,
     DeviceCategoryListResponseDto,

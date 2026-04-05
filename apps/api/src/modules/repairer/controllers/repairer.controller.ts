@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import {
     CreateRepairerDto,
     UpdateRepairerDto,
@@ -12,8 +12,7 @@ import {
     Role,
     JwtPayload,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import {
     RepairerResponseDto,
     PaginatedRepairersResponseDto,

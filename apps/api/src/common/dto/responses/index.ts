@@ -1,5 +1,11 @@
-export * from './base.response.dto';
-export * from './auth.response.dto';
+// Shared DTOs from gateway-common
+export {
+    MessageResponseDto, DeleteCountResponseDto, EmptyResponseDto,
+    AuthUserDto, AuthSessionResponseDto, AccessTokenResponseDto, ConfirmEmailResponseDto,
+    InviteLinkResponseDto, InviteCreatedResponseDto,
+} from '@asko/gateway-common';
+
+// Domain-specific DTOs
 export * from './user.response.dto';
 export * from './device.response.dto';
 export * from './certificate.response.dto';
@@ -12,6 +18,5 @@ export * from './file.response.dto';
 export * from './video.response.dto';
 export * from './notification.response.dto';
 export * from './article.response.dto';
-export * from './invite.response.dto';
 export * from './wschedule.response.dto';
 export * from './chat.response.dto';

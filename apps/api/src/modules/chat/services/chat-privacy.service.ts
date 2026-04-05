@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import Redis from 'ioredis';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 
 const CACHE_TTL = 3600; // 1 hour
 const CACHE_PREFIX = 'chat:prefs:';

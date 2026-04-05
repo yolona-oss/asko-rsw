@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AuthUserDto } from './auth.response.dto';
+import { AuthUserDto } from '@asko/gateway-common';
 import { UserDeviceRecordDto, AddressRecordDto } from './device.response.dto';
 import { CertificateRecordDto } from './certificate.response.dto';
 import { RepairerRecordDto } from './repairer.response.dto';

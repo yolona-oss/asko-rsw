@@ -3,7 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
 import {
@@ -21,8 +21,7 @@ import {
     computeExpiresAt,
 } from '@asko/shared';
 
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 
 class FindDealerCertificatesDto extends PaginationDto {
     @IsOptional()
@@ -39,7 +38,7 @@ import {
     VerifySignatureResponseDto,
     PublicKeyResponseDto,
 } from 'common/dto/responses';
-import { Public } from 'common/decorators/public.decorotor';
+import { Public } from '@asko/gateway-common';
 
 @ApiTags('Certificates')
 @Controller('certificates')

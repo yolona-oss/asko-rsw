@@ -1,27 +1,7 @@
-export const enum AppErrorTypeEnum {
-    // --- Generic / HTTP Errors ---
-    BAD_REQUEST = 400,
-    UNAUTHORIZED = 401,
-    FORBIDDEN = 403,
-    NOT_FOUND = 404,
-    CONFLICT = 409,
-    INTERNAL_ERROR = 500,
+export { AppErrorTypeEnum } from '@asko/shared';
 
-    // --- Database Errors ---
-    DB_CANNOT_READ = 600,
-    DB_CANNOT_CREATE,
-    DB_CANNOT_UPDATE,
-    DB_CANNOT_DELETE,
-    DB_ENTITY_EXISTS,
-    DB_ENTITY_NOT_FOUND,
-    DB_DUPLICATE_KEY,
-    DB_INCORRECT_MODEL,
-
-    // --- Validation ---
-    INVALID_DATA = 700,
-    VALIDATION_ERROR,
-
-    // --- Chat ---
+// Domain-specific chat error codes (range 1200+)
+export enum ChatErrorTypeEnum {
     CONVERSATION_NOT_FOUND = 1200,
     MESSAGE_NOT_FOUND,
     PARTICIPANT_NOT_FOUND,

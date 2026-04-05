@@ -28,9 +28,7 @@ class DeviceQueryDto extends PaginationDto {
     @IsBoolean()
     isFeatured?: boolean;
 }
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
-import { Public } from 'common/decorators/public.decorotor';
+import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
 import {
     DeviceRecordDto,
     PaginatedDevicesResponseDto,

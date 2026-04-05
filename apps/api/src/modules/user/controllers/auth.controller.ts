@@ -2,7 +2,7 @@ import { Res, Body, Controller, Post, NotImplementedException, Req, Get, Query }
 import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express'
 
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import {
@@ -26,9 +26,7 @@ import {
     Role,
     JwtPayload,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { Public } from 'common/decorators/public.decorotor';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, Public, JwtAuthUser } from '@asko/gateway-common';
 import { AppErrors } from 'common/error';
 import { CookieOptions } from 'express';
 import {

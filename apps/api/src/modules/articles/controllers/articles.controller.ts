@@ -12,10 +12,7 @@ import {
     ADMIN_ROLES,
     ImageTypeEnum,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { Public } from 'common/decorators/public.decorotor';
-import { OptionalAuth } from 'common/decorators/optional-auth.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, Public, OptionalAuth, JwtAuthUser } from '@asko/gateway-common';
 import { JwtPayload } from '@asko/shared';
 import {
     ArticleResponseDto,

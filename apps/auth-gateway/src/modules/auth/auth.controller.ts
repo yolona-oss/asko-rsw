@@ -2,7 +2,18 @@ import { Res, Body, Controller, Post, NotImplementedException, Req, Get, Query }
 import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express'
 
-import { UserClientService } from 'modules/user-client/user-client.service';
+import {
+    UserClientService,
+    RequiredRoles,
+    Public,
+    JwtAuthUser,
+    AuthSessionResponseDto,
+    ConfirmEmailResponseDto,
+    MessageResponseDto,
+    AccessTokenResponseDto,
+    EmptyResponseDto,
+    AuthUserDto,
+} from '@asko/gateway-common';
 import {
     ALL_ROLES,
     REFRESH_TOKEN,
@@ -23,19 +34,8 @@ import {
     getHostUrl,
     JwtPayload,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { Public } from 'common/decorators/public.decorotor';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
 import { AppErrors } from 'common/error';
 import { CookieOptions } from 'express';
-import {
-    AuthSessionResponseDto,
-    ConfirmEmailResponseDto,
-    MessageResponseDto,
-    AccessTokenResponseDto,
-    EmptyResponseDto,
-    AuthUserDto,
-} from 'common/dto/responses';
 
 @ApiTags('Auth')
 @Controller('auth')

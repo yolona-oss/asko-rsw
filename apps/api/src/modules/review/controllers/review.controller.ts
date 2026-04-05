@@ -7,9 +7,7 @@ import { RepairerClientService } from 'modules/repair-client/repairer-client.ser
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
-import { Public } from 'common/decorators/public.decorotor';
+import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
 import {
     ReviewResponseDto,
     ReviewListResponseDto,

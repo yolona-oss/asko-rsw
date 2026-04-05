@@ -19,3 +19,6 @@ export * from './dto'
 // External integrations
 export { SmsRu } from './external/sms_ru'
 export type { SmsSendOptions, SmsRuResponse } from './external/sms_ru'
+
+// Error system
+export * from './error'

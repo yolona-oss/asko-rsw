@@ -1,26 +1,13 @@
-export const enum AppErrorTypeEnum {
-    BAD_REQUEST = 400,
-    UNAUTHORIZED = 401,
-    FORBIDDEN = 403,
-    NOT_FOUND = 404,
-    CONFLICT = 409,
-    INTERNAL_ERROR = 500,
+export { AppErrorTypeEnum } from '@asko/shared';
 
-    DB_CANNOT_READ = 600,
-    DB_CANNOT_CREATE,
-    DB_CANNOT_UPDATE,
-    DB_CANNOT_DELETE,
-    DB_ENTITY_EXISTS,
-    DB_ENTITY_NOT_FOUND,
-    DB_DUPLICATE_KEY,
-    DB_INCORRECT_MODEL,
-
-    INVALID_DATA = 700,
-    VALIDATION_ERROR,
-    INVALID_OBJECT_ID,
+// Domain-specific user/auth error codes
+export enum UserErrorTypeEnum {
+    // --- Validation (range 702+, after shared VALIDATION_ERROR=701) ---
+    INVALID_OBJECT_ID = 702,
     INVALID_RANGE,
     INVALID_ORDER_STATUS,
 
+    // --- Auth / User (range 800+) ---
     USER_NOT_FOUND = 800,
     USER_ALREADY_EXISTS,
     INVALID_CREDENTIALS,

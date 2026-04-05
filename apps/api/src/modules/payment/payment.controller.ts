@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
     ALL_ROLES,
@@ -9,8 +9,7 @@ import {
     Role,
     JwtPayload,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import {
     PaymentOptionsResponseDto,
     ProcessInvoiceResponseDto,

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Delete, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { NotificationClientService } from 'modules/notification-client/notification-client.service';
 import { NotificationService } from '../services/common-notification.service';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { JwtAuthUser } from '@asko/gateway-common';
 import { JwtPayload } from '@asko/shared';
 import {
     PaginatedNotificationsResponseDto,

@@ -15,14 +15,12 @@ import { Request, Response } from 'express';
 import { ALL_ROLES, REFRESH_TOKEN } from '@asko/shared';
 import type { JwtPayload } from '@asko/shared';
 
-import { Public } from 'common/decorators/public.decorotor';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { Public, RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import { AppErrors } from 'common/error';
 import { MessageResponseDto } from 'common/dto/responses';
 
 import { AppConfig } from 'app.config';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { buildOAuthProviders, OAuthProviderConfig } from './oauth-providers';
 import { OAuthLinksResponseDto } from './oauth-response.dto';
 

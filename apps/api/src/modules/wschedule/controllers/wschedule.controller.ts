@@ -2,8 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CreateWScheduleDto, UpdateWScheduleDto, QueryScheduleDto, STAFF_ROLES, JwtPayload } from '@asko/shared';
 import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import { WScheduleRecordDto, PaginatedScheduleResponseDto } from 'common/dto/responses/wschedule.response.dto';
 
 @ApiTags('Schedule')

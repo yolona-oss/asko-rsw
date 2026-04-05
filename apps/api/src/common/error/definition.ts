@@ -1,57 +1,41 @@
-import { HttpStatus } from '@nestjs/common';
-import { AppErrorTypeEnum } from './error-type.enum';
-import { IErrorMessage } from './ierror-message.interface';
+import type { IErrorMessage } from '@asko/shared';
+import { AppError } from '@asko/shared';
+import { GatewayErrorTypeEnum } from './error-type.enum';
 
-export const ErrorsDefinition: Record<AppErrorTypeEnum, IErrorMessage> = {
-    [AppErrorTypeEnum.BAD_REQUEST]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Bad request' },
-    [AppErrorTypeEnum.UNAUTHORIZED]: { httpStatus: HttpStatus.UNAUTHORIZED, message: 'Unauthorized' },
-    [AppErrorTypeEnum.FORBIDDEN]: { httpStatus: HttpStatus.FORBIDDEN, message: 'Access forbidden' },
-    [AppErrorTypeEnum.NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Resource not found' },
-    [AppErrorTypeEnum.CONFLICT]: { httpStatus: HttpStatus.CONFLICT, message: 'Conflict detected' },
-    [AppErrorTypeEnum.INTERNAL_ERROR]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' },
+const GatewayErrorsDefinition: Record<number, IErrorMessage> = {
+    [GatewayErrorTypeEnum.INVALID_OBJECT_ID]: { httpStatus: 400, message: 'Invalid object ID' },
+    [GatewayErrorTypeEnum.INVALID_RANGE]: { httpStatus: 400, message: 'Invalid range' },
+    [GatewayErrorTypeEnum.INVALID_ORDER_STATUS]: { httpStatus: 400, message: 'Invalid order status transition' },
 
-    [AppErrorTypeEnum.DB_CANNOT_READ]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Cannot read from database' },
-    [AppErrorTypeEnum.DB_CANNOT_CREATE]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Cannot create entity in database' },
-    [AppErrorTypeEnum.DB_CANNOT_UPDATE]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Cannot update entity in database' },
-    [AppErrorTypeEnum.DB_CANNOT_DELETE]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Cannot delete entity in database' },
-    [AppErrorTypeEnum.DB_ENTITY_EXISTS]: { httpStatus: HttpStatus.CONFLICT, message: 'Entity already exists' },
-    [AppErrorTypeEnum.DB_ENTITY_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Entity not found' },
-    [AppErrorTypeEnum.DB_DUPLICATE_KEY]: { httpStatus: HttpStatus.CONFLICT, message: 'Duplicate key error' },
-    [AppErrorTypeEnum.DB_INCORRECT_MODEL]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Incorrect model definition' },
+    [GatewayErrorTypeEnum.USER_NOT_FOUND]: { httpStatus: 404, message: 'User not found' },
+    [GatewayErrorTypeEnum.USER_ALREADY_EXISTS]: { httpStatus: 409, message: 'User already exists' },
+    [GatewayErrorTypeEnum.INVALID_CREDENTIALS]: { httpStatus: 401, message: 'Invalid credentials' },
+    [GatewayErrorTypeEnum.EMAIL_NOT_CONFIRMED]: { httpStatus: 403, message: 'Email not confirmed' },
+    [GatewayErrorTypeEnum.OTP_EXPIRED]: { httpStatus: 400, message: 'OTP expired' },
+    [GatewayErrorTypeEnum.OTP_INVALID]: { httpStatus: 400, message: 'Invalid OTP' },
+    [GatewayErrorTypeEnum.TOKEN_EXPIRED]: { httpStatus: 401, message: 'Token expired' },
+    [GatewayErrorTypeEnum.TOKEN_INVALID]: { httpStatus: 401, message: 'Invalid token' },
+    [GatewayErrorTypeEnum.TOO_MANY_REQUESTS]: { httpStatus: 429, message: 'Too many requests' },
 
-    [AppErrorTypeEnum.INVALID_DATA]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid input data' },
-    [AppErrorTypeEnum.VALIDATION_ERROR]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Validation error' },
-    [AppErrorTypeEnum.INVALID_OBJECT_ID]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid object ID' },
-    [AppErrorTypeEnum.INVALID_RANGE]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid range' },
-    [AppErrorTypeEnum.INVALID_ORDER_STATUS]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid order status transition' },
+    [GatewayErrorTypeEnum.PRODUCT_NOT_FOUND]: { httpStatus: 404, message: 'Product not found' },
+    [GatewayErrorTypeEnum.INGREDIENT_NOT_FOUND]: { httpStatus: 404, message: 'Ingredient not found' },
+    [GatewayErrorTypeEnum.OUT_OF_STOCK]: { httpStatus: 400, message: 'Out of stock' },
+    [GatewayErrorTypeEnum.INFINITE_STOCK_DISABLED]: { httpStatus: 400, message: 'Infinite stock disabled' },
+    [GatewayErrorTypeEnum.CART_EMPTY]: { httpStatus: 400, message: 'Cart is empty' },
+    [GatewayErrorTypeEnum.CART_RULE_INVALID]: { httpStatus: 400, message: 'Invalid cart rule' },
 
-    [AppErrorTypeEnum.USER_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'User not found' },
-    [AppErrorTypeEnum.USER_ALREADY_EXISTS]: { httpStatus: HttpStatus.CONFLICT, message: 'User already exists' },
-    [AppErrorTypeEnum.INVALID_CREDENTIALS]: { httpStatus: HttpStatus.UNAUTHORIZED, message: 'Invalid credentials' },
-    [AppErrorTypeEnum.EMAIL_NOT_CONFIRMED]: { httpStatus: HttpStatus.FORBIDDEN, message: 'Email not confirmed' },
-    [AppErrorTypeEnum.OTP_EXPIRED]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'OTP expired' },
-    [AppErrorTypeEnum.OTP_INVALID]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid OTP' },
-    [AppErrorTypeEnum.TOKEN_EXPIRED]: { httpStatus: HttpStatus.UNAUTHORIZED, message: 'Token expired' },
-    [AppErrorTypeEnum.TOKEN_INVALID]: { httpStatus: HttpStatus.UNAUTHORIZED, message: 'Invalid token' },
-    [AppErrorTypeEnum.TOO_MANY_REQUESTS]: { httpStatus: HttpStatus.TOO_MANY_REQUESTS, message: 'Too many requests' },
+    [GatewayErrorTypeEnum.PAYMENT_FAILED]: { httpStatus: 400, message: 'Payment failed' },
+    [GatewayErrorTypeEnum.PAYMENT_DECLINED]: { httpStatus: 400, message: 'Payment declined' },
+    [GatewayErrorTypeEnum.PAYMENT_NOT_FOUND]: { httpStatus: 404, message: 'Payment not found' },
+    [GatewayErrorTypeEnum.PAYMENT_ALREADY_PROCESSED]: { httpStatus: 409, message: 'Payment already processed' },
 
-    [AppErrorTypeEnum.PRODUCT_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Product not found' },
-    [AppErrorTypeEnum.INGREDIENT_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Ingredient not found' },
-    [AppErrorTypeEnum.OUT_OF_STOCK]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Out of stock' },
-    [AppErrorTypeEnum.INFINITE_STOCK_DISABLED]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Infinite stock disabled' },
-    [AppErrorTypeEnum.CART_EMPTY]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Cart is empty' },
-    [AppErrorTypeEnum.CART_RULE_INVALID]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Invalid cart rule' },
+    [GatewayErrorTypeEnum.COURIER_NOT_AVAILABLE]: { httpStatus: 400, message: 'No courier available' },
+    [GatewayErrorTypeEnum.DELIVERY_ZONE_NOT_FOUND]: { httpStatus: 404, message: 'Delivery zone not found' },
+    [GatewayErrorTypeEnum.ORDER_ALREADY_ASSIGNED]: { httpStatus: 409, message: 'Order already assigned' },
+    [GatewayErrorTypeEnum.ORDER_NOT_ASSIGNABLE]: { httpStatus: 400, message: 'Order not assignable' },
 
-    [AppErrorTypeEnum.PAYMENT_FAILED]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Payment failed' },
-    [AppErrorTypeEnum.PAYMENT_DECLINED]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Payment declined' },
-    [AppErrorTypeEnum.PAYMENT_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Payment not found' },
-    [AppErrorTypeEnum.PAYMENT_ALREADY_PROCESSED]: { httpStatus: HttpStatus.CONFLICT, message: 'Payment already processed' },
+    [GatewayErrorTypeEnum.FILE_UPLOAD_FAILED]: { httpStatus: 500, message: 'File upload failed' },
+    [GatewayErrorTypeEnum.EXTERNAL_SERVICE_UNAVAILABLE]: { httpStatus: 503, message: 'External service unavailable' },
+};
 
-    [AppErrorTypeEnum.COURIER_NOT_AVAILABLE]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'No courier available' },
-    [AppErrorTypeEnum.DELIVERY_ZONE_NOT_FOUND]: { httpStatus: HttpStatus.NOT_FOUND, message: 'Delivery zone not found' },
-    [AppErrorTypeEnum.ORDER_ALREADY_ASSIGNED]: { httpStatus: HttpStatus.CONFLICT, message: 'Order already assigned' },
-    [AppErrorTypeEnum.ORDER_NOT_ASSIGNABLE]: { httpStatus: HttpStatus.BAD_REQUEST, message: 'Order not assignable' },
-
-    [AppErrorTypeEnum.FILE_UPLOAD_FAILED]: { httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, message: 'File upload failed' },
-    [AppErrorTypeEnum.EXTERNAL_SERVICE_UNAVAILABLE]: { httpStatus: HttpStatus.SERVICE_UNAVAILABLE, message: 'External service unavailable' },
-}
+AppError.registerDefinitions(GatewayErrorsDefinition);

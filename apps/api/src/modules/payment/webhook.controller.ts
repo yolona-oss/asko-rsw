@@ -1,7 +1,7 @@
 import { Body, Controller, Headers, Param, Post } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
-import { Public } from 'common/decorators/public.decorotor';
+import { Public } from '@asko/gateway-common';
 
 @ApiTags('Webhooks')
 @Controller('webhook')

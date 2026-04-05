@@ -1,17 +1,16 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiTags, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 
-import { UserClientService } from 'modules/user-client/user-client.service';
-
-import { ADMIN_ROLES, Role, CreateInvitationLinkDto, IAuthUser } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { Public } from 'common/decorators/public.decorotor';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
 import {
+    UserClientService,
+    RequiredRoles,
+    Public,
+    JwtAuthUser,
     InviteCreatedResponseDto,
     InviteLinkResponseDto,
     MessageResponseDto,
-} from 'common/dto/responses';
+} from '@asko/gateway-common';
+import { ADMIN_ROLES, Role, CreateInvitationLinkDto, IAuthUser } from '@asko/shared';
 
 @ApiTags('Invitations')
 @Controller('invite')

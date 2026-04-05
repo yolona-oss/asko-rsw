@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { grpcCall } from 'common/grpc';
+import { grpcCall } from '@asko/gateway-common';
 import { ImageTypeEnum } from '@asko/shared';
 
 import type {

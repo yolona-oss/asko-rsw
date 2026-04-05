@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateDealerProfileDto,
@@ -16,8 +16,7 @@ import {
     JwtPayload,
     WithdrawalStatus,
 } from '@asko/shared';
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import { UserResponseDto } from 'common/dto/responses/user.response.dto';
 import {
     DealerProfileResponseDto,

@@ -3,11 +3,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
+import { JwtGuard, GATEWAY_CONFIG } from '@asko/gateway-common';
 import { join } from 'path';
 
 import { AppConfig, AppConfigModule } from './app.config';
-
-import { JwtGuard } from './common/guards/jwt.guard';
 import { UserModule } from 'modules/user/user.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FileUploadModule } from 'modules/file-upload/file-upload.module';
@@ -72,6 +71,10 @@ import { PaymentModule } from 'modules/payment/payment.module';
         PaymentModule,
     ],
     providers: [
+        {
+            provide: GATEWAY_CONFIG,
+            useExisting: AppConfig,
+        },
         {
             provide: APP_GUARD,
             useClass: JwtGuard,

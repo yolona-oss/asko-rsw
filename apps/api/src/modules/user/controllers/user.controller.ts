@@ -11,11 +11,10 @@ import {
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { UserClientService } from '@asko/gateway-common';
 import { ChatPrivacyService } from 'modules/chat/services/chat-privacy.service';
 
-import { RequiredRoles } from 'common/decorators/role.decorator';
-import { JwtAuthUser } from 'common/decorators/user.decorator';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 
 import {
     IAuthUser,
