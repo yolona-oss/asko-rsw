@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/auth-slice';
 import { authApi } from '@/lib/api/auth';
 
-export default function OAuthCallbackPage() {
+function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -31,7 +31,6 @@ export default function OAuthCallbackPage() {
       return;
     }
 
-    // Store token temporarily, fetch session for user data
     dispatch(setCredentials({ accessToken: token, user: null as any }));
     authApi.getSession().then(({ data }) => {
       dispatch(setCredentials({ accessToken: token, user: data }));
@@ -45,5 +44,13 @@ export default function OAuthCallbackPage() {
     <div className="flex items-center justify-center min-h-screen">
       <p className="text-sm text-text-sub">Авторизация...</p>
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-sm text-text-sub">Загрузка...</p></div>}>
+      <CallbackHandler />
+    </Suspense>
   );
 }
