@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { authApi } from '@/lib/api/auth';
 import { Input } from '@asko/ui';
 import { Check, Minus } from 'lucide-react';
+import { OAuthButtons } from '@/components/auth/oauth-buttons';
 
 interface LoginMethodsSectionProps {
   providers: string[];
@@ -17,6 +18,7 @@ interface LoginMethodsSectionProps {
   emailResendCooldown?: number;
   phoneChangePending?: boolean;
   onPhoneChangeConfirmed?: () => void;
+  onUnlinkOAuth?: (provider: string) => void;
 }
 
 export function LoginMethodsSection({
@@ -31,6 +33,7 @@ export function LoginMethodsSection({
   emailResendCooldown = 0,
   phoneChangePending,
   onPhoneChangeConfirmed,
+  onUnlinkOAuth,
 }: LoginMethodsSectionProps) {
   // providers array = source of truth for active login methods
   const emailEnabled = providers.includes('EMAIL');   // can login with email+password
@@ -114,15 +117,36 @@ export function LoginMethodsSection({
           <div className="flex items-center gap-3">
             <MethodIcon active={emailEnabled} />
             <div>
-              <p className="text-sm font-medium text-text-main">Email + Пароль</p>
+              <p className="text-sm font-medium text-text-main">Почта</p>
               {email && <p className="text-xs text-text-sub">{email}</p>}
             </div>
           </div>
           {emailEnabled ? (
-            <span className="text-xs text-green-600">Активен</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-green-600">Активен</span>
+              {!emailVerified && (
+                <>
+                  <span className="text-xs text-amber-600">Не подтверждён</span>
+                  {onResendEmailConfirmation && (
+                    <button
+                      type="button"
+                      onClick={onResendEmailConfirmation}
+                      disabled={resendingEmail || (emailResendCooldown ?? 0) > 0}
+                      className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      {(emailResendCooldown ?? 0) > 0
+                        ? `Повторно (${emailResendCooldown}с)`
+                        : resendingEmail
+                          ? 'Отправка...'
+                          : 'Подтвердить'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           ) : emailPending ? (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-amber-600">Требуется подтверждение</span>
+              <span className="text-xs text-amber-600">Требуется подтверждение для входа</span>
               {onResendEmailConfirmation && (
                 <button
                   type="button"
@@ -228,15 +252,14 @@ export function LoginMethodsSection({
           )}
         </div>
 
-        {/* Google */}
-        <div className="flex items-center justify-between py-2.5">
-          <div className="flex items-center gap-3">
-            <MethodIcon active={googleEnabled} />
-            <p className="text-sm font-medium text-text-main">Google</p>
-          </div>
-          <span className={`text-xs ${googleEnabled ? 'text-green-600' : 'text-text-sub'}`}>
-            {googleEnabled ? 'Подключён' : 'Не подключён'}
-          </span>
+        {/* OAuth providers (Google, VK, Yandex) */}
+        <div className="border-t border-border-light pt-3 mt-1">
+          <p className="text-xs text-text-sub mb-2">Социальные сети</p>
+          <OAuthButtons
+            linkMode
+            connectedProviders={providers}
+            onUnlink={onUnlinkOAuth}
+          />
         </div>
       </div>
     </div>

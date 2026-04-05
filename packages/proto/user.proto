@@ -431,6 +431,12 @@ service UserService {
     rpc RequestEmailChange(RequestEmailChangeRequest) returns (RequestEmailChangeResponse);
     rpc ConfirmEmailChange(ConfirmEmailChangeRequest) returns (ConfirmEmailChangeResponse);
 
+    // OAuth
+    rpc OAuthLogin(OAuthLoginRequest) returns (LoginResponse);
+    rpc LinkOAuth(LinkOAuthRequest) returns (EmptyResponse);
+    rpc UnlinkOAuth(UnlinkOAuthRequest) returns (EmptyResponse);
+    rpc GetOAuthLinks(UserIdRequest) returns (OAuthLinksResponse);
+
     // MFA
     rpc VerifyMfaOtp(VerifyMfaRequest) returns (VerifyMfaResponse);
     rpc ResendMfaOtp(ResendMfaOtpRequest) returns (ResendMfaOtpResponse);
@@ -480,4 +486,46 @@ service UserService {
 
 message AuthUserResponse {
     AuthUser user = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OAuth Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message OAuthLoginRequest {
+    string provider = 1;
+    string provider_id = 2;
+    string email = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string avatar_url = 6;
+    string device_info = 7;
+    string ip_address = 8;
+}
+
+message LinkOAuthRequest {
+    string user_id = 1;
+    string provider = 2;
+    string provider_id = 3;
+    string email = 4;
+    string avatar_url = 5;
+}
+
+message UnlinkOAuthRequest {
+    string user_id = 1;
+    string provider = 2;
+}
+
+message OAuthLinkRecord {
+    string id = 1;
+    string user_id = 2;
+    string provider = 3;
+    string provider_id = 4;
+    string email = 5;
+    string avatar_url = 6;
+    string created_at = 7;
+}
+
+message OAuthLinksResponse {
+    repeated OAuthLinkRecord links = 1;
 }

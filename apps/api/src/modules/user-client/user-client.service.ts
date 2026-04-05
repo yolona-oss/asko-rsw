@@ -67,6 +67,10 @@ import type {
     RequestPhoneChangeResponse,
     ConfirmPhoneChangeRequest,
     ConfirmPhoneChangeResponse,
+    OAuthLoginRequest,
+    LinkOAuthRequest,
+    UnlinkOAuthRequest,
+    OAuthLinksResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -261,5 +265,23 @@ export class UserClientService implements OnModuleInit {
 
     searchUsersForChat(data: SearchUsersForChatRequest): Promise<SearchUsersForChatResponse> {
         return grpcCall(this.userService.searchUsersForChat(data));
+    }
+
+    // ─── OAuth ─────────────────────────────────────────────────────────
+
+    oAuthLogin(data: OAuthLoginRequest): Promise<LoginResponse> {
+        return grpcCall(this.userService.oAuthLogin(data));
+    }
+
+    linkOAuth(data: LinkOAuthRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.linkOAuth(data));
+    }
+
+    unlinkOAuth(data: UnlinkOAuthRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.unlinkOAuth(data));
+    }
+
+    getOAuthLinks(data: UserIdRequest): Promise<OAuthLinksResponse> {
+        return grpcCall(this.userService.getOAuthLinks(data));
     }
 }

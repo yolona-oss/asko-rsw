@@ -7,6 +7,7 @@ import { authApi } from '@/lib/api/auth';
 import { MfaOtpForm } from './mfa-otp-form';
 import { PhoneOtpForm } from './phone-otp-form';
 import { CredentialInput, type CredentialType } from './credential-input';
+import { OAuthButtons } from './oauth-buttons';
 import { PasswordInput } from '@asko/ui';
 
 interface LoginFormProps {
@@ -173,6 +174,14 @@ export function LoginForm({ variant }: LoginFormProps) {
           </Link>
         )}
       </form>
+
+      <div className={`flex items-center gap-3 ${variant === 'desktop' ? 'mt-6' : 'mt-4'}`}>
+        <div className="flex-1 h-px bg-border-light" />
+        <span className={`text-xs ${variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub'}`}>или</span>
+        <div className="flex-1 h-px bg-border-light" />
+      </div>
+
+      <OAuthButtons className={variant === 'desktop' ? 'mt-4' : 'mt-3'} />
 
       {showPassword && variant === 'desktop' && (
         <Link href="/reset" className="block mt-12 text-sm font-medium leading-[22px] tracking-[-0.01em] text-text-main">

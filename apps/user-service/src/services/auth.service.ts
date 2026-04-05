@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { AppConfig } from 'app.config';
@@ -194,8 +194,62 @@ export class AuthService {
         };
     }
 
-    async GoogleLogin(_: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<IAuthSession> {
-        throw new NotImplementedException()
+    async GoogleLogin(params: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<IAuthSession> {
+        // Legacy stub — delegate to oauthLogin for backward compatibility
+        const result = await this.oauthLogin({
+            provider: AuthProvider.GOOGLE,
+            providerId: params.googleId,
+            deviceInfo: params.deviceInfo,
+            ipAddress: params.ipAddress,
+        });
+        return {
+            access_token: result.access_token!,
+            refresh_token: result.refresh_token,
+            user: result.user!,
+        };
+    }
+
+    async oauthLogin(data: {
+        provider: string;
+        providerId: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        avatarUrl?: string;
+        deviceInfo: string;
+        ipAddress: string;
+    }): Promise<LoginResult> {
+        // Find existing user by OAuth link
+        let user = await this.userService.findByOAuth(data.provider, data.providerId);
+
+        if (!user) {
+            // Try to find by email and auto-link, or create new
+            user = await this.userService.createOAuthUser(data);
+        }
+
+        if (!user.isActive) {
+            throw AppErrors.forbidden('Account is disabled');
+        }
+
+        const { access_token, refresh_token } = await this.generateTokens(
+            user.id,
+            <Role[]>user.roles,
+            {
+                email: user.email,
+                phone: user.phone,
+                googleId: data.provider === AuthProvider.GOOGLE ? data.providerId : undefined,
+                authProvider: data.provider as AuthProvider,
+            },
+            { deviceInfo: data.deviceInfo, ipAddress: data.ipAddress },
+            user.isActive,
+        );
+
+        return {
+            status: 'SUCCESS',
+            access_token,
+            refresh_token,
+            user: toAuthUser(user),
+        };
     }
 
     async register(params: RegisterParams): Promise<(IAuthSession & { roles: Role[] }) | { status: 'OTP_REQUIRED'; pendingToken: string }> {
@@ -281,8 +335,22 @@ export class AuthService {
         return { status: 'OTP_REQUIRED', pendingToken };
     }
 
-    private async GoogleRegister(_dto: CreateUserDto, _deviceInfo: string, _ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
-        throw new NotImplementedException()
+    private async GoogleRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
+        const result = await this.oauthLogin({
+            provider: AuthProvider.GOOGLE,
+            providerId: dto.googleId!,
+            email: dto.email,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            deviceInfo,
+            ipAddress,
+        });
+        return {
+            access_token: result.access_token!,
+            refresh_token: result.refresh_token,
+            user: result.user!,
+            roles: result.user?.roles as Role[] ?? [DEFAULT_USER_ROLE],
+        };
     }
 
     async sendEmailConfirmation(user: User) {

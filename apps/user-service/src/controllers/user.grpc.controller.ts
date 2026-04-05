@@ -65,6 +65,10 @@ import type {
     ConfirmDisableMfaResponse,
     GetMfaStatusRequest,
     GetMfaStatusResponse,
+    OAuthLoginRequest,
+    LinkOAuthRequest,
+    UnlinkOAuthRequest,
+    OAuthLinksResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -619,6 +623,66 @@ export class UserGrpcController {
                     lastName: u.lastName ?? '',
                     middleName: u.middleName ?? '',
                     email: u.email ?? '',
+                })),
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── OAuth ────────────────────────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'OAuthLogin')
+    async oAuthLogin(data: OAuthLoginRequest): Promise<LoginResponse> {
+        try {
+            const result = await this.authService.oauthLogin({
+                provider: data.provider,
+                providerId: data.providerId,
+                email: data.email || undefined,
+                firstName: data.firstName || undefined,
+                lastName: data.lastName || undefined,
+                avatarUrl: data.avatarUrl || undefined,
+                deviceInfo: data.deviceInfo || 'unknown',
+                ipAddress: data.ipAddress || 'unknown',
+            });
+            return {
+                status: result.status,
+                accessToken: result.access_token ?? '',
+                refreshToken: result.refresh_token ?? '',
+                user: result.user ? userToAuthUser(result.user) : undefined,
+                mfaToken: '',
+                mfaMethod: '',
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'LinkOAuth')
+    async linkOAuth(data: LinkOAuthRequest): Promise<EmptyResponse> {
+        try {
+            await this.userService.linkOAuth(data.userId, data.provider, data.providerId, data.email || undefined, data.avatarUrl || undefined);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'UnlinkOAuth')
+    async unlinkOAuth(data: UnlinkOAuthRequest): Promise<EmptyResponse> {
+        try {
+            await this.userService.unlinkOAuth(data.userId, data.provider);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'GetOAuthLinks')
+    async getOAuthLinks(data: UserIdRequest): Promise<OAuthLinksResponse> {
+        try {
+            const links = await this.userService.getOAuthLinks(data.id);
+            return {
+                links: links.map(l => ({
+                    id: l.id,
+                    userId: l.userId,
+                    provider: l.provider,
+                    providerId: l.providerId,
+                    email: l.email ?? '',
+                    avatarUrl: l.avatarUrl ?? '',
+                    createdAt: l.createdAt.toISOString(),
                 })),
             };
         } catch (e) { throw toGrpcError(e); }

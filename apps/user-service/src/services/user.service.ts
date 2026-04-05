@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User, UserPopulateHints } from 'entities/auth/user.entity';
+import { UserOAuthLink } from 'entities/auth/user-oauth-link.entity';
 
 import { AppErrors } from 'common/error';
 import { DeepPartial } from 'types/deep-partial.type';
@@ -499,6 +500,97 @@ export class UserService {
         user.phone = newPhone;
         user.phoneVerified = false;
         await this.em.persistAndFlush(user);
+    }
+
+    // ─── OAuth ────────────────────────────────────────────────────────────
+
+    @CreateRequestContext()
+    async findByOAuth(provider: string, providerId: string): Promise<User | null> {
+        const link = await this.em.findOne(UserOAuthLink, { provider, providerId });
+        if (!link) return null;
+        return this.em.findOne(User, { id: link.userId });
+    }
+
+    @CreateRequestContext()
+    async createOAuthUser(data: {
+        provider: string;
+        providerId: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        avatarUrl?: string;
+    }): Promise<User> {
+        // Check if email already exists — link to existing account instead
+        if (data.email) {
+            const existing = await this.em.findOne(User, { email: data.email.toLowerCase() });
+            if (existing) {
+                await this.linkOAuth(existing.id, data.provider, data.providerId, data.email, data.avatarUrl);
+                if (!existing.providers.includes(data.provider as AuthProvider)) {
+                    existing.providers = [...existing.providers, data.provider as AuthProvider];
+                    await this.em.flush();
+                }
+                return existing;
+            }
+        }
+
+        const user = new User();
+        user.firstName = data.firstName;
+        user.lastName = data.lastName;
+        user.email = data.email?.toLowerCase();
+        user.emailVerified = !!data.email; // OAuth-provided email is pre-verified
+        user.providers = [data.provider as AuthProvider];
+        user.roles = [DEFAULT_USER_ROLE];
+        await this.em.persistAndFlush(user);
+
+        await this.linkOAuth(user.id, data.provider, data.providerId, data.email, data.avatarUrl);
+        return user;
+    }
+
+    @CreateRequestContext()
+    async linkOAuth(userId: string, provider: string, providerId: string, email?: string, avatarUrl?: string): Promise<void> {
+        const existing = await this.em.findOne(UserOAuthLink, { provider, providerId });
+        if (existing) {
+            if (existing.userId !== userId) throw AppErrors.badRequest('Этот аккаунт уже привязан к другому пользователю');
+            return; // already linked
+        }
+        const link = new UserOAuthLink();
+        link.userId = userId;
+        link.provider = provider;
+        link.providerId = providerId;
+        link.email = email;
+        link.avatarUrl = avatarUrl;
+        await this.em.persistAndFlush(link);
+
+        // Add provider to user's providers array
+        const user = await this.em.findOne(User, { id: userId });
+        if (user && !user.providers.includes(provider as AuthProvider)) {
+            user.providers = [...user.providers, provider as AuthProvider];
+            await this.em.flush();
+        }
+    }
+
+    @CreateRequestContext()
+    async unlinkOAuth(userId: string, provider: string): Promise<void> {
+        const link = await this.em.findOne(UserOAuthLink, { userId, provider });
+        if (!link) throw AppErrors.dbEntityNotFound('OAuth link not found');
+
+        // Don't allow unlinking if it's the only login method
+        const user = await this.em.findOne(User, { id: userId });
+        if (user && user.providers.length <= 1) {
+            throw AppErrors.badRequest('Нельзя отключить единственный способ входа');
+        }
+
+        await this.em.removeAndFlush(link);
+
+        if (user) {
+            user.providers = user.providers.filter(p => p !== provider);
+            await this.em.flush();
+        }
+    }
+
+    @CreateRequestContext()
+    async getOAuthLinks(userId: string): Promise<UserOAuthLink[]> {
+        return this.em.find(UserOAuthLink, { userId });
     }
 
     checkPasswordStrength(password: string) {

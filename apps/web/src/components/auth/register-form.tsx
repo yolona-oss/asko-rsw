@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSignup, useVerifyPhoneRegister } from '@/lib/api/use-auth';
 import { authApi } from '@/lib/api/auth';
 import { PhoneOtpForm } from './phone-otp-form';
+import { OAuthButtons } from './oauth-buttons';
 import { EmailInput, PasswordInput, PhoneInput, NameInput } from '@asko/ui';
 import {
   MIN_USER_PASSWORD_LENGTH,
@@ -338,6 +339,14 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       >
         {signup.isPending ? 'Загрузка...' : 'Далее'}
       </button>
+
+      <div className="flex items-center gap-3 mt-2">
+        <div className="flex-1 h-px bg-border-light" />
+        <span className={`text-xs ${subColor}`}>или</span>
+        <div className="flex-1 h-px bg-border-light" />
+      </div>
+
+      <OAuthButtons className="mt-2" />
 
       <p className={`text-sm ${subColor}`}>
         Уже есть аккаунт?{' '}

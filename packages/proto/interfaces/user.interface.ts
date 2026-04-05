@@ -474,4 +474,50 @@ export interface UserServiceClient {
     deleteInvite(request: InviteIdRequest): Observable<EmptyResponse>;
 
     searchUsersForChat(request: SearchUsersForChatRequest): Observable<SearchUsersForChatResponse>;
+
+    // OAuth
+    oAuthLogin(request: OAuthLoginRequest): Observable<LoginResponse>;
+    linkOAuth(request: LinkOAuthRequest): Observable<EmptyResponse>;
+    unlinkOAuth(request: UnlinkOAuthRequest): Observable<EmptyResponse>;
+    getOAuthLinks(request: UserIdRequest): Observable<OAuthLinksResponse>;
+}
+
+// ─── OAuth ─────────────────────────────────────────────────────────────
+
+export interface OAuthLoginRequest {
+    provider: string;
+    providerId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string;
+    deviceInfo: string;
+    ipAddress: string;
+}
+
+export interface LinkOAuthRequest {
+    userId: string;
+    provider: string;
+    providerId: string;
+    email: string;
+    avatarUrl: string;
+}
+
+export interface UnlinkOAuthRequest {
+    userId: string;
+    provider: string;
+}
+
+export interface OAuthLinkRecord {
+    id: string;
+    userId: string;
+    provider: string;
+    providerId: string;
+    email: string;
+    avatarUrl: string;
+    createdAt: string;
+}
+
+export interface OAuthLinksResponse {
+    links: OAuthLinkRecord[];
 }

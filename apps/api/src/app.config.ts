@@ -60,6 +60,24 @@ export class AppConfig {
         return this.configService.get<string>('CONTENT_SERVICE_URL') ?? 'localhost:5010';
     }
 
+    get oauth() {
+        return {
+            google: {
+                clientId: this.configService.get('GOOGLE_CLIENT_ID', ''),
+                clientSecret: this.configService.get('GOOGLE_CLIENT_SECRET', ''),
+            },
+            vk: {
+                clientId: this.configService.get('VK_CLIENT_ID', ''),
+                clientSecret: this.configService.get('VK_CLIENT_SECRET', ''),
+            },
+            yandex: {
+                clientId: this.configService.get('YANDEX_CLIENT_ID', ''),
+                clientSecret: this.configService.get('YANDEX_CLIENT_SECRET', ''),
+            },
+            callbackBaseUrl: this.configService.get('OAUTH_CALLBACK_BASE_URL', 'http://localhost:4000'),
+        };
+    }
+
     get jwt() {
         return {
             algorithm: this.configService.getOrThrow<string>('JWT_ALGORITHM') as Algorithm,
