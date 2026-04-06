@@ -145,38 +145,103 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
+  repair-gateway:
     build:
       context: .
-      dockerfile: Dockerfile.api
-    container_name: asko-api
+      dockerfile: Dockerfile.repair-gateway
+    container_name: asko-repair-gateway
     restart: unless-stopped
     network_mode: host
     depends_on:
-      - user-service
+      - repair-service
       - payment-service
       - file-service
-      - repair-service
-      - notification-service
       - chat-service
-      - content-service
-    volumes:
-      - images-data:/app/apps/api/images
     environment:
       NODE_ENV: production
+      PORT: 4002
+      METRICS_PORT: 9121
       USER_SERVICE_URL: "localhost:5000"
+      REPAIR_SERVICE_URL: "localhost:5003"
       PAYMENT_SERVICE_URL: "localhost:5001"
       FILE_SERVICE_URL: "localhost:5002"
-      REPAIR_SERVICE_URL: "localhost:5003"
-      NOTIFICATION_SERVICE_URL: "localhost:5004"
       CHAT_SERVICE_URL: "localhost:5005"
-      CONTENT_SERVICE_URL: "localhost:5010"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4002/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  media-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.media-gateway
+    container_name: asko-media-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - file-service
+    volumes:
+      - images-data:/app/apps/media-gateway/images
+    environment:
+      NODE_ENV: production
+      PORT: 4003
+      METRICS_PORT: 9122
+      USER_SERVICE_URL: "localhost:5000"
+      FILE_SERVICE_URL: "localhost:5002"
+      CHAT_SERVICE_URL: "localhost:5005"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  realtime-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.realtime-gateway
+    container_name: asko-realtime-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - chat-service
+      - notification-service
+    environment:
+      NODE_ENV: production
+      PORT: 4004
+      METRICS_PORT: 9123
+      USER_SERVICE_URL: "localhost:5000"
+      CHAT_SERVICE_URL: "localhost:5005"
+      NOTIFICATION_SERVICE_URL: "localhost:5004"
+      REDIS_URL: "redis://localhost:6379"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  content-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.content-gateway
+    container_name: asko-content-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - content-service
+      - file-service
+    environment:
+      NODE_ENV: production
+      PORT: 4005
+      METRICS_PORT: 9124
+      USER_SERVICE_URL: "localhost:5000"
+      CONTENT_SERVICE_URL: "localhost:5010"
+      FILE_SERVICE_URL: "localhost:5002"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build:

@@ -6,14 +6,29 @@ rule_files:
   - /etc/prometheus/alerts.yml
 
 scrape_configs:
-  - job_name: "api-gateway"
-    static_configs:
-      - targets: ["localhost:4000"]
-    metrics_path: /metrics
-
   - job_name: "auth-gateway"
     static_configs:
       - targets: ["localhost:9120"]
+    metrics_path: /metrics
+
+  - job_name: "repair-gateway"
+    static_configs:
+      - targets: ["localhost:9121"]
+    metrics_path: /metrics
+
+  - job_name: "media-gateway"
+    static_configs:
+      - targets: ["localhost:9122"]
+    metrics_path: /metrics
+
+  - job_name: "realtime-gateway"
+    static_configs:
+      - targets: ["localhost:9123"]
+    metrics_path: /metrics
+
+  - job_name: "content-gateway"
+    static_configs:
+      - targets: ["localhost:9124"]
     metrics_path: /metrics
 
   - job_name: "user-service"

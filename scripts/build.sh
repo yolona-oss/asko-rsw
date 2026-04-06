@@ -53,8 +53,12 @@ pnpm --filter file-service run build
 pnpm --filter repair-service run build
 pnpm --filter notification-service run build
 pnpm --filter chat-service run build
-pnpm --filter api run build
+pnpm --filter content-service run build
 pnpm --filter auth-gateway run build
+pnpm --filter repair-gateway run build
+pnpm --filter media-gateway run build
+pnpm --filter realtime-gateway run build
+pnpm --filter content-gateway run build
 
 echo ""
 echo "=== Build complete ==="
