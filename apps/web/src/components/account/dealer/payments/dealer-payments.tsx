@@ -1,15 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Badge,
   Button,
   Card,
+  DataGrid,
   DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
+  ChartCard,
+  DateRangeModal,
+  defaultRange,
+  formatRangeLabel,
 } from '@asko/ui';
+import type { DataGridColumn, SortOrder, FilterValues, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { WithdrawModal } from '@/components/account/dealer/withdraw-modal';
@@ -18,10 +24,73 @@ import { dealerApi } from '@/lib/api/dealer';
 import type { IPointsTransaction } from '@/lib/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getMyWithdraws } from '@/store/withdraw-slice';
-import { formatAmount, formatDate, POINTS_TX_LABELS, POINTS_TX_BADGE_VARIANT } from './constants';
+import {
+  formatAmount, formatDate,
+  POINTS_TX_LABELS, POINTS_TX_BADGE_VARIANT,
+  STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS,
+} from './constants';
 import { WithdrawalHistory } from './withdrawal-history';
-import { PaymentTable } from './payment-table';
-import { PaymentCards } from './payment-cards';
+
+// ─── Points chart bucketing ────────────────────────────────────────────────
+
+function bucketPoints(transactions: IPointsTransaction[], range: DateRange): { earned: ChartBucket[]; spent: ChartBucket[] } {
+  const rangeMs = range.end.getTime() - range.start.getTime();
+  const bucketMs = rangeMs <= 60 * 86400000 ? 86400000 : 7 * 86400000;
+  const labelFn = (d: Date) => `${d.getDate()} ${d.toLocaleDateString('ru-RU', { month: 'short' })}`;
+
+  const makeBuckets = (): ChartBucket[] => {
+    const buckets: ChartBucket[] = [];
+    let t = range.start.getTime();
+    while (t < range.end.getTime()) {
+      buckets.push({ start: new Date(t), end: new Date(Math.min(t + bucketMs, range.end.getTime())), total: 0, count: 0, label: labelFn(new Date(t)) });
+      t += bucketMs;
+    }
+    return buckets;
+  };
+
+  const earned = makeBuckets();
+  const spent = makeBuckets();
+
+  for (const tx of transactions) {
+    const ts = new Date(tx.createdAt).getTime();
+    if (ts < range.start.getTime() || ts > range.end.getTime()) continue;
+    const idx = Math.min(Math.floor((ts - range.start.getTime()) / bucketMs), earned.length - 1);
+    if (idx < 0) continue;
+    if (tx.amount > 0) { earned[idx].total += tx.amount; earned[idx].count += 1; }
+    else { spent[idx].total += Math.abs(tx.amount); spent[idx].count += 1; }
+  }
+  return { earned, spent };
+}
+
+// ─── Filter definitions ────────────────────────────────────────────────────
+
+const POINTS_FILTER = { key: 'type', label: 'Тип', type: 'select' as const, options: [
+  { value: '', label: 'Все' }, { value: 'earned', label: 'Начисление' },
+  { value: 'spent', label: 'Списание' }, { value: 'adjustment', label: 'Корректировка' },
+]};
+
+const PAYMENT_STATUS_FILTER = { key: 'status', label: 'Статус', type: 'select' as const, options: [
+  { value: '', label: 'Все' }, { value: 'paid', label: 'Оплачен' },
+  { value: 'pending', label: 'Ожидание' }, { value: 'refunded', label: 'Возвращён' },
+]};
+
+// ─── Columns ───────────────────────────────────────────────────────────────
+
+const pointsColumns: DataGridColumn<IPointsTransaction>[] = [
+  { key: 'reason', header: 'Описание', mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
+  { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
+  { key: 'type', header: 'Тип', width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
+  { key: 'date', header: 'Дата', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDate(tx.createdAt)}</span> },
+];
+
+const paymentColumns: DataGridColumn<PaymentRecord>[] = [
+  { key: 'type', header: 'Тип', mobileLabel: 'Тип:', render: (p) => <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span> },
+  { key: 'amount', header: 'Сумма', width: 140, mobileLabel: 'Сумма:', render: (p) => <span className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</span> },
+  { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (p) => <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge> },
+  { key: 'date', header: 'Дата', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span> },
+];
+
+// ─── Component ─────────────────────────────────────────────────────────────
 
 export function DealerPayments() {
   const dispatch = useAppDispatch();
@@ -33,34 +102,81 @@ export function DealerPayments() {
   const [loading, setLoading] = useState(true);
   const [pointsBalance, setPointsBalance] = useState(0);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [view, setView] = useState('card');
+
+  // Points view
+  const [pointsView, setPointsView] = useState('table');
+  const [pointsFilter, setPointsFilter] = useState<FilterValues>({ type: '' });
+  const [pointsSortBy, setPointsSortBy] = useState<string | null>(null);
+  const [pointsSortOrder, setPointsSortOrder] = useState<SortOrder | null>(null);
+
+  // Payment view
+  const [paymentView, setPaymentView] = useState('table');
+  const [paymentFilter, setPaymentFilter] = useState<FilterValues>({ status: '' });
+  const [paymentSortBy, setPaymentSortBy] = useState<string | null>(null);
+  const [paymentSortOrder, setPaymentSortOrder] = useState<SortOrder | null>(null);
+
+  // Chart
+  const [dateRange, setDateRange] = useState<DateRange>(defaultRange());
+  const [chartStyle, setChartStyle] = useState<ChartStyle>('bar');
+  const [dateModalOpen, setDateModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       const [paymentsRes, profileRes, pointsRes] = await Promise.all([
-        paymentApi.getMyPayments({ limit: 50 }),
+        paymentApi.getMyPayments({ limit: 200 }),
         dealerApi.getProfile(),
-        dealerApi.getPointsHistory({ limit: 20 }),
+        dealerApi.getPointsHistory({ limit: 200 }),
       ]);
       setPayments(paymentsRes.data.data ?? []);
       setPaymentsTotal(paymentsRes.data.overallCount ?? 0);
       setPointsBalance(profileRes.data.profile?.pointsBalance ?? 0);
       setPointsHistory(pointsRes.data.data ?? []);
-    } catch { /* non-critical */ } finally {
-      setLoading(false);
-    }
+    } catch {} finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-    dispatch(getMyWithdraws());
-  }, [dispatch, fetchData]);
+  useEffect(() => { fetchData(); dispatch(getMyWithdraws()); }, [dispatch, fetchData]);
 
-  const handleWithdrawClose = () => {
-    setWithdrawOpen(false);
-    fetchData();
-    dispatch(getMyWithdraws());
-  };
+  // Chart data
+  const { earned: earnedBuckets, spent: spentBuckets } = useMemo(() => bucketPoints(pointsHistory, dateRange), [pointsHistory, dateRange]);
+  const inRange = useCallback((ts: number) => ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime(), [dateRange]);
+  const inPrev = useMemo(() => {
+    const dur = dateRange.end.getTime() - dateRange.start.getTime();
+    const ps = dateRange.start.getTime() - dur;
+    const pe = dateRange.start.getTime();
+    return (ts: number) => ts >= ps && ts <= pe;
+  }, [dateRange]);
+
+  const earnedTotal = useMemo(() => pointsHistory.filter(tx => tx.amount > 0 && inRange(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + tx.amount, 0), [pointsHistory, inRange]);
+  const spentTotal = useMemo(() => pointsHistory.filter(tx => tx.amount < 0 && inRange(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + Math.abs(tx.amount), 0), [pointsHistory, inRange]);
+  const prevEarned = useMemo(() => pointsHistory.filter(tx => tx.amount > 0 && inPrev(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + tx.amount, 0), [pointsHistory, inPrev]);
+  const prevSpent = useMemo(() => pointsHistory.filter(tx => tx.amount < 0 && inPrev(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + Math.abs(tx.amount), 0), [pointsHistory, inPrev]);
+
+  const rangeLabel = formatRangeLabel(dateRange);
+  const toggleStyle = useCallback(() => setChartStyle(s => s === 'bar' ? 'line' : 'bar'), []);
+  const pct = (cur: number, prev: number) => prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0;
+
+  const renderTooltip = useCallback((bucket: ChartBucket) => (
+    <>
+      <p className="text-xs font-medium text-text-main">{bucket.label}</p>
+      <p className="text-xs text-text-sub">{formatAmount(bucket.total)} баллов</p>
+      <p className="text-xs text-text-sub">{bucket.count} {bucket.count === 1 ? 'операция' : bucket.count < 5 ? 'операции' : 'операций'}</p>
+    </>
+  ), []);
+
+  // Filtered data
+  const filteredPoints = useMemo(() => {
+    let items = pointsHistory;
+    if (pointsFilter.type) items = items.filter(tx => tx.type === pointsFilter.type);
+    if (pointsSortBy) items = [...items].sort((a, b) => { const cmp = ((a as any)[pointsSortBy] ?? '') < ((b as any)[pointsSortBy] ?? '') ? -1 : 1; return pointsSortOrder === 'desc' ? -cmp : cmp; });
+    return items;
+  }, [pointsHistory, pointsFilter, pointsSortBy, pointsSortOrder]);
+
+  const filteredPayments = useMemo(() => {
+    let items = payments;
+    if (paymentFilter.status) items = items.filter(p => p.status === paymentFilter.status);
+    if (paymentSortBy) items = [...items].sort((a, b) => { const cmp = ((a as any)[paymentSortBy] ?? '') < ((b as any)[paymentSortBy] ?? '') ? -1 : 1; return paymentSortOrder === 'desc' ? -cmp : cmp; });
+    return items;
+  }, [payments, paymentFilter, paymentSortBy, paymentSortOrder]);
 
   return (
     <PageContainer>
@@ -74,67 +190,80 @@ export function DealerPayments() {
             {loading ? '-' : formatAmount(pointsBalance)}
           </span>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => setWithdrawOpen(true)}
-          disabled={pointsBalance <= 0}
-        >
+        <Button variant="primary" size="lg" onClick={() => setWithdrawOpen(true)} disabled={pointsBalance <= 0}>
           Вывести на карту
         </Button>
       </Card>
+
+      {/* Points charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Начислено" formattedValue={`${formatAmount(earnedTotal)} баллов`} pctChange={pct(earnedTotal, prevEarned)} buckets={earnedBuckets} color="#20834A" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderTooltip} />
+        <ChartCard title="Списано" formattedValue={`${formatAmount(spentTotal)} баллов`} pctChange={pct(spentTotal, prevSpent)} buckets={spentBuckets} color="#dc2626" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderTooltip} />
+      </div>
 
       {/* Withdrawal history */}
       <WithdrawalHistory withdrawals={withdrawals} />
 
       {/* Points history */}
-      {pointsHistory.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-medium text-text-main">История баллов</h3>
-          {pointsHistory.map((tx) => (
-            <Card key={tx.id} className="flex items-center justify-between gap-4">
-              <div className="flex flex-col gap-1">
+      <h3 className="text-lg font-medium text-text-main">История баллов</h3>
+      <DataToolbar
+        filters={[POINTS_FILTER]}
+        filterValues={pointsFilter}
+        onFilterChange={(key, value) => setPointsFilter(prev => ({ ...prev, [key]: value }))}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={pointsView} onViewChange={setPointsView} />}
+      />
+      {pointsView === 'table' ? (
+        <DataGrid<IPointsTransaction> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
+      ) : loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : filteredPoints.length === 0 ? (
+        <p className="text-sm text-text-sub">Нет операций</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPoints.map((tx) => (
+            <Card key={tx.id} padding="none" className="p-5 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
                 <span className="text-sm text-text-main">{tx.reason}</span>
-                <span className="text-xs text-text-sub">{formatDate(tx.createdAt)}</span>
+                <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-base font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>
-                  {tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}
-                </span>
-                <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>
-                  {POINTS_TX_LABELS[tx.type] ?? tx.type}
-                </Badge>
-              </div>
+              <span className={`text-lg font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span>
+              <span className="text-xs text-text-sub">{formatDate(tx.createdAt)}</span>
             </Card>
           ))}
         </div>
       )}
 
       {/* Payment history */}
-      <div className="flex flex-col gap-4">
-        <h3 className="text-lg font-medium text-text-main">История платежей</h3>
-
-        <DataToolbar
-          viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
-        />
-
-        {loading ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
-        ) : payments.length === 0 ? (
-          <p className="text-sm text-text-sub">У вас пока нет платежей</p>
-        ) : view === 'table' ? (
-          <PaymentTable payments={payments} totalCount={paymentsTotal} />
-        ) : (
-          <PaymentCards payments={payments} />
-        )}
-      </div>
-
-      {/* Withdraw modal */}
-      <WithdrawModal
-        open={withdrawOpen}
-        onClose={handleWithdrawClose}
-        maxAmount={pointsBalance}
+      <h3 className="text-lg font-medium text-text-main">История платежей</h3>
+      <DataToolbar
+        filters={[PAYMENT_STATUS_FILTER]}
+        filterValues={paymentFilter}
+        onFilterChange={(key, value) => setPaymentFilter(prev => ({ ...prev, [key]: value }))}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={paymentView} onViewChange={setPaymentView} />}
       />
+      {paymentView === 'table' ? (
+        <DataGrid<PaymentRecord> loading={loading} columns={paymentColumns} data={filteredPayments} keyExtractor={(p) => p.id} emptyContent="Нет платежей" sortKey={paymentSortBy ?? undefined} sortOrder={paymentSortOrder ?? undefined} onSort={(k, o) => { setPaymentSortBy(k); setPaymentSortOrder(o); }} footer={<>Показано {filteredPayments.length} из {paymentsTotal}</>} />
+      ) : loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : filteredPayments.length === 0 ? (
+        <p className="text-sm text-text-sub">Нет платежей</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPayments.map((p) => (
+            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span>
+                <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge>
+              </div>
+              <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
+              <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <WithdrawModal open={withdrawOpen} onClose={() => { setWithdrawOpen(false); fetchData(); dispatch(getMyWithdraws()); }} maxAmount={pointsBalance} />
+      <DateRangeModal open={dateModalOpen} onClose={() => setDateModalOpen(false)} range={dateRange} onApply={setDateRange} />
     </PageContainer>
   );
 }
