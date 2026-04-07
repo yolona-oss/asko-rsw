@@ -13,8 +13,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { certificateApi } from '@/lib/api/certificate';
 import type { StatusFilter, SortField, Certificate } from './types';
 import { SORT_OPTIONS, PAGE_SIZE, STATUS_FILTER_DEF } from './constants';

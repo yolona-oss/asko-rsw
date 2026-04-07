@@ -1,7 +1,7 @@
 'use client';
 
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { RepairerHistory } from '@/components/account/repairer/repairer-history';
+import { RepairerHistory } from '@/components/account/repairer/history';
 
 export default function HistoryPage() {
   const allowed = useRoleGuard(['repairer']);

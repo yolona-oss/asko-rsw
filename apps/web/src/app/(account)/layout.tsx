@@ -1,8 +1,8 @@
-import { AccountProvider } from '@/components/account/account-provider';
-import { SidebarProvider } from '@/components/account/sidebar-context';
-import { AccountSidebar, MobileSidebar } from '@/components/account/sidebar';
-import { AccountHeader } from '@/components/account/account-header';
-import { AuthGuard } from '@/components/account/auth-guard';
+import { AccountProvider } from '@/components/account/layout/provider';
+import { SidebarProvider } from '@/components/account/layout/sidebar-context';
+import { AccountSidebar, MobileSidebar } from '@/components/account/layout/sidebar';
+import { AccountHeader } from '@/components/account/layout/header';
+import { AuthGuard } from '@/components/account/layout/auth-guard';
 
 export default function AccountLayout({
   children,

@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { displayName, getGreeting } from '@/lib/account';
 import { repairerApi } from '@/lib/api/repairer';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { Card, Button, Badge } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { RepairRequestStatus } from '@asko/shared/client';
 
 const LOCATION_INTERVAL_MS = 30 * 60 * 1000;

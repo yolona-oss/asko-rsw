@@ -15,10 +15,10 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder, DropdownMenuEntry } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { CTABanner } from '@/components/account/cta-banner';
-import { PaymentModal } from '@/components/account/user/payment-modal';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { CTABanner } from '@/components/account/layout/cta-banner';
+import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
 import { CertificateStatus } from '@asko/shared/client';

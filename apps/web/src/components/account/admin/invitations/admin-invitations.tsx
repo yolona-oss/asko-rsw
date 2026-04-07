@@ -19,8 +19,8 @@ import {
   CopyButton,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';

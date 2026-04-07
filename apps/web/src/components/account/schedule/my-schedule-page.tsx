@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button, Badge, Card, Modal } from '@asko/ui';
 import { Plus, Trash2 } from 'lucide-react';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { useAccount } from '@/components/account/account-provider';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { useAccount } from '@/components/account/layout/provider';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { ScheduleRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';

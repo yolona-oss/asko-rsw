@@ -16,9 +16,9 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { PaymentModal } from '@/components/account/user/payment-modal';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import {
   STATUS_LABELS,

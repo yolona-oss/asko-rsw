@@ -1,1 +1,0 @@
-export { DealerCertificates } from './certificates/';

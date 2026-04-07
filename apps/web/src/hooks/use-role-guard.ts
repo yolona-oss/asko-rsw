@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole, type UserRole } from '@/lib/account';
 
 export function useRoleGuard(allowedRoles: UserRole[]): boolean {

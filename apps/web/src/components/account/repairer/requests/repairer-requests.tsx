@@ -16,8 +16,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';

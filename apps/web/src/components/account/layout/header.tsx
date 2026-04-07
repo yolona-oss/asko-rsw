@@ -4,12 +4,12 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Dialog, DropdownMenu, SkeletonCircle } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
-import { useAccount } from './account-provider';
+import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
 import { User, LogOut } from 'lucide-react';
-import { NotificationBell } from './notification-bell';
+import { NotificationBell } from '../notifications';
 
 export function AccountHeader() {
   const { user } = useAccount();

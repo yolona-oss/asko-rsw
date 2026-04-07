@@ -2,10 +2,10 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { ChatLayout } from '@/components/chat/chat-layout';
 import { SkeletonBlock } from '@/components/skeleton';
-import { PageHeader } from '@/components/account/page-header';
+import { PageHeader } from '@/components/account/layout/page-header';
 
 function ChatSkeleton() {
   return (

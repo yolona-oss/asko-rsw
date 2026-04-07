@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Textarea } from '@asko/ui';
 import { Plus } from 'lucide-react';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { PaymentModal } from '@/components/account/user/payment-modal';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';

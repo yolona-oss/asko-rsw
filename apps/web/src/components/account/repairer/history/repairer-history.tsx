@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Star } from 'lucide-react';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
 import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
@@ -19,8 +19,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { STATUS_LABEL, STATUS_BADGE, formatDateShort, formatDateLong, LIMIT } from './constants';
 

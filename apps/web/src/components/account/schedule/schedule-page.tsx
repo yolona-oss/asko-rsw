@@ -18,9 +18,9 @@ import {
   VIEW_CARD,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { useAccount } from '@/components/account/account-provider';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { ScheduleEntry } from './types';

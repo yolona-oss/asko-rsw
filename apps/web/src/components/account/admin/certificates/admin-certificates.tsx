@@ -15,8 +15,8 @@ import {
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { certificateApi } from '@/lib/api/certificate';
 import type { ICertificate } from '@/lib/api/types';
 import { STATUS_FILTER, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';

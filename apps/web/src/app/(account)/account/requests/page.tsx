@@ -1,10 +1,10 @@
 'use client';
 
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { ManagerRequests } from '@/components/account/manager/manager-requests';
-import { RepairerRequest } from '@/components/account/repairer/repairer-request';
-import { UserRequests } from '@/components/account/user/user-requests';
+import { ManagerRequests } from '@/components/account/manager/requests';
+import { RepairerRequest } from '@/components/account/repairer/requests';
+import { UserRequests } from '@/components/account/user/requests';
 
 export default function RequestsPage() {
   const { user } = useAccount();

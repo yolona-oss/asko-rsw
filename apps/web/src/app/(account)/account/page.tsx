@@ -1,8 +1,8 @@
 'use client';
 
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { UserDashboard } from '@/components/account/user/user-dashboard';
+import { UserDashboard } from '@/components/account/user/dashboard';
 import { DealerDashboard } from '@/components/account/dealer/dealer-dashboard';
 import { ManagerDashboard } from '@/components/account/manager/manager-dashboard';
 import { AdminDashboard } from '@/components/account/admin/admin-dashboard';

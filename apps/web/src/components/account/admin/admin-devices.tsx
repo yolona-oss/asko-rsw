@@ -1,1 +1,0 @@
-export { AdminDevices } from './devices';

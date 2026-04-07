@@ -14,8 +14,8 @@ import {
   StatusBadge,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
 import { ROLE_LABELS, ROLE_TAB_FILTER_DEF } from './constants';

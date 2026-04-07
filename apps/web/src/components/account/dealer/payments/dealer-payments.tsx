@@ -17,11 +17,11 @@ import {
   formatRangeLabel,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder, FilterValues, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
-import { WithdrawModal } from '@/components/account/dealer/withdraw-modal';
+import { WithdrawModal } from '@/components/account/dealer/payments/withdraw-modal';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import { dealerApi } from '@/lib/api/dealer';
 import type { IPointsTransaction } from '@/lib/api/types';

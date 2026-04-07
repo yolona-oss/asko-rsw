@@ -1,1 +1,0 @@
-export { UserCertificates } from './certificates';

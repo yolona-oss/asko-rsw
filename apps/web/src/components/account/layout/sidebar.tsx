@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Dialog } from '@asko/ui';
 import { ArrowLeft, LogOut, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { useAccount } from './account-provider';
+import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';

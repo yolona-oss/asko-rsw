@@ -11,7 +11,7 @@ import { getActiveConversation } from '@/lib/active-conversation';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, getTimeAgo } from './constants';
-import { NotificationIcon } from './notification-icon';
+import { NotificationIcon } from './icon';
 
 export function NotificationBell() {
   const router = useRouter();

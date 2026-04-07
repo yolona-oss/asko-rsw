@@ -1,6 +1,6 @@
 'use client';
 
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { SchedulePage } from '@/components/account/schedule/schedule-page';
 import { MySchedulePage } from '@/components/account/schedule/my-schedule-page';

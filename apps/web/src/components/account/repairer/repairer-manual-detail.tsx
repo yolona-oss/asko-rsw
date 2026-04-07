@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { deviceApi } from '@/lib/api/device';
 import { Card, Button, Modal, Textarea, FormField, Toggle } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import type { IDevice } from '@/lib/api/types';
 
 export function RepairerManualDetail({ deviceId }: { deviceId: string }) {

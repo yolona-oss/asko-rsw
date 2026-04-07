@@ -17,8 +17,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { IArticle } from '@/lib/api/types';
 import { ArticleCard } from './article-card';

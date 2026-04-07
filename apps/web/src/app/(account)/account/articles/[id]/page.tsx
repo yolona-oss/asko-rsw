@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminArticleForm } from '@/components/account/admin/admin-article-form';
+import { AdminArticleForm } from '@/components/account/admin/article-form';
 
 export default function ArticleEditPage() {
   const { id } = useParams<{ id: string }>();

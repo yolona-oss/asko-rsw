@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { StatCard, DonutChart, MetricComparison, ProgressBar } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { deviceApi } from '@/lib/api/device';
 import { certificateApi } from '@/lib/api/certificate';
 import { usersApi } from '@/lib/api/users';

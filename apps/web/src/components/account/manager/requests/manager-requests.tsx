@@ -14,8 +14,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';

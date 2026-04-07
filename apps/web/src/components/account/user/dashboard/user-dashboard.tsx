@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { Card, Button, Modal, StatCard } from '@asko/ui';
 import { X } from 'lucide-react';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { CTABanner } from '@/components/account/cta-banner';
-import { PaymentModal } from '@/components/account/user/payment-modal';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { CTABanner } from '@/components/account/layout/cta-banner';
+import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';

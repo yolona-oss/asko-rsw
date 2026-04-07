@@ -1,10 +1,10 @@
 'use client';
 
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { ManagerPayments } from '@/components/account/manager/manager-payments';
-import { UserPayments } from '@/components/account/user/user-payments';
-import { DealerPayments } from '@/components/account/dealer/dealer-payments';
+import { ManagerPayments } from '@/components/account/manager/payments';
+import { UserPayments } from '@/components/account/user/payments';
+import { DealerPayments } from '@/components/account/dealer/payments';
 
 export default function PaymentsPage() {
   const { user } = useAccount();

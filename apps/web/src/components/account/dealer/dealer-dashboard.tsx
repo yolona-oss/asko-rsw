@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount } from '@/components/account/account-provider';
+import { useAccount } from '@/components/account/layout/provider';
 import { getGreeting, displayName } from '@/lib/account';
 import { StatCard, DonutChart, MetricComparison, Sparkline } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
-import { CTABanner } from '@/components/account/cta-banner';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { CTABanner } from '@/components/account/layout/cta-banner';
 import { dealerApi } from '@/lib/api/dealer';
 import { certificateApi } from '@/lib/api/certificate';
 import type { IPointsTransaction } from '@/lib/api/types';

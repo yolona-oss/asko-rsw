@@ -17,8 +17,8 @@ import {
   Pagination,
 } from '@asko/ui';
 import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate, STATUS_FILTER, type StatusFilter } from './constants';
 import type { RepairRequest } from './types';

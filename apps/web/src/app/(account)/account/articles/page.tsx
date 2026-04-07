@@ -1,7 +1,7 @@
 'use client';
 
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminArticles } from '@/components/account/admin/admin-articles';
+import { AdminArticles } from '@/components/account/admin/articles';
 
 export default function ArticlesPage() {
   const allowed = useRoleGuard(['admin']);

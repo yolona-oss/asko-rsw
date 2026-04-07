@@ -1,8 +1,8 @@
 'use client';
 
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { ArticleGraph } from '@/components/account/admin/article-graph/article-graph';
 
 export default function ArticleGraphPage() {

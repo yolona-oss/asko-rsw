@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, FormField } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
 import { RichTextEditor, plainTextToLexicalState, type RichTextEditorHandle } from './rich-text-editor';

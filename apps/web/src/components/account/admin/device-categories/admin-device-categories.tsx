@@ -12,8 +12,8 @@ import {
   DataGrid,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { deviceCategoryApi } from '@/lib/api/device-category';
 import type { DeviceCategoryRecord } from '@/lib/api/device-category';
 

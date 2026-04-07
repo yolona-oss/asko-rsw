@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminDeviceForm } from '@/components/account/admin/admin-device-form';
+import { AdminDeviceForm } from '@/components/account/admin/device-form';
 
 export default function DeviceEditPage() {
   const { id } = useParams<{ id: string }>();

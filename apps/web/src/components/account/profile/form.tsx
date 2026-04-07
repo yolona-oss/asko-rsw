@@ -2,11 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAccount } from '../account-provider';
+import { useAccount } from '../layout/provider';
 import { useAuth } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
-import { AvatarCropModal } from '../avatar-crop-modal';
+import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from '@/components/skeleton';

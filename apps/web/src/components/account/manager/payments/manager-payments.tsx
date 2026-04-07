@@ -18,8 +18,8 @@ import {
   formatRangeLabel,
 } from '@asko/ui';
 import type { FilterValues, DataGridColumn, SortOrder, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, PROVIDER_LABELS, FILTERS } from './constants';
 import { formatDateFull, formatAmount, payerName, bucketPayments } from './utils';

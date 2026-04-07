@@ -1,1 +1,1 @@
-export { RepairerRequests } from './repairer-requests';
+export { RepairerRequests, RepairerRequests as RepairerRequest } from './repairer-requests';

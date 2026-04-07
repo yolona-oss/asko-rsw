@@ -1,1 +1,0 @@
-export { AdminInvitations } from './invitations';

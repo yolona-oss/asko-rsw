@@ -17,8 +17,8 @@ import {
   VIEW_CARD,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
 import type { Device, ImportStatus } from './types';
