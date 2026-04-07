@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Badge, Button, ImageGallery } from '@asko/ui';
+import { Badge, Button, ImageGallery, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
@@ -156,7 +156,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     return (
       <PageContainer>
         <PageHeader>Заявки на обслуживание</PageHeader>
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <SkeletonCard className="h-[300px]" />
       </PageContainer>
     );
   }

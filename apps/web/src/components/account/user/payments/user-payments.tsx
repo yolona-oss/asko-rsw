@@ -14,6 +14,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
+  SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -150,7 +151,9 @@ export function UserPayments() {
       <PageHeader>Платежи</PageHeader>
 
       {loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
       ) : payments.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-12">
           <p className="text-base text-text-sub">У вас пока нет платежей</p>

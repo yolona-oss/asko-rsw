@@ -1,7 +1,8 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Container, Pagination } from '@asko/ui';
+import { Container, Pagination, SkeletonBlock } from '@asko/ui';
 
 export const metadata: Metadata = {
   title: 'Каталог техники ASKO — модели и характеристики',
@@ -18,14 +19,31 @@ import { getPlaceholderSrc } from '@/lib/placeholders';
 
 const LIMIT = 12;
 
-export default async function DevicesListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page: pageParam } = await searchParams;
-  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+function DevicesListSkeleton() {
+  return (
+    <div className="bg-page-bg">
+      <Container>
+        <div className="py-8 md:py-12">
+          <SkeletonBlock className="h-8 w-48 mb-8" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col">
+                <SkeletonBlock className="aspect-square w-full" />
+                <div className="p-3 md:p-4 flex flex-col gap-2">
+                  <SkeletonBlock className="h-3 w-16" />
+                  <SkeletonBlock className="h-4 w-full" />
+                  <SkeletonBlock className="h-3 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Container>
+    </div>
+  );
+}
 
+async function DevicesContent({ page }: { page: number }) {
   const [{ data: devices, overallCount: total }, categories] = await Promise.all([
     fetchDevices(page, LIMIT),
     fetchDeviceCategories(),
@@ -94,5 +112,20 @@ export default async function DevicesListPage({
         </div>
       </Container>
     </div>
+  );
+}
+
+export default async function DevicesListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+
+  return (
+    <Suspense fallback={<DevicesListSkeleton />}>
+      <DevicesContent page={page} />
+    </Suspense>
   );
 }

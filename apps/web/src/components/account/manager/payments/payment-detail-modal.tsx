@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Badge, Modal, DetailRow, DetailSection } from '@asko/ui';
+import { Badge, Modal, DetailRow, DetailSection, SkeletonBlock } from '@asko/ui';
 import type { PaymentRecord } from '@/lib/api/payment';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
@@ -95,7 +95,7 @@ export function PaymentDetailModal({
           </h3>
 
           {targetLoading ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
+            <div className="flex flex-col gap-2">{Array.from({ length: 4 }).map((_, i) => <SkeletonBlock key={i} className="h-5" />)}</div>
           ) : !target ? (
             <p className="text-sm text-text-sub">ID: {payment.targetId}</p>
           ) : payment.targetType === 'repairRequest' ? (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Select, Textarea, FormField, KeyValueEditor, kvToRecord, recordToKV } from '@asko/ui';
+import { Button, Input, Select, Textarea, FormField, KeyValueEditor, kvToRecord, recordToKV, SkeletonCard } from '@asko/ui';
 import type { KVPair } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -83,7 +83,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
   if (loading) {
     return (
       <PageContainer>
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+        <SkeletonCard className="h-[400px]" />
       </PageContainer>
     );
   }

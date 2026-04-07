@@ -1,6 +1,7 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Container, Pagination } from '@asko/ui';
+import { Container, Pagination, SkeletonBlock } from '@asko/ui';
 
 export const metadata: Metadata = {
   title: 'Статьи о ремонте техники ASKO',
@@ -16,14 +17,25 @@ import { ArticlePreviewCard } from '@/components/articles';
 
 const LIMIT = 12;
 
-export default async function ArticlesListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page: pageParam } = await searchParams;
-  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+function ArticlesListSkeleton() {
+  return (
+    <div className="bg-page-bg">
+      <Container>
+        <div className="py-8 md:py-12">
+          <SkeletonBlock className="h-4 w-48 mb-6" />
+          <SkeletonBlock className="h-10 w-64 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-72" />
+            ))}
+          </div>
+        </div>
+      </Container>
+    </div>
+  );
+}
 
+async function ArticlesContent({ page }: { page: number }) {
   const { data: articles, overallCount: total } = await fetchArticles(page, LIMIT);
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -77,6 +89,21 @@ export default async function ArticlesListPage({
         </div>
       </Container>
     </div>
+  );
+}
+
+export default async function ArticlesListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+
+  return (
+    <Suspense fallback={<ArticlesListSkeleton />}>
+      <ArticlesContent page={page} />
+    </Suspense>
   );
 }
 

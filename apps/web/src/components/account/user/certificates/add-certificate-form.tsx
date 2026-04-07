@@ -7,6 +7,7 @@ import {
   FormField,
   Select,
   Modal,
+  SkeletonBlock,
 } from '@asko/ui';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
@@ -86,7 +87,7 @@ export function AddCertificateForm({
         <h2 className="text-xl font-medium text-text-main">Добавить сертификат</h2>
         <FormField label="Устройство">
           {loadingDevices ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
+            <SkeletonBlock className="h-10 w-full" />
           ) : devices.length === 0 ? (
             <div className="flex flex-col gap-2">
               <p className="text-sm text-text-sub">Нет зарегистрированных устройств</p>

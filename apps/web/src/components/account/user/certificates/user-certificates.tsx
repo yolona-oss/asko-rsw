@@ -13,6 +13,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
+  SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder, DropdownMenuEntry } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -240,7 +241,9 @@ export function UserCertificates() {
             {/* Certificate cards */}
             <div className="flex flex-col gap-6 flex-1 min-w-0">
               {loading ? (
-                <p className="text-sm text-text-sub">Загрузка...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+                </div>
               ) : paginatedCertificates.length === 0 ? (
                 <p className="text-sm text-text-sub">У вас нет сертификатов</p>
               ) : (

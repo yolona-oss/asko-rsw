@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { SkeletonBlock } from '@asko/ui';
 import { HeroSection } from '@/components/landing/sections/hero';
 import { AdvantagesSection } from '@/components/landing/sections/advantages';
 import { ServicesSection } from '@/components/landing/sections/services';
@@ -10,6 +12,21 @@ import { VipSection } from '@/components/landing/sections/vip-section';
 import { ArticlesSection } from '@/components/landing/sections/articles';
 import { CtaSection } from '@/components/landing/sections/cta-section';
 import { FaqSection } from '@/components/landing/sections/faq';
+
+function SectionSkeleton() {
+  return (
+    <div className="py-16">
+      <div className="max-w-[1200px] mx-auto px-4">
+        <SkeletonBlock className="h-8 w-64 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[0, 1, 2].map((i) => (
+            <SkeletonBlock key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://askoservis.ru';
 
@@ -177,9 +194,13 @@ export default function HomePage() {
       <PersonalAccountSection />
       <AboutSection />
       <StoreBannerSection />
-      <ModelsSection />
+      <Suspense fallback={<SectionSkeleton />}>
+        <ModelsSection />
+      </Suspense>
       <VipSection />
-      <ArticlesSection />
+      <Suspense fallback={<SectionSkeleton />}>
+        <ArticlesSection />
+      </Suspense>
       <CtaSection />
       <FaqSection />
     </>

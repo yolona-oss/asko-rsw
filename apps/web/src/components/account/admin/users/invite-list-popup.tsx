@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { SkeletonBlock } from '@asko/ui';
 import { invitationApi } from '@/lib/api/invitation';
 import { INVITE_ROLE_LABELS, formatDateTime, isExpired } from './constants';
 
@@ -52,7 +53,7 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
 
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <p className="text-sm text-text-sub p-5">Загрузка...</p>
+            <div className="flex flex-col gap-2 p-5">{Array.from({ length: 3 }).map((_, i) => <SkeletonBlock key={i} className="h-10" />)}</div>
           ) : invites.length === 0 ? (
             <p className="text-sm text-text-sub p-5">Нет приглашений</p>
           ) : (

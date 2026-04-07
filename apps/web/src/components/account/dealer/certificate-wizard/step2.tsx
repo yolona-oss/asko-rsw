@@ -1,6 +1,6 @@
 'use client';
 
-import { FormField, Select, SerialNumberInput, AddressInput, type AddressValue } from '@asko/ui';
+import { FormField, Select, SerialNumberInput, AddressInput, SkeletonBlock, type AddressValue } from '@asko/ui';
 import type { FormData, CatalogDevice } from './types';
 
 export function Step2({
@@ -18,7 +18,7 @@ export function Step2({
     <div className="flex flex-col gap-6">
       <FormField label="Устройство из каталога" variant="bold">
         {loadingCatalog ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
+          <SkeletonBlock className="h-20 w-full" />
         ) : catalog.length === 0 ? (
           <p className="text-sm text-text-sub">Нет доступных устройств</p>
         ) : (

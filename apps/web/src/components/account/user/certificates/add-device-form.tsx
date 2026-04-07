@@ -8,6 +8,7 @@ import {
   Modal,
   SerialNumberInput,
   AddressInput,
+  SkeletonBlock,
   type AddressValue,
 } from '@asko/ui';
 import { userDeviceApi } from '@/lib/api/user-device';
@@ -87,7 +88,7 @@ export function AddDeviceForm({
 
         <FormField label="Устройство">
           {loadingCatalog ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
+            <SkeletonBlock className="h-10 w-full" />
           ) : catalog.length === 0 ? (
             <p className="text-sm text-text-sub">Нет доступных устройств</p>
           ) : (

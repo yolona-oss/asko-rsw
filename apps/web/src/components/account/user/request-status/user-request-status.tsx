@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Textarea } from '@asko/ui';
+import { Button, Textarea, SkeletonCard } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -143,7 +143,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
     return (
       <PageContainer>
         <PageHeader>Статусы заявки</PageHeader>
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <SkeletonCard className="h-[300px]" />
       </PageContainer>
     );
   }

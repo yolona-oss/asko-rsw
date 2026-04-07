@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import NextTopLoader from 'nextjs-toploader';
 import { AppProviders } from '@/store/providers';
 import { YandexMetrika } from '@/components/YandexMetrika';
 import '@/styles/globals.css';
@@ -41,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="min-h-screen flex flex-col">
+        <NextTopLoader color="#EB001C" height={3} showSpinner={false} />
         <AppProviders>{children}</AppProviders>
         <Suspense fallback={null}>
           <YandexMetrika />

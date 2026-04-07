@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Badge, Card, Modal } from '@asko/ui';
+import { Button, Badge, Card, Modal, SkeletonCard } from '@asko/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -112,7 +112,9 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
       <div>
         <h2 className="text-[14px] leading-[18px] font-bold text-text-main mb-3">Рабочий график</h2>
         {loading ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} className="h-28" />)}
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
             {DAY_LABELS.map((dayLabel, dayIndex) => {
@@ -154,7 +156,9 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
       <div>
         <h2 className="text-[14px] leading-[18px] font-bold text-text-main mb-3">Отпуска, больничные, переработки</h2>
         {loading ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} className="h-14" />)}
+          </div>
         ) : dateEntries.length === 0 ? (
           <p className="text-sm text-text-sub">Нет записей</p>
         ) : (

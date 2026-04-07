@@ -15,6 +15,7 @@ import {
   DateRangeModal,
   defaultRange,
   formatRangeLabel,
+  SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder, FilterValues, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -244,7 +245,9 @@ export function DealerPayments() {
       {pointsView === 'table' ? (
         <DataGrid<IPointsTransaction> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} onRowClick={pointsDetail.onRowClick} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
       ) : loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
       ) : filteredPoints.length === 0 ? (
         <p className="text-sm text-text-sub">Нет операций</p>
       ) : (
@@ -273,7 +276,9 @@ export function DealerPayments() {
       {paymentView === 'table' ? (
         <DataGrid<PaymentRecord> loading={loading} columns={paymentColumns} data={filteredPayments} keyExtractor={(p) => p.id} emptyContent="Нет платежей" sortKey={paymentSortBy ?? undefined} sortOrder={paymentSortOrder ?? undefined} onSort={(k, o) => { setPaymentSortBy(k); setPaymentSortOrder(o); }} onRowClick={paymentDetail.onRowClick} footer={<>Показано {filteredPayments.length} из {paymentsTotal}</>} />
       ) : loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
       ) : filteredPayments.length === 0 ? (
         <p className="text-sm text-text-sub">Нет платежей</p>
       ) : (

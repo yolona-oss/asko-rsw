@@ -12,6 +12,7 @@ import {
   VIEW_CARD,
   DataGrid,
   Pagination,
+  SkeletonCard,
 } from '@asko/ui';
 import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -185,7 +186,9 @@ export function ManagerRequests() {
             }
           />
         ) : loading ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+          </div>
         ) : requests.length === 0 ? (
           <p className="text-sm text-text-sub">Нет заявок</p>
         ) : (

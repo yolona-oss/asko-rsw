@@ -1,9 +1,23 @@
 'use client';
 
-import { Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AuthImageShell } from '@/components/auth/auth-image-shell';
-import { RegisterForm } from '@/components/auth/register-form';
+import { SkeletonBlock } from '@asko/ui';
+
+const AuthImageShell = lazy(() =>
+  import('@/components/auth/auth-image-shell').then((m) => ({ default: m.AuthImageShell })),
+);
+const RegisterForm = lazy(() =>
+  import('@/components/auth/register-form').then((m) => ({ default: m.RegisterForm })),
+);
+
+function AuthSkeleton() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <SkeletonBlock className="w-[400px] h-[500px]" />
+    </div>
+  );
+}
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -25,7 +39,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<AuthSkeleton />}>
       <RegisterContent />
     </Suspense>
   );

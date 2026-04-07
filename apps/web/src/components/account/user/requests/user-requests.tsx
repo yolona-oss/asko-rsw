@@ -15,6 +15,7 @@ import {
   VIEW_CARD,
   DataGrid,
   Pagination,
+  SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -161,7 +162,9 @@ export function UserRequests() {
           }
         />
       ) : loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
       ) : requests.length === 0 ? (
         total === 0 && !search && statusFilter === 'all' ? (
           <div className="flex flex-col items-center gap-4 py-12">

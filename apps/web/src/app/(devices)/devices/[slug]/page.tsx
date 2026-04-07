@@ -1,8 +1,9 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Product, SpecRow } from '@/lib/devices';
-import { Container } from '@asko/ui';
+import { Container, SkeletonBlock } from '@asko/ui';
 import { ProductGallery } from '@/components/devices/product-gallery';
 import { ProductInfo } from '@/components/devices/product-info';
 import { ProductSpecs } from '@/components/devices/product-specs';
@@ -80,13 +81,45 @@ function deviceToProduct(device: any, images: string[], typeLabels: Record<strin
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+function ProductDetailSkeleton() {
+  return (
+    <div className="bg-page-bg">
+      <Container>
+        <div className="flex flex-col gap-8 md:gap-12 py-6 md:py-8 lg:py-10">
+          {/* Desktop skeleton: gallery + info */}
+          <div className="hidden lg:flex gap-14">
+            <SkeletonBlock className="w-[500px] h-[500px]" />
+            <div className="flex-1 flex flex-col gap-4">
+              <SkeletonBlock className="h-4 w-24" />
+              <SkeletonBlock className="h-8 w-72" />
+              <SkeletonBlock className="h-4 w-48" />
+              <div className="mt-4 flex flex-col gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <SkeletonBlock key={i} className="h-4 w-full" />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Mobile skeleton */}
+          <div className="lg:hidden flex flex-col gap-6">
+            <SkeletonBlock className="h-6 w-48" />
+            <SkeletonBlock className="aspect-square w-full" />
+            <SkeletonBlock className="h-12 w-full" />
+          </div>
+          {/* Care skeleton */}
+          <SkeletonBlock className="h-32 w-full" />
+          {/* Specs skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SkeletonBlock className="h-48" />
+            <SkeletonBlock className="h-48" />
+          </div>
+        </div>
+      </Container>
+    </div>
+  );
+}
 
+async function ProductDetailContent({ slug }: { slug: string }) {
   const [device, images, categories] = await Promise.all([
     fetchDeviceBySlug(slug),
     fetchDeviceImageUrlsBySlug(slug),
@@ -166,5 +199,19 @@ export default async function ProductPage({
         </div>
       </Container>
     </div>
+  );
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  return (
+    <Suspense fallback={<ProductDetailSkeleton />}>
+      <ProductDetailContent slug={slug} />
+    </Suspense>
   );
 }

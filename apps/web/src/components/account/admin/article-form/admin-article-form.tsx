@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, FormField } from '@asko/ui';
+import { Button, Input, FormField, SkeletonCard } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { articleApi } from '@/lib/api/article';
@@ -103,7 +103,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   if (loading) {
     return (
       <PageContainer>
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+        <SkeletonCard className="h-[400px]" />
       </PageContainer>
     );
   }

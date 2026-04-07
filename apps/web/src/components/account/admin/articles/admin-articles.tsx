@@ -15,6 +15,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
+  SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -204,7 +205,9 @@ export function AdminArticles() {
           }
         />
       ) : loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
       ) : (
         <>
           {filteredArticles.length === 0 ? (

@@ -1,7 +1,8 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Container } from '@asko/ui';
+import { Container, SkeletonBlock } from '@asko/ui';
 import {
   fetchArticle,
   fetchArticleImages,
@@ -47,13 +48,28 @@ export async function generateMetadata({
   };
 }
 
-export default async function ArticlePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+function ArticleDetailSkeleton() {
+  return (
+    <div className="bg-[#f1f1f1]">
+      <Container>
+        <div className="py-8 md:py-12 px-4 md:px-0 max-w-[738px] mx-auto">
+          <SkeletonBlock className="h-4 w-48 mb-6" />
+          <SkeletonBlock className="h-10 w-full mb-8" />
+          <SkeletonBlock className="h-[400px] w-full mb-8" />
+          <div className="flex flex-col gap-4">
+            <SkeletonBlock className="h-4 w-full" />
+            <SkeletonBlock className="h-4 w-full" />
+            <SkeletonBlock className="h-4 w-3/4" />
+            <SkeletonBlock className="h-4 w-full" />
+            <SkeletonBlock className="h-4 w-5/6" />
+          </div>
+        </div>
+      </Container>
+    </div>
+  );
+}
 
+async function ArticleDetailContent({ slug }: { slug: string }) {
   const [article, images] = await Promise.all([
     fetchArticle(slug),
     fetchArticleImages(slug),
@@ -110,5 +126,19 @@ export default async function ArticlePage({
         </div>
       </Container>
     </div>
+  );
+}
+
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  return (
+    <Suspense fallback={<ArticleDetailSkeleton />}>
+      <ArticleDetailContent slug={slug} />
+    </Suspense>
   );
 }
