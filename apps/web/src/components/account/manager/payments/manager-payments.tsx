@@ -11,16 +11,17 @@ import {
   VIEW_CARD,
   DataGrid,
   Pagination,
+  ChartCard,
+  DateRangeModal,
+  defaultRange,
+  formatRangeLabel,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
+import type { FilterValues, DataGridColumn, SortOrder, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
-import type { ChartStyle, DateRange } from './types';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, PROVIDER_LABELS, FILTERS } from './constants';
-import { defaultRange, formatDateFull, formatAmount, formatRangeLabel, payerName, bucketPayments } from './utils';
-import { PaymentChartCard } from './payment-chart-card';
-import { DateRangeModal } from './date-range-modal';
+import { formatDateFull, formatAmount, payerName, bucketPayments } from './utils';
 import { PaymentDetailModal } from './payment-detail-modal';
 
 export function ManagerPayments() {
@@ -37,7 +38,7 @@ export function ManagerPayments() {
   const pageSize = 20;
 
   // Chart state
-  const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
+  const [dateRange, setDateRange] = useState<DateRange>(defaultRange());
   const [chartStyle, setChartStyle] = useState<ChartStyle>('bar');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [chartPayments, setChartPayments] = useState<PaymentRecord[]>([]);
@@ -104,6 +105,14 @@ export function ManagerPayments() {
 
   const rangeLabel = formatRangeLabel(dateRange);
   const toggleStyle = useCallback(() => setChartStyle((s) => (s === 'bar' ? 'line' : 'bar')), []);
+
+  const renderChartTooltip = useCallback((bucket: ChartBucket) => (
+    <>
+      <p className="text-xs font-medium text-text-main">{bucket.label}</p>
+      <p className="text-xs text-text-sub">{formatAmount(bucket.total)} ₽</p>
+      <p className="text-xs text-text-sub">{bucket.count} {bucket.count === 1 ? 'транзакция' : bucket.count < 5 ? 'транзакции' : 'транзакций'}</p>
+    </>
+  ), []);
 
   // Fetch table data
   useEffect(() => {
@@ -205,27 +214,29 @@ export function ManagerPayments() {
 
       {/* Chart cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <PaymentChartCard
+        <ChartCard
           title="Подтверждено"
-          total={confirmedTotal}
-          prevTotal={prevConfirmedTotal}
+          formattedValue={`${formatAmount(confirmedTotal)} ₽`}
+          pctChange={prevConfirmedTotal > 0 ? Math.round(((confirmedTotal - prevConfirmedTotal) / prevConfirmedTotal) * 100) : confirmedTotal > 0 ? 100 : 0}
           buckets={confirmedBuckets}
           color="#20834A"
           chartStyle={chartStyle}
           rangeLabel={rangeLabel}
           onRangeClick={() => setDateModalOpen(true)}
           onStyleToggle={toggleStyle}
+          renderTooltip={renderChartTooltip}
         />
-        <PaymentChartCard
+        <ChartCard
           title="Возвращено"
-          total={refundedTotal}
-          prevTotal={prevRefundedTotal}
+          formattedValue={`${formatAmount(refundedTotal)} ₽`}
+          pctChange={prevRefundedTotal > 0 ? Math.round(((refundedTotal - prevRefundedTotal) / prevRefundedTotal) * 100) : refundedTotal > 0 ? 100 : 0}
           buckets={refundedBuckets}
           color="#dc2626"
           chartStyle={chartStyle}
           rangeLabel={rangeLabel}
           onRangeClick={() => setDateModalOpen(true)}
           onStyleToggle={toggleStyle}
+          renderTooltip={renderChartTooltip}
         />
       </div>
 

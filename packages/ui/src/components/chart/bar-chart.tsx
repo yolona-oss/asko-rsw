@@ -1,21 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import type { Bucket } from './types';
+import type { ReactNode } from 'react';
+import type { ChartBucket } from './types';
 import { ChartTooltip } from './chart-tooltip';
 
-export function BarChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
+export interface BarChartProps {
+  buckets: ChartBucket[];
+  color: string;
+  /** Height in px (default 120) */
+  height?: number;
+  /** Custom tooltip render */
+  renderTooltip?: (bucket: ChartBucket) => ReactNode;
+  /** Format tooltip value */
+  formatValue?: (value: number) => string;
+  /** Suffix after value in tooltip */
+  valueSuffix?: string;
+}
+
+export function BarChart({
+  buckets,
+  color,
+  height = 120,
+  renderTooltip,
+  formatValue,
+  valueSuffix,
+}: BarChartProps) {
   const max = Math.max(...buckets.map((b) => b.total), 1);
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <div className="relative flex items-end gap-[2px] h-[120px]">
+      <div className="relative flex items-end gap-[2px]" style={{ height }}>
         <ChartTooltip
           bucket={hovered !== null ? buckets[hovered] : null}
           x={hovered !== null && buckets.length > 0 ? ((hovered + 0.5) / buckets.length) * 100 : 0}
           visible={hovered !== null}
+          renderContent={renderTooltip}
+          formatValue={formatValue}
+          valueSuffix={valueSuffix}
         />
         {buckets.map((b, i) => (
           <div

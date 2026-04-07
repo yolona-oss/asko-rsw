@@ -54,12 +54,4 @@ export const FILTERS: FilterDefinition[] = [
   },
 ];
 
-export const RANGE_PRESETS: { key: string; label: string; ms: number }[] = [
-  { key: '1h', label: '1ч', ms: 60 * 60 * 1000 },
-  { key: '6h', label: '6ч', ms: 6 * 60 * 60 * 1000 },
-  { key: '12h', label: '12ч', ms: 12 * 60 * 60 * 1000 },
-  { key: '1d', label: '1д', ms: 24 * 60 * 60 * 1000 },
-  { key: '7d', label: '7д', ms: 7 * 24 * 60 * 60 * 1000 },
-  { key: '1m', label: '1м', ms: 30 * 24 * 60 * 60 * 1000 },
-  { key: '1y', label: '1г', ms: 365 * 24 * 60 * 60 * 1000 },
-];
+// Range presets moved to @asko/ui — use DEFAULT_RANGE_PRESETS

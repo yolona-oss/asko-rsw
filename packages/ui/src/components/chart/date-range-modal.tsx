@@ -1,22 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Button, Input } from '@asko/ui';
-import type { DateRange } from './types';
-import { RANGE_PRESETS } from './constants';
-import { toInputDate } from './utils';
+import { Modal } from '../modal';
+import { Button } from '../button';
+import { Input } from '../input';
+import type { DateRange, RangePreset } from './types';
+import { DEFAULT_RANGE_PRESETS, toInputDate } from './utils';
+
+export interface DateRangeModalProps {
+  open: boolean;
+  onClose: () => void;
+  range: DateRange;
+  onApply: (range: DateRange) => void;
+  /** Override default presets */
+  presets?: RangePreset[];
+  /** Modal title (default: "Период") */
+  title?: string;
+}
 
 export function DateRangeModal({
   open,
   onClose,
   range,
   onApply,
-}: {
-  open: boolean;
-  onClose: () => void;
-  range: DateRange;
-  onApply: (range: DateRange) => void;
-}) {
+  presets = DEFAULT_RANGE_PRESETS,
+  title = 'Период',
+}: DateRangeModalProps) {
   const [startStr, setStartStr] = useState(toInputDate(range.start));
   const [endStr, setEndStr] = useState(toInputDate(range.end));
   const [activePreset, setActivePreset] = useState<string | null>('1m');
@@ -28,7 +37,7 @@ export function DateRangeModal({
     }
   }, [open, range]);
 
-  const handlePreset = (preset: typeof RANGE_PRESETS[number]) => {
+  const handlePreset = (preset: RangePreset) => {
     const end = new Date();
     const start = new Date(end.getTime() - preset.ms);
     setStartStr(toInputDate(start));
@@ -54,11 +63,11 @@ export function DateRangeModal({
   return (
     <Modal open={open} onClose={onClose}>
       <div className="flex flex-col gap-5 p-6 w-full sm:w-[400px]">
-        <h2 className="text-lg font-medium text-text-main">Период</h2>
+        <h2 className="text-lg font-medium text-text-main">{title}</h2>
 
         {/* Presets */}
         <div className="flex flex-wrap gap-2">
-          {RANGE_PRESETS.map((p) => (
+          {presets.map((p) => (
             <button
               key={p.key}
               type="button"

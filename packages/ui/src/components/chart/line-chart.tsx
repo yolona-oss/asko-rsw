@@ -1,13 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import type { Bucket } from './types';
+import type { ReactNode } from 'react';
+import type { ChartBucket } from './types';
 import { ChartTooltip } from './chart-tooltip';
 
-export function LineChart({ buckets, color }: { buckets: Bucket[]; color: string }) {
+export interface LineChartProps {
+  buckets: ChartBucket[];
+  color: string;
+  /** Height in px (default 120) */
+  height?: number;
+  /** Custom tooltip render */
+  renderTooltip?: (bucket: ChartBucket) => ReactNode;
+  /** Format tooltip value */
+  formatValue?: (value: number) => string;
+  /** Suffix after value in tooltip */
+  valueSuffix?: string;
+}
+
+export function LineChart({
+  buckets,
+  color,
+  height = 120,
+  renderTooltip,
+  formatValue,
+  valueSuffix,
+}: LineChartProps) {
   const max = Math.max(...buckets.map((b) => b.total), 1);
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
-  const h = 120;
+  const h = height;
   const w = buckets.length > 1 ? buckets.length - 1 : 1;
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -31,6 +52,9 @@ export function LineChart({ buckets, color }: { buckets: Bucket[]; color: string
           bucket={hovered !== null ? buckets[hovered] : null}
           x={hoveredX}
           visible={hovered !== null}
+          renderContent={renderTooltip}
+          formatValue={formatValue}
+          valueSuffix={valueSuffix}
         />
         <svg viewBox={`0 0 100 ${h}`} preserveAspectRatio="none" className="w-full" style={{ height: h }}>
           <polygon points={areaPoints} fill={color} opacity={0.1} />
@@ -41,11 +65,9 @@ export function LineChart({ buckets, color }: { buckets: Bucket[]; color: string
             strokeWidth={1.5}
             vectorEffect="non-scaling-stroke"
           />
-          {/* Hover dot */}
           {hovered !== null && (
             <circle cx={hoveredX} cy={hoveredY} r={3} fill={color} vectorEffect="non-scaling-stroke" />
           )}
-          {/* Invisible hit areas */}
           {buckets.map((_, i) => {
             const x = (i / w) * 100;
             const barW = 100 / buckets.length;

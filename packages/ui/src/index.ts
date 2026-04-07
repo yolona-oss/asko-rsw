@@ -147,3 +147,26 @@ export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/ima
 
 export { Tooltip } from './components/tooltip';
 export type { TooltipProps, TooltipPlacement, TooltipTrigger } from './components/tooltip';
+
+export {
+  BarChart,
+  LineChart,
+  ChartTooltip,
+  ChartCard,
+  DateRangeModal,
+  defaultRange,
+  formatRangeLabel,
+  toInputDate,
+  DEFAULT_RANGE_PRESETS,
+} from './components/chart';
+export type {
+  ChartStyle,
+  ChartBucket,
+  DateRange,
+  RangePreset,
+  BarChartProps,
+  LineChartProps,
+  ChartTooltipProps,
+  ChartCardProps,
+  DateRangeModalProps,
+} from './components/chart';

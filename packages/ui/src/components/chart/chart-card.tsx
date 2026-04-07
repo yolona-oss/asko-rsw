@@ -1,33 +1,55 @@
 'use client';
 
 import { AlignLeft, BarChart3 } from 'lucide-react';
-import type { Bucket, ChartStyle } from './types';
-import { formatAmount } from './utils';
+import type { ChartBucket, ChartStyle } from './types';
 import { BarChart } from './bar-chart';
 import { LineChart } from './line-chart';
+import type { ReactNode } from 'react';
 
-export function PaymentChartCard({
+export interface ChartCardProps {
+  /** Title below the value */
+  title: string;
+  /** Formatted main value (e.g. "12 345 ₽") */
+  formattedValue: string;
+  /** Percentage change vs previous period */
+  pctChange: number;
+  /** Label for the period change (e.g. "за период") */
+  pctLabel?: string;
+  /** Data buckets */
+  buckets: ChartBucket[];
+  /** Chart color */
+  color: string;
+  /** Current chart style */
+  chartStyle: ChartStyle;
+  /** Date range label (e.g. "С 1 марта по 1 апреля 2025 г.") */
+  rangeLabel: string;
+  /** Called when range label is clicked */
+  onRangeClick: () => void;
+  /** Called to toggle chart style */
+  onStyleToggle: () => void;
+  /** Custom tooltip render */
+  renderTooltip?: (bucket: ChartBucket) => ReactNode;
+  /** Format tooltip value */
+  formatValue?: (value: number) => string;
+  /** Suffix after value in tooltip */
+  valueSuffix?: string;
+}
+
+export function ChartCard({
   title,
-  total,
-  prevTotal,
+  formattedValue,
+  pctChange,
+  pctLabel = 'за период',
   buckets,
   color,
   chartStyle,
   rangeLabel,
   onRangeClick,
   onStyleToggle,
-}: {
-  title: string;
-  total: number;
-  prevTotal: number;
-  buckets: Bucket[];
-  color: string;
-  chartStyle: ChartStyle;
-  rangeLabel: string;
-  onRangeClick: () => void;
-  onStyleToggle: () => void;
-}) {
-  const pctChange = prevTotal > 0 ? Math.round(((total - prevTotal) / prevTotal) * 100) : total > 0 ? 100 : 0;
+  renderTooltip,
+  formatValue,
+  valueSuffix,
+}: ChartCardProps) {
   const pctColor = pctChange >= 0 ? 'text-[#2D8B57]' : 'text-brand-red';
 
   return (
@@ -39,7 +61,7 @@ export function PaymentChartCard({
             className="text-[#323232] font-bold tracking-[-0.01em]"
             style={{ fontSize: 52, lineHeight: '56px' }}
           >
-            {formatAmount(total)} ₽
+            {formattedValue}
           </p>
           <p
             className="text-[#323232] font-normal tracking-[-0.01em]"
@@ -49,7 +71,7 @@ export function PaymentChartCard({
           </p>
           <p className="font-normal tracking-[-0.01em]" style={{ fontSize: 18, lineHeight: '22px' }}>
             <span className={pctColor}>{pctChange >= 0 ? '+' : ''}{pctChange}%</span>
-            <span className="text-[#2D8B57]"> за период</span>
+            <span className="text-[#2D8B57]"> {pctLabel}</span>
           </p>
         </div>
         <button
@@ -71,12 +93,12 @@ export function PaymentChartCard({
         <>
           <div className="h-px bg-[#EDEFF1] my-3" />
           {chartStyle === 'bar'
-            ? <BarChart buckets={buckets} color={color} />
-            : <LineChart buckets={buckets} color={color} />}
+            ? <BarChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} />
+            : <LineChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} />}
         </>
       )}
 
-      {/* Separator + date range */}
+      {/* Date range */}
       <div className="h-px bg-[#EDEFF1] mt-3 mb-2" />
       <button
         type="button"

@@ -1,14 +1,2 @@
-export type ChartStyle = 'bar' | 'line';
-
-export interface DateRange {
-  start: Date;
-  end: Date;
-}
-
-export interface Bucket {
-  start: Date;
-  end: Date;
-  total: number;
-  count: number;
-  label: string;
-}
+// Chart types re-exported from @asko/ui
+export type { ChartStyle, ChartBucket as Bucket, DateRange } from '@asko/ui';
