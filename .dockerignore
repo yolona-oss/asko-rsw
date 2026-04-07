@@ -6,7 +6,7 @@ Dockerfile*
 docker-compose.yml
 dist
 .next
-turbo
+.turbo
 .cache
 notes
 todo
