@@ -1,6 +1,6 @@
 import { isDevEnv } from '@asko/shared';
 
-const allowlist = process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3000';
+const allowlist = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000'];
 
 export const corsOptions = {
     origin: function (origin: any, callback: any) {
