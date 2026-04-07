@@ -7,7 +7,7 @@ WORKDIR /app
 # ---------- prune ----------
 FROM base AS prune
 COPY . .
-RUN pnpm dlx turbo prune file-service --docker
+RUN pnpm dlx turbo prune @asko/file-service --docker
 
 # ---------- deps ----------
 FROM base AS deps
@@ -23,7 +23,7 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 # ---------- builder ----------
 FROM base AS builder
 COPY --from=deps /app ./
-RUN pnpm turbo run build --filter=file-service...
+RUN pnpm turbo run build --filter=@asko/file-service...
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner

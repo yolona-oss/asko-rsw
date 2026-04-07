@@ -1,5 +1,5 @@
 {
-    "name": "notification-service",
+    "name": "@asko/notification-service",
     "version": "1.0.0",
     "description": "Notification gRPC + RabbitMQ microservice",
     "private": true,

@@ -5,7 +5,7 @@ WORKDIR /app
 
 FROM base AS prune
 COPY . .
-RUN pnpm dlx turbo prune content-gateway --docker
+RUN pnpm dlx turbo prune @asko/content-gateway --docker
 
 FROM base AS deps
 COPY --from=prune /app/out/full/ .
@@ -19,7 +19,7 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 
 FROM base AS builder
 COPY --from=deps /app ./
-RUN pnpm turbo run build --filter=content-gateway...
+RUN pnpm turbo run build --filter=@asko/content-gateway...
 
 FROM node:20-alpine AS runner
 WORKDIR /app

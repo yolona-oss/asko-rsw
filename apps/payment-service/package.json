@@ -1,5 +1,5 @@
 {
-    "name": "payment-service",
+    "name": "@asko/payment-service",
     "version": "1.0.0",
     "description": "Payment gRPC microservice",
     "private": true,

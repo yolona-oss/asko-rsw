@@ -1,5 +1,5 @@
 {
-    "name": "file-service",
+    "name": "@asko/file-service",
     "version": "1.0.0",
     "description": "File upload gRPC microservice",
     "private": true,

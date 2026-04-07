@@ -1,5 +1,5 @@
 {
-    "name": "user-service",
+    "name": "@asko/user-service",
     "version": "1.0.0",
     "description": "User & Auth gRPC microservice",
     "private": true,

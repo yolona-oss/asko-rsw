@@ -1,5 +1,5 @@
 {
-    "name": "content-service",
+    "name": "@asko/content-service",
     "version": "1.0.0",
     "description": "Content gRPC microservice (articles, views, recommendations)",
     "private": true,

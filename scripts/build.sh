@@ -47,18 +47,18 @@ pnpm --filter @asko/ui run build
 
 echo ""
 echo "=== 6/6 Building services + gateways ==="
-pnpm --filter user-service run build
-pnpm --filter payment-service run build
-pnpm --filter file-service run build
-pnpm --filter repair-service run build
-pnpm --filter notification-service run build
-pnpm --filter chat-service run build
-pnpm --filter content-service run build
-pnpm --filter auth-gateway run build
-pnpm --filter repair-gateway run build
-pnpm --filter media-gateway run build
-pnpm --filter realtime-gateway run build
-pnpm --filter content-gateway run build
+pnpm --filter @asko/user-service run build
+pnpm --filter @asko/payment-service run build
+pnpm --filter @asko/file-service run build
+pnpm --filter @asko/repair-service run build
+pnpm --filter @asko/notification-service run build
+pnpm --filter @asko/chat-service run build
+pnpm --filter @asko/content-service run build
+pnpm --filter @asko/auth-gateway run build
+pnpm --filter @asko/repair-gateway run build
+pnpm --filter @asko/media-gateway run build
+pnpm --filter @asko/realtime-gateway run build
+pnpm --filter @asko/content-gateway run build
 
 echo ""
 echo "=== Build complete ==="

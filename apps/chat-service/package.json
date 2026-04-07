@@ -1,5 +1,5 @@
 {
-    "name": "chat-service",
+    "name": "@asko/chat-service",
     "version": "1.0.0",
     "description": "Chat gRPC + RabbitMQ microservice",
     "private": true,

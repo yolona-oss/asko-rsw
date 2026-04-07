@@ -1,5 +1,5 @@
 {
-    "name": "repair-service",
+    "name": "@asko/repair-service",
     "version": "1.0.0",
     "description": "Repair gRPC microservice",
     "private": true,
