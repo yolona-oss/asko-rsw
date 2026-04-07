@@ -148,6 +148,7 @@ export function AdminArticles() {
             </Button>
           )}
         </>}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 
       <Modal
@@ -181,9 +182,6 @@ export function AdminArticles() {
           </Button>
         </div>
       </Modal>
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'table' ? (
         <DataGrid

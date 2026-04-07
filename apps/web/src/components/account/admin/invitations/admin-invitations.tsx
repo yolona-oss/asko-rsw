@@ -11,8 +11,7 @@ import {
   Select,
   FormField,
   DataGrid,
-  DataSearch,
-  DataFilter,
+  DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -263,19 +262,13 @@ export function AdminInvitations() {
       {error && <p className="text-sm text-brand-red">{error}</p>}
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter
-            filters={[STATUS_FILTER]}
-            values={filterValues}
-            onChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
-          />
-        </div>
-      </div>
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        filters={[STATUS_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+      />
 
       {view === 'table' ? (
         <DataGrid

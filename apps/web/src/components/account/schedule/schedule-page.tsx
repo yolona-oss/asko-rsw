@@ -10,7 +10,6 @@ import { ScheduleFormModal } from './schedule-form-modal';
 import {
   Button,
   DataGrid,
-  DataFilter,
   DataToolbar,
   ViewSwitcher,
   Pagination,
@@ -259,6 +258,9 @@ export function SchedulePage() {
       <PageHeader>Расписание</PageHeader>
 
       <DataToolbar
+        filters={filters}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
         actions={<>
           <Link href="/account/schedule/my">
             <Button variant="secondary" size="sm">Моё расписание</Button>
@@ -267,11 +269,8 @@ export function SchedulePage() {
             Создать запись
           </Button>
         </>}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
-
-      <DataFilter filters={filters} values={filterValues} onChange={handleFilterChange} />
-
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'table' ? (
         <DataGrid

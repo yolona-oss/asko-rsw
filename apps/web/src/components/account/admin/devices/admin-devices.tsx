@@ -10,7 +10,6 @@ import {
   Button,
   Modal,
   DataGrid,
-  DataFilter,
   DataToolbar,
   ViewSwitcher,
   Pagination,
@@ -220,6 +219,9 @@ export function AdminDevices() {
       {/* Toolbar */}
       <DataToolbar
         search={{ value: search, onChange: handleSearchChange, placeholder: "Поиск" }}
+        filters={filters}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
         actions={<>
           <Link href="/account/device-categories">
             <Button variant="secondary" size="sm">Категории</Button>
@@ -248,13 +250,7 @@ export function AdminDevices() {
             </Button>
           )}
         </>}
-      />
-
-      {/* Filters */}
-      <DataFilter
-        filters={filters}
-        values={filterValues}
-        onChange={handleFilterChange}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 
       <Modal
@@ -338,9 +334,6 @@ export function AdminDevices() {
           </Button>
         </div>
       </Modal>
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'table' ? (
         <DataGrid

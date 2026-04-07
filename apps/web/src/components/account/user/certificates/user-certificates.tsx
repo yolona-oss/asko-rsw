@@ -228,10 +228,8 @@ export function UserCertificates() {
             Добавить сертификат
           </Button>
         }
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'card' ? (
         <>

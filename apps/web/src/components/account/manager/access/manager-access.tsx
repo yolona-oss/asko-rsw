@@ -8,8 +8,7 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
-  DataSearch,
-  DataFilter,
+  DataToolbar,
   DataGrid,
   Pagination,
 } from '@asko/ui';
@@ -150,19 +149,17 @@ export function ManagerAccess() {
       <PageHeader>Доступы мастеров</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск по городу..." className="lg:w-[320px] flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3">
-          <DataFilter filters={[TAB_FILTER]} values={filterValues} onChange={handleFilterChange} />
-        </div>
-      </div>
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск по городу..." }}
+        filters={[TAB_FILTER]}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+      />
 
       {error && (
         <p className="text-sm text-brand-red">{error}</p>
       )}
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {view === 'table' ? (
         <DataGrid<IRepairer>

@@ -9,7 +9,7 @@ import { deviceApi } from '@/lib/api/device';
 import {
   Card,
   DataGrid,
-  DataSearch,
+  DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -94,12 +94,10 @@ export function RepairerManuals() {
       <PageHeader>Мануалы</PageHeader>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-        <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-      </div>
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+      />
 
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

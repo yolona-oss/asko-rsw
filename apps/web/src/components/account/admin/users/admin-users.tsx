@@ -5,7 +5,6 @@ import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
 import { UserDetail } from './user-detail';
 import {
-  DataFilter,
   DataToolbar,
   DataGrid,
   ViewSwitcher,
@@ -184,10 +183,8 @@ export function AdminUsers() {
         filterValues={filterValues}
         onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         inlineActions={<InviteDropdown />}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
-
-      {/* ViewSwitcher — above data view */}
-      <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Content */}
       {view === 'table' ? (

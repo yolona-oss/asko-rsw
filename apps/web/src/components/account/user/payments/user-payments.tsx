@@ -9,7 +9,7 @@ import {
   Button,
   DetailRow,
   DataGrid,
-  DataSearch,
+  DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -192,12 +192,10 @@ export function UserPayments() {
               <h3 className="text-lg font-medium text-text-main">История платежей</h3>
 
               {/* Toolbar */}
-              <div className="flex flex-col lg:flex-row gap-4 items-stretch">
-                <DataSearch value={search} onChange={setSearch} placeholder="Поиск" className="lg:w-[320px] flex-shrink-0" />
-              </div>
-
-              {/* ViewSwitcher — above data view */}
-              <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+              <DataToolbar
+                search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+                viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+              />
 
               {view === 'table' ? (
                 <DataGrid<PaymentRecord>

@@ -27,6 +27,8 @@ export interface DataToolbarProps {
   inlineActions?: ReactNode;
   /** When true, the toolbar bar visually connects to the DataGrid below (no gap between borders) */
   connectToDataView?: boolean;
+  /** ViewSwitcher (or any node) rendered below the filter bar, closest to the data view */
+  viewSwitcher?: ReactNode;
   /** Extra class on the root container */
   className?: string;
 }
@@ -41,6 +43,7 @@ export function DataToolbar({
   actions,
   inlineActions,
   connectToDataView,
+  viewSwitcher,
   className,
 }: DataToolbarProps) {
   const filterRef = useRef<HTMLDivElement>(null);
@@ -74,6 +77,7 @@ export function DataToolbar({
             className={search.className}
           />
         )}
+        {viewSwitcher}
       </div>
     );
   }
@@ -131,6 +135,9 @@ export function DataToolbar({
           </div>
         )}
       </div>
+
+      {/* ViewSwitcher — below filter bar, closest to data view */}
+      {viewSwitcher}
     </div>
   );
 }

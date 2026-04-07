@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   Card,
+  DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -113,8 +114,9 @@ export function DealerPayments() {
       <div className="flex flex-col gap-4">
         <h3 className="text-lg font-medium text-text-main">История платежей</h3>
 
-        {/* ViewSwitcher — above data view */}
-        <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
+        <DataToolbar
+          viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+        />
 
         {loading ? (
           <p className="text-sm text-text-sub">Загрузка...</p>
