@@ -8,7 +8,7 @@ export const invitationApi = {
   },
 
   create(data: CreateInvitationLinkDto) {
-    return api.post<{ invite: IInvitationLink; link: string }>('/invite', data, { withCredentials: true });
+    return api.post<{ invite: IInvitationLink; link: string }>('/invite/', data);
   },
 
   delete(id: string) {

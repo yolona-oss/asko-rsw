@@ -11,11 +11,14 @@ Communication: REST+WebSocket (web↔gateways), gRPC (gateways↔services), Rabb
 ```
 apps/
   auth-gateway/           # Auth REST gateway (:4001) — login, OAuth, invitations
-  api/                    # Main REST+WS gateway (:4000) — domain endpoints, no auth controllers
+  repair-gateway/         # Repair REST gateway (:4002) — devices, repairs, certs, payments, dealers, schedules
+  media-gateway/          # Media REST gateway (:4003) — file uploads, access-controlled serving
+  realtime-gateway/       # Realtime gateway (:4004) — chat, notifications, WebSocket/Socket.IO
+  content-gateway/        # Content REST gateway (:4005) — articles, public user profiles
   user-service/           # Auth, users, invitations (:5000, gRPC+RMQ)
   payment-service/        # Payments, providers (:5001, gRPC+RMQ)
   file-service/           # Images, video, storage (:5002, gRPC+RMQ)
-  repair-service/         # Repairs, dealers, devices, certs, schedules (:5003, gRPC+RMQ)
+  repair-service/         # Repairs, devices, certificates, schedules (:5003, gRPC+RMQ)
   notification-service/   # Notifications, email (:5004, gRPC+RMQ+BullMQ)
   chat-service/           # Chat, presence (:5005, gRPC+RMQ)
   content-service/        # Articles, recommendations (:5010, gRPC)
@@ -26,73 +29,92 @@ packages/
   ui/                     # React components (@asko/ui)
   observability/          # Prometheus metrics + Pino logger (@asko/observability)
   gateway-common/         # Shared gateway infrastructure (@asko/gateway-common)
+deploy/
+  docker/                 # docker-compose.yml (profiles), .env.example
+  nginx/                  # nginx.app.conf (VPS host nginx for SSL + gateway routing)
 monitoring/
   prometheus/             # prometheus.yml + alerts.yml
   grafana/                # Dashboards + provisioning
-nginx/
-  nginx.conf              # Routes /auth/+/invite/ → auth-gateway, rest → api
+scripts/
+  build.sh                # Build all in dependency order
+  dev.sh                  # Docker infra + all services (excl web)
+  openapi.sh              # Regenerate OpenAPI spec + frontend types
+  setup-dev.sh            # Create DBs + run migrations
+  env-pull.sh             # Pull .env.prod files from VPS via SSH
+  env-push.sh             # Push .env.prod files to VPS (supports selective: ./env-push.sh auth-gateway web)
+  nginx-push.sh           # Push nginx config to VPS and reload
 ```
 
 ## Commands
 
 ```bash
 pnpm install && turbo run build          # Install + build all
-./scripts/build.sh                        # Build in dependency order (6 steps)
+./scripts/build.sh                        # Build in dependency order
 ./scripts/dev.sh                          # Docker infra + all services (excl web)
 ./scripts/openapi.sh                      # Regenerate OpenAPI spec + frontend types
 ./scripts/setup-dev.sh                    # Create DBs + run migrations
+./scripts/env-push.sh [app...]            # Push .env.prod to VPS
+./scripts/nginx-push.sh                   # Push nginx.app.conf to VPS + reload
 ```
 
 ## Gateway Architecture
 
-Two gateways, both sharing JWT public key for local token validation:
+Five gateways, all sharing JWT public key for local token validation. Host nginx (VPS) routes by URL prefix — frontend sees one domain.
 
-**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations. Talks to user-service only via gRPC.
+**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations. Talks to user-service only.
 
-**Main API Gateway** (:4000) — all domain routes. Devices, repairs, chat, payments, files, certificates, articles, schedules, notifications. Talks to all services via gRPC. WebSocket for chat.
+**Repair Gateway** (:4002) — `/repair-requests/*`, `/devices/*`, `/user-devices/*`, `/device-categories/*`, `/certificates/*`, `/repairers/*`, `/dealers/*`, `/reviews/*`, `/schedule/*`, `/address/*`, `/payment/*`. Talks to repair-service, payment-service, file-service, user-service.
 
-Nginx routes traffic by URL prefix. Frontend sees one URL.
+**Media Gateway** (:4003) — `/file-upload/*`, `/files/*`. Image/video upload with target-specific routes (`upload/device/:ownerId`, `upload/article/:ownerId`, etc.). Access-controlled file serving via FileAccess visibility checks. Local files served from shared Docker volume; Cloudinary URLs redirected. Nginx caches `/images/*` and `/videos/*` with 7d expiry.
+
+**Realtime Gateway** (:4004) — `/chat/*`, `/notifications/*`, `/socket.io/*`. WebSocket with sticky sessions. Talks to chat-service, notification-service, user-service. Redis adapter for cross-pod WebSocket.
+
+**Content Gateway** (:4005) — `/articles/*`, `/users/*`. Public article and user profile endpoints. Talks to content-service, file-service.
 
 ## Packages
 
+All packages use `@asko/` prefix. All services use `@asko/service-name` in package.json.
+
 ### `@asko/shared`
-DTOs, types, enums, constants shared across all apps. AppError system (base class + common error types). `slugify()` utility. Subpath exports: `@asko/shared` (full), `@asko/shared/client` (web-safe), `@asko/shared/server` (server-only). Must `pnpm run build` after changes.
+DTOs, types, enums, constants. AppError system. `slugify()`. `getEnvFilePath()` — returns `.env.prod`/`.env.dev` path or undefined (falls back to process.env). Subpath exports: `@asko/shared` (full), `@asko/shared/client` (web-safe), `@asko/shared/server` (server-only). Must build after changes.
 
 ### `@asko/gateway-common`
-Shared infrastructure for all gateways: JwtGuard (with `GATEWAY_CONFIG` injection token), decorators (`@JwtAuthUser`, `@Public`, `@OptionalAuth`, `@RequiredRoles`), GlobalExceptionFilter, gRPC utilities (`grpcCall`), CORS/Helmet config, UserClientModule + UserClientService, shared response DTOs. Must `pnpm run build` after changes.
+Shared gateway infra: JwtGuard (`GATEWAY_CONFIG` injection token), decorators (`@JwtAuthUser`, `@Public`, `@OptionalAuth`, `@RequiredRoles`), GlobalExceptionFilter, `grpcCall()`, CORS/Helmet config, UserClientModule, shared response DTOs. Must build after changes.
 
 ### `@asko/proto`
-gRPC .proto files + hand-written TS interfaces. No build step. 11 proto files.
+gRPC .proto files + hand-written TS interfaces. No build step.
 
 ### `@asko/ui`
-React component library. Tailwind only. Must `pnpm run build` after changes.
+React component library. Tailwind only. DataGrid, DataToolbar, DataFilter, ViewSwitcher, DataCardView, Pagination, Modal, etc. Must build after changes.
 
 ### `@asko/observability`
 Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 
 ## Services
 
-- **user-service** (:5000) — auth, users, invitations, JWT RS256, MFA, OAuth (UserOAuthLink entity), phone/email verification. gRPC+RMQ.
+- **user-service** (:5000) — auth, users, invitations, JWT RS256, MFA, OAuth, phone/email verification. gRPC+RMQ.
 - **payment-service** (:5001) — payments, webhooks, providers (Dummy/Yookassa/Tbank). gRPC+RMQ.
-- **file-service** (:5002) — images/video upload+processing, FileAccess table for per-file visibility control (public/private/role_restricted/participants_only). Local or Cloudinary storage. gRPC+RMQ.
-- **repair-service** (:5003) — repairs, devices, certificates, repairers, reviews, points, schedules (WSchedule with work/vacation/sick_leave/overtime/extra_day types + approval flow). gRPC+RMQ.
-- **notification-service** (:5004) — notifications, email delivery via BullMQ. Consumes payment/repair/chat/schedule events. gRPC+RMQ+BullMQ.
-- **chat-service** (:5005) — conversations, messages, presence. Message status (sending/delivered/seen). Conversation avatarUrl. gRPC+RMQ.
+- **file-service** (:5002) — image/video upload+processing+resize, FileAccess table (public/private/role_restricted/participants_only). Local (`FILE_STORAGE_MODE=local`) or Cloudinary storage. `PUBLIC_URL` used for stored URLs. gRPC+RMQ.
+- **repair-service** (:5003) — repairs, devices, user-devices, certificates, repairers, reviews, points, schedules. gRPC+RMQ.
+- **notification-service** (:5004) — notifications, email via BullMQ. Consumes payment/repair/chat/schedule events. gRPC+RMQ+BullMQ.
+- **chat-service** (:5005) — conversations, messages, presence. Message status (sending/delivered/seen). gRPC+RMQ.
 - **content-service** (:5010) — articles (Lexical JSON), view analytics, weighted article graph. gRPC only.
 
 ## UI Design Rules
 
 * **No border-radius** — sharp corners. Only `rounded-full` for avatars/circles and status badges.
 * **Icons via lucide-react** — never inline `<svg>` for standard icons.
-* **DataGrid** for all tables — auto-sized columns via content length + `weight` coefficient. `onRowClick` (detail modal), `onRowDoubleClick` (edit), auto "Подробнее" in context menu.
+* **DataGrid** for tables — auto-sized columns via content length + `weight`. Mobile: full-bleed (`-mx-4 lg:mx-0`), border-y only. `onRowClick` (detail modal), `onRowDoubleClick` (edit), auto "Подробнее" in context menu.
+* **DataToolbar** filters are horizontally scrollable with hidden scrollbar (`scrollbar-hide` class). FilterSelect uses borderless native `<select>` with ChevronDown overlay.
 * **ViewSwitcher** standalone above data view, not inside DataToolbar.
-* **File URLs** — all via access-controlled endpoint `/files/image/:id` or `/files/video/:id`. Use `getImageUrl(id)`/`getVideoUrl(id)` from `@/lib/file-url`. Legacy `/images/*` static serving kept for backward compat.
-* Tailwind only. Must `pnpm run build` after package changes.
+* **File URLs** — all via access-controlled endpoint `/files/image/:id` or `/files/video/:id`. Use `getImageUrl(id)`/`getVideoUrl(id)` from `@/lib/file-url`.
+* Tailwind only. Must build packages after changes.
 
 ## Account Layout
 
-* Full-width adaptive, no max-width cap.
-* Sidebar: 200px, `bg-[#fff]`, `sticky top-0 h-screen`.
+* Full-width adaptive, no max-width cap. `min-w-[390px]`.
+* Sidebar: 200px, `bg-[#fff]`, `sticky top-0 h-screen`, hidden on mobile.
+* Main content: `overflow-x-hidden` to prevent horizontal scroll.
 * Dashboard typography: numbers `text-[82px] leading-[86px]`, titles `text-[24px] leading-[28px]`, text `text-[14px] leading-[18px]`.
 * Avatar dropdown with "Профиль" + "Выйти".
 * OAuth buttons on login/register forms. Profile page has OAuth link/unlink.
@@ -104,13 +126,13 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 * Each microservice owns its DB and entities. No cross-service table access.
 * Microservices communicate via gRPC or RabbitMQ only.
 * Email: publish `email.send` to RMQ → notification-service delivers via BullMQ.
-* File access: all files go through FileAccessController with visibility checks. FileAccess table (separate from Image/Video entities).
+* File access: media-gateway serves local files directly (detects `/images/` or `/videos/` in storageUrl). Only Cloudinary URLs get redirected. FileAccess table for visibility control.
 * AppError base in `@asko/shared`, domain-specific error extensions in each service's local `common/error/`.
 * Gateway shared code in `@asko/gateway-common` — never duplicate guards/decorators/filters/gRPC utils between gateways.
 
 **Code**:
 * Russian UI strings. TypeScript strict. ESM. ES2022.
-* MikroORM v6. class-validator on all DTOs. argon2 for passwords. JWT RS256.
+* MikroORM v6. class-validator on all DTOs. argon2 for passwords. JWT ES256.
 * `@Public()` bypasses JWT. `@OptionalAuth()` tries JWT silently. Use `@JwtAuthUser()` decorator — never `(req as any).user`.
 * User preferences lazy-loaded. Use `findByIdWithPreferences()` when preferences needed. Never call `@CreateRequestContext()` method from within another — use `this.em.findOne()` directly.
 * `slugify()` from `@asko/shared` — single canonical implementation.
@@ -121,4 +143,10 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 * OAuth: server-side redirect flow via `/auth/oauth/:provider`. Callback page at `/auth/callback` with Suspense boundary.
 * No backward compatibility unless requested — migrate consumers, delete old code.
 
-**Docker**: One Dockerfile per app. `docker-compose.yml` includes all services + auth-gateway + Prometheus + Grafana + redis-exporter. Nginx config in `nginx/nginx.conf`. Turborepo prune for builds.
+**Docker & Deployment**:
+* One Dockerfile per app. `turbo prune @asko/app-name --docker` for minimal builds.
+* `deploy/docker/docker-compose.yml` with profiles: `all`, `data`, `services`, `gateways`, `frontend`, `monitoring`, `proxy`.
+* `network_mode: host` for all containers. `env_file:` with `required: false` for runtime env loading.
+* VPS host nginx handles SSL + path-based routing to 5 gateways. Docker nginx in `proxy` profile (not used on VPS).
+* Gateway Dockerfiles must COPY `gateway-common` to both `node_modules/@asko/gateway-common` and `packages/gateway-common` (compiled imports use relative paths).
+* VPS: `asko-rws@193.42.127.113` (key: `~/.ssh/asko_rws_vps_deploy_user`). Root: `root@193.42.127.113` (key: `~/.ssh/asko_rws_vps_beget`, default shell is fish — use `bash -c`).

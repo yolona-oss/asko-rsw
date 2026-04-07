@@ -94,12 +94,15 @@ export class FileAccessController {
         const url = fileAccess.storageUrl;
         if (!url) throw new NotFoundException('File URL not available');
 
-        // If it's a remote URL (Cloudinary, etc.), redirect
-        if (url.includes('cloudinary') || url.startsWith('http')) {
+        // Detect local storage URLs (contain /images/ or /videos/ path segments)
+        const isLocal = url.includes('/images/') || url.includes('/videos/');
+
+        // Remote CDN (Cloudinary, etc.) — redirect
+        if (!isLocal && url.startsWith('http')) {
             return res.redirect(url);
         }
 
-        // Local file -- resolve the path on disk
+        // Local file — resolve the path on disk
         const staticPath = process.env.STATIC_PATH || 'images';
 
         let relativePath = url;
