@@ -395,7 +395,7 @@ export function DataGrid<T>({
   return (
     <div
       className={cn(
-        'bg-white border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-x-auto',
+        'bg-white border-y lg:border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-x-auto -mx-4 lg:mx-0',
         className,
       )}
     >
@@ -468,7 +468,7 @@ export function DataGrid<T>({
 
       {/* Body */}
       {data.length === 0 && emptyContent ? (
-        <div className="px-8 py-10 text-center text-sm text-text-sub">
+        <div className="px-4 lg:px-8 py-10 text-center text-sm text-text-sub">
           {emptyContent}
         </div>
       ) : (
@@ -476,7 +476,7 @@ export function DataGrid<T>({
           <div
             key={keyExtractor(item)}
             className={cn(
-              'flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-6 py-2.5 border-b border-[#edeff1] last:border-b-0 bg-white hover:bg-[#fafafa] transition-colors min-w-max',
+              'flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-2.5 border-b border-[#edeff1] last:border-b-0 bg-white hover:bg-[#fafafa] transition-colors lg:min-w-max',
               (onRowClick || onRowDoubleClick) && 'cursor-pointer',
               rowClassName?.(item),
             )}
@@ -532,7 +532,7 @@ export function DataGrid<T>({
 
       {/* Footer */}
       {footer && (
-        <div className="px-6 py-2.5 text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px] sticky bottom-0 bg-white border-t border-[#edeff1]">
+        <div className="px-4 lg:px-6 py-2.5 text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px] sticky bottom-0 bg-white border-t border-[#edeff1]">
           {footer}
         </div>
       )}

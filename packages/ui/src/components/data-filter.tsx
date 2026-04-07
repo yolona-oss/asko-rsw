@@ -49,7 +49,7 @@ export function DataFilter({ filters, values, onChange, trailing, className }: D
       {filters.map((filter, idx) => (
         <div key={filter.key} className="contents">
           {idx > 0 && (
-            <div className="w-px h-6 bg-border-light flex-shrink-0 hidden sm:block" />
+            <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0 hidden sm:block" />
           )}
           {filter.type === 'select' ? (
             <FilterSelect
@@ -75,7 +75,7 @@ export function DataFilter({ filters, values, onChange, trailing, className }: D
       {trailing && (
         <>
           {filters.length > 0 && (
-            <div className="w-px h-6 bg-border-light flex-shrink-0 hidden sm:block" />
+            <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0 hidden sm:block" />
           )}
           {trailing}
         </>
@@ -95,21 +95,21 @@ interface FilterSelectProps {
 function FilterSelect({ filter, value, onChange }: FilterSelectProps) {
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
-      <span className="font-medium text-text-main">{filter.label}:</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          'px-3 py-1.5 text-sm text-text-main bg-white',
-          'border border-border-light outline-none',
-          'transition-colors focus:border-text-main',
-          'appearance-none cursor-pointer min-w-[100px]',
-        )}
-      >
-        {filter.options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
+      <span className="font-medium text-[#323232] text-sm leading-[18px] tracking-[-0.14px] whitespace-nowrap">
+        {filter.label}:
+      </span>
+      <div className="relative flex items-center">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none bg-transparent pr-6 text-sm leading-[18px] tracking-[-0.14px] text-[#323232] cursor-pointer outline-none"
+        >
+          {filter.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <ChevronDown className="w-4 h-4 text-[#323232] absolute right-0 pointer-events-none" />
+      </div>
     </div>
   );
 }

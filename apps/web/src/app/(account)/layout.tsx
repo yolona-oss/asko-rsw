@@ -15,7 +15,7 @@ export default function AccountLayout({
           <AccountSidebar />
           <div className="relative flex-1 min-w-0 flex flex-col">
             <AccountHeader />
-            <main className="flex-1 min-w-0">
+            <main className="flex-1 min-w-0 overflow-x-hidden">
               {children}
             </main>
           </div>

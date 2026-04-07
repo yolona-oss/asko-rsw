@@ -43,13 +43,16 @@ export function DataToolbar({
           className={cn('lg:w-[320px] flex-shrink-0', search.className)}
         />
       )}
-      <div className="flex-1 flex items-center gap-3">
+      <div className="flex-1 min-w-0 flex items-center gap-3">
         {filters && filterValues && onFilterChange && (
-          <DataFilter
-            filters={filters}
-            values={filterValues}
-            onChange={onFilterChange}
-          />
+          <div className="min-w-0 flex-1 overflow-x-auto scrollbar-hide">
+            <DataFilter
+              filters={filters}
+              values={filterValues}
+              onChange={onFilterChange}
+              className="min-w-max"
+            />
+          </div>
         )}
         {actions && (
           <div className="ml-auto flex-shrink-0 flex items-center gap-2">
