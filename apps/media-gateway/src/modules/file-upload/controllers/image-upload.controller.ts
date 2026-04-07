@@ -69,6 +69,114 @@ export class ImageUploadController {
         return this.fileService.uploadUserAvatar(file, userId);
     }
 
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/device/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadDeviceImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadDeviceImage(file, ownerId);
+    }
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/article/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadArticleImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadArticleImage(file, ownerId);
+    }
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/repair-request/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadRepairRequestImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadRepairRequestImage(file, ownerId);
+    }
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/review/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadReviewImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadReviewImage(file, ownerId);
+    }
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/device-part/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadDevicePartImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadDevicePartImage(file, ownerId);
+    }
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('upload/broken-part/:ownerId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadBrokenPartImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+                ],
+            })
+        )
+        file: Express.Multer.File,
+        @Param('ownerId') ownerId: string,
+    ) {
+        return this.fileService.uploadBrokenPartImage(file, ownerId);
+    }
+
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('delete/:imageId')
     async remove(@Param('imageId') imageId: string) {
