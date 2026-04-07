@@ -87,11 +87,11 @@ export function DealerCertificates() {
         filters={[STATUS_FILTER_DEF]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        actions={
+        inlineActions={
           <Select
             value={sortField}
             onChange={(e) => setSortField(e.target.value as SortField)}
-            className="w-52"
+            className="w-52 border-0"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>

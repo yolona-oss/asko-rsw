@@ -191,7 +191,7 @@ export function AdminUsers() {
         filters={[STATUS_FILTER_DEF]}
         filterValues={filterValues}
         onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-        actions={<InviteDropdown />}
+        inlineActions={<InviteDropdown />}
       />
 
       {/* ViewSwitcher — above data view */}
