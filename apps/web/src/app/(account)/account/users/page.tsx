@@ -1,12 +1,15 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminUsers } from '@/components/account/admin/users';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const AdminUsers = lazy(() => import('@/components/account/admin/users').then(m => ({ default: m.AdminUsers })));
 
 export default function UsersPage() {
   const allowed = useRoleGuard(['admin', 'manager']);
 
   if (!allowed) return null;
 
-  return <AdminUsers />;
+  return <Suspense fallback={<AccountPageSkeleton />}><AdminUsers /></Suspense>;
 }

@@ -1,8 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { lazy, Suspense, use } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { RepairerManualDetail } from '@/components/account/repairer/repairer-manual-detail';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const RepairerManualDetail = lazy(() => import('@/components/account/repairer/repairer-manual-detail').then(m => ({ default: m.RepairerManualDetail })));
 
 export default function ManualDetailPage({ params }: { params: Promise<{ deviceId: string }> }) {
   const { deviceId } = use(params);
@@ -10,5 +12,5 @@ export default function ManualDetailPage({ params }: { params: Promise<{ deviceI
 
   if (!allowed) return null;
 
-  return <RepairerManualDetail deviceId={deviceId} />;
+  return <Suspense fallback={<AccountPageSkeleton />}><RepairerManualDetail deviceId={deviceId} /></Suspense>;
 }

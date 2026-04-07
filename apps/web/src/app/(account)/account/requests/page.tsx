@@ -1,23 +1,30 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { ManagerRequests } from '@/components/account/manager/requests';
-import { RepairerRequest } from '@/components/account/repairer/requests';
-import { UserRequests } from '@/components/account/user/requests';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const ManagerRequests = lazy(() => import('@/components/account/manager/requests').then(m => ({ default: m.ManagerRequests })));
+const RepairerRequest = lazy(() => import('@/components/account/repairer/requests').then(m => ({ default: m.RepairerRequest })));
+const UserRequests = lazy(() => import('@/components/account/user/requests').then(m => ({ default: m.UserRequests })));
 
 export default function RequestsPage() {
   const { user } = useAccount();
 
   if (!user) return null;
 
-  if (primaryRole(user) === 'manager') {
-    return <ManagerRequests />;
-  }
+  const content = (() => {
+    if (primaryRole(user) === 'manager') {
+      return <ManagerRequests />;
+    }
 
-  if (primaryRole(user) === 'repairer') {
-    return <RepairerRequest />;
-  }
+    if (primaryRole(user) === 'repairer') {
+      return <RepairerRequest />;
+    }
 
-  return <UserRequests />;
+    return <UserRequests />;
+  })();
+
+  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
 }

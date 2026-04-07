@@ -1,12 +1,15 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminDeviceForm } from '@/components/account/admin/device-form';
+import { FormPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const AdminDeviceForm = lazy(() => import('@/components/account/admin/device-form').then(m => ({ default: m.AdminDeviceForm })));
 
 export default function DeviceCreatePage() {
   const allowed = useRoleGuard(['admin']);
 
   if (!allowed) return null;
 
-  return <AdminDeviceForm />;
+  return <Suspense fallback={<FormPageSkeleton />}><AdminDeviceForm /></Suspense>;
 }

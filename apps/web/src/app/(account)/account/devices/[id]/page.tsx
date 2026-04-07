@@ -1,8 +1,11 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { AdminDeviceForm } from '@/components/account/admin/device-form';
+import { FormPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const AdminDeviceForm = lazy(() => import('@/components/account/admin/device-form').then(m => ({ default: m.AdminDeviceForm })));
 
 export default function DeviceEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -10,5 +13,5 @@ export default function DeviceEditPage() {
 
   if (!allowed) return null;
 
-  return <AdminDeviceForm deviceId={id} />;
+  return <Suspense fallback={<FormPageSkeleton />}><AdminDeviceForm deviceId={id} /></Suspense>;
 }

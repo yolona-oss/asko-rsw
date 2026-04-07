@@ -1,12 +1,15 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
-import { RepairerManuals } from '@/components/account/repairer/repairer-manuals';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const RepairerManuals = lazy(() => import('@/components/account/repairer/repairer-manuals').then(m => ({ default: m.RepairerManuals })));
 
 export default function ManualsPage() {
   const allowed = useRoleGuard(['repairer']);
 
   if (!allowed) return null;
 
-  return <RepairerManuals />;
+  return <Suspense fallback={<AccountPageSkeleton />}><RepairerManuals /></Suspense>;
 }

@@ -1,19 +1,20 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { SchedulePage } from '@/components/account/schedule/schedule-page';
-import { MySchedulePage } from '@/components/account/schedule/my-schedule-page';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const SchedulePage = lazy(() => import('@/components/account/schedule/schedule-page').then(m => ({ default: m.SchedulePage })));
+const MySchedulePage = lazy(() => import('@/components/account/schedule/my-schedule-page').then(m => ({ default: m.MySchedulePage })));
 
 export default function SchedulePageRoute() {
   const { user } = useAccount();
   const role = user ? primaryRole(user) : 'user';
 
-  // Repairers see their own schedule directly
-  if (role === 'repairer') {
-    return <MySchedulePage />;
-  }
+  const content = role === 'repairer'
+    ? <MySchedulePage />
+    : <SchedulePage />;
 
-  // Managers and admins see the list of all schedules
-  return <SchedulePage />;
+  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
 }

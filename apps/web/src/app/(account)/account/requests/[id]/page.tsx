@@ -1,11 +1,14 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { UserRequestStatus } from '@/components/account/user/request-status';
-import { ManagerRequestDetail } from '@/components/account/manager/request-detail';
-import { RepairerRequestDetail } from '@/components/account/repairer/request-detail';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const UserRequestStatus = lazy(() => import('@/components/account/user/request-status').then(m => ({ default: m.UserRequestStatus })));
+const ManagerRequestDetail = lazy(() => import('@/components/account/manager/request-detail').then(m => ({ default: m.ManagerRequestDetail })));
+const RepairerRequestDetail = lazy(() => import('@/components/account/repairer/request-detail').then(m => ({ default: m.RepairerRequestDetail })));
 
 export default function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,13 +16,17 @@ export default function RequestDetailPage() {
 
   if (!user) return null;
 
-  if (primaryRole(user) === 'manager') {
-    return <ManagerRequestDetail requestId={id} />;
-  }
+  const content = (() => {
+    if (primaryRole(user) === 'manager') {
+      return <ManagerRequestDetail requestId={id} />;
+    }
 
-  if (primaryRole(user) === 'repairer') {
-    return <RepairerRequestDetail requestId={id} />;
-  }
+    if (primaryRole(user) === 'repairer') {
+      return <RepairerRequestDetail requestId={id} />;
+    }
 
-  return <UserRequestStatus requestId={id} />;
+    return <UserRequestStatus requestId={id} />;
+  })();
+
+  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
 }

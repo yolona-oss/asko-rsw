@@ -1,7 +1,10 @@
 'use client';
 
-import { MySchedulePage } from '@/components/account/schedule/my-schedule-page';
+import { lazy, Suspense } from 'react';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const MySchedulePage = lazy(() => import('@/components/account/schedule/my-schedule-page').then(m => ({ default: m.MySchedulePage })));
 
 export default function MyScheduleRoute() {
-  return <MySchedulePage />;
+  return <Suspense fallback={<AccountPageSkeleton />}><MySchedulePage /></Suspense>;
 }

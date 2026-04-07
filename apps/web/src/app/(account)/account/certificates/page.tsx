@@ -1,10 +1,13 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { primaryRole } from '@/lib/account';
-import { UserCertificates } from '@/components/account/user/certificates';
-import { DealerCertificates } from '@/components/account/dealer/certificates';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const UserCertificates = lazy(() => import('@/components/account/user/certificates').then(m => ({ default: m.UserCertificates })));
+const DealerCertificates = lazy(() => import('@/components/account/dealer/certificates').then(m => ({ default: m.DealerCertificates })));
 
 export default function CertificatesPage() {
   const { user } = useAccount();
@@ -12,9 +15,9 @@ export default function CertificatesPage() {
 
   if (!allowed) return null;
 
-  if (user && primaryRole(user) === 'dealer') {
-    return <DealerCertificates />;
-  }
+  const content = user && primaryRole(user) === 'dealer'
+    ? <DealerCertificates />
+    : <UserCertificates />;
 
-  return <UserCertificates />;
+  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
 }

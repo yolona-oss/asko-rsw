@@ -1,9 +1,11 @@
 'use client';
 
-import { use } from 'react';
+import { lazy, Suspense, use } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { MySchedulePage } from '@/components/account/schedule/my-schedule-page';
+import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const MySchedulePage = lazy(() => import('@/components/account/schedule/my-schedule-page').then(m => ({ default: m.MySchedulePage })));
 
 export default function UserScheduleRoute({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = use(params);
@@ -13,10 +15,12 @@ export default function UserScheduleRoute({ params }: { params: Promise<{ userId
   const canEdit = canApprove;
 
   return (
-    <MySchedulePage
-      targetUserId={userId}
-      canEdit={canEdit}
-      canApprove={canApprove}
-    />
+    <Suspense fallback={<AccountPageSkeleton />}>
+      <MySchedulePage
+        targetUserId={userId}
+        canEdit={canEdit}
+        canApprove={canApprove}
+      />
+    </Suspense>
   );
 }

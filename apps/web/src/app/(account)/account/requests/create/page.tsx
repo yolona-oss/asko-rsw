@@ -1,7 +1,10 @@
 'use client';
 
-import { CreateRequest } from '@/components/account/user/create-request';
+import { lazy, Suspense } from 'react';
+import { FormPageSkeleton } from '@/components/account/layout/page-skeleton';
+
+const CreateRequest = lazy(() => import('@/components/account/user/create-request').then(m => ({ default: m.CreateRequest })));
 
 export default function CreateRequestPage() {
-  return <CreateRequest />;
+  return <Suspense fallback={<FormPageSkeleton />}><CreateRequest /></Suspense>;
 }
