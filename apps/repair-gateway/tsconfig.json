@@ -28,7 +28,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "types": ["node"],
+        "types": ["node", "multer"],
         "paths": {
             "common/*": ["common/*"],
             "modules/*": ["modules/*"]
