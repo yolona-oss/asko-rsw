@@ -21,26 +21,24 @@ export function RequestCardItem({ request, convInfo, currentUserId, onClick, onD
 
   return (
     <Card padding="none" className={`p-5 flex flex-col gap-3${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs text-text-sub">
-          <span>{formatDate(request.createdAt)}</span>
-          {location && (
-            <>
-              <span>&bull;</span>
-              <span>{location}</span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {request.conversationId && (
-            <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
-          )}
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}
-          >
-            {STATUS_LABELS[request.status] ?? request.status}
-          </span>
-        </div>
+      <div className="flex items-center gap-2 text-xs text-text-sub">
+        <span>{formatDate(request.createdAt)}</span>
+        {location && (
+          <>
+            <span>&bull;</span>
+            <span>{location}</span>
+          </>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <span
+          className={`inline-flex items-center self-start px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}
+        >
+          {STATUS_LABELS[request.status] ?? request.status}
+        </span>
+        {request.conversationId && (
+          <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
+        )}
       </div>
       <p className="text-sm font-medium text-text-main">{userName}</p>
       <p className="text-sm text-text-sub">{deviceName}</p>

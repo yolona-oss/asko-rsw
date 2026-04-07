@@ -392,6 +392,7 @@ export function AdminDevices() {
         title="Детали товара"
         fetchOne={fetchDeviceOne}
         renderContent={(item, loading) => <DeviceDetail item={item} loading={loading} />}
+        onEdit={(item) => router.push(`/account/devices/${item.id}`)}
       />
     </PageContainer>
   );

@@ -233,6 +233,7 @@ export function AdminArticles() {
         title="Детали статьи"
         fetchOne={fetchArticleOne}
         renderContent={(item, loading) => <ArticleDetail item={item} loading={loading} />}
+        onEdit={(item) => router.push(`/account/articles/${item.id}`)}
       />
     </PageContainer>
   );

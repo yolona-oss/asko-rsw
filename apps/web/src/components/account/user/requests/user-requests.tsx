@@ -186,6 +186,7 @@ export function UserRequests() {
         title="Детали заявки"
         fetchOne={fetchRepairRequestOne}
         renderContent={(item, loading) => <RepairRequestDetail item={item} loading={loading} />}
+        onEdit={(item) => router.push(`/account/requests/${item.id}`)}
       />
     </PageContainer>
   );

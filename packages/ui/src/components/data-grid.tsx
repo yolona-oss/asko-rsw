@@ -9,7 +9,7 @@ import {
   type ReactNode,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import { ChevronUp, ChevronDown, EyeOff, Eye, RotateCcw } from 'lucide-react';
+import { ChevronUp, ChevronDown, EyeOff, Eye, RotateCcw, Pencil } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { ContextMenu } from './dropdown';
 import type { DropdownMenuEntry } from './dropdown';
@@ -237,6 +237,7 @@ function buildContextMenuItems(
 
 const CLICK_DEBOUNCE_MS = 250;
 const detailIcon = <Eye className="w-4 h-4 shrink-0" />;
+const editIcon = <Pencil className="w-4 h-4 shrink-0" />;
 
 export function DataGrid<T>({
   columns,
@@ -276,25 +277,27 @@ export function DataGrid<T>({
   const visibleColumns = columns.filter((c) => !hiddenKeys.has(c.key));
   const hiddenColumnsList = columns.filter((c) => hiddenKeys.has(c.key));
 
-  // Auto-inject "Подробнее" into row context menu when onRowClick is provided
+  // Auto-inject "Подробнее" and "Редактировать" into row context menu
   const resolvedRowMenuFn = useMemo(() => {
     const autoDetail = onRowClick && !suppressDetailMenuItem;
-    if (!rowMenuFn && !autoDetail) return undefined;
+    const autoEdit = !!onRowDoubleClick;
+    if (!rowMenuFn && !autoDetail && !autoEdit) return undefined;
     return (item: T): DropdownMenuEntry[] => {
       const userItems = rowMenuFn ? rowMenuFn(item) : [];
-      if (!autoDetail) return userItems;
-      const detailItem: DropdownMenuEntry = {
-        key: '__detail',
-        label: 'Подробнее',
-        icon: detailIcon,
-        onClick: () => onRowClick(item),
-      };
+      const autoItems: DropdownMenuEntry[] = [];
+      if (autoDetail) {
+        autoItems.push({ key: '__detail', label: 'Подробнее', icon: detailIcon, onClick: () => onRowClick(item) });
+      }
+      if (autoEdit) {
+        autoItems.push({ key: '__edit', label: 'Редактировать', icon: editIcon, onClick: () => onRowDoubleClick!(item) });
+      }
+      if (autoItems.length === 0) return userItems;
       return userItems.length > 0
-        ? [detailItem, 'separator', ...userItems]
-        : [detailItem];
+        ? [...autoItems, 'separator', ...userItems]
+        : autoItems;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowMenuFn, onRowClick, suppressDetailMenuItem]);
+  }, [rowMenuFn, onRowClick, onRowDoubleClick, suppressDetailMenuItem]);
 
   const hasRowMenu = resolvedRowMenuFn != null;
 

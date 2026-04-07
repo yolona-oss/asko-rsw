@@ -122,7 +122,7 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
                 изменено
               </span>
             )}
-            {isOwn && <MessageStatusIcon status={message.status} />}
+            {isOwn && <MessageStatusIcon status={message.status} dark />}
           </div>
         </div>
       </div>

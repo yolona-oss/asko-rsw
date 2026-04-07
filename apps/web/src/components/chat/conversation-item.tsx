@@ -2,6 +2,7 @@
 
 import { Avatar, Badge } from '@asko/ui';
 import { PresenceDot } from './presence-dot';
+import { MessageStatusIcon } from './message-status-icon';
 import type { ChatConversation } from '@/lib/chat-types';
 
 function getTimeLabel(dateStr: string): string {
@@ -87,7 +88,12 @@ export function ConversationItem({
           )}
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className="text-xs text-text-sub truncate">{lastText || '\u00A0'}</p>
+          <div className="flex items-center gap-1 min-w-0 flex-1">
+            {lastMsg && lastMsg.senderId === currentUserId && (
+              <MessageStatusIcon status={lastMsg.status} size="sm" />
+            )}
+            <p className="text-xs text-text-sub truncate">{lastText || '\u00A0'}</p>
+          </div>
           {conversation.unreadCount > 0 && (
             <Badge variant="error" className="!text-[10px] !px-1.5 !py-0 min-w-[18px] text-center">
               {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
