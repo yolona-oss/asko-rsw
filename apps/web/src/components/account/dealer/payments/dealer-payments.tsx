@@ -31,35 +31,46 @@ import {
 } from './constants';
 import { WithdrawalHistory } from './withdrawal-history';
 
-// ─── Points chart bucketing ────────────────────────────────────────────────
+// ─── Chart bucketing helpers ───────────────────────────────────────────────
 
-function bucketPoints(transactions: IPointsTransaction[], range: DateRange): { earned: ChartBucket[]; spent: ChartBucket[] } {
+function makeBuckets(range: DateRange): ChartBucket[] {
   const rangeMs = range.end.getTime() - range.start.getTime();
   const bucketMs = rangeMs <= 60 * 86400000 ? 86400000 : 7 * 86400000;
   const labelFn = (d: Date) => `${d.getDate()} ${d.toLocaleDateString('ru-RU', { month: 'short' })}`;
+  const buckets: ChartBucket[] = [];
+  let t = range.start.getTime();
+  while (t < range.end.getTime()) {
+    buckets.push({ start: new Date(t), end: new Date(Math.min(t + bucketMs, range.end.getTime())), total: 0, count: 0, label: labelFn(new Date(t)) });
+    t += bucketMs;
+  }
+  return buckets;
+}
 
-  const makeBuckets = (): ChartBucket[] => {
-    const buckets: ChartBucket[] = [];
-    let t = range.start.getTime();
-    while (t < range.end.getTime()) {
-      buckets.push({ start: new Date(t), end: new Date(Math.min(t + bucketMs, range.end.getTime())), total: 0, count: 0, label: labelFn(new Date(t)) });
-      t += bucketMs;
-    }
-    return buckets;
-  };
-
-  const earned = makeBuckets();
-  const spent = makeBuckets();
-
+function bucketPointsIncome(transactions: IPointsTransaction[], range: DateRange): ChartBucket[] {
+  const rangeMs = range.end.getTime() - range.start.getTime();
+  const bucketMs = rangeMs <= 60 * 86400000 ? 86400000 : 7 * 86400000;
+  const buckets = makeBuckets(range);
   for (const tx of transactions) {
+    if (tx.amount <= 0) continue;
     const ts = new Date(tx.createdAt).getTime();
     if (ts < range.start.getTime() || ts > range.end.getTime()) continue;
-    const idx = Math.min(Math.floor((ts - range.start.getTime()) / bucketMs), earned.length - 1);
-    if (idx < 0) continue;
-    if (tx.amount > 0) { earned[idx].total += tx.amount; earned[idx].count += 1; }
-    else { spent[idx].total += Math.abs(tx.amount); spent[idx].count += 1; }
+    const idx = Math.min(Math.floor((ts - range.start.getTime()) / bucketMs), buckets.length - 1);
+    if (idx >= 0) { buckets[idx].total += tx.amount; buckets[idx].count += 1; }
   }
-  return { earned, spent };
+  return buckets;
+}
+
+function bucketWithdrawals(items: any[], range: DateRange): ChartBucket[] {
+  const rangeMs = range.end.getTime() - range.start.getTime();
+  const bucketMs = rangeMs <= 60 * 86400000 ? 86400000 : 7 * 86400000;
+  const buckets = makeBuckets(range);
+  for (const w of items) {
+    const ts = new Date(w.requestedAt ?? w.createdAt).getTime();
+    if (ts < range.start.getTime() || ts > range.end.getTime()) continue;
+    const idx = Math.min(Math.floor((ts - range.start.getTime()) / bucketMs), buckets.length - 1);
+    if (idx >= 0) { buckets[idx].total += w.amount; buckets[idx].count += 1; }
+  }
+  return buckets;
 }
 
 // ─── Filter definitions ────────────────────────────────────────────────────
@@ -136,8 +147,8 @@ export function DealerPayments() {
 
   useEffect(() => { fetchData(); dispatch(getMyWithdraws()); }, [dispatch, fetchData]);
 
-  // Chart data
-  const { earned: earnedBuckets, spent: spentBuckets } = useMemo(() => bucketPoints(pointsHistory, dateRange), [pointsHistory, dateRange]);
+  // Chart data — points income
+  const earnedBuckets = useMemo(() => bucketPointsIncome(pointsHistory, dateRange), [pointsHistory, dateRange]);
   const inRange = useCallback((ts: number) => ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime(), [dateRange]);
   const inPrev = useMemo(() => {
     const dur = dateRange.end.getTime() - dateRange.start.getTime();
@@ -147,19 +158,30 @@ export function DealerPayments() {
   }, [dateRange]);
 
   const earnedTotal = useMemo(() => pointsHistory.filter(tx => tx.amount > 0 && inRange(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + tx.amount, 0), [pointsHistory, inRange]);
-  const spentTotal = useMemo(() => pointsHistory.filter(tx => tx.amount < 0 && inRange(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + Math.abs(tx.amount), 0), [pointsHistory, inRange]);
   const prevEarned = useMemo(() => pointsHistory.filter(tx => tx.amount > 0 && inPrev(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + tx.amount, 0), [pointsHistory, inPrev]);
-  const prevSpent = useMemo(() => pointsHistory.filter(tx => tx.amount < 0 && inPrev(new Date(tx.createdAt).getTime())).reduce((s, tx) => s + Math.abs(tx.amount), 0), [pointsHistory, inPrev]);
+
+  // Chart data — withdrawals
+  const withdrawalBuckets = useMemo(() => bucketWithdrawals(withdrawals, dateRange), [withdrawals, dateRange]);
+  const withdrawalTotal = useMemo(() => withdrawals.filter((w: any) => inRange(new Date(w.requestedAt ?? w.createdAt).getTime())).reduce((s: number, w: any) => s + w.amount, 0), [withdrawals, inRange]);
+  const prevWithdrawal = useMemo(() => withdrawals.filter((w: any) => inPrev(new Date(w.requestedAt ?? w.createdAt).getTime())).reduce((s: number, w: any) => s + w.amount, 0), [withdrawals, inPrev]);
 
   const rangeLabel = formatRangeLabel(dateRange);
   const toggleStyle = useCallback(() => setChartStyle(s => s === 'bar' ? 'line' : 'bar'), []);
   const pct = (cur: number, prev: number) => prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0;
 
-  const renderTooltip = useCallback((bucket: ChartBucket) => (
+  const renderPointsTooltip = useCallback((bucket: ChartBucket) => (
     <>
       <p className="text-xs font-medium text-text-main">{bucket.label}</p>
       <p className="text-xs text-text-sub">{formatAmount(bucket.total)} баллов</p>
       <p className="text-xs text-text-sub">{bucket.count} {bucket.count === 1 ? 'операция' : bucket.count < 5 ? 'операции' : 'операций'}</p>
+    </>
+  ), []);
+
+  const renderWithdrawalTooltip = useCallback((bucket: ChartBucket) => (
+    <>
+      <p className="text-xs font-medium text-text-main">{bucket.label}</p>
+      <p className="text-xs text-text-sub">{formatAmount(bucket.total)} ₽</p>
+      <p className="text-xs text-text-sub">{bucket.count} {bucket.count === 1 ? 'вывод' : bucket.count < 5 ? 'вывода' : 'выводов'}</p>
     </>
   ), []);
 
@@ -195,10 +217,10 @@ export function DealerPayments() {
         </Button>
       </Card>
 
-      {/* Points charts */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Начислено" formattedValue={`${formatAmount(earnedTotal)} баллов`} pctChange={pct(earnedTotal, prevEarned)} buckets={earnedBuckets} color="#20834A" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderTooltip} />
-        <ChartCard title="Списано" formattedValue={`${formatAmount(spentTotal)} баллов`} pctChange={pct(spentTotal, prevSpent)} buckets={spentBuckets} color="#dc2626" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderTooltip} />
+        <ChartCard title="Начислено баллов" formattedValue={`${formatAmount(earnedTotal)}`} pctChange={pct(earnedTotal, prevEarned)} buckets={earnedBuckets} color="#20834A" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderPointsTooltip} />
+        <ChartCard title="Выведено" formattedValue={`${formatAmount(withdrawalTotal)} ₽`} pctChange={pct(withdrawalTotal, prevWithdrawal)} buckets={withdrawalBuckets} color="#3b82f6" chartStyle={chartStyle} rangeLabel={rangeLabel} onRangeClick={() => setDateModalOpen(true)} onStyleToggle={toggleStyle} renderTooltip={renderWithdrawalTooltip} />
       </div>
 
       {/* Withdrawal history */}

@@ -159,6 +159,9 @@ export { CopyButton } from './components/copy-button';
 export type { CopyButtonProps } from './components/copy-button';
 
 export { DetailRow } from './components/detail-row';
+
+export { DetailSection } from './components/detail-section';
+export type { DetailSectionProps } from './components/detail-section';
 export type { DetailRowProps } from './components/detail-row';
 
 export { SkeletonBlock, SkeletonCircle, SkeletonCard } from './components/skeleton';

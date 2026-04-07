@@ -16,6 +16,8 @@ export interface BarChartProps {
   formatValue?: (value: number) => string;
   /** Suffix after value in tooltip */
   valueSuffix?: string;
+  /** Called when a bucket is clicked */
+  onBucketClick?: (bucket: ChartBucket, index: number) => void;
 }
 
 export function BarChart({
@@ -25,6 +27,7 @@ export function BarChart({
   renderTooltip,
   formatValue,
   valueSuffix,
+  onBucketClick,
 }: BarChartProps) {
   const max = Math.max(...buckets.map((b) => b.total), 1);
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
@@ -44,7 +47,8 @@ export function BarChart({
         {buckets.map((b, i) => (
           <div
             key={i}
-            className="flex-1 min-w-0 transition-all cursor-pointer"
+            className={`flex-1 min-w-0 transition-all ${onBucketClick ? 'cursor-pointer' : 'cursor-default'}`}
+            onClick={() => onBucketClick?.(b, i)}
             style={{
               height: `${Math.max((b.total / max) * 100, b.total > 0 ? 4 : 0)}%`,
               backgroundColor: color,

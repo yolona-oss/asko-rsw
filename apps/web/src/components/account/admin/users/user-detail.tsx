@@ -1,15 +1,17 @@
 'use client';
 
-import { Badge, DetailRow } from '@asko/ui';
+import { Badge, DetailRow, DetailSection } from '@asko/ui';
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 export function UserDetail({ item }: { item: any; loading: boolean }) {
-  const roles =
+  const rolesList: string[] =
     item.roles && item.roles.length > 0
-      ? item.roles.map((r: any) => (typeof r === 'string' ? r : r.name ?? r)).join(', ')
-      : '-';
+      ? item.roles.map((r: any) => (typeof r === 'string' ? r : r.name ?? r))
+      : [];
+
+  const oauthLinks: any[] = item.oauthLinks ?? item.oAuthLinks ?? [];
 
   return (
     <div className="flex flex-col">
@@ -17,7 +19,6 @@ export function UserDetail({ item }: { item: any; loading: boolean }) {
       <DetailRow label="Фамилия" value={item.lastName ?? '-'} />
       <DetailRow label="Email" value={item.email ?? '-'} />
       <DetailRow label="Телефон" value={item.phone ?? '-'} />
-      <DetailRow label="Роли" value={roles} />
       <DetailRow
         label="Активен"
         value={
@@ -27,6 +28,20 @@ export function UserDetail({ item }: { item: any; loading: boolean }) {
         }
       />
       <DetailRow label="Дата регистрации" value={item.createdAt ? fmt(item.createdAt) : '-'} />
+
+      <DetailSection label="Роли" summary={rolesList.length > 0 ? rolesList.join(', ') : '-'}>
+        {rolesList.length > 0 ? rolesList.map((role, i) => (
+          <DetailRow key={i} label={`#${i + 1}`} value={role} />
+        )) : <DetailRow label="Роли" value="Нет ролей" />}
+      </DetailSection>
+
+      {oauthLinks.length > 0 && (
+        <DetailSection label="OAuth провайдеры" summary={`${oauthLinks.length} шт.`}>
+          {oauthLinks.map((link: any, i: number) => (
+            <DetailRow key={link.id ?? i} label={link.provider ?? `-`} value={link.providerEmail ?? link.providerUserId ?? '-'} />
+          ))}
+        </DetailSection>
+      )}
     </div>
   );
 }

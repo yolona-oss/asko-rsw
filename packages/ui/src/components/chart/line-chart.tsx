@@ -16,6 +16,8 @@ export interface LineChartProps {
   formatValue?: (value: number) => string;
   /** Suffix after value in tooltip */
   valueSuffix?: string;
+  /** Called when a bucket is clicked */
+  onBucketClick?: (bucket: ChartBucket, index: number) => void;
 }
 
 export function LineChart({
@@ -25,6 +27,7 @@ export function LineChart({
   renderTooltip,
   formatValue,
   valueSuffix,
+  onBucketClick,
 }: LineChartProps) {
   const max = Math.max(...buckets.map((b) => b.total), 1);
   const showEvery = buckets.length > 15 ? Math.ceil(buckets.length / 10) : 1;
@@ -81,7 +84,8 @@ export function LineChart({
                 fill="transparent"
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
-                className="cursor-pointer"
+                onClick={() => onBucketClick?.(buckets[i], i)}
+                className={onBucketClick ? 'cursor-pointer' : 'cursor-default'}
               />
             );
           })}

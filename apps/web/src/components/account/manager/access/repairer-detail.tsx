@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, DetailRow } from '@asko/ui';
+import { Badge, DetailRow, DetailSection } from '@asko/ui';
 import { api } from '@/lib/api/client';
 
 export async function fetchRepairerOne(item: any): Promise<any> {
@@ -14,9 +14,6 @@ export function RepairerDetail({ item, loading }: { item: any; loading: boolean 
 
   return (
     <div className="flex flex-col">
-      <DetailRow label="Имя" value={loading ? 'Загрузка...' : (name ?? '-')} />
-      <DetailRow label="Email" value={loading ? 'Загрузка...' : (item.user?.email ?? '-')} />
-      <DetailRow label="Телефон" value={loading ? 'Загрузка...' : (item.user?.phone ?? '-')} />
       <DetailRow label="Город" value={item.city ?? '-'} />
       <DetailRow
         label="Активен"
@@ -30,6 +27,20 @@ export function RepairerDetail({ item, loading }: { item: any; loading: boolean 
         label="Завершено ремонтов"
         value={item.completedRepairs ?? 0}
       />
+
+      {item.user && (
+        <DetailSection label="Пользователь" summary={loading ? '...' : (name ?? '-')}>
+          <DetailRow label="Имя" value={name ?? '-'} />
+          {item.user.email && <DetailRow label="Email" value={item.user.email} />}
+          {item.user.phone && <DetailRow label="Телефон" value={item.user.phone} />}
+        </DetailSection>
+      )}
+
+      {(item.activeRequestCount ?? 0) > 0 && (
+        <DetailSection label="Активные заявки" summary={`${item.activeRequestCount} шт.`}>
+          <DetailRow label="Количество" value={item.activeRequestCount} />
+        </DetailSection>
+      )}
     </div>
   );
 }

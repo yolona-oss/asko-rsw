@@ -33,6 +33,8 @@ export interface ChartCardProps {
   formatValue?: (value: number) => string;
   /** Suffix after value in tooltip */
   valueSuffix?: string;
+  /** Called when a chart bucket is clicked */
+  onBucketClick?: (bucket: ChartBucket, index: number) => void;
 }
 
 export function ChartCard({
@@ -49,6 +51,7 @@ export function ChartCard({
   renderTooltip,
   formatValue,
   valueSuffix,
+  onBucketClick,
 }: ChartCardProps) {
   const pctColor = pctChange >= 0 ? 'text-[#2D8B57]' : 'text-brand-red';
 
@@ -93,8 +96,8 @@ export function ChartCard({
         <>
           <div className="h-px bg-[#EDEFF1] my-3" />
           {chartStyle === 'bar'
-            ? <BarChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} />
-            : <LineChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} />}
+            ? <BarChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} onBucketClick={onBucketClick} />
+            : <LineChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} onBucketClick={onBucketClick} />}
         </>
       )}
 
