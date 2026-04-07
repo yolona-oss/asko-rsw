@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
-import { Card, Button, Modal } from '@asko/ui';
+import { Card, Button, Modal, StatCard } from '@asko/ui';
 import { X } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
@@ -16,7 +16,6 @@ import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { TARGET_LABELS, pluralPayments, formatAmount, formatDate } from './constants';
 import type { RequestSummary } from './types';
-import { StatCard } from './stat-card';
 
 const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'В обработке',

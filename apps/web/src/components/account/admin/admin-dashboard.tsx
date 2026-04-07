@@ -4,99 +4,123 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/account-provider';
 import { getGreeting, displayName } from '@/lib/account';
+import { StatCard, DonutChart, MetricComparison, ProgressBar } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
 import { deviceApi } from '@/lib/api/device';
 import { certificateApi } from '@/lib/api/certificate';
 import { usersApi } from '@/lib/api/users';
 import { invitationApi } from '@/lib/api/invitation';
+import { paymentApi } from '@/lib/api/payment';
+import { repairRequestApi } from '@/lib/api/repair-request';
 
-function StatCard({ title, value, href }: { title: string; value: number | string; href: string }) {
-  return (
-    <Link
-      href={href}
-      className="bg-white border border-border-light p-6 flex flex-col gap-2 hover:border-text-main transition-colors"
-    >
-      <span className="text-[24px] font-medium leading-[28px] text-text-sub">{title}</span>
-      <span className="text-[82px] font-normal leading-[86px] text-text-main">
-        {value}
-      </span>
-    </Link>
-  );
-}
+const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 export function AdminDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
-
-  const [stats, setStats] = useState({ devices: 0, certificates: 0, users: 0, invitations: 0 });
   const [loading, setLoading] = useState(true);
+  const [s, setS] = useState({
+    devices: 0, certificates: 0, users: 0, invitations: 0,
+    confirmedTotal: 0, refundedTotal: 0, confirmedCount: 0, refundedCount: 0,
+    reqPending: 0, reqInProgress: 0, reqCompleted: 0, reqTotal: 0,
+    certsActive: 0, certsExpired: 0, certsRevoked: 0,
+  });
 
   useEffect(() => {
-    async function fetchData() {
+    (async () => {
       try {
-        const [devicesRes, certsRes, usersRes, invitationsRes] = await Promise.all([
-          deviceApi.getAll({ limit: 1 }),
-          certificateApi.getAll({ limit: 1 }),
-          usersApi.getAll({ limit: 1 }),
-          invitationApi.getAll(),
+        const [dev, cert, usr, inv, pay, rp, ri, rc, ra, ca, ce, cr] = await Promise.all([
+          deviceApi.getAll({ limit: 1 }), certificateApi.getAll({ limit: 1 }),
+          usersApi.getAll({ limit: 1 }), invitationApi.getAll(), paymentApi.getStats(),
+          repairRequestApi.getAll({ limit: 1, status: 'pending' }),
+          repairRequestApi.getAll({ limit: 1, status: 'in_progress' }),
+          repairRequestApi.getAll({ limit: 1, status: 'completed' }),
+          repairRequestApi.getAll({ limit: 1 }),
+          certificateApi.getAll({ limit: 1, status: 'active' }),
+          certificateApi.getAll({ limit: 1, status: 'expired' }),
+          certificateApi.getAll({ limit: 1, status: 'revoked' }),
         ]);
-
-        setStats({
-          devices: devicesRes.data?.overallCount ?? 0,
-          certificates: certsRes.data?.overallCount ?? 0,
-          users: usersRes.data?.overallCount ?? 0,
-          invitations: invitationsRes.data?.length ?? 0,
+        setS({
+          devices: dev.data?.overallCount ?? 0, certificates: cert.data?.overallCount ?? 0,
+          users: usr.data?.overallCount ?? 0, invitations: inv.data?.length ?? 0,
+          confirmedTotal: pay.data?.confirmedTotal ?? 0, refundedTotal: pay.data?.refundedTotal ?? 0,
+          confirmedCount: pay.data?.confirmedCount ?? 0, refundedCount: pay.data?.refundedCount ?? 0,
+          reqPending: rp.data?.overallCount ?? 0, reqInProgress: ri.data?.overallCount ?? 0,
+          reqCompleted: rc.data?.overallCount ?? 0, reqTotal: ra.data?.overallCount ?? 0,
+          certsActive: ca.data?.overallCount ?? 0, certsExpired: ce.data?.overallCount ?? 0,
+          certsRevoked: cr.data?.overallCount ?? 0,
         });
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+      } catch {} finally { setLoading(false); }
+    })();
   }, []);
 
-  const display = (v: number) => loading ? '-' : v;
+  const d = (v: number) => loading ? '-' : v;
+  const totalPay = s.confirmedCount + s.refundedCount || 1;
 
   return (
     <PageContainer>
-      <PageHeader size="large">
-        {greeting},<br />
-        {user && displayName(user)}!
-      </PageHeader>
+      <PageHeader size="large">{greeting},<br />{user && displayName(user)}!</PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <StatCard title="Товары:" value={display(stats.devices)} href="/account/devices" />
-        <StatCard title="Сертификаты:" value={display(stats.certificates)} href="/account/manage-certificates" />
-        <StatCard title="Активные пользователи:" value={display(stats.users)} href="/account/users" />
-        <StatCard title="Приглашения:" value={display(stats.invitations)} href="/account/invitations" />
+      {/* KPI cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link href="/account/devices"><StatCard title="Товары" value={d(s.devices)} className="hover:border-text-main transition-colors h-full" /></Link>
+        <Link href="/account/users"><StatCard title="Пользователи" value={d(s.users)} className="hover:border-text-main transition-colors h-full" /></Link>
+        <StatCard title="Выручка" value={loading ? '-' : `${fmt(s.confirmedTotal)} ₽`} subtitle={`${d(s.confirmedCount)} платежей`} />
+        <StatCard title="Возвраты" value={loading ? '-' : `${fmt(s.refundedTotal)} ₽`} subtitle={`${d(s.refundedCount)} возвратов`} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <Link
-          href="/account/devices"
-          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
-        >
-          Управление товарами
-        </Link>
-        <Link
-          href="/account/invitations"
-          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
-        >
-          Создать приглашение
-        </Link>
-        <Link
-          href="/account/users"
-          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
-        >
-          Управление пользователями
-        </Link>
-        <Link
-          href="/account/manage-certificates"
-          className="flex items-center justify-center px-6 py-3 text-[14px] leading-[18px] font-medium text-white bg-brand-red cursor-pointer"
-        >
-          Проверка сертификатов
-        </Link>
+      {/* Breakdown charts */}
+      {!loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+            <h3 className="text-base font-medium text-text-main">Заявки на ремонт</h3>
+            <div className="flex items-center gap-6">
+              <DonutChart size={100} thickness={16} segments={[
+                { value: s.reqPending, color: '#f59e0b', label: 'Ожидание' },
+                { value: s.reqInProgress, color: '#3b82f6', label: 'В работе' },
+                { value: s.reqCompleted, color: '#22c55e', label: 'Завершено' },
+              ]} centerContent={<span className="text-lg font-bold text-text-main">{s.reqTotal}</span>} />
+              <MetricComparison className="flex-1" items={[
+                { label: 'Ожидание', value: s.reqPending, color: '#f59e0b' },
+                { label: 'В работе', value: s.reqInProgress, color: '#3b82f6' },
+                { label: 'Завершено', value: s.reqCompleted, color: '#22c55e' },
+              ]} />
+            </div>
+          </div>
+          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+            <h3 className="text-base font-medium text-text-main">Сертификаты</h3>
+            <div className="flex items-center gap-6">
+              <DonutChart size={100} thickness={16} segments={[
+                { value: s.certsActive, color: '#22c55e', label: 'Активные' },
+                { value: s.certsExpired, color: '#9ca3af', label: 'Истекшие' },
+                { value: s.certsRevoked, color: '#ef4444', label: 'Отозванные' },
+              ]} centerContent={<span className="text-lg font-bold text-text-main">{s.certificates}</span>} />
+              <MetricComparison className="flex-1" items={[
+                { label: 'Активные', value: s.certsActive, color: '#22c55e' },
+                { label: 'Истекшие', value: s.certsExpired, color: '#9ca3af' },
+                { label: 'Отозванные', value: s.certsRevoked, color: '#ef4444' },
+              ]} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment progress */}
+      {!loading && s.confirmedCount > 0 && (
+        <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-3">
+          <h3 className="text-base font-medium text-text-main">Финансы</h3>
+          <ProgressBar value={(s.confirmedCount / totalPay) * 100} color="#22c55e" label="Успешные платежи" showValue size="lg" />
+          <ProgressBar value={(s.refundedCount / totalPay) * 100} color="#ef4444" label="Возвраты" showValue size="lg" />
+        </div>
+      )}
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link href="/account/devices" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Управление товарами</Link>
+        <Link href="/account/invitations" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Создать приглашение</Link>
+        <Link href="/account/users" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Управление пользователями</Link>
+        <Link href="/account/manage-certificates" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Проверка сертификатов</Link>
       </div>
     </PageContainer>
   );

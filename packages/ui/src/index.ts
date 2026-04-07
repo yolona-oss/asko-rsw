@@ -189,3 +189,18 @@ export type {
   ChartCardProps,
   DateRangeModalProps,
 } from './components/chart';
+
+export { StatCard } from './components/stat-card';
+export type { StatCardProps, StatCardTrend } from './components/stat-card';
+
+export { ProgressBar } from './components/progress-bar';
+export type { ProgressBarProps, ProgressBarSize } from './components/progress-bar';
+
+export { DonutChart } from './components/donut-chart';
+export type { DonutChartProps, DonutSegment } from './components/donut-chart';
+
+export { Sparkline } from './components/sparkline';
+export type { SparklineProps } from './components/sparkline';
+
+export { MetricComparison } from './components/metric-comparison';
+export type { MetricComparisonProps, MetricComparisonItem } from './components/metric-comparison';
