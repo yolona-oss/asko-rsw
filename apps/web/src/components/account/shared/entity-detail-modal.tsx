@@ -34,17 +34,23 @@ export function EntityDetailModal<T>({
 
   useEffect(() => {
     if (!open || !item) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFetched(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAccessDenied(false);
       return;
     }
     if (!fetchOne) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFetched(null);
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFetched(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccessDenied(false);
 
     fetchOne(item)

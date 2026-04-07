@@ -66,7 +66,7 @@ export function OAuthButtons({ linkMode, connectedProviders = [], onUnlink, clas
     const url = linkMode
       ? `${API_URL}/auth/oauth/${provider}?link=true`
       : `${API_URL}/auth/oauth/${provider}`;
-    window.location.href = url;
+    window.location.assign(url);
   };
 
   // Login/Register mode — icon-only row

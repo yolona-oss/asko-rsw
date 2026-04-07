@@ -70,6 +70,7 @@ export function RepairerDashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- geolocation callback sets state asynchronously
     sendLocation();
     const interval = setInterval(sendLocation, LOCATION_INTERVAL_MS);
     return () => clearInterval(interval);

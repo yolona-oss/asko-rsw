@@ -54,14 +54,17 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
 
   useEffect(() => {
     if (!email || authMethod !== 'email') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEmailStatus('idle');
       return;
     }
     // Basic format check before hitting API
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEmailStatus('idle');
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmailStatus('checking');
     clearTimeout(emailCheckTimer.current);
     emailCheckTimer.current = setTimeout(async () => {

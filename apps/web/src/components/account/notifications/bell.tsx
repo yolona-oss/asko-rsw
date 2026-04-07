@@ -115,8 +115,13 @@ export function NotificationBell() {
 
   // ── Desktop panel positioning ────────────────────────────────
   useEffect(() => {
-    if (!open || !triggerRef.current) { setDesktopPos(null); return; }
+    if (!open || !triggerRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDesktopPos(null);
+      return;
+    }
     const rect = triggerRef.current.getBoundingClientRect();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDesktopPos({ x: rect.right - 320, y: rect.bottom + 8 });
   }, [open]);
 

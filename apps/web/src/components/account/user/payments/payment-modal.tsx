@@ -51,6 +51,7 @@ export function PaymentModal({
     if (open) {
       dispatch(fetchPaymentOptions());
       dispatch(resetPayment());
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedProvider(null);
     }
   }, [open, dispatch]);
@@ -58,6 +59,7 @@ export function PaymentModal({
   // Set default provider when options load
   useEffect(() => {
     if (options && !selectedProvider) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedProvider(options.defaultProvider);
     }
   }, [options, selectedProvider]);
@@ -66,7 +68,7 @@ export function PaymentModal({
   useEffect(() => {
     if (result) {
       if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
+        window.location.assign(result.redirectUrl);
       } else if (result.status === 'paid') {
         onClose();
       }

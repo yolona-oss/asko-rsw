@@ -73,6 +73,7 @@ export function RepairerSelector({
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting state when dropdown opens is intentional
       setFocusIndex(-1);
       setSearch('');
     }

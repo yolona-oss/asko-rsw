@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '@/lib/api/chat';
 import { MessageBubble } from './message-bubble';
@@ -76,6 +76,17 @@ export function MessageList({
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
+  // Build date separators as part of the message list without mutable variables
+  const messagesWithSeparators = useMemo(() => {
+    return allMessages.reduce<Array<{ msg: ChatMessage; showSeparator: boolean; dateLabel: string }>>((acc, msg) => {
+      const msgDate = new Date(msg.createdAt).toDateString();
+      const prevDate = acc.length > 0 ? new Date(acc[acc.length - 1].msg.createdAt).toDateString() : '';
+      const showSeparator = msgDate !== prevDate;
+      acc.push({ msg, showSeparator, dateLabel: showSeparator ? formatDateSeparator(msg.createdAt) : '' });
+      return acc;
+    }, []);
+  }, [allMessages]);
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -83,8 +94,6 @@ export function MessageList({
       </div>
     );
   }
-
-  let lastDate = '';
 
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto px-4 py-3">
@@ -99,31 +108,23 @@ export function MessageList({
           </button>
         </div>
       )}
-      {allMessages.map((msg) => {
-        const msgDate = new Date(msg.createdAt).toDateString();
-        let separator = null;
-        if (msgDate !== lastDate) {
-          lastDate = msgDate;
-          separator = (
-            <div key={`sep-${msgDate}`} className="flex items-center gap-3 my-3">
+      {messagesWithSeparators.map(({ msg, showSeparator, dateLabel }) => (
+        <div key={msg.id}>
+          {showSeparator && (
+            <div className="flex items-center gap-3 my-3">
               <div className="flex-1 h-px bg-border-light" />
-              <span className="text-xs text-text-sub/60">{formatDateSeparator(msg.createdAt)}</span>
+              <span className="text-xs text-text-sub/60">{dateLabel}</span>
               <div className="flex-1 h-px bg-border-light" />
             </div>
-          );
-        }
-        return (
-          <div key={msg.id}>
-            {separator}
-            <MessageBubble
-              message={msg}
-              isOwn={msg.senderId === currentUserId}
-              showSender={isGroup}
-              senderName={participantNames[msg.senderId] ?? 'Пользователь'}
-            />
-          </div>
-        );
-      })}
+          )}
+          <MessageBubble
+            message={msg}
+            isOwn={msg.senderId === currentUserId}
+            showSender={isGroup}
+            senderName={participantNames[msg.senderId] ?? 'Пользователь'}
+          />
+        </div>
+      ))}
       <div ref={bottomRef} />
     </div>
   );

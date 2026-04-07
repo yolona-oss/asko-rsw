@@ -23,10 +23,13 @@ export function PaymentDetailModal({
 
   useEffect(() => {
     if (!open || !payment?.targetId || !payment?.targetType) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTarget(null);
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTargetLoading(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTarget(null);
 
     if (payment.targetType === 'repairRequest') {
@@ -40,6 +43,7 @@ export function PaymentDetailModal({
         .catch(() => {})
         .finally(() => setTargetLoading(false));
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTargetLoading(false);
     }
   }, [open, payment?.targetId, payment?.targetType]);

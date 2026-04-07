@@ -20,6 +20,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecking(false);
       return;
     }

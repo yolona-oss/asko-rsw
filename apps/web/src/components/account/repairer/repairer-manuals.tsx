@@ -49,7 +49,7 @@ export function RepairerManuals() {
       || d.model?.toLowerCase().includes(q)
       || (categoryLabels[d.type] ?? d.type).toLowerCase().includes(q),
     );
-  }, [devices, search]);
+  }, [devices, search, categoryLabels]);
 
   const sortedDevices = useMemo(() => {
     if (!sortBy) return filteredDevices;

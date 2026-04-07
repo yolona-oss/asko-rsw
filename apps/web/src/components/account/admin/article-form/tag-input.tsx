@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { api } from '@/lib/api/client';
 
 interface TagStat {
@@ -16,7 +16,6 @@ interface TagInputProps {
 
 export function TagInput({ value, onChange }: TagInputProps) {
     const [allTags, setAllTags] = useState<TagStat[]>([]);
-    const [suggestions, setSuggestions] = useState<TagStat[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -36,18 +35,21 @@ export function TagInput({ value, onChange }: TagInputProps) {
     const currentTags = value.split(',').map((t) => t.trim()).filter(Boolean);
     const currentInput = value.split(',').pop()?.trim() ?? '';
 
-    useEffect(() => {
+    const suggestions = useMemo(() => {
         if (!currentInput) {
-            setSuggestions(allTags.filter((t) => !currentTags.includes(t.tag)).slice(0, 8));
-        } else {
-            const filtered = allTags
-                .filter((t) => t.tag.toLowerCase().includes(currentInput.toLowerCase()))
-                .filter((t) => !currentTags.slice(0, -1).includes(t.tag))
-                .slice(0, 8);
-            setSuggestions(filtered);
+            return allTags.filter((t) => !currentTags.includes(t.tag)).slice(0, 8);
         }
+        return allTags
+            .filter((t) => t.tag.toLowerCase().includes(currentInput.toLowerCase()))
+            .filter((t) => !currentTags.slice(0, -1).includes(t.tag))
+            .slice(0, 8);
+    }, [currentInput, allTags, currentTags]);
+
+    // Reset active index when suggestions change
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveIndex(-1);
-    }, [currentInput, allTags, value]);
+    }, [suggestions]);
 
     const selectTag = (tag: string) => {
         const parts = value.split(',').map((t) => t.trim()).filter(Boolean);

@@ -26,8 +26,10 @@ export function useNotificationSocket(
   // Store callbacks in refs to avoid stale closures
   const onNotificationRef = useRef(onNotification);
   const onCountDeltaRef = useRef(onCountDelta);
-  onNotificationRef.current = onNotification;
-  onCountDeltaRef.current = onCountDelta;
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+    onCountDeltaRef.current = onCountDelta;
+  });
 
   useEffect(() => {
     if (!accessToken) return;

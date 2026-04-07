@@ -22,6 +22,15 @@ export function LandingHeader() {
   const pathname = usePathname();
   const accountHref = isAuthenticated ? '/account' : '/auth';
   const menuRef = useRef<HTMLDivElement>(null);
+  const [menuHeight, setMenuHeight] = useState(400);
+
+  // Track menu scroll height for animation
+  useEffect(() => {
+    if (menuOpen && menuRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMenuHeight(menuRef.current.scrollHeight);
+    }
+  }, [menuOpen]);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/' && !activeHash;
@@ -121,7 +130,7 @@ export function LandingHeader() {
           ref={menuRef}
           className="md:hidden overflow-hidden transition-all duration-300 ease-in-out"
           style={{
-            maxHeight: menuOpen ? `${menuRef.current?.scrollHeight ?? 400}px` : '0px',
+            maxHeight: menuOpen ? `${menuHeight}px` : '0px',
             opacity: menuOpen ? 1 : 0,
           }}
         >

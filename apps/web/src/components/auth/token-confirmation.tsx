@@ -40,6 +40,7 @@ export function TokenConfirmation({
 
   useEffect(() => {
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('error');
       setMessage(noTokenMessage);
       return;

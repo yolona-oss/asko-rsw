@@ -40,7 +40,7 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
   const accessToken = useAppSelector((s) => s.auth.accessToken);
   const socketRef = useRef<Socket | null>(null);
   const cbRef = useRef(callbacks);
-  cbRef.current = callbacks;
+  useEffect(() => { cbRef.current = callbacks; });
 
   useEffect(() => {
     if (!accessToken) return;

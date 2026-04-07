@@ -177,7 +177,7 @@ export function MobileSidebar() {
     locked: boolean | null; // null=undecided, true=horizontal, false=vertical(abort)
   } | null>(null);
   const openRef = useRef(mobileOpen);
-  openRef.current = mobileOpen;
+  useEffect(() => { openRef.current = mobileOpen; });
 
   const applyTransform = useCallback((translateX: number, withTransition: boolean) => {
     const el = sidebarRef.current;

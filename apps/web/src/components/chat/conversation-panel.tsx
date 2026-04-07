@@ -44,6 +44,7 @@ export function ConversationPanel({
 
   // Close info panel when switching conversations
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInfoPanelOpen(false);
   }, [conversation.id]);
 

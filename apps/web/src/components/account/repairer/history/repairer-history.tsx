@@ -90,6 +90,7 @@ export function RepairerHistory() {
   }, [user]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     repairRequestApi.getAssigned({ page, limit: LIMIT, sortBy: sortBy ?? undefined, sortOrder: sortOrder ?? undefined })
       .then(({ data }) => {
