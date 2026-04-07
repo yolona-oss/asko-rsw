@@ -28,6 +28,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/realtime-gateway/dist ./apps/realtime-gateway/dist
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 COPY --from=builder /app/packages/gateway-common ./node_modules/@asko/gateway-common
+COPY --from=builder /app/packages/gateway-common ./packages/gateway-common
 COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
 COPY --from=builder /app/packages/proto ./packages/proto
 WORKDIR /app/apps/realtime-gateway

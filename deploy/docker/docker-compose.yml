@@ -411,7 +411,7 @@ services:
       retries: 5
 
   nginx:
-    profiles: ["gateways", "all"]
+    profiles: ["proxy"]
     image: nginx:alpine
     container_name: asko-nginx
     restart: unless-stopped
@@ -450,10 +450,6 @@ services:
     container_name: asko-web
     restart: unless-stopped
     network_mode: host
-    depends_on:
-      nginx:
-        condition: service_healthy
-        required: false
     env_file:
       - path: ../../apps/web/.env.prod
         required: false
