@@ -36,8 +36,6 @@ COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
 COPY --from=builder /app/packages/proto ./packages/proto
 
-COPY apps/auth-gateway/.env.prod ./apps/auth-gateway/.env.prod
-
 WORKDIR /app/apps/auth-gateway
 
 CMD ["node", "dist/main.js"]

@@ -30,6 +30,5 @@ COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 COPY --from=builder /app/packages/gateway-common ./node_modules/@asko/gateway-common
 COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
 COPY --from=builder /app/packages/proto ./packages/proto
-COPY apps/media-gateway/.env.prod ./apps/media-gateway/.env.prod
 WORKDIR /app/apps/media-gateway
 CMD ["node", "dist/main.js"]

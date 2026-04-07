@@ -104,6 +104,9 @@ services:
       rabbitmq:
         condition: service_healthy
         required: false
+    env_file:
+      - path: ../../apps/user-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${USER_SERVICE_GRPC_PORT:-5000}"
@@ -128,6 +131,9 @@ services:
       rabbitmq:
         condition: service_healthy
         required: false
+    env_file:
+      - path: ../../apps/payment-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${PAYMENT_SERVICE_GRPC_PORT:-5001}"
@@ -148,6 +154,9 @@ services:
         required: false
     volumes:
       - images-data:/app/apps/file-service/images
+    env_file:
+      - path: ../../apps/file-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${FILE_SERVICE_GRPC_PORT:-5002}"
@@ -166,6 +175,9 @@ services:
       rabbitmq:
         condition: service_healthy
         required: false
+    env_file:
+      - path: ../../apps/repair-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${REPAIR_SERVICE_GRPC_PORT:-5003}"
@@ -183,6 +195,9 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+        required: false
+    env_file:
+      - path: ../../apps/notification-service/.env.prod
         required: false
     environment:
       NODE_ENV: production
@@ -203,6 +218,9 @@ services:
       rabbitmq:
         condition: service_healthy
         required: false
+    env_file:
+      - path: ../../apps/chat-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${CHAT_SERVICE_GRPC_PORT:-5005}"
@@ -217,6 +235,9 @@ services:
     container_name: asko-content-service
     restart: unless-stopped
     network_mode: host
+    env_file:
+      - path: ../../apps/content-service/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       GRPC_PORT: "${CONTENT_SERVICE_GRPC_PORT:-5010}"
@@ -235,6 +256,9 @@ services:
     depends_on:
       user-service:
         condition: service_started
+        required: false
+    env_file:
+      - path: ../../apps/auth-gateway/.env.prod
         required: false
     environment:
       NODE_ENV: production
@@ -275,6 +299,9 @@ services:
       chat-service:
         condition: service_started
         required: false
+    env_file:
+      - path: ../../apps/repair-gateway/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       PORT: "${REPAIR_GATEWAY_PORT:-4002}"
@@ -304,6 +331,9 @@ services:
         required: false
     volumes:
       - images-data:/app/apps/media-gateway/images
+    env_file:
+      - path: ../../apps/media-gateway/.env.prod
+        required: false
     environment:
       NODE_ENV: production
       PORT: "${MEDIA_GATEWAY_PORT:-4003}"
@@ -331,6 +361,9 @@ services:
         required: false
       notification-service:
         condition: service_started
+        required: false
+    env_file:
+      - path: ../../apps/realtime-gateway/.env.prod
         required: false
     environment:
       NODE_ENV: production
@@ -360,6 +393,9 @@ services:
         required: false
       file-service:
         condition: service_started
+        required: false
+    env_file:
+      - path: ../../apps/content-gateway/.env.prod
         required: false
     environment:
       NODE_ENV: production
@@ -417,6 +453,9 @@ services:
     depends_on:
       nginx:
         condition: service_healthy
+        required: false
+    env_file:
+      - path: ../../apps/web/.env.prod
         required: false
     environment:
       NODE_ENV: production
