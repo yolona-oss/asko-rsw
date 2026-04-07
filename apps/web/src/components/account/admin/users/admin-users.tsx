@@ -178,17 +178,10 @@ export function AdminUsers() {
     <PageContainer>
       <PageHeader>Выдача доступов</PageHeader>
 
-      {/* Role tabs */}
-      <DataFilter
-        filters={[ROLE_TAB_FILTER_DEF]}
-        values={filterValues}
-        onChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
-      />
-
       {/* Search + Filters + ViewSwitcher + Invite button */}
       <DataToolbar
         search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
-        filters={[STATUS_FILTER_DEF]}
+        filters={[STATUS_FILTER_DEF, ROLE_TAB_FILTER_DEF]}
         filterValues={filterValues}
         onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         inlineActions={<InviteDropdown />}

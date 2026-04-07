@@ -114,15 +114,10 @@ function FilterSelect({ filter, value, onChange }: FilterSelectProps) {
   );
 }
 
+
 // ─── FilterTabs ─────────────────────────────────────────────────────────────
 
-interface FilterTabsProps {
-  filter: FilterDefinition;
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
+function FilterTabs({ filter, value, onChange }: FilterSelectProps) {
   return (
     <div className="flex flex-wrap items-center">
       {filter.label && (
@@ -152,7 +147,7 @@ function FilterTabs({ filter, value, onChange }: FilterTabsProps) {
 
 // ─── FilterBlock (large rectangular buttons desktop, dropdown mobile) ────────
 
-function FilterBlock({ filter, value, onChange }: FilterTabsProps) {
+function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

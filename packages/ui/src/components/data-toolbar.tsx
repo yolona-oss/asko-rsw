@@ -25,6 +25,8 @@ export interface DataToolbarProps {
   actions?: ReactNode;
   /** Actions rendered inside the filter bar on the right (dropdown openers) */
   inlineActions?: ReactNode;
+  /** When true, the toolbar bar visually connects to the DataGrid below (no gap between borders) */
+  connectToDataView?: boolean;
   /** Extra class on the root container */
   className?: string;
 }
@@ -38,6 +40,7 @@ export function DataToolbar({
   onFilterChange,
   actions,
   inlineActions,
+  connectToDataView,
   className,
 }: DataToolbarProps) {
   const filterRef = useRef<HTMLDivElement>(null);
@@ -97,7 +100,7 @@ export function DataToolbar({
       {/* Toolbar bar — bordered, white bg, matches DataGrid border */}
       <div className={cn(
         'bg-white border border-[#eaeaea] flex items-center min-h-[42px]',
-        isWide && '-mb-px relative z-[1]',
+        connectToDataView && '-mb-px relative z-[1]',
       )}>
         {/* Search inline when narrow */}
         {!isWide && search && (
