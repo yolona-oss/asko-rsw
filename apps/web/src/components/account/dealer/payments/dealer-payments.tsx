@@ -7,6 +7,7 @@ import {
   Card,
   DataGrid,
   DataToolbar,
+  DetailRow,
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
@@ -18,6 +19,8 @@ import {
 import type { DataGridColumn, SortOrder, FilterValues, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
 import { WithdrawModal } from '@/components/account/dealer/withdraw-modal';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
 import { dealerApi } from '@/lib/api/dealer';
@@ -113,6 +116,10 @@ export function DealerPayments() {
   const [loading, setLoading] = useState(true);
   const [pointsBalance, setPointsBalance] = useState(0);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+
+  // Detail modals
+  const pointsDetail = useEntityDetail<IPointsTransaction>();
+  const paymentDetail = useEntityDetail<PaymentRecord>();
 
   // Points view
   const [pointsView, setPointsView] = useState('table');
@@ -235,7 +242,7 @@ export function DealerPayments() {
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={pointsView} onViewChange={setPointsView} />}
       />
       {pointsView === 'table' ? (
-        <DataGrid<IPointsTransaction> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
+        <DataGrid<IPointsTransaction> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} onRowClick={pointsDetail.onRowClick} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
       ) : loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
       ) : filteredPoints.length === 0 ? (
@@ -243,7 +250,7 @@ export function DealerPayments() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPoints.map((tx) => (
-            <Card key={tx.id} padding="none" className="p-5 flex flex-col gap-3">
+            <Card key={tx.id} padding="none" className="p-5 flex flex-col gap-3 cursor-pointer hover:border-text-sub transition-colors" onClick={() => pointsDetail.onRowClick(tx)}>
               <div className="flex items-start justify-between gap-2">
                 <span className="text-sm text-text-main">{tx.reason}</span>
                 <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge>
@@ -264,7 +271,7 @@ export function DealerPayments() {
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={paymentView} onViewChange={setPaymentView} />}
       />
       {paymentView === 'table' ? (
-        <DataGrid<PaymentRecord> loading={loading} columns={paymentColumns} data={filteredPayments} keyExtractor={(p) => p.id} emptyContent="Нет платежей" sortKey={paymentSortBy ?? undefined} sortOrder={paymentSortOrder ?? undefined} onSort={(k, o) => { setPaymentSortBy(k); setPaymentSortOrder(o); }} footer={<>Показано {filteredPayments.length} из {paymentsTotal}</>} />
+        <DataGrid<PaymentRecord> loading={loading} columns={paymentColumns} data={filteredPayments} keyExtractor={(p) => p.id} emptyContent="Нет платежей" sortKey={paymentSortBy ?? undefined} sortOrder={paymentSortOrder ?? undefined} onSort={(k, o) => { setPaymentSortBy(k); setPaymentSortOrder(o); }} onRowClick={paymentDetail.onRowClick} footer={<>Показано {filteredPayments.length} из {paymentsTotal}</>} />
       ) : loading ? (
         <p className="text-sm text-text-sub">Загрузка...</p>
       ) : filteredPayments.length === 0 ? (
@@ -272,7 +279,7 @@ export function DealerPayments() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPayments.map((p) => (
-            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
+            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3 cursor-pointer hover:border-text-sub transition-colors" onClick={() => paymentDetail.onRowClick(p)}>
               <div className="flex items-start justify-between gap-2">
                 <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span>
                 <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge>
@@ -283,6 +290,36 @@ export function DealerPayments() {
           ))}
         </div>
       )}
+
+      {/* Detail modals */}
+      <EntityDetailModal
+        open={pointsDetail.open}
+        onClose={pointsDetail.onClose}
+        item={pointsDetail.selectedItem}
+        title="Детали операции"
+        renderContent={(item) => (
+          <div className="flex flex-col">
+            <DetailRow label="Описание" value={item.reason ?? '-'} />
+            <DetailRow label="Сумма" value={<span className={item.amount > 0 ? 'text-green-600' : 'text-brand-red'}>{item.amount > 0 ? '+' : ''}{formatAmount(item.amount)}</span>} />
+            <DetailRow label="Тип" value={<Badge variant={POINTS_TX_BADGE_VARIANT[item.type] ?? 'neutral'}>{POINTS_TX_LABELS[item.type] ?? item.type}</Badge>} />
+            <DetailRow label="Дата" value={formatDate(item.createdAt)} />
+          </div>
+        )}
+      />
+      <EntityDetailModal
+        open={paymentDetail.open}
+        onClose={paymentDetail.onClose}
+        item={paymentDetail.selectedItem}
+        title="Детали платежа"
+        renderContent={(item) => (
+          <div className="flex flex-col">
+            <DetailRow label="Тип" value={TARGET_LABELS[item.targetType ?? ''] ?? 'Платёж'} />
+            <DetailRow label="Сумма" value={`${formatAmount(item.amount)} ₽`} />
+            <DetailRow label="Статус" value={<Badge variant={STATUS_BADGE_VARIANT[item.status] ?? 'neutral'}>{STATUS_LABELS[item.status] ?? item.status}</Badge>} />
+            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+          </div>
+        )}
+      />
 
       <WithdrawModal open={withdrawOpen} onClose={() => { setWithdrawOpen(false); fetchData(); dispatch(getMyWithdraws()); }} maxAmount={pointsBalance} />
       <DateRangeModal open={dateModalOpen} onClose={() => setDateModalOpen(false)} range={dateRange} onApply={setDateRange} />

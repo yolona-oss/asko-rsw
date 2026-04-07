@@ -53,7 +53,7 @@ export const PAGE_SIZE = 12;
 
 export const TAB_FILTER: FilterDefinition = {
   key: 'tab',
-  label: '',
+  label: 'Заявки',
   type: 'tabs',
   options: TABS.map((tab) => ({ value: tab.key, label: tab.label })),
 };

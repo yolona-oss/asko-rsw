@@ -19,7 +19,7 @@ const statusVariant = (s: string): BadgeVariant => {
 
 export async function fetchCertificateOne(item: any): Promise<any> {
   const { data } = await api.get(`/certificates/${item.id}`, { _silent: true } as any);
-  return data;
+  return data?.certificate ?? data;
 }
 
 export function CertificateDetail({ item, loading }: { item: any; loading: boolean }) {

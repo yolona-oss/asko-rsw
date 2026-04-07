@@ -4,7 +4,7 @@ import type { CertTab } from './types';
 
 export const STATUS_FILTER: FilterDefinition = {
   key: 'status',
-  label: '',
+  label: 'Статус',
   type: 'tabs',
   options: [
     { value: 'active', label: 'Активные' },

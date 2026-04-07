@@ -26,7 +26,7 @@ export const ROLE_LABELS: Record<string, string> = {
 
 export const STATUS_FILTER: FilterDefinition = {
   key: 'status',
-  label: '',
+  label: 'Статус',
   type: 'tabs',
   options: [
     { value: 'all', label: 'Все' },

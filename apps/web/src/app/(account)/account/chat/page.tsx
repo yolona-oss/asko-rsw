@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/components/account/account-provider';
 import { ChatLayout } from '@/components/chat/chat-layout';
 import { SkeletonBlock } from '@/components/skeleton';
+import { PageHeader } from '@/components/account/page-header';
 
 function ChatSkeleton() {
   return (
@@ -32,6 +33,7 @@ function ChatPageInner() {
 export default function ChatPage() {
   return (
     <Suspense fallback={<ChatSkeleton />}>
+      <PageHeader className="opacity-0">pu pu pu</PageHeader>
       <ChatPageInner />
     </Suspense>
   );

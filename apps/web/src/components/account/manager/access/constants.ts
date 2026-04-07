@@ -5,7 +5,7 @@ export type AccessTab = 'inactive' | 'active';
 
 export const TAB_FILTER: FilterDefinition = {
   key: 'status',
-  label: '',
+  label: 'Статус',
   type: 'tabs',
   options: [
     { value: 'inactive', label: 'Новые' },

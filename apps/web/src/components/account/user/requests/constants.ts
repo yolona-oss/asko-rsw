@@ -47,7 +47,7 @@ export const STATUS_TAB_MAP: Record<string, StatusFilter> = {
 
 export const STATUS_FILTER: FilterDefinition = {
   key: 'status',
-  label: '',
+  label: 'Статус',
   type: 'tabs',
   options: [
     { value: 'all', label: 'Все' },

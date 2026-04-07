@@ -5,7 +5,7 @@ export type TabKey = 'active' | 'all' | 'paused' | 'completed';
 
 export const TAB_FILTER: FilterDefinition = {
   key: 'tab',
-  label: '',
+  label: 'Заявки',
   type: 'tabs',
   options: [
     { value: 'active', label: 'Активная' },

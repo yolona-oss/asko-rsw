@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { cn } from '../utils/cn';
 import { DataSearch } from './data-search';
 import { DataFilter, type FilterDefinition, type FilterValues } from './data-filter';
@@ -33,8 +33,6 @@ export interface DataToolbarProps {
   className?: string;
 }
 
-const WIDE_THRESHOLD = 600;
-
 export function DataToolbar({
   search,
   filters,
@@ -46,21 +44,9 @@ export function DataToolbar({
   viewSwitcher,
   className,
 }: DataToolbarProps) {
-  const filterRef = useRef<HTMLDivElement>(null);
-  const [isWide, setIsWide] = useState(false);
   const hasFilters = !!(filters && filterValues && onFilterChange);
 
-  useEffect(() => {
-    const el = filterRef.current;
-    if (!el) return;
-    const check = () => setIsWide(el.scrollWidth > WIDE_THRESHOLD);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasFilters]);
-
-  // No filters — render search standalone with actions above
+  // No filters — search standalone with actions above
   if (!hasFilters) {
     return (
       <div className={cn('flex flex-col gap-3', className)}>
@@ -77,75 +63,57 @@ export function DataToolbar({
             className={search.className}
           />
         )}
-        {viewSwitcher && (
-          <div className="pt-3">
-            {viewSwitcher}
-          </div>
-        )}
+        {viewSwitcher && <div className="pt-3">{viewSwitcher}</div>}
       </div>
     );
   }
 
   return (
     <div className={cn('flex flex-col', className)}>
-      {/* Actions above toolbar */}
+      {/* Actions above */}
       {actions && (
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {actions}
         </div>
       )}
 
-      {/* Search above bar when filters are wide */}
-      {isWide && search && (
-        <DataSearch
-          value={search.value}
-          onChange={search.onChange}
-          placeholder={search.placeholder}
-          className={cn('mb-3', search.className)}
-        />
-      )}
-
-      {/* Toolbar bar — bordered, white bg, matches DataGrid border */}
-      <div className={cn(
-        'bg-white border border-[#eaeaea] flex items-center min-h-[42px]',
-        connectToDataView && '-mb-px relative z-[1]',
-      )}>
-        {/* Search inline when narrow */}
-        {!isWide && search && (
-          <div className="flex-shrink-0 border-r border-[#edeff1] [&_input]:border-0 [&_input]:bg-transparent">
+      {/* Search + Filter bar — same row on desktop, stacked on mobile */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Search — separate bordered box */}
+        {search && (
+          <div className="lg:w-[320px] flex-shrink-0 bg-white border border-[#e5e5e5] shadow-[0_1px_2px_rgba(0,0,0,0.04)] h-[42px] flex items-center [&_input]:border-0 [&_input]:bg-transparent [&_input]:shadow-none [&_input]:py-0 [&_input]:h-full">
             <DataSearch
               value={search.value}
               onChange={search.onChange}
               placeholder={search.placeholder}
-              className={cn('w-[200px] lg:w-[280px]', search.className)}
+              className={cn('w-full h-full', search.className)}
             />
           </div>
         )}
 
-        {/* Filters — scrollable, forced to dropdown style */}
-        <div ref={filterRef} className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
-          <DataFilter
-            filters={filters.map(f => ({ ...f, type: 'select' as const }))}
-            values={filterValues}
-            onChange={onFilterChange}
-            className="px-3 lg:px-5 py-2.5 min-w-max"
-          />
-        </div>
-
-        {/* Inline actions — dropdown openers, inside the bar */}
-        {inlineActions && (
-          <div className="flex-shrink-0 border-l border-[#edeff1] flex items-center self-stretch">
-            {inlineActions}
+        {/* Filter bar — separate bordered box */}
+        <div className={cn(
+          'bg-white border border-[#e5e5e5] flex items-center h-[42px] flex-1 min-w-0',
+          connectToDataView && '-mb-px relative z-[1]',
+        )}>
+          <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+            <DataFilter
+              filters={filters.map(f => ({ ...f, type: 'select' as const }))}
+              values={filterValues}
+              onChange={onFilterChange}
+              className="px-5 py-2.5 min-w-max"
+            />
           </div>
-        )}
+          {inlineActions && (
+            <div className="flex-shrink-0 border-l border-[#edeff1] flex items-center self-stretch">
+              {inlineActions}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ViewSwitcher — below filter bar, closest to data view */}
-      {viewSwitcher && (
-        <div className="pt-3">
-          {viewSwitcher}
-        </div>
-      )}
+      {/* ViewSwitcher — below */}
+      {viewSwitcher && <div className="pt-3">{viewSwitcher}</div>}
     </div>
   );
 }

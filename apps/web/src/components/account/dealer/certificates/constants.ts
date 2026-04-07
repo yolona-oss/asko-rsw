@@ -37,7 +37,7 @@ export const PAGE_SIZE = 10;
 
 export const STATUS_FILTER_DEF: FilterDefinition = {
   key: 'status',
-  label: '',
+  label: 'Статус',
   type: 'tabs',
   options: STATUS_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
 };
