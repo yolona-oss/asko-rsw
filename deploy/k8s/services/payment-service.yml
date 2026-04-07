@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: asko
+  labels:
+    app: payment-service
+    component: service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        component: service
+    spec:
+      containers:
+        - name: payment-service
+          image: asko/payment-service:latest
+          ports:
+            - containerPort: 5001
+              name: grpc
+            - containerPort: 9101
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: asko-config
+            - secretRef:
+                name: asko-secrets
+          env:
+            - name: GRPC_PORT
+              value: "5001"
+            - name: METRICS_PORT
+              value: "9101"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: asko
+  labels:
+    app: payment-service
+    component: service
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-service
+  ports:
+    - port: 5001
+      targetPort: 5001
+      name: grpc
+    - port: 9101
+      targetPort: 9101
+      name: metrics

@@ -20,8 +20,8 @@ export class ImageResizeService {
         return this.config.staticPath;
     }
 
-    private get serverUrl(): string {
-        return this.config.serverUrl;
+    private get publicUrl(): string {
+        return this.config.publicUrl;
     }
 
     async generateSizes(
@@ -43,7 +43,7 @@ export class ImageResizeService {
 
             // Skip resize if original already matches target
             if (origW === size.width && origH === size.height) {
-                const originalUrl = `${this.serverUrl}/images/${originalPublicId}`;
+                const originalUrl = `${this.publicUrl}/images/${originalPublicId}`;
                 results[size.name] = {
                     public_id: originalPublicId,
                     version: 1,
@@ -77,8 +77,8 @@ export class ImageResizeService {
                 height: meta.height ?? size.height,
                 format: parsed.ext.replace('.', ''),
                 resource_type: 'image',
-                url: `${this.serverUrl}/images/${relativePath}`,
-                secure_url: `${this.serverUrl}/images/${relativePath}`,
+                url: `${this.publicUrl}/images/${relativePath}`,
+                secure_url: `${this.publicUrl}/images/${relativePath}`,
                 original_filename: outputName,
             };
         }

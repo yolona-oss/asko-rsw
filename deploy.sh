@@ -10,16 +10,16 @@ OLD=$(git rev-parse HEAD)
 git fetch origin main
 git reset --hard origin/main
 
-if ! docker compose build; then
+if ! docker compose -f deploy/docker/docker-compose.yml --profile all build; then
   echo "BUILD FAILED"
   git reset --hard $OLD
   exit 1
 fi
 
-if ! docker compose up -d --remove-orphans; then
+if ! docker compose -f deploy/docker/docker-compose.yml --profile all up -d --remove-orphans; then
   echo "UP FAILED"
   git reset --hard $OLD
-  docker compose up -d
+  docker compose -f deploy/docker/docker-compose.yml --profile all up -d
   exit 1
 fi
 

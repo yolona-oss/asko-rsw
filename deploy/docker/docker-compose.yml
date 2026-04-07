@@ -1,0 +1,435 @@
+# ASKO — Production Docker Compose with profiles
+#
+# Usage:
+#   docker compose --profile all up -d                    # Everything on one server
+#   docker compose --profile data up -d                   # Data layer only
+#   docker compose --profile services up -d               # Microservices only
+#   docker compose --profile gateways up -d               # API gateways + nginx
+#   docker compose --profile frontend up -d               # Web frontend only
+#   docker compose --profile monitoring up -d              # Prometheus + Grafana
+#
+# All env vars use ${VAR:-default} syntax — override via .env file.
+
+services:
+
+  # ── Data layer ────────────────────────────────────────
+
+  rabbitmq:
+    profiles: ["data", "all"]
+    image: rabbitmq:3-management-alpine
+    container_name: asko-rabbitmq
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER:-asko}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS:-asko_rmq_pass}"
+      RABBITMQ_PLUGINS: "rabbitmq_management rabbitmq_prometheus"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Monitoring ────────────────────────────────────────
+
+  redis-exporter:
+    profiles: ["data", "monitoring", "all"]
+    image: oliver006/redis_exporter:latest
+    container_name: asko-redis-exporter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      REDIS_ADDR: "${REDIS_ADDR:-redis://localhost:6379}"
+    command: ["--web.listen-address=:9121"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9121/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  prometheus:
+    profiles: ["monitoring", "all"]
+    image: prom/prometheus:latest
+    container_name: asko-prometheus
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.listen-address=:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    profiles: ["monitoring", "all"]
+    image: grafana/grafana:latest
+    container_name: asko-grafana
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GF_SECURITY_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GF_SECURITY_ADMIN_PASSWORD:-admin}"
+      GF_SERVER_HTTP_PORT: "${GF_SERVER_HTTP_PORT:-3001}"
+      GF_SERVER_ROOT_URL: "${GF_SERVER_ROOT_URL:-https://localhost/grafana/}"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${GF_SERVER_HTTP_PORT:-3001}/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Microservices ─────────────────────────────────────
+
+  user-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.user-service
+    container_name: asko-user-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${USER_SERVICE_GRPC_PORT:-5000}"
+      METRICS_PORT: 9100
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const g=require('@grpc/grpc-js');const c=new g.Client('localhost:${USER_SERVICE_GRPC_PORT:-5000}',g.credentials.createInsecure());c.waitForReady(Date.now()+2000,e=>{process.exit(e?1:0)})\" 2>/dev/null || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  payment-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.payment-service
+    container_name: asko-payment-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${PAYMENT_SERVICE_GRPC_PORT:-5001}"
+      METRICS_PORT: 9101
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+
+  file-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.file-service
+    container_name: asko-file-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    volumes:
+      - images-data:/app/apps/file-service/images
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${FILE_SERVICE_GRPC_PORT:-5002}"
+      METRICS_PORT: 9102
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+
+  repair-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.repair-service
+    container_name: asko-repair-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${REPAIR_SERVICE_GRPC_PORT:-5003}"
+      METRICS_PORT: 9103
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+
+  notification-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.notification-service
+    container_name: asko-notification-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${NOTIFICATION_SERVICE_GRPC_PORT:-5004}"
+      METRICS_PORT: 9104
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+      REDIS_URL: "${REDIS_URL:-redis://localhost:6379}"
+
+  chat-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.chat-service
+    container_name: asko-chat-service
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${CHAT_SERVICE_GRPC_PORT:-5005}"
+      METRICS_PORT: 9105
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://asko:asko_rmq_pass@localhost:5672}"
+
+  content-service:
+    profiles: ["services", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.content-service
+    container_name: asko-content-service
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: "${CONTENT_SERVICE_GRPC_PORT:-5010}"
+      METRICS_PORT: 9110
+
+  # ── Gateways ──────────────────────────────────────────
+
+  auth-gateway:
+    profiles: ["gateways", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.auth-gateway
+    container_name: asko-auth-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      user-service:
+        condition: service_started
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "${AUTH_GATEWAY_PORT:-4001}"
+      METRICS_PORT: 9120
+      USER_SERVICE_ADDR: "${USER_SERVICE_ADDR:-localhost:5000}"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      VK_CLIENT_ID: "${VK_CLIENT_ID:-}"
+      VK_CLIENT_SECRET: "${VK_CLIENT_SECRET:-}"
+      YANDEX_CLIENT_ID: "${YANDEX_CLIENT_ID:-}"
+      YANDEX_CLIENT_SECRET: "${YANDEX_CLIENT_SECRET:-}"
+      OAUTH_CALLBACK_URL: "${OAUTH_CALLBACK_URL:-http://localhost}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${AUTH_GATEWAY_PORT:-4001}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  repair-gateway:
+    profiles: ["gateways", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.repair-gateway
+    container_name: asko-repair-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      repair-service:
+        condition: service_started
+        required: false
+      payment-service:
+        condition: service_started
+        required: false
+      file-service:
+        condition: service_started
+        required: false
+      chat-service:
+        condition: service_started
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "${REPAIR_GATEWAY_PORT:-4002}"
+      METRICS_PORT: 9121
+      USER_SERVICE_ADDR: "${USER_SERVICE_ADDR:-localhost:5000}"
+      REPAIR_SERVICE_ADDR: "${REPAIR_SERVICE_ADDR:-localhost:5003}"
+      PAYMENT_SERVICE_ADDR: "${PAYMENT_SERVICE_ADDR:-localhost:5001}"
+      FILE_SERVICE_ADDR: "${FILE_SERVICE_ADDR:-localhost:5002}"
+      CHAT_SERVICE_ADDR: "${CHAT_SERVICE_ADDR:-localhost:5005}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${REPAIR_GATEWAY_PORT:-4002}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  media-gateway:
+    profiles: ["gateways", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.media-gateway
+    container_name: asko-media-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      file-service:
+        condition: service_started
+        required: false
+    volumes:
+      - images-data:/app/apps/media-gateway/images
+    environment:
+      NODE_ENV: production
+      PORT: "${MEDIA_GATEWAY_PORT:-4003}"
+      METRICS_PORT: 9122
+      USER_SERVICE_ADDR: "${USER_SERVICE_ADDR:-localhost:5000}"
+      FILE_SERVICE_ADDR: "${FILE_SERVICE_ADDR:-localhost:5002}"
+      CHAT_SERVICE_ADDR: "${CHAT_SERVICE_ADDR:-localhost:5005}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${MEDIA_GATEWAY_PORT:-4003}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  realtime-gateway:
+    profiles: ["gateways", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.realtime-gateway
+    container_name: asko-realtime-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      chat-service:
+        condition: service_started
+        required: false
+      notification-service:
+        condition: service_started
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "${REALTIME_GATEWAY_PORT:-4004}"
+      METRICS_PORT: 9123
+      USER_SERVICE_ADDR: "${USER_SERVICE_ADDR:-localhost:5000}"
+      CHAT_SERVICE_ADDR: "${CHAT_SERVICE_ADDR:-localhost:5005}"
+      NOTIFICATION_SERVICE_ADDR: "${NOTIFICATION_SERVICE_ADDR:-localhost:5004}"
+      REDIS_URL: "${REDIS_URL:-redis://localhost:6379}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${REALTIME_GATEWAY_PORT:-4004}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  content-gateway:
+    profiles: ["gateways", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.content-gateway
+    container_name: asko-content-gateway
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      content-service:
+        condition: service_started
+        required: false
+      file-service:
+        condition: service_started
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "${CONTENT_GATEWAY_PORT:-4005}"
+      METRICS_PORT: 9124
+      USER_SERVICE_ADDR: "${USER_SERVICE_ADDR:-localhost:5000}"
+      CONTENT_SERVICE_ADDR: "${CONTENT_SERVICE_ADDR:-localhost:5010}"
+      FILE_SERVICE_ADDR: "${FILE_SERVICE_ADDR:-localhost:5002}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${CONTENT_GATEWAY_PORT:-4005}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    profiles: ["gateways", "all"]
+    image: nginx:alpine
+    container_name: asko-nginx
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      auth-gateway:
+        condition: service_healthy
+        required: false
+      repair-gateway:
+        condition: service_healthy
+        required: false
+      media-gateway:
+        condition: service_healthy
+        required: false
+      realtime-gateway:
+        condition: service_healthy
+        required: false
+      content-gateway:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend ──────────────────────────────────────────
+
+  web:
+    profiles: ["frontend", "all"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile.web
+    container_name: asko-web
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      nginx:
+        condition: service_healthy
+        required: false
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "${WEB_PORT:-3000}"
+      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-http://localhost}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${WEB_PORT:-3000}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  images-data:
+  prometheus-data:
+  grafana-data:

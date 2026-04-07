@@ -28,8 +28,8 @@ export class AppConfig {
         return this.configService.getOrThrow<string>('STATIC_PATH');
     }
 
-    get serverUrl(): string {
-        return this.configService.getOrThrow<string>('SERVER_URL');
+    get publicUrl(): string {
+        return this.configService.getOrThrow<string>('PUBLIC_URL');
     }
 
     get redisUrl(): string {
@@ -44,7 +44,7 @@ export class AppConfig {
 
     get cloudinary() {
         return {
-            resolve_name: this.configService.getOrThrow<string>('CLOUDINARY_RESOLVE_NAME'),
+            resolve_name: this.configService.getOrThrow<string>('CLOUDINARY_CLOUD_NAME'),
             api_key: this.configService.getOrThrow<string>('CLOUDINARY_API_KEY'),
             api_secret: this.configService.getOrThrow<string>('CLOUDINARY_API_SECRET'),
         };

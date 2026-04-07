@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+  namespace: asko
+  labels:
+    app: content-service
+    component: service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: content-service
+  template:
+    metadata:
+      labels:
+        app: content-service
+        component: service
+    spec:
+      containers:
+        - name: content-service
+          image: asko/content-service:latest
+          ports:
+            - containerPort: 5010
+              name: grpc
+            - containerPort: 9110
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: asko-config
+            - secretRef:
+                name: asko-secrets
+          env:
+            - name: GRPC_PORT
+              value: "5010"
+            - name: METRICS_PORT
+              value: "9110"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-service
+  namespace: asko
+  labels:
+    app: content-service
+    component: service
+spec:
+  type: ClusterIP
+  selector:
+    app: content-service
+  ports:
+    - port: 5010
+      targetPort: 5010
+      name: grpc
+    - port: 9110
+      targetPort: 9110
+      name: metrics

@@ -8,10 +8,6 @@ import ms from 'ms'
 export class AppConfig {
     constructor(private readonly configService: ConfigService) { }
 
-    get serverUrl() {
-        return this.configService.getOrThrow<string>('SERVER_URL');
-    }
-
     get frontendUrl() {
         return this.configService.getOrThrow<string>('FRONTEND_URL');
     }
@@ -35,29 +31,29 @@ export class AppConfig {
         return {
             algorithm: this.configService.getOrThrow<string>('JWT_ALGORITHM') as Algorithm,
             email_confirmation: {
-                public_key: this.configService.getOrThrow<string>('EMAIL_CONFIRMATION_TOKEN_PUBLIC_KEY'),
-                private_key: this.configService.getOrThrow<string>('EMAIL_CONFIRMATION_TOKEN_PRIVATE_KEY'),
+                public_key: this.configService.getOrThrow<string>('JWT_EMAIL_CONFIRM_PUBLIC_KEY'),
+                private_key: this.configService.getOrThrow<string>('JWT_EMAIL_CONFIRM_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: this.configService.getOrThrow<ms.StringValue>('EMAIL_CONFIRMATION_TOKEN_EXPIRES_IN')
+                    expires_in: this.configService.getOrThrow<ms.StringValue>('JWT_EMAIL_CONFIRM_EXPIRES_IN')
                 }
             },
             access_token: {
-                public_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PUBLIC_KEY'),
-                private_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PRIVATE_KEY'),
+                public_key: this.configService.getOrThrow<string>('JWT_ACCESS_PUBLIC_KEY'),
+                private_key: this.configService.getOrThrow<string>('JWT_ACCESS_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: this.configService.getOrThrow<ms.StringValue>('ACCESS_JWT_TOKEN_OPTION_EXPIRES_IN'),
+                    expires_in: this.configService.getOrThrow<ms.StringValue>('JWT_ACCESS_EXPIRES_IN'),
                 },
             },
             refresh_token: {
-                public_key: this.configService.getOrThrow<string>('REFRESH_JWT_TOKEN_PUBLIC_KEY'),
-                private_key: this.configService.getOrThrow<string>('REFRESH_JWT_TOKEN_PRIVATE_KEY'),
+                public_key: this.configService.getOrThrow<string>('JWT_REFRESH_PUBLIC_KEY'),
+                private_key: this.configService.getOrThrow<string>('JWT_REFRESH_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: this.configService.getOrThrow<ms.StringValue>('REFRESH_JWT_TOKEN_OPTION_EXPIRES_IN'),
+                    expires_in: this.configService.getOrThrow<ms.StringValue>('JWT_REFRESH_EXPIRES_IN'),
                 },
             },
             reset_token: {
                 sign_options: {
-                    expires_in: this.configService.getOrThrow<ms.StringValue>('RESET_PASSWORD_TOKEN_EXPIRES_IN'),
+                    expires_in: this.configService.getOrThrow<ms.StringValue>('JWT_RESET_EXPIRES_IN'),
                 }
             }
         };
@@ -72,9 +68,9 @@ export class AppConfig {
 
     get phoneOtp() {
         return {
-            maxAttempts: parseInt(this.configService.get<string>('OPT_MAX_ATTEMPTS') || '3', 10),
-            cooldownSec: parseInt(this.configService.get<string>('OPT_DELAY_BETWEEN_ATTEMPTS_SEC') || '60', 10),
-            lockoutSec: parseInt(this.configService.get<string>('OPT_DELAY_BETWEEN_MAX_ATTEMPTS_SEC') || '360', 10),
+            maxAttempts: parseInt(this.configService.get<string>('OTP_MAX_ATTEMPTS') || '3', 10),
+            cooldownSec: parseInt(this.configService.get<string>('OTP_COOLDOWN_SEC') || '60', 10),
+            lockoutSec: parseInt(this.configService.get<string>('OTP_LOCKOUT_SEC') || '360', 10),
         };
     }
 
@@ -106,10 +102,10 @@ export class AppConfig {
 
     get defaultUser() {
         return {
-            name: this.configService.getOrThrow<string>('DEFAULT_USER_NAME'),
-            email: this.configService.getOrThrow<string>('DEFAULT_USER_EMAIL'),
-            phone: this.configService.getOrThrow<string>('DEFAULT_USER_PHONE'),
-            password: this.configService.getOrThrow<string>('DEFAULT_USER_PASSWORD'),
+            name: this.configService.getOrThrow<string>('SEED_ADMIN_NAME'),
+            email: this.configService.getOrThrow<string>('SEED_ADMIN_EMAIL'),
+            phone: this.configService.getOrThrow<string>('SEED_ADMIN_PHONE'),
+            password: this.configService.getOrThrow<string>('SEED_ADMIN_PASSWORD'),
         };
     }
 }

@@ -1,0 +1,82 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: asko-ingress
+  namespace: asko
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: your-domain.com
+    http:
+      paths:
+      - path: /auth/
+        pathType: Prefix
+        backend: { service: { name: auth-gateway, port: { number: 4001 } } }
+      - path: /invite/
+        pathType: Prefix
+        backend: { service: { name: auth-gateway, port: { number: 4001 } } }
+      - path: /repair-requests/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /devices/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /device-categories/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /certificates/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /repairers/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /dealers/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /reviews/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /schedule/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /address/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /payment/
+        pathType: Prefix
+        backend: { service: { name: repair-gateway, port: { number: 4002 } } }
+      - path: /file-upload/
+        pathType: Prefix
+        backend: { service: { name: media-gateway, port: { number: 4003 } } }
+      - path: /files/
+        pathType: Prefix
+        backend: { service: { name: media-gateway, port: { number: 4003 } } }
+      - path: /images/
+        pathType: Prefix
+        backend: { service: { name: media-gateway, port: { number: 4003 } } }
+      - path: /videos/
+        pathType: Prefix
+        backend: { service: { name: media-gateway, port: { number: 4003 } } }
+      - path: /chat/
+        pathType: Prefix
+        backend: { service: { name: realtime-gateway, port: { number: 4004 } } }
+      - path: /notifications/
+        pathType: Prefix
+        backend: { service: { name: realtime-gateway, port: { number: 4004 } } }
+      - path: /socket.io/
+        pathType: Prefix
+        backend: { service: { name: realtime-gateway, port: { number: 4004 } } }
+      - path: /articles/
+        pathType: Prefix
+        backend: { service: { name: content-gateway, port: { number: 4005 } } }
+      - path: /users/
+        pathType: Prefix
+        backend: { service: { name: content-gateway, port: { number: 4005 } } }
+      - path: /
+        pathType: Prefix
+        backend: { service: { name: web, port: { number: 3000 } } }

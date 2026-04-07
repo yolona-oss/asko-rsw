@@ -14,10 +14,6 @@ export class AppConfig {
         return "asko-rws";
     }
 
-    get serverUrl() {
-        return this.configService.getOrThrow<string>('SERVER_URL');
-    }
-
     get frontendUrl() {
         return this.configService.getOrThrow<string>('FRONTEND_URL');
     }
@@ -32,7 +28,7 @@ export class AppConfig {
     }
 
     get userServiceUrl(): string {
-        return this.configService.get<string>('USER_SERVICE_URL') ?? 'localhost:5000';
+        return this.configService.get<string>('USER_SERVICE_ADDR') ?? 'localhost:5000';
     }
 
     get oauth() {
@@ -49,7 +45,7 @@ export class AppConfig {
                 clientId: this.configService.get('YANDEX_CLIENT_ID', ''),
                 clientSecret: this.configService.get('YANDEX_CLIENT_SECRET', ''),
             },
-            callbackBaseUrl: this.configService.get('OAUTH_CALLBACK_BASE_URL', 'http://localhost:4001'),
+            callbackBaseUrl: this.configService.get('OAUTH_CALLBACK_URL', 'http://localhost:4001'),
         };
     }
 
@@ -57,10 +53,10 @@ export class AppConfig {
         return {
             algorithm: this.configService.getOrThrow<string>('JWT_ALGORITHM') as Algorithm,
             access_token: {
-                public_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PUBLIC_KEY'),
-                private_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PRIVATE_KEY'),
+                public_key: this.configService.getOrThrow<string>('JWT_ACCESS_PUBLIC_KEY'),
+                private_key: this.configService.getOrThrow<string>('JWT_ACCESS_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: parseInt(this.configService.getOrThrow<ms.StringValue>('ACCESS_JWT_TOKEN_OPTION_EXPIRES_IN')),
+                    expires_in: parseInt(this.configService.getOrThrow<ms.StringValue>('JWT_ACCESS_EXPIRES_IN')),
                 },
             },
         };

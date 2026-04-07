@@ -14,14 +14,6 @@ export class AppConfig {
         return "asko-rws";
     }
 
-    get serverUrl() {
-        return this.configService.getOrThrow<string>('SERVER_URL');
-    }
-
-    get frontendUrl() {
-        return this.configService.getOrThrow<string>('FRONTEND_URL');
-    }
-
     get port() {
         const port = this.configService.getOrThrow<string>('PORT');
         return parseInt(port || '') || 4002;
@@ -32,23 +24,23 @@ export class AppConfig {
     }
 
     get userServiceUrl(): string {
-        return this.configService.get<string>('USER_SERVICE_URL') ?? 'localhost:5000';
+        return this.configService.get<string>('USER_SERVICE_ADDR') ?? 'localhost:5000';
     }
 
     get paymentServiceUrl(): string {
-        return this.configService.get<string>('PAYMENT_SERVICE_URL') ?? 'localhost:5001';
+        return this.configService.get<string>('PAYMENT_SERVICE_ADDR') ?? 'localhost:5001';
     }
 
     get fileServiceUrl(): string {
-        return this.configService.get<string>('FILE_SERVICE_URL') ?? 'localhost:5002';
+        return this.configService.get<string>('FILE_SERVICE_ADDR') ?? 'localhost:5002';
     }
 
     get repairServiceUrl(): string {
-        return this.configService.get<string>('REPAIR_SERVICE_URL') ?? 'localhost:5003';
+        return this.configService.get<string>('REPAIR_SERVICE_ADDR') ?? 'localhost:5003';
     }
 
     get chatServiceUrl(): string {
-        return this.configService.get<string>('CHAT_SERVICE_URL') ?? 'localhost:5005';
+        return this.configService.get<string>('CHAT_SERVICE_ADDR') ?? 'localhost:5005';
     }
 
     get redisUrl(): string {
@@ -59,10 +51,10 @@ export class AppConfig {
         return {
             algorithm: this.configService.getOrThrow<string>('JWT_ALGORITHM') as Algorithm,
             access_token: {
-                public_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PUBLIC_KEY'),
-                private_key: this.configService.getOrThrow<string>('ACCESS_JWT_TOKEN_PRIVATE_KEY'),
+                public_key: this.configService.getOrThrow<string>('JWT_ACCESS_PUBLIC_KEY'),
+                private_key: this.configService.getOrThrow<string>('JWT_ACCESS_PRIVATE_KEY'),
                 sign_options: {
-                    expires_in: parseInt(this.configService.getOrThrow<ms.StringValue>('ACCESS_JWT_TOKEN_OPTION_EXPIRES_IN')),
+                    expires_in: parseInt(this.configService.getOrThrow<ms.StringValue>('JWT_ACCESS_EXPIRES_IN')),
                 },
             },
         };

@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-service
+  namespace: asko
+  labels:
+    app: file-service
+    component: service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: file-service
+  template:
+    metadata:
+      labels:
+        app: file-service
+        component: service
+    spec:
+      containers:
+        - name: file-service
+          image: asko/file-service:latest
+          ports:
+            - containerPort: 5002
+              name: grpc
+            - containerPort: 9102
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: asko-config
+            - secretRef:
+                name: asko-secrets
+          env:
+            - name: GRPC_PORT
+              value: "5002"
+            - name: METRICS_PORT
+              value: "9102"
+          volumeMounts:
+            - name: images-data
+              mountPath: /app/apps/file-service/images
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: images-data
+          persistentVolumeClaim:
+            claimName: images-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-service
+  namespace: asko
+  labels:
+    app: file-service
+    component: service
+spec:
+  type: ClusterIP
+  selector:
+    app: file-service
+  ports:
+    - port: 5002
+      targetPort: 5002
+      name: grpc
+    - port: 9102
+      targetPort: 9102
+      name: metrics

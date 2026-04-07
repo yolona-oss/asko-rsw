@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asko-config
+  namespace: asko
+data:
+  NODE_ENV: "production"
+  USER_SERVICE_ADDR: "user-service.asko.svc.cluster.local:5000"
+  REPAIR_SERVICE_ADDR: "repair-service.asko.svc.cluster.local:5003"
+  PAYMENT_SERVICE_ADDR: "payment-service.asko.svc.cluster.local:5001"
+  FILE_SERVICE_ADDR: "file-service.asko.svc.cluster.local:5002"
+  CHAT_SERVICE_ADDR: "chat-service.asko.svc.cluster.local:5005"
+  NOTIFICATION_SERVICE_ADDR: "notification-service.asko.svc.cluster.local:5004"
+  CONTENT_SERVICE_ADDR: "content-service.asko.svc.cluster.local:5010"
+  RABBITMQ_URL: "amqp://asko:asko_rmq_pass@rabbitmq.asko.svc.cluster.local:5672"
+  REDIS_URL: "redis://redis.asko.svc.cluster.local:6379"

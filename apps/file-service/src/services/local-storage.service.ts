@@ -16,8 +16,8 @@ export class LocalStorageService implements StorageProvider {
         return this.config.staticPath;
     }
 
-    private get serverUrl(): string {
-        return this.config.serverUrl;
+    private get publicUrl(): string {
+        return this.config.publicUrl;
     }
 
     private async ensureDir(dir: string): Promise<void> {
@@ -35,7 +35,7 @@ export class LocalStorageService implements StorageProvider {
     }
 
     private buildResult(relativePath: string, filename: string, format: string): CloudinaryUploadResult {
-        const fileUrl = `${this.serverUrl}/images/${relativePath}`;
+        const fileUrl = `${this.publicUrl}/images/${relativePath}`;
         return {
             public_id: relativePath,
             version: 1,
@@ -109,7 +109,7 @@ export class LocalStorageService implements StorageProvider {
     }
 
     private buildVideoResult(relativePath: string, filename: string, format: string, size?: number): VideoUploadResult {
-        const fileUrl = `${this.serverUrl}/videos/${relativePath}`;
+        const fileUrl = `${this.publicUrl}/videos/${relativePath}`;
         return {
             public_id: relativePath,
             format,
