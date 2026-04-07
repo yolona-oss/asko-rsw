@@ -9,11 +9,11 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: 'bg-green-600 text-white',
-  warning: 'bg-yellow-500 text-white',
-  error: 'bg-red-500 text-white',
-  info: 'bg-blue-500 text-white',
-  neutral: 'bg-gray-600 text-white',
+  success: 'bg-success text-text-on-dark',
+  warning: 'bg-warning text-text-on-dark',
+  error: 'bg-error text-text-on-dark',
+  info: 'bg-info text-text-on-dark',
+  neutral: 'bg-text-sub text-text-on-dark',
 };
 
 export function Badge({ variant = 'neutral', className, children, ...props }: BadgeProps) {

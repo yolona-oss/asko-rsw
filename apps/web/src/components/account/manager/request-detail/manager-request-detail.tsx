@@ -472,7 +472,7 @@ function AssignSection({
                 type="button"
                 onClick={onAssign}
                 disabled={!selectedRepairer}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand-red disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-text-on-brand bg-brand-red disabled:opacity-50 cursor-pointer"
               >
                 {isAssigned ? 'Переназначить' : 'Назначить'}
               </button>

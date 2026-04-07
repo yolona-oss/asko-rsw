@@ -89,9 +89,9 @@ export function ManagerDashboard() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link href="/account/requests" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Управление заявками</Link>
-        <Link href="/account/users" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Выдача доступов</Link>
-        <Link href="/account/payments" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Платежи</Link>
+        <Link href="/account/requests" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Управление заявками</Link>
+        <Link href="/account/users" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Выдача доступов</Link>
+        <Link href="/account/payments" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Платежи</Link>
       </div>
     </PageContainer>
   );

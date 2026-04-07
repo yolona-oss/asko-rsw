@@ -1,4 +1,8 @@
+'use client';
+
 import Image from 'next/image';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 import { LandingHeader } from '@/components/landing/header';
 
 interface AuthImageShellProps {
@@ -6,6 +10,8 @@ interface AuthImageShellProps {
 }
 
 export function AuthImageShell({ children }: AuthImageShellProps) {
+  const { theme, toggle: toggleTheme } = useTheme();
+
   return (
     <>
       {/* Mobile */}
@@ -27,6 +33,14 @@ export function AuthImageShell({ children }: AuthImageShellProps) {
 
       {/* Desktop */}
       <div className="hidden lg:flex items-center justify-center min-h-screen bg-page-bg py-10">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="fixed top-4 right-4 z-50 p-2 text-text-sub hover:text-text-main bg-surface border border-border rounded-full shadow-sm transition-colors cursor-pointer"
+          title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+        >
+          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+        </button>
         <div className="relative w-[1120px] min-h-[676px] bg-surface flex">
           <div className="flex items-center w-[569px] px-6 py-10">
             <div className="w-[446px]">

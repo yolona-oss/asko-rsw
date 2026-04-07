@@ -153,7 +153,7 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
     const btn = (active: boolean) =>
         `px-2 py-1 text-sm rounded transition-colors ${
             active
-                ? 'bg-brand-red text-white'
+                ? 'bg-brand-red text-text-on-brand'
                 : 'bg-surface text-text-main hover:bg-gray-100 border border-border-light/30'
         }`;
 

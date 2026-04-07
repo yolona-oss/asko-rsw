@@ -29,7 +29,7 @@ const PROVIDER_LABELS: Record<string, string> = {
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
-  dummy: 'bg-brand-red text-white',
+  dummy: 'bg-brand-red text-text-on-brand',
   yookassa: 'bg-dark text-white',
   tbank: 'bg-dark text-white',
   card: 'bg-transparent border border-border-light text-text-main',
@@ -146,7 +146,7 @@ export function PaymentModal({
         disabled={!selectedProvider || creating}
         className={`w-full mt-6 py-3 text-sm font-medium cursor-pointer transition-colors ${
           selectedProvider && !creating
-            ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-white')
+            ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-text-on-brand')
             : 'bg-gray-200 text-text-sub cursor-not-allowed'
         }`}
       >

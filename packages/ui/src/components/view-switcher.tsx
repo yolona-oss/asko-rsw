@@ -64,7 +64,7 @@ export function ViewSwitcher({ views, activeView, onViewChange, className }: Vie
               'inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors cursor-pointer',
               'border-r border-border-light last:border-r-0',
               isActive
-                ? 'bg-dark-deep text-white'
+                ? 'bg-dark-deep text-text-on-dark'
                 : 'bg-surface text-text-sub hover:bg-surface-hover hover:text-text-main',
             )}
           >

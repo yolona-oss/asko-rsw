@@ -59,7 +59,7 @@ export function VipSection() {
 
           <Link
             href="/register"
-            className="flex items-center justify-center w-full py-3 text-sm font-medium text-white bg-brand-red shadow-sm"
+            className="flex items-center justify-center w-full py-3 text-sm font-medium text-text-on-brand bg-brand-red shadow-sm"
           >
             Вступить
           </Link>
@@ -80,7 +80,7 @@ export function VipSection() {
               </div>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center w-fit px-6 py-2 text-sm font-medium text-white bg-brand-red shadow-sm"
+                className="inline-flex items-center justify-center w-fit px-6 py-2 text-sm font-medium text-text-on-brand bg-brand-red shadow-sm"
               >
                 Стать VIP
               </Link>

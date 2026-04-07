@@ -133,7 +133,7 @@ function FilterTabs({ filter, value, onChange }: FilterSelectProps) {
             className={cn(
               'px-3 py-1.5 text-xs font-medium border transition-colors cursor-pointer -ml-px first:ml-0',
               isActive
-                ? 'bg-dark-deep text-white border-dark-deep relative z-[1]'
+                ? 'bg-dark-deep text-text-on-dark border-dark-deep relative z-[1]'
                 : 'bg-surface text-text-main border-border-light hover:border-text-main',
             )}
           >
@@ -187,7 +187,7 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
                 className={cn(
                   'block w-full px-4 py-2.5 text-left text-base transition-colors cursor-pointer',
                   opt.value === value
-                    ? 'bg-[#323232] text-white'
+                    ? 'bg-dark text-text-on-dark'
                     : 'text-text-main hover:bg-surface-secondary',
                 )}
               >
@@ -210,7 +210,7 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
               className={cn(
                 'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
                 isActive
-                  ? 'bg-[#323232] text-white'
+                  ? 'bg-dark text-text-on-dark'
                   : 'bg-surface-secondary text-text-main border border-border-light hover:border-[#323232]',
               )}
             >

@@ -376,7 +376,7 @@ export function AddressInput({
               className={cn(
                 'px-2.5 py-1 transition-colors cursor-pointer',
                 inputMode === 'address'
-                  ? 'bg-text-main text-white'
+                  ? 'bg-text-main text-text-on-dark'
                   : 'bg-surface text-text-sub hover:bg-surface-hover',
               )}
             >
@@ -388,7 +388,7 @@ export function AddressInput({
               className={cn(
                 'px-2.5 py-1 transition-colors cursor-pointer',
                 inputMode === 'coords'
-                  ? 'bg-text-main text-white'
+                  ? 'bg-text-main text-text-on-dark'
                   : 'bg-surface text-text-sub hover:bg-surface-hover',
               )}
             >

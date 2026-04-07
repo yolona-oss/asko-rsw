@@ -29,7 +29,7 @@ export function Tab({ active, onClick, className, children }: TabProps) {
       className={cn(
         'px-4 py-2 text-sm font-medium border transition-colors cursor-pointer',
         active
-          ? 'bg-dark-deep text-white border-dark-deep'
+          ? 'bg-dark-deep text-text-on-dark border-dark-deep'
           : 'bg-surface text-text-main border-border-light hover:border-text-main',
         className,
       )}

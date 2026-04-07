@@ -229,7 +229,7 @@ export function NotificationBell() {
           strokeWidth={1.5}
         />
         {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-brand-red text-white text-[10px] font-medium px-1 leading-none animate-[badge-pop_300ms_ease-out]">
+          <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-brand-red text-text-on-brand text-[10px] font-medium px-1 leading-none animate-[badge-pop_300ms_ease-out]">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

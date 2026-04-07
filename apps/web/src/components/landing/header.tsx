@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Container } from '@asko/ui';
+import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/api/use-auth';
+import { useTheme } from '@/lib/theme';
 
 const navLinks = [
   { href: '/', label: 'Главная' },
@@ -19,6 +21,7 @@ export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeHash, setActiveHash] = useState('');
   const { isAuthenticated, authReady } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const pathname = usePathname();
   const accountHref = isAuthenticated ? '/account' : '/auth';
   const menuRef = useRef<HTMLDivElement>(null);
@@ -108,7 +111,15 @@ export function LandingHeader() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 text-text-sub hover:text-text-main transition-colors cursor-pointer"
+              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
             {!authReady ? (
               <div className="animate-pulse bg-skeleton h-9 w-[160px]" />
             ) : (
@@ -152,6 +163,14 @@ export function LandingHeader() {
                 </Link>
               ))}
               <hr className="border-border-light my-2" />
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-2 py-1 text-base font-medium text-text-main cursor-pointer"
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                {theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+              </button>
               {!authReady ? (
                 <div className="animate-pulse bg-skeleton h-9 w-full" />
               ) : (

@@ -11,13 +11,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-red text-white',
+  primary: 'bg-brand-red text-text-on-brand',
   secondary:
     'border border-border-light text-text-main bg-surface hover:bg-surface-hover transition-colors',
   danger:
-    'text-brand-red border border-brand-red hover:bg-red-50 transition-colors',
-  success: 'bg-green-600 text-white',
-  ghost: 'text-text-main hover:bg-gray-100 transition-colors',
+    'text-brand-red border border-brand-red hover:bg-primary-50 transition-colors',
+  success: 'bg-success text-text-on-brand',
+  ghost: 'text-text-main hover:bg-surface-hover transition-colors',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -45,7 +45,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled}
         className={cn(
           'inline-flex items-center justify-center font-medium cursor-pointer',
-          'disabled:bg-dark-deep disabled:opacity-50 disabled:text-white disabled:border-transparent disabled:cursor-not-allowed',
+          'disabled:bg-surface-secondary disabled:opacity-50 disabled:text-text-sub disabled:border-transparent disabled:cursor-not-allowed',
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && 'w-full',

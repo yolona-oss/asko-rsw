@@ -66,7 +66,7 @@ export function ServicesSection() {
 
               <Link
                 href="#cta"
-                className="flex md:hidden items-center justify-center w-full py-3 text-sm font-medium text-white bg-brand-red shadow-sm"
+                className="flex md:hidden items-center justify-center w-full py-3 text-sm font-medium text-text-on-brand bg-brand-red shadow-sm"
               >
                 Вызвать мастера
               </Link>

@@ -37,7 +37,7 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
           </div>
           <Link
             href={linkHref}
-            className="flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white bg-brand-red shadow-sm cursor-pointer"
+            className="flex items-center justify-center px-6 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red shadow-sm cursor-pointer"
           >
             {linkLabel}
           </Link>
@@ -69,7 +69,7 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
         </div>
         <Link
           href={linkHref}
-          className="flex items-center justify-center w-full lg:w-fit h-[46px] lg:h-auto px-6 py-2.5 text-sm font-medium text-white bg-brand-red shadow-sm cursor-pointer"
+          className="flex items-center justify-center w-full lg:w-fit h-[46px] lg:h-auto px-6 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red shadow-sm cursor-pointer"
         >
           {linkLabel}
         </Link>

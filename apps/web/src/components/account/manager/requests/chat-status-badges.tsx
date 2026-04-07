@@ -12,7 +12,7 @@ export function ChatStatusBadges({ convInfo, currentUserId }: { convInfo?: Conve
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       {convInfo.unreadCount > 0 && (
-        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-brand-red text-white text-[10px] font-bold">
+        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-brand-red text-text-on-brand text-[10px] font-bold">
           {convInfo.unreadCount > 99 ? '99+' : convInfo.unreadCount}
         </span>
       )}

@@ -8,12 +8,14 @@ import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 import { NotificationBell } from '../notifications';
 
 export function AccountHeader() {
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const router = useRouter();
   const logout = useLogout();
@@ -87,8 +89,16 @@ export function AccountHeader() {
             />
           </button>
 
-          {/* Right: notification bell + avatar */}
+          {/* Right: theme toggle + notification bell + avatar */}
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1 text-text-sub hover:text-text-main transition-colors cursor-pointer"
+              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
             {user ? (
               <NotificationBell />
             ) : (

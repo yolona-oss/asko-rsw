@@ -117,10 +117,10 @@ export function AdminDashboard() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/account/devices" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Управление товарами</Link>
-        <Link href="/account/invitations" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Создать приглашение</Link>
-        <Link href="/account/users" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Управление пользователями</Link>
-        <Link href="/account/manage-certificates" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Проверка сертификатов</Link>
+        <Link href="/account/devices" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Управление товарами</Link>
+        <Link href="/account/invitations" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Создать приглашение</Link>
+        <Link href="/account/users" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Управление пользователями</Link>
+        <Link href="/account/manage-certificates" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Проверка сертификатов</Link>
       </div>
     </PageContainer>
   );

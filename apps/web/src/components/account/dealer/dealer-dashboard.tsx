@@ -87,8 +87,8 @@ export function DealerDashboard() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link href="/account/certificates/create" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Создать сертификат</Link>
-        <Link href="/account/payments" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-brand-red">Платежи и баллы</Link>
+        <Link href="/account/certificates/create" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Создать сертификат</Link>
+        <Link href="/account/payments" className="flex items-center justify-center px-6 py-3 text-sm font-medium text-text-on-brand bg-brand-red">Платежи и баллы</Link>
       </div>
 
       <CTABanner

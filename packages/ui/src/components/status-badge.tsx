@@ -18,7 +18,7 @@ export function StatusBadge({
 }: StatusBadgeProps) {
   return (
     <span className={cn(
-      'inline-block text-sm text-white px-2 py-0.5 rounded-[22px]',
+      'inline-block text-sm text-text-on-dark px-2 py-0.5 rounded-[22px]',
       active ? 'bg-[#187f43]' : 'bg-[#a0a0a0]',
       className,
     )}>

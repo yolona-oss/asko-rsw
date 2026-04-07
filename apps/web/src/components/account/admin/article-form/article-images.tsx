@@ -160,7 +160,7 @@ export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) 
                     const src = getImageUrl(img, 'large')!;
                     onInsertImage(src);
                   }}
-                  className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-brand-red text-text-on-brand text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   Вставить
                 </button>
