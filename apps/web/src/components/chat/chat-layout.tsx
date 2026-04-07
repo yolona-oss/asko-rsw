@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatSocket } from '@/lib/hooks/use-chat-socket';
 import { chatApi } from '@/lib/api/chat';
+import { usersApi } from '@/lib/api/users';
 import { ConversationList } from './conversation-list';
 import { ConversationPanel } from './conversation-panel';
 import { ChatEmptyState } from './chat-empty-state';
@@ -28,7 +29,23 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   const initialConversationHandled = useRef(false);
 
   // Participant name cache (userId → display name)
-  const [participantNames] = useState<Record<string, string>>({});
+  const [participantNames, setParticipantNames] = useState<Record<string, string>>({});
+  const fetchedProfilesRef = useRef<Set<string>>(new Set());
+
+  const registerParticipantIds = useCallback((ids: string[]) => {
+    const newIds = ids.filter(id => id && id !== currentUserId && !fetchedProfilesRef.current.has(id));
+    if (newIds.length === 0) return;
+    newIds.forEach(id => fetchedProfilesRef.current.add(id));
+    usersApi.getBatch(newIds).then(users => {
+      setParticipantNames(prev => {
+        const next = { ...prev };
+        for (const u of users) {
+          next[u.id] = [u.lastName, u.firstName].filter(Boolean).join(' ') || u.id.slice(0, 8);
+        }
+        return next;
+      });
+    });
+  }, [currentUserId]);
 
   // Auto-open conversation from ?conversation= query parameter (notification links)
   useEffect(() => {
@@ -136,6 +153,8 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
             activeId={activeConversation?.id ?? null}
             currentUserId={currentUserId}
             presenceMap={presenceMap}
+            participantNames={participantNames}
+            onRegisterParticipants={registerParticipantIds}
             onSelect={handleSelectConversation}
             onNewChat={() => setShowNewChat(true)}
           />

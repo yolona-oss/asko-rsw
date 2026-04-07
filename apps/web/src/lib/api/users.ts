@@ -41,6 +41,18 @@ export const usersApi = {
     return api.put<void>('/users/password', data);
   },
 
+  async getBatch(ids: string[]): Promise<{ id: string; firstName: string; lastName: string }[]> {
+    if (ids.length === 0) return [];
+    try {
+      const { data } = await api.post<{ users: { id: string; firstName: string; lastName: string }[] }>(
+        '/users/batch', { ids }, { _silent: true } as any,
+      );
+      return data.users ?? [];
+    } catch {
+      return [];
+    }
+  },
+
   async getAvatarUrl(userId: string): Promise<string | null> {
     try {
       const { data } = await api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {

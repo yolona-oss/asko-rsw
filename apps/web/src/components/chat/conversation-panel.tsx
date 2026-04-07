@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { Avatar } from '@asko/ui';
+import { cn } from '@asko/ui';
 import { PresenceDot } from './presence-dot';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
@@ -38,13 +40,18 @@ export function ConversationPanel({
   participantNames,
 }: ConversationPanelProps) {
   const queryClient = useQueryClient();
+  const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+
+  // Close info panel when switching conversations
+  useEffect(() => {
+    setInfoPanelOpen(false);
+  }, [conversation.id]);
 
   // Join/leave conversation room + mark messages as read + track active conversation
   useEffect(() => {
     setActiveConversation(conversation.id);
     socketActions.joinConversation(conversation.id);
 
-    // Mark last message as read to reset unread count
     const lastMsg = conversation.lastMessage;
     if (lastMsg && lastMsg.senderId !== currentUserId) {
       socketActions.emitMarkAsRead(conversation.id, lastMsg.id);
@@ -84,7 +91,6 @@ export function ConversationPanel({
 
     const ids = new Set(toMark.map((n) => n.id));
 
-    // Optimistic: remove from bell list + decrement badge
     queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
       if (!old) return old;
       return {
@@ -97,18 +103,22 @@ export function ConversationPanel({
       count: Math.max(0, (old?.count ?? 0) - toMark.length),
     }));
 
-    // Fire mark-as-read API for each (silent, no refetch)
     toMark.forEach((n) => notificationApi.markAsRead(n.id));
   }, [conversation.id, queryClient, realtimeMessages.length]);
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';
   const isDirect = conversation.type === 'direct';
-  const otherIds = useMemo(() => otherParticipant && isDirect ? [otherParticipant.userId] : [], [otherParticipant, isDirect]);
-  const avatarMap = useUserAvatars(otherIds);
+  const isGroup = conversation.type === 'group';
+
+  // Fetch avatars for all participants (for dropdown)
+  const allParticipantIds = useMemo(
+    () => conversation.participants.map(p => p.userId).filter(id => id !== currentUserId),
+    [conversation.participants, currentUserId],
+  );
+  const avatarMap = useUserAvatars(allParticipantIds);
   const headerAvatarSrc = isDirect && otherParticipant ? (avatarMap[otherParticipant.userId] ?? undefined) : conversation.avatarUrl;
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
-  const isGroup = conversation.type === 'group';
 
   // Typing indicator names for this conversation
   const typingNames: string[] = [];
@@ -131,7 +141,6 @@ export function ConversationPanel({
     socketActions.emitStopTyping(conversation.id);
   }, [socketActions, conversation.id]);
 
-  // Filter realtime messages for this conversation
   const conversationRealtimeMessages = realtimeMessages.filter(
     m => m.conversationId === conversation.id,
   );
@@ -139,29 +148,68 @@ export function ConversationPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border-light">
-        {onBack && (
-          <button type="button" onClick={onBack} className="lg:hidden cursor-pointer">
-            <svg className="w-5 h-5 text-text-main" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
+      <div className="border-b border-border-light">
+        <div
+          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setInfoPanelOpen(!infoPanelOpen)}
+        >
+          {onBack && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onBack(); }}
+              className="lg:hidden cursor-pointer"
+            >
+              <svg className="w-5 h-5 text-text-main" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+          )}
+          <div className="relative flex-shrink-0">
+            <Avatar size="md" src={headerAvatarSrc} fallback={displayName.slice(0, 2)} />
+            {isDirect && (
+              <PresenceDot online={isOnline} className="absolute -bottom-0.5 -right-0.5" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-text-main truncate">{displayName}</p>
+            {isDirect && (
+              <p className="text-xs text-text-sub">{isOnline ? 'В сети' : 'Не в сети'}</p>
+            )}
+            {isGroup && (
+              <p className="text-xs text-text-sub">{conversation.participants.length} участников</p>
+            )}
+          </div>
+          <ChevronDown className={cn('w-4 h-4 text-text-sub transition-transform flex-shrink-0', infoPanelOpen && 'rotate-180')} />
+        </div>
+
+        {/* Participant info dropdown */}
+        {infoPanelOpen && (
+          <div className="px-4 py-3 bg-[#fafafa] border-t border-border-light">
+            <p className="text-xs font-medium text-text-sub mb-3">
+              Участники ({conversation.participants.length})
+            </p>
+            <div className="flex flex-col gap-2.5">
+              {conversation.participants.map(p => {
+                const isMe = p.userId === currentUserId;
+                const name = isMe ? 'Вы' : (participantNames[p.userId] || p.userId.slice(0, 8));
+                const online = presenceMap[p.userId] ?? false;
+                const src = avatarMap[p.userId] ?? undefined;
+                return (
+                  <div key={p.userId} className="flex items-center gap-2.5">
+                    <div className="relative flex-shrink-0">
+                      <Avatar size="sm" src={src} fallback={name.slice(0, 2)} />
+                      <PresenceDot online={online} className="absolute -bottom-0.5 -right-0.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-text-main truncate">{name}</p>
+                      <p className="text-xs text-text-sub">{online ? 'В сети' : 'Не в сети'}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
-        <div className="relative flex-shrink-0">
-          <Avatar size="md" src={headerAvatarSrc} fallback={displayName.slice(0, 2)} />
-          {isDirect && (
-            <PresenceDot online={isOnline} className="absolute -bottom-0.5 -right-0.5" />
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-text-main truncate">{displayName}</p>
-          {isDirect && (
-            <p className="text-xs text-text-sub">{isOnline ? 'В сети' : 'Не в сети'}</p>
-          )}
-          {isGroup && (
-            <p className="text-xs text-text-sub">{conversation.participants.length} участников</p>
-          )}
-        </div>
       </div>
 
       {/* Messages */}

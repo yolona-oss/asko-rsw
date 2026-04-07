@@ -25,6 +25,7 @@ interface ConversationItemProps {
   active: boolean;
   currentUserId: string;
   presenceMap: Record<string, boolean>;
+  participantNames: Record<string, string>;
   /** Map of userId → avatar URL for direct chat participants */
   avatarMap?: Record<string, string | null>;
   onClick: () => void;
@@ -35,12 +36,14 @@ export function ConversationItem({
   active,
   currentUserId,
   presenceMap,
+  participantNames,
   avatarMap,
   onClick,
 }: ConversationItemProps) {
-  // Derive display name
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
-  const displayName = conversation.name || (otherParticipant ? otherParticipant.userId.slice(0, 8) : 'Чат');
+  const displayName = conversation.name
+    || (otherParticipant ? participantNames[otherParticipant.userId] : null)
+    || 'Чат';
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
   const isDirect = conversation.type === 'direct';
 

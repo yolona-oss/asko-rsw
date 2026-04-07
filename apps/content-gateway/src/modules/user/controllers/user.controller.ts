@@ -112,6 +112,21 @@ export class UsersController {
     }
 
     @RequiredRoles(...ALL_ROLES)
+    @ApiOkResponse({ description: 'Basic public profiles for given user IDs' })
+    @Post('/batch')
+    async getUsersBatch(@Body() body: { ids: string[] }) {
+        const ids = (body.ids ?? []).slice(0, 100);
+        const results = await Promise.all(
+            ids.map((id: string) =>
+                this.userClient.findUserById({ id })
+                    .then((u: any) => u ? { id: u.id, firstName: u.firstName ?? '', lastName: u.lastName ?? '' } : null)
+                    .catch(() => null),
+            ),
+        );
+        return { users: results.filter(Boolean) };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: UserResponseDto })
     @Get('/profile')
     async getUserById(@JwtAuthUser() user: IAuthUser) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { chatApi } from '@/lib/api/chat';
 import { ConversationItem } from './conversation-item';
@@ -12,6 +12,8 @@ interface ConversationListProps {
   activeId: string | null;
   currentUserId: string;
   presenceMap: Record<string, boolean>;
+  participantNames: Record<string, string>;
+  onRegisterParticipants: (ids: string[]) => void;
   onSelect: (conversation: ChatConversation) => void;
   onNewChat: () => void;
 }
@@ -20,6 +22,8 @@ export function ConversationList({
   activeId,
   currentUserId,
   presenceMap,
+  participantNames,
+  onRegisterParticipants,
   onSelect,
   onNewChat,
 }: ConversationListProps) {
@@ -40,18 +44,31 @@ export function ConversationList({
       const q = search.toLowerCase();
       return (
         c.name?.toLowerCase().includes(q) ||
-        c.participants.some(p => p.userId.toLowerCase().includes(q))
+        c.participants.some(p => {
+          const name = participantNames[p.userId];
+          return name?.toLowerCase().includes(q) || p.userId.toLowerCase().includes(q);
+        })
       );
     })
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-  // Collect other participant IDs from direct conversations for avatar fetching
+  // Collect other participant IDs for avatar fetching and name resolution
   const otherUserIds = useMemo(() => {
-    return conversations
-      .filter((c) => c.type === 'direct')
-      .map((c) => c.participants.find((p) => p.userId !== currentUserId)?.userId)
-      .filter((id): id is string => !!id);
-  }, [conversations, currentUserId]);
+    const ids = new Set<string>();
+    (data?.data ?? []).forEach(c => {
+      c.participants.forEach(p => {
+        if (p.userId !== currentUserId) ids.add(p.userId);
+      });
+    });
+    return Array.from(ids);
+  }, [data?.data, currentUserId]);
+
+  // Register participant IDs for name fetching
+  useEffect(() => {
+    if (otherUserIds.length > 0) {
+      onRegisterParticipants(otherUserIds);
+    }
+  }, [otherUserIds.join(',')]);
 
   const avatarMap = useUserAvatars(otherUserIds);
 
@@ -84,6 +101,7 @@ export function ConversationList({
               active={c.id === activeId}
               currentUserId={currentUserId}
               presenceMap={presenceMap}
+              participantNames={participantNames}
               avatarMap={avatarMap}
               onClick={() => onSelect(c)}
             />
