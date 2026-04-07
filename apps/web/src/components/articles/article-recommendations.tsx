@@ -16,7 +16,7 @@ export function ArticleRecommendations({
 
     return (
         <section className="flex flex-col gap-12 items-start">
-            <h2 className="text-[32px] leading-[36px] font-medium tracking-[-0.32px] text-[#323232]">
+            <h2 className="text-[32px] leading-[36px] font-medium tracking-[-0.32px] text-text-main">
                 {title}
             </h2>
 

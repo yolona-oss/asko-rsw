@@ -11,7 +11,7 @@ export function StepCircle({
   isCompleted: boolean;
   isFuture: boolean;
 }) {
-  let circleClass = 'border-2 border-[#E8E8E8] bg-white text-text-sub';
+  let circleClass = 'border-2 border-[#E8E8E8] bg-surface text-text-sub';
   if (isActive) circleClass = 'bg-green-600 text-white';
   else if (isCompleted) circleClass = 'bg-green-600 text-white';
 

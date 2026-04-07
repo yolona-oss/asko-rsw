@@ -143,7 +143,7 @@ export function ArticleGraph() {
             </div>
 
             {/* Graph */}
-            <div ref={containerRef} className="border border-border-light/30 rounded bg-white overflow-hidden">
+            <div ref={containerRef} className="border border-border-light/30 rounded bg-surface overflow-hidden">
                 <ForceGraph2D
                     graphData={graphData}
                     width={dimensions.width}
@@ -187,7 +187,7 @@ export function ArticleGraph() {
 
             {/* Selected node info */}
             {selectedNode && (
-                <div className="flex items-center gap-4 p-3 bg-white border border-border-light/30 rounded text-sm">
+                <div className="flex items-center gap-4 p-3 bg-surface border border-border-light/30 rounded text-sm">
                     <span className="font-medium text-text-main">{selectedNode.name}</span>
                     <button
                         type="button"

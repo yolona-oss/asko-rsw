@@ -47,7 +47,7 @@ export function DetailSection({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 py-2.5 text-left cursor-pointer hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center gap-2 py-2.5 text-left cursor-pointer hover:bg-surface-hover transition-colors"
       >
         <ChevronRight className={cn('w-4 h-4 text-text-sub transition-transform flex-shrink-0', open && 'rotate-90')} />
         <span className="text-sm font-medium text-text-main flex-1">{label}</span>

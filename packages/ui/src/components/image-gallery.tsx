@@ -462,7 +462,7 @@ export function ImageGallery({
         zoomCfg={zoomCfg}
         clickable={fullscreen}
         onClick={() => openModal(active)}
-        className="w-[468px] h-[656px] flex-shrink-0 bg-white"
+        className="w-[468px] h-[656px] flex-shrink-0 bg-surface"
       />
     </div>
   );

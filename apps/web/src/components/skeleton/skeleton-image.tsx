@@ -14,7 +14,7 @@ export function SkeletonImage({ className = '', onLoad, ...props }: ImageProps) 
     <>
       {/* Skeleton placeholder */}
       {!loaded && (
-        <div className="absolute inset-0 animate-pulse bg-[#C4C4C4]" />
+        <div className="absolute inset-0 animate-pulse bg-skeleton" />
       )}
       <Image
         {...props}

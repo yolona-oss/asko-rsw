@@ -54,7 +54,7 @@ export function AvatarSection({
     <div className="flex flex-col sm:flex-row items-start gap-6">
       {/* Avatar preview */}
       <div className="relative flex-shrink-0">
-        <div className="w-24 h-24 rounded-full overflow-hidden bg-[#C4C4C4]">
+        <div className="w-24 h-24 rounded-full overflow-hidden bg-skeleton">
           {displayAvatar ? (
             <Image
               src={displayAvatar}

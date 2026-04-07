@@ -20,6 +20,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; color?:
 export function MenuIcon({ icon, active = false }: { icon: string; active?: boolean }) {
   const color = active ? '#EB001C' : '#323232';
   const Icon = ICON_MAP[icon];
-  if (!Icon) return <div className="w-5 h-5 rounded-full bg-[#C4C4C4]" />;
+  if (!Icon) return <div className="w-5 h-5 rounded-full bg-skeleton" />;
   return <Icon className="w-5 h-5" color={color} />;
 }

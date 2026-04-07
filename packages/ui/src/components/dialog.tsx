@@ -31,7 +31,7 @@ export function Dialog({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
-      <div className="relative bg-white shadow-lg mx-4 w-full max-w-sm p-6">
+      <div className="relative bg-surface shadow-lg mx-4 w-full max-w-sm p-6">
         <h2 className="text-base font-medium text-text-main">{title}</h2>
         {description && (
           <p className="mt-2 text-sm text-text-sub">{description}</p>

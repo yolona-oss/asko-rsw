@@ -144,7 +144,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
 
   return (
     <>
-      <div className="flex flex-1 min-h-0 lg:flex-none lg:h-[calc(100vh-120px)] bg-white border-y lg:border border-border-light lg:rounded-sm overflow-hidden">
+      <div className="flex flex-1 min-h-0 lg:flex-none lg:h-[calc(100vh-120px)] bg-surface border-y lg:border border-border-light lg:rounded-sm overflow-hidden">
         {/* Left panel: conversation list */}
         <div className={`w-full lg:w-80 lg:border-r lg:border-border-light flex-shrink-0 ${
           activeConversation ? 'hidden lg:flex lg:flex-col' : 'flex flex-col'

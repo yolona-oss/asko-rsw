@@ -75,7 +75,7 @@ async function DevicesContent({ page }: { page: number }) {
                   <Link
                     key={device.id}
                     href={`/devices/${device.slug}`}
-                    className="group flex flex-col bg-white border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
+                    className="group flex flex-col bg-surface border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
                     <div className="relative aspect-square bg-gray-50">
                       <Image

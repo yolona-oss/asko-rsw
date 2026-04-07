@@ -153,7 +153,7 @@ export function UserRequests() {
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           onRowClick={detail.onRowClick}
           onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
-          rowClassName={() => 'hover:bg-gray-50 transition-colors'}
+          rowClassName={() => 'hover:bg-surface-hover transition-colors'}
           footer={
             <div className="flex items-center justify-between w-full">
               <span>Показано {requests.length} из {total}</span>

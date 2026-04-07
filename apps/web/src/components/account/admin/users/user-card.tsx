@@ -43,12 +43,12 @@ export function UserCard({
         <div className="flex items-center gap-3">
           <UserAvatar />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
+            <p className="text-sm font-medium text-text-main tracking-[-0.14px]">{name}</p>
             <p className="text-xs text-text-sub">{user.phone ?? '-'}</p>
           </div>
           <StatusBadge active={isActive} />
         </div>
-        <div className="flex flex-col gap-1 text-sm text-[#323232] tracking-[-0.14px]">
+        <div className="flex flex-col gap-1 text-sm text-text-main tracking-[-0.14px]">
           <div className="flex justify-between">
             <span className="text-text-sub">Роль:</span>
             <span>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}</span>

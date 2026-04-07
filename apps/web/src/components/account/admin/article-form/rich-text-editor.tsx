@@ -162,7 +162,7 @@ function RichTextEditorInner({ content, onChange, articleId, onRequestArticleId 
 
     return (
         <LexicalComposer initialConfig={initialConfig}>
-            <div className="border border-border-light/30 rounded bg-white">
+            <div className="border border-border-light/30 rounded bg-surface">
                 <EditorToolbar articleId={articleId} onRequestArticleId={onRequestArticleId} />
                 <div className="relative min-h-[300px]">
                     <RichTextPlugin

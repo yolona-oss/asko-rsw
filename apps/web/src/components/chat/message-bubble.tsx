@@ -69,7 +69,7 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
         className={`max-w-[75%] rounded-2xl overflow-hidden ${
           isOwn
             ? 'bg-dark text-white rounded-br-sm'
-            : 'bg-white border border-border-light rounded-bl-sm'
+            : 'bg-surface border border-border-light rounded-bl-sm'
         }`}
       >
         {showSender && senderName && !isOwn && (

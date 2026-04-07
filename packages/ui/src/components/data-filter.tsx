@@ -49,7 +49,7 @@ export function DataFilter({ filters, values, onChange, trailing, className }: D
       {filters.map((filter, idx) => (
         <div key={filter.key} className="contents">
           {idx > 0 && (
-            <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0 hidden sm:block" />
+            <div className="w-px h-[35px] bg-border-divider flex-shrink-0 hidden sm:block" />
           )}
           {filter.type === 'select' ? (
             <FilterSelect
@@ -75,7 +75,7 @@ export function DataFilter({ filters, values, onChange, trailing, className }: D
       {trailing && (
         <>
           {filters.length > 0 && (
-            <div className="w-px h-[35px] bg-[#edeff1] flex-shrink-0 hidden sm:block" />
+            <div className="w-px h-[35px] bg-border-divider flex-shrink-0 hidden sm:block" />
           )}
           {trailing}
         </>
@@ -95,20 +95,20 @@ interface FilterSelectProps {
 function FilterSelect({ filter, value, onChange }: FilterSelectProps) {
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
-      <span className="font-medium text-[#323232] text-sm leading-[18px] tracking-[-0.14px] whitespace-nowrap">
+      <span className="font-medium text-text-main text-sm leading-[18px] tracking-[-0.14px] whitespace-nowrap">
         {filter.label}:
       </span>
       <div className="relative flex items-center">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="appearance-none bg-transparent pr-6 text-sm leading-[18px] tracking-[-0.14px] text-[#323232] cursor-pointer outline-none"
+          className="appearance-none bg-transparent pr-6 text-sm leading-[18px] tracking-[-0.14px] text-text-main cursor-pointer outline-none"
         >
           {filter.options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <ChevronDown className="w-4 h-4 text-[#323232] absolute right-0 pointer-events-none" />
+        <ChevronDown className="w-4 h-4 text-text-main absolute right-0 pointer-events-none" />
       </div>
     </div>
   );
@@ -134,7 +134,7 @@ function FilterTabs({ filter, value, onChange }: FilterSelectProps) {
               'px-3 py-1.5 text-xs font-medium border transition-colors cursor-pointer -ml-px first:ml-0',
               isActive
                 ? 'bg-dark-deep text-white border-dark-deep relative z-[1]'
-                : 'bg-white text-text-main border-border-light hover:border-text-main',
+                : 'bg-surface text-text-main border-border-light hover:border-text-main',
             )}
           >
             {opt.label}
@@ -172,13 +172,13 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 px-4 py-[7.5px] bg-white border border-[#d9d9d9] text-lg font-medium text-[#323232] tracking-[0.005em] cursor-pointer"
+          className="flex items-center gap-2 px-4 py-[7.5px] bg-surface border border-border-light text-lg font-medium text-text-main tracking-[0.005em] cursor-pointer"
         >
           <span className="leading-[18px]">{activeLabel}</span>
           <ChevronDown className={cn('w-[13px] h-[13px] transition-transform', open && 'rotate-180')} />
         </button>
         {open && (
-          <div className="absolute top-full left-0 mt-1 z-20 bg-white border border-[#d9d9d9] shadow-lg min-w-[200px]">
+          <div className="absolute top-full left-0 mt-1 z-20 bg-surface border border-border-light shadow-lg min-w-[200px]">
             {filter.options.map((opt) => (
               <button
                 key={opt.value}
@@ -188,7 +188,7 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
                   'block w-full px-4 py-2.5 text-left text-base transition-colors cursor-pointer',
                   opt.value === value
                     ? 'bg-[#323232] text-white'
-                    : 'text-[#323232] hover:bg-[#f1f1f1]',
+                    : 'text-text-main hover:bg-surface-secondary',
                 )}
               >
                 {opt.label}
@@ -211,7 +211,7 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
                 'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
                 isActive
                   ? 'bg-[#323232] text-white'
-                  : 'bg-[#f1f1f1] text-[#323232] border border-[#d9d9d9] hover:border-[#323232]',
+                  : 'bg-surface-secondary text-text-main border border-border-light hover:border-[#323232]',
               )}
             >
               {opt.label}

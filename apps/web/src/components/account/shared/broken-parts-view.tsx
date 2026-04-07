@@ -48,7 +48,7 @@ export function BrokenPartsView({ parts, partImages, title = 'Запчасти' 
           return (
             <div
               key={part.id}
-              className="flex flex-col gap-2 p-4 border border-border-light bg-white"
+              className="flex flex-col gap-2 p-4 border border-border-light bg-surface"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col gap-0.5 min-w-0">

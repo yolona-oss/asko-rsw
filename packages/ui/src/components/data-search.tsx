@@ -56,7 +56,7 @@ export function DataSearch({
         onChange={(e) => setLocalValue(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          'w-full pl-10 pr-4 py-2.5 text-sm text-text-main bg-white',
+          'w-full pl-10 pr-4 py-2.5 text-sm text-text-main bg-surface',
           'border border-border-light outline-none transition-colors',
           'placeholder:text-text-sub',
           'focus:border-text-main',

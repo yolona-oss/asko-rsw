@@ -96,9 +96,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             type={visible ? 'text' : 'password'}
             value={value}
             className={cn(
-              'w-full px-4 py-2.5 pr-11 text-sm text-text-main bg-white',
+              'w-full px-4 py-2.5 pr-11 text-sm text-text-main bg-surface',
               'border outline-none transition-colors',
-              'placeholder:text-[#999]',
+              'placeholder:text-text-sub',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               error
                 ? 'border-brand-red focus:border-brand-red'
@@ -111,7 +111,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             type="button"
             tabIndex={-1}
             onClick={() => setVisible((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-text-main transition-colors cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main transition-colors cursor-pointer"
             aria-label={visible ? 'Скрыть пароль' : 'Показать пароль'}
           >
             {visible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -132,7 +132,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
               ))}
             </div>
             {passedCount < total && (
-              <p className="text-xs text-[#999]">
+              <p className="text-xs text-text-sub">
                 {results.find((r) => !r.passed)?.label}
               </p>
             )}

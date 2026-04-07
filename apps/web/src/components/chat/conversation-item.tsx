@@ -60,7 +60,7 @@ export function ConversationItem({
       className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${
         active
           ? 'bg-gray-100'
-          : 'hover:bg-gray-50'
+          : 'hover:bg-surface-hover'
       }`}
     >
       <div className="relative flex-shrink-0">

@@ -73,7 +73,7 @@ export function AdminDashboard() {
       {/* Breakdown charts */}
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+          <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-4">
             <h3 className="text-base font-medium text-text-main">Заявки на ремонт</h3>
             <div className="flex items-center gap-6">
               <DonutChart size={100} thickness={16} segments={[
@@ -88,7 +88,7 @@ export function AdminDashboard() {
               ]} />
             </div>
           </div>
-          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+          <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-4">
             <h3 className="text-base font-medium text-text-main">Сертификаты</h3>
             <div className="flex items-center gap-6">
               <DonutChart size={100} thickness={16} segments={[
@@ -108,7 +108,7 @@ export function AdminDashboard() {
 
       {/* Payment progress */}
       {!loading && s.confirmedCount > 0 && (
-        <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-3">
+        <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-3">
           <h3 className="text-base font-medium text-text-main">Финансы</h3>
           <ProgressBar value={(s.confirmedCount / totalPay) * 100} color="#22c55e" label="Успешные платежи" showValue size="lg" />
           <ProgressBar value={(s.refundedCount / totalPay) * 100} color="#ef4444" label="Возвраты" showValue size="lg" />

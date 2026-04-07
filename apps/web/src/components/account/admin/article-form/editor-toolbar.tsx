@@ -154,7 +154,7 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
         `px-2 py-1 text-sm rounded transition-colors ${
             active
                 ? 'bg-brand-red text-white'
-                : 'bg-white text-text-main hover:bg-gray-100 border border-border-light/30'
+                : 'bg-surface text-text-main hover:bg-gray-100 border border-border-light/30'
         }`;
 
     return (

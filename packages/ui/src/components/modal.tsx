@@ -30,7 +30,7 @@ export function Modal({ open, onClose, className, children }: ModalProps) {
       />
       <div
         className={cn(
-          'relative bg-white shadow-lg mx-4 max-h-[90vh] overflow-y-auto',
+          'relative bg-surface shadow-lg mx-4 max-h-[90vh] overflow-y-auto',
           className,
         )}
       >

@@ -10,7 +10,7 @@ export function ArticleTags({ tags }: ArticleTagsProps) {
             {tags.map((tag) => (
                 <span
                     key={tag}
-                    className="px-3 py-1 text-xs text-text-sub bg-white border border-border-light/30 rounded-sm"
+                    className="px-3 py-1 text-xs text-text-sub bg-surface border border-border-light/30 rounded-sm"
                 >
                     {tag}
                 </span>

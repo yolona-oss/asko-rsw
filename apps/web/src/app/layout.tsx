@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import NextTopLoader from 'nextjs-toploader';
+import { ThemeProvider } from '@/lib/theme';
 import { AppProviders } from '@/store/providers';
 import { YandexMetrika } from '@/components/YandexMetrika';
 import '@/styles/globals.css';
@@ -40,10 +41,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} />
+      </head>
       <body className="min-h-screen flex flex-col">
-        <NextTopLoader color="#EB001C" height={3} showSpinner={false} />
-        <AppProviders>{children}</AppProviders>
+        <NextTopLoader color="var(--color-brand-red)" height={3} showSpinner={false} />
+        <ThemeProvider>
+          <AppProviders>{children}</AppProviders>
+        </ThemeProvider>
         <Suspense fallback={null}>
           <YandexMetrika />
         </Suspense>

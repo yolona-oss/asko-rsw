@@ -1,6 +1,6 @@
 import { cn } from '../utils/cn';
 
-const pulse = 'animate-pulse bg-[#C4C4C4]';
+const pulse = 'animate-pulse bg-skeleton';
 
 export interface SkeletonBlockProps {
   className?: string;

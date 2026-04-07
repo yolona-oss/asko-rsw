@@ -65,7 +65,7 @@ export function ViewSwitcher({ views, activeView, onViewChange, className }: Vie
               'border-r border-border-light last:border-r-0',
               isActive
                 ? 'bg-dark-deep text-white'
-                : 'bg-white text-text-sub hover:bg-gray-50 hover:text-text-main',
+                : 'bg-surface text-text-sub hover:bg-surface-hover hover:text-text-main',
             )}
           >
             {view.icon}

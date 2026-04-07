@@ -39,7 +39,7 @@ export function MetricComparison({
                 )}
               </span>
             </div>
-            <div className="w-full h-2 bg-[#f1f1f1] overflow-hidden">
+            <div className="w-full h-2 bg-surface-secondary overflow-hidden">
               <div
                 className="h-full transition-all duration-300"
                 style={{ width: `${pct}%`, backgroundColor: barColor }}

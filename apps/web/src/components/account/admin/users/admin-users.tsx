@@ -114,7 +114,7 @@ export function AdminUsers() {
         return (
           <div className="flex items-center gap-3">
             <UserAvatar />
-            <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
+            <p className="text-sm font-medium text-text-main tracking-[-0.14px]">{name}</p>
           </div>
         );
       },
@@ -124,7 +124,7 @@ export function AdminUsers() {
       header: 'Телефон',
       width: 160,
       mobileLabel: 'Телефон:',
-      render: (user) => <p className="text-sm text-[#323232] tracking-[-0.14px]">{user.phone ?? '-'}</p>,
+      render: (user) => <p className="text-sm text-text-main tracking-[-0.14px]">{user.phone ?? '-'}</p>,
     },
     {
       key: 'role',
@@ -132,7 +132,7 @@ export function AdminUsers() {
       width: 90,
       mobileLabel: 'Роль:',
       render: (user) => (
-        <p className="text-sm text-[#323232] tracking-[-0.14px]">
+        <p className="text-sm text-text-main tracking-[-0.14px]">
           {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
         </p>
       ),
@@ -142,7 +142,7 @@ export function AdminUsers() {
       header: 'Район',
       width: 150,
       mobileLabel: 'Район:',
-      render: () => <p className="text-sm text-[#323232] tracking-[-0.14px]">-</p>,
+      render: () => <p className="text-sm text-text-main tracking-[-0.14px]">-</p>,
     },
     {
       key: 'status',

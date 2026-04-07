@@ -103,13 +103,13 @@ export function TagInput({ value, onChange }: TagInputProps) {
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={() => setShowDropdown(true)}
                 onKeyDown={handleKeyDown}
-                className="w-full px-3 py-2 text-sm border border-border-light/30 rounded bg-white text-text-main outline-none focus:border-brand-red/50 transition-colors"
+                className="w-full px-3 py-2 text-sm border border-border-light/30 rounded bg-surface text-text-main outline-none focus:border-brand-red/50 transition-colors"
             />
 
             {showDropdown && suggestions.length > 0 && (
                 <div
                     ref={dropdownRef}
-                    className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-border-light/30 rounded shadow-lg max-h-[240px] overflow-y-auto"
+                    className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border-light/30 rounded shadow-lg max-h-[240px] overflow-y-auto"
                 >
                     {suggestions.map((s, i) => (
                         <button
@@ -117,7 +117,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
                             type="button"
                             onClick={() => selectTag(s.tag)}
                             className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${
-                                i === activeIndex ? 'bg-gray-100' : 'hover:bg-gray-50'
+                                i === activeIndex ? 'bg-gray-100' : 'hover:bg-surface-hover'
                             }`}
                         >
                             <span className="text-text-main">{s.tag}</span>

@@ -81,7 +81,7 @@ export function DataToolbar({
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Search — separate bordered box */}
         {search && (
-          <div className="lg:w-[320px] flex-shrink-0 bg-white border border-[#e5e5e5] shadow-[0_1px_2px_rgba(0,0,0,0.04)] h-[42px] flex items-center [&_input]:border-0 [&_input]:bg-transparent [&_input]:shadow-none [&_input]:py-0 [&_input]:h-full">
+          <div className="lg:w-[320px] flex-shrink-0 bg-surface border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] h-[42px] flex items-center [&_input]:border-0 [&_input]:bg-transparent [&_input]:shadow-none [&_input]:py-0 [&_input]:h-full">
             <DataSearch
               value={search.value}
               onChange={search.onChange}
@@ -93,7 +93,7 @@ export function DataToolbar({
 
         {/* Filter bar — separate bordered box */}
         <div className={cn(
-          'bg-white border border-[#e5e5e5] flex items-center h-[42px] flex-1 min-w-0',
+          'bg-surface border border-border flex items-center h-[42px] flex-1 min-w-0',
           connectToDataView && '-mb-px relative z-[1]',
         )}>
           <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
@@ -105,7 +105,7 @@ export function DataToolbar({
             />
           </div>
           {inlineActions && (
-            <div className="flex-shrink-0 border-l border-[#edeff1] flex items-center self-stretch">
+            <div className="flex-shrink-0 border-l border-border-divider flex items-center self-stretch">
               {inlineActions}
             </div>
           )}

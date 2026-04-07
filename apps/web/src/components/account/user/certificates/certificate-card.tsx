@@ -62,7 +62,7 @@ export function CertificateCard({
     <ContextMenuArea items={menuItems}>
       <div
         ref={cardRef}
-        className={`relative overflow-hidden border border-border-light bg-white p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]${onClick ? ' cursor-pointer' : ''}`}
+        className={`relative overflow-hidden border border-border-light bg-surface p-6 shadow-[0_10px_60px_0_rgba(226,236,249,0.5)]${onClick ? ' cursor-pointer' : ''}`}
         onClick={handleClick}
       >
         {/* Title + description - full width */}

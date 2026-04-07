@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Dialog } from '@asko/ui';
-import { ArrowLeft, LogOut, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { ArrowLeft, LogOut, PanelLeftClose, PanelLeft, Sun, Moon } from 'lucide-react';
 import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
+import { useTheme } from '@/lib/theme';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { MenuIcon } from './menu-icon';
@@ -24,13 +25,14 @@ export function AccountSidebar() {
   const pathname = usePathname();
   const { user } = useAccount();
   const { collapsed, toggleCollapsed } = useSidebar();
+  const { theme, toggle: toggleTheme } = useTheme();
   const menu = user ? menuByRole[primaryRole(user)] : [];
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
 
   return (
     <aside
-      className="hidden lg:flex flex-col flex-shrink-0 bg-[#fff] border-r border-border-light sticky top-0 h-screen overflow-y-auto overflow-x-hidden transition-[width] duration-200"
+      className="hidden lg:flex flex-col flex-shrink-0 bg-surface border-r border-border-light sticky top-0 h-screen overflow-y-auto overflow-x-hidden transition-[width] duration-200"
       style={{ width: collapsed ? 60 : 200 }}
     >
       {/* Logo */}
@@ -127,6 +129,15 @@ export function AccountSidebar() {
             )}
             <button
               type="button"
+              onClick={toggleTheme}
+              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+              className={`flex items-center gap-1 text-sm text-text-sub hover:text-text-main transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {!collapsed && <span>{theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}</span>}
+            </button>
+            <button
+              type="button"
               onClick={toggleCollapsed}
               title={collapsed ? 'Развернуть' : 'Свернуть'}
               className={`flex items-center gap-1 text-sm text-text-sub hover:text-text-main transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}
@@ -163,6 +174,7 @@ export function MobileSidebar() {
   const pathname = usePathname();
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const { theme, toggle: toggleTheme } = useTheme();
   const menu = user ? menuByRole[primaryRole(user)] : [];
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
@@ -337,6 +349,14 @@ export function MobileSidebar() {
             <ArrowLeft className="w-4 h-4" />
             Вернуться на сайт
           </Link>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center gap-1 text-sm text-text-main cursor-pointer"
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+          </button>
           <button
             type="button"
             onClick={() => { setMobileOpen(false); setLogoutDialogOpen(true); }}

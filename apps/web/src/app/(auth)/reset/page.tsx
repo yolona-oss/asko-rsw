@@ -16,7 +16,7 @@ const ResetPasswordForm = lazy(() =>
 
 function AuthSkeleton() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="flex items-center justify-center min-h-screen bg-surface">
       <SkeletonBlock className="w-[400px] h-[500px]" />
     </div>
   );

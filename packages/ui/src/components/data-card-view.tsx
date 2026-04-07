@@ -154,7 +154,7 @@ export function DataCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
       className={cn(
-        'bg-white border flex flex-col gap-3',
+        'bg-surface border flex flex-col gap-3',
         cardPaddingStyles[padding],
         highlighted
           ? 'border-brand-red ring-2 ring-brand-red/20'

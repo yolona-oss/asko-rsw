@@ -56,18 +56,18 @@ export function ChartCard({
   const pctColor = pctChange >= 0 ? 'text-[#2D8B57]' : 'text-brand-red';
 
   return (
-    <div className="bg-white border border-[#EAEAEA] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-8 flex flex-col gap-1">
+    <div className="bg-surface border border-border shadow-sm p-8 flex flex-col gap-1">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
           <p
-            className="text-[#323232] font-bold tracking-[-0.01em]"
+            className="text-text-main font-bold tracking-[-0.01em]"
             style={{ fontSize: 52, lineHeight: '56px' }}
           >
             {formattedValue}
           </p>
           <p
-            className="text-[#323232] font-normal tracking-[-0.01em]"
+            className="text-text-main font-normal tracking-[-0.01em]"
             style={{ fontSize: 24, lineHeight: '28px' }}
           >
             {title}
@@ -80,7 +80,7 @@ export function ChartCard({
         <button
           type="button"
           onClick={onStyleToggle}
-          className="text-[#9C9C9C] hover:text-[#323232] transition-colors cursor-pointer p-1"
+          className="text-text-sub hover:text-text-main transition-colors cursor-pointer p-1"
           title={chartStyle === 'bar' ? 'Линейный график' : 'Столбчатый график'}
         >
           {chartStyle === 'bar' ? (
@@ -94,7 +94,7 @@ export function ChartCard({
       {/* Chart */}
       {buckets.length > 0 && (
         <>
-          <div className="h-px bg-[#EDEFF1] my-3" />
+          <div className="h-px bg-border-divider my-3" />
           {chartStyle === 'bar'
             ? <BarChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} onBucketClick={onBucketClick} />
             : <LineChart buckets={buckets} color={color} renderTooltip={renderTooltip} formatValue={formatValue} valueSuffix={valueSuffix} onBucketClick={onBucketClick} />}
@@ -102,11 +102,11 @@ export function ChartCard({
       )}
 
       {/* Date range */}
-      <div className="h-px bg-[#EDEFF1] mt-3 mb-2" />
+      <div className="h-px bg-border-divider mt-3 mb-2" />
       <button
         type="button"
         onClick={onRangeClick}
-        className="text-[#9C9C9C] font-normal tracking-[-0.01em] hover:text-[#323232] transition-colors cursor-pointer text-left"
+        className="text-text-sub font-normal tracking-[-0.01em] hover:text-text-main transition-colors cursor-pointer text-left"
         style={{ fontSize: 18, lineHeight: '22px' }}
       >
         {rangeLabel}

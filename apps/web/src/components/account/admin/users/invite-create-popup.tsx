@@ -44,18 +44,18 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-white w-full max-w-md mx-4 p-5 flex flex-col gap-4"
+        className="relative bg-surface w-full max-w-md mx-4 p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-[#323232]">Создать приглашение</h3>
+          <h3 className="text-lg font-medium text-text-main">Создать приглашение</h3>
           <button type="button" onClick={onClose} className="text-text-sub hover:text-text-main cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-[#323232]">Роль</label>
+          <label className="text-sm font-medium text-text-main">Роль</label>
           <Select value={role} onChange={(e) => setRole(e.target.value)} className="text-sm">
             <option value="" disabled>Выбрать роль</option>
             {ROLE_OPTIONS.map((opt) => (
@@ -65,7 +65,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-[#323232]">Срок действия</label>
+          <label className="text-sm font-medium text-text-main">Срок действия</label>
           <Select
             value={ttl}
             onChange={(e) => setTtl(e.target.value === '' ? '' : Number(e.target.value))}
@@ -80,7 +80,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
 
         {createdLink && (
           <div className="flex flex-col gap-2 p-3 bg-green-50 border border-green-200">
-            <p className="text-xs font-mono text-[#323232] break-all">{createdLink}</p>
+            <p className="text-xs font-mono text-text-main break-all">{createdLink}</p>
             <button
               type="button"
               className="text-xs text-[#179242] font-medium hover:underline cursor-pointer text-left"

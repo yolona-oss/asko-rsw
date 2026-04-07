@@ -61,7 +61,7 @@ export function ManagerDashboard() {
 
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+          <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-4">
             <h3 className="text-base font-medium text-text-main">Статусы заявок</h3>
             <div className="flex items-center gap-6">
               <DonutChart size={100} thickness={16} segments={[
@@ -79,7 +79,7 @@ export function ManagerDashboard() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+          <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-4">
             <h3 className="text-base font-medium text-text-main">Финансы</h3>
             <ProgressBar value={s.confirmedCount / ((s.confirmedCount + s.refundedCount) || 1) * 100} color="#22c55e" label={`Подтверждено: ${fmt(s.confirmedTotal)} ₽`} showValue size="lg" />
             <ProgressBar value={s.refundedCount / ((s.confirmedCount + s.refundedCount) || 1) * 100} color="#ef4444" label={`Возвращено: ${fmt(s.refundedTotal)} ₽`} showValue size="lg" />

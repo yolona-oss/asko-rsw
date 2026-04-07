@@ -68,7 +68,7 @@ export function DealerDashboard() {
 
       {/* Certificates breakdown */}
       {!loading && s.certsTotal > 0 && (
-        <div className="bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-4">
+        <div className="bg-surface border border-border shadow-sm p-6 flex flex-col gap-4">
           <h3 className="text-base font-medium text-text-main">Статусы сертификатов</h3>
           <div className="flex items-center gap-6">
             <DonutChart size={100} thickness={16} segments={[

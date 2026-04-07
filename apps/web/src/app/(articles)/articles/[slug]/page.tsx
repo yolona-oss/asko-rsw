@@ -50,7 +50,7 @@ export async function generateMetadata({
 
 function ArticleDetailSkeleton() {
   return (
-    <div className="bg-[#f1f1f1]">
+    <div className="bg-surface-secondary">
       <Container>
         <div className="py-8 md:py-12 px-4 md:px-0 max-w-[738px] mx-auto">
           <SkeletonBlock className="h-4 w-48 mb-6" />
@@ -87,7 +87,7 @@ async function ArticleDetailContent({ slug }: { slug: string }) {
   const nextArticle = otherArticles[0] ?? null;
 
   return (
-    <div className="bg-[#f1f1f1]">
+    <div className="bg-surface-secondary">
       <ArticleViewTracker slug={slug} />
       <Container>
         <div className="py-8 md:py-12 px-4 md:px-0 max-w-[738px] mx-auto">
@@ -96,7 +96,7 @@ async function ArticleDetailContent({ slug }: { slug: string }) {
           <div>
             {/* Mobile: title + image grouped (gap-4), Desktop: gap-8 */}
             <div className="flex flex-col gap-4 md:gap-8">
-              <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-[#323232]">
+              <h1 className="text-[32px] leading-[36px] tracking-[-0.32px] md:text-[42px] md:leading-[46px] md:tracking-[-0.42px] font-normal text-text-main">
                 {article.title}
               </h1>
 

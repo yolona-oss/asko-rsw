@@ -36,7 +36,7 @@ export function DataListView<T>({
   return (
     <div
       className={cn(
-        'flex flex-col border border-border-light overflow-hidden bg-white',
+        'flex flex-col border border-border-light overflow-hidden bg-surface',
         className,
       )}
     >
@@ -78,7 +78,7 @@ export function DataListItem({
       className={cn(
         'flex items-center gap-4 px-5 py-4',
         highlighted && 'bg-brand-red/5',
-        onClick && 'cursor-pointer hover:bg-gray-50 transition-colors',
+        onClick && 'cursor-pointer hover:bg-surface-hover transition-colors',
         className,
       )}
     >

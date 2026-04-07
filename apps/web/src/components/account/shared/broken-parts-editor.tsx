@@ -127,7 +127,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
           {parts.map((part) => {
             const images = partImages[part.id] ?? [];
             return (
-              <div key={part.id} className="flex flex-col gap-2 p-4 border border-border-light bg-white">
+              <div key={part.id} className="flex flex-col gap-2 p-4 border border-border-light bg-surface">
                 {/* Header: name + badge + delete */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5 min-w-0">

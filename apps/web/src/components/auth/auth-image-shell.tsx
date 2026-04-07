@@ -27,7 +27,7 @@ export function AuthImageShell({ children }: AuthImageShellProps) {
 
       {/* Desktop */}
       <div className="hidden lg:flex items-center justify-center min-h-screen bg-page-bg py-10">
-        <div className="relative w-[1120px] min-h-[676px] bg-white flex">
+        <div className="relative w-[1120px] min-h-[676px] bg-surface flex">
           <div className="flex items-center w-[569px] px-6 py-10">
             <div className="w-[446px]">
               {children('desktop')}

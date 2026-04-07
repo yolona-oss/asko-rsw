@@ -214,7 +214,7 @@ export function ArticleEdges({ articleId }: { articleId: string }) {
                                     key={a.id}
                                     type="button"
                                     onClick={() => handleLink(a.id)}
-                                    className="text-left text-sm px-2 py-1.5 hover:bg-white rounded transition-colors"
+                                    className="text-left text-sm px-2 py-1.5 hover:bg-surface rounded transition-colors"
                                 >
                                     {a.title}
                                 </button>

@@ -12,7 +12,7 @@ function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: ()
         className={`flex items-center justify-center w-4 h-4 border transition-colors ${
           checked
             ? 'bg-[#193CB8] border-[#193CB8]'
-            : 'bg-white border-[#CBD5E1] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]'
+            : 'bg-surface border-[#CBD5E1] shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]'
         }`}
       >
         {checked && (
@@ -79,13 +79,13 @@ export function CtaSection() {
                   <input
                     type="text"
                     placeholder="Ваше имя..."
-                    className="w-full px-3 py-2 min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
+                    className="w-full px-3 py-2 min-h-[36px] bg-surface border border-[#E2E8F0] text-sm text-text-main placeholder:text-[#737373] outline-none"
                   />
                   <div className="flex flex-col gap-3">
                     <input
                       type="text"
                       placeholder="Телефон или логин в мессенджере..."
-                      className="w-full px-3 py-2 min-h-[36px] bg-white border border-[#E2E8F0] text-sm text-[#323232] placeholder:text-[#737373] outline-none"
+                      className="w-full px-3 py-2 min-h-[36px] bg-surface border border-[#E2E8F0] text-sm text-text-main placeholder:text-[#737373] outline-none"
                     />
                     <div className="flex items-center gap-6">
                       <Checkbox checked={messengers.has('telegram')} onChange={() => toggleMessenger('telegram')} label="Telegram" />

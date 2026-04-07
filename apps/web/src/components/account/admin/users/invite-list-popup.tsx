@@ -41,11 +41,11 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-white w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+        className="relative bg-surface w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#edeff1]">
-          <h3 className="text-lg font-medium text-[#323232]">Все приглашения</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-divider">
+          <h3 className="text-lg font-medium text-text-main">Все приглашения</h3>
           <button type="button" onClick={onClose} className="text-text-sub hover:text-text-main cursor-pointer">
             <X className="w-5 h-5" />
           </button>
@@ -63,15 +63,15 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
               return (
                 <div
                   key={inv.id}
-                  className={`flex items-center gap-3 px-5 py-3 border-b border-[#edeff1] ${inactive ? 'opacity-50' : ''}`}
+                  className={`flex items-center gap-3 px-5 py-3 border-b border-border-divider ${inactive ? 'opacity-50' : ''}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-[#323232]">
+                      <span className="text-sm font-medium text-text-main">
                         {INVITE_ROLE_LABELS[inv.role] ?? inv.role}
                       </span>
                       {inv.used ? (
-                        <span className="text-xs text-[#a0a0a0] bg-[#f1f1f1] px-1.5 py-0.5 rounded">Использовано</span>
+                        <span className="text-xs text-[#a0a0a0] bg-surface-secondary px-1.5 py-0.5 rounded">Использовано</span>
                       ) : expired ? (
                         <span className="text-xs text-brand-red bg-red-50 px-1.5 py-0.5 rounded">Истёк</span>
                       ) : (

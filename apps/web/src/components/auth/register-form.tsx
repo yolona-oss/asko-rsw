@@ -203,7 +203,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
 
   const activeTabCls = 'bg-[#EB001C] text-white';
   const inactiveTabCls = variant === 'mobile'
-    ? 'bg-white/10 text-white/60'
+    ? 'bg-surface/10 text-white/60'
     : 'bg-[#F0F0F1] text-text-sub';
 
   return (

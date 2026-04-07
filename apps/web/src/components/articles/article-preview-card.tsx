@@ -55,7 +55,7 @@ export function ArticlePreviewCard({
                         {previewText}
                     </p>
                 </div>
-                <span className="text-sm font-bold text-[#323232] underline tracking-[-0.14px] leading-[18px]">
+                <span className="text-sm font-bold text-text-main underline tracking-[-0.14px] leading-[18px]">
                     Читать статью...
                 </span>
             </div>

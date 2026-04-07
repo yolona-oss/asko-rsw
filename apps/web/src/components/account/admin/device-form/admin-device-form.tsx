@@ -175,7 +175,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
             }`}
           >
             <span
-              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-surface shadow-sm transform transition-transform mt-0.5 ${
                 data.isFeatured ? 'translate-x-[22px]' : 'translate-x-0.5'
               }`}
             />

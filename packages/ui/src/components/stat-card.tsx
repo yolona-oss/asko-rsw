@@ -35,7 +35,7 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <div className={cn(
-      'bg-white border border-[#eaeaea] shadow-[0_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col gap-2',
+      'bg-surface border border-border shadow-sm p-6 flex flex-col gap-2',
       className,
     )}>
       <div className="flex items-start justify-between gap-2">

@@ -405,14 +405,14 @@ export function DataGrid<T>({
   return (
     <div
       className={cn(
-        'bg-white border-y lg:border border-[#eaeaea] shadow-[0px_10px_60px_0px_rgba(226,236,249,0.5)] overflow-x-auto -mx-4 lg:mx-0',
+        'bg-surface border-y lg:border border-border shadow-sm overflow-x-auto -mx-4 lg:mx-0',
         className,
       )}
     >
       {/* Header (desktop) */}
       <div
         ref={headerRef}
-        className="hidden lg:grid items-center bg-[#f6f6f8] border-b border-[#edeff1] px-6 py-2 text-sm font-medium text-[#323232] sticky top-0 z-10 select-none gap-x-3 min-w-max"
+        className="hidden lg:grid items-center bg-surface-secondary border-b border-border-divider px-6 py-2 text-sm font-medium text-text-main sticky top-0 z-10 select-none gap-x-3 min-w-max"
         style={{ gridTemplateColumns: gridTemplate }}
         onContextMenu={(e) => {
           if (!(e.target as HTMLElement).closest('[data-col]')) {
@@ -469,7 +469,7 @@ export function DataGrid<T>({
       {/* Empty header area for showing context menu when all columns hidden */}
       {visibleColumns.length === 0 && (
         <div
-          className="hidden lg:flex items-center justify-center bg-[#f6f6f8] border-b border-[#edeff1] px-6 py-3 text-sm text-[#999] sticky top-0 z-10"
+          className="hidden lg:flex items-center justify-center bg-surface-secondary border-b border-border-divider px-6 py-3 text-sm text-text-sub sticky top-0 z-10"
           onContextMenu={(e) => openCtxMenu(e, null)}
         >
           Все столбцы скрыты — нажмите ПКМ для восстановления
@@ -481,7 +481,7 @@ export function DataGrid<T>({
         Array.from({ length: loadingRows }).map((_, i) => (
           <div
             key={`skeleton-${i}`}
-            className="flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-3 border-b border-[#edeff1] last:border-b-0 bg-white lg:min-w-max"
+            className="flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-3 border-b border-border-divider last:border-b-0 bg-surface lg:min-w-max"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {visibleColumns.map((col) => (
@@ -500,7 +500,7 @@ export function DataGrid<T>({
           <div
             key={keyExtractor(item)}
             className={cn(
-              'flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-2.5 border-b border-[#edeff1] last:border-b-0 bg-white hover:bg-[#fafafa] transition-colors lg:min-w-max',
+              'flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-2.5 border-b border-border-divider last:border-b-0 bg-surface hover:bg-surface-hover transition-colors lg:min-w-max',
               (onRowClick || onRowDoubleClick) && 'cursor-pointer',
               rowClassName?.(item),
             )}
@@ -556,7 +556,7 @@ export function DataGrid<T>({
 
       {/* Footer */}
       {footer && (
-        <div className="px-4 lg:px-6 py-2.5 text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px] sticky bottom-0 bg-white border-t border-[#edeff1]">
+        <div className="px-4 lg:px-6 py-2.5 text-sm text-[rgba(50,50,50,0.58)] tracking-[-0.14px] sticky bottom-0 bg-surface border-t border-border-divider">
           {footer}
         </div>
       )}

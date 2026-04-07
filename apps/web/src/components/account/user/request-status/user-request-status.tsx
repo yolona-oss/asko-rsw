@@ -251,7 +251,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* Review form (COMPLETED status) */}
       {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
-        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light bg-white">
+        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light bg-surface">
           <h3 className="text-lg font-medium text-text-main">Оставить отзыв</h3>
           <div className="flex flex-col gap-1">
             <p className="text-sm text-text-sub">Оцените работу мастера</p>

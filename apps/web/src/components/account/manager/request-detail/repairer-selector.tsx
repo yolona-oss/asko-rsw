@@ -126,7 +126,7 @@ export function RepairerSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left border border-border-main bg-white hover:border-text-sub transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left border border-border-main bg-surface hover:border-text-sub transition-colors cursor-pointer"
       >
         <span className={selected ? 'text-text-main' : 'text-text-sub'}>
           {selected ? getRepairerName(selected) + (selected.city ? ` (${selected.city})` : '') : placeholder}
@@ -136,7 +136,7 @@ export function RepairerSelector({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-border-main shadow-lg max-h-80 flex flex-col">
+        <div className="absolute z-50 mt-1 w-full bg-surface border border-border-main shadow-lg max-h-80 flex flex-col">
           {/* Search */}
           <div className="p-2 border-b border-border-main">
             <input
@@ -191,7 +191,7 @@ export function RepairerSelector({
                   onMouseDown={() => { if (!isCurrent) { onSelect(r.id); setOpen(false); } }}
                   onMouseEnter={() => setFocusIndex(i)}
                   className={`px-3 py-2.5 transition-colors ${
-                    isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-red-50 cursor-pointer' : isFocused ? 'bg-gray-50 cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'
+                    isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-red-50 cursor-pointer' : isFocused ? 'bg-gray-50 cursor-pointer' : 'hover:bg-surface-hover cursor-pointer'
                   }`}
                 >
                   {/* Row 1: name + badges */}

@@ -28,7 +28,7 @@ export function Avatar({
   return (
     <div
       className={cn(
-        'relative flex-shrink-0 rounded-full overflow-hidden bg-[#C4C4C4]',
+        'relative flex-shrink-0 rounded-full overflow-hidden bg-skeleton',
         sizeStyles[size],
         className,
       )}

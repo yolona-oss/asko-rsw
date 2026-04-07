@@ -147,7 +147,7 @@ export function PaymentDetailModal({
         <button
           type="button"
           onClick={onClose}
-          className="self-end px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-gray-50 transition-colors cursor-pointer"
+          className="self-end px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
         >
           Закрыть
         </button>

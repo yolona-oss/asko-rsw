@@ -151,7 +151,7 @@ export function ConversationPanel({
       {/* Header */}
       <div className="border-b border-border-light">
         <div
-          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-hover transition-colors"
           onClick={() => setInfoPanelOpen(!infoPanelOpen)}
         >
           {onBack && (
@@ -185,7 +185,7 @@ export function ConversationPanel({
 
         {/* Participant info dropdown */}
         {infoPanelOpen && (
-          <div className="px-4 py-3 bg-[#fafafa] border-t border-border-light">
+          <div className="px-4 py-3 bg-surface-hover border-t border-border-light">
             <p className="text-xs font-medium text-text-sub mb-3">
               Участники ({conversation.participants.length})
             </p>

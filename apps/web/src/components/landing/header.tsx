@@ -110,11 +110,11 @@ export function LandingHeader() {
 
           <div className="hidden md:flex items-center">
             {!authReady ? (
-              <div className="animate-pulse bg-[#C4C4C4] h-9 w-[160px]" />
+              <div className="animate-pulse bg-skeleton h-9 w-[160px]" />
             ) : (
               <Link
                 href={accountHref}
-                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-white/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
+                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-surface/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
               >
                 Личный кабинет
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -153,7 +153,7 @@ export function LandingHeader() {
               ))}
               <hr className="border-border-light my-2" />
               {!authReady ? (
-                <div className="animate-pulse bg-[#C4C4C4] h-9 w-full" />
+                <div className="animate-pulse bg-skeleton h-9 w-full" />
               ) : (
                 <Link
                   href={accountHref}

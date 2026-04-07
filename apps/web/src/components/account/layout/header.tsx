@@ -36,7 +36,7 @@ export function AccountHeader() {
   ];
 
   const avatarElement = user ? (
-    <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C4C4C4]">
+    <div className="w-9 h-9 rounded-full overflow-hidden bg-skeleton">
       {user?.avatar ? (
         <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
       ) : (

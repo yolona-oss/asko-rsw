@@ -108,9 +108,9 @@ export default function AuthPage() {
       </div>
 
       {/* Desktop layout */}
-      <div className="hidden lg:flex items-center justify-center min-h-screen bg-white">
+      <div className="hidden lg:flex items-center justify-center min-h-screen bg-surface">
         {/* Left: dark panel */}
-        <div className="relative w-[1120px] h-[676px] bg-white flex">
+        <div className="relative w-[1120px] h-[676px] bg-surface flex">
           <div
             className="relative w-1/2 overflow-hidden"
             style={{ background: '#151515', boxShadow: '0px 10px 60px rgba(226, 236, 249, 0.5)' }}

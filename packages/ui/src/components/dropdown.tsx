@@ -183,16 +183,16 @@ function MenuPanel({
   onSelect: (key: string) => void;
 }) {
   return (
-    <div className="bg-white border border-[#e0e0e0] shadow-lg py-1 min-w-[180px] text-sm">
+    <div className="bg-surface border border-border-light shadow-lg py-1 min-w-[180px] text-sm">
       {title && (
-        <div className="px-3 py-1.5 text-xs font-medium text-[#999] uppercase tracking-wide">
+        <div className="px-3 py-1.5 text-xs font-medium text-text-sub uppercase tracking-wide">
           {title}
         </div>
       )}
       {items.map((entry, i) => {
         if (entry === 'separator') {
           return (
-            <div key={`sep-${i}`} className="border-t border-[#edeff1] my-1" />
+            <div key={`sep-${i}`} className="border-t border-border-divider my-1" />
           );
         }
         return (
@@ -246,7 +246,7 @@ function MenuItemEl({
             !item.disabled &&
             'text-red-600 hover:bg-red-50',
           item.active && !item.disabled && 'text-blue-600 font-medium',
-          !item.active && item.variant !== 'danger' && !item.disabled && 'text-[#323232]',
+          !item.active && item.variant !== 'danger' && !item.disabled && 'text-text-main',
         )}
         onClick={
           item.disabled
@@ -261,7 +261,7 @@ function MenuItemEl({
       >
         {item.icon}
         <span className="flex-1 truncate">{item.label}</span>
-        {hasChildren && <ChevronRight className="w-3 h-3 shrink-0 text-[#999]" />}
+        {hasChildren && <ChevronRight className="w-3 h-3 shrink-0 text-text-sub" />}
       </button>
 
       {/* Submenu */}

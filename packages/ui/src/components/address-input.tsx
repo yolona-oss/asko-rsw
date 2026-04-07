@@ -377,7 +377,7 @@ export function AddressInput({
                 'px-2.5 py-1 transition-colors cursor-pointer',
                 inputMode === 'address'
                   ? 'bg-text-main text-white'
-                  : 'bg-white text-text-sub hover:bg-gray-50',
+                  : 'bg-surface text-text-sub hover:bg-surface-hover',
               )}
             >
               По адресу
@@ -389,7 +389,7 @@ export function AddressInput({
                 'px-2.5 py-1 transition-colors cursor-pointer',
                 inputMode === 'coords'
                   ? 'bg-text-main text-white'
-                  : 'bg-white text-text-sub hover:bg-gray-50',
+                  : 'bg-surface text-text-sub hover:bg-surface-hover',
               )}
             >
               По координатам
@@ -432,7 +432,7 @@ export function AddressInput({
             <div
               className={cn(
                 'absolute z-50 mt-1 w-full',
-                'bg-white border border-border-light',
+                'bg-surface border border-border-light',
                 'shadow-md',
                 'max-h-60 overflow-auto',
               )}
