@@ -29,7 +29,7 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.REFUNDED]: 'neutral',
 };
 
-export type StatusFilter = 'all' | 'active' | 'completed' | 'cancelled';
+export type StatusFilter = '' | 'active' | 'completed' | 'cancelled';
 
 export const STATUS_TAB_MAP: Record<string, StatusFilter> = {
   [RepairRequestStatus.PENDING]: 'active',
@@ -50,7 +50,7 @@ export const STATUS_FILTER: FilterDefinition = {
   label: 'Статус',
   type: 'tabs',
   options: [
-    { value: 'all', label: 'Все' },
+    { value: '', label: 'Все' },
     { value: 'active', label: 'Активные' },
     { value: 'completed', label: 'Завершенные' },
     { value: 'cancelled', label: 'Отмененные' },

@@ -4,7 +4,7 @@ import { getImageUrl } from '@/lib/image-url';
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Container, DataFilter } from '@asko/ui';
+import { Container, DataFilter, filterValueToParam } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { SkeletonImage } from '@/components/skeleton';
 import { PlaceholderImage } from '@/components/placeholder-image';
@@ -77,7 +77,7 @@ export function ModelsSection() {
     (async () => {
       setLoading(true);
       try {
-        const typeParam = filterValues.type || undefined;
+        const typeParam = filterValueToParam(filterValues, 'type');
 
         // Fetch featured first
         const { data: featuredResp } = await deviceApi.getAll({

@@ -16,6 +16,7 @@ import {
   DataGrid,
   Pagination,
   SkeletonCard,
+  filterValueToParam,
 } from '@asko/ui';
 import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -36,7 +37,7 @@ export function UserRequests() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
-  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all' });
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: '' });
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
@@ -49,7 +50,7 @@ export function UserRequests() {
         page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
+        status: filterValueToParam(filterValues, 'status'),
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
       });
@@ -103,7 +104,7 @@ export function UserRequests() {
     },
   ];
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };
@@ -139,7 +140,7 @@ export function UserRequests() {
           data={requests}
           keyExtractor={(req) => req.id}
           emptyContent={
-            total === 0 && !search && statusFilter === 'all' ? (
+            total === 0 && !search && !statusFilter ? (
               <div className="flex flex-col items-center gap-4 py-4">
                 <p className="text-base text-text-sub">У вас пока нет заявок</p>
                 <Link href="/account/requests/create">
@@ -166,7 +167,7 @@ export function UserRequests() {
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
         </div>
       ) : requests.length === 0 ? (
-        total === 0 && !search && statusFilter === 'all' ? (
+        total === 0 && !search && !statusFilter ? (
           <div className="flex flex-col items-center gap-4 py-12">
             <p className="text-base text-text-sub">У вас пока нет заявок</p>
             <Link href="/account/requests/create">

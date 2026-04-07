@@ -16,6 +16,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   SkeletonCard,
+  filterValueToParam,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -78,7 +79,7 @@ export function AdminDevices() {
         page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
-        type: filterValues.type || undefined,
+        type: filterValueToParam(filterValues, 'type'),
         isFeatured: filterValues.featured === 'yes' ? true : filterValues.featured === 'no' ? false : undefined,
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
@@ -95,7 +96,7 @@ export function AdminDevices() {
     fetchDevices();
   }, [fetchDevices]);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };

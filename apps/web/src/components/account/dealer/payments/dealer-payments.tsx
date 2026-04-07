@@ -239,7 +239,7 @@ export function DealerPayments() {
       <DataToolbar
         filters={[POINTS_FILTER]}
         filterValues={pointsFilter}
-        onFilterChange={(key, value) => setPointsFilter(prev => ({ ...prev, [key]: value }))}
+        onFilterChange={(key: string, value: string | string[]) => setPointsFilter(prev => ({ ...prev, [key]: value }))}
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={pointsView} onViewChange={setPointsView} />}
       />
       {pointsView === 'table' ? (
@@ -270,7 +270,7 @@ export function DealerPayments() {
       <DataToolbar
         filters={[PAYMENT_STATUS_FILTER]}
         filterValues={paymentFilter}
-        onFilterChange={(key, value) => setPaymentFilter(prev => ({ ...prev, [key]: value }))}
+        onFilterChange={(key: string, value: string | string[]) => setPaymentFilter(prev => ({ ...prev, [key]: value }))}
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={paymentView} onViewChange={setPaymentView} />}
       />
       {paymentView === 'table' ? (

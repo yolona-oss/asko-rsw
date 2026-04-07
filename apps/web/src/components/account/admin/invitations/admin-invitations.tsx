@@ -267,7 +267,7 @@ export function AdminInvitations() {
         search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
+        onFilterChange={(key: string, value: string | string[]) => setFilterValues((prev) => ({ ...prev, [key]: value }))}
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 

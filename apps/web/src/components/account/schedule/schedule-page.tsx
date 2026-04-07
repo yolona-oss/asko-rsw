@@ -17,6 +17,7 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   SkeletonCard,
+  filterValueToParam,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -62,8 +63,8 @@ export function SchedulePage() {
       const { data } = await scheduleApi.getAll({
         page,
         limit: PAGE_SIZE,
-        type: filterValues.type || undefined,
-        status: filterValues.status || undefined,
+        type: filterValueToParam(filterValues, 'type'),
+        status: filterValueToParam(filterValues, 'status'),
       });
       setEntries(data.data ?? []);
       setTotal(data.overallCount ?? 0);
@@ -78,7 +79,7 @@ export function SchedulePage() {
     fetchEntries();
   }, [fetchEntries]);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };

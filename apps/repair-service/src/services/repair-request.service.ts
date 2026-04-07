@@ -626,7 +626,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = { userId };
-        if (pagination.status) where.status = pagination.status;
+        if (pagination.status) where.status = pagination.status.includes(",") ? { $in: pagination.status.split(",") } : pagination.status;
         if (pagination.search) {
             where.$or = [
                 { description: { $ilike: `%${pagination.search}%` } },
@@ -692,7 +692,7 @@ export class RepairRequestService {
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
         const where: Record<string, any> = { repairer: repairer.id };
-        if (status) where.status = status;
+        if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
         if (search) {
             where.$or = [
                 { description: { $ilike: `%${search}%` } },
@@ -733,7 +733,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findAll(pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = {};
-        if (pagination.status) where.status = pagination.status;
+        if (pagination.status) where.status = pagination.status.includes(",") ? { $in: pagination.status.split(",") } : pagination.status;
         if (pagination.search) {
             where.$or = [
                 { description: { $ilike: `%${pagination.search}%` } },

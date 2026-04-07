@@ -29,7 +29,7 @@ export class WScheduleService {
         const where: any = {};
         if (query.userId) where.userId = query.userId;
         if (query.type) where.type = query.type;
-        if (query.status) where.status = query.status;
+        if (query.status) where.status = query.status.includes(",") ? { $in: query.status.split(",") } : query.status;
         if (query.dateFrom || query.dateTo) {
             where.date = {};
             if (query.dateFrom) where.date.$gte = new Date(query.dateFrom);

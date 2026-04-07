@@ -73,7 +73,7 @@ export function DealerCertificates() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };

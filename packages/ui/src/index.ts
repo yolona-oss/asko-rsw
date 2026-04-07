@@ -125,6 +125,9 @@ export type {
 export {
   DataFilter,
   ActiveFilters,
+  getFilterValues,
+  matchesFilter,
+  filterValueToParam,
 } from './components/data-filter';
 export type {
   DataFilterProps,

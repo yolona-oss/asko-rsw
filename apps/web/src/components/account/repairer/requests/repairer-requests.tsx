@@ -151,7 +151,7 @@ export function RepairerRequests() {
 
   const showActiveHighlight = activeTab === 'active' || activeTab === 'all';
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };

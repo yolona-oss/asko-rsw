@@ -452,7 +452,7 @@ export class PaymentService {
         provider?: string;
     }, pagination: PaginationDto & { sortBy?: string; sortOrder?: string }): Promise<PaginatedResponseDto<PaymentEntity>> {
         const where: FilterQuery<PaymentEntity> = {};
-        if (params.status) where.status = params.status as PaymentStatus;
+        if (params.status) where.status = params.status.includes(",") ? { $in: params.status.split(",") } as any : params.status as PaymentStatus;
         if (params.provider) where.provider = params.provider;
 
         const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (PAYMENT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
@@ -477,7 +477,7 @@ export class PaymentService {
         status?: string;
     }, pagination: PaginationDto & { sortBy?: string; sortOrder?: string }): Promise<PaginatedResponseDto<PaymentEntity>> {
         const where: FilterQuery<PaymentEntity> = { userId };
-        if (params.status) where.status = params.status as PaymentStatus;
+        if (params.status) where.status = params.status.includes(",") ? { $in: params.status.split(",") } as any : params.status as PaymentStatus;
 
         const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (PAYMENT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
             ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }

@@ -13,6 +13,7 @@ import {
   Pagination,
   StatusBadge,
   SkeletonCard,
+  filterValueToParam,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -34,7 +35,7 @@ export function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', role: 'repairer' });
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: '', role: 'repairer' });
   const [view, setView] = useState('table');
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
@@ -46,8 +47,8 @@ export function AdminUsers() {
         page: page,
         limit: PAGE_SIZE,
         search: search || undefined,
-        role: filterValues.role || undefined,
-        status: filterValues.status !== 'all' ? (filterValues.status as string) : undefined,
+        role: filterValueToParam(filterValues, 'role'),
+        status: filterValueToParam(filterValues, 'status'),
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
       });
@@ -97,7 +98,7 @@ export function AdminUsers() {
     label: 'Статус',
     type: 'select',
     options: [
-      { value: 'all', label: 'Все' },
+      { value: '', label: 'Все' },
       { value: 'active', label: 'Активен' },
       { value: 'disabled', label: 'Заблокирован' },
     ],
@@ -182,7 +183,7 @@ export function AdminUsers() {
         search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
         filters={[STATUS_FILTER_DEF, ROLE_TAB_FILTER_DEF]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
+        onFilterChange={(key: string, value: string | string[]) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         inlineActions={<InviteDropdown />}
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />

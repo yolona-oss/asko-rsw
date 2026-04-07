@@ -152,7 +152,7 @@ export function AdminCertificates() {
         search={{ value: search, onChange: (v) => { setSearch(v); setPage(1); }, placeholder: "Поиск" }}
         filters={[STATUS_FILTER]}
         filterValues={filterValues}
-        onFilterChange={(key, value) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
+        onFilterChange={(key: string, value: string | string[]) => { setFilterValues((prev) => ({ ...prev, [key]: value })); setPage(1); }}
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 

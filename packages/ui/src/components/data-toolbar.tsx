@@ -20,7 +20,7 @@ export interface DataToolbarProps {
   /** Current filter values */
   filterValues?: FilterValues;
   /** Filter change handler */
-  onFilterChange?: (key: string, value: string) => void;
+  onFilterChange?: (key: string, value: string | string[]) => void;
   /** Action buttons rendered above the filter bar (regular buttons, links) */
   actions?: ReactNode;
   /** Actions rendered inside the filter bar on the right (dropdown openers) */

@@ -274,7 +274,7 @@ export class CertificateService {
     @CreateRequestContext()
     async findByDealer(dealerId: string, pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = { dealer: dealerId };
-        if (status) where.status = status;
+        if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
         if (pagination.search) {
             where.$or = [
                 { certificateNumber: { $ilike: `%${pagination.search}%` } },
@@ -300,7 +300,7 @@ export class CertificateService {
     @CreateRequestContext()
     async findAll(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = {};
-        if (status) where.status = status;
+        if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
         if (pagination.search) {
             where.$or = [
                 { certificateNumber: { $ilike: `%${pagination.search}%` } },

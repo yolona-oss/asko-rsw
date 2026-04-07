@@ -17,6 +17,7 @@ import {
   defaultRange,
   formatRangeLabel,
   SkeletonCard,
+  filterValueToParam,
 } from '@asko/ui';
 import type { FilterValues, DataGridColumn, SortOrder, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -123,8 +124,8 @@ export function ManagerPayments() {
         const res = await paymentApi.listPayments({
           page: page,
           limit: pageSize,
-          status: filterValues.status || undefined,
-          provider: filterValues.provider || undefined,
+          status: filterValueToParam(filterValues, 'status'),
+          provider: filterValueToParam(filterValues, 'provider'),
           search: search || undefined,
           sortBy: sortBy ?? undefined,
           sortOrder: sortOrder ?? undefined,
@@ -145,7 +146,7 @@ export function ManagerPayments() {
   const showFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, total);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };
