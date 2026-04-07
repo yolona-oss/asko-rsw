@@ -4,16 +4,14 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/components/account/account-provider';
 import { ChatLayout } from '@/components/chat/chat-layout';
-import { PageContainer } from '@/components/account/page-container';
-import { PageHeader } from '@/components/account/page-header';
 import { SkeletonBlock } from '@/components/skeleton';
 
 function ChatSkeleton() {
   return (
-    <PageContainer>
-      <SkeletonBlock className="h-8 w-32" />
-      <SkeletonBlock className="h-[calc(100vh-180px)] w-full" />
-    </PageContainer>
+    <div className="flex-1 min-h-0 flex flex-col lg:p-8 lg:gap-8">
+      <SkeletonBlock className="h-8 w-32 hidden lg:block" />
+      <SkeletonBlock className="flex-1 lg:flex-none lg:h-[calc(100vh-180px)] w-full" />
+    </div>
   );
 }
 
@@ -27,10 +25,9 @@ function ChatPageInner() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader>Чат</PageHeader>
+    <div className="flex-1 min-h-0 flex flex-col lg:p-8 lg:gap-8">
       <ChatLayout currentUserId={user.id} initialConversationId={initialConversationId} />
-    </PageContainer>
+    </div>
   );
 }
 

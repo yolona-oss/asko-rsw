@@ -258,6 +258,8 @@ export class CertificateController {
     @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.certificateClient.findById(id);
+        const cert = await this.certificateClient.findById(id);
+        await this.enrichCertificates([cert]);
+        return cert;
     }
 }

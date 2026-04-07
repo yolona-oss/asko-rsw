@@ -107,6 +107,7 @@ export function ManagerRequests() {
       key: 'device',
       header: 'Устройство',
       mobileLabel: 'Устройство:',
+      width: 200,
       render: (req) => {
         const deviceName = req.userDevice?.device?.name || req.description;
         return <p className="text-sm text-text-main truncate">{deviceName}</p>;
@@ -122,7 +123,7 @@ export function ManagerRequests() {
     {
       key: 'status',
       header: 'Статус',
-      width: 160,
+      width: 150,
       mobileLabel: 'Статус:',
       render: (req) => {
         const tabKey = STATUS_MAP[req.status] ?? 'pending';
