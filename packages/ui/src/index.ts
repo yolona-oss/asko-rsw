@@ -148,6 +148,21 @@ export type { ImageGalleryProps, ImageGalleryZoomConfig } from './components/ima
 export { Tooltip } from './components/tooltip';
 export type { TooltipProps, TooltipPlacement, TooltipTrigger } from './components/tooltip';
 
+export { Checkbox } from './components/checkbox';
+export type { CheckboxProps } from './components/checkbox';
+
+export { StatusBadge } from './components/status-badge';
+export type { StatusBadgeProps } from './components/status-badge';
+
+export { CopyButton } from './components/copy-button';
+export type { CopyButtonProps } from './components/copy-button';
+
+export { DetailRow } from './components/detail-row';
+export type { DetailRowProps } from './components/detail-row';
+
+export { SkeletonBlock, SkeletonCircle, SkeletonCard } from './components/skeleton';
+export type { SkeletonBlockProps, SkeletonCircleProps, SkeletonCardProps } from './components/skeleton';
+
 export {
   BarChart,
   LineChart,

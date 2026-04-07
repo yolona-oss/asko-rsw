@@ -17,16 +17,15 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
+  CopyButton,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/skeleton';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';
 import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, formatDate, isExpired } from './constants';
-import { CopyButton } from './copy-button';
 import { InvitationCard } from './invitation-card';
 
 const PAGE_SIZE = 20;
@@ -278,14 +277,9 @@ export function AdminInvitations() {
       {/* ViewSwitcher — above data view */}
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonCard key={i} className="h-14" />
-          ))}
-        </div>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={paginatedInvitations}
           keyExtractor={(inv) => inv.id}
@@ -303,6 +297,8 @@ export function AdminInvitations() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {paginatedInvitations.length === 0 ? (

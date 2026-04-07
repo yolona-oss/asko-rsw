@@ -3,9 +3,9 @@
 import { useState, useMemo } from 'react';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
-import { DetailRow } from '@/components/account/shared/detail-row';
 import {
   Badge,
+  DetailRow,
   DataGrid,
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';

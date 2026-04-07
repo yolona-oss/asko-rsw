@@ -17,7 +17,6 @@ import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { User } from 'lucide-react';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/skeleton';
 import { repairerApi } from '@/lib/api/repairer';
 import type { IRepairer } from '@/lib/api/types';
 import type { AccessTab } from './constants';
@@ -165,14 +164,9 @@ export function ManagerAccess() {
       {/* ViewSwitcher — above data view */}
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SkeletonCard key={i} className="h-16" />
-          ))}
-        </div>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid<IRepairer>
+          loading={loading}
           columns={repairerColumns}
           data={displayed}
           keyExtractor={(rep) => rep.id}
@@ -193,6 +187,8 @@ export function ManagerAccess() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {displayed.length === 0 ? (

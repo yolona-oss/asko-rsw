@@ -6,18 +6,17 @@ import { useAccount } from '@/components/account/account-provider';
 import { primaryRole, type UserRole } from '@/lib/account';
 
 export function useRoleGuard(allowedRoles: UserRole[]): boolean {
-  const { stage, user } = useAccount();
+  const { user } = useAccount();
   const router = useRouter();
 
-  const isLoaded = stage !== 'skeleton' && user !== null;
   const role = user ? primaryRole(user) : null;
-  const allowed = isLoaded && role !== null && allowedRoles.includes(role);
+  const allowed = user !== null && role !== null && allowedRoles.includes(role);
 
   useEffect(() => {
-    if (isLoaded && !allowed) {
+    if (user && !allowed) {
       router.replace('/account');
     }
-  }, [isLoaded, allowed, router]);
+  }, [user, allowed, router]);
 
   return allowed;
 }

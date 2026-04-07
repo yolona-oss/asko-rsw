@@ -207,23 +207,20 @@ export function AdminDeviceCategories() {
         </div>
       </Modal>
 
-      {loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : (
-        <DataGrid
-          columns={columns}
-          data={sortedCategories}
-          keyExtractor={(cat) => cat.id}
-          emptyContent="Нет категорий"
-          sortKey={sortBy ?? undefined}
-          sortOrder={sortOrder ?? undefined}
-          onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
-          onRowClick={detail.onRowClick}
-          onRowDoubleClick={(cat) => openEdit(cat)}
-          rowMenu={rowMenu}
-          footer={<span>Всего: {categories.length}</span>}
-        />
-      )}
+      <DataGrid
+        loading={loading}
+        columns={columns}
+        data={sortedCategories}
+        keyExtractor={(cat) => cat.id}
+        emptyContent="Нет категорий"
+        sortKey={sortBy ?? undefined}
+        sortOrder={sortOrder ?? undefined}
+        onSort={(key, order) => { setSortBy(key); setSortOrder(order); }}
+        onRowClick={detail.onRowClick}
+        onRowDoubleClick={(cat) => openEdit(cat)}
+        rowMenu={rowMenu}
+        footer={<span>Всего: {categories.length}</span>}
+      />
       <EntityDetailModal
         open={detail.open}
         onClose={detail.onClose}

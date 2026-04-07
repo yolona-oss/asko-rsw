@@ -167,25 +167,9 @@ export function ManagerRequests() {
 
       {/* Request data */}
       {
-        loading ? (
-          <p className="text-sm text-text-sub">Загрузка...</p>
-        ) : requests.length === 0 ? (
-          <p className="text-sm text-text-sub">Нет заявок</p>
-        ) : view === 'card' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {requests.map((req) => (
-              <RequestCardItem
-                key={req.id}
-                request={req}
-                convInfo={convInfoMap[req.id]}
-                currentUserId={currentUserId}
-                onClick={() => detail.onRowClick(req)}
-                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
-              />
-            ))}
-          </div>
-        ) : (
+        view === 'table' ? (
           <DataGrid<RepairRequest>
+            loading={loading}
             columns={requestColumns}
             data={requests}
             keyExtractor={(req) => req.id}
@@ -202,6 +186,23 @@ export function ManagerRequests() {
               </div>
             }
           />
+        ) : loading ? (
+          <p className="text-sm text-text-sub">Загрузка...</p>
+        ) : requests.length === 0 ? (
+          <p className="text-sm text-text-sub">Нет заявок</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {requests.map((req) => (
+              <RequestCardItem
+                key={req.id}
+                request={req}
+                convInfo={convInfoMap[req.id]}
+                currentUserId={currentUserId}
+                onClick={() => detail.onRowClick(req)}
+                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
+              />
+            ))}
+          </div>
         )
       }
 

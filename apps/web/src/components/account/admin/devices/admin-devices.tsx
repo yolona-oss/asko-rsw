@@ -342,10 +342,9 @@ export function AdminDevices() {
       {/* ViewSwitcher — above data view */}
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
-      {loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={devices}
           keyExtractor={(device) => device.id}
@@ -363,6 +362,8 @@ export function AdminDevices() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {devices.length === 0 ? (

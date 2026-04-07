@@ -1,7 +1,6 @@
 'use client';
 
-import { Badge } from '@asko/ui';
-import { DetailRow } from '@/components/account/shared/detail-row';
+import { Badge, DetailRow } from '@asko/ui';
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });

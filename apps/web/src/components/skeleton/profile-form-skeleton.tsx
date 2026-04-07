@@ -1,6 +1,6 @@
 'use client';
 
-import { SkeletonBlock, SkeletonCircle } from './skeleton';
+import { SkeletonBlock, SkeletonCircle } from '@asko/ui';
 
 export function ProfileFormSkeleton() {
   return (

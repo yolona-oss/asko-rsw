@@ -252,10 +252,9 @@ export function ManagerPayments() {
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Data */}
-      {loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid<PaymentRecord>
+          loading={loading}
           columns={paymentColumns}
           data={payments}
           keyExtractor={(p) => p.id}
@@ -272,6 +271,8 @@ export function ManagerPayments() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
       ) : payments.length === 0 ? (
         <p className="text-sm text-text-sub">Платежи не найдены</p>
       ) : (

@@ -1,7 +1,6 @@
 'use client';
 
-import { Badge } from '@asko/ui';
-import { DetailRow } from '@/components/account/shared/detail-row';
+import { Badge, DetailRow } from '@asko/ui';
 import { api } from '@/lib/api/client';
 
 export async function fetchRepairerOne(item: any): Promise<any> {

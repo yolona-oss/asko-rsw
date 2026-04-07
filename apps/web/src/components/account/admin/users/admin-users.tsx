@@ -12,17 +12,16 @@ import {
   VIEW_TABLE,
   VIEW_CARD,
   Pagination,
+  StatusBadge,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterDefinition, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/skeleton';
 import { usersApi } from '@/lib/api/users';
 import type { IAuthUser } from '@/lib/api/types';
 import { ROLE_LABELS, ROLE_TAB_FILTER_DEF } from './constants';
 import { InviteDropdown } from './invite-dropdown';
 import { UserAvatar } from './user-avatar';
-import { StatusBadge } from './status-badge';
 import { UserCard } from './user-card';
 
 const PAGE_SIZE = 20;
@@ -152,7 +151,7 @@ export function AdminUsers() {
       mobileLabel: 'Статус:',
       render: (user) => {
         const isActive = (user as any).isActive !== false;
-        return <StatusBadge isActive={isActive} />;
+        return <StatusBadge active={isActive} />;
       },
     },
   ], [actionLoading]);
@@ -191,14 +190,9 @@ export function AdminUsers() {
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Content */}
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SkeletonCard key={i} className="h-14" />
-          ))}
-        </div>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={users}
           keyExtractor={(user) => user.id}
@@ -216,6 +210,8 @@ export function AdminUsers() {
             </div>
           ) : undefined}
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         /* Card view */
         users.length === 0 ? (

@@ -1,18 +1,16 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { AccountUser, LoadingStage } from '@/lib/account';
+import type { AccountUser } from '@/lib/account';
 import { useAuth, useSession } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
 
 interface AccountContextType {
-  stage: LoadingStage;
   user: AccountUser | null;
 }
 
 const AccountContext = createContext<AccountContextType>({
-  stage: 'skeleton',
   user: null,
 });
 
@@ -31,26 +29,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const [stage, setStage] = useState<LoadingStage>('skeleton');
-
-  useEffect(() => {
-    if (authUser) {
-      setStage((prev) => prev === 'skeleton' ? 'partial' : prev);
-    }
-  }, [authUser]);
-
-  useEffect(() => {
-    if (sessionUser) {
-      setStage('loaded');
-    }
-  }, [sessionUser]);
-
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      setStage('skeleton');
-    }
-  }, [isAuthenticated, isLoading]);
-
   const user = useMemo<AccountUser | null>(() => {
     if (!isAuthenticated && !isLoading) return null;
     const base = sessionUser ?? authUser;
@@ -59,7 +37,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, [authUser, sessionUser, avatarUrl, isAuthenticated, isLoading]);
 
   return (
-    <AccountContext.Provider value={{ stage, user }}>
+    <AccountContext.Provider value={{ user }}>
       {children}
     </AccountContext.Provider>
   );

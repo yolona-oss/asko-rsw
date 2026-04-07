@@ -22,7 +22,7 @@ const POSITION_THRESHOLD = 0.35;
 
 export function AccountSidebar() {
   const pathname = usePathname();
-  const { stage, user } = useAccount();
+  const { user } = useAccount();
   const { collapsed, toggleCollapsed } = useSidebar();
   const menu = user ? menuByRole[primaryRole(user)] : [];
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -35,7 +35,7 @@ export function AccountSidebar() {
     >
       {/* Logo */}
       <div className={`pt-6 pb-8 ${collapsed ? 'px-3 flex justify-center' : 'px-6'}`}>
-        {stage === 'skeleton' ? (
+        {!user ? (
           <SkeletonBlock className={collapsed ? 'w-8 h-8' : 'w-[100px] h-[30px]'} />
         ) : collapsed ? (
           <Link href="/" title="ASKO">
@@ -53,7 +53,7 @@ export function AccountSidebar() {
 
       {/* Menu */}
       <nav className={`flex flex-col gap-1 flex-1 ${collapsed ? 'px-2' : 'px-4'}`}>
-        {stage === 'skeleton' ? (
+        {!user ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className={`flex items-center gap-3 px-2 py-2 ${collapsed ? 'justify-center' : ''}`}>
               <SkeletonCircle className="w-5 h-5" />
@@ -75,7 +75,7 @@ export function AccountSidebar() {
                   : 'text-text-main hover:text-brand-red'
                 }`}
               >
-                {stage === 'loaded' ? (
+                {user ? (
                   <MenuIcon icon={item.icon} active={isActive} />
                 ) : (
                   <SkeletonCircle className="w-5 h-5" />
@@ -89,7 +89,7 @@ export function AccountSidebar() {
 
       {/* Footer: collapse toggle + back + logout */}
       <div className={`pb-6 flex flex-col gap-3 ${collapsed ? 'px-2 items-center' : 'px-4'}`}>
-        {stage === 'loaded' ? (
+        {user ? (
           <>
             {!collapsed && (
               <>
@@ -161,7 +161,7 @@ export function AccountSidebar() {
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const { stage, user } = useAccount();
+  const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
   const menu = user ? menuByRole[primaryRole(user)] : [];
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);

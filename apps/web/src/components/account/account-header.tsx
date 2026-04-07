@@ -2,18 +2,17 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Dialog, DropdownMenu } from '@asko/ui';
+import { Dialog, DropdownMenu, SkeletonCircle } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useAccount } from './account-provider';
 import { useSidebar } from './sidebar-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
 import { User, LogOut } from 'lucide-react';
-import { SkeletonCircle } from '@/components/skeleton';
 import { NotificationBell } from './notification-bell';
 
 export function AccountHeader() {
-  const { stage, user } = useAccount();
+  const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const router = useRouter();
@@ -36,7 +35,7 @@ export function AccountHeader() {
     },
   ];
 
-  const avatarElement = stage === 'loaded' ? (
+  const avatarElement = user ? (
     <div className="w-9 h-9 rounded-full overflow-hidden bg-[#C4C4C4]">
       {user?.avatar ? (
         <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
@@ -90,7 +89,7 @@ export function AccountHeader() {
 
           {/* Right: notification bell + avatar */}
           <div className="flex items-center gap-4">
-            {stage === 'loaded' ? (
+            {user ? (
               <NotificationBell />
             ) : (
               <SkeletonCircle className="w-6 h-6" />

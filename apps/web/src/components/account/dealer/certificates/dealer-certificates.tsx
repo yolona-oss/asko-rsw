@@ -105,10 +105,10 @@ export function DealerCertificates() {
 
       {/* Data */}
       {
-        loading ? (
+        view === 'table' ? (
+          <CertificateTable certificates={sorted} total={total} loading={loading} />
+        ) : loading ? (
           <p className="text-sm text-text-sub p-4">Загрузка...</p>
-        ) : view === 'table' ? (
-          <CertificateTable certificates={sorted} total={total} />
         ) : (
           <CertificateCards certificates={sorted} onCardClick={detail.onRowClick} />
         )

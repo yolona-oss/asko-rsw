@@ -209,27 +209,13 @@ export function RepairerRequests() {
       {/* List */}
       {activeTab !== 'active' && (
         <>
-          {loading ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : requests.length === 0 ? (
-            <p className="text-sm text-text-sub">Нет заявок</p>
-          ) : view === 'card' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {requests.map((req) => (
-                <RequestCard
-                  key={req.id}
-                  request={req}
-                  highlight={showActiveHighlight && activeRequest?.id === req.id}
-                  onClick={() => detail.onRowClick(req)}
-                  onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
-                />
-              ))}
-            </div>
-          ) : (
+          {view === 'table' ? (
             <DataGrid
+              loading={loading}
               columns={columns}
               data={requests}
               keyExtractor={(req) => req.id}
+              emptyContent="Нет заявок"
               sortKey={sortBy ?? undefined}
               sortOrder={sortOrder ?? undefined}
               onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
@@ -245,6 +231,22 @@ export function RepairerRequests() {
                 </div>
               }
             />
+          ) : loading ? (
+            <p className="text-sm text-text-sub">Загрузка...</p>
+          ) : requests.length === 0 ? (
+            <p className="text-sm text-text-sub">Нет заявок</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {requests.map((req) => (
+                <RequestCard
+                  key={req.id}
+                  request={req}
+                  highlight={showActiveHighlight && activeRequest?.id === req.id}
+                  onClick={() => detail.onRowClick(req)}
+                  onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
+                />
+              ))}
+            </div>
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />

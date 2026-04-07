@@ -157,10 +157,9 @@ export function AdminCertificates() {
       {/* ViewSwitcher — above data view */}
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
-      {loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={certificates}
           keyExtractor={(cert) => cert.id}
@@ -177,6 +176,8 @@ export function AdminCertificates() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {certificates.length === 0 ? (

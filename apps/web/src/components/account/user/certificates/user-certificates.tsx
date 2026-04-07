@@ -291,36 +291,31 @@ export function UserCertificates() {
           />
         </>
       ) : (
-        <>
-          {loading ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : (
-            <DataGrid<ICertificate>
-              columns={certificateColumns}
-              data={paginatedCertificates}
-              keyExtractor={(cert) => cert.id}
-              emptyContent="У вас нет сертификатов"
-              sortKey={sortBy ?? undefined}
-              sortOrder={sortOrder ?? undefined}
-              onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-              onRowClick={detail.onRowClick}
-              rowMenu={(cert) => {
-                const items: DropdownMenuEntry[] = [];
-                if (cert.status === CertificateStatus.PENDING_PAYMENT) {
-                  items.push({ key: 'pay', label: 'Оплатить', onClick: () => handlePay(cert) });
-                }
-                items.push({ key: 'pdf', label: 'Скачать PDF', onClick: () => exportPdf(cert) });
-                return items;
-              }}
-              footer={
-                <div className="flex items-center justify-between w-full">
-                  <span>Показано {paginatedCertificates.length} из {sortedCertificates.length}</span>
-                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                </div>
-              }
-            />
-          )}
-        </>
+        <DataGrid<ICertificate>
+          loading={loading}
+          columns={certificateColumns}
+          data={paginatedCertificates}
+          keyExtractor={(cert) => cert.id}
+          emptyContent="У вас нет сертификатов"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
+          rowMenu={(cert) => {
+            const items: DropdownMenuEntry[] = [];
+            if (cert.status === CertificateStatus.PENDING_PAYMENT) {
+              items.push({ key: 'pay', label: 'Оплатить', onClick: () => handlePay(cert) });
+            }
+            items.push({ key: 'pdf', label: 'Скачать PDF', onClick: () => exportPdf(cert) });
+            return items;
+          }}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {paginatedCertificates.length} из {sortedCertificates.length}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          }
+        />
       )}
 
       <AddCertificateForm

@@ -185,10 +185,9 @@ export function AdminArticles() {
       {/* ViewSwitcher — above data view */}
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
-      {loading ? (
-        <p className="text-sm text-text-sub p-4">Загрузка...</p>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={filteredArticles}
           keyExtractor={(article) => article.id}
@@ -206,6 +205,8 @@ export function AdminArticles() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {filteredArticles.length === 0 ? (

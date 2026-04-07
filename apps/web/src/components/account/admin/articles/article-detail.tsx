@@ -1,6 +1,6 @@
 'use client';
 
-import { DetailRow } from '@/components/account/shared/detail-row';
+import { DetailRow } from '@asko/ui';
 import { api } from '@/lib/api/client';
 
 const fmt = (d: string) =>

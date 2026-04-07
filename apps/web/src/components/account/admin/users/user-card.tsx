@@ -1,11 +1,10 @@
 'use client';
 
-import { Card, ContextMenuArea } from '@asko/ui';
+import { Card, ContextMenuArea, StatusBadge } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import type { IAuthUser } from '@/lib/api/types';
 import { ROLE_LABELS } from './constants';
 import { UserAvatar } from './user-avatar';
-import { StatusBadge } from './status-badge';
 
 export function UserCard({
   user,
@@ -46,7 +45,7 @@ export function UserCard({
             <p className="text-sm font-medium text-[#323232] tracking-[-0.14px]">{name}</p>
             <p className="text-xs text-text-sub">{user.phone ?? '-'}</p>
           </div>
-          <StatusBadge isActive={isActive} />
+          <StatusBadge active={isActive} />
         </div>
         <div className="flex flex-col gap-1 text-sm text-[#323232] tracking-[-0.14px]">
           <div className="flex justify-between">

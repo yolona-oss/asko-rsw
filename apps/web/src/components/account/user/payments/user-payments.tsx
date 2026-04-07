@@ -3,11 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
-import { DetailRow } from '@/components/account/shared/detail-row';
 import {
   Badge,
   Card,
   Button,
+  DetailRow,
   DataGrid,
   DataSearch,
   ViewSwitcher,
@@ -201,6 +201,7 @@ export function UserPayments() {
 
               {view === 'table' ? (
                 <DataGrid<PaymentRecord>
+                  loading={loading}
                   columns={paymentColumns}
                   data={filteredHistory}
                   keyExtractor={(p) => p.id}

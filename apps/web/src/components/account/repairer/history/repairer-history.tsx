@@ -21,7 +21,6 @@ import {
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/page-container';
 import { PageHeader } from '@/components/account/page-header';
-import { SkeletonCard } from '@/components/skeleton';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { STATUS_LABEL, STATUS_BADGE, formatDateShort, formatDateLong, LIMIT } from './constants';
 
@@ -152,14 +151,9 @@ export function RepairerHistory() {
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Request list */}
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SkeletonCard key={i} className="h-20" />
-          ))}
-        </div>
-      ) : view === 'table' ? (
+      {view === 'table' ? (
         <DataGrid
+          loading={loading}
           columns={columns}
           data={filteredRequests}
           keyExtractor={(req) => req.id}
@@ -175,6 +169,8 @@ export function RepairerHistory() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub p-4">Загрузка...</p>
       ) : (
         <>
           {filteredRequests.length === 0 ? (

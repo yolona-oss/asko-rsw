@@ -16,13 +16,11 @@ function ChatSkeleton() {
 }
 
 function ChatPageInner() {
-  const { stage, user } = useAccount();
+  const { user } = useAccount();
   const searchParams = useSearchParams();
   const initialConversationId = searchParams.get('conversation') ?? undefined;
 
-  if (stage === 'skeleton' || !user) {
-    return <ChatSkeleton />;
-  }
+  if (!user) return null;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col lg:flex-initial lg:p-8 lg:gap-8">

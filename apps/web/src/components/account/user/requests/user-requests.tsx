@@ -133,38 +133,22 @@ export function UserRequests() {
       <ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />
 
       {/* Data */}
-      {loading ? (
-        <p className="text-sm text-text-sub">Загрузка...</p>
-      ) : requests.length === 0 ? (
-        total === 0 && !search && statusFilter === 'all' ? (
-          <div className="flex flex-col items-center gap-4 py-12">
-            <p className="text-base text-text-sub">У вас пока нет заявок</p>
-            <Link href="/account/requests/create">
-              <Button variant="primary">Создать первую заявку</Button>
-            </Link>
-          </div>
-        ) : (
-          <p className="text-sm text-text-sub">Заявки не найдены</p>
-        )
-      ) : view === 'card' ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {requests.map((req) => (
-              <RequestCard
-                key={req.id}
-                request={req}
-                onClick={() => detail.onRowClick(req)}
-                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
-              />
-            ))}
-          </div>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
-        </>
-      ) : (
+      {view === 'table' ? (
         <DataGrid<RepairRequest>
+          loading={loading}
           columns={requestColumns}
           data={requests}
           keyExtractor={(req) => req.id}
+          emptyContent={
+            total === 0 && !search && statusFilter === 'all' ? (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <p className="text-base text-text-sub">У вас пока нет заявок</p>
+                <Link href="/account/requests/create">
+                  <Button variant="primary">Создать первую заявку</Button>
+                </Link>
+              </div>
+            ) : "Заявки не найдены"
+          }
           sortKey={sortBy ?? undefined}
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
@@ -178,6 +162,33 @@ export function UserRequests() {
             </div>
           }
         />
+      ) : loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : requests.length === 0 ? (
+        total === 0 && !search && statusFilter === 'all' ? (
+          <div className="flex flex-col items-center gap-4 py-12">
+            <p className="text-base text-text-sub">У вас пока нет заявок</p>
+            <Link href="/account/requests/create">
+              <Button variant="primary">Создать первую заявку</Button>
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-text-sub">Заявки не найдены</p>
+        )
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {requests.map((req) => (
+              <RequestCard
+                key={req.id}
+                request={req}
+                onClick={() => detail.onRowClick(req)}
+                onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
+              />
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+        </>
       )}
       <EntityDetailModal
         open={detail.open}

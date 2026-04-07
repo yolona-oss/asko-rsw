@@ -72,9 +72,11 @@ const columns: DataGridColumn<Certificate>[] = [
 export function CertificateTable({
   certificates,
   total,
+  loading,
 }: {
   certificates: Certificate[];
   total: number;
+  loading?: boolean;
 }) {
   const detail = useEntityDetail<Certificate>();
   const [sortBy, setSortBy] = useState<string | null>(null);
@@ -93,6 +95,7 @@ export function CertificateTable({
   return (
     <>
       <DataGrid
+        loading={loading}
         columns={columns}
         data={sortedCertificates}
         keyExtractor={(cert) => cert.id}

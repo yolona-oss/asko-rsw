@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { ChevronUp, ChevronDown, EyeOff, Eye, RotateCcw, Pencil } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { SkeletonBlock } from './skeleton';
 import { ContextMenu } from './dropdown';
 import type { DropdownMenuEntry } from './dropdown';
 
@@ -125,6 +126,10 @@ export interface DataGridProps<T = any> {
   rowClassName?: (item: T) => string | undefined;
   /** Returns context menu items for a row (right-click / long-press) */
   rowMenu?: (item: T) => DropdownMenuEntry[];
+  /** When true, renders skeleton rows instead of data */
+  loading?: boolean;
+  /** Number of skeleton rows to show when loading (default: 5) */
+  loadingRows?: number;
 }
 
 // ─── CellContent (internal) ─────────────────────────────────────────────────
@@ -254,6 +259,8 @@ export function DataGrid<T>({
   suppressDetailMenuItem,
   rowClassName,
   rowMenu: rowMenuFn,
+  loading: isLoading,
+  loadingRows = 5,
 }: DataGridProps<T>) {
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [widths, setWidths] = useState<Record<string, number>>({});
@@ -470,7 +477,21 @@ export function DataGrid<T>({
       )}
 
       {/* Body */}
-      {data.length === 0 && emptyContent ? (
+      {isLoading ? (
+        Array.from({ length: loadingRows }).map((_, i) => (
+          <div
+            key={`skeleton-${i}`}
+            className="flex flex-col lg:grid lg:items-center gap-2 lg:gap-x-3 px-4 lg:px-6 py-3 border-b border-[#edeff1] last:border-b-0 bg-white lg:min-w-max"
+            style={{ gridTemplateColumns: gridTemplate }}
+          >
+            {visibleColumns.map((col) => (
+              <div key={col.key} className="min-w-0">
+                <SkeletonBlock className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
+        ))
+      ) : data.length === 0 && emptyContent ? (
         <div className="px-4 lg:px-8 py-10 text-center text-sm text-text-sub">
           {emptyContent}
         </div>
