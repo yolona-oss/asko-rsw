@@ -24,6 +24,13 @@ export const ROLE_OPTIONS = [
   { value: 'repairer', label: 'Мастер' },
 ];
 
+export const TTL_OPTIONS: { value: number; label: string }[] = [
+  { value: 3600, label: '1 час' },
+  { value: 86400, label: '24 часа' },
+  { value: 604800, label: '7 дней' },
+  { value: 2592000, label: '30 дней' },
+];
+
 export const ROLE_TAB_FILTER_DEF: FilterDefinition = {
   key: 'role',
   label: 'Роли',
