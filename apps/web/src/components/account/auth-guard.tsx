@@ -33,7 +33,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         dispatch(logout());
-        router.replace('/auth');
+        const hasAccount = localStorage.getItem('has_account');
+        router.replace(hasAccount ? '/login' : '/auth');
       });
   }, [isAuthenticated, dispatch, router]);
 

@@ -33,6 +33,7 @@ function CallbackHandler() {
 
     dispatch(setCredentials({ accessToken: token, user: null as any }));
     authApi.getSession().then(({ data }) => {
+      try { localStorage.setItem('has_account', '1'); } catch {}
       dispatch(setCredentials({ accessToken: token, user: data }));
       router.replace('/account');
     }).catch(() => {

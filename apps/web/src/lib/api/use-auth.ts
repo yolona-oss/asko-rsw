@@ -10,6 +10,10 @@ import { authApi } from './auth';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 import type { IAuthSession } from './types';
 
+function markHasAccount() {
+  try { localStorage.setItem('has_account', '1'); } catch {}
+}
+
 export function useAuth() {
   const { accessToken, user } = useAppSelector((s) => s.auth);
   const authReady = useContext(AuthReadyContext);
@@ -42,6 +46,7 @@ export function useLogin() {
         // Don't dispatch credentials — component reads mutation.data for MFA state
         return;
       }
+      markHasAccount();
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },
@@ -56,6 +61,7 @@ export function useVerifyMfaOtp() {
     mutationFn: (data: { mfaToken: string; code: string; trustDevice?: boolean }) =>
       authApi.verifyMfaOtp(data).then((r) => r.data),
     onSuccess: (data) => {
+      markHasAccount();
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },
@@ -73,6 +79,7 @@ export function useSignup(options?: { onSuccess?: (data: any) => void }) {
         options?.onSuccess?.(data);
         return;
       }
+      markHasAccount();
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       if (options?.onSuccess) {
         options.onSuccess(data);
@@ -91,6 +98,7 @@ export function useVerifyPhoneRegister() {
     mutationFn: (data: { pendingToken: string; code: string }) =>
       authApi.verifyPhoneRegister(data).then((r) => r.data),
     onSuccess: (data) => {
+      markHasAccount();
       dispatch(setCredentials({ accessToken: data.access_token, user: data.user }));
       router.push('/account');
     },

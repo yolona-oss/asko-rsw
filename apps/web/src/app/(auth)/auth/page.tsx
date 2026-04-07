@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,6 +10,13 @@ import { EmailInput } from '@asko/ui';
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const router = useRouter();
+
+  // Returning users → login page
+  useEffect(() => {
+    if (localStorage.getItem('has_account')) {
+      router.replace('/login');
+    }
+  }, [router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
