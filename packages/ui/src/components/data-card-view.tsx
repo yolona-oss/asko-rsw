@@ -1,7 +1,30 @@
 'use client';
 
 import { useRef, useEffect, useState, type ReactNode } from 'react';
+import { Eye, ExternalLink } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { SkeletonCard } from './skeleton';
+import { ContextMenuArea } from './dropdown';
+import type { DropdownMenuEntry } from './dropdown';
+
+// ─── Auto-inject menu items helper ─────────────────────────────────────────
+
+const detailIcon = <Eye className="w-4 h-4 shrink-0" />;
+const navigateIcon = <ExternalLink className="w-4 h-4 shrink-0" />;
+
+/** Build context menu items with auto-injected "Подробнее" and "Перейти" */
+export function buildCardMenuItems(
+  onClick?: () => void,
+  onDoubleClick?: () => void,
+  customItems?: DropdownMenuEntry[],
+): DropdownMenuEntry[] {
+  const auto: DropdownMenuEntry[] = [];
+  if (onClick) auto.push({ key: '__detail', label: 'Подробнее', icon: detailIcon, onClick });
+  if (onDoubleClick) auto.push({ key: '__navigate', label: 'Перейти', icon: navigateIcon, onClick: onDoubleClick });
+  const custom = customItems ?? [];
+  if (auto.length === 0) return custom;
+  return custom.length > 0 ? [...auto, 'separator', ...custom] : auto;
+}
 
 // ─── Grid columns ───────────────────────────────────────────────────────────
 
@@ -29,6 +52,10 @@ export interface DataCardViewProps<T> {
   gap?: 'sm' | 'md' | 'lg';
   /** Content shown when data is empty */
   emptyContent?: ReactNode;
+  /** When true, renders skeleton cards instead of data */
+  loading?: boolean;
+  /** Number of skeleton cards to show when loading (default: 6) */
+  loadingCards?: number;
   className?: string;
 }
 
@@ -45,8 +72,20 @@ export function DataCardView<T>({
   columns = 3,
   gap = 'md',
   emptyContent,
+  loading,
+  loadingCards = 6,
   className,
 }: DataCardViewProps<T>) {
+  if (loading) {
+    return (
+      <div className={cn('grid', gridStyles[columns], gapStyles[gap], className)}>
+        {Array.from({ length: loadingCards }).map((_, i) => (
+          <SkeletonCard key={i} className="h-40" />
+        ))}
+      </div>
+    );
+  }
+
   if (data.length === 0 && emptyContent) {
     return (
       <div className="px-5 py-8 text-center text-sm text-text-sub">
@@ -78,9 +117,13 @@ export function DataCardView<T>({
 export interface DataCardProps {
   /** Click handler - makes the card look interactive */
   onClick?: () => void;
+  /** Double-click handler (navigate/edit) */
+  onDoubleClick?: () => void;
   /** Highlighted state (e.g. active item) */
   highlighted?: boolean;
   padding?: 'sm' | 'md' | 'lg';
+  /** Custom context menu items (auto-injects "Подробнее"/"Перейти" from onClick/onDoubleClick) */
+  menuItems?: DropdownMenuEntry[];
   className?: string;
   children: ReactNode;
 }
@@ -93,14 +136,20 @@ const cardPaddingStyles = {
 
 export function DataCard({
   onClick,
+  onDoubleClick,
   highlighted,
   padding = 'md',
+  menuItems,
   className,
   children,
 }: DataCardProps) {
-  return (
+  const resolvedMenu = buildCardMenuItems(onClick, onDoubleClick, menuItems);
+  const hasMenu = resolvedMenu.length > 0;
+
+  const card = (
     <div
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
@@ -110,13 +159,19 @@ export function DataCard({
         highlighted
           ? 'border-brand-red ring-2 ring-brand-red/20'
           : 'border-border-light',
-        onClick && 'cursor-pointer hover:border-text-sub transition-colors',
+        (onClick || onDoubleClick) && 'cursor-pointer hover:border-text-sub transition-colors',
         className,
       )}
     >
       {children}
     </div>
   );
+
+  if (hasMenu) {
+    return <ContextMenuArea items={resolvedMenu}>{card}</ContextMenuArea>;
+  }
+
+  return card;
 }
 
 // ─── DataCardField (label + value pair inside a card) ───────────────────────

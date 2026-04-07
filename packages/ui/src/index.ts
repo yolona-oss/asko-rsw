@@ -104,6 +104,7 @@ export {
   DataCardView,
   DataCard,
   DataCardField,
+  buildCardMenuItems,
 } from './components/data-card-view';
 export type {
   DataCardViewProps,

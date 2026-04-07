@@ -5,6 +5,7 @@ import {
   Badge,
   Card,
   ContextMenuArea,
+  buildCardMenuItems,
   DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
@@ -278,9 +279,7 @@ export function ManagerPayments() {
           {payments.map((p) => (
             <ContextMenuArea
               key={p.id}
-              items={[
-                { key: 'view', label: 'Подробнее', onClick: () => setSelectedPayment(p) },
-              ]}
+              items={buildCardMenuItems(() => setSelectedPayment(p))}
             >
               <Card padding="none" className="p-5 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">

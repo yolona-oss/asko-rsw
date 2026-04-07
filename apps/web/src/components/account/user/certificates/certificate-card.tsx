@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ContextMenuArea } from '@asko/ui';
+import { ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
@@ -49,13 +49,14 @@ export function CertificateCard({
     }).catch(() => { });
   }, [device?.id]);
 
-  const menuItems: DropdownMenuEntry[] = [];
+  const customItems: DropdownMenuEntry[] = [];
   if (isPendingPayment && onPay) {
-    menuItems.push({ key: 'pay', label: 'Оплатить', onClick: () => onPay(cert) });
+    customItems.push({ key: 'pay', label: 'Оплатить', onClick: () => onPay(cert) });
   }
   if (onExportPdf) {
-    menuItems.push({ key: 'pdf', label: 'Скачать PDF', onClick: () => onExportPdf(cert) });
+    customItems.push({ key: 'pdf', label: 'Скачать PDF', onClick: () => onExportPdf(cert) });
   }
+  const menuItems = buildCardMenuItems(onClick, undefined, customItems);
 
   return (
     <ContextMenuArea items={menuItems}>

@@ -77,7 +77,11 @@ export function DataToolbar({
             className={search.className}
           />
         )}
-        {viewSwitcher}
+        {viewSwitcher && (
+          <div className="pt-3">
+            {viewSwitcher}
+          </div>
+        )}
       </div>
     );
   }
@@ -118,13 +122,13 @@ export function DataToolbar({
           </div>
         )}
 
-        {/* Filters — scrollable */}
+        {/* Filters — scrollable, forced to dropdown style */}
         <div ref={filterRef} className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
           <DataFilter
-            filters={filters}
+            filters={filters.map(f => ({ ...f, type: 'select' as const }))}
             values={filterValues}
             onChange={onFilterChange}
-            className="px-5 py-2 min-w-max"
+            className="px-3 lg:px-5 py-2.5 min-w-max"
           />
         </div>
 
@@ -137,7 +141,11 @@ export function DataToolbar({
       </div>
 
       {/* ViewSwitcher — below filter bar, closest to data view */}
-      {viewSwitcher}
+      {viewSwitcher && (
+        <div className="pt-3">
+          {viewSwitcher}
+        </div>
+      )}
     </div>
   );
 }

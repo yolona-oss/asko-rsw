@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type ReactNode } from 'react';
 import { Modal } from '@asko/ui';
-import { ShieldAlert, Pencil } from 'lucide-react';
+import { ShieldAlert, ExternalLink } from 'lucide-react';
 
 export interface EntityDetailModalProps<T> {
   open: boolean;
@@ -15,7 +15,7 @@ export interface EntityDetailModalProps<T> {
   fetchOne?: (item: T) => Promise<T>;
   /** Render detail content. Receives the (possibly fetched) item and loading state */
   renderContent: (item: T, loading: boolean) => ReactNode;
-  /** If provided, shows an "Редактировать" button that calls this callback */
+  /** If provided, shows a "Перейти" button that calls this callback */
   onEdit?: (item: T) => void;
 }
 
@@ -83,8 +83,8 @@ export function EntityDetailModal<T>({
               onClick={() => { onEdit(displayItem); onClose(); }}
               className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-dark-deep text-white hover:bg-dark transition-colors cursor-pointer"
             >
-              <Pencil className="w-3.5 h-3.5" />
-              Редактировать
+              <ExternalLink className="w-3.5 h-3.5" />
+              Перейти
             </button>
           )}
           <button

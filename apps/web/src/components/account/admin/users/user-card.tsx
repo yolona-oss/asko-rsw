@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, ContextMenuArea, StatusBadge } from '@asko/ui';
+import { Card, ContextMenuArea, StatusBadge, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import type { IAuthUser } from '@/lib/api/types';
 import { ROLE_LABELS } from './constants';
@@ -20,7 +20,7 @@ export function UserCard({
   const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
   const isActive = (user as any).isActive !== false;
 
-  const menuItems: DropdownMenuEntry[] = [
+  const customItems: DropdownMenuEntry[] = [
     {
       key: 'toggle-active',
       label: isActive ? 'Заблокировать' : 'Разблокировать',
@@ -35,6 +35,7 @@ export function UserCard({
       onClick: () => onDelete(user.id),
     },
   ];
+  const menuItems = buildCardMenuItems(undefined, undefined, customItems);
 
   return (
     <ContextMenuArea items={menuItems}>

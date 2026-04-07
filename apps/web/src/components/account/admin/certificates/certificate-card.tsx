@@ -4,6 +4,7 @@ import {
   Badge,
   Card,
   ContextMenuArea,
+  buildCardMenuItems,
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { CertificateStatus } from '@asko/shared/client';
@@ -28,10 +29,11 @@ export function CertificateCard({
     || [cert.dealer?.user?.lastName, cert.dealer?.user?.firstName].filter(Boolean).join(' ')
     || '-';
 
-  const menuItems: DropdownMenuEntry[] = [];
+  const customItems: DropdownMenuEntry[] = [];
   if (cert.status === CertificateStatus.ACTIVE) {
-    menuItems.push({ key: 'revoke', label: 'Отозвать', variant: 'danger', onClick: () => onRevoke(cert.id) });
+    customItems.push({ key: 'revoke', label: 'Отозвать', variant: 'danger', onClick: () => onRevoke(cert.id) });
   }
+  const menuItems = buildCardMenuItems(onClick, undefined, customItems);
 
   return (
     <ContextMenuArea items={menuItems}>

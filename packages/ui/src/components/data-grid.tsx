@@ -9,7 +9,7 @@ import {
   type ReactNode,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import { ChevronUp, ChevronDown, EyeOff, Eye, RotateCcw, Pencil } from 'lucide-react';
+import { ChevronUp, ChevronDown, EyeOff, Eye, RotateCcw, ExternalLink } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { SkeletonBlock } from './skeleton';
 import { ContextMenu } from './dropdown';
@@ -242,7 +242,7 @@ function buildContextMenuItems(
 
 const CLICK_DEBOUNCE_MS = 250;
 const detailIcon = <Eye className="w-4 h-4 shrink-0" />;
-const editIcon = <Pencil className="w-4 h-4 shrink-0" />;
+const editIcon = <ExternalLink className="w-4 h-4 shrink-0" />;
 
 export function DataGrid<T>({
   columns,
@@ -284,7 +284,7 @@ export function DataGrid<T>({
   const visibleColumns = columns.filter((c) => !hiddenKeys.has(c.key));
   const hiddenColumnsList = columns.filter((c) => hiddenKeys.has(c.key));
 
-  // Auto-inject "Подробнее" and "Редактировать" into row context menu
+  // Auto-inject "Подробнее" and "Перейти" into row context menu
   const resolvedRowMenuFn = useMemo(() => {
     const autoDetail = onRowClick && !suppressDetailMenuItem;
     const autoEdit = !!onRowDoubleClick;
@@ -296,7 +296,7 @@ export function DataGrid<T>({
         autoItems.push({ key: '__detail', label: 'Подробнее', icon: detailIcon, onClick: () => onRowClick(item) });
       }
       if (autoEdit) {
-        autoItems.push({ key: '__edit', label: 'Редактировать', icon: editIcon, onClick: () => onRowDoubleClick!(item) });
+        autoItems.push({ key: '__edit', label: 'Перейти', icon: editIcon, onClick: () => onRowDoubleClick!(item) });
       }
       if (autoItems.length === 0) return userItems;
       return userItems.length > 0

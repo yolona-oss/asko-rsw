@@ -4,6 +4,7 @@ import {
   Badge,
   Card,
   ContextMenuArea,
+  buildCardMenuItems,
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
@@ -28,21 +29,22 @@ export function InvitationCard({
   const inactive = invitation.used || expired;
   const resolvedLink = link ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${invitation.token}`;
 
-  const menuItems: DropdownMenuEntry[] = [];
+  const customItems: DropdownMenuEntry[] = [];
   if (!inactive) {
-    menuItems.push({
+    customItems.push({
       key: 'copy',
       label: 'Копировать ссылку',
       onClick: () => navigator.clipboard.writeText(resolvedLink),
     });
   }
-  menuItems.push({
+  customItems.push({
     key: 'delete',
     label: 'Удалить',
     variant: 'danger',
     disabled: deleteLoading === invitation.id,
     onClick: () => onDelete(invitation.id),
   });
+  const menuItems = buildCardMenuItems(onClick, undefined, customItems);
 
   return (
     <ContextMenuArea items={menuItems}>

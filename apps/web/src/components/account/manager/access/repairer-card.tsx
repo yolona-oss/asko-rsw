@@ -4,6 +4,7 @@ import {
   Card,
   Badge,
   ContextMenuArea,
+  buildCardMenuItems,
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
@@ -23,7 +24,7 @@ export function RepairerCard({
   const { handleClick } = useClickHandlers(onClick);
 
   return (
-    <ContextMenuArea items={menuItems}>
+    <ContextMenuArea items={buildCardMenuItems(onClick, undefined, menuItems)}>
       <Card padding="none" className={`p-5 flex flex-col gap-3${onClick ? ' cursor-pointer' : ''}`} onClick={handleClick}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Badge, ContextMenuArea } from '@asko/ui';
+import { Card, Badge, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import type { RepairRequest } from './types';
@@ -17,7 +17,7 @@ export function RequestCard({ request, highlight, onClick, onDoubleClick }: {
 
   return (
     <ContextMenuArea
-      items={[]}
+      items={buildCardMenuItems(onClick, onDoubleClick)}
     >
       <Card padding="none" className={`p-5 flex flex-col gap-3 ${highlight ? 'ring-2 ring-brand-red' : ''}${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
         <div className="flex items-center justify-between gap-2">

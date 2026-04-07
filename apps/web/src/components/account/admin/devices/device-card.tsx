@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, ContextMenuArea } from '@asko/ui';
+import { Card, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { Device } from './types';
@@ -14,9 +14,10 @@ export function DeviceCard({ device, categoryLabels, onDelete, onClick, onDouble
 }) {
   const { handleClick, handleDoubleClick } = useClickHandlers(onClick, onDoubleClick);
 
-  const menuItems: DropdownMenuEntry[] = [
+  const customItems: DropdownMenuEntry[] = [
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => onDelete(device.id) },
   ];
+  const menuItems = buildCardMenuItems(onClick, onDoubleClick, customItems);
 
   return (
     <ContextMenuArea items={menuItems}>
