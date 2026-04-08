@@ -97,6 +97,7 @@ export function ManagerRequests() {
     {
       key: 'client',
       header: 'Клиент',
+      sortable: false,
       width: 180,
       mobileLabel: 'Клиент:',
       render: (req) => {
@@ -107,6 +108,7 @@ export function ManagerRequests() {
     {
       key: 'device',
       header: 'Устройство',
+      sortable: false,
       mobileLabel: 'Устройство:',
       width: 200,
       render: (req) => {
@@ -117,6 +119,7 @@ export function ManagerRequests() {
     {
       key: 'city',
       header: 'Город',
+      sortable: false,
       width: 120,
       mobileLabel: 'Город:',
       render: (req) => <p className="text-sm text-text-main">{req.address?.city ?? '-'}</p>,
@@ -138,6 +141,7 @@ export function ManagerRequests() {
     {
       key: 'chat',
       header: 'Чат',
+      sortable: false,
       width: 140,
       mobileLabel: 'Чат:',
       render: (req) => req.conversationId ? <ChatStatusBadges convInfo={convInfoMap[req.id]} currentUserId={currentUserId} /> : null,
@@ -145,6 +149,7 @@ export function ManagerRequests() {
     {
       key: 'date',
       header: 'Дата',
+      sortField: 'createdAt',
       width: 140,
       mobileLabel: 'Дата:',
       render: (req) => <p className="text-sm text-text-main">{formatDate(req.createdAt)}</p>,

@@ -119,6 +119,7 @@ export function AdminDevices() {
     {
       key: 'type',
       header: 'Тип',
+      sortable: false,
       mobileLabel: 'Тип:',
       render: (device) => <p className="text-sm text-text-main">{categoryLabels[device.type ?? ''] ?? device.type}</p>,
     },

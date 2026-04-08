@@ -88,6 +88,7 @@ export function UserPayments() {
     {
       key: 'id',
       header: 'ID',
+      sortable: false,
       width: 120,
       mobileLabel: 'ID:',
       render: (p) => <p className="text-sm text-text-sub font-mono truncate">{p.id.slice(0, 8)}</p>,
@@ -95,6 +96,7 @@ export function UserPayments() {
     {
       key: 'type',
       header: 'Тип',
+      sortable: false,
       mobileLabel: 'Тип:',
       render: (p) => (
         <p className="text-sm font-medium text-text-main">
@@ -123,6 +125,7 @@ export function UserPayments() {
     {
       key: 'date',
       header: 'Дата',
+      sortField: 'createdAt',
       width: 160,
       mobileLabel: 'Дата:',
       render: (p) => <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>,

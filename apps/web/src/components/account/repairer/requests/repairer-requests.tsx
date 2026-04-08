@@ -30,6 +30,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
     {
       key: 'client',
       header: 'Клиент',
+      sortable: false,
       width: 180,
       mobileLabel: 'Клиент:',
       render: (request) => {
@@ -40,6 +41,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
     {
       key: 'device',
       header: 'Устройство',
+      sortable: false,
       mobileLabel: 'Устройство:',
       render: (request) => {
         const deviceName = request.userDevice?.device?.name || request.description;
@@ -49,6 +51,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
     {
       key: 'city',
       header: 'Город',
+      sortable: false,
       width: 120,
       mobileLabel: 'Город:',
       render: (request) => (
@@ -69,6 +72,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
     {
       key: 'cost',
       header: 'Стоимость',
+      sortField: 'totalCost',
       width: 100,
       mobileLabel: 'Стоимость:',
       render: (request) => (
@@ -80,6 +84,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
     {
       key: 'date',
       header: 'Дата',
+      sortField: 'createdAt',
       width: 140,
       mobileLabel: 'Дата:',
       render: (request) => (

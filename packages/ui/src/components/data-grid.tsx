@@ -40,6 +40,8 @@ export interface DataGridColumn<T = any> {
   mobileLabel?: string;
   /** If false, this column cannot be sorted. Default: true */
   sortable?: boolean;
+  /** Field name sent to the API for sorting. Defaults to `key` if not set. */
+  sortField?: string;
 }
 
 // ─── Auto-sizing helpers ───────────────────────────────────────────────────
@@ -422,7 +424,7 @@ export function DataGrid<T>({
       >
         {visibleColumns.map((col, colIndex) => {
           const isSortable = onSort != null && col.sortable !== false;
-          const isSorted = sortKey === col.key;
+          const isSorted = sortKey === (col.sortField ?? col.key);
           const isLast = colIndex === visibleColumns.length - 1;
 
           return (
@@ -434,10 +436,11 @@ export function DataGrid<T>({
                 isSortable && 'cursor-pointer',
               )}
               onClick={isSortable ? () => {
-                if (sortKey !== col.key) {
-                  onSort(col.key, 'asc');
+                const field = col.sortField ?? col.key;
+                if (sortKey !== field) {
+                  onSort(field, 'asc');
                 } else if (sortOrder === 'asc') {
-                  onSort(col.key, 'desc');
+                  onSort(field, 'desc');
                 } else {
                   onSort(null, null);
                 }
@@ -578,8 +581,11 @@ export function DataGrid<T>({
           ctxMenu.columnKey != null &&
           columns.find((c) => c.key === ctxMenu.columnKey)?.sortable !== false;
 
+        const ctxCol = columns.find((c) => c.key === ctxMenu.columnKey);
+        const ctxSortField = ctxCol?.sortField ?? ctxMenu.columnKey;
+
         const { items: menuItems, aside: menuAside } = buildContextMenuItems(
-          ctxMenu.columnKey,
+          ctxSortField,
           columnSortable,
           sortKey,
           sortOrder,

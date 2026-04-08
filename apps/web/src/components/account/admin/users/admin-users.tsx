@@ -110,6 +110,7 @@ export function AdminUsers() {
     {
       key: 'user',
       header: 'Пользователь',
+      sortField: 'lastName',
       render: (user) => {
         const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
         return (
@@ -130,6 +131,7 @@ export function AdminUsers() {
     {
       key: 'role',
       header: 'Роль',
+      sortable: false,
       width: 90,
       mobileLabel: 'Роль:',
       render: (user) => (
@@ -141,6 +143,7 @@ export function AdminUsers() {
     {
       key: 'district',
       header: 'Район',
+      sortable: false,
       width: 150,
       mobileLabel: 'Район:',
       render: () => <p className="text-sm text-text-main tracking-[-0.14px]">-</p>,
@@ -148,6 +151,7 @@ export function AdminUsers() {
     {
       key: 'status',
       header: 'Статус',
+      sortField: 'isActive',
       width: 100,
       mobileLabel: 'Статус:',
       render: (user) => {

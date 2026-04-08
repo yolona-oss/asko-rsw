@@ -106,6 +106,7 @@ export function ManagerAccess() {
     {
       key: 'name',
       header: 'Имя',
+      sortable: false,
       width: 200,
       mobileLabel: 'Имя:',
       render: (rep) => (
@@ -120,6 +121,7 @@ export function ManagerAccess() {
     {
       key: 'email',
       header: 'Почта',
+      sortable: false,
       mobileLabel: 'Почта:',
       render: (rep) => <p className="text-sm text-text-main">{rep.user?.email ?? '-'}</p>,
     },
@@ -132,6 +134,7 @@ export function ManagerAccess() {
     {
       key: 'completed',
       header: 'Выполнено',
+      sortField: 'completedRepairs',
       width: 100,
       mobileLabel: 'Выполнено:',
       render: (rep) => <p className="text-sm text-text-main">{rep.completedRepairs}</p>,
@@ -139,6 +142,7 @@ export function ManagerAccess() {
     {
       key: 'location',
       header: 'Геопозиция',
+      sortable: false,
       width: 160,
       mobileLabel: 'Геопозиция:',
       render: (rep) => <p className="text-sm text-text-main">{formatDate(rep.lastLocationUpdate)}</p>,

@@ -28,6 +28,7 @@ const columns: DataGridColumn<any>[] = [
   {
     key: 'device',
     header: 'Устройство',
+    sortable: false,
     mobileLabel: 'Устройство:',
     render: (req) => (
       <p className="text-sm font-medium text-text-main truncate">
@@ -38,6 +39,7 @@ const columns: DataGridColumn<any>[] = [
   {
     key: 'description',
     header: 'Описание',
+    sortable: false,
     mobileLabel: 'Описание:',
     render: (req) => (
       <p className="text-sm text-text-main line-clamp-1">{req.description}</p>
@@ -60,6 +62,7 @@ const columns: DataGridColumn<any>[] = [
   {
     key: 'date',
     header: 'Дата',
+    sortField: 'updatedAt',
     width: 140,
     mobileLabel: 'Дата:',
     render: (req) => (

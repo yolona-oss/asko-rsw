@@ -103,6 +103,7 @@ export function AdminArticles() {
     {
       key: 'slug',
       header: 'Slug',
+      sortable: false,
       width: 192,
       mobileLabel: 'Slug:',
       render: (article) => <p className="text-sm text-text-sub">{article.slug}</p>,
@@ -110,6 +111,7 @@ export function AdminArticles() {
     {
       key: 'tags',
       header: 'Теги',
+      sortable: false,
       width: 192,
       multiline: true,
       mobileLabel: 'Теги:',

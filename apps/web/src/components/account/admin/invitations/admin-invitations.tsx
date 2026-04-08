@@ -180,6 +180,7 @@ export function AdminInvitations() {
     {
       key: 'status',
       header: 'Статус',
+      sortable: false,
       width: 130,
       mobileLabel: 'Статус:',
       render: (inv) => {

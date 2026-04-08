@@ -160,6 +160,7 @@ export function ManagerPayments() {
     {
       key: 'id',
       header: 'ID',
+      sortable: false,
       width: 80,
       mobileLabel: 'ID:',
       render: (p) => <span className="font-medium text-text-main text-sm">#{p.id.slice(0, 4)}</span>,
@@ -167,6 +168,7 @@ export function ManagerPayments() {
     {
       key: 'payer',
       header: 'Плательщик',
+      sortable: false,
       mobileLabel: 'Плательщик:',
       render: (p) => <span className="text-sm text-text-main">{payerName(p.user)}</span>,
     },
@@ -205,6 +207,7 @@ export function ManagerPayments() {
     {
       key: 'date',
       header: 'Дата платежа',
+      sortField: 'createdAt',
       width: 140,
       mobileLabel: 'Дата:',
       render: (p) => <span className="text-sm text-text-main">{formatDateFull(p.paidAt ?? p.createdAt)}</span>,

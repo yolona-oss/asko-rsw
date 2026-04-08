@@ -92,17 +92,17 @@ const PAYMENT_STATUS_FILTER = { key: 'status', label: 'Статус', type: 'sel
 // ─── Columns ───────────────────────────────────────────────────────────────
 
 const pointsColumns: DataGridColumn<IPointsTransaction>[] = [
-  { key: 'reason', header: 'Описание', mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
+  { key: 'reason', header: 'Описание', sortable: false, mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
   { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
-  { key: 'type', header: 'Тип', width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
-  { key: 'date', header: 'Дата', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDate(tx.createdAt)}</span> },
+  { key: 'type', header: 'Тип', sortable: false, width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
+  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDate(tx.createdAt)}</span> },
 ];
 
 const paymentColumns: DataGridColumn<PaymentRecord>[] = [
-  { key: 'type', header: 'Тип', mobileLabel: 'Тип:', render: (p) => <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span> },
+  { key: 'type', header: 'Тип', sortable: false, mobileLabel: 'Тип:', render: (p) => <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span> },
   { key: 'amount', header: 'Сумма', width: 140, mobileLabel: 'Сумма:', render: (p) => <span className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</span> },
   { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (p) => <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge> },
-  { key: 'date', header: 'Дата', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span> },
+  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span> },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────

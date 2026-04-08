@@ -72,6 +72,7 @@ export function UserRequests() {
     {
       key: 'device',
       header: 'Устройство',
+      sortable: false,
       width: 200,
       mobileLabel: 'Устройство:',
       render: (req) => (
@@ -81,6 +82,7 @@ export function UserRequests() {
     {
       key: 'description',
       header: 'Описание',
+      sortable: false,
       mobileLabel: 'Описание:',
       render: (req) => <p className="text-sm text-text-main truncate">{req.description}</p>,
     },
@@ -98,6 +100,7 @@ export function UserRequests() {
     {
       key: 'date',
       header: 'Дата',
+      sortField: 'createdAt',
       width: 120,
       mobileLabel: 'Дата:',
       render: (req) => <p className="text-sm text-text-main">{formatDate(req.createdAt)}</p>,

@@ -82,6 +82,7 @@ export function AdminCertificates() {
     {
       key: 'user',
       header: 'Пользователь',
+      sortable: false,
       mobileLabel: 'Пользователь:',
       width: 100,
       render: (cert) => {
@@ -92,6 +93,7 @@ export function AdminCertificates() {
     {
       key: 'device',
       header: 'Устройство',
+      sortable: false,
       mobileLabel: 'Устройство:',
       width: 150,
       render: (cert) => <p className="text-sm text-text-main">{cert.userDevice?.device?.name ?? '-'}</p>,
@@ -99,6 +101,7 @@ export function AdminCertificates() {
     {
       key: 'dealer',
       header: 'Дилер',
+      sortable: false,
       width: 150,
       mobileLabel: 'Дилер:',
       render: (cert) => {

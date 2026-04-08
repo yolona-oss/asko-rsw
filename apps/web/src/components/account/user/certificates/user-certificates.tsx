@@ -176,6 +176,7 @@ export function UserCertificates() {
     {
       key: 'number',
       header: 'Номер',
+      sortField: 'certificateNumber',
       width: 180,
       mobileLabel: 'Номер:',
       render: (cert) => <p className="text-sm font-medium text-text-main">{cert.certificateNumber}</p>,
@@ -183,6 +184,7 @@ export function UserCertificates() {
     {
       key: 'device',
       header: 'Устройство',
+      sortable: false,
       mobileLabel: 'Устройство:',
       render: (cert) => {
         const device = cert.userDevice?.device;
