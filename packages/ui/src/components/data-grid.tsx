@@ -182,6 +182,7 @@ const sortDescSvg = <ChevronDown className="w-4 h-4 shrink-0" />;
 
 function buildContextMenuItems(
   columnKey: string | null,
+  sortField: string | null,
   columnSortable: boolean,
   sortKey: string | undefined,
   sortOrder: SortOrder | undefined,
@@ -195,20 +196,20 @@ function buildContextMenuItems(
 ): { items: DropdownMenuEntry[]; aside: DropdownMenuEntry[] } {
   const items: DropdownMenuEntry[] = [];
 
-  if (columnKey && columnSortable) {
+  if (sortField && columnSortable) {
     items.push({
       key: 'sort-asc',
       label: 'По возрастанию',
       icon: sortAscSvg,
-      active: sortKey === columnKey && sortOrder === 'asc',
-      onClick: () => handlers.onSort(columnKey, 'asc'),
+      active: sortKey === sortField && sortOrder === 'asc',
+      onClick: () => handlers.onSort(sortField, 'asc'),
     });
     items.push({
       key: 'sort-desc',
       label: 'По убыванию',
       icon: sortDescSvg,
-      active: sortKey === columnKey && sortOrder === 'desc',
-      onClick: () => handlers.onSort(columnKey, 'desc'),
+      active: sortKey === sortField && sortOrder === 'desc',
+      onClick: () => handlers.onSort(sortField, 'desc'),
     });
   }
 
@@ -585,6 +586,7 @@ export function DataGrid<T>({
         const ctxSortField = ctxCol?.sortField ?? ctxMenu.columnKey;
 
         const { items: menuItems, aside: menuAside } = buildContextMenuItems(
+          ctxMenu.columnKey,
           ctxSortField,
           columnSortable,
           sortKey,
