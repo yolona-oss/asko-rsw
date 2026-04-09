@@ -3236,7 +3236,11 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         LoginCredentials: Record<string, never>;
-        AuthSessionResponseDto: Record<string, never>;
+        AuthSessionResponseDto: {
+            access_token: string;
+            user: components["schemas"]["AuthUserDto"];
+            refresh_token?: string;
+        };
         CreateUserDto: Record<string, never>;
         ConfirmMailDto: Record<string, never>;
         ConfirmEmailResponseDto: Record<string, never>;
@@ -3252,7 +3256,18 @@ export interface components {
         DisableMfaDto: Record<string, never>;
         VerifyPhoneRegisterDto: Record<string, never>;
         ResendPhoneRegisterOtpDto: Record<string, never>;
-        AuthUserDto: Record<string, never>;
+        AuthUserDto: {
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: string[];
+            roles: string[];
+            createdAt: string;
+            updatedAt: string;
+        };
         OAuthLinkRecordDto: {
             id: string;
             userId: string;
@@ -3267,7 +3282,15 @@ export interface components {
         };
         CreateInvitationLinkDto: Record<string, never>;
         InviteCreatedResponseDto: Record<string, never>;
-        InviteLinkResponseDto: Record<string, never>;
+        InviteLinkResponseDto: {
+            id: string;
+            token: string;
+            role: string;
+            ttl: number;
+            used: boolean;
+            expiresAt: string;
+            createdAt: string;
+        };
         CreateArticleDto: Record<string, never>;
         ArticleResponseDto: {
             id: string;
@@ -3330,7 +3353,7 @@ export interface components {
         ArticleViewResponseDto: {
             message: string;
         };
-        UserResponseDto: {
+        UserResponseDto: components["schemas"]["AuthUserDto"] & {
             emailVerified?: boolean;
             phoneVerified?: boolean;
         };
