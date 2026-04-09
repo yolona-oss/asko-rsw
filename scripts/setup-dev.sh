@@ -34,7 +34,6 @@ DB_USER="almagest_root"
 DB_PASS="almagest_root"
 
 DATABASES=(
-  "asko_rws_misc_db"
   "asko_rws_users_db"
   "asko_rws_payment_db"
   "asko_rws_files_db"
@@ -62,7 +61,8 @@ done
 echo ""
 echo "=== Building shared packages ==="
 pnpm --filter @asko/shared run build
-pnpm --filter @asko/proto run build
+pnpm --filter @asko/observability run build
+pnpm --filter @asko/gateway-common run build
 pnpm --filter @asko/ui run build
 
 # ── 5. Run migrations ──
@@ -76,7 +76,6 @@ run_migration() {
   (cd "apps/$service" && NODE_ENV=dev npx mikro-orm migration:up 2>/dev/null) || echo "    (no pending migrations or migration failed - check manually)"
 }
 
-run_migration "api"
 run_migration "user-service"
 run_migration "payment-service"
 run_migration "file-service"
@@ -89,15 +88,21 @@ echo ""
 echo "=== Dev setup complete ==="
 echo ""
 echo "Services:"
-echo "  user-service       -> localhost:5000"
-echo "  payment-service    -> localhost:5001"
-echo "  file-service       -> localhost:5002"
-echo "  repair-service     -> localhost:5003"
+echo "  user-service         -> localhost:5000"
+echo "  payment-service      -> localhost:5001"
+echo "  file-service         -> localhost:5002"
+echo "  repair-service       -> localhost:5003"
 echo "  notification-service -> localhost:5004"
-echo "  chat-service       -> localhost:5005"
-echo "  content-service    -> localhost:5010"
-echo "  api                -> localhost:4000"
-echo "  web                -> localhost:3000"
+echo "  chat-service         -> localhost:5005"
+echo "  content-service      -> localhost:5010"
+echo "Gateways:"
+echo "  auth-gateway         -> localhost:4001"
+echo "  repair-gateway       -> localhost:4002"
+echo "  media-gateway        -> localhost:4003"
+echo "  realtime-gateway     -> localhost:4004"
+echo "  content-gateway      -> localhost:4005"
+echo "Frontend:"
+echo "  web                  -> localhost:3000"
 echo ""
 echo "Start all services:  ./scripts/dev.sh"
 echo "Start web only:      cd apps/web && pnpm run dev"

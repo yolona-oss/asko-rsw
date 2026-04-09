@@ -83,6 +83,9 @@ function messageToRecord(entity: Message) {
         text: entity.text ?? '',
         attachmentJson: entity.attachmentJson ? JSON.stringify(entity.attachmentJson) : '',
         isEdited: entity.isEdited,
+        status: entity.status ?? '',
+        deliveredAt: entity.deliveredAt?.toISOString() ?? '',
+        readAt: entity.readAt?.toISOString() ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
     };

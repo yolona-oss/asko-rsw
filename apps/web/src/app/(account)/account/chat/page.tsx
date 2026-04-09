@@ -4,15 +4,13 @@ import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from '@/components/account/layout/provider';
 import { SkeletonBlock } from '@/components/skeleton';
-import { PageHeader } from '@/components/account/layout/page-header';
 
 const ChatLayout = lazy(() => import('@/components/chat/chat-layout').then(m => ({ default: m.ChatLayout })));
 
 function ChatSkeleton() {
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-initial lg:p-8 lg:gap-8">
-      <SkeletonBlock className="h-8 w-32 hidden lg:block" />
-      <SkeletonBlock className="flex-1 lg:flex-none lg:h-[calc(100vh-180px)] w-full" />
+    <div className="flex-1 min-h-0 flex flex-col lg:p-8">
+      <SkeletonBlock className="flex-1 w-full" />
     </div>
   );
 }
@@ -25,7 +23,7 @@ function ChatPageInner() {
   if (!user) return null;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-initial lg:p-8 lg:gap-8">
+    <div className="flex-1 min-h-0 flex flex-col lg:p-8">
       <ChatLayout currentUserId={user.id} initialConversationId={initialConversationId} />
     </div>
   );
@@ -34,7 +32,6 @@ function ChatPageInner() {
 export default function ChatPage() {
   return (
     <Suspense fallback={<ChatSkeleton />}>
-      <PageHeader className="opacity-0">pu pu pu</PageHeader>
       <ChatPageInner />
     </Suspense>
   );
