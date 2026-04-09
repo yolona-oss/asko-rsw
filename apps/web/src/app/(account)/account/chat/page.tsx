@@ -9,7 +9,7 @@ const ChatLayout = lazy(() => import('@/components/chat/chat-layout').then(m => 
 
 function ChatSkeleton() {
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:p-8">
+    <div className="flex-1 min-h-0 flex flex-col lg:px-8 lg:pb-8 lg:pt-[72px]">
       <SkeletonBlock className="flex-1 w-full" />
     </div>
   );
@@ -23,7 +23,7 @@ function ChatPageInner() {
   if (!user) return null;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:p-8">
+    <div className="flex-1 min-h-0 flex flex-col lg:px-8 lg:pb-8 lg:pt-[72px]">
       <ChatLayout currentUserId={user.id} initialConversationId={initialConversationId} />
     </div>
   );
