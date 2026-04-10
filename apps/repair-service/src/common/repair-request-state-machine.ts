@@ -25,7 +25,7 @@ export const REPAIR_ACTION_TRANSITIONS = {
     refuse: { from: [S.ASSIGNED] as readonly Status[], to: S.PAID },
     denyRefund: { from: [S.REFUND_REQUESTED] as readonly Status[], to: S.PAID },
     resume: { from: [S.PAUSED] as readonly Status[] },
-    reassign: { from: [S.ACCEPTED, S.PAUSED] as readonly Status[], to: S.ASSIGNED },
+    reassign: { from: [S.ASSIGNED, S.ACCEPTED, S.PAUSED, S.REFUSED] as readonly Status[], to: S.ASSIGNED },
 } as const;
 
 export function canTransition(currentStatus: Status, targetStatus: Status): boolean {
