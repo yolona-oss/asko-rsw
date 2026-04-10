@@ -1,14 +1,32 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class InviteLinkResponseDto {
-    id: string;
-    token: string;
-    role: string;
-    ttl: number;
-    used: boolean;
-    expiresAt: string;
-    createdAt: string;
+    @ApiProperty()
+    id!: string;
+
+    @ApiProperty()
+    token!: string;
+
+    @ApiProperty()
+    role!: string;
+
+    @ApiProperty()
+    ttl!: number;
+
+    @ApiProperty()
+    used!: boolean;
+
+    @ApiProperty()
+    expiresAt!: string;
+
+    @ApiProperty()
+    createdAt!: string;
 }
 
 export class InviteCreatedResponseDto {
-    invite: InviteLinkResponseDto;
-    link: string;
+    @ApiProperty({ type: () => InviteLinkResponseDto })
+    invite!: InviteLinkResponseDto;
+
+    @ApiProperty()
+    link!: string;
 }

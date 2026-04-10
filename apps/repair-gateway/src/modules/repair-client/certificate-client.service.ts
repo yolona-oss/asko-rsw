@@ -87,6 +87,22 @@ export class CertificateClientService implements OnModuleInit {
         return grpcCall(this.certificateService.reassignCertificate({ userId, certId, userDeviceId }));
     }
 
+    reapplyCertificate(userId: string, sourceCertId: string, dto: {
+        durationMonths: number;
+        description?: string;
+    }): Promise<CertificateResponse> {
+        return grpcCall(this.certificateService.reapplyCertificate({
+            userId,
+            sourceCertId,
+            durationMonths: dto.durationMonths,
+            description: dto.description ?? '',
+        }));
+    }
+
+    dismissExpiryReminder(userId: string, certId: string): Promise<CertificateResponse> {
+        return grpcCall(this.certificateService.dismissExpiryReminder({ userId, certId }));
+    }
+
     // ─── Price ─────────────────────────────────────────────────────────────
 
     calculatePrice(userDeviceId: string, expiresAt: string): Promise<CertPriceResponse> {

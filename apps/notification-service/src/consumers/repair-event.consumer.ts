@@ -156,4 +156,53 @@ export class RepairEventConsumer {
         console.log('[RepairEventConsumer] repair.diagnostics_approved', JSON.stringify(data));
         channel.ack(msg);
     }
+
+    @EventPattern('certificate.expiring_soon')
+    async handleCertificateExpiringSoon(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const days = Number(data.daysUntilExpiry ?? 0);
+        const shortNumber = String(data.certificateNumber ?? '').slice(0, 12);
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.CERTIFICATE_EXPIRING_SOON,
+                'Сертификат скоро истечёт',
+                `Сертификат №${shortNumber} истекает через ${days} ${days === 1 ? 'день' : 'дней'}. Продлите его, чтобы сохранить защиту устройства.`,
+                NotificationTargetType.CERTIFICATE,
+                data.certificateId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] certificate.expiring_soon error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('certificate.expired')
+    async handleCertificateExpired(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const shortNumber = String(data.certificateNumber ?? '').slice(0, 12);
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.CERTIFICATE_EXPIRED,
+                'Сертификат истёк',
+                `Сертификат №${shortNumber} истёк. Вы можете оформить новый сертификат для этого устройства в любое время.`,
+                NotificationTargetType.CERTIFICATE,
+                data.certificateId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] certificate.expired error:', e);
+            channel.ack(msg);
+        }
+    }
 }

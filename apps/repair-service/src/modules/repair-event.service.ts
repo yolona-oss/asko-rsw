@@ -12,6 +12,19 @@ export enum RepairEventType {
     SCHEDULE_UPDATED = 'schedule.updated',
     SCHEDULE_APPROVED = 'schedule.approved',
     SCHEDULE_REJECTED = 'schedule.rejected',
+    CERTIFICATE_EXPIRING_SOON = 'certificate.expiring_soon',
+    CERTIFICATE_EXPIRED = 'certificate.expired',
+}
+
+export interface CertificateEvent {
+    type: RepairEventType.CERTIFICATE_EXPIRING_SOON | RepairEventType.CERTIFICATE_EXPIRED;
+    certificateId: string;
+    certificateNumber: string;
+    userId: string;
+    userDeviceId: string;
+    expiresAt: string;
+    daysUntilExpiry: number;
+    timestamp: Date;
 }
 
 export interface RepairEvent {
@@ -59,6 +72,11 @@ export class RepairEventService implements OnModuleInit {
 
     async emitScheduleEvent(event: ScheduleEvent): Promise<void> {
         console.log(`[ScheduleEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
+    }
+
+    async emitCertificateEvent(event: CertificateEvent): Promise<void> {
+        console.log(`[CertificateEvent] ${event.type}`, JSON.stringify(event));
         this.rmqClient.emit(event.type, event);
     }
 }

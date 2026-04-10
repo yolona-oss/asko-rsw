@@ -1,26 +1,54 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 export class AuthUserDto {
-    id: string;
+    @ApiProperty()
+    id!: string;
+
+    @ApiPropertyOptional()
     firstName?: string;
+
+    @ApiPropertyOptional()
     lastName?: string;
+
+    @ApiPropertyOptional()
     email?: string;
+
+    @ApiPropertyOptional()
     phone?: string;
+
+    @ApiPropertyOptional()
     googleId?: string;
-    providers: string[];
-    roles: string[];
-    createdAt: string;
-    updatedAt: string;
+
+    @ApiProperty({ type: [String] })
+    providers!: string[];
+
+    @ApiProperty({ type: [String] })
+    roles!: string[];
+
+    @ApiProperty()
+    createdAt!: string;
+
+    @ApiProperty()
+    updatedAt!: string;
 }
 
 export class AuthSessionResponseDto {
-    access_token: string;
-    user: AuthUserDto;
+    @ApiProperty()
+    access_token!: string;
+
+    @ApiProperty({ type: () => AuthUserDto })
+    user!: AuthUserDto;
+
+    @ApiPropertyOptional()
     refresh_token?: string;
 }
 
 export class AccessTokenResponseDto {
-    access_token: string;
+    @ApiProperty()
+    access_token!: string;
 }
 
 export class ConfirmEmailResponseDto {
-    message: string;
+    @ApiProperty()
+    message!: string;
 }

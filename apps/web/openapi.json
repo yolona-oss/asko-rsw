@@ -5298,6 +5298,38 @@
         ]
       }
     },
+    "/certificates/self-create": {
+      "post": {
+        "operationId": "CertificateController_selfCreate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelfCreateCertificateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User self-creates a certificate for one of their devices (PENDING_PAYMENT + invoice)",
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
     "/certificates/{id}/reassign": {
       "post": {
         "operationId": "CertificateController_reassign",
@@ -5334,6 +5366,88 @@
           }
         },
         "summary": "Reassign certificate to different device",
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/reapply": {
+      "post": {
+        "operationId": "CertificateController_reapply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReapplyCertificateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User reapplies (renews) an expired / near-expiry certificate",
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/dismiss-reminder": {
+      "post": {
+        "operationId": "CertificateController_dismissReminder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User dismisses the \"expiring soon\" reminder for a certificate",
         "tags": [
           "Certificates"
         ]
@@ -7090,9 +7204,71 @@
         "type": "object",
         "properties": {}
       },
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "googleId": {
+            "type": "string"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "providers",
+          "roles",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "AuthSessionResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "user"
+        ]
       },
       "CreateUserDto": {
         "type": "object",
@@ -7104,7 +7280,14 @@
       },
       "ConfirmEmailResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
       },
       "ResendConfirmMailDto": {
         "type": "object",
@@ -7112,11 +7295,25 @@
       },
       "MessageResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
       },
       "AccessTokenResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "access_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token"
+        ]
       },
       "EmptyResponseDto": {
         "type": "object",
@@ -7151,10 +7348,6 @@
         "properties": {}
       },
       "ResendPhoneRegisterOtpDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "AuthUserDto": {
         "type": "object",
         "properties": {}
       },
@@ -7211,13 +7404,55 @@
         "type": "object",
         "properties": {}
       },
-      "InviteCreatedResponseDto": {
-        "type": "object",
-        "properties": {}
-      },
       "InviteLinkResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "ttl": {
+            "type": "number"
+          },
+          "used": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "role",
+          "ttl",
+          "used",
+          "expiresAt",
+          "createdAt"
+        ]
+      },
+      "InviteCreatedResponseDto": {
+        "type": "object",
+        "properties": {
+          "invite": {
+            "$ref": "#/components/schemas/InviteLinkResponseDto"
+          },
+          "link": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "invite",
+          "link"
+        ]
       },
       "CreateArticleDto": {
         "type": "object",
@@ -7276,7 +7511,18 @@
       },
       "DeleteCountResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "message",
+          "count"
+        ]
       },
       "CloudinaryImageDto": {
         "type": "object",
@@ -7465,13 +7711,56 @@
       "UserResponseDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "googleId": {
+            "type": "string"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
           "emailVerified": {
             "type": "boolean"
           },
           "phoneVerified": {
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "id",
+          "providers",
+          "roles",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "PaginatedUsersResponseDto": {
         "type": "object",
@@ -8028,6 +8317,9 @@
           "declinedByRepairerId": {
             "type": "string"
           },
+          "completedByRepairerId": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -8517,16 +8809,13 @@
           "refuseReason": {
             "type": "string"
           },
-          "rejectedRepairers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "completionNote": {
             "type": "string"
           },
           "stepsLocked": {
+            "type": "boolean"
+          },
+          "certificateValid": {
             "type": "boolean"
           },
           "completionSignature": {
@@ -9015,7 +9304,15 @@
         "type": "object",
         "properties": {}
       },
+      "SelfCreateCertificateDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AssignCertificateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReapplyCertificateDto": {
         "type": "object",
         "properties": {}
       },

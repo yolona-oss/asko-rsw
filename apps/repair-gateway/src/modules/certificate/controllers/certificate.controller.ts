@@ -11,6 +11,7 @@ import {
     CreateCertificateDto,
     SelfCreateCertificateDto,
     AssignCertificateDto,
+    ReapplyCertificateDto,
     CertificateStatus,
     PaginationDto,
     ALL_ROLES,
@@ -161,6 +162,32 @@ export class CertificateController {
         @Body() dto: AssignCertificateDto,
     ) {
         return this.certificateClient.reassignCertificate(user.sub, id, dto.userDeviceId);
+    }
+
+    /** User reapplies (renews) an expired / near-expiry certificate */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/reapply')
+    async reapply(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Body() dto: ReapplyCertificateDto,
+    ) {
+        return this.certificateClient.reapplyCertificate(user.sub, id, {
+            durationMonths: dto.durationMonths,
+            description: dto.description,
+        });
+    }
+
+    /** User dismisses the "expiring soon" reminder for a certificate */
+    @ApiOkResponse({ type: CertificateResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/dismiss-reminder')
+    async dismissReminder(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+    ) {
+        return this.certificateClient.dismissExpiryReminder(user.sub, id);
     }
 
     /** Admin revokes a certificate */

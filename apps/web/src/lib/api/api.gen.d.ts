@@ -2438,6 +2438,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/certificates/self-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** User self-creates a certificate for one of their devices (PENDING_PAYMENT + invoice) */
+        post: operations["CertificateController_selfCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/certificates/{id}/reassign": {
         parameters: {
             query?: never;
@@ -2449,6 +2466,40 @@ export interface paths {
         put?: never;
         /** Reassign certificate to different device */
         post: operations["CertificateController_reassign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}/reapply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** User reapplies (renews) an expired / near-expiry certificate */
+        post: operations["CertificateController_reapply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}/dismiss-reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** User dismisses the "expiring soon" reminder for a certificate */
+        post: operations["CertificateController_dismissReminder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3268,13 +3319,35 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         LoginCredentials: Record<string, never>;
-        AuthSessionResponseDto: Record<string, never>;
+        AuthUserDto: {
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: string[];
+            roles: string[];
+            createdAt: string;
+            updatedAt: string;
+        };
+        AuthSessionResponseDto: {
+            access_token: string;
+            user: components["schemas"]["AuthUserDto"];
+            refresh_token?: string;
+        };
         CreateUserDto: Record<string, never>;
         ConfirmMailDto: Record<string, never>;
-        ConfirmEmailResponseDto: Record<string, never>;
+        ConfirmEmailResponseDto: {
+            message: string;
+        };
         ResendConfirmMailDto: Record<string, never>;
-        MessageResponseDto: Record<string, never>;
-        AccessTokenResponseDto: Record<string, never>;
+        MessageResponseDto: {
+            message: string;
+        };
+        AccessTokenResponseDto: {
+            access_token: string;
+        };
         EmptyResponseDto: Record<string, never>;
         ForgotPasswordDto: Record<string, never>;
         ResetPasswordDto: Record<string, never>;
@@ -3284,7 +3357,6 @@ export interface components {
         DisableMfaDto: Record<string, never>;
         VerifyPhoneRegisterDto: Record<string, never>;
         ResendPhoneRegisterOtpDto: Record<string, never>;
-        AuthUserDto: Record<string, never>;
         OAuthLinkRecordDto: {
             id: string;
             userId: string;
@@ -3298,8 +3370,19 @@ export interface components {
             links: components["schemas"]["OAuthLinkRecordDto"][];
         };
         CreateInvitationLinkDto: Record<string, never>;
-        InviteCreatedResponseDto: Record<string, never>;
-        InviteLinkResponseDto: Record<string, never>;
+        InviteLinkResponseDto: {
+            id: string;
+            token: string;
+            role: string;
+            ttl: number;
+            used: boolean;
+            expiresAt: string;
+            createdAt: string;
+        };
+        InviteCreatedResponseDto: {
+            invite: components["schemas"]["InviteLinkResponseDto"];
+            link: string;
+        };
         CreateArticleDto: Record<string, never>;
         ArticleResponseDto: {
             id: string;
@@ -3314,7 +3397,10 @@ export interface components {
             updatedAt: string;
         };
         UpdateArticleDto: Record<string, never>;
-        DeleteCountResponseDto: Record<string, never>;
+        DeleteCountResponseDto: {
+            message: string;
+            count: number;
+        };
         CloudinaryImageDto: {
             public_id: string;
             version: number;
@@ -3363,6 +3449,16 @@ export interface components {
             message: string;
         };
         UserResponseDto: {
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: string[];
+            roles: string[];
+            createdAt: string;
+            updatedAt: string;
             emailVerified?: boolean;
             phoneVerified?: boolean;
         };
@@ -3512,6 +3608,7 @@ export interface components {
             isMandatory: boolean;
             declinedAt?: string;
             declinedByRepairerId?: string;
+            completedByRepairerId?: string;
             createdAt: string;
             updatedAt: string;
         };
@@ -3648,9 +3745,9 @@ export interface components {
             refundRequested: boolean;
             refundReason?: string;
             refuseReason?: string;
-            rejectedRepairers?: string[];
             completionNote?: string;
             stepsLocked: boolean;
+            certificateValid?: boolean;
             completionSignature?: string;
             completionSignedPayload?: string;
             acceptanceSignature?: string;
@@ -3774,7 +3871,9 @@ export interface components {
             certificate: components["schemas"]["CertificateRecordDto"];
         };
         CreateCertificateDto: Record<string, never>;
+        SelfCreateCertificateDto: Record<string, never>;
         AssignCertificateDto: Record<string, never>;
+        ReapplyCertificateDto: Record<string, never>;
         CertPriceResponseDto: {
             price: number;
         };
@@ -7832,6 +7931,29 @@ export interface operations {
             };
         };
     };
+    CertificateController_selfCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfCreateCertificateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateResponseDto"];
+                };
+            };
+        };
+    };
     CertificateController_reassign: {
         parameters: {
             query?: never;
@@ -7853,6 +7975,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CertificateResponseDto"];
+                };
+            };
+        };
+    };
+    CertificateController_reapply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReapplyCertificateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateResponseDto"];
+                };
+            };
+        };
+    };
+    CertificateController_dismissReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

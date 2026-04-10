@@ -393,6 +393,18 @@ export interface CertReassignRequest {
     userDeviceId: string;
 }
 
+export interface CertReapplyRequest {
+    userId: string;
+    sourceCertId: string;
+    durationMonths: number;
+    description: string;
+}
+
+export interface CertDismissReminderRequest {
+    userId: string;
+    certId: string;
+}
+
 export interface CertCalculatePriceRequest {
     userDeviceId: string;
     expiresAt: string;
@@ -466,6 +478,8 @@ export interface CertificateServiceClient {
     markPaid(request: CertMarkPaidRequest): Observable<CertificateResponse>;
     revokeCertificate(request: CertRevokeRequest): Observable<CertificateResponse>;
     reassignCertificate(request: CertReassignRequest): Observable<CertificateResponse>;
+    reapplyCertificate(request: CertReapplyRequest): Observable<CertificateResponse>;
+    dismissExpiryReminder(request: CertDismissReminderRequest): Observable<CertificateResponse>;
     calculatePrice(request: CertCalculatePriceRequest): Observable<CertPriceResponse>;
     findById(request: CertFindByIdRequest): Observable<CertificateResponse>;
     findByUser(request: CertFindByUserRequest): Observable<CertificateListResponse>;

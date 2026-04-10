@@ -869,6 +869,54 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
+        },
+        "expiry_reminder_sent": {
+          "name": "expiry_reminder_sent",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "expiry_reminder_dismissed": {
+          "name": "expiry_reminder_dismissed",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "replaced_certificate_id": {
+          "name": "replaced_certificate_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "certificate",
@@ -882,6 +930,17 @@
           "constraint": true,
           "keyName": "certificate_certificate_number_unique",
           "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "expires_at",
+            "status"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "certificate_expires_at_status_index",
+          "unique": false,
           "primary": false
         },
         {
@@ -904,6 +963,19 @@
           "constraintName": "certificate_dealer_id_foreign",
           "localTableName": "public.certificate",
           "referencedTableName": "public.dealer_profile",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "certificate_replaced_certificate_id_foreign": {
+          "columnNames": [
+            "replaced_certificate_id"
+          ],
+          "constraintName": "certificate_replaced_certificate_id_foreign",
+          "localTableName": "public.certificate",
+          "referencedTableName": "public.certificate",
           "referencedColumnNames": [
             "id"
           ],
@@ -2875,22 +2947,6 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "rejected_repairers": {
-          "name": "rejected_repairers",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "json"
-        },
         "completion_note": {
           "name": "completion_note",
           "type": "text",
@@ -3066,6 +3122,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "certificate_valid": {
+          "name": "certificate_valid",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "repair_request",
@@ -4207,6 +4279,22 @@
         },
         "declined_by_repairer_id": {
           "name": "declined_by_repairer_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "completed_by_repairer_id": {
+          "name": "completed_by_repairer_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,

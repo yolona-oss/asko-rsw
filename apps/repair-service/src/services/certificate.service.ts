@@ -10,6 +10,7 @@ import {
     PaymentTargetType,
     PointsTransactionType,
     RepairRequestStatus,
+    computeExpiresAt,
     generateCertificateNumber,
 } from '@asko/shared';
 import { PointsTransaction } from 'entities/points-transaction.entity';
@@ -196,10 +197,12 @@ export class CertificateService {
         return cert;
     }
 
-    /** Mark certificate as paid -> ACTIVE. Also award dealer points if applicable. */
+    /** Mark certificate as paid -> ACTIVE. Also award dealer points if applicable.
+     *  If this cert replaces a prior one (reapply flow), the prior cert is
+     *  transactionally flipped to EXPIRED in the same flush. */
     @CreateRequestContext()
     async markPaid(id: string): Promise<Certificate> {
-        const cert = await this.em.findOne(Certificate, { id }, { populate: ['dealer'] });
+        const cert = await this.em.findOne(Certificate, { id }, { populate: ['dealer', 'replacedCertificate'] });
         if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
         if (cert.status !== CertificateStatus.PENDING_PAYMENT) {
             throw AppErrors.badRequest('Certificate is not pending payment');
@@ -207,6 +210,13 @@ export class CertificateService {
 
         cert.status = CertificateStatus.ACTIVE;
         cert.paid = true;
+
+        if (cert.replacedCertificate && typeof cert.replacedCertificate === 'object') {
+            const prior = cert.replacedCertificate;
+            if (prior.status === CertificateStatus.ACTIVE) {
+                prior.status = CertificateStatus.EXPIRED;
+            }
+        }
 
         // Sign certificate data
         const userDeviceId = typeof cert.userDevice === 'object' ? cert.userDevice.id : String(cert.userDevice);
@@ -264,6 +274,95 @@ export class CertificateService {
             req.certificateValid = true;
         }
 
+        await this.em.flush();
+        return cert;
+    }
+
+    /**
+     * User reapplies (renews) a certificate for the same device.
+     *
+     * Rather than mutating the source cert's expiresAt (which would force
+     * re-signing a mutable row and make pricing awkward), we create a brand-new
+     * PENDING_PAYMENT cert that references the source via replacedCertificate FK.
+     * On markPaid() of the new cert we transactionally flip the source cert
+     * from ACTIVE to EXPIRED.
+     *
+     * Guards (in order):
+     *   - source cert exists and belongs to caller
+     *   - source cert is not REVOKED
+     *   - timing: source is EXPIRED (any time), OR ACTIVE within 30d of expiry
+     *   - no open PENDING_PAYMENT reapply already exists for the same device
+     */
+    @CreateRequestContext()
+    async reapplyCertificate(userId: string, sourceCertId: string, dto: {
+        durationMonths: number;
+        description?: string;
+    }): Promise<Certificate> {
+        const source = await this.em.findOne(Certificate, { id: sourceCertId }, {
+            populate: ['userDevice', 'userDevice.device'],
+        });
+        if (!source) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (source.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (source.status === CertificateStatus.REVOKED) {
+            throw AppErrors.badRequest('Cannot reapply a revoked certificate');
+        }
+
+        const now = new Date();
+        const isExpired = source.status === CertificateStatus.EXPIRED || now >= source.expiresAt;
+        if (!isExpired) {
+            const reapplyWindowStart = new Date(source.expiresAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+            if (now < reapplyWindowStart) {
+                throw AppErrors.badRequest('Certificate can only be reapplied within 30 days of expiry');
+            }
+        }
+
+        const userDevice = typeof source.userDevice === 'object' ? source.userDevice : null;
+        if (!userDevice) throw AppErrors.badRequest('Source certificate has no device');
+
+        const pendingForDevice = await this.em.findOne(Certificate, {
+            userDevice: userDevice.id,
+            status: CertificateStatus.PENDING_PAYMENT,
+        });
+        if (pendingForDevice) {
+            throw AppErrors.dbEntityExists('A pending certificate already exists for this device');
+        }
+
+        const certNumber = generateCertificateNumber();
+        const expiresAt = computeExpiresAt(dto.durationMonths);
+        const years = Math.max(1, Math.ceil(dto.durationMonths / 12));
+        const price = calculateCertificatePrice(userDevice.device.price ?? 0, years);
+
+        const cert = this.em.create(Certificate, {
+            userId,
+            userDevice,
+            certificateNumber: certNumber,
+            expiresAt,
+            price,
+            status: CertificateStatus.PENDING_PAYMENT,
+            description: dto.description,
+            replacedCertificate: source,
+        });
+        await this.em.persistAndFlush(cert);
+
+        await this.paymentCommandService.emitCreateInvoice(
+            userId,
+            PaymentTargetType.CERTIFICATE,
+            cert.id,
+            price,
+        );
+
+        return cert;
+    }
+
+    /** User dismisses the "expiring soon" reminder for a certificate. Does not
+     *  expire the cert — just stops the cron from nagging again. */
+    @CreateRequestContext()
+    async dismissExpiryReminder(userId: string, certId: string): Promise<Certificate> {
+        const cert = await this.em.findOne(Certificate, { id: certId });
+        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (cert.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+
+        cert.expiryReminderDismissed = true;
         await this.em.flush();
         return cert;
     }

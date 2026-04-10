@@ -54,6 +54,8 @@ service CertificateService {
     rpc MarkPaid(CertMarkPaidRequest) returns (CertificateResponse);
     rpc RevokeCertificate(CertRevokeRequest) returns (CertificateResponse);
     rpc ReassignCertificate(CertReassignRequest) returns (CertificateResponse);
+    rpc ReapplyCertificate(CertReapplyRequest) returns (CertificateResponse);
+    rpc DismissExpiryReminder(CertDismissReminderRequest) returns (CertificateResponse);
     rpc CalculatePrice(CertCalculatePriceRequest) returns (CertPriceResponse);
     rpc FindById(CertFindByIdRequest) returns (CertificateResponse);
     rpc FindByUser(CertFindByUserRequest) returns (CertificateListResponse);
@@ -484,6 +486,18 @@ message CertReassignRequest {
     string userId = 1;
     string certId = 2;
     string userDeviceId = 3;
+}
+
+message CertReapplyRequest {
+    string userId = 1;
+    string sourceCertId = 2;
+    int32 durationMonths = 3;
+    string description = 4;
+}
+
+message CertDismissReminderRequest {
+    string userId = 1;
+    string certId = 2;
 }
 
 message CertCalculatePriceRequest {

@@ -83,3 +83,15 @@ export class AssignCertificateDto {
     @IsString()
     userDeviceId!: string;
 }
+
+/** User reapplies a certificate (renew/extend). Creates a new PENDING_PAYMENT cert
+ *  pointing at the source cert via replacedCertificateId. Same device, new duration. */
+export class ReapplyCertificateDto {
+    @IsInt()
+    @IsIn(CERTIFICATE_DURATION_OPTIONS as unknown as number[])
+    durationMonths!: number;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
+}

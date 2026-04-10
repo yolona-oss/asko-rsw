@@ -10,6 +10,8 @@ export enum NotificationType {
     PAYMENT_FAILED = 'payment_failed',
     PAYMENT_REFUNDED = 'payment_refunded',
     CERTIFICATE_ISSUED = 'certificate_issued',
+    CERTIFICATE_EXPIRING_SOON = 'certificate_expiring_soon',
+    CERTIFICATE_EXPIRED = 'certificate_expired',
     CHAT_MESSAGE = 'chat_message',
     CHAT_CONVERSATION_CREATED = 'chat_conversation_created',
     CHAT_PARTICIPANT_ADDED = 'chat_participant_added',

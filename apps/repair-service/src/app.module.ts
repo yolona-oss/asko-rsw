@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
@@ -40,6 +41,7 @@ import { DeviceService } from 'services/device.service';
 import { AddressService } from 'services/address.service';
 import { ExternalCertValidationService } from 'services/external-cert-validation.service';
 import { CertificateService } from 'services/certificate.service';
+import { CertificateExpiryService } from 'services/certificate-expiry.service';
 import { RepairerService } from 'services/repairer.service';
 import { ReviewService } from 'services/review.service';
 import { RepairRequestService } from 'services/repair-request.service';
@@ -54,6 +56,7 @@ import { WScheduleService } from 'services/wschedule.service';
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'repair-service' }),
+        ScheduleModule.forRoot(),
         DatabaseModule,
         MikroOrmModule.forFeature([
             DeviceCategory,
@@ -131,6 +134,7 @@ import { WScheduleService } from 'services/wschedule.service';
         AddressService,
         ExternalCertValidationService,
         CertificateService,
+        CertificateExpiryService,
         RepairerService,
         ReviewService,
         RepairRequestService,

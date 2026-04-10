@@ -1,10 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class MessageResponseDto {
-    message: string;
+    @ApiProperty()
+    message!: string;
 }
 
 export class DeleteCountResponseDto {
-    message: string;
-    count: number;
+    @ApiProperty()
+    message!: string;
+
+    @ApiProperty()
+    count!: number;
 }
 
 export class EmptyResponseDto {}

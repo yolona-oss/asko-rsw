@@ -21,6 +21,8 @@ import type {
     CertMarkPaidRequest,
     CertRevokeRequest,
     CertReassignRequest,
+    CertReapplyRequest,
+    CertDismissReminderRequest,
     CertCalculatePriceRequest,
     CertFindByIdRequest,
     CertFindByUserRequest,
@@ -209,6 +211,25 @@ export class CertificateGrpcController {
     async reassignCertificate(data: CertReassignRequest) {
         try {
             const cert = await this.certificateService.reassignCertificate(data.userId, data.certId, data.userDeviceId);
+            return { certificate: certToRecord(cert) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'ReapplyCertificate')
+    async reapplyCertificate(data: CertReapplyRequest) {
+        try {
+            const cert = await this.certificateService.reapplyCertificate(data.userId, data.sourceCertId, {
+                durationMonths: data.durationMonths,
+                description: data.description || undefined,
+            });
+            return { certificate: certToRecord(cert) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'DismissExpiryReminder')
+    async dismissExpiryReminder(data: CertDismissReminderRequest) {
+        try {
+            const cert = await this.certificateService.dismissExpiryReminder(data.userId, data.certId);
             return { certificate: certToRecord(cert) };
         } catch (e) { throw toGrpcError(e); }
     }
