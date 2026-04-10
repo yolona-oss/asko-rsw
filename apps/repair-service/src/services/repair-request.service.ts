@@ -61,9 +61,10 @@ export class RepairRequestService {
         }
 
         // Cert validation: data-integrity problems (not_found / wrong_user / wrong_device)
-        // hard-throw; soft problems (not_paid / expired / revoked / signature_invalid) attach
-        // the cert anyway and mark the request with certificateValid=false, so it can be
-        // revalidated later by the cert payment webhook (see certificate.service.ts::markPaid).
+        // hard-throw; soft problems (not_paid / expired / revoked / signature_invalid /
+        // payment_not_found) attach the cert anyway and mark the request with
+        // certificateValid=false, so it can be revalidated later by the cert payment
+        // webhook (see certificate.service.ts::markPaid).
         let certificate: Certificate | undefined;
         let certificateValid = true;
         if (dto.certificateId) {

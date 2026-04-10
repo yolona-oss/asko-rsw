@@ -6,6 +6,7 @@ import { DealerProfile } from 'entities/dealer-profile.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import {
     CertificateStatus,
+    PaymentStatus,
     PaymentTargetType,
     PointsTransactionType,
     RepairRequestStatus,
@@ -14,6 +15,7 @@ import {
 import { PointsTransaction } from 'entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
+import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { SignatureService } from './signature.service';
 
 const CERT_SORTABLE_FIELDS = ['createdAt', 'issuedAt', 'expiresAt', 'status', 'certificateNumber'] as const;
@@ -29,6 +31,7 @@ export class CertificateService {
     constructor(
         private readonly em: EntityManager,
         private readonly paymentCommandService: PaymentCommandService,
+        private readonly paymentClient: PaymentClientService,
         private readonly signatureService: SignatureService,
     ) {}
 
@@ -383,25 +386,28 @@ export class CertificateService {
     }
 
     @CreateRequestContext()
-    async validateCertificate(certificateNumber: string): Promise<{ valid: boolean; certificate?: Certificate; reason?: string }> {
+    async validateCertificate(
+        certificateNumber: string,
+    ): Promise<{ valid: boolean; certificate?: Certificate; reason?: string }> {
         const cert = await this.em.findOne(Certificate, { certificateNumber }, {
             populate: ['userDevice', 'userDevice.device'],
         });
         if (!cert) return { valid: false, reason: 'Certificate not found' };
-        if (cert.status === CertificateStatus.REVOKED) return { valid: false, certificate: cert, reason: 'Certificate is revoked' };
-        if (cert.status === CertificateStatus.EXPIRED) return { valid: false, certificate: cert, reason: 'Certificate has expired' };
-        if (new Date() > cert.expiresAt) return { valid: false, certificate: cert, reason: 'Certificate has expired' };
-        if (!cert.paid) return { valid: false, certificate: cert, reason: 'Certificate is not paid' };
 
+        const result = await this.verifyCertificateIntegrity(cert);
+        if (!result.ok) {
+            return { valid: false, certificate: cert, reason: INTEGRITY_REASON_MESSAGES[result.reason] };
+        }
         return { valid: true, certificate: cert };
     }
 
     /**
      * Strict cert check used by the repair-request creation path.
      * Returns a discriminated result so callers can decide whether to:
-     *   - hard-throw (data integrity violations like `not_found`, `wrong_user`, `wrong_device`)
-     *   - soft-flag the request (`not_paid`, `expired`, `revoked`, `signature_invalid`)
-     * Kept separate from `validateCertificate(certificateNumber)` which is a public gRPC API.
+     *   - hard-throw (data integrity violations: not_found / wrong_user / wrong_device)
+     *   - soft-flag the request (everything else — see verifyCertificateIntegrity)
+     * Kept separate from validateCertificate(certificateNumber) which is the
+     * public gRPC API and returns a loose { valid, reason } shape.
      */
     async validateCertificateForRequest(
         certId: string,
@@ -409,26 +415,87 @@ export class CertificateService {
         userDeviceId: string,
     ): Promise<
         | { ok: true; certificate: Certificate }
-        | { ok: false; reason: 'not_found' | 'wrong_user' | 'wrong_device' | 'not_paid' | 'expired' | 'revoked' | 'signature_invalid'; certificate?: Certificate }
+        | {
+            ok: false;
+            reason: 'not_found' | 'wrong_user' | 'wrong_device' | IntegrityFailReason;
+            certificate?: Certificate;
+          }
     > {
-        const cert = await this.em.findOne(Certificate, { id: certId }, {
-            populate: ['userDevice'],
-        });
+        const cert = await this.em.findOne(Certificate, { id: certId }, { populate: ['userDevice'] });
         if (!cert) return { ok: false, reason: 'not_found' };
         if (cert.userId !== userId) return { ok: false, reason: 'wrong_user', certificate: cert };
 
         const certDeviceId = typeof cert.userDevice === 'object' ? cert.userDevice.id : String(cert.userDevice);
         if (certDeviceId !== userDeviceId) return { ok: false, reason: 'wrong_device', certificate: cert };
 
-        if (cert.status === CertificateStatus.REVOKED) return { ok: false, reason: 'revoked', certificate: cert };
-        if (cert.status === CertificateStatus.EXPIRED || new Date() > cert.expiresAt) {
-            return { ok: false, reason: 'expired', certificate: cert };
-        }
-        if (!cert.paid) return { ok: false, reason: 'not_paid', certificate: cert };
-
-        const sigCheck = this.signatureService.verifyStoredSignature(cert.signedPayload, cert.signature);
-        if (!sigCheck.valid) return { ok: false, reason: 'signature_invalid', certificate: cert };
+        const integrity = await this.verifyCertificateIntegrity(cert);
+        if (!integrity.ok) return { ok: false, reason: integrity.reason, certificate: cert };
 
         return { ok: true, certificate: cert };
     }
+
+    /**
+     * Shared cert integrity check. Used by both validateCertificate (public gRPC
+     * API) and validateCertificateForRequest (internal, for repair-request creation).
+     *
+     * Checks are ordered cheap → expensive so invalid certs fail fast without
+     * spending a gRPC round-trip on the Payment cross-check:
+     *   1. status (REVOKED / EXPIRED)
+     *   2. expiresAt vs now
+     *   3. cert.paid flag (local pre-filter)
+     *   4. ECDSA signature verification
+     *   5. Payment-record cross-check against payment-service (only for
+     *      invoiced certs — bundled certs from addCertificate() have price=null
+     *      and no Payment row by design)
+     */
+    private async verifyCertificateIntegrity(
+        cert: Certificate,
+    ): Promise<{ ok: true } | { ok: false; reason: IntegrityFailReason }> {
+        if (cert.status === CertificateStatus.REVOKED) return { ok: false, reason: 'revoked' };
+        if (cert.status === CertificateStatus.EXPIRED || new Date() > cert.expiresAt) {
+            return { ok: false, reason: 'expired' };
+        }
+        if (!cert.paid) return { ok: false, reason: 'not_paid' };
+
+        const sig = this.signatureService.verifyStoredSignature(cert.signedPayload, cert.signature);
+        if (!sig.valid) return { ok: false, reason: 'signature_invalid' };
+
+        // Cross-check with payment-service only when the cert was actually invoiced.
+        // addCertificate() creates bundled certs with price=null; no Payment row exists
+        // for them by design.
+        if (cert.price != null) {
+            try {
+                const { payments } = await this.paymentClient.getPaymentsByTarget(
+                    PaymentTargetType.CERTIFICATE,
+                    cert.id,
+                );
+                const hasSuccess = payments?.some((p) => p.status === PaymentStatus.PAID);
+                if (!hasSuccess) return { ok: false, reason: 'payment_not_found' };
+            } catch (err) {
+                // Fail closed when payment-service is unreachable. The normal
+                // markPaid() RMQ webhook path still runs independently, so open
+                // repair requests will get re-flipped to valid once payment-service
+                // comes back and emits the next payment.paid event.
+                console.error('[CertificateService] payment cross-check failed:', err);
+                return { ok: false, reason: 'payment_not_found' };
+            }
+        }
+
+        return { ok: true };
+    }
 }
+
+type IntegrityFailReason =
+    | 'revoked'
+    | 'expired'
+    | 'not_paid'
+    | 'signature_invalid'
+    | 'payment_not_found';
+
+const INTEGRITY_REASON_MESSAGES: Record<IntegrityFailReason, string> = {
+    revoked: 'Certificate is revoked',
+    expired: 'Certificate has expired',
+    not_paid: 'Certificate is not paid',
+    signature_invalid: 'Certificate signature is invalid',
+    payment_not_found: 'Certificate payment not verified',
+};

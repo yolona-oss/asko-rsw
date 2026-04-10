@@ -2,16 +2,9 @@
 
 import { useState } from 'react';
 import { Button, FormField, Select, Input, Modal } from '@asko/ui';
+import { CERTIFICATE_DURATION_OPTIONS, CERTIFICATE_DURATION_LABELS } from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
 import type { ICertificate } from '@/lib/api/types';
-
-const DURATION_OPTIONS = [
-  { value: 6, label: '6 месяцев' },
-  { value: 12, label: '1 год' },
-  { value: 24, label: '2 года' },
-  { value: 36, label: '3 года' },
-  { value: 60, label: '5 лет' },
-];
 
 export function CreateCertificateModal({
   open,
@@ -66,9 +59,9 @@ export function CreateCertificateModal({
             value={String(durationMonths)}
             onChange={(e) => setDurationMonths(Number(e.target.value))}
           >
-            {DURATION_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
+            {CERTIFICATE_DURATION_OPTIONS.map((months) => (
+              <option key={months} value={months}>
+                {CERTIFICATE_DURATION_LABELS[months]}
               </option>
             ))}
           </Select>

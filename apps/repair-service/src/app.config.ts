@@ -26,6 +26,9 @@ export class AppConfig {
             publicKey: Buffer.from(this.configService.getOrThrow<string>('SIGNATURE_PUBLIC_KEY'), 'base64').toString('utf-8'),
         };
     }
+    get paymentServiceUrl(): string {
+        return this.configService.get<string>('PAYMENT_SERVICE_ADDR') ?? 'localhost:5001';
+    }
 }
 
 @Global()

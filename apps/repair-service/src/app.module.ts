@@ -6,6 +6,7 @@ import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { RepairEventService } from 'modules/repair-event.service';
 import { PaymentCommandService } from 'modules/payment-command.service';
+import { PaymentClientModule } from 'modules/payment-client/payment-client.module';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
 import {
@@ -72,6 +73,7 @@ import { WScheduleService } from 'services/wschedule.service';
             BrokenPart,
             WSchedule,
         ]),
+        PaymentClientModule,
         ClientsModule.registerAsync([
             {
                 name: 'REPAIR_EVENTS',

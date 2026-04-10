@@ -12,7 +12,6 @@ import { certificateApi } from '@/lib/api/certificate';
 import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { AddDeviceForm } from '@/components/account/user/certificates/add-device-form';
-import { AddCertificateForm } from '@/components/account/user/certificates/add-certificate-form';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { CreateCertificateModal } from './create-certificate-modal';
 import { TERMINAL_STATUSES } from './constants';
@@ -84,7 +83,6 @@ export function CreateRequest() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showAddDevice, setShowAddDevice] = useState(false);
-  const [showAddCert, setShowAddCert] = useState(false);
   const [showCreateCert, setShowCreateCert] = useState(false);
   const [localCert, setLocalCert] = useState<Certificate | null>(null);
   const [showPayment, setShowPayment] = useState(false);
@@ -253,14 +251,9 @@ export function CreateRequest() {
               <p className="text-sm text-text-sub">
                 У вас нет зарегистрированных устройств. Добавьте устройство и при необходимости зарегистрируйте сертификат.
               </p>
-              <div className="flex gap-2">
-                <Button variant="primary" size="sm" onClick={() => setShowAddDevice(true)}>
-                  Добавить устройство
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => setShowAddCert(true)}>
-                  Добавить сертификат
-                </Button>
-              </div>
+              <Button variant="primary" size="sm" onClick={() => setShowAddDevice(true)}>
+                Добавить устройство
+              </Button>
             </div>
           ) : (
             <Select
@@ -544,13 +537,6 @@ export function CreateRequest() {
         open={showAddDevice}
         onClose={() => setShowAddDevice(false)}
         onSuccess={() => { setShowAddDevice(false); fetchData(); }}
-      />
-
-      <AddCertificateForm
-        open={showAddCert}
-        onClose={() => setShowAddCert(false)}
-        onSuccess={() => { setShowAddCert(false); fetchData(); }}
-        onOpenAddDevice={() => setShowAddDevice(true)}
       />
 
       <CreateCertificateModal
