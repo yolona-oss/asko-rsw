@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/layout/provider';
 import { getGreeting, displayName } from '@/lib/account';
-import { Card, Button, Modal, StatCard } from '@asko/ui';
+import { Card, Button, Modal } from '@asko/ui';
 import { X } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -137,22 +137,34 @@ export function UserDashboard() {
       {/* Stat cards - mobile stacked, desktop 3-col */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Мои заявки */}
-        <StatCard title="Мои заявки:" value={loading ? '-' : requestsCount}>
+        <div className="bg-surface border border-border shadow-[0px_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col h-[312px] lg:h-[214px] lg:w-[286px]">
+          <div className="flex flex-col gap-2">
+            <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">
+              Мои заявки:
+            </span>
+            <span className="text-[82px] font-medium leading-[86px] tracking-[-0.01em] text-text-main">
+              {loading ? '-' : requestsCount}
+            </span>
+          </div>
           {lastRequest && (
-            <div className="mt-auto pt-4 flex flex-col lg:hidden gap-1">
-              <p className="text-[14px] leading-[18px] font-bold text-text-main">{lastRequest.deviceName}</p>
-              {lastRequest.address && (
-                <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
-              )}
+            <div className="mt-8 flex flex-col gap-4 lg:hidden">
+              <div className="flex flex-col gap-1">
+                <p className="text-[24px] font-medium leading-[28px] tracking-[-0.01em] text-text-main">
+                  Последняя заявка:
+                </p>
+                <p className="text-[18px] font-normal leading-[22px] tracking-[-0.01em] text-text-main">
+                  {lastRequest.deviceName}
+                </p>
+              </div>
               <Link
                 href="/account/requests"
-                className="text-[14px] leading-[18px] text-text-sub underline mt-1 lg:hidden"
+                className="text-[14px] font-medium leading-[18px] tracking-[-0.01em] text-text-main"
               >
                 Смотреть все заявки...
               </Link>
             </div>
           )}
-        </StatCard>
+        </div>
 
         {/* Активные сертификаты */}
         <Card className="flex flex-row items-center justify-between gap-4 lg:flex-col lg:items-start lg:gap-2">

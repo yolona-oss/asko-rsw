@@ -5,18 +5,20 @@ export function StepCircle({
   isActive,
   isCompleted,
   isFuture,
+  className = '',
 }: {
   label: string;
   isActive: boolean;
   isCompleted: boolean;
   isFuture: boolean;
+  className?: string;
 }) {
   let circleClass = 'border-2 border-[#E8E8E8] bg-surface text-text-sub';
   if (isActive) circleClass = 'bg-green-600 text-white';
   else if (isCompleted) circleClass = 'bg-green-600 text-white';
 
   return (
-    <div className={`flex flex-col items-center gap-2 flex-shrink-0 ${isFuture ? 'opacity-40 blur-[3px]' : ''}`}>
+    <div className={`flex flex-col items-center gap-2 flex-shrink-0 ${isFuture ? 'opacity-40 blur-[3px]' : ''} ${className}`}>
       <div className="relative">
         {isActive && (
           <div className="absolute inset-0 rounded-full bg-green-600/30 animate-ping" />

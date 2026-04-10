@@ -1,5 +1,6 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ClientProxy } from '@nestjs/microservices';
 
 import { AppConfig } from 'app.config';
 import { UserService } from './user.service';
@@ -80,6 +81,7 @@ export class AuthService {
         private readonly otpService: OtpService,
         private readonly emailEvent: EmailEventService,
         @Inject('REDIS_CLIENT') private readonly redis: Redis,
+        @Inject('REPAIR_SERVICE') private readonly repairClient: ClientProxy,
     ) { }
 
     async login(params: LoginParams): Promise<LoginResult> {
@@ -277,6 +279,8 @@ export class AuthService {
         dto.roles = roles;
         const newUser = await this.userService.create(dto)
 
+        this.publishUserRegistered(newUser.id, roles);
+
         await this.sendEmailConfirmation(newUser);
 
         const { access_token, refresh_token } = await this.generateTokens(
@@ -292,6 +296,14 @@ export class AuthService {
             refresh_token,
             user: toAuthUser(newUser),
             roles,
+        }
+    }
+
+    private publishUserRegistered(userId: string, roles: Role[]): void {
+        try {
+            this.repairClient.emit('user.registered', { userId, roles });
+        } catch (e) {
+            console.error('[AuthService] Failed to publish user.registered event:', e);
         }
     }
 

@@ -689,7 +689,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) return { data: [], total: 0 };
 
         const where: Record<string, any> = { repairer: repairer.id };
         if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
@@ -715,7 +715,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) return { data: [], total: 0 };
 
         const [data, total] = await this.em.findAndCount(
             RepairRequest,

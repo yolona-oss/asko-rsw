@@ -105,7 +105,7 @@ export function DataToolbar({
             />
           </div>
           {inlineActions && (
-            <div className="flex-shrink-0 border-l border-border-divider flex items-center self-stretch">
+            <div className="flex-shrink-0 px-2 flex items-center self-stretch">
               {inlineActions}
             </div>
           )}

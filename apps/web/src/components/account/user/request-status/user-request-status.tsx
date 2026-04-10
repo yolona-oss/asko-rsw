@@ -215,6 +215,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           const isActive = idx === currentStepIdx;
           const isCompleted = idx < currentStepIdx;
           const isFuture = idx > currentStepIdx + 1;
+          const mobileVisible = idx === currentStepIdx || idx === currentStepIdx + 1;
+          const mobileLineVisible = idx === currentStepIdx || idx === currentStepIdx + 1;
 
           return (
             <div key={step.key} className="contents">
@@ -223,8 +225,14 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
                 isActive={isActive}
                 isCompleted={isCompleted}
                 isFuture={isFuture}
+                className={mobileVisible ? '' : 'hidden lg:flex'}
               />
-              {idx < STEPS.length - 1 && <StepLine completed={isCompleted} />}
+              {idx < STEPS.length - 1 && (
+                <StepLine
+                  completed={isCompleted}
+                  className={mobileLineVisible ? '' : 'hidden lg:block'}
+                />
+              )}
             </div>
           );
         })}

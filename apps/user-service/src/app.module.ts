@@ -53,6 +53,18 @@ import { DatabaseModule } from 'modules/database.module';
                     },
                 }),
             },
+            {
+                name: 'REPAIR_SERVICE',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'repair_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
         ]),
         MikroOrmModule.forFeature([
             User,
