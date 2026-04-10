@@ -27,6 +27,7 @@ import type { ICertificate } from '@/lib/api/types';
 import { CertificateCard } from './certificate-card';
 import { DeviceSlider } from './device-slider';
 import { AddDeviceForm } from './add-device-form';
+import { EditUserDeviceForm } from './edit-user-device-form';
 import { AddCertificateForm } from './add-certificate-form';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate, formatDateLong } from './constants';
 import type { UserDevice } from './types';
@@ -41,6 +42,7 @@ export function UserCertificates() {
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
+  const [editDevice, setEditDevice] = useState<UserDevice | null>(null);
   const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
@@ -236,38 +238,59 @@ export function UserCertificates() {
 
       {view === 'card' ? (
         <>
-          <DeviceSlider devices={devices} loading={loadingDevices} />
+          <DeviceSlider
+            devices={devices}
+            loading={loadingDevices}
+            onEditAddress={setEditDevice}
+          />
 
-          {/* Certificates + CTA banner row */}
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Certificate cards */}
-            <div className="flex flex-col gap-6 flex-1 min-w-0">
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
-                </div>
-              ) : paginatedCertificates.length === 0 ? (
-                <p className="text-sm text-text-sub">У вас нет сертификатов</p>
-              ) : (
-                <>
-                  {paginatedCertificates.map((cert) => (
-                    <CertificateCard key={cert.id} cert={cert} onPay={handlePay} onExportPdf={exportPdf} onClick={() => detail.onRowClick(cert)} />
-                  ))}
-                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
-                </>
-              )}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
             </div>
+          ) : paginatedCertificates.length === 0 ? (
+            <p className="text-sm text-text-sub">У вас нет сертификатов</p>
+          ) : (
+            <>
+              {/* First certificate + CTA banner row (CTA matches first card height on desktop) */}
+              <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                <div className="flex-1 min-w-0">
+                  <CertificateCard
+                    key={paginatedCertificates[0].id}
+                    cert={paginatedCertificates[0]}
+                    onPay={handlePay}
+                    onExportPdf={exportPdf}
+                    onClick={() => detail.onRowClick(paginatedCertificates[0])}
+                  />
+                </div>
+                <CTABanner
+                  variant="compact"
+                  className="hidden lg:flex lg:w-[262px] lg:flex-shrink-0"
+                  title={<>Возникла проблема с устройством?</>}
+                  description="Создайте заявку, и специалист сервисного центра ASKO свяжется с вами для диагностики и согласования ремонта."
+                  linkHref="/account/requests/create"
+                  linkLabel="Создать заявку"
+                />
+              </div>
 
-            {/* CTA Banner - sidebar */}
-            <CTABanner
-              variant="compact"
-              className="hidden lg:flex lg:w-[262px] lg:flex-shrink-0 lg:self-start"
-              title={<>Возникла проблема с устройством?</>}
-              description="Создайте заявку, и специалист сервисного центра ASKO свяжется с вами для диагностики и согласования ремонта."
-              linkHref="/account/requests/create"
-              linkLabel="Создать заявку"
-            />
-          </div>
+              {/* Remaining certificate cards */}
+              {paginatedCertificates.length > 1 && (
+                <div className="flex flex-col gap-6">
+                  {paginatedCertificates.slice(1).map((cert) => (
+                    <CertificateCard
+                      key={cert.id}
+                      cert={cert}
+                      onPay={handlePay}
+                      onExportPdf={exportPdf}
+                      onClick={() => detail.onRowClick(cert)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+            </>
+          )}
 
           {/* Add new device section */}
           <div className="flex flex-col gap-6">
@@ -337,6 +360,13 @@ export function UserCertificates() {
         open={showAddDevice}
         onClose={() => setShowAddDevice(false)}
         onSuccess={() => { fetchCertificates(); fetchDevices(); }}
+      />
+
+      <EditUserDeviceForm
+        open={!!editDevice}
+        device={editDevice}
+        onClose={() => setEditDevice(null)}
+        onSuccess={() => { fetchDevices(); setEditDevice(null); }}
       />
 
       {paymentCert && (

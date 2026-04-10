@@ -244,6 +244,35 @@ export class DeviceService {
     }
 
     @CreateRequestContext()
+    async updateUserDevice(userId: string, id: string, dto: {
+        addressId?: string;
+        serialNumber?: string;
+        notes?: string;
+    }): Promise<UserDevice> {
+        const userDevice = await this.em.findOne(UserDevice, { id, userId }, {
+            populate: ['device', 'address'],
+        });
+        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+
+        if (dto.addressId) {
+            const address = await this.em.findOne(Address, { id: dto.addressId });
+            if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+            userDevice.address = address;
+        }
+
+        if (dto.serialNumber) {
+            userDevice.serialNumber = dto.serialNumber;
+        }
+
+        if (dto.notes !== undefined) {
+            userDevice.notes = dto.notes;
+        }
+
+        await this.em.flush();
+        return userDevice;
+    }
+
+    @CreateRequestContext()
     async getUserDevices(userId: string): Promise<UserDevice[]> {
         return this.em.find(UserDevice, { userId }, {
             populate: ['device', 'address'],

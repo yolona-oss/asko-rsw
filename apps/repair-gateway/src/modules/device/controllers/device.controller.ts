@@ -11,6 +11,7 @@ import {
     CreateDevicePartDto,
     UpdateDevicePartDto,
     RegisterUserDeviceDto,
+    UpdateUserDeviceDto,
     PaginationDto,
     ALL_ROLES,
     ADMIN_ROLES,
@@ -256,6 +257,17 @@ export class UserDeviceController {
     @ApiOkResponse({ type: UserDeviceRecordDto })
     async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.deviceClient.getUserDevice(user.sub, id);
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Patch(':id')
+    @ApiOkResponse({ type: UserDeviceRecordDto })
+    async update(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Body() dto: UpdateUserDeviceDto,
+    ) {
+        return this.deviceClient.updateUserDevice(user.sub, id, dto);
     }
 
     @RequiredRoles(...ALL_ROLES)

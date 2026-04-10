@@ -116,6 +116,16 @@ export class DeviceClientService implements OnModuleInit {
         }));
     }
 
+    updateUserDevice(userId: string, id: string, dto: { addressId?: string; serialNumber?: string; notes?: string }): Promise<UserDeviceResponse> {
+        return grpcCall(this.deviceService.updateUserDevice({
+            userId,
+            id,
+            addressId: dto.addressId ?? '',
+            serialNumber: dto.serialNumber ?? '',
+            notes: dto.notes ?? '',
+        }));
+    }
+
     getUserDevices(userId: string): Promise<UserDeviceListResponse> {
         return grpcCall(this.deviceService.getUserDevices({ userId }));
     }

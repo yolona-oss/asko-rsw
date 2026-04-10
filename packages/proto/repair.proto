@@ -22,6 +22,7 @@ service DeviceService {
 
     // User devices
     rpc RegisterUserDevice(RegisterUserDeviceRequest) returns (UserDeviceResponse);
+    rpc UpdateUserDevice(UpdateUserDeviceRequest) returns (UserDeviceResponse);
     rpc GetUserDevices(GetUserDevicesRequest) returns (UserDeviceListResponse);
     rpc GetUserDevice(GetUserDeviceRequest) returns (UserDeviceResponse);
     rpc RemoveUserDevice(RemoveUserDeviceRequest) returns (EmptyResponse);
@@ -252,6 +253,14 @@ message GetUserDeviceRequest {
 message RemoveUserDeviceRequest {
     string userId = 1;
     string id = 2;
+}
+
+message UpdateUserDeviceRequest {
+    string userId = 1;
+    string id = 2;
+    string addressId = 3;
+    string serialNumber = 4;
+    string notes = 5;
 }
 
 message CreateDevicePartRequest {

@@ -125,3 +125,17 @@ export class RegisterUserDeviceDto {
     @IsString()
     notes?: string;
 }
+
+export class UpdateUserDeviceDto {
+    @IsOptional()
+    @IsString()
+    addressId?: string;
+
+    @IsOptional()
+    @IsString()
+    serialNumber?: string;
+
+    @IsOptional()
+    @IsString()
+    notes?: string;
+}

@@ -21,6 +21,7 @@ import type {
     FindBySlugRequest,
     FindByIdRequest,
     RegisterUserDeviceRequest,
+    UpdateUserDeviceRequest,
     GetUserDevicesRequest,
     GetUserDeviceRequest,
     RemoveUserDeviceRequest,
@@ -268,6 +269,18 @@ export class DeviceGrpcController {
                 addressId: data.addressId,
                 purchaseDate: data.purchaseDate || undefined,
                 warrantyUntil: data.warrantyUntil || undefined,
+                notes: data.notes || undefined,
+            });
+            return { userDevice: userDeviceToRecord(userDevice) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'UpdateUserDevice')
+    async updateUserDevice(data: UpdateUserDeviceRequest) {
+        try {
+            const userDevice = await this.deviceService.updateUserDevice(data.userId, data.id, {
+                addressId: data.addressId || undefined,
+                serialNumber: data.serialNumber || undefined,
                 notes: data.notes || undefined,
             });
             return { userDevice: userDeviceToRecord(userDevice) };

@@ -80,6 +80,14 @@ export interface RemoveUserDeviceRequest {
     id: string;
 }
 
+export interface UpdateUserDeviceRequest {
+    userId: string;
+    id: string;
+    addressId: string;
+    serialNumber: string;
+    notes: string;
+}
+
 export interface CreateDevicePartRequest {
     deviceId: string;
     name: string;
@@ -257,6 +265,7 @@ export interface DeviceServiceClient {
 
     // User devices
     registerUserDevice(request: RegisterUserDeviceRequest): Observable<UserDeviceResponse>;
+    updateUserDevice(request: UpdateUserDeviceRequest): Observable<UserDeviceResponse>;
     getUserDevices(request: GetUserDevicesRequest): Observable<UserDeviceListResponse>;
     getUserDevice(request: GetUserDeviceRequest): Observable<UserDeviceResponse>;
     removeUserDevice(request: RemoveUserDeviceRequest): Observable<EmptyDeviceResponse>;

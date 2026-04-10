@@ -1,4 +1,4 @@
-import type { RegisterUserDeviceDto } from '@asko/shared/client';
+import type { RegisterUserDeviceDto, UpdateUserDeviceDto } from '@asko/shared/client';
 import type { IUserDevice } from './types';
 import { api } from './client';
 
@@ -10,5 +10,9 @@ export const userDeviceApi = {
 
   register(data: RegisterUserDeviceDto) {
     return api.post<IUserDevice>('/user-devices/', data);
+  },
+
+  update(id: string, data: UpdateUserDeviceDto) {
+    return api.patch<{ userDevice: IUserDevice }>(`/user-devices/${id}`, data);
   },
 };

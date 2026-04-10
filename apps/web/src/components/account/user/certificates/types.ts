@@ -1,8 +1,21 @@
 export interface UserDevice {
   id: string;
   serialNumber?: string;
-  device?: { name?: string; brand?: string; model?: string };
-  address?: { city?: string; street?: string; house?: number; validationStatus?: string; validationError?: string };
+  device?: { id?: string; name?: string; brand?: string; model?: string };
+  address?: {
+    id?: string;
+    country?: string;
+    city?: string;
+    street?: string;
+    house?: number;
+    building?: number;
+    floor?: number;
+    room?: number;
+    latitude?: number;
+    longitude?: number;
+    validationStatus?: string;
+    validationError?: string;
+  };
   createdAt?: Date | string;
 }
 
