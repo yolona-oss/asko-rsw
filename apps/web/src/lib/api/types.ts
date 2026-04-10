@@ -44,10 +44,18 @@ export type RepairRequestResponse = components['schemas']['RepairRequestResponse
 export type PaginatedRepairRequests = components['schemas']['PaginatedRepairRequestsResponseDto'];
 
 // ── Work Steps ──
-export type WorkStepRecord = components['schemas']['WorkStepRecordDto'];
-export type WorkStepResponse = components['schemas']['WorkStepResponseDto'];
-export type WorkStepList = components['schemas']['WorkStepListResponseDto'];
-export type CompleteStep = components['schemas']['CompleteStepResponseDto'];
+// TODO: Remove overrides after running ./scripts/openapi.sh
+export type WorkStepRecord = components['schemas']['WorkStepRecordDto'] & {
+  comment?: string;
+  isMandatory?: boolean;
+  isFinal?: boolean;
+  declinedAt?: string;
+  declinedByRepairerId?: string;
+  completedByRepairerId?: string;
+};
+export type WorkStepResponse = { step: WorkStepRecord };
+export type WorkStepList = { steps: WorkStepRecord[] };
+export type CompleteStep = { step: WorkStepRecord; requestCompleted: boolean };
 
 // ── Broken Parts ──
 export type BrokenPartRecord = components['schemas']['BrokenPartRecordDto'];

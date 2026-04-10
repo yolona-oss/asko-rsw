@@ -1988,6 +1988,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/steps/diagnostics/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_approveDiagnostics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/steps/diagnostics/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_declineDiagnostics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/{id}/broken-parts": {
         parameters: {
             query?: never;
@@ -2337,7 +2369,7 @@ export interface paths {
         delete: operations["UserDeviceController_remove"];
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["UserDeviceController_update"];
         trace?: never;
     };
     "/device-categories": {
@@ -3236,11 +3268,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         LoginCredentials: Record<string, never>;
-        AuthSessionResponseDto: {
-            access_token: string;
-            user: components["schemas"]["AuthUserDto"];
-            refresh_token?: string;
-        };
+        AuthSessionResponseDto: Record<string, never>;
         CreateUserDto: Record<string, never>;
         ConfirmMailDto: Record<string, never>;
         ConfirmEmailResponseDto: Record<string, never>;
@@ -3256,18 +3284,7 @@ export interface components {
         DisableMfaDto: Record<string, never>;
         VerifyPhoneRegisterDto: Record<string, never>;
         ResendPhoneRegisterOtpDto: Record<string, never>;
-        AuthUserDto: {
-            id: string;
-            firstName?: string;
-            lastName?: string;
-            email?: string;
-            phone?: string;
-            googleId?: string;
-            providers: string[];
-            roles: string[];
-            createdAt: string;
-            updatedAt: string;
-        };
+        AuthUserDto: Record<string, never>;
         OAuthLinkRecordDto: {
             id: string;
             userId: string;
@@ -3282,15 +3299,7 @@ export interface components {
         };
         CreateInvitationLinkDto: Record<string, never>;
         InviteCreatedResponseDto: Record<string, never>;
-        InviteLinkResponseDto: {
-            id: string;
-            token: string;
-            role: string;
-            ttl: number;
-            used: boolean;
-            expiresAt: string;
-            createdAt: string;
-        };
+        InviteLinkResponseDto: Record<string, never>;
         CreateArticleDto: Record<string, never>;
         ArticleResponseDto: {
             id: string;
@@ -3353,7 +3362,7 @@ export interface components {
         ArticleViewResponseDto: {
             message: string;
         };
-        UserResponseDto: components["schemas"]["AuthUserDto"] & {
+        UserResponseDto: {
             emailVerified?: boolean;
             phoneVerified?: boolean;
         };
@@ -3496,9 +3505,13 @@ export interface components {
             repairRequestId: string;
             title: string;
             description?: string;
+            comment?: string;
             status: string;
             order: number;
             isFinal: boolean;
+            isMandatory: boolean;
+            declinedAt?: string;
+            declinedByRepairerId?: string;
             createdAt: string;
             updatedAt: string;
         };
@@ -3698,6 +3711,7 @@ export interface components {
         WorkStepListResponseDto: {
             steps: components["schemas"]["WorkStepRecordDto"][];
         };
+        DeclineDiagnosticsDto: Record<string, never>;
         AddBrokenPartDto: Record<string, never>;
         BrokenPartResponseDto: {
             part: components["schemas"]["BrokenPartRecordDto"];
@@ -3740,6 +3754,7 @@ export interface components {
         UserDeviceListResponseDto: {
             userDevices: components["schemas"]["UserDeviceRecordDto"][];
         };
+        UpdateUserDeviceDto: Record<string, never>;
         DeviceCategoryRecordDto: {
             id: string;
             name: string;
@@ -6927,6 +6942,52 @@ export interface operations {
             };
         };
     };
+    RepairRequestController_approveDiagnostics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_declineDiagnostics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeclineDiagnosticsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkStepListResponseDto"];
+                };
+            };
+        };
+    };
     RepairRequestController_getBrokenParts: {
         parameters: {
             query?: never;
@@ -7587,6 +7648,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    UserDeviceController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserDeviceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDeviceRecordDto"];
                 };
             };
         };

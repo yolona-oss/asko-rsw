@@ -52,6 +52,17 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [addStepError, setAddStepError] = useState('');
   const [lockLoading, setLockLoading] = useState(false);
 
+  // Diagnostics review (post-transfer)
+  const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
+  const [declineDiagOpen, setDeclineDiagOpen] = useState(false);
+  const [declineDiagReason, setDeclineDiagReason] = useState('');
+  const [declineDiagError, setDeclineDiagError] = useState('');
+
+  // Comment editor
+  const [commentEditId, setCommentEditId] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentSaving, setCommentSaving] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data fetch ──
@@ -209,6 +220,55 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     catch {} finally { setLockLoading(false); }
   };
 
+  // ── Diagnostics approve/decline (post-transfer) ──
+
+  const handleApproveDiagnostics = async () => {
+    if (!request) return;
+    setDiagnosticsLoading(true);
+    try {
+      await repairRequestApi.approveDiagnostics(request.id);
+      const { data } = await repairRequestApi.getSteps(request.id);
+      setSteps(data.steps ?? []);
+    } catch {} finally { setDiagnosticsLoading(false); }
+  };
+
+  const handleDeclineDiagnostics = async () => {
+    if (!request) return;
+    setDiagnosticsLoading(true);
+    setDeclineDiagError('');
+    try {
+      const { data } = await repairRequestApi.declineDiagnostics(request.id, declineDiagReason.trim() || undefined);
+      setSteps(data.steps ?? []);
+      setRequest({ ...request, stepsLocked: false });
+      setDeclineDiagOpen(false);
+      setDeclineDiagReason('');
+    } catch {
+      setDeclineDiagError('Не удалось отклонить диагностику');
+    } finally { setDiagnosticsLoading(false); }
+  };
+
+  // ── Comment editor ──
+
+  const startEditComment = (step: any) => {
+    setCommentEditId(step.id);
+    setCommentDraft(step.comment ?? '');
+  };
+
+  const cancelEditComment = () => {
+    setCommentEditId(null);
+    setCommentDraft('');
+  };
+
+  const saveEditComment = async () => {
+    if (!request || !commentEditId) return;
+    setCommentSaving(true);
+    try {
+      const { data } = await repairRequestApi.updateStep(request.id, commentEditId, { comment: commentDraft });
+      setSteps((prev) => prev.map((s) => s.id === commentEditId ? { ...s, comment: data.step.comment } : s));
+      cancelEditComment();
+    } catch {} finally { setCommentSaving(false); }
+  };
+
 
   // ── Render ──
 
@@ -224,10 +284,21 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const stepsLocked = !!request.stepsLocked;
   const canEditSteps = !stepsLocked && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
   const canControlFlow = stepsLocked && [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.ACCEPTED].includes(status);
-  const allStepsDone = steps.length > 0 && steps.every((s) => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED);
+  const allStepsDone = steps.length > 0 && steps.every((s) => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED || s.status === WorkStepStatus.DECLINED);
   const canComplete = status === RepairRequestStatus.AWAITING_COMPLETION || (stepsLocked && allStepsDone && status === RepairRequestStatus.IN_PROGRESS);
   const isPaused = status === RepairRequestStatus.PAUSED;
   const isTerminal = [RepairRequestStatus.COMPLETED, RepairRequestStatus.CANCELLED, RepairRequestStatus.REFUSED].includes(status);
+
+  // Post-transfer diagnostics review — per-step ownership check
+  const currentRepairerId = request.repairer?.id;
+  const hasUnownedMandatoryStep = steps.some((s: any) =>
+    s.isMandatory
+    && s.status === WorkStepStatus.COMPLETED
+    && s.completedByRepairerId
+    && s.completedByRepairerId !== currentRepairerId,
+  );
+  const canReviewDiagnostics = !isTerminal && hasUnownedMandatoryStep
+    && [RepairRequestStatus.ASSIGNED, RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
 
   return (
     <PageContainer>
@@ -290,6 +361,16 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <Button variant="primary" size="sm" onClick={handleResume} disabled={actionLoading}>
             {actionLoading ? 'Возобновление...' : 'Возобновить'}
           </Button>
+        </Card>
+      )}
+
+      {status === RepairRequestStatus.REFUSED && (
+        <Card className="flex flex-col gap-2 border-red-300 bg-red-50">
+          <p className="text-sm font-medium text-red-900">Вы отказались от этой заявки</p>
+          <p className="text-sm text-red-800">Ожидайте решения менеджера — он передаст заявку другому специалисту.</p>
+          {request.refuseReason && (
+            <p className="text-sm text-red-800">Причина: {request.refuseReason}</p>
+          )}
         </Card>
       )}
 
@@ -387,6 +468,24 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         </Card>
       )}
 
+      {/* ── Diagnostics review (post-transfer) ── */}
+      {canReviewDiagnostics && (
+        <Card className="flex flex-col gap-3 border-yellow-300 bg-yellow-50">
+          <h2 className="text-base font-medium text-yellow-900">Проверка диагностики предыдущего мастера</h2>
+          <p className="text-sm text-yellow-800">
+            Подтвердите диагностику, если согласны с ней, или отклоните — будут добавлены новые шаги диагностики, а текущие неактуальные шаги будут удалены.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            <Button variant="primary" onClick={handleApproveDiagnostics} disabled={diagnosticsLoading}>
+              {diagnosticsLoading ? 'Сохранение...' : 'Принять диагностику'}
+            </Button>
+            <Button variant="secondary" onClick={() => { setDeclineDiagReason(''); setDeclineDiagError(''); setDeclineDiagOpen(true); }} disabled={diagnosticsLoading}>
+              Отклонить диагностику
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* ── Work steps ── */}
       <Card className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -398,35 +497,87 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <p className="text-sm text-text-sub">Шаги не назначены</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {steps.map((step, idx) => (
-              <div key={step.id} className="flex items-start gap-3">
-                <StepCircle status={step.status} index={idx} />
-                <div className="flex-1 flex flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-text-main">{step.title}</span>
-                    {step.isFinal && <Badge variant="info">финальный</Badge>}
-                    <span className="text-xs text-text-sub ml-auto">{STEP_STATUS_LABEL[step.status as WorkStepStatus]}</span>
+            {steps.map((step, idx) => {
+              const isDeclined = step.status === WorkStepStatus.DECLINED;
+              const isMandatory = !!step.isMandatory;
+              const isEditingComment = commentEditId === step.id;
+              const canEditComment = isMandatory && !isDeclined && !isTerminal
+                && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
+
+              return (
+                <div key={step.id} className={`flex items-start gap-3 ${isDeclined ? 'opacity-60' : ''}`}>
+                  <StepCircle status={step.status} index={idx} />
+                  <div className="flex-1 flex flex-col gap-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-sm font-medium text-text-main ${isDeclined ? 'line-through' : ''}`}>{step.title}</span>
+                      {isMandatory && <Badge variant="neutral" className="text-[10px] uppercase">Обязательный</Badge>}
+                      {step.isFinal && <Badge variant="info">финальный</Badge>}
+                      <span className="text-xs text-text-sub ml-auto">{STEP_STATUS_LABEL[step.status] ?? step.status}</span>
+                    </div>
+                    {step.description && <p className="text-xs text-text-sub">{step.description}</p>}
+
+                    {/* Comment (client-visible) */}
+                    {isEditingComment ? (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <Textarea
+                          value={commentDraft}
+                          onChange={(e) => setCommentDraft(e.target.value)}
+                          placeholder="Комментарий, видимый клиенту..."
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button variant="primary" size="sm" onClick={saveEditComment} disabled={commentSaving}>
+                            {commentSaving ? 'Сохранение...' : 'Сохранить'}
+                          </Button>
+                          <Button variant="secondary" size="sm" onClick={cancelEditComment} disabled={commentSaving}>
+                            Отмена
+                          </Button>
+                        </div>
+                      </div>
+                    ) : step.comment ? (
+                      <div className="mt-1 pl-2 border-l-2 border-border-light">
+                        <p className="text-xs text-text-main whitespace-pre-wrap">{step.comment}</p>
+                      </div>
+                    ) : null}
+
+                    {isDeclined && (
+                      <p className="text-xs text-text-sub mt-1">
+                        Отклонён новым мастером{step.declinedAt ? ` — ${formatDate(step.declinedAt)}` : ''}
+                      </p>
+                    )}
+
+                    {!isDeclined && (canControlFlow || status === RepairRequestStatus.IN_PROGRESS) && (
+                      <div className="flex gap-3 mt-1 flex-wrap">
+                        {step.status === WorkStepStatus.PENDING && <button type="button" onClick={() => handleStepStart(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Начать</button>}
+                        {step.status === WorkStepStatus.IN_PROGRESS && (
+                          <>
+                            <button type="button" onClick={() => handleStepComplete(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Выполнено</button>
+                            {!isMandatory && <button type="button" onClick={() => handleStepSkip(step.id)} className="text-xs text-text-sub hover:underline cursor-pointer">Пропустить</button>}
+                          </>
+                        )}
+                        {canEditComment && !isEditingComment && (
+                          <button type="button" onClick={() => startEditComment(step)} className="text-xs text-text-sub hover:underline cursor-pointer">
+                            {step.comment ? 'Изменить комментарий' : 'Добавить комментарий'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {!isDeclined && canEditSteps && !isMandatory && (
+                      <div className="flex gap-3 mt-1">
+                        <button type="button" onClick={() => handleDeleteStep(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Удалить</button>
+                      </div>
+                    )}
+                    {!isDeclined && canEditSteps && isMandatory && !isEditingComment && (
+                      <div className="flex gap-3 mt-1">
+                        <button type="button" onClick={() => startEditComment(step)} className="text-xs text-text-sub hover:underline cursor-pointer">
+                          {step.comment ? 'Изменить комментарий' : 'Добавить комментарий'}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  {step.description && <p className="text-xs text-text-sub">{step.description}</p>}
-                  {(canControlFlow || status === RepairRequestStatus.IN_PROGRESS) && (
-                    <div className="flex gap-3 mt-1">
-                      {step.status === WorkStepStatus.PENDING && <button type="button" onClick={() => handleStepStart(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Начать</button>}
-                      {step.status === WorkStepStatus.IN_PROGRESS && (
-                        <>
-                          <button type="button" onClick={() => handleStepComplete(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Выполнено</button>
-                          <button type="button" onClick={() => handleStepSkip(step.id)} className="text-xs text-text-sub hover:underline cursor-pointer">Пропустить</button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {canEditSteps && (
-                    <div className="flex gap-3 mt-1">
-                      <button type="button" onClick={() => handleDeleteStep(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Удалить</button>
-                    </div>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -471,6 +622,25 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <div className="flex gap-3">
             <Button variant="primary" onClick={handleAddStep} disabled={!addStepTitle.trim() || addStepLoading}>{addStepLoading ? 'Добавление...' : 'Добавить'}</Button>
             <Button variant="secondary" onClick={() => setAddStepOpen(false)}>Отмена</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={declineDiagOpen} onClose={() => setDeclineDiagOpen(false)} className="w-full max-w-md p-6">
+        <h2 className="text-base font-medium text-text-main mb-4">Отклонить диагностику</h2>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text-sub">
+            Шаги диагностики будут помечены как отклонённые и сохранены в истории. Будут добавлены новые обязательные шаги, а все необязательные шаги — удалены.
+          </p>
+          <FormField label="Причина (необязательно)">
+            <Textarea value={declineDiagReason} onChange={(e) => setDeclineDiagReason(e.target.value)} placeholder="Почему требуется повторная диагностика..." rows={3} />
+          </FormField>
+          {declineDiagError && <p className="text-sm text-brand-red">{declineDiagError}</p>}
+          <div className="flex gap-3">
+            <Button variant="danger" onClick={handleDeclineDiagnostics} disabled={diagnosticsLoading}>
+              {diagnosticsLoading ? 'Сохранение...' : 'Отклонить'}
+            </Button>
+            <Button variant="secondary" onClick={() => setDeclineDiagOpen(false)} disabled={diagnosticsLoading}>Отмена</Button>
           </div>
         </div>
       </Modal>

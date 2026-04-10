@@ -654,7 +654,6 @@ export interface RepairRequestRecord {
     refundRequested: boolean;
     refundReason: string;
     refuseReason: string;
-    rejectedRepairers: string;
     completionNote: string;
     stepsLocked: boolean;
     createdAt: string;
@@ -695,6 +694,11 @@ export interface WorkStepRecord {
     isFinal: boolean;
     createdAt: string;
     updatedAt: string;
+    isMandatory: boolean;
+    comment: string;
+    declinedAt: string;
+    declinedByRepairerId: string;
+    completedByRepairerId: string;
 }
 
 // ─── Repair Requests ────────────────────────────────────────────────────
@@ -795,6 +799,8 @@ export interface RepairAddStepRequest {
     description: string;
     order: number;
     isFinal: boolean;
+    comment: string;
+    isMandatory: boolean;
 }
 
 export interface RepairUpdateStepRequest {
@@ -804,6 +810,18 @@ export interface RepairUpdateStepRequest {
     title: string;
     description: string;
     status: string;
+    comment: string;
+}
+
+export interface RepairApproveDiagnosticsRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
+export interface RepairDeclineDiagnosticsRequest {
+    repairerUserId: string;
+    requestId: string;
+    reason: string;
 }
 
 export interface RepairCompleteStepRequest {
@@ -1004,6 +1022,8 @@ export interface RepairServiceClient {
     deleteStep(request: RepairDeleteStepRequest): Observable<RepairEmptyResponse>;
     lockSteps(request: RepairLockStepsRequest): Observable<RepairRequestResponse>;
     getSteps(request: RepairGetStepsRequest): Observable<WorkStepListResponse>;
+    approveDiagnostics(request: RepairApproveDiagnosticsRequest): Observable<RepairEmptyResponse>;
+    declineDiagnostics(request: RepairDeclineDiagnosticsRequest): Observable<WorkStepListResponse>;
 
     // Broken parts
     addBrokenPart(request: RepairAddBrokenPartRequest): Observable<BrokenPartResponse>;

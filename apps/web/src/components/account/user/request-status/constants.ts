@@ -10,7 +10,7 @@ export const TERMINAL_STATUSES = [
 
 export const STEPS = [
   { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING] },
-  { key: 'choosing', label: 'Назначение\nмастера', statuses: [RepairRequestStatus.ASSIGNED, RepairRequestStatus.REFUSED] },
+  { key: 'choosing', label: 'Назначение\nмастера', statuses: [RepairRequestStatus.ASSIGNED] },
   { key: 'traveling', label: 'Мастер\nвыехал', statuses: [RepairRequestStatus.ACCEPTED] },
   { key: 'repair', label: 'Ремонт', statuses: [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.PAUSED, RepairRequestStatus.AWAITING_COMPLETION] },
   { key: 'completed', label: 'Завершено', statuses: [RepairRequestStatus.COMPLETED] },
@@ -26,7 +26,7 @@ export const STATUS_DESCRIPTIONS: Record<string, string> = {
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ремонт почти завершён, ожидайте подтверждения.',
   [RepairRequestStatus.COMPLETED]: 'Ремонт успешно завершён. Спасибо за обращение!',
   [RepairRequestStatus.CANCELLED]: 'Заявка отменена.',
-  [RepairRequestStatus.REFUSED]: 'Мастер отказался от заявки. Мы подберём нового специалиста.',
+  [RepairRequestStatus.REFUSED]: 'Мастер отказался от заявки. Менеджер подберёт нового специалиста.',
   [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос на возврат средств отправлен. Ожидайте решения.',
   [RepairRequestStatus.REFUNDED]: 'Средства возвращены на ваш счёт.',
 };
@@ -41,7 +41,7 @@ export const STATUS_TITLES: Record<string, string> = {
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
   [RepairRequestStatus.COMPLETED]: 'Ремонт завершён',
   [RepairRequestStatus.CANCELLED]: 'Заявка отменена',
-  [RepairRequestStatus.REFUSED]: 'Поиск нового мастера',
+  [RepairRequestStatus.REFUSED]: 'Мастер отказался',
   [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос возврата',
   [RepairRequestStatus.REFUNDED]: 'Средства возвращены',
 };

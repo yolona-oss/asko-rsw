@@ -345,7 +345,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -597,7 +598,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -988,7 +990,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -1157,7 +1160,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -1392,7 +1396,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -1715,7 +1720,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -1928,7 +1934,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -2161,7 +2168,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -2396,7 +2404,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -2619,7 +2628,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -3193,7 +3203,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -3460,7 +3471,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -3690,7 +3702,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -3984,7 +3997,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -4073,7 +4087,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ],
           "mappedType": "unknown",
           "nativeEnumName": "work_step_status"
@@ -4141,6 +4156,70 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "is_mandatory": {
+          "name": "is_mandatory",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "declined_at": {
+          "name": "declined_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "declined_by_repairer_id": {
+          "name": "declined_by_repairer_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "work_step",
@@ -4239,7 +4318,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -4548,7 +4628,8 @@
             "pending",
             "in_progress",
             "completed",
-            "skipped"
+            "skipped",
+            "declined"
           ]
         }
       },
@@ -4621,7 +4702,8 @@
         "pending",
         "in_progress",
         "completed",
-        "skipped"
+        "skipped",
+        "declined"
       ]
     }
   }

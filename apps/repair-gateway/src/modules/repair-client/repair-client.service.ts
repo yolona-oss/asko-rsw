@@ -109,24 +109,27 @@ export class RepairClientService implements OnModuleInit {
 
     // ── Work steps ──
 
-    addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; order?: number; isFinal?: boolean }): Promise<WorkStepResponse> {
+    addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; comment?: string; order?: number; isFinal?: boolean; isMandatory?: boolean }): Promise<WorkStepResponse> {
         return grpcCall(this.repairService.addStep({
             repairerUserId,
             requestId,
             title: dto.title,
             description: dto.description ?? '',
+            comment: dto.comment ?? '',
             order: dto.order ?? 0,
             isFinal: dto.isFinal ?? false,
+            isMandatory: dto.isMandatory ?? false,
         }));
     }
 
-    updateStep(repairerUserId: string, requestId: string, stepId: string, dto: { title?: string; description?: string; status?: string }): Promise<WorkStepResponse> {
+    updateStep(repairerUserId: string, requestId: string, stepId: string, dto: { title?: string; description?: string; comment?: string; status?: string }): Promise<WorkStepResponse> {
         return grpcCall(this.repairService.updateStep({
             repairerUserId,
             requestId,
             stepId,
             title: dto.title ?? '',
             description: dto.description ?? '',
+            comment: dto.comment ?? '',
             status: dto.status ?? '',
         }));
     }
@@ -145,6 +148,14 @@ export class RepairClientService implements OnModuleInit {
 
     getSteps(requestId: string): Promise<WorkStepListResponse> {
         return grpcCall(this.repairService.getSteps({ requestId }));
+    }
+
+    approveDiagnostics(repairerUserId: string, requestId: string): Promise<RepairEmptyResponse> {
+        return grpcCall(this.repairService.approveDiagnostics({ repairerUserId, requestId }));
+    }
+
+    declineDiagnostics(repairerUserId: string, requestId: string, reason?: string): Promise<WorkStepListResponse> {
+        return grpcCall(this.repairService.declineDiagnostics({ repairerUserId, requestId, reason: reason ?? '' }));
     }
 
     // ── Broken parts ──

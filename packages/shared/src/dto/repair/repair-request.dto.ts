@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsArray, IsBoolean } from 'class-validator';
 import { RepairRequestStatus, WorkStepStatus, BrokenPartStatus } from '../../types/repair.type';
 
 export class CreateRepairRequestDto {
@@ -68,11 +68,20 @@ export class AddWorkStepDto {
     description?: string;
 
     @IsOptional()
+    @IsString()
+    comment?: string;
+
+    @IsOptional()
     @IsNumber()
     order?: number;
 
     @IsOptional()
+    @IsBoolean()
     isFinal?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    isMandatory?: boolean;
 }
 
 export class UpdateWorkStepDto {
@@ -85,8 +94,18 @@ export class UpdateWorkStepDto {
     description?: string;
 
     @IsOptional()
+    @IsString()
+    comment?: string;
+
+    @IsOptional()
     @IsEnum(WorkStepStatus)
     status?: WorkStepStatus;
+}
+
+export class DeclineDiagnosticsDto {
+    @IsOptional()
+    @IsString()
+    reason?: string;
 }
 
 export class AddBrokenPartDto {

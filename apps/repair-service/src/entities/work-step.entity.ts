@@ -5,7 +5,7 @@ import { RepairRequest } from './repair-request.entity';
 
 @Entity()
 export class WorkStep {
-    [OptionalProps]?: 'description' | 'status' | 'isFinal' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'description' | 'comment' | 'status' | 'isFinal' | 'isMandatory' | 'declinedAt' | 'declinedByRepairerId' | 'completedByRepairerId' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -19,6 +19,9 @@ export class WorkStep {
     @Property({ type: 'text', nullable: true })
     description?: string;
 
+    @Property({ type: 'text', nullable: true })
+    comment?: string;
+
     @Enum({ items: () => WorkStepStatus, nativeEnumName: 'work_step_status' })
     status: WorkStepStatus = WorkStepStatus.PENDING;
 
@@ -27,6 +30,18 @@ export class WorkStep {
 
     @Property({ type: 'boolean', default: false })
     isFinal: boolean = false;
+
+    @Property({ type: 'boolean', default: false })
+    isMandatory: boolean = false;
+
+    @Property({ type: 'datetime', nullable: true })
+    declinedAt?: Date;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    declinedByRepairerId?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    completedByRepairerId?: string;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

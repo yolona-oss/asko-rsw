@@ -16,6 +16,7 @@ import {
     RequestRefundDto,
     AddWorkStepDto,
     UpdateWorkStepDto,
+    DeclineDiagnosticsDto,
     SetRepairPriceDto,
     AddBrokenPartDto,
     UpdateBrokenPartDto,
@@ -398,6 +399,24 @@ export class RepairRequestController {
     @Get(':id/steps')
     async getSteps(@Param('id') id: string) {
         return this.repairClient.getSteps(id);
+    }
+
+    @ApiCreatedResponse({ type: EmptyResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/steps/diagnostics/approve')
+    async approveDiagnostics(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.approveDiagnostics(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: WorkStepListResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/steps/diagnostics/decline')
+    async declineDiagnostics(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Body() dto: DeclineDiagnosticsDto,
+    ) {
+        return this.repairClient.declineDiagnostics(user.sub, id, dto.reason);
     }
 
     // ── Broken parts ──

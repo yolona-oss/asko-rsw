@@ -4,9 +4,13 @@ export interface WorkStep {
   id: string;
   title: string;
   description?: string;
-  status: RepairRequestStatus;
+  comment?: string;
+  status: string;
   order: number;
-  isFinal: boolean;
+  isFinal?: boolean;
+  isMandatory?: boolean;
+  declinedAt?: Date | string;
+  declinedByRepairerId?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

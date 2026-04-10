@@ -1,11 +1,12 @@
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import type { BadgeVariant } from '@asko/ui';
 
-export const STEP_STATUS_LABEL: Record<WorkStepStatus, string> = {
+export const STEP_STATUS_LABEL: Record<string, string> = {
   [WorkStepStatus.PENDING]: 'Ожидает',
   [WorkStepStatus.IN_PROGRESS]: 'В процессе',
   [WorkStepStatus.COMPLETED]: 'Выполнен',
   [WorkStepStatus.SKIPPED]: 'Пропущен',
+  [WorkStepStatus.DECLINED]: 'Отклонён',
 };
 
 

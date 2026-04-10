@@ -252,9 +252,9 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           </div>
 
           {/* Refusal notice */}
-          {request.refuseReason && request.rejectedRepairers && request.rejectedRepairers.length > 0 && (
-            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-              Предыдущий мастер отклонил заявку: {request.refuseReason}
+          {request.refuseReason && (
+            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+              Мастер отказался от заявки: {request.refuseReason}
             </div>
           )}
 
@@ -266,7 +266,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               assignSuccess={assignSuccess}
               selectedRepairer={selectedRepairer}
               onSelectRepairer={setSelectedRepairer}
-              repairers={repairers.filter((r) => !(request.rejectedRepairers ?? []).includes(r.id))}
+              repairers={repairers}
               onAssign={handleAssign}
               requestAddress={request.address}
               currentRepairerId={request.repairer?.id}

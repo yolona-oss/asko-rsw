@@ -5,7 +5,6 @@ export interface RepairRequestDetail {
   status: RepairRequestStatus;
   description: string;
   createdAt: Date | string;
-  rejectedRepairers?: string[];
   refuseReason?: string;
   conversationId?: string;
   user?: { firstName?: string; lastName?: string; phone?: string };

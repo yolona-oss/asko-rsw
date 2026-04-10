@@ -258,6 +258,25 @@ export class RepairRequestService {
         assertTransition(request.status, RepairRequestStatus.ACCEPTED);
 
         request.status = RepairRequestStatus.ACCEPTED;
+
+        // Seed mandatory diagnostics steps if none exist yet (idempotent — re-accept after transfer won't duplicate)
+        const existingMandatory = await this.em.count(WorkStep, { repairRequest: requestId, isMandatory: true });
+        if (existingMandatory === 0) {
+            const existingCount = await this.em.count(WorkStep, { repairRequest: requestId });
+            this.em.create(WorkStep, {
+                repairRequest: request,
+                title: 'Диагностика',
+                order: existingCount + 1,
+                isMandatory: true,
+            });
+            this.em.create(WorkStep, {
+                repairRequest: request,
+                title: 'Результат диагностики',
+                order: existingCount + 2,
+                isMandatory: true,
+            });
+        }
+
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -272,7 +291,7 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Repairer refuses assigned request - reverts to PAID so manager can re-assign */
+    /** Repairer refuses assigned request — pinned to REFUSED with the original repairer still attached. Only a manager transfer can move the request out. */
     @CreateRequestContext()
     async refuseRequest(repairerUserId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
@@ -282,13 +301,8 @@ export class RepairRequestService {
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertActionTransition('refuse', request.status);
 
-        // Track rejected repairer
-        if (!request.rejectedRepairers) request.rejectedRepairers = [];
-        request.rejectedRepairers.push(repairer.id);
-
-        request.status = RepairRequestStatus.PAID;
+        request.status = RepairRequestStatus.REFUSED;
         request.refuseReason = reason;
-        request.repairer = undefined;
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -296,7 +310,7 @@ export class RepairRequestService {
             repairId: request.id,
             userId: request.userId,
             oldStatus: RepairRequestStatus.ASSIGNED,
-            newStatus: RepairRequestStatus.PAID,
+            newStatus: RepairRequestStatus.REFUSED,
             timestamp: new Date(),
         });
 
@@ -559,40 +573,56 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Manager reassigns request from current repairer to a new one */
+    /** Manager transfers request from current repairer to a new one (any non-terminal state with a repairer) */
     @CreateRequestContext()
     async reassign(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertActionTransition('reassign', request.status);
+
+        const oldRepairer = request.repairer
+            ? (typeof request.repairer === 'object' ? request.repairer : await this.em.findOne(Repairer, { id: String(request.repairer) }))
+            : undefined;
+        if (!oldRepairer) {
+            throw AppErrors.badRequest('Нельзя передать заявку без текущего мастера');
+        }
+
+        if (oldRepairer.id === newRepairerId) {
+            throw AppErrors.badRequest('Нельзя передать заявку текущему мастеру');
+        }
 
         const newRepairer = await this.em.findOne(Repairer, { id: newRepairerId });
         if (!newRepairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!newRepairer.isActive) throw AppErrors.badRequest('Repairer is not active');
-
-        // Track old repairer in rejected list
-        const oldRepairerId = request.repairer
-            ? (typeof request.repairer === 'object' ? request.repairer.id : String(request.repairer))
-            : undefined;
-        if (oldRepairerId) {
-            if (!request.rejectedRepairers) request.rejectedRepairers = [];
-            request.rejectedRepairers.push(oldRepairerId);
-        }
 
         const oldStatus = request.status;
         request.repairer = this.em.getReference(Repairer, newRepairerId);
         request.managerId = managerId;
         request.status = RepairRequestStatus.ASSIGNED;
         request.statusBeforePause = undefined;
+        request.refuseReason = undefined;
         await this.em.flush();
 
         await this.repairEventService.emit({
-            type: RepairEventType.ASSIGNED,
+            type: RepairEventType.TRANSFERRED,
             repairId: request.id,
             userId: request.userId,
             oldStatus,
             newStatus: RepairRequestStatus.ASSIGNED,
-            repairerId: newRepairerId,
+            oldRepairerId: oldRepairer.id,
+            newRepairerId,
+            oldRepairerUserId: oldRepairer.userId,
+            newRepairerUserId: newRepairer.userId,
+            timestamp: new Date(),
+        });
+
+        // Keep status_changed fan-out so existing consumers stay happy
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.ASSIGNED,
             timestamp: new Date(),
         });
 

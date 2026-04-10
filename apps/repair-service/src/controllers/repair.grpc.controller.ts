@@ -34,6 +34,8 @@ import type {
     RepairDeleteStepRequest,
     RepairLockStepsRequest,
     RepairGetStepsRequest,
+    RepairApproveDiagnosticsRequest,
+    RepairDeclineDiagnosticsRequest,
     RepairFindByIdRequest,
     RepairFindByUserRequest,
     RepairFindByRepairerRequest,
@@ -182,7 +184,6 @@ function requestToRecord(entity: RepairRequest) {
         refundRequested: entity.refundRequested,
         refundReason: entity.refundReason ?? '',
         refuseReason: entity.refuseReason ?? '',
-        rejectedRepairers: entity.rejectedRepairers ? JSON.stringify(entity.rejectedRepairers) : '',
         completionNote: entity.completionNote ?? '',
         stepsLocked: entity.stepsLocked,
         createdAt: entity.createdAt?.toISOString() ?? '',
@@ -225,6 +226,11 @@ function stepToRecord(entity: WorkStep) {
         isFinal: entity.isFinal,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        isMandatory: entity.isMandatory,
+        comment: entity.comment ?? '',
+        declinedAt: entity.declinedAt?.toISOString() ?? '',
+        declinedByRepairerId: entity.declinedByRepairerId ?? '',
+        completedByRepairerId: entity.completedByRepairerId ?? '',
     };
 }
 
@@ -385,8 +391,10 @@ export class RepairGrpcController {
             const step = await this.workStepService.addStep(data.repairerUserId, data.requestId, {
                 title: data.title,
                 description: data.description || undefined,
+                comment: data.comment || undefined,
                 order: data.order || undefined,
                 isFinal: data.isFinal || false,
+                isMandatory: data.isMandatory || false,
             });
             return { step: stepToRecord(step) };
         } catch (e) { throw toGrpcError(e); }
@@ -398,9 +406,26 @@ export class RepairGrpcController {
             const step = await this.workStepService.updateStep(data.repairerUserId, data.requestId, data.stepId, {
                 title: data.title || undefined,
                 description: data.description,
+                comment: data.comment,
                 status: data.status || undefined,
             });
             return { step: stepToRecord(step) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ApproveDiagnostics')
+    async approveDiagnostics(data: RepairApproveDiagnosticsRequest) {
+        try {
+            await this.workStepService.approveDiagnostics(data.repairerUserId, data.requestId);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'DeclineDiagnostics')
+    async declineDiagnostics(data: RepairDeclineDiagnosticsRequest) {
+        try {
+            const newSteps = await this.workStepService.declineDiagnostics(data.repairerUserId, data.requestId, data.reason || undefined);
+            return { steps: newSteps.map(stepToRecord) };
         } catch (e) { throw toGrpcError(e); }
     }
 

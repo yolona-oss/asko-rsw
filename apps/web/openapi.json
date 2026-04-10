@@ -3996,6 +3996,76 @@
         ]
       }
     },
+    "/repair-requests/{id}/steps/diagnostics/approve": {
+      "post": {
+        "operationId": "RepairRequestController_approveDiagnostics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/steps/diagnostics/decline": {
+      "post": {
+        "operationId": "RepairRequestController_declineDiagnostics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineDiagnosticsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkStepListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/{id}/broken-parts": {
       "post": {
         "operationId": "RepairRequestController_addBrokenPart",
@@ -4935,6 +5005,44 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeviceRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "User Devices"
+        ]
+      },
+      "patch": {
+        "operationId": "UserDeviceController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDeviceDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -7899,6 +8007,9 @@
           "description": {
             "type": "string"
           },
+          "comment": {
+            "type": "string"
+          },
           "status": {
             "type": "string"
           },
@@ -7907,6 +8018,15 @@
           },
           "isFinal": {
             "type": "boolean"
+          },
+          "isMandatory": {
+            "type": "boolean"
+          },
+          "declinedAt": {
+            "type": "string"
+          },
+          "declinedByRepairerId": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string"
@@ -7922,6 +8042,7 @@
           "status",
           "order",
           "isFinal",
+          "isMandatory",
           "createdAt",
           "updatedAt"
         ]
@@ -8641,6 +8762,10 @@
           "steps"
         ]
       },
+      "DeclineDiagnosticsDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AddBrokenPartDto": {
         "type": "object",
         "properties": {}
@@ -8809,6 +8934,10 @@
         "required": [
           "userDevices"
         ]
+      },
+      "UpdateUserDeviceDto": {
+        "type": "object",
+        "properties": {}
       },
       "DeviceCategoryRecordDto": {
         "type": "object",

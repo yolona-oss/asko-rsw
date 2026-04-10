@@ -110,6 +110,8 @@ service RepairService {
     rpc DeleteStep(RepairDeleteStepRequest) returns (RepairEmptyResponse);
     rpc LockSteps(RepairLockStepsRequest) returns (RepairRequestResponse);
     rpc GetSteps(RepairGetStepsRequest) returns (WorkStepListResponse);
+    rpc ApproveDiagnostics(RepairApproveDiagnosticsRequest) returns (RepairEmptyResponse);
+    rpc DeclineDiagnostics(RepairDeclineDiagnosticsRequest) returns (WorkStepListResponse);
 
     // Broken parts
     rpc AddBrokenPart(RepairAddBrokenPartRequest) returns (BrokenPartResponse);
@@ -692,7 +694,7 @@ message RepairRequestRecord {
     bool refundRequested = 12;
     string refundReason = 13;
     string refuseReason = 14;
-    string rejectedRepairers = 15;
+    reserved 15;
     string completionNote = 16;
     bool stepsLocked = 17;
     string createdAt = 18;
@@ -737,6 +739,11 @@ message WorkStepRecord {
     bool isFinal = 7;
     string createdAt = 8;
     string updatedAt = 9;
+    bool isMandatory = 10;
+    string comment = 11;
+    string declinedAt = 12;
+    string declinedByRepairerId = 13;
+    string completedByRepairerId = 14;
 }
 
 // ─── Repair Requests ───────────────────────────────────────────────────────
@@ -837,6 +844,8 @@ message RepairAddStepRequest {
     string description = 4;
     int32 order = 5;
     bool isFinal = 6;
+    string comment = 7;
+    bool isMandatory = 8;
 }
 
 message RepairUpdateStepRequest {
@@ -846,6 +855,18 @@ message RepairUpdateStepRequest {
     string title = 4;
     string description = 5;
     string status = 6;
+    string comment = 7;
+}
+
+message RepairApproveDiagnosticsRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairDeclineDiagnosticsRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string reason = 3;
 }
 
 message RepairCompleteStepRequest {

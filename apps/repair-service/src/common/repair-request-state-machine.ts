@@ -21,12 +21,27 @@ export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
     [S.CANCELLED]: { notFrom: [S.COMPLETED, S.IN_PROGRESS, S.AWAITING_COMPLETION] },
 };
 
-export const REPAIR_ACTION_TRANSITIONS = {
-    refuse: { from: [S.ASSIGNED] as readonly Status[], to: S.PAID },
+type ActionTransitionRule =
+    | { from: readonly Status[]; notFrom?: never; to?: Status }
+    | { from?: never; notFrom: readonly Status[]; to?: Status };
+
+export const REPAIR_ACTION_TRANSITIONS: Record<string, ActionTransitionRule> = {
+    refuse: { from: [S.ASSIGNED] as readonly Status[], to: S.REFUSED },
     denyRefund: { from: [S.REFUND_REQUESTED] as readonly Status[], to: S.PAID },
     resume: { from: [S.PAUSED] as readonly Status[] },
-    reassign: { from: [S.ASSIGNED, S.ACCEPTED, S.PAUSED, S.REFUSED] as readonly Status[], to: S.ASSIGNED },
-} as const;
+    reassign: {
+        // Transfer from any state where a repairer is attached and the job isn't terminal/refund-bound
+        notFrom: [
+            S.PENDING,
+            S.PAID,
+            S.COMPLETED,
+            S.CANCELLED,
+            S.REFUNDED,
+            S.REFUND_REQUESTED,
+        ] as readonly Status[],
+        to: S.ASSIGNED,
+    },
+};
 
 export function canTransition(currentStatus: Status, targetStatus: Status): boolean {
     const rule = REPAIR_TRANSITIONS[targetStatus];
@@ -49,7 +64,15 @@ export function assertActionTransition(
     currentStatus: Status,
 ): void {
     const rule = REPAIR_ACTION_TRANSITIONS[action];
-    if (!rule.from.includes(currentStatus)) {
+    if (!rule) {
+        throw AppErrors.repairInvalidStatus(`Unknown action "${action}"`);
+    }
+    const allowed = rule.from
+        ? rule.from.includes(currentStatus)
+        : rule.notFrom
+            ? !rule.notFrom.includes(currentStatus)
+            : false;
+    if (!allowed) {
         throw AppErrors.repairInvalidStatus(
             `Cannot perform "${action}" from status "${currentStatus}"`,
         );

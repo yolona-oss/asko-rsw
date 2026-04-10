@@ -18,6 +18,7 @@ export enum WorkStepStatus {
     IN_PROGRESS = 'in_progress',
     COMPLETED = 'completed',
     SKIPPED = 'skipped',
+    DECLINED = 'declined',
 }
 
 export enum BrokenPartStatus {
@@ -50,7 +51,6 @@ export interface IRepairRequest {
     refundRequested: boolean;
     refundReason?: string;
     refuseReason?: string;
-    rejectedRepairers?: string[];
     completionNote?: string;
     statusBeforePause?: string;
     stepsLocked: boolean;
@@ -74,9 +74,14 @@ export interface IWorkStep {
     repairRequestId: string;
     title: string;
     description?: string;
+    comment?: string;
     status: WorkStepStatus;
     order: number;
     isFinal: boolean;
+    isMandatory: boolean;
+    declinedAt?: Date;
+    declinedByRepairerId?: string;
+    completedByRepairerId?: string;
     createdAt: Date;
     updatedAt: Date;
 }

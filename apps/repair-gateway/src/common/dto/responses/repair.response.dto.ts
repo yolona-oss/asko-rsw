@@ -19,7 +19,6 @@ export class RepairRequestRecordDto {
     refundRequested: boolean;
     refundReason?: string;
     refuseReason?: string;
-    rejectedRepairers?: string[];
     completionNote?: string;
     stepsLocked: boolean;
     completionSignature?: string;
@@ -56,9 +55,14 @@ export class WorkStepRecordDto {
     repairRequestId: string;
     title: string;
     description?: string;
+    comment?: string;
     status: string;
     order: number;
     isFinal: boolean;
+    isMandatory: boolean;
+    declinedAt?: string;
+    declinedByRepairerId?: string;
+    completedByRepairerId?: string;
     createdAt: string;
     updatedAt: string;
 }

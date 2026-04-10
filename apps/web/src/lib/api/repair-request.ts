@@ -136,6 +136,14 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/steps/lock`);
   },
 
+  approveDiagnostics(requestId: string) {
+    return api.post<void>(`/repair-requests/${requestId}/steps/diagnostics/approve`);
+  },
+
+  declineDiagnostics(requestId: string, reason?: string) {
+    return api.post<WorkStepList>(`/repair-requests/${requestId}/steps/diagnostics/decline`, { reason });
+  },
+
   // Broken parts
   getBrokenParts(requestId: string) {
     return api.get<{ parts: any[] }>(`/repair-requests/${requestId}/broken-parts`);

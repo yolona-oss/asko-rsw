@@ -33,7 +33,7 @@ const ARRAY_FIELDS = new Set([
     'repairers', 'devices', 'participants', 'presences', 'links',
     // entity array fields
     'roles', 'providers', 'specializations', 'tags',
-    'workSteps', 'brokenParts', 'rejectedRepairers',
+    'workSteps', 'brokenParts',
 ]);
 
 function normalizeGrpcResponse<T>(data: T): T {

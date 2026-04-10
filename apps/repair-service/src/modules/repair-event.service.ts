@@ -4,6 +4,9 @@ import { ClientProxy } from '@nestjs/microservices';
 export enum RepairEventType {
     STATUS_CHANGED = 'repair.status_changed',
     ASSIGNED = 'repair.assigned',
+    TRANSFERRED = 'repair.transferred',
+    DIAGNOSTICS_APPROVED = 'repair.diagnostics_approved',
+    DIAGNOSTICS_DECLINED = 'repair.diagnostics_declined',
     COMPLETED = 'repair.completed',
     SCHEDULE_CREATED = 'schedule.created',
     SCHEDULE_UPDATED = 'schedule.updated',
@@ -18,6 +21,11 @@ export interface RepairEvent {
     oldStatus?: string;
     newStatus?: string;
     repairerId?: string;
+    oldRepairerId?: string;
+    newRepairerId?: string;
+    oldRepairerUserId?: string;
+    newRepairerUserId?: string;
+    reason?: string;
     timestamp: Date;
 }
 
