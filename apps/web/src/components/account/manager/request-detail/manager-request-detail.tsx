@@ -7,6 +7,7 @@ import { Badge, Button, ImageGallery, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
+import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
@@ -189,7 +190,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
       {/* Status header */}
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <h2 className="text-2xl font-bold text-text-main">Статус заявки:</h2>
           <Badge
             variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'}
@@ -197,6 +198,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           >
             {STATUS_LABELS[request.status] ?? request.status}
           </Badge>
+          <CertificateWarningBadge valid={request.certificateValid} />
         </div>
         <div className="flex items-center gap-2 text-sm text-text-sub">
           <span>ID #{request.id.slice(0, 8)}</span>

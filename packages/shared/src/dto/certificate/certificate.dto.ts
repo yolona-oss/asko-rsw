@@ -65,6 +65,20 @@ export class CreateCertificateDto {
     description?: string;
 }
 
+/** User self-creates a certificate for their own device (backend generates cert number; PENDING_PAYMENT + invoice) */
+export class SelfCreateCertificateDto {
+    @IsString()
+    userDeviceId!: string;
+
+    @IsInt()
+    @IsIn(CERTIFICATE_DURATION_OPTIONS as unknown as number[])
+    durationMonths!: number;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
+}
+
 export class AssignCertificateDto {
     @IsString()
     userDeviceId!: string;

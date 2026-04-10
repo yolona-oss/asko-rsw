@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Textarea, SkeletonCard } from '@asko/ui';
 import { Plus } from 'lucide-react';
+import Link from 'next/link';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
+import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
@@ -172,6 +174,24 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           {statusTitle}
         </h2>
         <span className="text-sm text-text-sub">{formatDate(request.updatedAt)}</span>
+        {request.certificateValid === false && (
+          <div className="flex flex-col gap-1 mt-2">
+            <CertificateWarningBadge valid={request.certificateValid} />
+            <p className="text-xs text-text-sub">
+              Сертификат не оплачен или недействителен.{' '}
+              {(request.certificate?.id ?? request.certificateId) ? (
+                <Link
+                  href={`/account/certificates/${request.certificate?.id ?? request.certificateId}`}
+                  className="text-brand-main underline"
+                >
+                  Оплатите, чтобы активировать заявку.
+                </Link>
+              ) : (
+                'Оплатите, чтобы активировать заявку.'
+              )}
+            </p>
+          </div>
+        )}
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-3">
           {description}
         </p>

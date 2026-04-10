@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Certificate } from 'entities/certificate.entity';
 import { UserDevice } from 'entities/user-device.entity';
-import { Device } from 'entities/device.entity';
 import { DealerProfile } from 'entities/dealer-profile.entity';
+import { RepairRequest } from 'entities/repair-request.entity';
 import {
     CertificateStatus,
     PaymentTargetType,
     PointsTransactionType,
+    RepairRequestStatus,
     generateCertificateNumber,
 } from '@asko/shared';
 import { PointsTransaction } from 'entities/points-transaction.entity';
@@ -83,6 +84,46 @@ export class CertificateService {
         cert.signedPayload = JSON.stringify(payload, Object.keys(payload).sort());
         cert.signature = this.signatureService.sign(payload);
         await this.em.flush();
+
+        return cert;
+    }
+
+    /** User creates a certificate for their own device — invoice emitted, cert starts PENDING_PAYMENT. */
+    @CreateRequestContext()
+    async selfCreate(userId: string, dto: {
+        userDeviceId: string;
+        expiresAt: string;
+        description?: string;
+    }): Promise<Certificate> {
+        const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
+        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+
+        const certNumber = generateCertificateNumber();
+
+        const device = userDevice.device;
+        const years = Math.max(1, Math.ceil(
+            (new Date(dto.expiresAt).getTime() - Date.now()) / (365.25 * 24 * 60 * 60 * 1000),
+        ));
+        const price = calculateCertificatePrice(device.price ?? 0, years);
+
+        const cert = this.em.create(Certificate, {
+            userId,
+            userDevice,
+            certificateNumber: certNumber,
+            expiresAt: new Date(dto.expiresAt),
+            price,
+            status: CertificateStatus.PENDING_PAYMENT,
+            description: dto.description,
+        });
+        await this.em.persistAndFlush(cert);
+
+        await this.paymentCommandService.emitCreateInvoice(
+            userId,
+            PaymentTargetType.CERTIFICATE,
+            cert.id,
+            price,
+        );
 
         return cert;
     }
@@ -200,6 +241,24 @@ export class CertificateService {
                 });
                 this.em.persist(transaction);
             }
+        }
+
+        // Flip certificateValid=true on any open repair requests that were created with
+        // this cert while it was still unpaid — the cert is now effectively "applied".
+        const openRequests = await this.em.find(RepairRequest, {
+            certificate: cert.id,
+            certificateValid: false,
+            status: {
+                $nin: [
+                    RepairRequestStatus.COMPLETED,
+                    RepairRequestStatus.CANCELLED,
+                    RepairRequestStatus.REFUNDED,
+                    RepairRequestStatus.REFUSED,
+                ],
+            },
+        });
+        for (const req of openRequests) {
+            req.certificateValid = true;
         }
 
         await this.em.flush();
@@ -335,5 +394,41 @@ export class CertificateService {
         if (!cert.paid) return { valid: false, certificate: cert, reason: 'Certificate is not paid' };
 
         return { valid: true, certificate: cert };
+    }
+
+    /**
+     * Strict cert check used by the repair-request creation path.
+     * Returns a discriminated result so callers can decide whether to:
+     *   - hard-throw (data integrity violations like `not_found`, `wrong_user`, `wrong_device`)
+     *   - soft-flag the request (`not_paid`, `expired`, `revoked`, `signature_invalid`)
+     * Kept separate from `validateCertificate(certificateNumber)` which is a public gRPC API.
+     */
+    async validateCertificateForRequest(
+        certId: string,
+        userId: string,
+        userDeviceId: string,
+    ): Promise<
+        | { ok: true; certificate: Certificate }
+        | { ok: false; reason: 'not_found' | 'wrong_user' | 'wrong_device' | 'not_paid' | 'expired' | 'revoked' | 'signature_invalid'; certificate?: Certificate }
+    > {
+        const cert = await this.em.findOne(Certificate, { id: certId }, {
+            populate: ['userDevice'],
+        });
+        if (!cert) return { ok: false, reason: 'not_found' };
+        if (cert.userId !== userId) return { ok: false, reason: 'wrong_user', certificate: cert };
+
+        const certDeviceId = typeof cert.userDevice === 'object' ? cert.userDevice.id : String(cert.userDevice);
+        if (certDeviceId !== userDeviceId) return { ok: false, reason: 'wrong_device', certificate: cert };
+
+        if (cert.status === CertificateStatus.REVOKED) return { ok: false, reason: 'revoked', certificate: cert };
+        if (cert.status === CertificateStatus.EXPIRED || new Date() > cert.expiresAt) {
+            return { ok: false, reason: 'expired', certificate: cert };
+        }
+        if (!cert.paid) return { ok: false, reason: 'not_paid', certificate: cert };
+
+        const sigCheck = this.signatureService.verifyStoredSignature(cert.signedPayload, cert.signature);
+        if (!sigCheck.valid) return { ok: false, reason: 'signature_invalid', certificate: cert };
+
+        return { ok: true, certificate: cert };
     }
 }

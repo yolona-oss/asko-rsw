@@ -21,6 +21,7 @@ export class RepairRequestRecordDto {
     refuseReason?: string;
     completionNote?: string;
     stepsLocked: boolean;
+    certificateValid?: boolean;
     completionSignature?: string;
     completionSignedPayload?: string;
     acceptanceSignature?: string;

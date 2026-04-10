@@ -7,6 +7,7 @@ export interface RepairRequestDetail {
   createdAt: Date | string;
   refuseReason?: string;
   conversationId?: string;
+  certificateValid?: boolean;
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
   address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number };

@@ -50,6 +50,7 @@ service DeviceService {
 service CertificateService {
     rpc AddCertificate(CertAddCertificateRequest) returns (CertificateResponse);
     rpc CreateByDealer(CertCreateByDealerRequest) returns (CertificateResponse);
+    rpc SelfCreate(CertSelfCreateRequest) returns (CertificateResponse);
     rpc MarkPaid(CertMarkPaidRequest) returns (CertificateResponse);
     rpc RevokeCertificate(CertRevokeRequest) returns (CertificateResponse);
     rpc ReassignCertificate(CertReassignRequest) returns (CertificateResponse);
@@ -464,6 +465,13 @@ message CertCreateByDealerRequest {
     string serialNumber = 7;
 }
 
+message CertSelfCreateRequest {
+    string userId = 1;
+    string userDeviceId = 2;
+    string expiresAt = 3;
+    string description = 4;
+}
+
 message CertMarkPaidRequest {
     string id = 1;
 }
@@ -710,6 +718,7 @@ message RepairRequestRecord {
     string completionSignedPayload = 28;
     string acceptanceSignature = 29;
     string acceptanceSignedPayload = 30;
+    bool certificateValid = 31;
 }
 
 message BrokenPartRecord {

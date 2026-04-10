@@ -186,6 +186,7 @@ function requestToRecord(entity: RepairRequest) {
         refuseReason: entity.refuseReason ?? '',
         completionNote: entity.completionNote ?? '',
         stepsLocked: entity.stepsLocked,
+        certificateValid: entity.certificateValid,
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
         statusBeforePause: entity.statusBeforePause ?? '',

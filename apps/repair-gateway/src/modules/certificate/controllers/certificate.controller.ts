@@ -9,6 +9,7 @@ import { IsOptional, IsEnum } from 'class-validator';
 import {
     AddCertificateDto,
     CreateCertificateDto,
+    SelfCreateCertificateDto,
     AssignCertificateDto,
     CertificateStatus,
     PaginationDto,
@@ -135,6 +136,19 @@ export class CertificateController {
         });
 
         return result;
+    }
+
+    /** User self-creates a certificate for one of their devices (PENDING_PAYMENT + invoice) */
+    @ApiCreatedResponse({ type: CertificateResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Post('self-create')
+    async selfCreate(@JwtAuthUser() user: JwtPayload, @Body() dto: SelfCreateCertificateDto) {
+        const expiresAt = computeExpiresAt(dto.durationMonths).toISOString();
+        return this.certificateClient.selfCreate(user.sub, {
+            userDeviceId: dto.userDeviceId,
+            expiresAt,
+            description: dto.description,
+        });
     }
 
     /** Reassign certificate to different device */

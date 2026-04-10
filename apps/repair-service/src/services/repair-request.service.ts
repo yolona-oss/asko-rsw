@@ -5,13 +5,14 @@ import { UserDevice } from 'entities/user-device.entity';
 import { Certificate } from 'entities/certificate.entity';
 import { Repairer } from 'entities/repairer.entity';
 import { Address } from 'entities/address.entity';
-import { RepairRequestStatus, CertificateStatus, PaymentTargetType } from '@asko/shared';
+import { RepairRequestStatus, PaymentTargetType } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { assertTransition, assertActionTransition, canTransition } from 'common/repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
 import { WorkStep } from 'entities/work-step.entity';
 import { BrokenPartService } from './broken-part.service';
+import { CertificateService } from './certificate.service';
 import { SignatureService } from './signature.service';
 import { WScheduleService } from './wschedule.service';
 
@@ -30,6 +31,7 @@ export class RepairRequestService {
         private readonly paymentCommandService: PaymentCommandService,
         private readonly repairEventService: RepairEventService,
         private readonly brokenPartService: BrokenPartService,
+        private readonly certificateService: CertificateService,
         private readonly signatureService: SignatureService,
         private readonly scheduleService: WScheduleService,
     ) {}
@@ -58,18 +60,30 @@ export class RepairRequestService {
             throw AppErrors.conflict('Для этого устройства уже существует активная заявка на ремонт');
         }
 
+        // Cert validation: data-integrity problems (not_found / wrong_user / wrong_device)
+        // hard-throw; soft problems (not_paid / expired / revoked / signature_invalid) attach
+        // the cert anyway and mark the request with certificateValid=false, so it can be
+        // revalidated later by the cert payment webhook (see certificate.service.ts::markPaid).
         let certificate: Certificate | undefined;
+        let certificateValid = true;
         if (dto.certificateId) {
-            const cert = await this.em.findOne(Certificate, { id: dto.certificateId });
-            if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
-            if (cert.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
-            if (cert.status !== CertificateStatus.ACTIVE) {
-                throw AppErrors.badRequest('Certificate is not active');
+            const result = await this.certificateService.validateCertificateForRequest(
+                dto.certificateId,
+                userId,
+                dto.userDeviceId,
+            );
+            if (!result.ok) {
+                if (result.reason === 'not_found' || result.reason === 'wrong_user') {
+                    throw AppErrors.dbEntityNotFound('Certificate not found');
+                }
+                if (result.reason === 'wrong_device') {
+                    throw AppErrors.badRequest('Certificate does not belong to this device');
+                }
+                certificate = result.certificate;
+                certificateValid = false;
+            } else {
+                certificate = result.certificate;
             }
-            if (new Date() > cert.expiresAt) {
-                throw AppErrors.badRequest('Certificate has expired');
-            }
-            certificate = cert;
         }
 
         // Validate address
@@ -97,6 +111,7 @@ export class RepairRequestService {
             userId,
             userDevice,
             certificate,
+            certificateValid,
             description: dto.description,
             preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
             address: addressRef,

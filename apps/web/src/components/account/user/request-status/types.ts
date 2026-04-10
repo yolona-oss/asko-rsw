@@ -22,6 +22,9 @@ export interface RepairRequest {
   createdAt: Date | string;
   updatedAt: Date | string;
   totalCost?: number;
+  certificateValid?: boolean;
+  certificateId?: string;
+  certificate?: { id: string };
   repairer?: {
     user?: { firstName?: string; lastName?: string };
   };

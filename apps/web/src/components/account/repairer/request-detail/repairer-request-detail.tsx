@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
+import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { StepCircle } from './step-circle';
 
@@ -432,7 +433,10 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           {/* Certificate */}
           {request.certificate && (
             <Card className="flex flex-col gap-2">
-              <h2 className="text-lg font-medium text-text-main">Сертификат</h2>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-lg font-medium text-text-main">Сертификат</h2>
+                <CertificateWarningBadge valid={request.certificateValid} />
+              </div>
               <div className="flex flex-col gap-1 text-sm">
                 <div className="flex gap-2"><span className="text-text-sub w-32 flex-shrink-0">Номер:</span><span className="text-text-main">{request.certificate.certificateNumber ?? request.certificate.id?.slice(0, 8)}</span></div>
                 {request.certificate.expiresAt && (

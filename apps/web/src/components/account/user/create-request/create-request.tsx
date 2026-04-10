@@ -13,8 +13,55 @@ import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { AddDeviceForm } from '@/components/account/user/certificates/add-device-form';
 import { AddCertificateForm } from '@/components/account/user/certificates/add-certificate-form';
+import { PaymentModal } from '@/components/account/user/payments/payment-modal';
+import { CreateCertificateModal } from './create-certificate-modal';
 import { TERMINAL_STATUSES } from './constants';
 import type { UserDevice, Certificate, UploadedImage } from './types';
+
+type AppliedCert = { cert: Certificate; list: Certificate[] } | null;
+
+/**
+ * Pick which cert to auto-apply for a given device and which ones to show in the list.
+ * Rules:
+ *  - ACTIVE certs always win over PENDING_PAYMENT over EXPIRED.
+ *  - If there's an ACTIVE cert: apply the most recent; list all visible (active + expired),
+ *    with the dedup rule "1 active + >1 expired → hide expired".
+ *  - If no ACTIVE cert but a PENDING_PAYMENT exists: apply the most recent pending one
+ *    (user will see pay button, request can still be submitted — backend will flag it
+ *    and the cert payment webhook will flip the flag later).
+ *  - If nothing: return null so the form shows the "create certificate" button.
+ */
+function computeAppliedCert(certs: Certificate[], userDeviceId: string): AppliedCert {
+  if (!userDeviceId) return null;
+  const forDevice = certs.filter((c) => c.userDevice?.id === userDeviceId);
+  if (forDevice.length === 0) return null;
+
+  const active = forDevice.filter((c) => c.status === 'active');
+  const pending = forDevice.filter((c) => c.status === 'pending_payment');
+  const expired = forDevice.filter((c) => c.status === 'expired');
+
+  const byIssuedDesc = (a: Certificate, b: Certificate) =>
+    new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime();
+
+  if (active.length > 0) {
+    const applied = [...active].sort(byIssuedDesc)[0];
+    const list = active.length === 1 && expired.length > 1
+      ? active
+      : [...active, ...expired];
+    return { cert: applied, list };
+  }
+
+  if (pending.length > 0) {
+    const applied = [...pending].sort(byIssuedDesc)[0];
+    return { cert: applied, list: [applied] };
+  }
+
+  return null;
+}
+
+function formatDateRu(d: Date | string) {
+  return new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
 export function CreateRequest() {
   const router = useRouter();
@@ -26,7 +73,6 @@ export function CreateRequest() {
   const [loadingDevices, setLoadingDevices] = useState(true);
 
   const [userDeviceId, setUserDeviceId] = useState('');
-  const [certificateId, setCertificateId] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
 
@@ -39,6 +85,9 @@ export function CreateRequest() {
   const [error, setError] = useState('');
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [showAddCert, setShowAddCert] = useState(false);
+  const [showCreateCert, setShowCreateCert] = useState(false);
+  const [localCert, setLocalCert] = useState<Certificate | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   const fetchData = async () => {
     setLoadingDevices(true);
@@ -67,18 +116,20 @@ export function CreateRequest() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Filter certificates by selected device
-  const filteredCertificates = certificates.filter(
-    (c) => !userDeviceId || c.userDevice?.id === userDeviceId,
-  );
+  // Auto-apply cert for the selected device. Prefer a just-created localCert
+  // (which may still be PENDING_PAYMENT) so the user sees the cert they just made.
+  const applied: AppliedCert =
+    localCert && localCert.userDevice?.id === userDeviceId
+      ? { cert: localCert, list: [localCert] }
+      : computeAppliedCert(certificates, userDeviceId);
 
-  // Reset certificate and broken parts when device changes
+  // Reset broken parts + localCert when device changes
   useEffect(() => {
-    setCertificateId('');
     setSelectedParts([]);
     setDeviceParts([]);
     setCustomPartName('');
     setShowCustomPartInput(false);
+    setLocalCert(null);
   }, [userDeviceId]);
 
   // Fetch device parts catalog when device changes
@@ -157,7 +208,7 @@ export function CreateRequest() {
       const { data } = await repairRequestApi.create({
         userDeviceId,
         description: description.trim(),
-        ...(certificateId ? { certificateId } : {}),
+        ...(applied?.cert.id ? { certificateId: applied.cert.id } : {}),
         ...(brokenParts.length > 0 ? { brokenParts } : {}),
       });
       const request = data.request;
@@ -262,20 +313,57 @@ export function CreateRequest() {
           return null;
         })()}
 
-        {/* Certificate select */}
-        {filteredCertificates.length > 0 && (
-          <FormField label="Сертификат (необязательно)" variant="bold">
-            <Select
-              value={certificateId}
-              onChange={(e) => setCertificateId(e.target.value)}
-            >
-              <option value="">Без сертификата</option>
-              {filteredCertificates.map((c) => (
-                <option key={c.id} value={c.id}>
-                  №{c.certificateNumber}
-                </option>
-              ))}
-            </Select>
+        {/* Certificate (read-only auto-applied card) */}
+        {userDeviceId && (
+          <FormField label="Сертификат" variant="bold">
+            {applied ? (
+              <div className="flex flex-col gap-2 border border-border-light px-4 py-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="font-medium text-text-main">№{applied.cert.certificateNumber}</span>
+                  {applied.cert.status === 'pending_payment' ? (
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs bg-yellow-50 text-yellow-800 border border-yellow-200">
+                      Ожидает оплаты
+                    </span>
+                  ) : (
+                    <span className="text-xs text-text-sub">Применён к заявке</span>
+                  )}
+                </div>
+                <span className="text-sm text-text-sub">
+                  Действителен до {formatDateRu(applied.cert.expiresAt)}
+                </span>
+                {applied.cert.status === 'pending_payment' && (
+                  <>
+                    <p className="text-xs text-text-sub">
+                      Сертификат ещё не оплачен. Вы можете оплатить его сейчас или отправить заявку — сертификат применится автоматически после оплаты.
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      type="button"
+                      onClick={() => setShowPayment(true)}
+                      className="w-fit"
+                    >
+                      Оплатить сейчас
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-text-sub">
+                  Сертификата нет — создайте новый или отправьте заявку без сертификата.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  type="button"
+                  onClick={() => setShowCreateCert(true)}
+                  className="w-fit"
+                >
+                  Добавить сертификат
+                </Button>
+              </div>
+            )}
           </FormField>
         )}
 
@@ -464,6 +552,26 @@ export function CreateRequest() {
         onSuccess={() => { setShowAddCert(false); fetchData(); }}
         onOpenAddDevice={() => setShowAddDevice(true)}
       />
+
+      <CreateCertificateModal
+        open={showCreateCert}
+        userDeviceId={userDeviceId}
+        onClose={() => setShowCreateCert(false)}
+        onSuccess={(cert) => {
+          setCertificates((prev) => [cert, ...prev]);
+          setLocalCert(cert);
+        }}
+      />
+
+      {applied?.cert.status === 'pending_payment' && (
+        <PaymentModal
+          open={showPayment}
+          onClose={() => { setShowPayment(false); fetchData(); }}
+          targetType="certificate"
+          targetId={applied.cert.id}
+          amount={applied.cert.price ?? 0}
+        />
+      )}
     </PageContainer>
   );
 }

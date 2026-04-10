@@ -17,6 +17,7 @@ import { DealerProfile as DealerProfileEntity } from 'entities/dealer-profile.en
 import type {
     CertAddCertificateRequest,
     CertCreateByDealerRequest,
+    CertSelfCreateRequest,
     CertMarkPaidRequest,
     CertRevokeRequest,
     CertReassignRequest,
@@ -170,6 +171,18 @@ export class CertificateGrpcController {
                 expiresAt: data.expiresAt,
                 serialNumber: data.serialNumber,
                 purchaseReceiptUrl: data.purchaseReceiptUrl || undefined,
+                description: data.description || undefined,
+            });
+            return { certificate: certToRecord(cert) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'SelfCreate')
+    async selfCreate(data: CertSelfCreateRequest) {
+        try {
+            const cert = await this.certificateService.selfCreate(data.userId, {
+                userDeviceId: data.userDeviceId,
+                expiresAt: data.expiresAt,
                 description: data.description || undefined,
             });
             return { certificate: certToRecord(cert) };

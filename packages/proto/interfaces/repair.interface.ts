@@ -372,6 +372,13 @@ export interface CertCreateByDealerRequest {
     serialNumber: string;
 }
 
+export interface CertSelfCreateRequest {
+    userId: string;
+    userDeviceId: string;
+    expiresAt: string;
+    description: string;
+}
+
 export interface CertMarkPaidRequest {
     id: string;
 }
@@ -455,6 +462,7 @@ export interface CertValidateResponse {
 export interface CertificateServiceClient {
     addCertificate(request: CertAddCertificateRequest): Observable<CertificateResponse>;
     createByDealer(request: CertCreateByDealerRequest): Observable<CertificateResponse>;
+    selfCreate(request: CertSelfCreateRequest): Observable<CertificateResponse>;
     markPaid(request: CertMarkPaidRequest): Observable<CertificateResponse>;
     revokeCertificate(request: CertRevokeRequest): Observable<CertificateResponse>;
     reassignCertificate(request: CertReassignRequest): Observable<CertificateResponse>;
@@ -665,6 +673,7 @@ export interface RepairRequestRecord {
     completionSignedPayload?: string;
     acceptanceSignature?: string;
     acceptanceSignedPayload?: string;
+    certificateValid?: boolean;
 }
 
 export interface BrokenPartRecord {

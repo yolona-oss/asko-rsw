@@ -39,7 +39,10 @@ export type PaginatedCertificates = components['schemas']['PaginatedCertificates
 export type CertPrice = components['schemas']['CertPriceResponseDto'];
 
 // ── Repair Requests ──
-export type RepairRequestRecord = components['schemas']['RepairRequestRecordDto'];
+// TODO: Remove override after running ./scripts/openapi.sh
+export type RepairRequestRecord = components['schemas']['RepairRequestRecordDto'] & {
+  certificateValid?: boolean;
+};
 export type RepairRequestResponse = components['schemas']['RepairRequestResponseDto'];
 export type PaginatedRepairRequests = components['schemas']['PaginatedRepairRequestsResponseDto'];
 

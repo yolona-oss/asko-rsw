@@ -1,6 +1,7 @@
 import type {
   AddCertificateDto,
   CreateCertificateDto,
+  SelfCreateCertificateDto,
 } from '@asko/shared/client';
 import type {
   ICertificate,
@@ -33,6 +34,10 @@ export const certificateApi = {
 
   create(data: CreateCertificateDto) {
     return api.post<ICertificate>('/certificates/create', data);
+  },
+
+  selfCreate(data: SelfCreateCertificateDto) {
+    return api.post<{ certificate: ICertificate }>('/certificates/self-create', data);
   },
 
   revoke(id: string) {

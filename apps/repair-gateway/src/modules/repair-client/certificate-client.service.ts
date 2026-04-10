@@ -60,6 +60,19 @@ export class CertificateClientService implements OnModuleInit {
         }));
     }
 
+    selfCreate(userId: string, dto: {
+        userDeviceId: string;
+        expiresAt: string;
+        description?: string;
+    }): Promise<CertificateResponse> {
+        return grpcCall(this.certificateService.selfCreate({
+            userId,
+            userDeviceId: dto.userDeviceId,
+            expiresAt: dto.expiresAt,
+            description: dto.description ?? '',
+        }));
+    }
+
     // ─── Status changes ────────────────────────────────────────────────────
 
     markPaid(id: string): Promise<CertificateResponse> {

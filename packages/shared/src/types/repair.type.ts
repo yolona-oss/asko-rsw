@@ -65,6 +65,7 @@ export interface IRepairRequest {
     completionSignedPayload?: string;
     acceptanceSignature?: string;
     acceptanceSignedPayload?: string;
+    certificateValid?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
