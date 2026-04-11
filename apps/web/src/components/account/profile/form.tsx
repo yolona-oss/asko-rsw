@@ -35,7 +35,6 @@ export function ProfileForm() {
 
   // Providers & verification
   const [providers, setProviders] = useState<string[]>([]);
-  const [phoneVerified, setPhoneVerified] = useState(false);
 
   // Original values for change detection
   const originalEmail = useRef('');
@@ -73,7 +72,6 @@ export function ProfileForm() {
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
         setEmailVerified(data.emailVerified ?? false);
-        setPhoneVerified(data.phoneVerified ?? false);
         setProviders(data.providers ?? []);
         originalEmail.current = data.email ?? '';
         originalEmailVerified.current = data.emailVerified ?? false;
@@ -183,7 +181,6 @@ export function ProfileForm() {
       } else if (phoneChanged) {
         originalPhone.current = phoneDigits;
         originalPhoneVerified.current = false;
-        setPhoneVerified(false);
       }
 
       setMessage({
@@ -229,7 +226,7 @@ export function ProfileForm() {
 
   return (
     <>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 lg:gap-8">
         {/* Avatar section */}
         <AvatarSection
           displayAvatar={displayAvatar}
@@ -274,18 +271,22 @@ export function ProfileForm() {
           email={email}
           emailVerified={emailVerified}
           phone={phone}
-          phoneVerified={phoneVerified}
-          onPhoneVerified={() => setPhoneVerified(true)}
+          onPhoneVerified={() => {
+            usersApi.getProfile().then(({ data }) => {
+              setProviders(data.providers ?? []);
+              originalPhoneVerified.current = data.phoneVerified ?? false;
+            });
+          }}
           onResendEmailConfirmation={handleResendConfirmation}
           resendingEmail={resendingEmail}
           emailResendCooldown={emailResendCooldown}
           phoneChangePending={phoneChangePending}
           onPhoneChangeConfirmed={() => {
             setPhoneChangePending(false);
-            // Reload profile to get the new phone
+            // Reload profile to get the new phone + providers
             usersApi.getProfile().then(({ data }) => {
               setPhone(data.phone ?? '');
-              setPhoneVerified(data.phoneVerified ?? false);
+              setProviders(data.providers ?? []);
               originalPhone.current = data.phone ?? '';
               originalPhoneVerified.current = data.phoneVerified ?? false;
             });

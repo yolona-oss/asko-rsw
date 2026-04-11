@@ -11,7 +11,6 @@ interface LoginMethodsSectionProps {
   email: string;
   emailVerified: boolean;
   phone: string;
-  phoneVerified: boolean;
   onPhoneVerified?: () => void;
   onResendEmailConfirmation?: () => void;
   resendingEmail?: boolean;
@@ -26,7 +25,6 @@ export function LoginMethodsSection({
   email,
   emailVerified,
   phone,
-  phoneVerified,
   onPhoneVerified,
   onResendEmailConfirmation,
   resendingEmail,
@@ -38,7 +36,6 @@ export function LoginMethodsSection({
   // providers array = source of truth for active login methods
   const emailEnabled = providers.includes('EMAIL');   // can login with email+password
   const phoneEnabled = providers.includes('PHONE');   // can login with phone OTP
-  const googleEnabled = providers.includes('GOOGLE');
 
   // contact exists but not yet an active login method (needs verification to unlock)
   const emailPending = !!email && !emailEnabled;
@@ -113,39 +110,36 @@ export function LoginMethodsSection({
 
       <div className="flex flex-col gap-1">
         {/* Email + Password */}
-        <div className="flex items-center justify-between py-2.5">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 py-2.5">
+          <div className="flex items-center gap-3 min-w-0">
             <MethodIcon active={emailEnabled} />
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-text-main">Почта</p>
-              {email && <p className="text-xs text-text-sub">{email}</p>}
+              {email && <p className="text-xs text-text-sub truncate">{email}</p>}
             </div>
           </div>
           {emailEnabled ? (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-green-600">Активен</span>
-              {!emailVerified && (
-                <>
-                  <span className="text-xs text-amber-600">Не подтверждён</span>
-                  {onResendEmailConfirmation && (
-                    <button
-                      type="button"
-                      onClick={onResendEmailConfirmation}
-                      disabled={resendingEmail || (emailResendCooldown ?? 0) > 0}
-                      className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed"
-                    >
-                      {(emailResendCooldown ?? 0) > 0
-                        ? `Повторно (${emailResendCooldown}с)`
-                        : resendingEmail
-                          ? 'Отправка...'
-                          : 'Подтвердить'}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
+            !emailVerified ? (
+              <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
+                <span className="text-xs text-amber-600">Не подтверждён</span>
+                {onResendEmailConfirmation && (
+                  <button
+                    type="button"
+                    onClick={onResendEmailConfirmation}
+                    disabled={resendingEmail || (emailResendCooldown ?? 0) > 0}
+                    className="text-xs text-brand-red font-medium hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    {(emailResendCooldown ?? 0) > 0
+                      ? `Повторно (${emailResendCooldown}с)`
+                      : resendingEmail
+                        ? 'Отправка...'
+                        : 'Подтвердить'}
+                  </button>
+                )}
+              </div>
+            ) : null
           ) : emailPending ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
               <span className="text-xs text-amber-600">Требуется подтверждение для входа</span>
               {onResendEmailConfirmation && (
                 <button
@@ -163,24 +157,22 @@ export function LoginMethodsSection({
               )}
             </div>
           ) : (
-            <span className="text-xs text-text-sub">Укажите email в профиле</span>
+            <span className="text-xs text-text-sub ml-11 sm:ml-0">Укажите email в профиле</span>
           )}
         </div>
 
         {/* Phone */}
         <div className="flex flex-col gap-2 py-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <MethodIcon active={phoneEnabled} />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-text-main">Телефон (СМС-код)</p>
-                {phone && <p className="text-xs text-text-sub">{phone}</p>}
+                {phone && <p className="text-xs text-text-sub truncate">{phone}</p>}
               </div>
             </div>
-            {phoneEnabled ? (
-              <span className="text-xs text-green-600">Активен</span>
-            ) : phonePending ? (
-              <div className="flex items-center gap-3">
+            {phoneEnabled ? null : phonePending ? (
+              <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
                 {phoneSuccess ? (
                   <span className="text-xs text-green-600">{phoneSuccess}</span>
                 ) : (
@@ -198,14 +190,14 @@ export function LoginMethodsSection({
                 )}
               </div>
             ) : (
-              <span className="text-xs text-text-sub">Укажите телефон в профиле</span>
+              <span className="text-xs text-text-sub ml-11 sm:ml-0">Укажите телефон в профиле</span>
             )}
           </div>
 
           {/* Phone OTP input — only show when phone is pending (not yet a provider) */}
           {phoneOtpStep !== 'idle' && !phoneEnabled && (
             <div className="flex flex-col gap-2 ml-11">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Input
                   ref={codeInputRef}
                   value={phoneCode}
@@ -226,7 +218,7 @@ export function LoginMethodsSection({
                   {phoneOtpStep === 'verifying' ? 'Проверка...' : 'Подтвердить'}
                 </button>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={handleSendPhoneOtp}

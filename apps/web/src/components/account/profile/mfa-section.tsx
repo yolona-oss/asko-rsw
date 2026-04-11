@@ -116,14 +116,14 @@ export function MfaSection({ emailVerified }: MfaSectionProps) {
               <p className="text-sm text-text-main">
                 {mfaOtpStep === 'enable' ? 'Введите код для включения MFA' : 'Введите код для отключения MFA'}
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Input
                   value={mfaOtpCode}
                   onChange={(e) => setMfaOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
                   inputMode="numeric"
-                  className="w-40 text-center tracking-[0.3em] font-mono"
+                  className="w-full sm:w-40 text-center tracking-[0.3em] font-mono"
                 />
                 <Button
                   onClick={handleMfaOtpSubmit}

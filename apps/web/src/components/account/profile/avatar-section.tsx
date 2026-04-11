@@ -51,7 +51,7 @@ export function AvatarSection({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start gap-6">
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
       {/* Avatar preview */}
       <div className="relative flex-shrink-0">
         <div className="w-24 h-24 rounded-full overflow-hidden bg-skeleton">
