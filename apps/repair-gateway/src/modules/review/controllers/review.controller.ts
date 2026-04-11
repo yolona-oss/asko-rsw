@@ -86,4 +86,11 @@ export class ReviewController {
     async findByRepairer(@Param('repairerId') repairerId: string, @Query() pagination: PaginationDto) {
         return this.repairerClient.findReviewsByRepairer(repairerId, pagination);
     }
+
+    @ApiOkResponse({ type: ReviewResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Get('request/:requestId')
+    async findByRequest(@Param('requestId') requestId: string) {
+        return this.repairerClient.findReviewByRequest(requestId);
+    }
 }

@@ -111,4 +111,8 @@ export class RepairerClientService implements OnModuleInit {
     findUserReview(userId: string, reviewId: string): Promise<ReviewResponse> {
         return grpcCall(this.repairerService.findUserReview({ userId, reviewId }));
     }
+
+    findReviewByRequest(repairRequestId: string): Promise<ReviewResponse> {
+        return grpcCall(this.repairerService.findReviewByRequest({ id: repairRequestId }));
+    }
 }

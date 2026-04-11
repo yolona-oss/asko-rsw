@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Star } from 'lucide-react';
 import { Badge, DetailRow, DetailSection } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { api } from '@/lib/api/client';
+import { reviewApi } from '@/lib/api/review';
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -28,6 +30,8 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
   const [payments, setPayments] = useState<any[] | null>(null);
   const [steps, setSteps] = useState<any[] | null>(null);
   const [schedule, setSchedule] = useState<any[] | null>(null);
+  const [review, setReview] = useState<any>(null);
+  const [reviewFetched, setReviewFetched] = useState(false);
 
   const userName = [item.user?.lastName, item.user?.firstName].filter(Boolean).join(' ') || null;
   const deviceName = item.userDevice?.device?.name ?? item.device?.name;
@@ -104,6 +108,45 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
         {steps && steps.length > 0 ? steps.map((s: any) => (
           <DetailRow key={s.id} label={s.title ?? s.description ?? '-'} value={<Badge variant={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'warning' : 'neutral'}>{s.status ?? '-'}</Badge>} />
         )) : <DetailRow label="Этапы" value="Нет этапов" />}
+      </DetailSection>
+
+      {/* Review */}
+      <DetailSection
+        label="Отзыв"
+        summary={reviewFetched ? (review ? `${review.rating}/5` : 'Нет отзыва') : 'Загрузить...'}
+        fetchData={async () => {
+          try {
+            const { data } = await reviewApi.getByRequest(item.id);
+            setReview(data?.review ?? null);
+          } catch {
+            setReview(null);
+          } finally {
+            setReviewFetched(true);
+          }
+        }}
+      >
+        {review ? (
+          <>
+            <DetailRow
+              label="Оценка"
+              value={
+                <span className="inline-flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-[#E5E5E5]'}`}
+                    />
+                  ))}
+                  <span className="ml-1 text-text-sub">{review.rating}/5</span>
+                </span>
+              }
+            />
+            {review.comment && <DetailRow label="Комментарий" value={review.comment} />}
+            {review.createdAt && <DetailRow label="Дата" value={fmt(review.createdAt)} />}
+          </>
+        ) : (
+          <DetailRow label="Отзыв" value="Нет отзыва" />
+        )}
       </DetailSection>
     </div>
   );

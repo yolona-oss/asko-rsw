@@ -22,4 +22,8 @@ export const reviewApi = {
     return api.get<{ average: number; count: number }>(`/reviews/rating/repairer/${repairerId}`);
   },
 
+  getByRequest(requestId: string) {
+    return api.get<{ review: IReview }>(`/reviews/request/${requestId}`, { _silent: true } as any);
+  },
+
 };
