@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { BrokenPart } from 'entities/broken-part.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import { DevicePart } from 'entities/device-part.entity';
 import { BrokenPartStatus, RepairRequestStatus } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { SupplierService } from 'providers/supplier/supplier.service';
 
 const TERMINAL_STATUSES = [
     RepairRequestStatus.COMPLETED,
@@ -17,6 +18,8 @@ const TERMINAL_STATUSES = [
 export class BrokenPartService {
     constructor(
         private readonly em: EntityManager,
+        @Inject(forwardRef(() => SupplierService))
+        private readonly supplierService: SupplierService,
     ) {}
 
     /** Add a broken part to a repair request */
@@ -145,5 +148,64 @@ export class BrokenPartService {
     @CreateRequestContext()
     async getBrokenParts(requestId: string): Promise<BrokenPart[]> {
         return this.em.find(BrokenPart, { repairRequest: requestId }, { orderBy: { createdAt: 'ASC' } });
+    }
+
+    /** Place a supplier order for a broken part. Transitions ADDED → ORDERED. */
+    @CreateRequestContext()
+    async orderFromSupplier(
+        _userId: string,
+        requestId: string,
+        partId: string,
+        supplierName?: string,
+    ): Promise<BrokenPart> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+
+        if (TERMINAL_STATUSES.includes(request.status)) {
+            throw AppErrors.badRequest('Нельзя заказывать запчасти для завершённой заявки');
+        }
+
+        const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
+        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+
+        if (part.status !== BrokenPartStatus.ADDED) {
+            throw AppErrors.badRequest('Запчасть уже была заказана');
+        }
+
+        const provider = this.supplierService.getProvider(supplierName);
+        const result = await provider.orderPart({
+            partId: part.id,
+            name: part.name,
+            note: part.note,
+            requestId,
+        });
+
+        part.externalOrderId = result.externalOrderId;
+        part.supplierProvider = provider.name;
+        part.orderedAt = new Date();
+        part.status = BrokenPartStatus.ORDERED;
+        await this.em.flush();
+        return part;
+    }
+
+    /** Supplier callback: transition the part to SHIPPED (or rollback on failure). */
+    @CreateRequestContext()
+    async handleSupplierCallback(
+        partId: string,
+        payload: { status: 'shipped' | 'failed'; externalOrderId: string },
+    ): Promise<void> {
+        const part = await this.em.findOne(BrokenPart, { id: partId });
+        if (!part) return;
+        if (part.externalOrderId !== payload.externalOrderId) return;
+
+        if (payload.status === 'shipped') {
+            part.status = BrokenPartStatus.SHIPPED;
+        } else {
+            part.status = BrokenPartStatus.ADDED;
+            part.externalOrderId = undefined;
+            part.supplierProvider = undefined;
+            part.orderedAt = undefined;
+        }
+        await this.em.flush();
     }
 }

@@ -201,6 +201,15 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.getBrokenParts({ requestId }));
     }
 
+    orderBrokenPart(userId: string, requestId: string, partId: string, supplier?: string): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.orderBrokenPart({
+            userId,
+            requestId,
+            partId,
+            supplier: supplier ?? '',
+        }));
+    }
+
     // ── Queries ──
 
     findById(id: string): Promise<RepairRequestResponse> {

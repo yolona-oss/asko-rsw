@@ -37,6 +37,16 @@ export class FileAccessController {
         return this.handleAccess(id, 'video', user, res!);
     }
 
+    @OptionalAuth()
+    @Get('document/:id')
+    async getDocument(
+        @Param('id') id: string,
+        @JwtAuthUser() user?: JwtPayload,
+        @Res() res?: Response,
+    ) {
+        return this.handleAccess(id, 'document', user, res!);
+    }
+
     private async handleAccess(id: string, type: string, user: JwtPayload | undefined, res: Response) {
         let fileAccess;
         try {
@@ -94,8 +104,8 @@ export class FileAccessController {
         const url = fileAccess.storageUrl;
         if (!url) throw new NotFoundException('File URL not available');
 
-        // Detect local storage URLs (contain /images/ or /videos/ path segments)
-        const isLocal = url.includes('/images/') || url.includes('/videos/');
+        // Detect local storage URLs (contain /images/, /videos/, or /documents/ path segments)
+        const isLocal = url.includes('/images/') || url.includes('/videos/') || url.includes('/documents/');
 
         // Remote CDN (Cloudinary, etc.) — redirect
         if (!isLocal && url.startsWith('http')) {
@@ -110,6 +120,8 @@ export class FileAccessController {
             relativePath = url.split('/images/').pop() || '';
         } else if (url.includes('/videos/')) {
             relativePath = 'videos/' + (url.split('/videos/').pop() || '');
+        } else if (url.includes('/documents/')) {
+            relativePath = 'documents/' + (url.split('/documents/').pop() || '');
         }
 
         const filePath = path.join(process.cwd(), staticPath, relativePath);
@@ -130,6 +142,7 @@ export class FileAccessController {
             '.mp4': 'video/mp4',
             '.webm': 'video/webm',
             '.mov': 'video/quicktime',
+            '.pdf': 'application/pdf',
         };
 
         res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');

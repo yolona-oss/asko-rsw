@@ -21,6 +21,7 @@ import {
     AddBrokenPartDto,
     UpdateBrokenPartDto,
     UpdateBrokenPartStatusDto,
+    OrderBrokenPartDto,
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
@@ -462,6 +463,18 @@ export class RepairRequestController {
     ) {
         await this.repairClient.deleteBrokenPart(user.sub, id, partId);
         return {};
+    }
+
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/broken-parts/:partId/order')
+    async orderBrokenPart(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Param('partId') partId: string,
+        @Body() dto: OrderBrokenPartDto,
+    ) {
+        return this.repairClient.orderBrokenPart(user.sub, id, partId, dto.supplier);
     }
 
     @ApiOkResponse({ type: BrokenPartListResponseDto })

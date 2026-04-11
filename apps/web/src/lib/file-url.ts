@@ -11,3 +11,7 @@ export function getImageUrl(imageId: string): string {
 export function getVideoUrl(videoId: string): string {
   return `${API_URL}/files/video/${videoId}`;
 }
+
+export function getDocumentUrl(documentId: string): string {
+  return `${API_URL}/files/document/${documentId}`;
+}

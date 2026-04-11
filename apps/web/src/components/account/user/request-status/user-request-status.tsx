@@ -8,6 +8,7 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
+import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
@@ -276,6 +277,11 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           <BrokenPartsView parts={brokenParts} partImages={partImages} />
         </div>
       )}
+
+      {/* Aggregate documents (read-only) */}
+      <div className="max-w-lg mt-6">
+        <RepairRequestDocuments requestId={requestId} readOnly />
+      </div>
 
       {/* Review form (COMPLETED status) */}
       {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (

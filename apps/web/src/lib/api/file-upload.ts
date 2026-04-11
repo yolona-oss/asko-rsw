@@ -22,6 +22,20 @@ interface VideoResponse {
   };
 }
 
+export interface DocumentAttachment {
+  id: string;
+  filename?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  ownerType?: string;
+  ownerId?: string;
+  createdAt?: string;
+}
+
+interface DocumentResponse {
+  document: DocumentAttachment;
+}
+
 const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
 
 function toForm(file: File | Blob, name = 'file') {
@@ -69,6 +83,34 @@ export const fileUploadApi = {
 
   uploadBrokenPartImage(file: File, ownerId: string) {
     return api.post<ImageResponse>(`/file-upload/image/upload/broken-part/${ownerId}`, toForm(file), MULTIPART);
+  },
+
+  // ── Document uploads ──────────────────────────────────────────────────
+
+  uploadBrokenPartDocument(file: File, ownerId: string) {
+    return api.post<DocumentResponse>(
+      `/file-upload/document/upload/broken-part/${ownerId}`,
+      toForm(file),
+      MULTIPART,
+    );
+  },
+
+  uploadRepairRequestDocument(file: File, ownerId: string) {
+    return api.post<DocumentResponse>(
+      `/file-upload/document/upload/repair-request/${ownerId}`,
+      toForm(file),
+      MULTIPART,
+    );
+  },
+
+  deleteDocument(documentId: string) {
+    return api.post(`/file-upload/document/${documentId}/delete`);
+  },
+
+  getAttachedDocuments(ownerType: string, ownerId: string) {
+    return api.get<{ documents: DocumentAttachment[] }>('/file-upload/document/attached', {
+      params: { ownerType, ownerId },
+    });
   },
 
   // ── Video uploads by target ───────────────────────────────────────────

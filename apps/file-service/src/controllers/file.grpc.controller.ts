@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
+import { DocumentService } from 'services/document.service';
 import { AppError } from 'common/error';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
 import { Readable } from 'stream';
@@ -22,9 +23,14 @@ import type {
     AttachVideoRequest,
     GetFileAccessRequest,
     FileAccessResponse,
+    UploadDocumentRequest,
+    DocumentIdRequest,
+    DocumentResponse,
+    DocumentListResponse,
 } from '@asko/proto';
 import type { Image } from 'entities/image.entity';
 import type { Video } from 'entities/video.entity';
+import type { Document } from 'entities/document.entity';
 
 function toGrpcError(error: unknown): RpcException {
     if (error instanceof AppError) {
@@ -84,12 +90,27 @@ function videoEntityToRecord(entity: Video) {
     };
 }
 
+function documentToRecord(entity: Document) {
+    return {
+        id: entity.id,
+        filename: entity.filename,
+        mimeType: entity.mimeType,
+        sizeBytes: Number(entity.sizeBytes ?? 0),
+        ownerType: entity.ownerType,
+        ownerId: entity.ownerId,
+        storageUrl: entity.storageUrl,
+        publicId: entity.publicId ?? '',
+        createdAt: entity.createdAt?.toISOString() ?? '',
+    };
+}
+
 @Controller()
 export class FileGrpcController {
     constructor(
         private readonly imageService: ImageService,
         private readonly videoService: VideoService,
         private readonly cleanupService: ImageCleanupService,
+        private readonly documentService: DocumentService,
     ) {}
 
     // ─── Upload operations ──────────────────────────────────────────────
@@ -387,6 +408,71 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
+    // ─── Document operations ────────────────────────────────────────────
+
+    @GrpcMethod('FileService', 'UploadBrokenPartDocument')
+    async uploadBrokenPartDocument(data: UploadWithOwnerRequest): Promise<DocumentResponse> {
+        try {
+            const file = toMulterFile(data.file);
+            const doc = await this.documentService.uploadBrokenPartDocument(file, data.ownerId, {
+                creatorId: data.creatorId || undefined,
+                visibility: data.visibility || undefined,
+                conversationId: data.conversationId || undefined,
+            });
+            return { document: documentToRecord(doc) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadRepairRequestDocument')
+    async uploadRepairRequestDocument(data: UploadWithOwnerRequest): Promise<DocumentResponse> {
+        try {
+            const file = toMulterFile(data.file);
+            const doc = await this.documentService.uploadRepairRequestDocument(file, data.ownerId, {
+                creatorId: data.creatorId || undefined,
+                visibility: data.visibility || undefined,
+                conversationId: data.conversationId || undefined,
+            });
+            return { document: documentToRecord(doc) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'UploadDocument')
+    async uploadDocument(data: UploadDocumentRequest): Promise<DocumentResponse> {
+        try {
+            const file = toMulterFile(data.file);
+            const doc = await this.documentService.upload(file, data.ownerType, data.ownerId, {
+                creatorId: data.creatorId || undefined,
+                visibility: data.visibility || undefined,
+                conversationId: data.conversationId || undefined,
+            });
+            return { document: documentToRecord(doc) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'GetDocument')
+    async getDocument(data: DocumentIdRequest): Promise<DocumentResponse> {
+        try {
+            const doc = await this.documentService.findOne(data.id);
+            return { document: documentToRecord(doc) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'GetDocumentsByOwner')
+    async getDocumentsByOwner(data: FindAttachedRequest): Promise<DocumentListResponse> {
+        try {
+            const docs = await this.documentService.findByOwner(data.ownerType, data.ownerId);
+            return { documents: docs.map(documentToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('FileService', 'DeleteDocument')
+    async deleteDocument(data: DocumentIdRequest) {
+        try {
+            await this.documentService.remove(data.id);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
     // ─── Access control ─────────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'GetFileAccess')
@@ -401,6 +487,11 @@ export class FileGrpcController {
                 storageUrl = video.video?.secure_url ?? video.video?.url ?? '';
                 publicId = video.video?.public_id ?? '';
                 access = await this.videoService.findAccess(data.id);
+            } else if (data.type === 'document') {
+                const doc = await this.documentService.findOne(data.id);
+                storageUrl = doc.storageUrl;
+                publicId = doc.publicId ?? '';
+                access = await this.documentService.findAccess(data.id);
             } else {
                 const image = await this.imageService.findOne(data.id);
                 storageUrl = image.image?.original?.secure_url ?? image.image?.original?.url ?? '';

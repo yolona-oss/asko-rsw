@@ -168,4 +168,16 @@ export const repairRequestApi = {
   getBrokenPartImages(requestId: string, partId: string) {
     return api.get<{ images: any[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
   },
+
+  orderBrokenPart(requestId: string, partId: string, data?: { supplier?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/order`, data ?? {});
+  },
+
+  getBrokenPartDocuments(requestId: string, partId: string) {
+    return api.get<{ documents: any[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/documents`);
+  },
+
+  getDocuments(requestId: string) {
+    return api.get<{ documents: any[] }>(`/repair-requests/${requestId}/documents`);
+  },
 };

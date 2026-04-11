@@ -6,7 +6,15 @@ import { DevicePart } from './device-part.entity';
 
 @Entity()
 export class BrokenPart {
-    [OptionalProps]?: 'status' | 'devicePart' | 'note' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?:
+        | 'status'
+        | 'devicePart'
+        | 'note'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'externalOrderId'
+        | 'supplierProvider'
+        | 'orderedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -25,6 +33,15 @@ export class BrokenPart {
 
     @Property({ type: 'text', nullable: true })
     note?: string;
+
+    @Property({ type: 'varchar', length: 64, nullable: true })
+    externalOrderId?: string;
+
+    @Property({ type: 'varchar', length: 32, nullable: true })
+    supplierProvider?: string;
+
+    @Property({ type: 'datetime', nullable: true })
+    orderedAt?: Date;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

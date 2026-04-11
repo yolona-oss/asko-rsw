@@ -122,6 +122,7 @@ service RepairService {
     rpc UpdateBrokenPartStatus(RepairUpdateBrokenPartStatusRequest) returns (BrokenPartResponse);
     rpc DeleteBrokenPart(RepairDeleteBrokenPartRequest) returns (RepairEmptyResponse);
     rpc GetBrokenParts(RepairGetBrokenPartsRequest) returns (BrokenPartListResponse);
+    rpc OrderBrokenPart(RepairOrderBrokenPartRequest) returns (BrokenPartResponse);
 
     // Queries
     rpc FindById(RepairFindByIdRequest) returns (RepairRequestResponse);
@@ -744,6 +745,9 @@ message BrokenPartRecord {
     string note = 6;
     string createdAt = 7;
     string updatedAt = 8;
+    string externalOrderId = 9;
+    string supplierProvider = 10;
+    string orderedAt = 11;
 }
 
 message BrokenPartInput {
@@ -944,6 +948,13 @@ message RepairDeleteBrokenPartRequest {
 
 message RepairGetBrokenPartsRequest {
     string requestId = 1;
+}
+
+message RepairOrderBrokenPartRequest {
+    string userId = 1;
+    string requestId = 2;
+    string partId = 3;
+    string supplier = 4;
 }
 
 message RepairFindByIdRequest {

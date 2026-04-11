@@ -51,6 +51,8 @@ import { BrokenPartService } from 'services/broken-part.service';
 import { SignatureService } from 'services/signature.service';
 import { DeviceCategoryService } from 'services/device-category.service';
 import { WScheduleService } from 'services/wschedule.service';
+import { SupplierService } from 'providers/supplier/supplier.service';
+import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provider';
 
 @Module({
     imports: [
@@ -146,6 +148,8 @@ import { WScheduleService } from 'services/wschedule.service';
         PaymentCommandService,
         AddressValidationPublisher,
         WScheduleService,
+        DummySupplierProvider,
+        SupplierService,
     ],
 })
 export class AppModule {}

@@ -14,6 +14,9 @@ import type {
     VideoResponse,
     VideoListResponse,
     FileAccessResponse,
+    DocumentRecord,
+    DocumentResponse,
+    DocumentListResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -277,5 +280,54 @@ export class FileClientService implements OnModuleInit {
 
     getFileAccess(id: string, type: string): Promise<FileAccessResponse> {
         return grpcCall(this.fileService.getFileAccess({ id, type }));
+    }
+
+    // --- Documents ---
+
+    private toDocumentResponse(res: DocumentResponse) {
+        return { document: res.document };
+    }
+
+    private toDocumentListResponse(res: DocumentListResponse) {
+        return { documents: res.documents ?? [] };
+    }
+
+    async uploadBrokenPartDocument(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadBrokenPartDocument({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.toDocumentResponse(res);
+    }
+
+    async uploadRepairRequestDocument(file: Express.Multer.File, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadRepairRequestDocument({
+            file: this.toFileData(file),
+            ownerId,
+        }));
+        return this.toDocumentResponse(res);
+    }
+
+    async uploadDocument(file: Express.Multer.File, ownerType: string, ownerId: string) {
+        const res = await grpcCall(this.fileService.uploadDocument({
+            file: this.toFileData(file),
+            ownerType,
+            ownerId,
+        }));
+        return this.toDocumentResponse(res);
+    }
+
+    async getDocument(id: string): Promise<DocumentRecord> {
+        const res = await grpcCall(this.fileService.getDocument({ id }));
+        return res.document;
+    }
+
+    async getDocumentsByOwner(ownerType: string, ownerId: string) {
+        const res = await grpcCall(this.fileService.getDocumentsByOwner({ ownerType, ownerId }));
+        return this.toDocumentListResponse(res);
+    }
+
+    deleteDocument(id: string): Promise<EmptyFileResponse> {
+        return grpcCall(this.fileService.deleteDocument({ id }));
     }
 }

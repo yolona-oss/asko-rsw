@@ -699,6 +699,9 @@ export interface BrokenPartRecord {
     note: string;
     createdAt: string;
     updatedAt: string;
+    externalOrderId: string;
+    supplierProvider: string;
+    orderedAt: string;
 }
 
 export interface BrokenPartInput {
@@ -901,6 +904,13 @@ export interface RepairGetBrokenPartsRequest {
     requestId: string;
 }
 
+export interface RepairOrderBrokenPartRequest {
+    userId: string;
+    requestId: string;
+    partId: string;
+    supplier: string;
+}
+
 export interface RepairFindByIdRequest {
     id: string;
 }
@@ -1054,6 +1064,7 @@ export interface RepairServiceClient {
     updateBrokenPartStatus(request: RepairUpdateBrokenPartStatusRequest): Observable<BrokenPartResponse>;
     deleteBrokenPart(request: RepairDeleteBrokenPartRequest): Observable<RepairEmptyResponse>;
     getBrokenParts(request: RepairGetBrokenPartsRequest): Observable<BrokenPartListResponse>;
+    orderBrokenPart(request: RepairOrderBrokenPartRequest): Observable<BrokenPartResponse>;
 
     // Queries
     findById(request: RepairFindByIdRequest): Observable<RepairRequestResponse>;

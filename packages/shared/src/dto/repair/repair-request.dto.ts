@@ -136,3 +136,9 @@ export class UpdateBrokenPartStatusDto {
     @IsEnum(BrokenPartStatus)
     status!: BrokenPartStatus;
 }
+
+export class OrderBrokenPartDto {
+    @IsOptional()
+    @IsString()
+    supplier?: string;
+}

@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
+import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { StepCircle } from './step-circle';
@@ -471,6 +472,11 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <BrokenPartsEditor requestId={requestId} />
         </Card>
       )}
+
+      {/* ── Aggregate documents ── */}
+      <Card className="flex flex-col gap-4">
+        <RepairRequestDocuments requestId={requestId} readOnly={isTerminal} />
+      </Card>
 
       {/* ── Diagnostics review (post-transfer) ── */}
       {canReviewDiagnostics && (

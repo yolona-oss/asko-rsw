@@ -55,6 +55,7 @@ import type {
     RepairUpdateBrokenPartStatusRequest,
     RepairDeleteBrokenPartRequest,
     RepairGetBrokenPartsRequest,
+    RepairOrderBrokenPartRequest,
     RepairAcceptCompletionRequest,
 } from '@asko/proto';
 
@@ -213,6 +214,9 @@ function brokenPartToRecord(entity: BrokenPart) {
         note: entity.note ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        externalOrderId: entity.externalOrderId ?? '',
+        supplierProvider: entity.supplierProvider ?? '',
+        orderedAt: entity.orderedAt?.toISOString() ?? '',
     };
 }
 
@@ -512,6 +516,19 @@ export class RepairGrpcController {
         try {
             const parts = await this.brokenPartService.getBrokenParts(data.requestId);
             return { parts: parts.map(brokenPartToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'OrderBrokenPart')
+    async orderBrokenPart(data: RepairOrderBrokenPartRequest) {
+        try {
+            const part = await this.brokenPartService.orderFromSupplier(
+                data.userId,
+                data.requestId,
+                data.partId,
+                data.supplier || undefined,
+            );
+            return { part: brokenPartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }
     }
 

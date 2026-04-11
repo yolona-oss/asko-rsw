@@ -7,6 +7,7 @@ import { Badge, Button, ImageGallery, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
+import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -311,6 +312,9 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
           {/* Broken parts */}
           {!isTerminal && <BrokenPartsEditor requestId={requestId} />}
+
+          {/* Aggregate documents */}
+          <RepairRequestDocuments requestId={requestId} readOnly={isTerminal} />
 
           <Link
             href="/account/requests"

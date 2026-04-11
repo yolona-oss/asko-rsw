@@ -8,11 +8,13 @@ import { ImageResizeQueueModule } from 'modules/image-resize-queue.module';
 import { Image } from 'entities/image.entity';
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
+import { Document } from 'entities/document.entity';
 import { ImageService } from 'services/image.service';
 import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
 import { CloudinaryService } from 'services/cloudinary.service';
 import { LocalStorageService } from 'services/local-storage.service';
+import { DocumentService } from 'services/document.service';
 import { STORAGE_PROVIDER } from 'storage/storage-provider.interface';
 import { FileGrpcController } from 'controllers/file.grpc.controller';
 
@@ -22,7 +24,7 @@ import { FileGrpcController } from 'controllers/file.grpc.controller';
         ScheduleModule.forRoot(),
         MetricsModule.register({ serviceName: 'file-service' }),
         DatabaseModule,
-        MikroOrmModule.forFeature([Image, Video, FileAccess]),
+        MikroOrmModule.forFeature([Image, Video, FileAccess, Document]),
         ImageResizeQueueModule,
     ],
     controllers: [FileGrpcController],
@@ -40,6 +42,7 @@ import { FileGrpcController } from 'controllers/file.grpc.controller';
         ImageService,
         VideoService,
         ImageCleanupService,
+        DocumentService,
     ],
 })
 export class AppModule {}

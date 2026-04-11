@@ -158,6 +158,41 @@ export interface FileAccessResponse {
     publicId: string;
 }
 
+// ─── Documents ────────────────────────────────────────────────────────
+
+export interface UploadDocumentRequest {
+    file: FileData;
+    ownerType: string;
+    ownerId: string;
+    visibility?: string;
+    creatorId?: string;
+    conversationId?: string;
+}
+
+export interface DocumentIdRequest {
+    id: string;
+}
+
+export interface DocumentRecord {
+    id: string;
+    filename: string;
+    mimeType: string;
+    sizeBytes: number;
+    ownerType: string;
+    ownerId: string;
+    storageUrl: string;
+    publicId: string;
+    createdAt: string;
+}
+
+export interface DocumentResponse {
+    document: DocumentRecord;
+}
+
+export interface DocumentListResponse {
+    documents: DocumentRecord[];
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface FileServiceClient {
@@ -193,6 +228,14 @@ export interface FileServiceClient {
     findAttachedVideos(request: FindAttachedRequest): Observable<VideoListResponse>;
     attachVideo(request: AttachVideoRequest): Observable<VideoResponse>;
     unattachVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
+
+    // Document operations
+    uploadBrokenPartDocument(request: UploadWithOwnerRequest): Observable<DocumentResponse>;
+    uploadRepairRequestDocument(request: UploadWithOwnerRequest): Observable<DocumentResponse>;
+    uploadDocument(request: UploadDocumentRequest): Observable<DocumentResponse>;
+    getDocument(request: DocumentIdRequest): Observable<DocumentResponse>;
+    getDocumentsByOwner(request: FindAttachedRequest): Observable<DocumentListResponse>;
+    deleteDocument(request: DocumentIdRequest): Observable<EmptyFileResponse>;
 
     // Access control
     getFileAccess(request: GetFileAccessRequest): Observable<FileAccessResponse>;
