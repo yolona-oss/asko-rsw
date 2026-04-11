@@ -53,7 +53,7 @@ function DeviceSliderCard({
     deviceApi
       .getImages(deviceId)
       .then(({ data }) => {
-        const images = Array.isArray(data) ? data : [];
+        const images = (data.images ?? []).slice().sort((a, b) => a.order - b.order);
         if (images.length > 0) {
           const url = getImageUrl(images[0], 'thumbnail');
           if (url) setImageUrl(url);

@@ -40,10 +40,9 @@ export function CertificateCard({
   useEffect(() => {
     if (!device?.id) return;
     deviceApi.getImages(device.id).then(({ data }) => {
-      const images = Array.isArray(data) ? data : [];
+      const images = (data.images ?? []).slice().sort((a, b) => a.order - b.order);
       if (images.length > 0) {
-        const img = images[0];
-        const url = getImageUrl(img, 'medium')
+        const url = getImageUrl(images[0], 'medium');
         if (url) setDeviceImageUrl(url);
       }
     }).catch(() => { });
