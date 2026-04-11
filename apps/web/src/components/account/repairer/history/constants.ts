@@ -1,5 +1,18 @@
 import { RepairRequestStatus } from '@asko/shared/client';
-import type { BadgeVariant } from '@asko/ui';
+import type { BadgeVariant, FilterDefinition } from '@asko/ui';
+
+export type GroupKey = 'all' | 'per-request' | 'per-user-device';
+
+export const GROUP_FILTER: FilterDefinition = {
+  key: 'group',
+  label: 'Группировка',
+  type: 'tabs',
+  options: [
+    { value: 'all', label: 'Все' },
+    { value: 'per-request', label: 'По заявкам' },
+    { value: 'per-user-device', label: 'По устройствам' },
+  ],
+};
 
 export const STATUS_LABEL: Partial<Record<RepairRequestStatus, string>> = {
   [RepairRequestStatus.COMPLETED]: 'Выполнено',
