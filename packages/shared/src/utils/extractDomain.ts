@@ -1,4 +1,4 @@
-import { toURL } from './toURL';
+import { toURL } from './toURL.js';
 
 /**
  * Extracts the root domain from a given URL.

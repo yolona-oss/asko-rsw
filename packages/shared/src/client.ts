@@ -1,15 +1,138 @@
-export * from './utils/extractDomain'
-export * from './utils/httpUtils'
-export * from './utils/isDefined'
-export * from './utils/toURL'
-export * from './utils/nodeEnv'
-export * from './utils/to-auth-user'
-export * from './utils/extract-token'
+// Runtime enums + pure constants + type-only DTO re-exports. No server utils.
+//
+// The frontend imports enums/constants as runtime values, and DTOs/interfaces as TS types only.
+// DTO classes here are only used as types on the frontend — `import type` strips them at build time,
+// so their class-validator decorators never ship to the browser. Request DTOs live here (not in
+// api.gen) because the NestJS Swagger CLI plugin does not walk into node_modules, so shared DTOs
+// come through the OpenAPI spec as empty schemas.
 
-export * from './types'
-export * from './constants'
-export * from './data'
+// Auth
+export { AuthProvider } from './auth/auth-provider.enum.js';
+export { TokenType } from './auth/auth-token-type.enum.js';
+export { MfaMethod } from './auth/mfa-method.enum.js';
 
-// Type-only re-exports from DTOs - completely erased in JS output,
-// only present in .d.ts so client code can use DTO types for type-checking
-export type * from './dto'
+// User
+export { Role, ALL_ROLES, ADMIN_ROLES, STAFF_ROLES } from './user/roles.type.js';
+export { DEFAULT_USER_ROLE } from './user/default-user-role.constant.js';
+export { UserAddressType } from './user/user-address-type.enum.js';
+export {
+    MAX_USER_PASSWORD_LENGTH,
+    MIN_USER_PASSWORD_LENGTH,
+    MIN_USER_PASSWORD_ENTROPY,
+} from './user/password.constants.js';
+
+// Repair
+export {
+    RepairRequestStatus,
+    WorkStepStatus,
+    BrokenPartStatus,
+    PaymentStatus,
+} from './repair/repair.type.js';
+
+// Certificate
+export { CertificateStatus } from './certificate/certificate.type.js';
+export {
+    CERTIFICATE_DURATION_OPTIONS,
+    CERTIFICATE_DURATION_LABELS,
+    computeExpiresAt,
+} from './certificate/certificate.constants.js';
+export type { CertificateDurationMonths } from './certificate/certificate.constants.js';
+
+// Payment
+export { PaymentProviderType, PaymentTargetType } from './payment/payment.type.js';
+export { CurrencyEnum } from './payment/currency.type.js';
+
+// Dealer
+export { PointsTransactionType, WithdrawalStatus } from './dealer/dealer.type.js';
+
+// Schedule
+export { ScheduleEntryType, ScheduleStatus } from './schedule/schedule.type.js';
+
+// Chat
+export {
+    ConversationType,
+    MessageType,
+    MessageStatus,
+    PresenceStatus,
+    UserActivity,
+    ParticipantRole,
+} from './chat/chat.type.js';
+
+// Notification
+export { NotificationType, NotificationTargetType } from './notification/notification.type.js';
+
+// Device
+export { DeviceType } from './device/device.type.js';
+
+// Image / video / file
+export { ImageTypeEnum } from './image/image-type.enum.js';
+export { VideoTypeEnum } from './video/video-type.enum.js';
+export { FileVisibility } from './image/file.type.js';
+export { DefaultImages } from './image/default-images.enum.js';
+export type { DefaultImagesType } from './image/default-images.enum.js';
+
+// Common
+export {
+    DEFAULT_REQUEST_PAGE,
+    DEFAULT_REQUEST_PER_PAGE,
+} from './common/pagination.constants.js';
+export {
+    PASSWORD_REGEX,
+    NAME_REGEX,
+    SLUG_REGEX,
+    BCRYPT_HASH,
+} from './common/regex.js';
+
+// ── Type-only DTO / interface re-exports ──
+// These are stripped at frontend build time (imported as `type`). They exist here because
+// Swagger CLI does not decorate shared DTOs, so api.gen cannot be the source of truth yet.
+
+export type { IUser, IUserSettings } from './user/user.type.js';
+export type { CreateUserDto, UpdateUserDto, UpdateUserSettingsDto } from './user/user.dto.js';
+export type { ChangePasswordDto } from './user/user-actions.dto.js';
+
+export type { LoginCredentials } from './auth/login-credentials.dto.js';
+export type { CreateInvitationLinkDto } from './auth/invitation-link.dto.js';
+
+export type { CreateAddressDto } from './address/address.dto.js';
+
+export type { CreateArticleDto, UpdateArticleDto } from './article/article.dto.js';
+
+export type {
+    AddCertificateDto,
+    CreateCertificateDto,
+    SelfCreateCertificateDto,
+    ReapplyCertificateDto,
+} from './certificate/certificate.dto.js';
+
+export type { CreatePaymentDto } from './payment/payment.dto.js';
+
+export type {
+    CreateRepairRequestDto,
+    AssignRepairerDto,
+    SetRepairPriceDto,
+    RefuseRequestDto,
+    AddWorkStepDto,
+    UpdateWorkStepDto,
+} from './repair/repair-request.dto.js';
+
+export type {
+    CreateRepairerDto,
+    UpdateRepairerDto,
+    UpdateLocationDto,
+} from './repairer/repairer.dto.js';
+
+export type { CreateReviewDto } from './review/review.dto.js';
+
+export type {
+    CreateDeviceDto,
+    UpdateDeviceDto,
+    RegisterUserDeviceDto,
+    UpdateUserDeviceDto,
+} from './device/device.dto.js';
+export type {
+    CreateDeviceCategoryDto,
+    UpdateDeviceCategoryDto,
+} from './device/device-category.dto.js';
+
+export type { RequestPointsWithdrawalDto } from './dealer/dealer.dto.js';

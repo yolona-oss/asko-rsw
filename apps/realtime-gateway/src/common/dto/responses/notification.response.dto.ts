@@ -1,12 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { NotificationTargetType, NotificationType } from '@asko/shared';
 
 export class NotificationRecordDto {
     id: string;
     userId: string;
-    type: string;
+    @ApiProperty({ enum: NotificationType, enumName: 'NotificationType' })
+    type: NotificationType;
     title: string;
     body: string;
-    targetType?: string;
+    @ApiPropertyOptional({ enum: NotificationTargetType, enumName: 'NotificationTargetType' })
+    targetType?: NotificationTargetType;
     targetId?: string;
     metadata?: string;
     isRead: boolean;

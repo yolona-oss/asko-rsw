@@ -1,10 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+    ConversationType,
+    MessageStatus,
+    MessageType,
+    ParticipantRole,
+    PresenceStatus,
+    UserActivity,
+} from '@asko/shared';
 
 export class ParticipantRecordDto {
     id: string;
     userId: string;
     conversationId: string;
-    role: string;
+    @ApiProperty({ enum: ParticipantRole, enumName: 'ParticipantRole' })
+    role: ParticipantRole;
     lastReadMessageId?: string;
     joinedAt: string;
 }
@@ -13,11 +22,13 @@ export class ChatMessageRecordDto {
     id: string;
     conversationId: string;
     senderId: string;
-    type: string;
+    @ApiProperty({ enum: MessageType, enumName: 'MessageType' })
+    type: MessageType;
     text?: string;
     attachmentJson?: string;
     isEdited: boolean;
-    status?: string;
+    @ApiPropertyOptional({ enum: MessageStatus, enumName: 'MessageStatus' })
+    status?: MessageStatus;
     deliveredAt?: string;
     readAt?: string;
     createdAt: string;
@@ -26,7 +37,8 @@ export class ChatMessageRecordDto {
 
 export class ConversationRecordDto {
     id: string;
-    type: string;
+    @ApiProperty({ enum: ConversationType, enumName: 'ConversationType' })
+    type: ConversationType;
     name?: string;
     creatorId: string;
     @ApiProperty({ type: [ParticipantRecordDto] })
@@ -73,8 +85,10 @@ export class ParticipantListResponseDto {
 
 export class PresenceRecordDto {
     userId: string;
-    status: string;
-    activity: string;
+    @ApiProperty({ enum: PresenceStatus, enumName: 'PresenceStatus' })
+    status: PresenceStatus;
+    @ApiProperty({ enum: UserActivity, enumName: 'UserActivity' })
+    activity: UserActivity;
     conversationId?: string;
     lastSeenAt: string;
 }

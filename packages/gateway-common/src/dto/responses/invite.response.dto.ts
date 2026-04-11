@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@asko/shared';
 
 export class InviteLinkResponseDto {
     @ApiProperty()
@@ -7,8 +8,8 @@ export class InviteLinkResponseDto {
     @ApiProperty()
     token!: string;
 
-    @ApiProperty()
-    role!: string;
+    @ApiProperty({ enum: Role, enumName: 'Role' })
+    role!: Role;
 
     @ApiProperty()
     ttl!: number;

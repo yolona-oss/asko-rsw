@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
+import { PointsTransactionType, WithdrawalStatus } from '@asko/shared';
 
 export class DealerProfileRecordDto {
     id: string;
@@ -63,7 +64,8 @@ export class DealerUserDeviceListResponseDto {
 export class PointsTransactionRecordDto {
     id: string;
     dealerId: string;
-    type: string;
+    @ApiProperty({ enum: PointsTransactionType, enumName: 'PointsTransactionType' })
+    type: PointsTransactionType;
     amount: number;
     reason: string;
     repairRequestId?: string;
@@ -82,7 +84,8 @@ export class WithdrawalRecordDto {
     id: string;
     dealerId: string;
     amount: number;
-    status: string;
+    @ApiProperty({ enum: WithdrawalStatus, enumName: 'WithdrawalStatus' })
+    status: WithdrawalStatus;
     requestedAt: string;
     processedAt?: string;
     processedByUserId?: string;

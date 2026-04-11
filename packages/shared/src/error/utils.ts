@@ -1,5 +1,5 @@
-import { AppError } from './app-error';
-import { AppErrorTypeEnum } from './error-type.enum';
+import { AppError } from './app-error.js';
+import { AppErrorTypeEnum } from './error-type.enum.js';
 
 /**
  * Create an AppError from raw exception

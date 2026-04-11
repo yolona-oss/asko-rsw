@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
+import { RepairRequestStatus } from '@asko/shared';
 
 export class RepairerRecordDto {
     id: string;
@@ -14,7 +15,8 @@ export class RepairerRecordDto {
     lastLocationUpdate?: string;
     user?: AuthUserDto;
     activeRequestCount?: number;
-    currentRequestStatus?: string;
+    @ApiPropertyOptional({ enum: RepairRequestStatus, enumName: 'RepairRequestStatus' })
+    currentRequestStatus?: RepairRequestStatus;
     createdAt: string;
     updatedAt: string;
 }

@@ -6,11 +6,12 @@ import {
     RequiredRoles,
     Public,
     JwtAuthUser,
+    AuthUserDto,
     InviteCreatedResponseDto,
     InviteLinkResponseDto,
     MessageResponseDto,
 } from '@asko/gateway-common';
-import { ADMIN_ROLES, Role, CreateInvitationLinkDto, IAuthUser } from '@asko/shared';
+import { ADMIN_ROLES, Role, CreateInvitationLinkDto } from '@asko/shared';
 
 @ApiTags('Invitations')
 @Controller('invite')
@@ -22,7 +23,7 @@ export class InviteController {
     @Post('/')
     async create(
         @Body() dto: CreateInvitationLinkDto,
-        @JwtAuthUser() user: IAuthUser,
+        @JwtAuthUser() user: AuthUserDto,
     ) {
         return this.userClient.createInvite({
             role: dto.role,

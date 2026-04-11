@@ -1,5 +1,5 @@
-import { AppErrorTypeEnum } from './error-type.enum';
-import { IErrorMessage } from './ierror-message.interface';
+import { AppErrorTypeEnum } from './error-type.enum.js';
+import { IErrorMessage } from './ierror-message.interface.js';
 
 export const CommonErrorsDefinition: Record<number, IErrorMessage> = {
     [AppErrorTypeEnum.BAD_REQUEST]: { httpStatus: 400, message: 'Bad request' },

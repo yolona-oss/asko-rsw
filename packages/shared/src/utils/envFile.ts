@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { isProdEnv, isDevEnv } from './nodeEnv'
+import { isProdEnv, isDevEnv } from './nodeEnv.js'
 
 const findRepoRoot = (_: string) => './'
 

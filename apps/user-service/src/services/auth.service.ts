@@ -16,13 +16,8 @@ import Crypto from './crypto.service';
 import crypto from 'crypto'
 
 import {
-    toAuthUser,
     LoginCredentials,
     CreateUserDto,
-    IAuthSession,
-    IAuthUser,
-    IRefreshToken,
-    IAccessToken,
     JwtPayload,
     JwtRefreshPayload,
     Role,
@@ -34,6 +29,13 @@ import {
     MFA_CHALLENGE_TOKEN_EXPIRY,
     PHONE_OTP_PENDING_REG_PREFIX,
 } from '@asko/shared';
+import {
+    toAuthUser,
+    IAuthSession,
+    IAuthUser,
+    IRefreshToken,
+    IAccessToken,
+} from 'types/auth.types';
 import { time } from 'utils';
 import Redis from 'ioredis';
 

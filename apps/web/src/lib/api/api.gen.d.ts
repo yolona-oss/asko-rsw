@@ -1252,6 +1252,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/file-upload/document/upload/broken-part/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentUploadController_uploadBrokenPartDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/document/upload/repair-request/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentUploadController_uploadRepairRequestDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/document/attached": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentUploadController_listAttached"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/file-upload/document/delete/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["DocumentUploadController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files/image/{id}": {
         parameters: {
             query?: never;
@@ -1276,6 +1340,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["FileAccessController_getVideo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/files/document/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FileAccessController_getDocument"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2078,6 +2158,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["RepairRequestController_deleteBrokenPart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/broken-parts/{partId}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_orderBrokenPart"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3058,6 +3154,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reviews/rating/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReviewController_findMyRating"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/rating/repairer/{repairerId}": {
         parameters: {
             query?: never;
@@ -3082,6 +3194,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ReviewController_findByRepairer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/request/{requestId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReviewController_findByRequest"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3319,6 +3447,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         LoginCredentials: Record<string, never>;
+        /** @enum {string} */
+        AuthProvider: "EMAIL" | "PHONE" | "GOOGLE" | "VK" | "YANDEX";
+        /** @enum {string} */
+        Role: "super_admin" | "admin" | "dealer" | "manager" | "repairer" | "user";
         AuthUserDto: {
             id: string;
             firstName?: string;
@@ -3326,8 +3458,8 @@ export interface components {
             email?: string;
             phone?: string;
             googleId?: string;
-            providers: string[];
-            roles: string[];
+            providers: components["schemas"]["AuthProvider"][];
+            roles: components["schemas"]["Role"][];
             createdAt: string;
             updatedAt: string;
         };
@@ -3358,9 +3490,9 @@ export interface components {
         VerifyPhoneRegisterDto: Record<string, never>;
         ResendPhoneRegisterOtpDto: Record<string, never>;
         OAuthLinkRecordDto: {
+            provider: components["schemas"]["AuthProvider"];
             id: string;
             userId: string;
-            provider: string;
             providerId: string;
             email: string;
             avatarUrl: string;
@@ -3373,7 +3505,7 @@ export interface components {
         InviteLinkResponseDto: {
             id: string;
             token: string;
-            role: string;
+            role: components["schemas"]["Role"];
             ttl: number;
             used: boolean;
             expiresAt: string;
@@ -3385,12 +3517,14 @@ export interface components {
         };
         CreateArticleDto: Record<string, never>;
         ArticleResponseDto: {
+            content?: {
+                [key: string]: unknown;
+            };
             id: string;
             title: string;
             slug: string;
             text: string;
             description?: string;
-            content?: Record<string, never>;
             tags?: string[];
             viewCount: number;
             createdAt: string;
@@ -3455,8 +3589,8 @@ export interface components {
             email?: string;
             phone?: string;
             googleId?: string;
-            providers: string[];
-            roles: string[];
+            providers: components["schemas"]["AuthProvider"][];
+            roles: components["schemas"]["Role"][];
             createdAt: string;
             updatedAt: string;
             emailVerified?: boolean;
@@ -3502,32 +3636,40 @@ export interface components {
         VideoListResponseDto: {
             videos: components["schemas"]["VideoRecordDto"][];
         };
+        /** @enum {string} */
+        ConversationType: "direct" | "group";
+        /** @enum {string} */
+        ParticipantRole: "owner" | "admin" | "member";
         ParticipantRecordDto: {
+            role: components["schemas"]["ParticipantRole"];
             id: string;
             userId: string;
             conversationId: string;
-            role: string;
             lastReadMessageId?: string;
             joinedAt: string;
         };
+        /** @enum {string} */
+        MessageType: "text" | "image" | "video" | "system";
+        /** @enum {string} */
+        MessageStatus: "sending" | "delivered" | "seen";
         ChatMessageRecordDto: {
+            type: components["schemas"]["MessageType"];
+            status?: components["schemas"]["MessageStatus"];
             id: string;
             conversationId: string;
             senderId: string;
-            type: string;
             text?: string;
             attachmentJson?: string;
             isEdited: boolean;
-            status?: string;
             deliveredAt?: string;
             readAt?: string;
             createdAt: string;
             updatedAt: string;
         };
         ConversationRecordDto: {
+            type: components["schemas"]["ConversationType"];
             participants: components["schemas"]["ParticipantRecordDto"][];
             id: string;
-            type: string;
             name?: string;
             creatorId: string;
             lastMessage?: components["schemas"]["ChatMessageRecordDto"];
@@ -3560,10 +3702,14 @@ export interface components {
         ChatUnreadCountResponseDto: {
             count: number;
         };
+        /** @enum {string} */
+        PresenceStatus: "online" | "offline";
+        /** @enum {string} */
+        UserActivity: "idle" | "typing" | "uploading_image" | "uploading_video";
         PresenceRecordDto: {
+            status: components["schemas"]["PresenceStatus"];
+            activity: components["schemas"]["UserActivity"];
             userId: string;
-            status: string;
-            activity: string;
             conversationId?: string;
             lastSeenAt: string;
         };
@@ -3573,13 +3719,17 @@ export interface components {
         BulkPresenceResponseDto: {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
+        /** @enum {string} */
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated";
+        /** @enum {string} */
+        NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "system";
         NotificationRecordDto: {
+            type: components["schemas"]["NotificationType"];
+            targetType?: components["schemas"]["NotificationTargetType"];
             id: string;
             userId: string;
-            type: string;
             title: string;
             body: string;
-            targetType?: string;
             targetId?: string;
             metadata?: string;
             isRead: boolean;
@@ -3596,13 +3746,17 @@ export interface components {
             count: number;
         };
         CreateRepairRequestDto: Record<string, never>;
+        /** @enum {string} */
+        RepairRequestStatus: "pending" | "paid" | "assigned" | "accepted" | "in_progress" | "awaiting_completion" | "completed" | "refused" | "cancelled" | "paused" | "refund_requested" | "refunded";
+        /** @enum {string} */
+        WorkStepStatus: "pending" | "in_progress" | "completed" | "skipped" | "declined";
         WorkStepRecordDto: {
+            status: components["schemas"]["WorkStepStatus"];
             id: string;
             repairRequestId: string;
             title: string;
             description?: string;
             comment?: string;
-            status: string;
             order: number;
             isFinal: boolean;
             isMandatory: boolean;
@@ -3612,20 +3766,24 @@ export interface components {
             createdAt: string;
             updatedAt: string;
         };
+        /** @enum {string} */
+        BrokenPartStatus: "added" | "ordered" | "shipped" | "replaced";
         BrokenPartRecordDto: {
+            status: components["schemas"]["BrokenPartStatus"];
             id: string;
             repairRequestId: string;
             devicePartId?: string;
             name: string;
-            status: string;
             note?: string;
             createdAt: string;
             updatedAt: string;
         };
+        /** @enum {string} */
+        DeviceType: "washing_machine" | "dryer" | "dishwasher" | "oven" | "cooktop" | "refrigerator" | "freezer" | "hood" | "other";
         DeviceRecordDto: {
+            type: components["schemas"]["DeviceType"];
             id: string;
             name: string;
-            type: string;
             model: string;
             brand: string;
             slug: string;
@@ -3672,6 +3830,7 @@ export interface components {
             address?: components["schemas"]["AddressRecordDto"];
         };
         RepairerRecordDto: {
+            currentRequestStatus?: components["schemas"]["RepairRequestStatus"];
             id: string;
             userId: string;
             specializations: string[];
@@ -3684,10 +3843,11 @@ export interface components {
             lastLocationUpdate?: string;
             user?: components["schemas"]["AuthUserDto"];
             activeRequestCount?: number;
-            currentRequestStatus?: string;
             createdAt: string;
             updatedAt: string;
         };
+        /** @enum {string} */
+        CertificateStatus: "pending_payment" | "validation_error" | "active" | "expired" | "revoked";
         DealerClientRecordDto: {
             id: string;
             dealerId: string;
@@ -3709,12 +3869,12 @@ export interface components {
             updatedAt: string;
         };
         CertificateRecordDto: {
+            status: components["schemas"]["CertificateStatus"];
             id: string;
             userId: string;
             userDeviceId: string;
             dealerId?: string;
             certificateNumber: string;
-            status: string;
             issuedAt: string;
             expiresAt: string;
             purchaseReceiptUrl?: string;
@@ -3729,6 +3889,7 @@ export interface components {
             createdAt: string;
         };
         RepairRequestRecordDto: {
+            status: components["schemas"]["RepairRequestStatus"];
             workSteps?: components["schemas"]["WorkStepRecordDto"][];
             brokenParts?: components["schemas"]["BrokenPartRecordDto"][];
             id: string;
@@ -3738,7 +3899,6 @@ export interface components {
             managerId?: string;
             certificateId?: string;
             addressId?: string;
-            status: string;
             description: string;
             preferredDate?: string;
             totalCost?: number;
@@ -3770,20 +3930,28 @@ export interface components {
             limit: number;
         };
         RequestRefundDto: Record<string, never>;
+        /** @enum {string} */
+        PaymentStatus: "pending" | "paid" | "partially_refunded" | "refunded" | "failed";
         ProcessInvoiceResponseDto: {
+            status: components["schemas"]["PaymentStatus"];
             paymentId: string;
-            status: string;
             redirectUrl?: string;
         };
+        /** @enum {string} */
+        PaymentTargetType: "repairRequest" | "certificate" | "dealerWithdrawal";
+        /** @enum {string} */
+        CurrencyEnum: "usd" | "eur" | "rub" | "rub";
+        /** @enum {string} */
+        PaymentProviderType: "dummy" | "yookassa" | "tbank" | "card";
         PaymentRecordDto: {
+            targetType: components["schemas"]["PaymentTargetType"];
+            currency: components["schemas"]["CurrencyEnum"];
+            status: components["schemas"]["PaymentStatus"];
+            provider?: components["schemas"]["PaymentProviderType"];
             id: string;
             userId: string;
-            targetType: string;
             targetId: string;
             amount: number;
-            currency: string;
-            status: string;
-            provider?: string;
             providerPaymentId?: string;
             user?: components["schemas"]["AuthUserDto"];
             paidAt?: string;
@@ -3815,6 +3983,7 @@ export interface components {
         };
         UpdateBrokenPartDto: Record<string, never>;
         UpdateBrokenPartStatusDto: Record<string, never>;
+        OrderBrokenPartDto: Record<string, never>;
         BrokenPartListResponseDto: {
             parts: components["schemas"]["BrokenPartRecordDto"][];
         };
@@ -3920,11 +4089,13 @@ export interface components {
             page: number;
             limit: number;
         };
+        /** @enum {string} */
+        WithdrawalStatus: "pending" | "approved" | "rejected" | "completed";
         WithdrawalRecordDto: {
+            status: components["schemas"]["WithdrawalStatus"];
             id: string;
             dealerId: string;
             amount: number;
-            status: string;
             requestedAt: string;
             processedAt?: string;
             processedByUserId?: string;
@@ -3940,8 +4111,8 @@ export interface components {
             withdrawal: components["schemas"]["WithdrawalRecordDto"];
         };
         PayoutResponseDto: {
+            status: components["schemas"]["PaymentStatus"];
             paymentId: string;
-            status: string;
         };
         UpdateDealerProfileDto: Record<string, never>;
         DealerClientListResponseDto: {
@@ -3963,10 +4134,12 @@ export interface components {
         DealerClientResponseDto: {
             client: components["schemas"]["DealerClientRecordDto"];
         };
+        /** @enum {string} */
+        PointsTransactionType: "earned" | "spent" | "adjustment";
         PointsTransactionRecordDto: {
+            type: components["schemas"]["PointsTransactionType"];
             id: string;
             dealerId: string;
-            type: string;
             amount: number;
             reason: string;
             repairRequestId?: string;
@@ -4009,15 +4182,19 @@ export interface components {
             limit: number;
         };
         CreateWScheduleDto: Record<string, never>;
+        /** @enum {string} */
+        ScheduleEntryType: "work" | "vacation" | "sick_leave" | "overtime" | "extra_day";
+        /** @enum {string} */
+        ScheduleStatus: "pending" | "approved" | "rejected";
         WScheduleRecordDto: {
+            type: components["schemas"]["ScheduleEntryType"];
+            status: components["schemas"]["ScheduleStatus"];
             id: string;
             userId: string;
-            type: string;
             dayOfWeek?: number;
             date?: string;
             startTime: string;
             endTime: string;
-            status: string;
             approvedBy?: string;
             note?: string;
             autoGenerated: boolean;
@@ -4039,8 +4216,8 @@ export interface components {
             addresses: components["schemas"]["AddressRecordDto"][];
         };
         PaymentOptionsResponseDto: {
-            providers: string[];
-            defaultProvider: string;
+            providers: components["schemas"]["PaymentProviderType"][];
+            defaultProvider: components["schemas"]["PaymentProviderType"];
         };
         CreatePaymentDto: Record<string, never>;
         PaginatedPaymentsResponseDto: {
@@ -5888,6 +6065,85 @@ export interface operations {
             };
         };
     };
+    DocumentUploadController_uploadBrokenPartDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentUploadController_uploadRepairRequestDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentUploadController_listAttached: {
+        parameters: {
+            query: {
+                ownerType: string;
+                ownerId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentUploadController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
     FileAccessController_getImage: {
         parameters: {
             query?: never;
@@ -5908,6 +6164,25 @@ export interface operations {
         };
     };
     FileAccessController_getVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FileAccessController_getDocument: {
         parameters: {
             query?: never;
             header?: never;
@@ -7203,6 +7478,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_orderBrokenPart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderBrokenPartDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrokenPartResponseDto"];
                 };
             };
         };
@@ -8848,6 +9149,25 @@ export interface operations {
             };
         };
     };
+    ReviewController_findMyRating: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatingResponseDto"];
+                };
+            };
+        };
+    };
     ReviewController_findRepairerRating: {
         parameters: {
             query?: never;
@@ -8886,6 +9206,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedReviewsResponseDto"];
+                };
+            };
+        };
+    };
+    ReviewController_findByRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewResponseDto"];
                 };
             };
         };

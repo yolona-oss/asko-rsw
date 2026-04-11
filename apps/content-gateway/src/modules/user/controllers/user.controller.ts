@@ -11,10 +11,14 @@ import {
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-import { UserClientService, RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import {
+    UserClientService,
+    RequiredRoles,
+    JwtAuthUser,
+    AuthUserDto,
+} from '@asko/gateway-common';
 
 import {
-    IAuthUser,
     UpdateUserDto,
     ChangePasswordDto,
     PaginationDto,
@@ -67,7 +71,7 @@ export class UsersController {
     @ApiOkResponse({ type: UserResponseDto })
     @Put('/')
     async updateUserById(
-        @JwtAuthUser() user: IAuthUser,
+        @JwtAuthUser() user: AuthUserDto,
         @Body() data: Partial<UpdateUserDto>,
     ) {
         return this.userClient.updateUser({
@@ -92,7 +96,7 @@ export class UsersController {
     @ApiOkResponse({ type: UserResponseDto })
     @Put('/password')
     async changePassword(
-        @JwtAuthUser() user: IAuthUser,
+        @JwtAuthUser() user: AuthUserDto,
         @Body() data: ChangePasswordDto,
     ) {
         return this.userClient.changePassword({
@@ -106,7 +110,7 @@ export class UsersController {
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/request-email-change')
     async requestEmailChange(
-        @JwtAuthUser() user: IAuthUser,
+        @JwtAuthUser() user: AuthUserDto,
         @Body() data: RequestEmailChangeDto,
     ) {
         const result = await this.userClient.requestEmailChange({
@@ -134,7 +138,7 @@ export class UsersController {
     @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: UserResponseDto })
     @Get('/profile')
-    async getUserById(@JwtAuthUser() user: IAuthUser) {
+    async getUserById(@JwtAuthUser() user: AuthUserDto) {
         return this.userClient.getProfile({ id: user.id });
     }
 

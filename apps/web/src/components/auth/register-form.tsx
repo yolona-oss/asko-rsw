@@ -12,10 +12,12 @@ import {
   MIN_USER_PASSWORD_LENGTH,
   MAX_USER_PASSWORD_LENGTH,
   NAME_REGEX,
+} from '@asko/shared/client';
+import {
   RUSSIAN_NAMES,
   RUSSIAN_SURNAMES,
   RUSSIAN_PATRONYMICS,
-} from '@asko/shared/client';
+} from '@/data/russian-names';
 
 type AuthMethod = 'email' | 'phone';
 type Step = 'credentials' | 'verification';

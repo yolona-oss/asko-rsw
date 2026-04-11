@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
+import { BrokenPartStatus, RepairRequestStatus, WorkStepStatus } from '@asko/shared';
 import { UserDeviceRecordDto, AddressRecordDto } from './device.response.dto';
 import { CertificateRecordDto } from './certificate.response.dto';
 import { RepairerRecordDto } from './repairer.response.dto';
@@ -12,7 +13,8 @@ export class RepairRequestRecordDto {
     managerId?: string;
     certificateId?: string;
     addressId?: string;
-    status: string;
+    @ApiProperty({ enum: RepairRequestStatus, enumName: 'RepairRequestStatus' })
+    status: RepairRequestStatus;
     description: string;
     preferredDate?: string;
     totalCost?: number;
@@ -57,7 +59,8 @@ export class WorkStepRecordDto {
     title: string;
     description?: string;
     comment?: string;
-    status: string;
+    @ApiProperty({ enum: WorkStepStatus, enumName: 'WorkStepStatus' })
+    status: WorkStepStatus;
     order: number;
     isFinal: boolean;
     isMandatory: boolean;
@@ -87,7 +90,8 @@ export class BrokenPartRecordDto {
     repairRequestId: string;
     devicePartId?: string;
     name: string;
-    status: string;
+    @ApiProperty({ enum: BrokenPartStatus, enumName: 'BrokenPartStatus' })
+    status: BrokenPartStatus;
     note?: string;
     createdAt: string;
     updatedAt: string;

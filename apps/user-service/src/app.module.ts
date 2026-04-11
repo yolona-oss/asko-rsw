@@ -99,7 +99,5 @@ export class AppModule implements OnApplicationBootstrap {
             email: this.config.defaultUser.email,
             password: this.config.defaultUser.password
         })
-
-        console.log(this.config)
     }
 }

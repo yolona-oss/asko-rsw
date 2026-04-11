@@ -1,6 +1,6 @@
-import { AppErrorTypeEnum } from './error-type.enum';
-import { IErrorMessage } from './ierror-message.interface';
-import { CommonErrorsDefinition } from './definition';
+import { AppErrorTypeEnum } from './error-type.enum.js';
+import { IErrorMessage } from './ierror-message.interface.js';
+import { CommonErrorsDefinition } from './definition.js';
 
 interface AppErrorModificationOptions extends Pick<IErrorMessage, 'message'> {
     message: string;

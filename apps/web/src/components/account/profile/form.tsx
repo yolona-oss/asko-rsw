@@ -20,7 +20,7 @@ import {
   RUSSIAN_NAMES,
   RUSSIAN_SURNAMES,
   RUSSIAN_PATRONYMICS,
-} from '@asko/shared/client';
+} from '@/data/russian-names';
 
 export function ProfileForm() {
   const { user } = useAccount();

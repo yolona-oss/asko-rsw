@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DeviceType } from '@asko/shared';
 
 export class AddressRecordDto {
     id: string;
@@ -19,7 +20,8 @@ export class AddressRecordDto {
 export class DeviceRecordDto {
     id: string;
     name: string;
-    type: string;
+    @ApiProperty({ enum: DeviceType, enumName: 'DeviceType' })
+    type: DeviceType;
     model: string;
     brand: string;
     slug: string;

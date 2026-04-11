@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
+import { CertificateStatus } from '@asko/shared';
 import { UserDeviceRecordDto } from './device.response.dto';
 import { DealerProfileRecordDto } from './dealer.response.dto';
 
@@ -9,7 +10,8 @@ export class CertificateRecordDto {
     userDeviceId: string;
     dealerId?: string;
     certificateNumber: string;
-    status: string;
+    @ApiProperty({ enum: CertificateStatus, enumName: 'CertificateStatus' })
+    status: CertificateStatus;
     issuedAt: string;
     expiresAt: string;
     purchaseReceiptUrl?: string;

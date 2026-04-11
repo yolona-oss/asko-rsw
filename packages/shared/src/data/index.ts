@@ -1,1 +1,0 @@
-export { RUSSIAN_NAMES, RUSSIAN_SURNAMES, RUSSIAN_PATRONYMICS } from './russian-names';

@@ -1,5 +1,5 @@
 import http from "node:http";
-import { responseCodes, type ReqType } from "./response_code";
+import { responseCodes, type ReqType } from "./response_code.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

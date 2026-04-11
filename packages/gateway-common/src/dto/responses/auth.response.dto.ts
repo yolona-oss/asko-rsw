@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AuthProvider, Role } from '@asko/shared';
 
 export class AuthUserDto {
     @ApiProperty()
@@ -19,11 +20,11 @@ export class AuthUserDto {
     @ApiPropertyOptional()
     googleId?: string;
 
-    @ApiProperty({ type: [String] })
-    providers!: string[];
+    @ApiProperty({ enum: AuthProvider, enumName: 'AuthProvider', isArray: true })
+    providers!: AuthProvider[];
 
-    @ApiProperty({ type: [String] })
-    roles!: string[];
+    @ApiProperty({ enum: Role, enumName: 'Role', isArray: true })
+    roles!: Role[];
 
     @ApiProperty()
     createdAt!: string;

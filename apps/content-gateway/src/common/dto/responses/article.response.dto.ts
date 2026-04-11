@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ArticleResponseDto {
     id: string;
@@ -6,6 +6,7 @@ export class ArticleResponseDto {
     slug: string;
     text: string;
     description?: string;
+    @ApiPropertyOptional({ type: 'object', additionalProperties: true })
     content?: Record<string, any>;
     tags?: string[];
     viewCount: number;

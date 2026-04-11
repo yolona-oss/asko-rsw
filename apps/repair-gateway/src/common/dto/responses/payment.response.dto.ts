@@ -1,15 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
+import {
+    CurrencyEnum,
+    PaymentProviderType,
+    PaymentStatus,
+    PaymentTargetType,
+} from '@asko/shared';
 
 export class PaymentRecordDto {
     id: string;
     userId: string;
-    targetType: string;
+    @ApiProperty({ enum: PaymentTargetType, enumName: 'PaymentTargetType' })
+    targetType: PaymentTargetType;
     targetId: string;
     amount: number;
-    currency: string;
-    status: string;
-    provider?: string;
+    @ApiProperty({ enum: CurrencyEnum, enumName: 'CurrencyEnum' })
+    currency: CurrencyEnum;
+    @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
+    status: PaymentStatus;
+    @ApiProperty({ enum: PaymentProviderType, enumName: 'PaymentProviderType', required: false })
+    provider?: PaymentProviderType;
     providerPaymentId?: string;
     user?: AuthUserDto;
     paidAt?: string;
@@ -32,18 +42,22 @@ export class PaginatedPaymentsResponseDto {
 
 export class ProcessInvoiceResponseDto {
     paymentId: string;
-    status: string;
+    @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
+    status: PaymentStatus;
     redirectUrl?: string;
 }
 
 export class PayoutResponseDto {
     paymentId: string;
-    status: string;
+    @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
+    status: PaymentStatus;
 }
 
 export class PaymentOptionsResponseDto {
-    providers: string[];
-    defaultProvider: string;
+    @ApiProperty({ enum: PaymentProviderType, enumName: 'PaymentProviderType', isArray: true })
+    providers: PaymentProviderType[];
+    @ApiProperty({ enum: PaymentProviderType, enumName: 'PaymentProviderType' })
+    defaultProvider: PaymentProviderType;
 }
 
 export class PaymentStatsResponseDto {

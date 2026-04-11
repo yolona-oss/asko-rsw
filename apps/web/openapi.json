@@ -2342,6 +2342,113 @@
         ]
       }
     },
+    "/file-upload/document/upload/broken-part/{ownerId}": {
+      "post": {
+        "operationId": "DocumentUploadController_uploadBrokenPartDocument",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/document/upload/repair-request/{ownerId}": {
+      "post": {
+        "operationId": "DocumentUploadController_uploadRepairRequestDocument",
+        "parameters": [
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/document/attached": {
+      "get": {
+        "operationId": "DocumentUploadController_listAttached",
+        "parameters": [
+          {
+            "name": "ownerType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
+    "/file-upload/document/delete/{documentId}": {
+      "delete": {
+        "operationId": "DocumentUploadController_remove",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
     "/files/image/{id}": {
       "get": {
         "operationId": "FileAccessController_getImage",
@@ -2368,6 +2475,29 @@
     "/files/video/{id}": {
       "get": {
         "operationId": "FileAccessController_getVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Files"
+        ]
+      }
+    },
+    "/files/document/{id}": {
+      "get": {
+        "operationId": "FileAccessController_getDocument",
         "parameters": [
           {
             "name": "id",
@@ -4258,6 +4388,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/order": {
+      "post": {
+        "operationId": "RepairRequestController_orderBrokenPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderBrokenPartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
                 }
               }
             }
@@ -6538,6 +6716,27 @@
         ]
       }
     },
+    "/reviews/rating/my": {
+      "get": {
+        "operationId": "ReviewController_findMyRating",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
     "/reviews/rating/repairer/{repairerId}": {
       "get": {
         "operationId": "ReviewController_findRepairerRating",
@@ -6588,6 +6787,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaginatedReviewsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/request/{requestId}": {
+      "get": {
+        "operationId": "ReviewController_findByRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponseDto"
                 }
               }
             }
@@ -7204,6 +7433,27 @@
         "type": "object",
         "properties": {}
       },
+      "AuthProvider": {
+        "type": "string",
+        "enum": [
+          "EMAIL",
+          "PHONE",
+          "GOOGLE",
+          "VK",
+          "YANDEX"
+        ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "super_admin",
+          "admin",
+          "dealer",
+          "manager",
+          "repairer",
+          "user"
+        ]
+      },
       "AuthUserDto": {
         "type": "object",
         "properties": {
@@ -7228,13 +7478,13 @@
           "providers": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AuthProvider"
             }
           },
           "roles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Role"
             }
           },
           "createdAt": {
@@ -7354,13 +7604,17 @@
       "OAuthLinkRecordDto": {
         "type": "object",
         "properties": {
+          "provider": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthProvider"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "userId": {
-            "type": "string"
-          },
-          "provider": {
             "type": "string"
           },
           "providerId": {
@@ -7377,9 +7631,9 @@
           }
         },
         "required": [
+          "provider",
           "id",
           "userId",
-          "provider",
           "providerId",
           "email",
           "avatarUrl",
@@ -7414,7 +7668,11 @@
             "type": "string"
           },
           "role": {
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ]
           },
           "ttl": {
             "type": "number"
@@ -7461,6 +7719,10 @@
       "ArticleResponseDto": {
         "type": "object",
         "properties": {
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "id": {
             "type": "string"
           },
@@ -7475,9 +7737,6 @@
           },
           "description": {
             "type": "string"
-          },
-          "content": {
-            "type": "object"
           },
           "tags": {
             "type": "array",
@@ -7732,13 +7991,13 @@
           "providers": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AuthProvider"
             }
           },
           "roles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Role"
             }
           },
           "createdAt": {
@@ -7916,9 +8175,31 @@
           "videos"
         ]
       },
+      "ConversationType": {
+        "type": "string",
+        "enum": [
+          "direct",
+          "group"
+        ]
+      },
+      "ParticipantRole": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "admin",
+          "member"
+        ]
+      },
       "ParticipantRecordDto": {
         "type": "object",
         "properties": {
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParticipantRole"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -7926,9 +8207,6 @@
             "type": "string"
           },
           "conversationId": {
-            "type": "string"
-          },
-          "role": {
             "type": "string"
           },
           "lastReadMessageId": {
@@ -7939,16 +8217,47 @@
           }
         },
         "required": [
+          "role",
           "id",
           "userId",
           "conversationId",
-          "role",
           "joinedAt"
+        ]
+      },
+      "MessageType": {
+        "type": "string",
+        "enum": [
+          "text",
+          "image",
+          "video",
+          "system"
+        ]
+      },
+      "MessageStatus": {
+        "type": "string",
+        "enum": [
+          "sending",
+          "delivered",
+          "seen"
         ]
       },
       "ChatMessageRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageType"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -7956,9 +8265,6 @@
             "type": "string"
           },
           "senderId": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "text": {
@@ -7969,9 +8275,6 @@
           },
           "isEdited": {
             "type": "boolean"
-          },
-          "status": {
-            "type": "string"
           },
           "deliveredAt": {
             "type": "string"
@@ -7987,10 +8290,10 @@
           }
         },
         "required": [
+          "type",
           "id",
           "conversationId",
           "senderId",
-          "type",
           "isEdited",
           "createdAt",
           "updatedAt"
@@ -7999,6 +8302,13 @@
       "ConversationRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConversationType"
+              }
+            ]
+          },
           "participants": {
             "type": "array",
             "items": {
@@ -8006,9 +8316,6 @@
             }
           },
           "id": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "name": {
@@ -8034,9 +8341,9 @@
           }
         },
         "required": [
+          "type",
           "participants",
           "id",
-          "type",
           "creatorId",
           "unreadCount",
           "createdAt",
@@ -8142,16 +8449,40 @@
           "count"
         ]
       },
+      "PresenceStatus": {
+        "type": "string",
+        "enum": [
+          "online",
+          "offline"
+        ]
+      },
+      "UserActivity": {
+        "type": "string",
+        "enum": [
+          "idle",
+          "typing",
+          "uploading_image",
+          "uploading_video"
+        ]
+      },
       "PresenceRecordDto": {
         "type": "object",
         "properties": {
-          "userId": {
-            "type": "string"
-          },
           "status": {
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PresenceStatus"
+              }
+            ]
           },
           "activity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserActivity"
+              }
+            ]
+          },
+          "userId": {
             "type": "string"
           },
           "conversationId": {
@@ -8162,9 +8493,9 @@
           }
         },
         "required": [
-          "userId",
           "status",
           "activity",
+          "userId",
           "lastSeenAt"
         ]
       },
@@ -8193,25 +8524,73 @@
           "presences"
         ]
       },
+      "NotificationType": {
+        "type": "string",
+        "enum": [
+          "repair_status_changed",
+          "repair_assigned",
+          "repair_transferred_to_repairer",
+          "repair_transferred_from_repairer",
+          "repair_transferred_client",
+          "repair_diagnostics_declined",
+          "repair_completed",
+          "invoice_created",
+          "payment_paid",
+          "payment_failed",
+          "payment_refunded",
+          "certificate_issued",
+          "certificate_expiring_soon",
+          "certificate_expired",
+          "chat_message",
+          "chat_conversation_created",
+          "chat_participant_added",
+          "chat_participant_removed",
+          "message",
+          "system",
+          "schedule_created",
+          "schedule_approved",
+          "schedule_rejected",
+          "schedule_updated"
+        ]
+      },
+      "NotificationTargetType": {
+        "type": "string",
+        "enum": [
+          "repairRequest",
+          "payment",
+          "certificate",
+          "conversation",
+          "schedule",
+          "system"
+        ]
+      },
       "NotificationRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationType"
+              }
+            ]
+          },
+          "targetType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationTargetType"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "userId": {
             "type": "string"
           },
-          "type": {
-            "type": "string"
-          },
           "title": {
             "type": "string"
           },
           "body": {
-            "type": "string"
-          },
-          "targetType": {
             "type": "string"
           },
           "targetId": {
@@ -8231,9 +8610,9 @@
           }
         },
         "required": [
+          "type",
           "id",
           "userId",
-          "type",
           "title",
           "body",
           "isRead",
@@ -8281,9 +8660,43 @@
         "type": "object",
         "properties": {}
       },
+      "RepairRequestStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "paid",
+          "assigned",
+          "accepted",
+          "in_progress",
+          "awaiting_completion",
+          "completed",
+          "refused",
+          "cancelled",
+          "paused",
+          "refund_requested",
+          "refunded"
+        ]
+      },
+      "WorkStepStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "in_progress",
+          "completed",
+          "skipped",
+          "declined"
+        ]
+      },
       "WorkStepRecordDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkStepStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -8297,9 +8710,6 @@
             "type": "string"
           },
           "comment": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "order": {
@@ -8328,10 +8738,10 @@
           }
         },
         "required": [
+          "status",
           "id",
           "repairRequestId",
           "title",
-          "status",
           "order",
           "isFinal",
           "isMandatory",
@@ -8339,9 +8749,25 @@
           "updatedAt"
         ]
       },
+      "BrokenPartStatus": {
+        "type": "string",
+        "enum": [
+          "added",
+          "ordered",
+          "shipped",
+          "replaced"
+        ]
+      },
       "BrokenPartRecordDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BrokenPartStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -8352,9 +8778,6 @@
             "type": "string"
           },
           "name": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "note": {
@@ -8368,24 +8791,42 @@
           }
         },
         "required": [
+          "status",
           "id",
           "repairRequestId",
           "name",
-          "status",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "DeviceType": {
+        "type": "string",
+        "enum": [
+          "washing_machine",
+          "dryer",
+          "dishwasher",
+          "oven",
+          "cooktop",
+          "refrigerator",
+          "freezer",
+          "hood",
+          "other"
         ]
       },
       "DeviceRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceType"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "name": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "model": {
@@ -8432,9 +8873,9 @@
           }
         },
         "required": [
+          "type",
           "id",
           "name",
-          "type",
           "model",
           "brand",
           "slug",
@@ -8548,6 +8989,13 @@
       "RepairerRecordDto": {
         "type": "object",
         "properties": {
+          "currentRequestStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepairRequestStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -8587,9 +9035,6 @@
           "activeRequestCount": {
             "type": "number"
           },
-          "currentRequestStatus": {
-            "type": "string"
-          },
           "createdAt": {
             "type": "string"
           },
@@ -8606,6 +9051,16 @@
           "completedRepairs",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "CertificateStatus": {
+        "type": "string",
+        "enum": [
+          "pending_payment",
+          "validation_error",
+          "active",
+          "expired",
+          "revoked"
         ]
       },
       "DealerClientRecordDto": {
@@ -8685,6 +9140,13 @@
       "CertificateRecordDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificateStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -8698,9 +9160,6 @@
             "type": "string"
           },
           "certificateNumber": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "issuedAt": {
@@ -8741,11 +9200,11 @@
           }
         },
         "required": [
+          "status",
           "id",
           "userId",
           "userDeviceId",
           "certificateNumber",
-          "status",
           "issuedAt",
           "expiresAt",
           "paid",
@@ -8755,6 +9214,13 @@
       "RepairRequestRecordDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepairRequestStatus"
+              }
+            ]
+          },
           "workSteps": {
             "type": "array",
             "items": {
@@ -8786,9 +9252,6 @@
             "type": "string"
           },
           "addressId": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "description": {
@@ -8853,10 +9316,10 @@
           }
         },
         "required": [
+          "status",
           "id",
           "userId",
           "userDeviceId",
-          "status",
           "description",
           "refundRequested",
           "stepsLocked",
@@ -8905,13 +9368,27 @@
         "type": "object",
         "properties": {}
       },
+      "PaymentStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "paid",
+          "partially_refunded",
+          "refunded",
+          "failed"
+        ]
+      },
       "ProcessInvoiceResponseDto": {
         "type": "object",
         "properties": {
-          "paymentId": {
-            "type": "string"
-          },
           "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatus"
+              }
+            ]
+          },
+          "paymentId": {
             "type": "string"
           },
           "redirectUrl": {
@@ -8919,20 +9396,71 @@
           }
         },
         "required": [
-          "paymentId",
-          "status"
+          "status",
+          "paymentId"
+        ]
+      },
+      "PaymentTargetType": {
+        "type": "string",
+        "enum": [
+          "repairRequest",
+          "certificate",
+          "dealerWithdrawal"
+        ]
+      },
+      "CurrencyEnum": {
+        "type": "string",
+        "enum": [
+          "usd",
+          "eur",
+          "rub",
+          "rub"
+        ]
+      },
+      "PaymentProviderType": {
+        "type": "string",
+        "enum": [
+          "dummy",
+          "yookassa",
+          "tbank",
+          "card"
         ]
       },
       "PaymentRecordDto": {
         "type": "object",
         "properties": {
+          "targetType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentTargetType"
+              }
+            ]
+          },
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyEnum"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatus"
+              }
+            ]
+          },
+          "provider": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentProviderType"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "userId": {
-            "type": "string"
-          },
-          "targetType": {
             "type": "string"
           },
           "targetId": {
@@ -8940,15 +9468,6 @@
           },
           "amount": {
             "type": "number"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "provider": {
-            "type": "string"
           },
           "providerPaymentId": {
             "type": "string"
@@ -8967,13 +9486,13 @@
           }
         },
         "required": [
-          "id",
-          "userId",
           "targetType",
-          "targetId",
-          "amount",
           "currency",
           "status",
+          "id",
+          "userId",
+          "targetId",
+          "amount",
           "createdAt"
         ]
       },
@@ -9075,6 +9594,10 @@
         "properties": {}
       },
       "UpdateBrokenPartStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "OrderBrokenPartDto": {
         "type": "object",
         "properties": {}
       },
@@ -9503,9 +10026,25 @@
           "limit"
         ]
       },
+      "WithdrawalStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "completed"
+        ]
+      },
       "WithdrawalRecordDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -9514,9 +10053,6 @@
           },
           "amount": {
             "type": "number"
-          },
-          "status": {
-            "type": "string"
           },
           "requestedAt": {
             "type": "string"
@@ -9529,10 +10065,10 @@
           }
         },
         "required": [
+          "status",
           "id",
           "dealerId",
           "amount",
-          "status",
           "requestedAt"
         ]
       },
@@ -9580,16 +10116,20 @@
       "PayoutResponseDto": {
         "type": "object",
         "properties": {
-          "paymentId": {
-            "type": "string"
-          },
           "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentStatus"
+              }
+            ]
+          },
+          "paymentId": {
             "type": "string"
           }
         },
         "required": [
-          "paymentId",
-          "status"
+          "status",
+          "paymentId"
         ]
       },
       "UpdateDealerProfileDto": {
@@ -9674,16 +10214,28 @@
           "client"
         ]
       },
+      "PointsTransactionType": {
+        "type": "string",
+        "enum": [
+          "earned",
+          "spent",
+          "adjustment"
+        ]
+      },
       "PointsTransactionRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PointsTransactionType"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "dealerId": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "amount": {
@@ -9700,9 +10252,9 @@
           }
         },
         "required": [
+          "type",
           "id",
           "dealerId",
-          "type",
           "amount",
           "reason",
           "createdAt"
@@ -9860,16 +10412,45 @@
         "type": "object",
         "properties": {}
       },
+      "ScheduleEntryType": {
+        "type": "string",
+        "enum": [
+          "work",
+          "vacation",
+          "sick_leave",
+          "overtime",
+          "extra_day"
+        ]
+      },
+      "ScheduleStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ]
+      },
       "WScheduleRecordDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleEntryType"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
           "userId": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "dayOfWeek": {
@@ -9882,9 +10463,6 @@
             "type": "string"
           },
           "endTime": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "approvedBy": {
@@ -9904,12 +10482,12 @@
           }
         },
         "required": [
+          "type",
+          "status",
           "id",
           "userId",
-          "type",
           "startTime",
           "endTime",
-          "status",
           "autoGenerated",
           "createdAt",
           "updatedAt"
@@ -9980,11 +10558,15 @@
           "providers": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PaymentProviderType"
             }
           },
           "defaultProvider": {
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentProviderType"
+              }
+            ]
           }
         },
         "required": [
