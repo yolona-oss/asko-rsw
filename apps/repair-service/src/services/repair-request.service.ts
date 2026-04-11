@@ -268,6 +268,8 @@ export class RepairRequestService {
             oldStatus,
             newStatus: RepairRequestStatus.ASSIGNED,
             repairerId,
+            repairerUserId: repairer.userId,
+            managerId,
             timestamp: new Date(),
         });
 
@@ -408,6 +410,8 @@ export class RepairRequestService {
             userId: request.userId,
             oldStatus: RepairRequestStatus.ACCEPTED,
             newStatus: RepairRequestStatus.IN_PROGRESS,
+            repairerUserId: repairer.userId,
+            managerId: request.managerId,
             timestamp: new Date(),
         });
 

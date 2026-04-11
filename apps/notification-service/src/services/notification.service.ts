@@ -112,6 +112,21 @@ export class NotificationService {
     }
 
     @CreateRequestContext()
+    async hasUnreadForTarget(
+        userId: string,
+        targetType: string,
+        targetId: string,
+    ): Promise<boolean> {
+        const count = await this.em.count(NotificationEntity, {
+            userId,
+            targetType,
+            targetId,
+            isRead: false,
+        });
+        return count > 0;
+    }
+
+    @CreateRequestContext()
     async deleteNotification(notificationId: string, userId: string): Promise<void> {
         const notification = await this.em.findOne(NotificationEntity, { id: notificationId, userId });
         if (!notification) throw AppErrors.notificationNotFound();

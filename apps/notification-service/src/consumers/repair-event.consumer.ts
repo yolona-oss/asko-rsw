@@ -1,11 +1,34 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
-import { NotificationType, NotificationTargetType } from '@asko/shared';
+import { ReminderService } from 'services/reminder.service';
+import { UserClientService } from 'modules/user-client/user-client.service';
+import { AppConfig } from '../app.config';
+import { NotificationType, NotificationTargetType, Role } from '@asko/shared';
 
 @Controller()
 export class RepairEventConsumer {
-    constructor(private readonly notificationService: NotificationService) {}
+    constructor(
+        private readonly notificationService: NotificationService,
+        private readonly reminderService: ReminderService,
+        private readonly userClient: UserClientService,
+        private readonly config: AppConfig,
+    ) {}
+
+    private async getStaffRecipients(excludeUserId?: string): Promise<string[]> {
+        const ids = new Set<string>();
+        for (const role of [Role.ADMIN, Role.SUPER_ADMIN, Role.MANAGER]) {
+            try {
+                const res = await this.userClient.findAllUsers({ role });
+                for (const u of res.data ?? []) {
+                    if (u.id && u.id !== excludeUserId) ids.add(u.id);
+                }
+            } catch (e) {
+                console.error(`[RepairEventConsumer] failed to fetch ${role}s:`, e);
+            }
+        }
+        return Array.from(ids);
+    }
 
     @EventPattern('repair.status_changed')
     async handleRepairStatusChanged(@Payload() data: any, @Ctx() context: RmqContext) {
@@ -22,6 +45,47 @@ export class RepairEventConsumer {
                 data.repairId,
                 data,
             );
+
+            if (data.oldStatus === 'assigned') {
+                await this.reminderService.cancelReminder(
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    `status_changed:${data.newStatus}`,
+                    ['repair_assignment_pending'],
+                );
+            }
+
+            if (data.oldStatus === 'in_progress') {
+                await this.reminderService.cancelReminder(
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    `status_changed:${data.newStatus}`,
+                    ['repair_in_progress_stuck'],
+                );
+            }
+
+            if (data.newStatus === 'in_progress' && data.repairerUserId) {
+                const staff = await this.getStaffRecipients(data.repairerUserId);
+                const recipients = Array.from(new Set([data.repairerUserId, ...staff]));
+                const stuckAfterMs = this.config.reminders.repairStuckAfterMs;
+                await this.reminderService.scheduleReminder({
+                    kind: 'repair_in_progress_stuck',
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    recipientUserIds: recipients,
+                    notificationType: NotificationType.REPAIR_IN_PROGRESS_STUCK,
+                    title: 'Заявка долго в работе',
+                    body: `Заявка №${data.repairId} находится в статусе "В работе" слишком долго. Проверьте ход работ.`,
+                    metadata: {
+                        repairId: data.repairId,
+                        repairerUserId: data.repairerUserId,
+                    },
+                    intervalMs: stuckAfterMs,
+                    maxFires: 1,
+                    firstFireAt: new Date(Date.now() + stuckAfterMs),
+                });
+            }
+
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] repair.status_changed error:', e);
@@ -44,6 +108,25 @@ export class RepairEventConsumer {
                 data.repairId,
                 data,
             );
+
+            if (data.repairerUserId) {
+                await this.reminderService.scheduleReminder({
+                    kind: 'repair_assignment_pending',
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    recipientUserIds: [data.repairerUserId],
+                    notificationType: NotificationType.REPAIR_ASSIGNMENT_REMINDER,
+                    title: 'Ожидается ответ мастера',
+                    body: `Заявка №${data.repairId} ожидает вашего подтверждения.`,
+                    metadata: {
+                        repairId: data.repairId,
+                        repairerUserId: data.repairerUserId,
+                    },
+                    intervalMs: this.config.reminders.repairAssignmentIntervalMs,
+                    maxFires: this.config.reminders.repairAssignmentMaxFires,
+                });
+            }
+
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] repair.assigned error:', e);
@@ -65,6 +148,12 @@ export class RepairEventConsumer {
                 NotificationTargetType.REPAIR_REQUEST,
                 data.repairId,
                 data,
+            );
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.REPAIR_REQUEST,
+                data.repairId,
+                'repair.completed',
+                ['repair_assignment_pending', 'repair_in_progress_stuck'],
             );
             channel.ack(msg);
         } catch (e) {
@@ -117,6 +206,31 @@ export class RepairEventConsumer {
                 );
             }
 
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.REPAIR_REQUEST,
+                data.repairId,
+                'repair.transferred',
+                ['repair_assignment_pending'],
+            );
+
+            if (data.newRepairerUserId) {
+                await this.reminderService.scheduleReminder({
+                    kind: 'repair_assignment_pending',
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    recipientUserIds: [data.newRepairerUserId],
+                    notificationType: NotificationType.REPAIR_ASSIGNMENT_REMINDER,
+                    title: 'Ожидается ответ мастера',
+                    body: `Заявка №${data.repairId} ожидает вашего подтверждения.`,
+                    metadata: {
+                        repairId: data.repairId,
+                        repairerUserId: data.newRepairerUserId,
+                    },
+                    intervalMs: this.config.reminders.repairAssignmentIntervalMs,
+                    maxFires: this.config.reminders.repairAssignmentMaxFires,
+                });
+            }
+
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] repair.transferred error:', e);
@@ -152,7 +266,6 @@ export class RepairEventConsumer {
     async handleRepairDiagnosticsApproved(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
-        // Informational only — no user-facing notification, keeps audit trail via event log.
         console.log('[RepairEventConsumer] repair.diagnostics_approved', JSON.stringify(data));
         channel.ack(msg);
     }

@@ -339,6 +339,30 @@ describe('NotificationService', () => {
         });
     });
 
+    describe('hasUnreadForTarget', () => {
+        it('should return true when unread notifications exist for target', async () => {
+            mockEm.count.mockResolvedValue(2);
+
+            const result = await service.hasUnreadForTarget('u1', 'payment', 'p1');
+
+            expect(result).toBe(true);
+            expect(mockEm.count).toHaveBeenCalledWith(NotificationEntity, {
+                userId: 'u1',
+                targetType: 'payment',
+                targetId: 'p1',
+                isRead: false,
+            });
+        });
+
+        it('should return false when no unread notifications exist for target', async () => {
+            mockEm.count.mockResolvedValue(0);
+
+            const result = await service.hasUnreadForTarget('u1', 'payment', 'p1');
+
+            expect(result).toBe(false);
+        });
+    });
+
     describe('deleteNotification', () => {
         it('should remove the notification', async () => {
             const notification = { id: 'n1', userId: 'u1' };

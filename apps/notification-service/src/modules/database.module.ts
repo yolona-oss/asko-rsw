@@ -3,6 +3,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
 import { NotificationEntity } from 'entities/notification.entity';
+import { ReminderJobEntity } from 'entities/reminder-job.entity';
 import { isProdEnv } from '@asko/shared';
 
 @Module({
@@ -16,7 +17,7 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [NotificationEntity],
+                    entities: [NotificationEntity, ReminderJobEntity],
                     debug: !isProdEnv(),
                 };
             },

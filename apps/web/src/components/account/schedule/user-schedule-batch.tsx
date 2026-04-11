@@ -156,7 +156,7 @@ export function UserScheduleBatch({
           {canEdit && onVacationToday && onProposeExtraDay && (
             <div className="p-3 bg-warning-bg border border-warning-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-warning-deep">Репейрер сейчас в отпуске</p>
+                <p className="text-[13px] font-medium text-warning-deep">Мастер сейчас в отпуске</p>
                 <p className="text-[11px] sm:text-[12px] text-text-sub">
                   Предложите дополнительный рабочий день — он должен быть подтверждён репейрером.
                 </p>

@@ -43,6 +43,32 @@ export class AppConfig {
             from: this.configService.getOrThrow<string>('EMAIL_FROM'),
         };
     }
+
+    get reminders() {
+        return {
+            paymentIntervalMs: parseInt(
+                this.configService.get<string>('REMINDER_PAYMENT_INTERVAL_MS') ?? '1800000',
+            ),
+            paymentMaxFires: parseInt(
+                this.configService.get<string>('REMINDER_PAYMENT_MAX_FIRES') ?? '3',
+            ),
+            repairAssignmentIntervalMs: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_ASSIGNMENT_INTERVAL_MS') ?? '900000',
+            ),
+            repairAssignmentMaxFires: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_ASSIGNMENT_MAX_FIRES') ?? '3',
+            ),
+            repairStuckAfterMs: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_STUCK_AFTER_MS') ?? '28800000',
+            ),
+            sweepBatchSize: parseInt(
+                this.configService.get<string>('REMINDER_SWEEP_BATCH_SIZE') ?? '100',
+            ),
+            advisoryLockKey: parseInt(
+                this.configService.get<string>('REMINDER_ADVISORY_LOCK_KEY') ?? '94117',
+            ),
+        };
+    }
 }
 
 @Global()

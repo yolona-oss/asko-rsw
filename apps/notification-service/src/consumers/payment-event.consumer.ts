@@ -1,11 +1,17 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
+import { ReminderService } from 'services/reminder.service';
+import { AppConfig } from '../app.config';
 import { NotificationType, NotificationTargetType } from '@asko/shared';
 
 @Controller()
 export class PaymentEventConsumer {
-    constructor(private readonly notificationService: NotificationService) {}
+    constructor(
+        private readonly notificationService: NotificationService,
+        private readonly reminderService: ReminderService,
+        private readonly config: AppConfig,
+    ) {}
 
     @EventPattern('payment.created')
     async handleInvoiceCreated(@Payload() data: any, @Ctx() context: RmqContext) {
@@ -26,6 +32,22 @@ export class PaymentEventConsumer {
                 data.paymentId,
                 data,
             );
+            await this.reminderService.scheduleReminder({
+                kind: 'payment_unpaid',
+                targetType: NotificationTargetType.PAYMENT,
+                targetId: data.paymentId,
+                recipientUserIds: [data.userId],
+                notificationType: NotificationType.INVOICE_UNPAID_REMINDER,
+                title: 'Счёт ещё не оплачен',
+                body: `Счёт на сумму ${data.amount} ${data.currency} ещё не оплачен. Пожалуйста, завершите оплату.`,
+                metadata: {
+                    paymentId: data.paymentId,
+                    amount: data.amount,
+                    currency: data.currency,
+                },
+                intervalMs: this.config.reminders.paymentIntervalMs,
+                maxFires: this.config.reminders.paymentMaxFires,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.created error:', e);
@@ -47,6 +69,12 @@ export class PaymentEventConsumer {
                 NotificationTargetType.PAYMENT,
                 data.paymentId,
                 data,
+            );
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.PAYMENT,
+                data.paymentId,
+                'payment.paid',
+                ['payment_unpaid'],
             );
             channel.ack(msg);
         } catch (e) {
@@ -70,6 +98,12 @@ export class PaymentEventConsumer {
                 data.paymentId,
                 data,
             );
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.PAYMENT,
+                data.paymentId,
+                'payment.failed',
+                ['payment_unpaid'],
+            );
             channel.ack(msg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.failed error:', e);
@@ -91,6 +125,12 @@ export class PaymentEventConsumer {
                 NotificationTargetType.PAYMENT,
                 data.paymentId,
                 data,
+            );
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.PAYMENT,
+                data.paymentId,
+                'payment.refunded',
+                ['payment_unpaid'],
             );
             channel.ack(msg);
         } catch (e) {

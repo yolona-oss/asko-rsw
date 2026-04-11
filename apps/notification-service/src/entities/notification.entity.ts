@@ -2,6 +2,10 @@ import { Entity, PrimaryKey, Property, Index, OptionalProps } from '@mikro-orm/c
 import { v4 as uuid } from 'uuid';
 
 @Entity({ tableName: 'notification' })
+@Index({
+    properties: ['targetType', 'targetId', 'isRead'],
+    name: 'idx_notification_target_unread',
+})
 export class NotificationEntity {
     [OptionalProps]?: 'isRead' | 'readAt' | 'metadata' | 'createdAt' | 'targetType' | 'targetId';
 

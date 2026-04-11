@@ -40,6 +40,8 @@ export interface RepairEvent {
     oldStatus?: string;
     newStatus?: string;
     repairerId?: string;
+    repairerUserId?: string;
+    managerId?: string;
     oldRepairerId?: string;
     newRepairerId?: string;
     oldRepairerUserId?: string;
