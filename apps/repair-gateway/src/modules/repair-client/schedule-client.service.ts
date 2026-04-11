@@ -46,8 +46,8 @@ export class ScheduleClientService implements OnModuleInit {
         return grpcCall(this.scheduleService.findScheduleById({ id }));
     }
 
-    delete(id: string): Promise<ScheduleEmptyResponse> {
-        return grpcCall(this.scheduleService.deleteSchedule({ id }));
+    delete(id: string, actorId?: string): Promise<ScheduleEmptyResponse> {
+        return grpcCall(this.scheduleService.deleteSchedule({ id, actorId }));
     }
 
     approve(id: string, approvedBy: string): Promise<ScheduleResponse> {

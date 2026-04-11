@@ -1378,6 +1378,7 @@ export interface UpdateScheduleRequest {
     endTime?: string;
     status?: string;
     note?: string;
+    actorId?: string;
 }
 
 export interface FindAllSchedulesRequest {
@@ -1398,6 +1399,7 @@ export interface ScheduleFindByIdRequest {
 
 export interface ScheduleDeleteRequest {
     id: string;
+    actorId?: string;
 }
 
 export interface ScheduleApproveRequest {

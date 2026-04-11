@@ -71,6 +71,7 @@ export class ScheduleGrpcController {
                 type: RepairEventType.SCHEDULE_UPDATED,
                 scheduleId: entry.id,
                 userId: entry.userId,
+                actorId: data.actorId || undefined,
                 scheduleType: entry.type,
                 timestamp: new Date(),
             });
@@ -110,7 +111,15 @@ export class ScheduleGrpcController {
     @GrpcMethod('ScheduleService', 'DeleteSchedule')
     async deleteSchedule(data: ScheduleDeleteRequest): Promise<ScheduleEmptyResponse> {
         try {
-            await this.scheduleService.delete(data.id);
+            const deleted = await this.scheduleService.delete(data.id);
+            await this.repairEventService.emitScheduleEvent({
+                type: RepairEventType.SCHEDULE_DELETED,
+                scheduleId: deleted.id,
+                userId: deleted.userId,
+                actorId: data.actorId || undefined,
+                scheduleType: deleted.type,
+                timestamp: new Date(),
+            });
             return {};
         } catch (e) {
             throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });

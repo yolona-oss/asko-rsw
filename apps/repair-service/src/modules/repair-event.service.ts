@@ -10,6 +10,7 @@ export enum RepairEventType {
     COMPLETED = 'repair.completed',
     SCHEDULE_CREATED = 'schedule.created',
     SCHEDULE_UPDATED = 'schedule.updated',
+    SCHEDULE_DELETED = 'schedule.deleted',
     SCHEDULE_APPROVED = 'schedule.approved',
     SCHEDULE_REJECTED = 'schedule.rejected',
     SCHEDULE_PATTERN_CREATED = 'schedule.pattern_created',

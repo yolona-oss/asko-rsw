@@ -72,6 +72,10 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
     icon: 'schedule',
     href: scheduleStaffHref,
   },
+  schedule_deleted: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
+  },
   schedule_approved: {
     icon: 'schedule',
     href: () => '/account/schedule/my',

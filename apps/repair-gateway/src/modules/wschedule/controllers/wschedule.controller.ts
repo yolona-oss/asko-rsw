@@ -148,7 +148,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: WScheduleRecordDto })
     @RequiredRoles(...STAFF_ROLES)
     @Put(':id')
-    async update(@Param('id') id: string, @Body() dto: UpdateWScheduleDto) {
+    async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateWScheduleDto) {
         const result = await this.scheduleClient.update({
             id,
             type: dto.type,
@@ -158,6 +158,7 @@ export class WScheduleController {
             endTime: dto.endTime,
             status: dto.status,
             note: dto.note ?? undefined,
+            actorId: user.sub,
         });
         return result.schedule;
     }
@@ -165,8 +166,8 @@ export class WScheduleController {
     @ApiOkResponse()
     @RequiredRoles(...STAFF_ROLES)
     @Delete(':id')
-    async delete(@Param('id') id: string): Promise<void> {
-        await this.scheduleClient.delete(id);
+    async delete(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
+        await this.scheduleClient.delete(id, user.sub);
     }
 
     @ApiOkResponse({ type: WScheduleRecordDto })

@@ -1350,6 +1350,7 @@ message UpdateScheduleRequest {
     string endTime = 6;
     string status = 7;
     string note = 8;
+    string actorId = 9;
 }
 
 message FindAllSchedulesRequest {
@@ -1370,6 +1371,7 @@ message ScheduleFindByIdRequest {
 
 message ScheduleDeleteRequest {
     string id = 1;
+    string actorId = 2;
 }
 
 message ScheduleApproveRequest {

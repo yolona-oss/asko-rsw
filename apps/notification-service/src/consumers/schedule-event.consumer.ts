@@ -4,6 +4,17 @@ import { NotificationService } from 'services/notification.service';
 import { UserClientService } from 'modules/user-client/user-client.service';
 import { NotificationType, NotificationTargetType, Role } from '@asko/shared';
 
+const SCHEDULE_TYPE_LABELS: Record<string, { nominative: string; accusative: string }> = {
+    vacation: { nominative: 'Отпуск', accusative: 'отпуск' },
+    sick_leave: { nominative: 'Больничный', accusative: 'больничный' },
+    overtime: { nominative: 'Переработка', accusative: 'переработку' },
+    extra_day: { nominative: 'Дополнительный рабочий день', accusative: 'дополнительный рабочий день' },
+};
+
+function scheduleLabel(type: string | undefined): { nominative: string; accusative: string } {
+    return SCHEDULE_TYPE_LABELS[type ?? ''] ?? { nominative: 'Запись расписания', accusative: 'запись расписания' };
+}
+
 @Controller()
 export class ScheduleEventConsumer {
     constructor(
@@ -103,23 +114,67 @@ export class ScheduleEventConsumer {
         const msg = context.getMessage();
 
         try {
-            const recipients = await this.getStaffRecipients(data.userId);
-            await Promise.all(
-                recipients.map((recipientId) =>
-                    this.notificationService.createNotification(
-                        recipientId,
-                        NotificationType.SCHEDULE_UPDATED,
-                        'Расписание изменено',
-                        `Запрос расписания был обновлён (${data.scheduleType})`,
-                        NotificationTargetType.SCHEDULE,
-                        data.scheduleId,
-                        data,
+            const label = scheduleLabel(data.scheduleType);
+            const staffActed = data.actorId && data.actorId !== data.userId;
+            if (staffActed) {
+                // Manager/admin changed a repairer's schedule — tell the repairer.
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_UPDATED,
+                    `${label.nominative} изменён`,
+                    `Менеджер изменил ${label.accusative} в вашем расписании`,
+                    NotificationTargetType.SCHEDULE,
+                    data.scheduleId,
+                    data,
+                );
+            } else {
+                // Self-edit by the repairer — notify staff so they can review.
+                const recipients = await this.getStaffRecipients(data.userId);
+                await Promise.all(
+                    recipients.map((recipientId) =>
+                        this.notificationService.createNotification(
+                            recipientId,
+                            NotificationType.SCHEDULE_UPDATED,
+                            'Расписание изменено',
+                            `Запрос расписания был обновлён (${label.nominative.toLowerCase()})`,
+                            NotificationTargetType.SCHEDULE,
+                            data.scheduleId,
+                            data,
+                        ),
                     ),
-                ),
-            );
+                );
+            }
             channel.ack(msg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.updated error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('schedule.deleted')
+    async handleScheduleDeleted(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            const label = scheduleLabel(data.scheduleType);
+            const staffActed = data.actorId && data.actorId !== data.userId;
+            if (staffActed) {
+                // Manager/admin removed a repairer's schedule entry — tell the repairer.
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_DELETED,
+                    `${label.nominative} удалён`,
+                    `Менеджер удалил ${label.accusative} из вашего расписания`,
+                    NotificationTargetType.SCHEDULE,
+                    data.scheduleId,
+                    data,
+                );
+            }
+            // If the repairer deleted their own pending entry, no notification is emitted.
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.deleted error:', e);
             channel.ack(msg);
         }
     }

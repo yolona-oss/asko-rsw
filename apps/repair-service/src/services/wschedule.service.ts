@@ -69,9 +69,11 @@ export class WScheduleService {
     }
 
     @CreateRequestContext()
-    async delete(id: string): Promise<void> {
+    async delete(id: string): Promise<{ id: string; userId: string; type: ScheduleEntryType }> {
         const entry = await this.em.findOneOrFail(WSchedule, { id });
+        const snapshot = { id: entry.id, userId: entry.userId, type: entry.type };
         await this.em.removeAndFlush(entry);
+        return snapshot;
     }
 
     @CreateRequestContext()
