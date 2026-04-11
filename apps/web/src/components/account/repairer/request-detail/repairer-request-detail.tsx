@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
+import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { RequestChat } from '@/components/account/manager/request-detail/request-chat';
 import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { StepCircle } from './step-circle';
@@ -442,7 +443,14 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
             <Card className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="text-lg font-medium text-text-main">Сертификат</h2>
-                <CertificateWarningBadge valid={request.certificateValid} />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CertificateWarningBadge valid={request.certificateValid} />
+                  <CertificateAppliedBadge
+                    valid={request.certificateValid}
+                    snapshot={request.certificateSnapshot}
+                    expiresAt={request.certificate.expiresAt}
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-1 text-sm">
                 <div className="flex gap-2"><span className="text-text-sub w-32 flex-shrink-0">Номер:</span><span className="text-text-main">{request.certificate.certificateNumber ?? request.certificate.id?.slice(0, 8)}</span></div>

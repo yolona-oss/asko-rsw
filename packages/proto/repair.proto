@@ -458,6 +458,20 @@ message CertificateRecord {
     string signedPayload = 17;
 }
 
+// Frozen copy of a certificate's state at the moment a repair request was
+// completed. Fields mirror CertificateRecord but only include what matters
+// for historical display.
+message CertificateSnapshotRecord {
+    string id = 1;
+    string certificateNumber = 2;
+    string status = 3;
+    string issuedAt = 4;
+    string expiresAt = 5;
+    string frozenAt = 6;
+    string signedPayload = 7;
+    string signature = 8;
+}
+
 // ─── Certificate Requests ──────────────────────────────────────────────────
 
 message CertAddCertificateRequest {
@@ -744,6 +758,7 @@ message RepairRequestRecord {
     string acceptanceSignature = 29;
     string acceptanceSignedPayload = 30;
     bool certificateValid = 31;
+    CertificateSnapshotRecord certificateSnapshot = 32;
 }
 
 message BrokenPartRecord {

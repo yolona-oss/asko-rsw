@@ -58,6 +58,7 @@ export interface IRepairRequest {
     userDevice?: import('../device/device.type.js').IUserDevice;
     repairer?: import('../repairer/repairer.type.js').IRepairer;
     certificate?: import('../certificate/certificate.type.js').ICertificate;
+    certificateSnapshot?: import('../certificate/certificate.type.js').ICertificateSnapshot | null;
     workSteps?: IWorkStep[];
     brokenParts?: IBrokenPart[];
     address?: import('../address/address-book.type.js').IAddressBook;

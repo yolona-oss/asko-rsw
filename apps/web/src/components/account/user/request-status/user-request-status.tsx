@@ -10,6 +10,7 @@ import { CreateCertificateModal } from '@/components/account/user/create-request
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
+import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
@@ -189,6 +190,15 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
                 Оплатите, чтобы активировать заявку.
               </button>
             </p>
+          </div>
+        )}
+        {request.certificateValid === true && (request.certificateSnapshot || request.certificate) && (
+          <div className="mt-2">
+            <CertificateAppliedBadge
+              valid={request.certificateValid}
+              snapshot={request.certificateSnapshot}
+              expiresAt={request.certificate?.expiresAt}
+            />
           </div>
         )}
         <p className="text-base text-text-main leading-relaxed whitespace-pre-line mt-3">

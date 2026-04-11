@@ -5,6 +5,17 @@ import { UserDeviceRecordDto, AddressRecordDto } from './device.response.dto';
 import { CertificateRecordDto } from './certificate.response.dto';
 import { RepairerRecordDto } from './repairer.response.dto';
 
+export class CertificateSnapshotRecordDto {
+    id: string;
+    certificateNumber: string;
+    status: string;
+    issuedAt: string;
+    expiresAt: string;
+    frozenAt: string;
+    signedPayload?: string;
+    signature?: string;
+}
+
 export class RepairRequestRecordDto {
     id: string;
     userId: string;
@@ -32,6 +43,7 @@ export class RepairRequestRecordDto {
     userDevice?: UserDeviceRecordDto;
     repairer?: RepairerRecordDto;
     certificate?: CertificateRecordDto;
+    certificateSnapshot?: CertificateSnapshotRecordDto;
     @ApiProperty({ type: () => [WorkStepRecordDto] })
     workSteps?: WorkStepRecordDto[];
     @ApiProperty({ type: () => [BrokenPartRecordDto] })

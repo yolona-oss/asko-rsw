@@ -247,6 +247,16 @@ export function RepairerSelector({
                         Выходной
                       </Badge>
                     )}
+                    {schedule?.status === 'vacation' && (
+                      <Badge variant="error" className="text-xs px-1.5 py-0">
+                        В отпуске
+                      </Badge>
+                    )}
+                    {schedule?.status === 'sick_leave' && (
+                      <Badge variant="error" className="text-xs px-1.5 py-0">
+                        На больничном
+                      </Badge>
+                    )}
                     {schedule?.status === 'unknown' && (
                       <Badge variant="neutral" className="text-xs px-1.5 py-0">
                         Нет графика

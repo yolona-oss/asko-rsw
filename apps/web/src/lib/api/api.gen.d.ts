@@ -3266,6 +3266,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedule/pattern/{userId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WScheduleController_approvePattern"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule/pattern/{userId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WScheduleController_rejectPattern"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schedule/patterns": {
         parameters: {
             query?: never;
@@ -3752,7 +3784,7 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_approved" | "schedule_pattern_rejected";
         /** @enum {string} */
         NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "system";
         NotificationRecordDto: {
@@ -3920,6 +3952,16 @@ export interface components {
             dealer?: components["schemas"]["DealerProfileRecordDto"];
             createdAt: string;
         };
+        CertificateSnapshotRecordDto: {
+            id: string;
+            certificateNumber: string;
+            status: string;
+            issuedAt: string;
+            expiresAt: string;
+            frozenAt: string;
+            signedPayload?: string;
+            signature?: string;
+        };
         RepairRequestRecordDto: {
             status: components["schemas"]["RepairRequestStatus"];
             workSteps?: components["schemas"]["WorkStepRecordDto"][];
@@ -3948,6 +3990,7 @@ export interface components {
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             repairer?: components["schemas"]["RepairerRecordDto"];
             certificate?: components["schemas"]["CertificateRecordDto"];
+            certificateSnapshot?: components["schemas"]["CertificateSnapshotRecordDto"];
             address?: components["schemas"]["AddressRecordDto"];
             createdAt: string;
             updatedAt: string;
@@ -4245,8 +4288,17 @@ export interface components {
             startTime?: string;
             endTime?: string;
         };
+        PatternPendingDto: {
+            slots: components["schemas"]["PatternSlotDto"][];
+            cycleLength: number;
+            anchorDate: string;
+            defaultStartTime: string;
+            defaultEndTime: string;
+        };
         SchedulePatternRecordDto: {
             slots: components["schemas"]["PatternSlotDto"][];
+            status: components["schemas"]["ScheduleStatus"];
+            pendingData?: components["schemas"]["PatternPendingDto"];
             id: string;
             userId: string;
             cycleLength: number;
@@ -4255,6 +4307,9 @@ export interface components {
             defaultEndTime: string;
             createdAt: string;
             updatedAt: string;
+            approvedBy?: string;
+            approvedAt?: string;
+            hasPendingData: boolean;
         };
         UpsertPatternDto: Record<string, never>;
         SchedulePatternListResponseDto: {
@@ -9411,6 +9466,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    WScheduleController_approvePattern: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePatternRecordDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    WScheduleController_rejectPattern: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePatternRecordDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
             };
         };
     };

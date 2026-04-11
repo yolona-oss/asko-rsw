@@ -27,6 +27,20 @@ export interface ICertificate {
     createdAt: Date;
 }
 
+/** Frozen copy of a certificate's state captured when a repair request is
+ *  completed. Never rewritten afterwards, so later revocation/expiry of the
+ *  cert does not retroactively change the request's historical display. */
+export interface ICertificateSnapshot {
+    id: string;
+    certificateNumber: string;
+    status: CertificateStatus;
+    issuedAt: string;
+    expiresAt: string;
+    frozenAt: string;
+    signedPayload?: string;
+    signature?: string;
+}
+
 /**
  * Generate certificate number in format ASKO-NNNN-NNNN
  */

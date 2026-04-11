@@ -24,7 +24,15 @@ export interface RepairRequest {
   totalCost?: number;
   certificateValid?: boolean;
   certificateId?: string;
-  certificate?: { id: string };
+  certificate?: { id: string; expiresAt?: string };
+  certificateSnapshot?: {
+    id: string;
+    certificateNumber: string;
+    status: string;
+    issuedAt: string;
+    expiresAt: string;
+    frozenAt: string;
+  } | null;
   userDevice?: { id: string };
   repairer?: {
     user?: { firstName?: string; lastName?: string };

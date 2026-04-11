@@ -6997,6 +6997,86 @@
         ]
       }
     },
+    "/schedule/pattern/{userId}/approve": {
+      "post": {
+        "operationId": "WScheduleController_approvePattern",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulePatternRecordDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/pattern/{userId}/reject": {
+      "post": {
+        "operationId": "WScheduleController_rejectPattern",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulePatternRecordDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
     "/schedule/patterns": {
       "get": {
         "operationId": "WScheduleController_getManyPatterns",
@@ -8668,7 +8748,11 @@
           "schedule_created",
           "schedule_approved",
           "schedule_rejected",
-          "schedule_updated"
+          "schedule_updated",
+          "schedule_pattern_created",
+          "schedule_pattern_updated",
+          "schedule_pattern_approved",
+          "schedule_pattern_rejected"
         ]
       },
       "NotificationTargetType": {
@@ -9329,6 +9413,43 @@
           "createdAt"
         ]
       },
+      "CertificateSnapshotRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "certificateNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "frozenAt": {
+            "type": "string"
+          },
+          "signedPayload": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "certificateNumber",
+          "status",
+          "issuedAt",
+          "expiresAt",
+          "frozenAt"
+        ]
+      },
       "RepairRequestRecordDto": {
         "type": "object",
         "properties": {
@@ -9422,6 +9543,9 @@
           },
           "certificate": {
             "$ref": "#/components/schemas/CertificateRecordDto"
+          },
+          "certificateSnapshot": {
+            "$ref": "#/components/schemas/CertificateSnapshotRecordDto"
           },
           "address": {
             "$ref": "#/components/schemas/AddressRecordDto"
@@ -10659,6 +10783,36 @@
           "work"
         ]
       },
+      "PatternPendingDto": {
+        "type": "object",
+        "properties": {
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatternSlotDto"
+            }
+          },
+          "cycleLength": {
+            "type": "number"
+          },
+          "anchorDate": {
+            "type": "string"
+          },
+          "defaultStartTime": {
+            "type": "string"
+          },
+          "defaultEndTime": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slots",
+          "cycleLength",
+          "anchorDate",
+          "defaultStartTime",
+          "defaultEndTime"
+        ]
+      },
       "SchedulePatternRecordDto": {
         "type": "object",
         "properties": {
@@ -10667,6 +10821,16 @@
             "items": {
               "$ref": "#/components/schemas/PatternSlotDto"
             }
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleStatus"
+              }
+            ]
+          },
+          "pendingData": {
+            "$ref": "#/components/schemas/PatternPendingDto"
           },
           "id": {
             "type": "string"
@@ -10691,10 +10855,20 @@
           },
           "updatedAt": {
             "type": "string"
+          },
+          "approvedBy": {
+            "type": "string"
+          },
+          "approvedAt": {
+            "type": "string"
+          },
+          "hasPendingData": {
+            "type": "boolean"
           }
         },
         "required": [
           "slots",
+          "status",
           "id",
           "userId",
           "cycleLength",
@@ -10702,7 +10876,8 @@
           "defaultStartTime",
           "defaultEndTime",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "hasPendingData"
         ]
       },
       "UpsertPatternDto": {

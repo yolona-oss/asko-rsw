@@ -9,11 +9,12 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
+import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { getImageUrl } from '@/lib/file-url';
@@ -66,6 +67,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
   const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
+  const [scheduleEntries, setScheduleEntries] = useState<Record<string, ScheduleRecord[]>>({});
   const [selectedRepairer, setSelectedRepairer] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,12 +100,30 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
         const userIds = repairerList.map((r) => r.userId).filter(Boolean);
         if (userIds.length > 0) {
-          try {
-            const { data: patternData } = await scheduleApi.patternGetMany(userIds);
+          const today = new Date().toISOString().slice(0, 10);
+          const [patternRes, entriesRes] = await Promise.allSettled([
+            scheduleApi.patternGetMany(userIds),
+            scheduleApi.getAll({
+              status: 'approved',
+              dateFrom: today,
+              dateTo: today,
+              limit: 500,
+            }),
+          ]);
+          if (patternRes.status === 'fulfilled') {
             const byUser: Record<string, PatternRecordDto> = {};
-            for (const p of patternData?.data ?? []) byUser[p.userId] = p;
+            for (const p of patternRes.value.data?.data ?? []) byUser[p.userId] = p;
             setPatterns(byUser);
-          } catch { /* non-critical */ }
+          }
+          if (entriesRes.status === 'fulfilled') {
+            const byUser: Record<string, ScheduleRecord[]> = {};
+            const userIdSet = new Set(userIds);
+            for (const e of entriesRes.value.data?.data ?? []) {
+              if (!userIdSet.has(e.userId)) continue;
+              (byUser[e.userId] ??= []).push(e);
+            }
+            setScheduleEntries(byUser);
+          }
         }
 
         try {
@@ -124,10 +144,13 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const scheduleInfoByRepairer = useMemo(() => {
     const map: Record<string, RepairerScheduleInfo> = {};
     for (const r of repairers) {
-      map[r.id] = resolveScheduleForToday(patterns[r.userId] ?? null);
+      map[r.id] = resolveScheduleForToday(
+        patterns[r.userId] ?? null,
+        scheduleEntries[r.userId],
+      );
     }
     return map;
-  }, [repairers, patterns]);
+  }, [repairers, patterns, scheduleEntries]);
 
   const sortedRepairers = useMemo(() => {
     return [...repairers].sort((a, b) =>
@@ -163,7 +186,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!selectedRepairer || !request) return;
     const candidate = repairers.find((r) => r.id === selectedRepairer);
     const info = candidate ? scheduleInfoByRepairer[candidate.id] : undefined;
-    if (candidate && info?.status === 'off') {
+    if (candidate && (info?.status === 'off' || info?.status === 'vacation' || info?.status === 'sick_leave')) {
       setOffDayConfirm(candidate);
       return;
     }
@@ -173,7 +196,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const handleConfirmOffDayAssign = async () => {
     const repairer = offDayConfirm;
     setOffDayConfirm(null);
-    if (repairer) await performAssign(repairer.id);
+    if (!repairer) return;
+    const info = scheduleInfoByRepairer[repairer.id];
+    // Vacation/sick-leave is blocked server-side — the modal button is disabled,
+    // so this path is only reachable for regular off-days.
+    if (info?.status === 'vacation' || info?.status === 'sick_leave') return;
+    await performAssign(repairer.id);
   };
 
   const handleAcceptChat = async () => {
@@ -250,6 +278,11 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             {STATUS_LABELS[request.status] ?? request.status}
           </Badge>
           <CertificateWarningBadge valid={request.certificateValid} />
+          <CertificateAppliedBadge
+            valid={request.certificateValid}
+            snapshot={request.certificateSnapshot}
+            expiresAt={request.certificate?.expiresAt}
+          />
         </div>
         <div className="flex items-center gap-2 text-sm text-text-sub">
           <span>ID #{request.id.slice(0, 8)}</span>
@@ -393,23 +426,38 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       </div>
 
       <Modal open={!!offDayConfirm} onClose={() => setOffDayConfirm(null)} className="w-full max-w-md p-6">
-        <h2 className="text-lg font-medium text-text-main mb-2">Назначение на выходной</h2>
-        {offDayConfirm && (
-          <p className="text-sm text-text-sub mb-4">
-            У мастера <span className="font-medium text-text-main">
-              {[offDayConfirm.user?.lastName, offDayConfirm.user?.firstName].filter(Boolean).join(' ') || 'Без имени'}
-            </span>{' '}
-            сегодня выходной по графику. При назначении будет автоматически создан дополнительный рабочий день.
-          </p>
-        )}
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setOffDayConfirm(null)}>
-            Отмена
-          </Button>
-          <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
-            Подтвердить
-          </Button>
-        </div>
+        {(() => {
+          if (!offDayConfirm) return null;
+          const info = scheduleInfoByRepairer[offDayConfirm.id];
+          const name = [offDayConfirm.user?.lastName, offDayConfirm.user?.firstName].filter(Boolean).join(' ') || 'Без имени';
+          const blocked = info?.status === 'vacation' || info?.status === 'sick_leave';
+          const title = info?.status === 'vacation'
+            ? 'Мастер в отпуске'
+            : info?.status === 'sick_leave'
+              ? 'Мастер на больничном'
+              : 'Назначение на выходной';
+          const body = info?.status === 'vacation'
+            ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый отпуск. Чтобы назначить его на заявку, сначала отмените запись отпуска на странице расписания.</>
+            : info?.status === 'sick_leave'
+              ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый больничный. Чтобы назначить его на заявку, сначала отмените запись больничного на странице расписания.</>
+              : <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня выходной по графику. При назначении будет автоматически создан дополнительный рабочий день.</>;
+          return (
+            <>
+              <h2 className="text-lg font-medium text-text-main mb-2">{title}</h2>
+              <p className="text-sm text-text-sub mb-4">{body}</p>
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" size="sm" onClick={() => setOffDayConfirm(null)}>
+                  {blocked ? 'Закрыть' : 'Отмена'}
+                </Button>
+                {!blocked && (
+                  <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
+                    Подтвердить
+                  </Button>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </Modal>
     </PageContainer>
   );

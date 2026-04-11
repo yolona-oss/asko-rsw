@@ -353,6 +353,17 @@ export interface CertificateRecord {
     signedPayload?: string;
 }
 
+export interface CertificateSnapshotRecord {
+    id: string;
+    certificateNumber: string;
+    status: string;
+    issuedAt: string;
+    expiresAt: string;
+    frozenAt: string;
+    signedPayload?: string;
+    signature?: string;
+}
+
 // ─── Certificate Requests ───────────────────────────────────────────────
 
 export interface CertAddCertificateRequest {
@@ -688,6 +699,7 @@ export interface RepairRequestRecord {
     acceptanceSignature?: string;
     acceptanceSignedPayload?: string;
     certificateValid?: boolean;
+    certificateSnapshot?: CertificateSnapshotRecord;
 }
 
 export interface BrokenPartRecord {
