@@ -3175,6 +3175,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "certificate_snapshot": {
+          "name": "certificate_snapshot",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         }
       },
       "name": "repair_request",

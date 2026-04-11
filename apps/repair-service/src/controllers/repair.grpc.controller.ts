@@ -200,6 +200,16 @@ function requestToRecord(entity: RepairRequest) {
         userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
         repairer: repairer ? repairerToRecord(repairer) : undefined,
         certificate: certificate ? certificateToRecord(certificate) : undefined,
+        certificateSnapshot: entity.certificateSnapshot ? {
+            id: entity.certificateSnapshot.id,
+            certificateNumber: entity.certificateSnapshot.certificateNumber,
+            status: entity.certificateSnapshot.status,
+            issuedAt: entity.certificateSnapshot.issuedAt,
+            expiresAt: entity.certificateSnapshot.expiresAt,
+            frozenAt: entity.certificateSnapshot.frozenAt,
+            signedPayload: entity.certificateSnapshot.signedPayload,
+            signature: entity.certificateSnapshot.signature,
+        } : undefined,
         address: address ? addressToRecord(address) : undefined,
     };
 }

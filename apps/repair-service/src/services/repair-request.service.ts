@@ -11,6 +11,7 @@ import { assertTransition, assertActionTransition, canTransition } from 'common/
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
 import { WorkStep } from 'entities/work-step.entity';
+import { WSchedule, ScheduleEntryType, ScheduleStatus } from 'entities/wschedule.entity';
 import { BrokenPartService } from './broken-part.service';
 import { CertificateService } from './certificate.service';
 import { SignatureService } from './signature.service';
@@ -246,6 +247,12 @@ export class RepairRequestService {
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
+        const blocking = await this.findBlockingScheduleToday(repairer.userId);
+        if (blocking) {
+            const label = blocking.type === ScheduleEntryType.VACATION ? 'vacation' : 'sick leave';
+            throw AppErrors.badRequest(`Repairer is on ${label} today`);
+        }
+
         const oldStatus = request.status;
         request.repairer = this.em.getReference(Repairer, repairerId);
         request.managerId = managerId;
@@ -274,11 +281,28 @@ export class RepairRequestService {
      */
     private async ensureExtraDayIfOff(repairerUserId: string, requestId: string): Promise<void> {
         const now = new Date();
+        // Vacation / sick leave already blocks assignRepairer; if we ever get here despite
+        // that (e.g. another caller), skip logging an EXTRA_DAY since blocked time isn't bonus work.
+        const blocking = await this.findBlockingScheduleToday(repairerUserId);
+        if (blocking) return;
         const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, now);
         if (slot && slot.work) return;
         const start = slot?.startTime || '09:00';
         const end = slot?.endTime || '18:00';
         await this.scheduleService.recordExtraDay(repairerUserId, now, start, end, requestId);
+    }
+
+    /** Returns the first APPROVED vacation/sick-leave entry covering today, or null. */
+    private async findBlockingScheduleToday(userId: string): Promise<WSchedule | null> {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return this.em.findOne(WSchedule, {
+            userId,
+            status: ScheduleStatus.APPROVED,
+            type: { $in: [ScheduleEntryType.VACATION, ScheduleEntryType.SICK_LEAVE] },
+            dateFrom: { $lte: today },
+            dateTo: { $gte: today },
+        });
     }
 
     /** Repairer accepts assigned request */
@@ -425,7 +449,7 @@ export class RepairRequestService {
     /** Complete the request with optional description */
     @CreateRequestContext()
     async complete(requestId: string, description?: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['certificate'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         const oldStatus = request.status;
         assertTransition(request.status, RepairRequestStatus.COMPLETED);
@@ -436,6 +460,22 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.COMPLETED;
         if (description) {
             request.completionNote = description;
+        }
+
+        // Freeze a snapshot of the cert's current state so later revocation/expiry
+        // doesn't retroactively change the historical display of this request.
+        const cert = typeof request.certificate === 'object' ? request.certificate : null;
+        if (cert && request.certificateValid && !request.certificateSnapshot) {
+            request.certificateSnapshot = {
+                id: cert.id,
+                certificateNumber: cert.certificateNumber,
+                status: cert.status,
+                issuedAt: cert.issuedAt.toISOString(),
+                expiresAt: cert.expiresAt.toISOString(),
+                frozenAt: new Date().toISOString(),
+                signedPayload: cert.signedPayload ?? undefined,
+                signature: cert.signature ?? undefined,
+            };
         }
 
         // Update repairer stats directly (same DB)

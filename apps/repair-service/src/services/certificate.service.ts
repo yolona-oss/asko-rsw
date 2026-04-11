@@ -274,6 +274,27 @@ export class CertificateService {
             req.certificateValid = true;
         }
 
+        // Auto-attach newly paid cert to open repair requests for the same device
+        // that were created without a cert — covers "user creates request, then buys
+        // cert before completion". Post-completion purchases are excluded by status filter.
+        const unattachedRequests = await this.em.find(RepairRequest, {
+            userId: cert.userId,
+            userDevice: userDeviceId,
+            certificate: null,
+            status: {
+                $nin: [
+                    RepairRequestStatus.COMPLETED,
+                    RepairRequestStatus.CANCELLED,
+                    RepairRequestStatus.REFUNDED,
+                    RepairRequestStatus.REFUSED,
+                ],
+            },
+        });
+        for (const req of unattachedRequests) {
+            req.certificate = cert;
+            req.certificateValid = true;
+        }
+
         await this.em.flush();
         return cert;
     }

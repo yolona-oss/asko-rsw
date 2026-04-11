@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
-import { RepairRequestStatus } from '@asko/shared';
+import { RepairRequestStatus, type ICertificateSnapshot } from '@asko/shared';
 import { UserDevice } from './user-device.entity';
 import { Repairer } from './repairer.entity';
 import { Certificate } from './certificate.entity';
@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload';
 
     @PrimaryKey()
     id: string = uuid();
@@ -71,6 +71,9 @@ export class RepairRequest {
 
     @Property({ type: 'boolean', default: true })
     certificateValid: boolean = true;
+
+    @Property({ type: 'jsonb', nullable: true })
+    certificateSnapshot?: ICertificateSnapshot | null;
 
     @OneToMany(() => WorkStep, ws => ws.repairRequest)
     workSteps = new Collection<WorkStep>(this);
