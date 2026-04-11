@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  type KeyboardEvent,
-} from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Navigation, Map as MapIcon, X } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
@@ -40,229 +33,48 @@ interface NominatimResult {
   lon: string;
   address: {
     road?: string;
+    pedestrian?: string;
+    footway?: string;
     house_number?: string;
     city?: string;
     town?: string;
     village?: string;
     hamlet?: string;
+    municipality?: string;
     suburb?: string;
     city_district?: string;
-    neighbourhood?: string;
-    quarter?: string;
     state?: string;
     county?: string;
-    postcode?: string;
     country?: string;
   };
 }
 
-// ── Format utilities ─────────────────────────────────────────────────
-//
-// Canonical suggestion shape (label-prefixed, comma-separated):
-//   `Город {city}[, р-н {settlement}], Улица {street}, дом {house}[, корп {b}][, эт. {f}][, кв. {r}]`
-// Required: city, street, house. Settlement/building/floor/room are optional.
-
-const HOUSE_NUMBER_RX = /\d+[а-яА-Яa-zA-Z]?(?:\/\d+[а-яА-Яa-zA-Z]?)?/;
-
-const CITY_RX = /^(?:г\.?|город)\s+(.+)$/i;
-const SETTLEMENT_RX = /^(?:р-н|район|пос\.?|посёлок|поселок)\s+(.+)$/i;
-const STREET_RX = /^(?:ул\.?|улица)\s+(.+)$/i;
-const HOUSE_RX = new RegExp(`^(?:д\\.?|дом)\\s+(${HOUSE_NUMBER_RX.source})$`, 'i');
-const BUILDING_RX = /^(?:к\.?|корп\.?|корпус)\s+(.+)$/i;
-const FLOOR_RX = /^(?:эт\.?|этаж)\s+(.+)$/i;
-const ROOM_RX = /^(?:кв\.?|квартира|пом\.?)\s+(.+)$/i;
-
-function stripCityPrefix(s: string): string {
-  return s.replace(/^(?:г\.?|город)\s+/i, '').trim();
-}
-function stripStreetPrefix(s: string): string {
-  return s.replace(/^(?:ул\.?|улица|пр-т|пр\.?|проспект|пер\.?|переулок|б-р|бульвар|ш\.?|шоссе|пл\.?|площадь|наб\.?|набережная)\s+/i, '').trim();
+interface ParsedParts {
+  city?: string;
+  street?: string;
+  house?: string;
+  lat?: number;
+  lon?: number;
 }
 
-// Remove all canonical labels from a raw query so Nominatim can search by bare values.
-function stripLabels(s: string): string {
-  return s
-    .replace(/\b(?:Город|город|г\.|Улица|улица|ул\.|р-н|район|пос\.?|посёлок|поселок|дом|д\.|корпус|корп\.?|к\.|этаж|эт\.|квартира|кв\.|пом\.?)\b/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/\s*,\s*/g, ', ')
-    .replace(/^[,\s]+|[,\s]+$/g, '')
-    .trim();
+function getCityName(a: NominatimResult['address']): string {
+  return a.city || a.town || a.village || a.hamlet || a.municipality || '';
 }
 
-interface ParsedAddress {
-  city: string;
-  settlement?: string;
-  street: string;
-  house: string;
-  building?: string;
-  floor?: string;
-  room?: string;
+function getStreetName(a: NominatimResult['address']): string {
+  return a.road || a.pedestrian || a.footway || '';
 }
 
-type TokenKey =
-  | 'city'
-  | 'settlement'
-  | 'street'
-  | 'house'
-  | 'building'
-  | 'floor'
-  | 'room';
-
-// Canonical labels (with trailing space) in priority order.
-// Every label at the start of a segment must exactly match one of these.
-const TOKEN_LABELS: Record<TokenKey, string> = {
-  city: 'Город ',
-  settlement: 'р-н ',
-  street: 'Улица ',
-  house: 'дом ',
-  building: 'корп ',
-  floor: 'эт. ',
-  room: 'кв. ',
-};
-
-const TOKEN_ORDER: TokenKey[] = [
-  'city',
-  'settlement',
-  'street',
-  'house',
-  'building',
-  'floor',
-  'room',
-];
-
-const LABEL_STRINGS = TOKEN_ORDER.map((k) => TOKEN_LABELS[k]);
-
-function parseAddressPartial(text: string): Partial<ParsedAddress> {
-  const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
-  const result: Partial<ParsedAddress> = {};
-
-  for (const part of parts) {
-    let m: RegExpMatchArray | null;
-    if ((m = part.match(CITY_RX))) { result.city = m[1].trim(); continue; }
-    if ((m = part.match(SETTLEMENT_RX))) { result.settlement = m[1].trim(); continue; }
-    if ((m = part.match(STREET_RX))) { result.street = m[1].trim(); continue; }
-    if ((m = part.match(HOUSE_RX))) { result.house = m[1].trim(); continue; }
-    if ((m = part.match(BUILDING_RX))) { result.building = m[1].trim(); continue; }
-    if ((m = part.match(FLOOR_RX))) { result.floor = m[1].trim(); continue; }
-    if ((m = part.match(ROOM_RX))) { result.room = m[1].trim(); continue; }
-  }
-
-  return result;
-}
-
-function parseAddressString(text: string): ParsedAddress | null {
-  const p = parseAddressPartial(text);
-  if (!p.city || !p.street || !p.house) return null;
-  return p as ParsedAddress;
-}
-
-function formatAddressString(p: {
-  city: string;
-  settlement?: string;
-  street: string;
-  house: string | number;
-  building?: string | number;
-  floor?: string | number;
-  room?: string | number;
-}): string {
-  const parts: string[] = [`Город ${p.city}`];
-  if (p.settlement) parts.push(`р-н ${p.settlement}`);
-  parts.push(`Улица ${p.street}`);
-  parts.push(`дом ${p.house}`);
-  if (p.building) parts.push(`корп ${p.building}`);
-  if (p.floor) parts.push(`эт. ${p.floor}`);
-  if (p.room) parts.push(`кв. ${p.room}`);
-  return parts.join(', ');
-}
-
-function normalizeNominatim(r: NominatimResult): string | null {
-  const a = r.address;
-  const cityRaw = a.city || a.town || a.village || a.hamlet || '';
-  const streetRaw = a.road || '';
-  const houseRaw = a.house_number || '';
-  if (!cityRaw || !streetRaw || !houseRaw) return null;
-
-  if (!new RegExp(`^${HOUSE_NUMBER_RX.source}$`).test(houseRaw)) return null;
-
-  const city = stripCityPrefix(cityRaw);
-  const street = stripStreetPrefix(streetRaw);
-  if (!city || !street) return null;
-
-  const settlementCandidate =
-    a.suburb || a.city_district || a.neighbourhood || a.quarter || '';
-  const settlement =
-    settlementCandidate && settlementCandidate !== city ? settlementCandidate : undefined;
-
-  return formatAddressString({ city, settlement, street, house: houseRaw });
-}
-
-// ── Label ghost / backspace helpers ──────────────────────────────────
-
-function getCurrentSegment(query: string): { text: string; start: number } {
-  const lastSep = query.lastIndexOf(', ');
-  if (lastSep === -1) return { text: query, start: 0 };
-  return { text: query.slice(lastSep + 2), start: lastSep + 2 };
-}
-
-function getMissingTokens(partial: Partial<ParsedAddress>): TokenKey[] {
-  return TOKEN_ORDER.filter((t) => partial[t] == null);
-}
-
-// Return the remaining characters of the next missing-token canonical label
-// when the user's current segment is a case-insensitive prefix of it.
-// Empty string means "no label ghost".
-function computeLabelGhost(
-  query: string,
-  partial: Partial<ParsedAddress>,
-): string {
-  const { text: segment } = getCurrentSegment(query);
-  const missing = getMissingTokens(partial);
-
-  // Empty segment → propose the next missing label in canonical order.
-  if (segment.length === 0) {
-    return missing[0] ? TOKEN_LABELS[missing[0]] : '';
-  }
-
-  for (const token of missing) {
-    const label = TOKEN_LABELS[token];
-    if (segment.length >= label.length) continue;
-    if (label.toLowerCase().startsWith(segment.toLowerCase())) {
-      return label.slice(segment.length);
-    }
-  }
-  return '';
-}
-
-// If the char range ending at `position` exactly matches a canonical label
-// and starts at a segment boundary (index 0 or after ", "), return that span
-// together with the separator start (so callers can also strip ", ").
-function findLabelEndingAt(
-  query: string,
-  position: number,
-): { sepStart: number; labelEnd: number } | null {
-  for (const label of LABEL_STRINGS) {
-    const labelStart = position - label.length;
-    if (labelStart < 0) continue;
-    if (query.slice(labelStart, position).toLowerCase() !== label.toLowerCase()) continue;
-    if (labelStart === 0) {
-      return { sepStart: 0, labelEnd: position };
-    }
-    if (labelStart >= 2 && query.slice(labelStart - 2, labelStart) === ', ') {
-      return { sepStart: labelStart - 2, labelEnd: position };
-    }
-  }
-  return null;
-}
-
-// Advance `current` position to the end of the next character-class run in `full`.
-// A "unit" is either a maximal run of word chars or a maximal run of boundary chars.
-function advanceOneUnit(full: string, current: number): number {
-  if (current >= full.length) return current;
-  const isBoundary = (ch: string) => /[\s,;.]/.test(ch);
-  const startClass = isBoundary(full[current]);
-  let i = current;
-  while (i < full.length && isBoundary(full[i]) === startClass) i++;
-  return i;
+function parseNominatim(r: NominatimResult): ParsedParts {
+  const lat = parseFloat(r.lat);
+  const lon = parseFloat(r.lon);
+  return {
+    city: getCityName(r.address) || undefined,
+    street: getStreetName(r.address) || undefined,
+    house: r.address.house_number || undefined,
+    lat: Number.isFinite(lat) ? lat : undefined,
+    lon: Number.isFinite(lon) ? lon : undefined,
+  };
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -278,19 +90,39 @@ async function reverseGeocode(
   latitude: number,
   longitude: number,
   signal?: AbortSignal,
-): Promise<{ suggestion: string; lat: number; lon: number } | null> {
+): Promise<ParsedParts | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&accept-language=ru`,
       { signal },
     );
     const data = (await res.json()) as NominatimResult;
-    const normalized = normalizeNominatim(data);
-    if (!normalized) return null;
-    return { suggestion: normalized, lat: latitude, lon: longitude };
+    return parseNominatim(data);
   } catch {
     return null;
   }
+}
+
+async function forwardSearch(q: string, signal?: AbortSignal): Promise<NominatimResult[]> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}` +
+        `&format=json&addressdetails=1&accept-language=ru&countrycodes=ru&limit=8`,
+      { signal },
+    );
+    const data = await res.json();
+    return Array.isArray(data) ? (data as NominatimResult[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Extract the first positive integer from a string (backend stores `house` as int).
+function parsePositiveInt(s: string): number | undefined {
+  const m = s.match(/\d+/);
+  if (!m) return undefined;
+  const n = Number(m[0]);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
 // ── Map picker modal ─────────────────────────────────────────────────
@@ -425,6 +257,8 @@ function MapPickerModal({ initialLat, initialLon, onConfirm, onClose }: MapPicke
   );
 }
 
+// ── Address Input ────────────────────────────────────────────────────
+
 export function AddressInput({
   value,
   onChange,
@@ -433,236 +267,175 @@ export function AddressInput({
   label = 'Адрес',
   className,
 }: AddressInputProps) {
-  const [query, setQuery] = useState('');
+  const [city, setCity] = useState('');
+  const [street, setStreet] = useState('');
+  const [house, setHouse] = useState('');
+  const [building, setBuilding] = useState('');
+  const [floor, setFloor] = useState('');
+  const [room, setRoom] = useState('');
   const [lat, setLat] = useState<number | undefined>();
   const [lon, setLon] = useState<number | undefined>();
 
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [citySuggestions, setCitySuggestions] = useState<NominatimResult[]>([]);
+  const [streetSuggestions, setStreetSuggestions] = useState<NominatimResult[]>([]);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [streetOpen, setStreetOpen] = useState(false);
 
   const [detecting, setDetecting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const debouncedQuery = useDebounce(query, 400);
+  const cityWrapRef = useRef<HTMLDivElement>(null);
+  const streetWrapRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(false);
-  const pendingCursorRef = useRef<number | null>(null);
+  const lastEmittedRef = useRef<string>('');
 
-  // Hydrate from external value on mount
+  // Hydrate from external value on first mount only.
   useEffect(() => {
     if (value && !mountedRef.current) {
-      const q = formatAddressString({
-        city: value.city,
-        street: value.street,
-        house: value.house,
-        building: value.building,
-        floor: value.floor,
-        room: value.room,
-      });
-      setQuery(q);
-      if (value.latitude != null) setLat(value.latitude);
-      if (value.longitude != null) setLon(value.longitude);
+      setCity(value.city ?? '');
+      setStreet(value.street ?? '');
+      setHouse(value.house != null ? String(value.house) : '');
+      setBuilding(value.building != null ? String(value.building) : '');
+      setFloor(value.floor != null ? String(value.floor) : '');
+      setRoom(value.room != null ? String(value.room) : '');
+      setLat(value.latitude);
+      setLon(value.longitude);
     }
     mountedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Apply any pending cursor position after query updates that came from programmatic edits.
+  // Emit a structured AddressValue whenever fields change.
   useEffect(() => {
-    if (pendingCursorRef.current !== null && inputRef.current) {
-      const pos = pendingCursorRef.current;
-      pendingCursorRef.current = null;
-      inputRef.current.setSelectionRange(pos, pos);
-    }
-  }, [query]);
-
-  // Parse `query` on every change and emit a structured AddressValue.
-  const parsed = useMemo(() => parseAddressString(query), [query]);
-  const partial = useMemo(() => parseAddressPartial(query), [query]);
-
-  useEffect(() => {
-    if (parsed) {
-      const houseNum = Number(parsed.house.replace(/[^\d]/g, ''));
-      if (!Number.isFinite(houseNum) || houseNum <= 0) {
+    const cityTrim = city.trim();
+    const streetTrim = street.trim();
+    const houseNum = parsePositiveInt(house);
+    if (!cityTrim || !streetTrim || houseNum == null) {
+      if (lastEmittedRef.current !== 'null') {
+        lastEmittedRef.current = 'null';
         onChange(null);
-        return;
       }
-      onChange({
-        country: 'Россия',
-        city: parsed.city,
-        street: parsed.street,
-        house: houseNum,
-        ...(parsed.building ? { building: Number(parsed.building) } : {}),
-        ...(parsed.floor ? { floor: Number(parsed.floor) } : {}),
-        ...(parsed.room ? { room: Number(parsed.room) } : {}),
-        ...(lat != null && lon != null ? { latitude: lat, longitude: lon } : {}),
-      });
-    } else {
-      onChange(null);
+      return;
     }
+    const buildingNum = parsePositiveInt(building);
+    const floorNum = parsePositiveInt(floor);
+    const roomNum = parsePositiveInt(room);
+    const next: AddressValue = {
+      country: 'Россия',
+      city: cityTrim,
+      street: streetTrim,
+      house: houseNum,
+      ...(buildingNum != null ? { building: buildingNum } : {}),
+      ...(floorNum != null ? { floor: floorNum } : {}),
+      ...(roomNum != null ? { room: roomNum } : {}),
+      ...(lat != null && lon != null ? { latitude: lat, longitude: lon } : {}),
+    };
+    const key = JSON.stringify(next);
+    if (key === lastEmittedRef.current) return;
+    lastEmittedRef.current = key;
+    onChange(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parsed, lat, lon]);
+  }, [city, street, house, building, floor, room, lat, lon]);
 
-  // Forward geocode: refresh coords when the city/street/house portion settles.
-  const debouncedParsedKey = useDebounce(
-    parsed ? `${parsed.city}|${parsed.street}|${parsed.house}` : '',
-    800,
-  );
+  // ── Autocomplete: city ──
+  const debouncedCity = useDebounce(city, 350);
   useEffect(() => {
-    if (!debouncedParsedKey || !parsed) return;
-    const q = `${parsed.city}, ${parsed.street} ${parsed.house}`;
-    const controller = new AbortController();
-    fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}` +
-        `&format=json&addressdetails=1&accept-language=ru&countrycodes=ru&limit=1`,
-      { signal: controller.signal },
-    )
-      .then((r) => r.json())
-      .then((data: NominatimResult[]) => {
-        if (data[0]) {
-          const newLat = parseFloat(data[0].lat);
-          const newLon = parseFloat(data[0].lon);
-          if (Number.isFinite(newLat) && Number.isFinite(newLon)) {
-            setLat(newLat);
-            setLon(newLon);
-          }
-        }
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [debouncedParsedKey]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Nominatim autocomplete search → normalize → deduplicate.
-  useEffect(() => {
-    const bareQuery = stripLabels(debouncedQuery);
-    if (bareQuery.length < 3) {
-      setSuggestions([]);
+    const q = debouncedCity.trim();
+    if (q.length < 2) {
+      setCitySuggestions([]);
       return;
     }
     const controller = new AbortController();
-    fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(bareQuery)}` +
-        `&format=json&addressdetails=1&accept-language=ru&countrycodes=ru&limit=10`,
-      { signal: controller.signal },
-    )
-      .then((r) => r.json())
-      .then((data: NominatimResult[]) => {
-        const normalized = data
-          .map(normalizeNominatim)
-          .filter((s): s is string => s !== null);
-        const seen = new Set<string>();
-        const unique = normalized.filter((s) => {
-          if (seen.has(s)) return false;
-          seen.add(s);
-          return true;
-        });
-        setSuggestions(unique.slice(0, 8));
-      })
-      .catch(() => {});
+    forwardSearch(q, controller.signal).then((results) => {
+      const cities = results.filter((r) => !!getCityName(r.address));
+      const seen = new Set<string>();
+      const unique = cities.filter((r) => {
+        const name = getCityName(r.address);
+        if (seen.has(name)) return false;
+        seen.add(name);
+        return true;
+      });
+      setCitySuggestions(unique.slice(0, 6));
+    });
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedCity]);
 
-  const prefixMatches = useMemo(() => {
-    if (!query) return suggestions;
-    const q = query.toLowerCase();
-    return suggestions.filter((s) => s.toLowerCase().startsWith(q));
-  }, [suggestions, query]);
+  // ── Autocomplete: street (biased by current city) ──
+  const debouncedStreet = useDebounce(street, 350);
+  useEffect(() => {
+    const sq = debouncedStreet.trim();
+    if (sq.length < 2) {
+      setStreetSuggestions([]);
+      return;
+    }
+    const cq = city.trim();
+    const q = cq ? `${sq}, ${cq}` : sq;
+    const controller = new AbortController();
+    forwardSearch(q, controller.signal).then((results) => {
+      const streets = results.filter((r) => !!getStreetName(r.address));
+      const seen = new Set<string>();
+      const unique = streets.filter((r) => {
+        const name = `${getStreetName(r.address)}|${getCityName(r.address)}`;
+        if (seen.has(name)) return false;
+        seen.add(name);
+        return true;
+      });
+      setStreetSuggestions(unique.slice(0, 6));
+    });
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedStreet]);
 
-  const topSuggestion = useMemo(() => {
-    if (!showSuggestions) return null;
-    if (prefixMatches.length === 0) return null;
-    const idx = activeIndex >= 0 && activeIndex < prefixMatches.length ? activeIndex : 0;
-    return prefixMatches[idx];
-  }, [prefixMatches, activeIndex, showSuggestions]);
+  // ── Forward geocode: refresh coords once city/street/house settle ──
+  const geocodeKey = useMemo(
+    () =>
+      city.trim() && street.trim() && house.trim()
+        ? `${city.trim()}|${street.trim()}|${house.trim()}`
+        : '',
+    [city, street, house],
+  );
+  const debouncedGeocodeKey = useDebounce(geocodeKey, 800);
+  useEffect(() => {
+    if (!debouncedGeocodeKey) return;
+    const q = `${city.trim()}, ${street.trim()} ${house.trim()}`;
+    const controller = new AbortController();
+    forwardSearch(q, controller.signal).then((results) => {
+      const first = results[0];
+      if (!first) return;
+      const newLat = parseFloat(first.lat);
+      const newLon = parseFloat(first.lon);
+      if (Number.isFinite(newLat) && Number.isFinite(newLon)) {
+        setLat(newLat);
+        setLon(newLon);
+      }
+    });
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedGeocodeKey]);
 
-  // Label ghost takes priority over Nominatim ghost.
-  const labelGhost = useMemo(() => computeLabelGhost(query, partial), [query, partial]);
-
-  const nominatimGhost = useMemo(() => {
-    if (!topSuggestion) return '';
-    if (topSuggestion.length <= query.length) return '';
-    if (!topSuggestion.toLowerCase().startsWith(query.toLowerCase())) return '';
-    return topSuggestion.slice(query.length);
-  }, [topSuggestion, query]);
-
-  const ghostSuffix = labelGhost || nominatimGhost;
-
-  // Click outside closes dropdown
+  // Click outside closes dropdowns
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
+      if (cityWrapRef.current && !cityWrapRef.current.contains(e.target as Node)) {
+        setCityOpen(false);
+      }
+      if (streetWrapRef.current && !streetWrapRef.current.contains(e.target as Node)) {
+        setStreetOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const acceptFullSuggestion = useCallback((text: string) => {
-    setQuery(text);
-    setShowSuggestions(false);
-    setActiveIndex(-1);
-  }, []);
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    // Smart backspace: deleting into a canonical label removes the whole
-    // label token together with its leading ", " separator.
-    if (e.key === 'Backspace') {
-      const input = inputRef.current;
-      if (input && input.selectionStart === input.selectionEnd) {
-        const cursorPos = input.selectionStart ?? 0;
-        const match = findLabelEndingAt(query, cursorPos);
-        if (match) {
-          e.preventDefault();
-          const newQuery = query.slice(0, match.sepStart) + query.slice(match.labelEnd);
-          pendingCursorRef.current = match.sepStart;
-          setQuery(newQuery);
-          setShowSuggestions(true);
-          setActiveIndex(-1);
-          return;
-        }
-      }
-    }
-
-    // Tab — label ghost completes the whole label; Nominatim ghost advances one unit.
-    if (e.key === 'Tab') {
-      if (labelGhost) {
-        e.preventDefault();
-        setQuery(query + labelGhost);
-        return;
-      }
-      if (!topSuggestion || topSuggestion.length <= query.length) {
-        return;
-      }
-      const nextEnd = advanceOneUnit(topSuggestion, query.length);
-      if (nextEnd <= query.length) return;
-      e.preventDefault();
-      setQuery(query + topSuggestion.slice(query.length, nextEnd));
-      return;
-    }
-
-    if (!showSuggestions || prefixMatches.length === 0) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setActiveIndex((i) => (i + 1 >= prefixMatches.length ? 0 : i + 1));
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveIndex((i) => (i <= 0 ? prefixMatches.length - 1 : i - 1));
-    }
-    if (e.key === 'Enter') {
-      if (topSuggestion && topSuggestion !== query) {
-        e.preventDefault();
-        acceptFullSuggestion(topSuggestion);
-      }
-    }
-    if (e.key === 'Escape') {
-      setShowSuggestions(false);
-    }
+  const applyParts = (parts: ParsedParts, pickedLat?: number, pickedLon?: number) => {
+    if (parts.city) setCity(parts.city);
+    if (parts.street) setStreet(parts.street);
+    if (parts.house) setHouse(parts.house);
+    const finalLat = pickedLat ?? parts.lat;
+    const finalLon = pickedLon ?? parts.lon;
+    if (finalLat != null) setLat(finalLat);
+    if (finalLon != null) setLon(finalLon);
   };
 
   // ── Browser geolocation → reverse geocode ──
@@ -677,13 +450,14 @@ export function AddressInput({
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }),
       );
-      const result = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-      if (result) {
-        setLat(result.lat);
-        setLon(result.lon);
-        setQuery(result.suggestion);
+      const parts = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+      if (parts && (parts.city || parts.street)) {
+        applyParts(parts, pos.coords.latitude, pos.coords.longitude);
+        if (!parts.house) setGeoError('Уточните номер дома вручную');
       } else {
-        setGeoError('Не удалось определить адрес');
+        setLat(pos.coords.latitude);
+        setLon(pos.coords.longitude);
+        setGeoError('Не удалось определить адрес. Заполните поля вручную.');
       }
     } catch {
       setGeoError('Не удалось определить адрес');
@@ -695,24 +469,41 @@ export function AddressInput({
   const handleMapConfirm = async (pickedLat: number, pickedLon: number) => {
     setMapOpen(false);
     setGeoError('');
-    const result = await reverseGeocode(pickedLat, pickedLon);
-    if (result) {
-      setLat(result.lat);
-      setLon(result.lon);
-      setQuery(result.suggestion);
+    const parts = await reverseGeocode(pickedLat, pickedLon);
+    if (parts && (parts.city || parts.street)) {
+      applyParts(parts, pickedLat, pickedLon);
+      if (!parts.house) setGeoError('Уточните номер дома вручную');
     } else {
       setLat(pickedLat);
       setLon(pickedLon);
-      setGeoError('Не удалось определить адрес по выбранной точке');
+      setGeoError('Не удалось определить адрес по точке. Заполните поля вручную.');
     }
   };
 
+  const selectCitySuggestion = (r: NominatimResult) => {
+    const parts = parseNominatim(r);
+    if (parts.city) setCity(parts.city);
+    if (parts.lat != null) setLat(parts.lat);
+    if (parts.lon != null) setLon(parts.lon);
+    setCityOpen(false);
+  };
+
+  const selectStreetSuggestion = (r: NominatimResult) => {
+    const parts = parseNominatim(r);
+    if (parts.city && !city.trim()) setCity(parts.city);
+    if (parts.street) setStreet(parts.street);
+    if (parts.house && !house.trim()) setHouse(parts.house);
+    if (parts.lat != null) setLat(parts.lat);
+    if (parts.lon != null) setLon(parts.lon);
+    setStreetOpen(false);
+  };
+
+  const inputError = !!error;
+
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      {/* Label */}
       <p className="text-sm font-bold text-text-main">{label}</p>
 
-      {/* Action buttons — new line after the label */}
       {showGeolocation && (
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -739,85 +530,150 @@ export function AddressInput({
         </div>
       )}
 
-      {/* Autocomplete input with ghost text */}
-      <div ref={wrapperRef} className="relative w-full">
-        {ghostSuffix && (
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none px-4 py-2.5 text-sm overflow-hidden whitespace-nowrap"
-          >
-            <span className="invisible">{query}</span>
-            <span className="text-text-main/25">{ghostSuffix}</span>
-          </div>
-        )}
-
+      {/* City */}
+      <div ref={cityWrapRef} className="relative w-full">
+        <label className="text-xs text-text-sub mb-1 block">Город</label>
         <Input
-          ref={inputRef}
-          placeholder="Город Москва, Улица Ленина, дом 4, корп 2, эт. 5, кв. 59"
-          value={query}
+          placeholder="Москва"
+          value={city}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setShowSuggestions(true);
-            setActiveIndex(-1);
+            setCity(e.target.value);
+            setCityOpen(true);
           }}
           onFocus={() => {
-            if (suggestions.length > 0) setShowSuggestions(true);
+            if (citySuggestions.length > 0) setCityOpen(true);
           }}
-          onKeyDown={handleKeyDown}
-          error={!!error}
-          className={cn(ghostSuffix && 'bg-transparent')}
+          error={inputError}
+          autoComplete="off"
         />
-
-        {showSuggestions && prefixMatches.length > 0 && (
+        {cityOpen && citySuggestions.length > 0 && (
           <div
             className={cn(
               'absolute z-50 mt-1 w-full',
-              'bg-surface border border-border-light',
-              'shadow-md',
+              'bg-surface border border-border-light shadow-md',
               'max-h-60 overflow-auto',
             )}
           >
-            {prefixMatches.map((s, i) => {
-              const matchLen = query.length;
-              const isActive = activeIndex >= 0 ? i === activeIndex : i === 0;
+            {citySuggestions.map((r) => {
+              const name = getCityName(r.address);
+              const region = r.address.state || r.address.county || '';
               return (
                 <div
-                  key={s}
+                  key={`${r.lat}-${r.lon}-${name}`}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    acceptFullSuggestion(s);
+                    selectCitySuggestion(r);
                   }}
-                  className={cn(
-                    'px-3 py-2 text-sm cursor-pointer',
-                    'hover:bg-gray-100',
-                    isActive && 'bg-gray-100',
-                  )}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
                 >
-                  <span className="font-semibold">{s.slice(0, matchLen)}</span>
-                  <span>{s.slice(matchLen)}</span>
+                  <span className="text-text-main">{name}</span>
+                  {region && <span className="text-text-sub"> — {region}</span>}
                 </div>
               );
             })}
           </div>
         )}
-
-        <p className="text-xs text-text-sub mt-1">
-          Tab — дополнить, Enter — принять предложение, Backspace — удалить токен
-        </p>
       </div>
 
-      {/* Coords display (when available) */}
-      {parsed && lat != null && lon != null && (
+      {/* Street */}
+      <div ref={streetWrapRef} className="relative w-full">
+        <label className="text-xs text-text-sub mb-1 block">Улица</label>
+        <Input
+          placeholder="Ленина"
+          value={street}
+          onChange={(e) => {
+            setStreet(e.target.value);
+            setStreetOpen(true);
+          }}
+          onFocus={() => {
+            if (streetSuggestions.length > 0) setStreetOpen(true);
+          }}
+          error={inputError}
+          autoComplete="off"
+        />
+        {streetOpen && streetSuggestions.length > 0 && (
+          <div
+            className={cn(
+              'absolute z-50 mt-1 w-full',
+              'bg-surface border border-border-light shadow-md',
+              'max-h-60 overflow-auto',
+            )}
+          >
+            {streetSuggestions.map((r) => {
+              const name = getStreetName(r.address);
+              const loc = getCityName(r.address);
+              return (
+                <div
+                  key={`${r.lat}-${r.lon}-${name}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectStreetSuggestion(r);
+                  }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                >
+                  <span className="text-text-main">{name}</span>
+                  {loc && <span className="text-text-sub"> — {loc}</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* House / Building / Floor / Room */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <label className="text-xs text-text-sub mb-1 block">Дом *</label>
+          <Input
+            placeholder="4"
+            inputMode="numeric"
+            value={house}
+            onChange={(e) => setHouse(e.target.value)}
+            error={inputError}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-text-sub mb-1 block">Корпус</label>
+          <Input
+            placeholder="2"
+            inputMode="numeric"
+            value={building}
+            onChange={(e) => setBuilding(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-text-sub mb-1 block">Этаж</label>
+          <Input
+            placeholder="5"
+            inputMode="numeric"
+            value={floor}
+            onChange={(e) => setFloor(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-text-sub mb-1 block">Квартира</label>
+          <Input
+            placeholder="59"
+            inputMode="numeric"
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+      </div>
+
+      {lat != null && lon != null && (
         <p className="text-xs text-text-sub">
           Координаты: {lat.toFixed(6)}, {lon.toFixed(6)}
         </p>
       )}
 
-      {/* Error messages */}
       {error && <p className="text-sm text-brand-red">{error}</p>}
       {geoError && <p className="text-sm text-brand-red">{geoError}</p>}
 
-      {/* Map picker modal */}
       {mapOpen && (
         <MapPickerModal
           initialLat={lat}

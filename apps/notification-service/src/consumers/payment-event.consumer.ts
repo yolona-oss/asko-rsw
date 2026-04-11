@@ -7,6 +7,32 @@ import { NotificationType, NotificationTargetType } from '@asko/shared';
 export class PaymentEventConsumer {
     constructor(private readonly notificationService: NotificationService) {}
 
+    @EventPattern('payment.created')
+    async handleInvoiceCreated(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            if (!data.userId) {
+                channel.ack(msg);
+                return;
+            }
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.INVOICE_CREATED,
+                'Новый счёт на оплату',
+                `Создан счёт на сумму ${data.amount} ${data.currency}`,
+                NotificationTargetType.PAYMENT,
+                data.paymentId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[PaymentEventConsumer] payment.created error:', e);
+            channel.ack(msg);
+        }
+    }
+
     @EventPattern('payment.paid')
     async handlePaymentPaid(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();

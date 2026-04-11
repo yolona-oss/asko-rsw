@@ -18,6 +18,10 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
     icon: 'repair',
     href: (n) => n.targetId ? `/account/requests/${n.targetId}` : undefined as any,
   },
+  invoice_created: {
+    icon: 'payment',
+    href: () => '/account/payments',
+  },
   payment_paid: {
     icon: 'payment',
     href: () => '/account/payments',

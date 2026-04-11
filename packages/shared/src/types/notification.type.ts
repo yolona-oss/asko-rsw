@@ -6,6 +6,7 @@ export enum NotificationType {
     REPAIR_TRANSFERRED_CLIENT = 'repair_transferred_client',
     REPAIR_DIAGNOSTICS_DECLINED = 'repair_diagnostics_declined',
     REPAIR_COMPLETED = 'repair_completed',
+    INVOICE_CREATED = 'invoice_created',
     PAYMENT_PAID = 'payment_paid',
     PAYMENT_FAILED = 'payment_failed',
     PAYMENT_REFUNDED = 'payment_refunded',
