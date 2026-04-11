@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { useAuth } from '@/lib/api/use-auth';
 import { getImageUrl } from '@/lib/file-url';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
 import { Card, Button, Badge, Modal, Textarea, FormField, Input, ImageGallery, SkeletonBlock, SkeletonCard } from '@asko/ui';
@@ -13,16 +14,21 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
+import { RequestChat } from '@/components/account/manager/request-detail/request-chat';
 import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { StepCircle } from './step-circle';
 
 // ── Main Component ──
 
 export function RepairerRequestDetail({ requestId }: { requestId: string }) {
+  const { user: authUser } = useAuth();
+  const currentUserId = authUser?.id ?? '';
+
   const [request, setRequest] = useState<any | null>(null);
   const [steps, setSteps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Photos
   const [photos, setPhotos] = useState<string[]>([]);
@@ -465,6 +471,27 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           </div>
         )}
       </div>
+
+      {/* ── Chat ── */}
+      {request.conversationId && !isTerminal && (
+        <Card className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-medium text-text-main">Чат по заявке</h2>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setChatOpen((v) => !v)}
+            >
+              {chatOpen ? 'Свернуть' : 'Развернуть'}
+            </Button>
+          </div>
+          {chatOpen && (
+            <div className="border border-border-main overflow-hidden">
+              <RequestChat conversationId={request.conversationId} currentUserId={currentUserId} />
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* ── Broken parts ── */}
       {!isTerminal && (
