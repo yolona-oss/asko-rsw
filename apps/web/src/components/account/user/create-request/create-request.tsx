@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Select, Textarea, FormField, Input } from '@asko/ui';
+import { Button, Select, Textarea, FormField } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -13,6 +13,11 @@ import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { AddDeviceForm } from '@/components/account/user/certificates/add-device-form';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
+import {
+  BrokenPartsDraftEditor,
+  type DraftBrokenPart,
+  type CatalogPart,
+} from '@/components/account/shared/broken-parts-draft-editor';
 import { CreateCertificateModal } from './create-certificate-modal';
 import { TERMINAL_STATUSES } from './constants';
 import type { UserDevice, Certificate, UploadedImage } from './types';
@@ -75,10 +80,8 @@ export function CreateRequest() {
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<UploadedImage[]>([]);
 
-  const [deviceParts, setDeviceParts] = useState<any[]>([]);
-  const [selectedParts, setSelectedParts] = useState<{ devicePartId?: string; name: string }[]>([]);
-  const [customPartName, setCustomPartName] = useState('');
-  const [showCustomPartInput, setShowCustomPartInput] = useState(false);
+  const [deviceParts, setDeviceParts] = useState<CatalogPart[]>([]);
+  const [selectedParts, setSelectedParts] = useState<DraftBrokenPart[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -125,8 +128,6 @@ export function CreateRequest() {
   useEffect(() => {
     setSelectedParts([]);
     setDeviceParts([]);
-    setCustomPartName('');
-    setShowCustomPartInput(false);
     setLocalCert(null);
   }, [userDeviceId]);
 
@@ -202,6 +203,7 @@ export function CreateRequest() {
       const brokenParts = selectedParts.map((sp) => ({
         ...(sp.devicePartId ? { devicePartId: sp.devicePartId } : {}),
         name: sp.name,
+        ...(sp.note ? { note: sp.note } : {}),
       }));
       const { data } = await repairRequestApi.create({
         userDeviceId,
@@ -362,106 +364,17 @@ export function CreateRequest() {
 
         {/* Broken parts selection */}
         {userDeviceId && (
-          <FormField label="Неисправные запчасти (необязательно)" variant="bold">
-            {/* Catalog parts checkboxes */}
-            {deviceParts.length > 0 && (
-              <div className="flex flex-col gap-2">
-                {deviceParts.map((part) => {
-                  const isChecked = selectedParts.some((sp) => sp.devicePartId === part.id);
-                  const label = part.partNumber
-                    ? `${part.name} (${part.partNumber})`
-                    : part.name;
-                  return (
-                    <label key={part.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {
-                          if (isChecked) {
-                            setSelectedParts((prev) => prev.filter((sp) => sp.devicePartId !== part.id));
-                          } else {
-                            setSelectedParts((prev) => [...prev, { devicePartId: part.id, name: part.name }]);
-                          }
-                        }}
-                        className="w-4 h-4 accent-brand-main"
-                      />
-                      <span className="text-text-main">{label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Custom parts chips */}
-            {selectedParts.filter((sp) => !sp.devicePartId).length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedParts
-                  .filter((sp) => !sp.devicePartId)
-                  .map((sp, idx) => (
-                    <span
-                      key={`custom-${idx}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-bg-alt border border-border-light"
-                    >
-                      {sp.name}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedParts((prev) =>
-                            prev.filter((p) => !(p.name === sp.name && !p.devicePartId)),
-                          )
-                        }
-                        className="ml-1 text-text-sub hover:text-text-main cursor-pointer"
-                      >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
-              </div>
-            )}
-
-            {/* Add custom part */}
-            {showCustomPartInput ? (
-              <div className="flex items-center gap-2 mt-2">
-                <Input
-                  placeholder="Название запчасти"
-                  value={customPartName}
-                  onChange={(e) => setCustomPartName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const trimmed = customPartName.trim();
-                      if (trimmed) {
-                        setSelectedParts((prev) => [...prev, { name: trimmed }]);
-                        setCustomPartName('');
-                      }
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const trimmed = customPartName.trim();
-                    if (trimmed) {
-                      setSelectedParts((prev) => [...prev, { name: trimmed }]);
-                      setCustomPartName('');
-                    }
-                  }}
-                  className="flex items-center justify-center w-9 h-9 text-lg font-medium border border-border-light hover:border-text-sub transition-colors cursor-pointer"
-                >
-                  +
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowCustomPartInput(true)}
-                className="flex items-center gap-2 mt-2 text-sm font-medium text-text-sub hover:text-text-main transition-colors cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                Добавить свою запчасть
-              </button>
-            )}
+          <FormField label="Предположения о неисправности (необязательно)" variant="bold">
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-text-sub">
+                Ваши предположения о том, что могло сломаться. Это подсказка для мастера — окончательный список запчастей определит он после диагностики.
+              </p>
+              <BrokenPartsDraftEditor
+                parts={selectedParts}
+                onChange={setSelectedParts}
+                deviceParts={deviceParts}
+              />
+            </div>
           </FormField>
         )}
 
