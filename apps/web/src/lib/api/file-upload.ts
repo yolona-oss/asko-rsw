@@ -104,7 +104,7 @@ export const fileUploadApi = {
   },
 
   deleteDocument(documentId: string) {
-    return api.post(`/file-upload/document/${documentId}/delete`);
+    return api.delete(`/file-upload/document/delete/${documentId}`);
   },
 
   getAttachedDocuments(ownerType: string, ownerId: string) {

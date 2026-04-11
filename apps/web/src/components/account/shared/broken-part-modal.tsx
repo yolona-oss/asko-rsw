@@ -99,8 +99,8 @@ export function BrokenPartModal({
       .then(({ data }) => setImages((data.images ?? []) as BrokenPartImage[]))
       .catch(() => setImages([]));
 
-    repairRequestApi
-      .getBrokenPartDocuments(requestId, part.id)
+    fileUploadApi
+      .getAttachedDocuments('broken-part', part.id)
       .then(({ data }) => setDocuments((data.documents ?? []) as BrokenPartDocument[]))
       .catch(() => setDocuments([]));
   }, [open, mode, part, requestId]);

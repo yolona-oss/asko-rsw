@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { getDocumentUrl } from '@/lib/file-url';
-import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import type { RepairRequestDocument } from './broken-part-types';
 
@@ -26,8 +25,8 @@ export function RepairRequestDocuments({
 
   useEffect(() => {
     let cancelled = false;
-    repairRequestApi
-      .getDocuments(requestId)
+    fileUploadApi
+      .getAttachedDocuments('repair-request', requestId)
       .then(({ data }) => {
         if (!cancelled) setDocuments((data.documents ?? []) as RepairRequestDocument[]);
       })
