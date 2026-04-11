@@ -30,6 +30,10 @@ export class AppConfig {
         return this.configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379';
     }
 
+    get userServiceUrl(): string {
+        return this.configService.get<string>('USER_SERVICE_ADDR') ?? 'localhost:5000';
+    }
+
     get email() {
         return {
             host: this.configService.get<string>('EMAIL_HOST') ?? 'smtp.gmail.com',

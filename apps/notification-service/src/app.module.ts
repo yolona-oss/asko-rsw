@@ -15,6 +15,7 @@ import { ChatEventConsumer } from 'consumers/chat-event.consumer';
 import { EmailEventConsumer } from 'consumers/email-event.consumer';
 import { ScheduleEventConsumer } from 'consumers/schedule-event.consumer';
 import { EmailQueueModule } from 'modules/email-queue.module';
+import { UserClientModule } from 'modules/user-client/user-client.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { EmailQueueModule } from 'modules/email-queue.module';
         DatabaseModule,
         MikroOrmModule.forFeature([NotificationEntity]),
         EmailQueueModule,
+        UserClientModule,
         ClientsModule.registerAsync([
             {
                 name: 'NOTIFICATION_EVENTS',

@@ -97,8 +97,12 @@ export {
   VIEW_TABLE,
   VIEW_CARD,
   VIEW_LIST,
+  VIEW_GROUPED,
 } from './components/view-switcher';
 export type { ViewSwitcherProps, ViewDefinition } from './components/view-switcher';
+
+export { DataGroupedView } from './components/data-grouped-view';
+export type { DataGroupedViewProps, DataGroup } from './components/data-grouped-view';
 
 export {
   DataCardView,

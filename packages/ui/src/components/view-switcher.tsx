@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Table2, LayoutGrid, List } from 'lucide-react';
+import { Table2, LayoutGrid, List, ListTree } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 // ─── View registry ──────────────────────────────────────────────────────────
@@ -30,6 +30,12 @@ export const VIEW_LIST: ViewDefinition = {
   key: 'list',
   label: 'Список',
   icon: <List className="w-4 h-4" />,
+};
+
+export const VIEW_GROUPED: ViewDefinition = {
+  key: 'grouped',
+  label: 'Группы',
+  icon: <ListTree className="w-4 h-4" />,
 };
 
 // ─── ViewSwitcher component ─────────────────────────────────────────────────

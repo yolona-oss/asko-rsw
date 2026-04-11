@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, DataToolbar, SkeletonCard, filterValueToParam } from '@asko/ui';
+import { Button, DataGroupedView, DataToolbar, filterValueToParam } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
 import { CalendarClock } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -134,30 +134,10 @@ export function SchedulePage() {
     setFormOpen(true);
   };
 
-  const batches = useMemo(() => {
-    const grouped = new Map<string, ScheduleEntry[]>();
-    const orderedUserIds: string[] = [];
-    for (const userId of rosterIds) {
-      if (!grouped.has(userId)) {
-        grouped.set(userId, []);
-        orderedUserIds.push(userId);
-      }
-    }
-    for (const entry of entries) {
-      if (!grouped.has(entry.userId)) {
-        grouped.set(entry.userId, []);
-        orderedUserIds.push(entry.userId);
-      }
-      grouped.get(entry.userId)!.push(entry);
-    }
-    for (const [, list] of grouped) {
-      list.sort((a, b) => (a.dateFrom < b.dateFrom ? 1 : -1));
-    }
-    return orderedUserIds.map((userId) => ({
-      userId,
-      entries: grouped.get(userId) ?? [],
-    }));
-  }, [entries, rosterIds]);
+  const sortedEntries = useMemo(
+    () => [...entries].sort((a, b) => (a.dateFrom < b.dateFrom ? 1 : -1)),
+    [entries],
+  );
 
   const displayName = (userId: string): string => {
     const u = users[userId];
@@ -167,48 +147,45 @@ export function SchedulePage() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-4">
-        <PageHeader>Расписание</PageHeader>
-        <Link href="/account/schedule/my">
-          <Button variant="secondary" className="flex items-center gap-2">
-            <CalendarClock className="w-4 h-4" />
-            Моё расписание
-          </Button>
-        </Link>
-      </div>
+      <PageHeader>Расписание</PageHeader>
 
       <DataToolbar
         filters={filters}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
+        actions={
+          <Link href="/account/schedule/my">
+            <Button variant="secondary" className="flex items-center gap-2">
+              <CalendarClock className="w-4 h-4" />
+              Моё расписание
+            </Button>
+          </Link>
+        }
       />
 
-      {loading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} className="h-20" />)}
-        </div>
-      ) : batches.length === 0 ? (
-        <p className="text-sm text-text-sub text-center py-8">Нет записей в расписании</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {batches.map((batch) => (
-            <UserScheduleBatch
-              key={batch.userId}
-              userId={batch.userId}
-              displayName={displayName(batch.userId)}
-              pattern={(patterns[batch.userId] ?? null) as any}
-              entries={batch.entries}
-              canApprove={canApprove}
-              canEdit={canEdit}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              onViewUser={(userId) => router.push(`/account/schedule/${userId}`)}
-            />
-          ))}
-        </div>
-      )}
+      <DataGroupedView<ScheduleEntry>
+        data={sortedEntries}
+        groupBy={(entry) => entry.userId}
+        groupOrder={rosterIds}
+        loading={loading}
+        loadingGroups={4}
+        emptyContent="Нет записей в расписании"
+        renderGroup={({ key, items }) => (
+          <UserScheduleBatch
+            userId={key}
+            displayName={displayName(key)}
+            pattern={(patterns[key] ?? null) as any}
+            entries={items}
+            canApprove={canApprove}
+            canEdit={canEdit}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            onViewUser={(userId) => router.push(`/account/schedule/${userId}`)}
+          />
+        )}
+      />
 
       <ScheduleFormModal
         open={formOpen}
