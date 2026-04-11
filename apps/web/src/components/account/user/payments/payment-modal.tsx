@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Modal, SkeletonBlock } from '@asko/ui';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
 import { PaymentTargetType } from '@asko/shared/client';
@@ -64,14 +64,25 @@ export function PaymentModal({
     }
   }, [options, selectedProvider]);
 
-  // Handle payment result
+  // Handle payment result.
+  // - Real providers: redirectUrl → navigate to hosted checkout.
+  // - Dummy provider: returns { status: 'pending', redirectUrl: dummy-checkout://... }
+  //   and asynchronously confirms via a simulated webhook ~2-4s later. Show a
+  //   waiting state and auto-close once the webhook is expected to have fired.
   useEffect(() => {
-    if (result) {
-      if (result.redirectUrl) {
-        window.location.assign(result.redirectUrl);
-      } else if (result.status === 'paid') {
-        onClose();
-      }
+    if (!result) return;
+    if (result.redirectUrl && !result.redirectUrl.startsWith('dummy-checkout://')) {
+      window.location.assign(result.redirectUrl);
+      return;
+    }
+    if (result.status === 'paid') {
+      onClose();
+      return;
+    }
+    if (result.status === 'pending') {
+      // Dummy webhook fires at ≤4s; add a small buffer for DB + notification hop.
+      const t = setTimeout(() => onClose(), 5500);
+      return () => clearTimeout(t);
     }
   }, [result, onClose]);
 
@@ -139,19 +150,29 @@ export function PaymentModal({
       {/* Error */}
       {error && <p className="text-sm text-brand-red mt-4">{error}</p>}
 
-      {/* Pay button */}
-      <button
-        type="button"
-        onClick={handlePay}
-        disabled={!selectedProvider || creating}
-        className={`w-full mt-6 py-3 text-sm font-medium cursor-pointer transition-colors ${
-          selectedProvider && !creating
-            ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-text-on-brand')
-            : 'bg-gray-200 text-text-sub cursor-not-allowed'
-        }`}
-      >
-        {creating ? 'Обработка...' : 'Оплатить'}
-      </button>
+      {/* Pending confirmation state (dummy provider async webhook) */}
+      {result?.status === 'pending' ? (
+        <div className="mt-8 flex flex-col items-center gap-3 py-6">
+          <Loader2 className="w-8 h-8 text-brand-red animate-spin" />
+          <p className="text-sm font-medium text-text-main">Ожидание подтверждения оплаты</p>
+          <p className="text-xs text-text-sub text-center max-w-[320px]">
+            Платёжная система обрабатывает транзакцию. Окно закроется автоматически.
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={!selectedProvider || creating}
+          className={`w-full mt-6 py-3 text-sm font-medium cursor-pointer transition-colors ${
+            selectedProvider && !creating
+              ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-text-on-brand')
+              : 'bg-gray-200 text-text-sub cursor-not-allowed'
+          }`}
+        >
+          {creating ? 'Обработка...' : 'Оплатить'}
+        </button>
+      )}
     </Modal>
   );
 }

@@ -38,6 +38,14 @@ export interface CropModalProps {
   title?: string;
   /** JPEG quality 0-1. Default: 0.92 */
   quality?: number;
+  /**
+   * Keep crop corners inside the image: prevents resize/zoom from extending
+   * the crop past the image bounds and enables edge-magnet snapping on corners.
+   * Default: true.
+   */
+  constrainToImage?: boolean;
+  /** Snap distance (screen px) for corner → image edge magnets. Default: 12 */
+  magnetThreshold?: number;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────
@@ -66,6 +74,8 @@ export function CropModal({
   containerSize = 420,
   title = 'Обрезка изображения',
   quality = 0.92,
+  constrainToImage = true,
+  magnetThreshold = 12,
 }: CropModalProps) {
   const isCircle = shape === 'circle';
   const outW = outputWidth;
@@ -120,17 +130,62 @@ export function CropModal({
     [imgNatural],
   );
 
+  // Max crop dimensions (screen px) that keep all four corners inside the image,
+  // given current scale and offset. The crop rect is center-anchored in the
+  // container, so max half-size per axis = min distance from center to either
+  // image edge on that axis.
+  const getMaxCropDims = useCallback(
+    (s: number, ox: number, oy: number) => {
+      const iw = imgNatural.w * s;
+      const ih = imgNatural.h * s;
+      const leftDist = iw / 2 + ox;
+      const rightDist = iw / 2 - ox;
+      const topDist = ih / 2 + oy;
+      const bottomDist = ih / 2 - oy;
+      return {
+        maxW: Math.max(0, 2 * Math.min(leftDist, rightDist)),
+        maxH: Math.max(0, 2 * Math.min(topDist, bottomDist)),
+      };
+    },
+    [imgNatural],
+  );
+
   // Resize crop area with aspect ratio lock
   const resizeCrop = useCallback(
     (delta: number) => {
+      let effectiveMaxW = maxCropSize;
+      let effectiveMaxH = maxCropSize;
+      if (constrainToImage) {
+        const { maxW, maxH } = getMaxCropDims(scale, offset.x, offset.y);
+        effectiveMaxW = Math.min(maxCropSize, maxW);
+        effectiveMaxH = Math.min(maxCropSize, maxH);
+      }
+
       let newW: number;
       let newH: number;
 
       if (isCircle) {
-        newW = Math.round(Math.max(minCropSize, Math.min(maxCropSize, resizeStart.current.w + delta)));
+        const cap = Math.max(minCropSize, Math.min(effectiveMaxW, effectiveMaxH));
+        newW = Math.round(Math.max(minCropSize, Math.min(cap, resizeStart.current.w + delta)));
+        if (
+          constrainToImage &&
+          cap - newW <= magnetThreshold &&
+          cap >= minCropSize + magnetThreshold
+        ) {
+          newW = Math.round(cap);
+        }
         newH = newW;
       } else {
-        newW = Math.round(Math.max(minCropSize, Math.min(maxCropSize, resizeStart.current.w + delta)));
+        // Aspect-locked: both width-budget and height-budget (converted to width) apply
+        const cap = Math.max(minCropSize, Math.min(effectiveMaxW, effectiveMaxH * ratio));
+        newW = Math.round(Math.max(minCropSize, Math.min(cap, resizeStart.current.w + delta)));
+        if (
+          constrainToImage &&
+          cap - newW <= magnetThreshold &&
+          cap >= minCropSize + magnetThreshold
+        ) {
+          newW = Math.round(cap);
+        }
         newH = Math.round(newW / ratio);
       }
 
@@ -138,7 +193,18 @@ export function CropModal({
       setCropH(newH);
       setOffset((prev) => clampOffset(prev.x, prev.y, scale, newW, newH));
     },
-    [isCircle, ratio, minCropSize, maxCropSize, clampOffset, scale],
+    [
+      isCircle,
+      ratio,
+      minCropSize,
+      maxCropSize,
+      clampOffset,
+      scale,
+      offset,
+      constrainToImage,
+      magnetThreshold,
+      getMaxCropDims,
+    ],
   );
 
   // Pointer handlers
@@ -206,17 +272,25 @@ export function CropModal({
     activeCorner.current = null;
   };
 
-  // Wheel zoom
+  // Wheel zoom — also enforce a lower bound so the image never shrinks
+  // below the current crop size when constrainToImage is on.
   const handleWheel = useCallback(
     (e: WheelEvent) => {
       e.preventDefault();
       setScale((prev) => {
-        const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, prev - e.deltaY * 0.001));
+        let next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, prev - e.deltaY * 0.001));
+        if (constrainToImage && imgNatural.w > 0 && imgNatural.h > 0) {
+          const minScaleForCrop = Math.max(
+            cropW / imgNatural.w,
+            cropH / imgNatural.h,
+          );
+          if (next < minScaleForCrop) next = minScaleForCrop;
+        }
         setOffset((o) => clampOffset(o.x, o.y, next, cropW, cropH));
         return next;
       });
     },
-    [clampOffset, cropW, cropH],
+    [clampOffset, cropW, cropH, constrainToImage, imgNatural],
   );
 
   useEffect(() => {

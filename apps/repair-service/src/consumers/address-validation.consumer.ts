@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { sleep } from '@asko/shared';
 import { Address } from 'entities/address.entity';
 import type { AddressValidationEvent } from 'modules/address-validation.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
@@ -17,10 +18,6 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
         Math.sin(dLat / 2) ** 2 +
         Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 @Controller()
