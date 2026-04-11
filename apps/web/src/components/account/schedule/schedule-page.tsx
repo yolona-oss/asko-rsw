@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, DataGroupedView, DataToolbar, filterValueToParam } from '@asko/ui';
+import { Badge, Button, Card, DataGroupedView, DataToolbar, matchesFilter } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, Clock3 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
@@ -42,12 +42,9 @@ export function SchedulePage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
+      // Fetch ALL entries (no filter) so pending counts and client-side filtering stay in sync.
       const [entriesRes, repairersRes, managersRes] = await Promise.all([
-        scheduleApi.getAll({
-          limit: 500,
-          type: filterValueToParam(filterValues, 'type'),
-          status: filterValueToParam(filterValues, 'status'),
-        }),
+        scheduleApi.getAll({ limit: 500 }),
         usersApi.getAll({ role: 'repairer', limit: 500 }).catch(() => null),
         usersApi.getAll({ role: 'manager', limit: 500 }).catch(() => null),
       ]);
@@ -98,7 +95,7 @@ export function SchedulePage() {
     } finally {
       setLoading(false);
     }
-  }, [filterValues.type, filterValues.status]);
+  }, []);
 
   useEffect(() => {
     fetchAll();
@@ -148,10 +145,51 @@ export function SchedulePage() {
     setFormOpen(true);
   };
 
-  const sortedEntries = useMemo(
-    () => [...entries].sort((a, b) => (a.dateFrom < b.dateFrom ? 1 : -1)),
+  // Full pending counts across ALL data (filter-independent).
+  const pendingPatternUserIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const [userId, p] of Object.entries(patterns)) {
+      if (!p) continue;
+      if (p.status === 'pending' || !!p.pendingData) ids.push(userId);
+    }
+    return ids;
+  }, [patterns]);
+
+  const pendingEntryCount = useMemo(
+    () => entries.filter((e) => e.status === 'pending').length,
     [entries],
   );
+  const pendingPatternCount = pendingPatternUserIds.length;
+  const totalPendingCount = pendingEntryCount + pendingPatternCount;
+
+  // Client-side filter — runs on loaded data so the pending counts stay accurate.
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter(
+        (e) => matchesFilter(filterValues, 'type', e.type) && matchesFilter(filterValues, 'status', e.status),
+      ),
+    [entries, filterValues],
+  );
+
+  const sortedEntries = useMemo(
+    () => [...filteredEntries].sort((a, b) => (a.dateFrom < b.dateFrom ? 1 : -1)),
+    [filteredEntries],
+  );
+
+  // Hide empty groups when any filter is active. When filtering by pending,
+  // also keep users whose pattern is pending (they aren't in `filteredEntries`).
+  const hasActiveFilter = !!(filterValues.type || filterValues.status);
+  const showingPendingOnly = filterValues.status === 'pending';
+
+  const visibleUserIds = useMemo(() => {
+    if (!hasActiveFilter) return rosterIds;
+    const keep = new Set<string>();
+    for (const e of sortedEntries) keep.add(e.userId);
+    if (showingPendingOnly && !filterValues.type) {
+      for (const uid of pendingPatternUserIds) keep.add(uid);
+    }
+    return rosterIds.filter((uid) => keep.has(uid));
+  }, [hasActiveFilter, showingPendingOnly, filterValues.type, rosterIds, sortedEntries, pendingPatternUserIds]);
 
   const displayName = (userId: string): string => {
     const u = users[userId];
@@ -159,9 +197,43 @@ export function SchedulePage() {
     return [u.lastName, u.firstName].filter(Boolean).join(' ') || userId.slice(0, 8);
   };
 
+  const togglePendingOnly = () => {
+    setFilterValues((prev) => ({
+      ...prev,
+      status: prev.status === 'pending' ? '' : 'pending',
+    }));
+  };
+
   return (
     <PageContainer>
       <PageHeader>Расписание</PageHeader>
+
+      {!loading && totalPendingCount > 0 && (
+        <Card padding="sm" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-l-4 border-l-warning">
+          <div className="flex items-start gap-3">
+            <Clock3 className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-text-main">Ожидают одобрения</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {pendingEntryCount > 0 && (
+                  <Badge variant="warning">{pendingEntryCount} записей</Badge>
+                )}
+                {pendingPatternCount > 0 && (
+                  <Badge variant="warning">{pendingPatternCount} графиков</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button
+            variant={showingPendingOnly ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={togglePendingOnly}
+            className="sm:self-center"
+          >
+            {showingPendingOnly ? 'Показать все' : 'Показать только ожидающие'}
+          </Button>
+        </Card>
+      )}
 
       <DataToolbar
         filters={filters}
@@ -180,10 +252,14 @@ export function SchedulePage() {
       <DataGroupedView<ScheduleEntry>
         data={sortedEntries}
         groupBy={(entry) => entry.userId}
-        groupOrder={rosterIds}
+        groupOrder={visibleUserIds}
         loading={loading}
         loadingGroups={4}
-        emptyContent="Нет записей в расписании"
+        emptyContent={
+          hasActiveFilter
+            ? 'Нет записей по выбранным фильтрам'
+            : 'Нет записей в расписании'
+        }
         renderGroup={({ key, items }) => (
           <UserScheduleBatch
             userId={key}
