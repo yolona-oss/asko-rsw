@@ -134,6 +134,13 @@ message FindAllUsersRequest {
     string sort_order = 7;
 }
 
+message UserSettings {
+    repeated string mfa_methods = 1;
+    bool chat_accept_conversations = 2;
+    bool chat_searchable = 3;
+    string meta_json = 4;
+}
+
 message UpdateUserRequest {
     string id = 1;
     string name = 2;
@@ -142,7 +149,7 @@ message UpdateUserRequest {
     string password = 5;
     string address_id = 6;
     string current_password = 7;
-    string preferences_json = 8;
+    UserSettings settings = 8;
     string middle_name = 9;
 }
 
@@ -233,7 +240,7 @@ message AuthUser {
     repeated string roles = 8;
     string created_at = 9;
     string updated_at = 10;
-    string preferences_json = 11;
+    UserSettings settings = 11;
     bool is_active = 12;
     string middle_name = 13;
 }
@@ -251,7 +258,7 @@ message UserResponse {
     bool phone_verified = 10;
     string created_at = 11;
     string updated_at = 12;
-    string preferences_json = 13;
+    UserSettings settings = 13;
     bool is_active = 14;
     string middle_name = 15;
 }

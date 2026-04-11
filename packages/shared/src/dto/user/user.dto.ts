@@ -1,4 +1,13 @@
-import { IsOptional, IsString, IsEmail, IsArray } from 'class-validator';
+import {
+    IsOptional,
+    IsString,
+    IsEmail,
+    IsArray,
+    IsBoolean,
+    IsObject,
+    ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { Role } from '../../types/roles.type';
 
 export class CreateUserDto {
@@ -39,6 +48,25 @@ export class CreateUserDto {
     inviteToken?: string;
 }
 
+export class UpdateUserSettingsDto {
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    mfaMethods?: string[];
+
+    @IsOptional()
+    @IsBoolean()
+    chatAcceptConversations?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    chatSearchable?: boolean;
+
+    @IsOptional()
+    @IsObject()
+    meta?: Record<string, any>;
+}
+
 export class UpdateUserDto {
     @IsOptional()
     @IsString()
@@ -65,5 +93,7 @@ export class UpdateUserDto {
     password?: string;
 
     @IsOptional()
-    preferences?: Record<string, any>;
+    @ValidateNested()
+    @Type(() => UpdateUserSettingsDto)
+    settings?: UpdateUserSettingsDto;
 }

@@ -79,13 +79,11 @@ export function ProfileForm() {
         originalEmailVerified.current = data.emailVerified ?? false;
         originalPhone.current = data.phone ?? '';
         originalPhoneVerified.current = data.phoneVerified ?? false;
-        // Load chat preferences
-        const prefs = (data as any).preferencesJson
-          ? JSON.parse((data as any).preferencesJson)
-          : (data as any).preferences;
-        if (prefs?.chat) {
-          setChatAcceptConversations(prefs.chat.acceptConversations ?? false);
-          setChatSearchable(prefs.chat.searchable ?? false);
+        // Load chat preferences from structured settings
+        const settings = (data as any).settings;
+        if (settings) {
+          setChatAcceptConversations(settings.chatAcceptConversations ?? false);
+          setChatSearchable(settings.chatSearchable ?? false);
         }
       }),
       usersApi.getAvatarUrl(authUser.id).then((url) => {
@@ -146,11 +144,9 @@ export function ProfileForm() {
         middleName: pMiddleName || undefined,
         email: email || undefined,
         phone: phoneDigits || undefined,
-        preferences: {
-          chat: {
-            acceptConversations: chatAcceptConversations,
-            searchable: chatSearchable,
-          },
+        settings: {
+          chatAcceptConversations,
+          chatSearchable,
         },
       } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });

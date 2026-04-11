@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User, UserPopulateHints } from 'entities/auth/user.entity';
 import { UserOAuthLink } from 'entities/auth/user-oauth-link.entity';
+import { UserSettings } from 'entities/auth/user-settings.entity';
 
 import { AppErrors } from 'common/error';
 import { DeepPartial } from 'types/deep-partial.type';
@@ -86,8 +87,8 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async findByIdWithPreferences(id: string): Promise<User | null> {
-        return await this.em.findOne(User, { id }, { populate: ['preferences' as any] });
+    async findByIdWithSettings(id: string): Promise<User | null> {
+        return await this.em.findOne(User, { id }, { populate: ['settings'] });
     }
 
     @CreateRequestContext()
@@ -196,6 +197,7 @@ export class UserService {
             passwordHash = await CryptoService.createPasswordHash(userData.password);
         }
 
+        const settings = new UserSettings();
         const user = this.em.create(User, {
             firstName: userData.firstName,
             lastName: userData.lastName,
@@ -208,6 +210,7 @@ export class UserService {
             sessions: [],
             roles: provideRoles,
             providers: [provider],
+            settings,
 
             addresses: [],
 
@@ -231,8 +234,8 @@ export class UserService {
 
     @CreateRequestContext()
     async updateSafe(id: string, _newUserInfo: DeepPartial<UpdateUserDto>, currentPassword?: string): Promise<User> {
-        const needsPrefs = !!((_newUserInfo as any).preferences);
-        const user = await this.em.findOne(User, { id }, needsPrefs ? { populate: ['preferences' as any] } : {})
+        const needsSettings = !!((_newUserInfo as any).settings);
+        const user = await this.em.findOne(User, { id }, needsSettings ? { populate: ['settings'] } : {})
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found')
         }
@@ -295,10 +298,19 @@ export class UserService {
             }
         }
 
-        if ((newUserInfo as any).preferences) {
-            user.preferences = {
-                ...(user.preferences ?? {}),
-                ...(newUserInfo as any).preferences,
+        if (newUserInfo.settings) {
+            const s = user.settings;
+            if (newUserInfo.settings.mfaMethods !== undefined) {
+                s.mfaMethods = newUserInfo.settings.mfaMethods as string[];
+            }
+            if (newUserInfo.settings.chatAcceptConversations !== undefined) {
+                s.chatAcceptConversations = newUserInfo.settings.chatAcceptConversations;
+            }
+            if (newUserInfo.settings.chatSearchable !== undefined) {
+                s.chatSearchable = newUserInfo.settings.chatSearchable;
+            }
+            if (newUserInfo.settings.meta !== undefined) {
+                s.meta = { ...(s.meta ?? {}), ...newUserInfo.settings.meta };
             }
         }
 
@@ -340,6 +352,7 @@ export class UserService {
         const existing = await this.findByPhone(data.phone);
         if (existing) throw AppErrors.conflict('Пользователь с этим номером уже зарегистрирован');
 
+        const settings = new UserSettings();
         const user = this.em.create(User, {
             phone: data.phone,
             firstName: data.firstName ?? '',
@@ -351,6 +364,7 @@ export class UserService {
             roles: data.roles,
             providers: [AuthProvider.PHONE],
             addresses: [],
+            settings,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -418,7 +432,7 @@ export class UserService {
                 ],
             })
         if (!isPrivileged) {
-            qb.andWhere(`u.preferences IS NOT NULL AND u.preferences->'chat'->>'searchable' = 'true'`)
+            qb.innerJoin('u.settings', 's').andWhere({ 's.chatSearchable': true })
         }
 
         qb.limit(limit)
@@ -468,15 +482,12 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async setMfaPreferences(userId: string, methods: string[]) {
-        const user = await this.em.findOne(User, { id: userId }, { populate: ['preferences' as any] });
+    async setMfaMethods(userId: string, methods: string[]) {
+        const user = await this.em.findOne(User, { id: userId }, { populate: ['settings'] });
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found');
         }
-        user.preferences = {
-            ...(user.preferences ?? {}),
-            mfa: { methods },
-        };
+        user.settings.mfaMethods = methods;
         await this.em.persistAndFlush(user);
     }
 
@@ -540,6 +551,7 @@ export class UserService {
         user.emailVerified = !!data.email; // OAuth-provided email is pre-verified
         user.providers = [data.provider as AuthProvider];
         user.roles = [DEFAULT_USER_ROLE];
+        user.settings = new UserSettings();
         await this.em.persistAndFlush(user);
 
         await this.linkOAuth(user.id, data.provider, data.providerId, data.email, data.avatarUrl);

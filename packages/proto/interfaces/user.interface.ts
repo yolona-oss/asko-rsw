@@ -132,6 +132,13 @@ export interface FindAllUsersRequest {
     sortOrder: string;
 }
 
+export interface UserSettings {
+    mfaMethods: string[];
+    chatAcceptConversations: boolean;
+    chatSearchable: boolean;
+    metaJson: string;
+}
+
 export interface UpdateUserRequest {
     id: string;
     name: string;
@@ -140,7 +147,7 @@ export interface UpdateUserRequest {
     password: string;
     addressId: string;
     currentPassword: string;
-    preferencesJson: string;
+    settings?: UserSettings;
     middleName: string;
 }
 
@@ -232,7 +239,7 @@ export interface AuthUser {
     roles: string[];
     createdAt: string;
     updatedAt: string;
-    preferencesJson: string;
+    settings?: UserSettings;
     isActive: boolean;
 }
 
@@ -250,7 +257,7 @@ export interface UserResponse {
     phoneVerified: boolean;
     createdAt: string;
     updatedAt: string;
-    preferencesJson: string;
+    settings?: UserSettings;
     isActive: boolean;
 }
 

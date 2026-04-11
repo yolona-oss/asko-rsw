@@ -4,7 +4,7 @@ import { getEnvFilePath } from '@asko/shared';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
-import { User, Session, InvitationLink, UserAddress, UserOAuthLink } from './entities';
+import { User, Session, InvitationLink, UserAddress, UserOAuthLink, UserSettings } from './entities';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
 
@@ -15,7 +15,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: process.env.DATABASE_DB_NAME,
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT || '5432'),
-    entities: [User, Session, InvitationLink, UserAddress, UserOAuthLink],
+    entities: [User, Session, InvitationLink, UserAddress, UserOAuthLink, UserSettings],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

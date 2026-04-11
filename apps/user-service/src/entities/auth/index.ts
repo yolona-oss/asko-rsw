@@ -1,5 +1,6 @@
 export * from './invitation-link.entity'
 export * from './session.entity'
 export * from './user-address.entity'
+export * from './user-settings.entity'
 export * from './user.entity'
 export * from './user-oauth-link.entity'

@@ -1,11 +1,12 @@
-import { Entity, PrimaryKey, Property, OneToMany, Unique, Collection, Cascade, OptionalProps, t, Enum } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OneToMany, OneToOne, Unique, Collection, Cascade, OptionalProps, t, Enum } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 import { DEFAULT_USER_ROLE, Role, AuthProvider } from '@asko/shared';
 
 import { Session } from './session.entity';
 import { UserAddress } from './user-address.entity';
+import { UserSettings } from './user-settings.entity';
 
-export type UserPopulateHints = "sessions" | "addresses" | "roles"
+export type UserPopulateHints = "sessions" | "addresses" | "roles" | "settings"
 
 @Entity()
 export class User {
@@ -20,7 +21,7 @@ export class User {
     | 'isActive'
     | 'emailVerified'
     | 'phoneVerified'
-    | 'preferences';
+    | 'settings';
 
     @PrimaryKey()
     id: string = uuid();
@@ -51,8 +52,13 @@ export class User {
     @Enum({ items: () => Role, array: true, default: [DEFAULT_USER_ROLE], nativeEnumName: 'role' })
     roles: Role[] = [DEFAULT_USER_ROLE];
 
-    @Property({ type: 'json', nullable: true, lazy: true })
-    preferences?: Record<string, any>;
+    @OneToOne(() => UserSettings, s => s.user, {
+        owner: true,
+        cascade: [Cascade.PERSIST, Cascade.REMOVE],
+        eager: false,
+        nullable: false,
+    })
+    settings!: UserSettings;
 
     @OneToMany(() => Session, s => s.user, { cascade: [Cascade.REMOVE], lazy: true })
     sessions = new Collection<Session>(this);

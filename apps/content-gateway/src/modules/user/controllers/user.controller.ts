@@ -79,7 +79,12 @@ export class UsersController {
             password: data.password ?? '',
             addressId: data.addressId ?? '',
             currentPassword: data.password ?? '',
-            preferencesJson: data.preferences ? JSON.stringify(data.preferences) : '',
+            settings: data.settings ? {
+                mfaMethods: data.settings.mfaMethods ?? [],
+                chatAcceptConversations: data.settings.chatAcceptConversations ?? false,
+                chatSearchable: data.settings.chatSearchable ?? false,
+                metaJson: data.settings.meta ? JSON.stringify(data.settings.meta) : '',
+            } : undefined,
         });
     }
 

@@ -121,8 +121,8 @@ export class AuthService {
             throw AppErrors.forbidden('Account is disabled');
         }
 
-        // MFA check — reload with lazy preferences for MFA method lookup
-        user = (await this.userService.findByIdWithPreferences(user.id)) ?? user;
+        // MFA check — reload with lazy settings for MFA method lookup
+        user = (await this.userService.findByIdWithSettings(user.id)) ?? user;
         if (this.mfaService.isMfaEnabled(user)) {
             const needsChallenge = await this.mfaService.shouldChallenge(
                 user.id,
@@ -757,10 +757,10 @@ export class AuthService {
     }> {
         const { userId, method: tokenMethod } = this.mfaService.verifyMfaChallengeToken(mfaToken);
 
-        const user = await this.userService.findByIdWithPreferences(userId);
+        const user = await this.userService.findByIdWithSettings(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
 
-        // Use method from token (handles phone-login users who have no MFA preferences)
+        // Use method from token (handles phone-login users who have no MFA settings)
         const method = tokenMethod ?? this.mfaService.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
         const valid = await this.otpService.verify(userId, method, code);
         if (!valid) {

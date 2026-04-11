@@ -91,13 +91,16 @@ function toGrpcError(error: unknown): RpcException {
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
 
-// Serialize preferences only if the lazy field has been populated (not a Reference proxy)
-function serializePrefs(user: any): string {
-    const prefs = user.preferences;
-    if (prefs && typeof prefs === 'object' && !prefs.__helper) {
-        return JSON.stringify(prefs);
-    }
-    return '';
+// Project settings only if the lazy relation has been populated (not a Reference proxy)
+function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversations: boolean; chatSearchable: boolean; metaJson: string } | undefined {
+    const s = user.settings;
+    if (!s || typeof s !== 'object' || s.__helper) return undefined;
+    return {
+        mfaMethods: s.mfaMethods ?? [],
+        chatAcceptConversations: !!s.chatAcceptConversations,
+        chatSearchable: !!s.chatSearchable,
+        metaJson: s.meta ? JSON.stringify(s.meta) : '',
+    };
 }
 
 function userToResponse(user: any): UserResponse {
@@ -116,7 +119,7 @@ function userToResponse(user: any): UserResponse {
         isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
-        preferencesJson: serializePrefs(user),
+        settings: settingsToProto(user),
     };
 }
 
@@ -134,7 +137,7 @@ function userToAuthUser(user: any) {
         isActive: user.isActive ?? true,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt ?? ''),
         updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : String(user.updatedAt ?? ''),
-        preferencesJson: serializePrefs(user),
+        settings: settingsToProto(user),
     };
 }
 
@@ -444,7 +447,7 @@ export class UserGrpcController {
     @GrpcMethod('UserService', 'FindUserById')
     async findUserById(data: UserIdRequest): Promise<UserResponse> {
         try {
-            const user = await this.userService.findByIdWithPreferences(data.id);
+            const user = await this.userService.findByIdWithSettings(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }
@@ -477,8 +480,13 @@ export class UserGrpcController {
             if (data.phone) updateDto.phone = data.phone;
             if (data.password) updateDto.password = data.password;
             if (data.addressId) updateDto.addressId = data.addressId;
-            if (data.preferencesJson) {
-                try { updateDto.preferences = JSON.parse(data.preferencesJson); } catch {}
+            if (data.settings) {
+                updateDto.settings = {
+                    mfaMethods: data.settings.mfaMethods,
+                    chatAcceptConversations: data.settings.chatAcceptConversations,
+                    chatSearchable: data.settings.chatSearchable,
+                    meta: data.settings.metaJson ? (() => { try { return JSON.parse(data.settings!.metaJson); } catch { return undefined; } })() : undefined,
+                };
             }
 
             const user = await this.userService.updateSafe(data.id, updateDto, data.currentPassword || undefined);
@@ -501,7 +509,7 @@ export class UserGrpcController {
     @GrpcMethod('UserService', 'GetProfile')
     async getProfile(data: UserIdRequest): Promise<UserResponse> {
         try {
-            const user = await this.userService.findByIdWithPreferences(data.id);
+            const user = await this.userService.findByIdWithSettings(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
             return userToResponse(user);
         } catch (e) { throw toGrpcError(e); }

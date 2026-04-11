@@ -134,7 +134,7 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 * Russian UI strings. TypeScript strict. ESM. ES2022.
 * MikroORM v6. class-validator on all DTOs. argon2 for passwords. JWT ES256.
 * `@Public()` bypasses JWT. `@OptionalAuth()` tries JWT silently. Use `@JwtAuthUser()` decorator — never `(req as any).user`.
-* User preferences lazy-loaded. Use `findByIdWithPreferences()` when preferences needed. Never call `@CreateRequestContext()` method from within another — use `this.em.findOne()` directly.
+* User settings lazy-loaded (one-to-one to `user_settings` table). Use `findByIdWithSettings()` when settings needed. Never call `@CreateRequestContext()` method from within another — use `this.em.findOne()` directly.
 * `slugify()` from `@asko/shared` — single canonical implementation.
 
 **Frontend**:

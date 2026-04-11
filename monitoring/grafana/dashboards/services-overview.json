@@ -22,7 +22,7 @@
       }
     ]
   },
-  "description": "ASKO Repair Management Platform — full observability dashboard for API gateway, gRPC microservices, and Node.js runtime",
+  "description": "ASKO Repair Management Platform — observability for 5 REST gateways (auth/repair/media/realtime/content), 7 gRPC microservices (user/payment/file/repair/notification/chat/content), RabbitMQ, and Redis.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -36,8 +36,8 @@
       "type": "row"
     },
     {
-      "title": "Services Up",
-      "description": "Number of actively scraped service targets",
+      "title": "Targets Up",
+      "description": "Scrape targets currently responding. Full infra = 5 gateways + 7 microservices + rabbitmq + redis-exporter = 14 targets.",
       "type": "stat",
       "id": 1,
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
@@ -49,8 +49,9 @@
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "orange", "value": 5 },
-              { "color": "green", "value": 8 }
+              { "color": "orange", "value": 10 },
+              { "color": "yellow", "value": 13 },
+              { "color": "green", "value": 14 }
             ]
           },
           "mappings": []
@@ -263,7 +264,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 101,
-      "title": "HTTP — API Gateway",
+      "title": "HTTP — REST Gateways",
       "type": "row"
     },
     {
@@ -1976,5 +1977,5 @@
   "timezone": "browser",
   "title": "ASKO Services Overview",
   "uid": "asko-services-overview",
-  "version": 3
+  "version": 4
 }

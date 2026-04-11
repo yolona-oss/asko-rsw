@@ -2,9 +2,11 @@ import { AuthProvider } from "../../dto/auth/enums/auth-provider.enum";
 import { Role } from "./../roles.type";
 import { IUserAddress } from "./user-address.type";
 
-export interface ChatPreferences {
-    acceptConversations: boolean;
-    searchable: boolean;
+export interface IUserSettings {
+    mfaMethods: string[];
+    chatAcceptConversations: boolean;
+    chatSearchable: boolean;
+    meta?: Record<string, any> | null;
 }
 
 export interface IUser {
@@ -18,7 +20,7 @@ export interface IUser {
     emailVerified: boolean;
     phoneVerified: boolean;
     passwordHash?: string;
-    preferences?: Record<string, any>;
+    settings: IUserSettings;
     roles: Role[];
 
     addresses: IUserAddress[] | any // TODO

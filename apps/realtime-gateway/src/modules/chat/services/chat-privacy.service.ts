@@ -26,10 +26,10 @@ export class ChatPrivacyService {
         // Fallback: fetch from user-service via gRPC
         try {
             const user = await this.userClient.findUserById({ id: userId });
-            const prefs = user.preferencesJson ? JSON.parse(user.preferencesJson) : {};
+            const s = user.settings;
             const chatPrefs: ChatPrefs = {
-                acceptConversations: prefs?.chat?.acceptConversations ?? false,
-                searchable: prefs?.chat?.searchable ?? false,
+                acceptConversations: s?.chatAcceptConversations ?? false,
+                searchable: s?.chatSearchable ?? false,
             };
             await this.redis.set(`${CACHE_PREFIX}${userId}`, JSON.stringify(chatPrefs), 'EX', CACHE_TTL);
             return chatPrefs;
