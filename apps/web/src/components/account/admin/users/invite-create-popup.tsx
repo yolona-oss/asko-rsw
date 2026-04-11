@@ -42,7 +42,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-dark-deep/40" />
+      <div className="absolute inset-0 bg-overlay-dark/60" />
       <div
         className="relative bg-surface w-full max-w-md mx-4 p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}

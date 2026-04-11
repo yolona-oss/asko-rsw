@@ -63,7 +63,7 @@ export function AccountHeader() {
             className="flex flex-col justify-center items-start w-[33px] h-[25px] relative cursor-pointer lg:hidden"
           >
             <span
-              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out origin-center"
               style={{
                 width: '33px',
                 top: mobileOpen ? '10px' : '0px',
@@ -71,7 +71,7 @@ export function AccountHeader() {
               }}
             />
             <span
-              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out"
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out"
               style={{
                 width: '16.5px',
                 top: '10px',
@@ -80,7 +80,7 @@ export function AccountHeader() {
               }}
             />
             <span
-              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              className="block h-[5px] bg-text-main absolute left-0 transition-all duration-300 ease-in-out origin-center"
               style={{
                 width: '33px',
                 top: mobileOpen ? '10px' : '20px',

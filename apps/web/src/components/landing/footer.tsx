@@ -4,7 +4,7 @@ import { Container } from '@asko/ui';
 
 export function LandingFooter() {
   return (
-    <footer className="bg-dark text-page-bg/60 py-8">
+    <footer className="bg-dark text-text-on-dark/60 py-8">
       <Container>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link href="/">
@@ -17,8 +17,8 @@ export function LandingFooter() {
             />
           </Link>
           <div className="flex gap-6 text-sm">
-            <Link href="#" className="hover:text-page-bg transition-colors">Политика конфиденциальности</Link>
-            <Link href="#" className="hover:text-page-bg transition-colors">Условия использования</Link>
+            <Link href="#" className="hover:text-text-on-dark transition-colors">Политика конфиденциальности</Link>
+            <Link href="#" className="hover:text-text-on-dark transition-colors">Условия использования</Link>
           </div>
           <span className="text-sm">&copy; {new Date().getFullYear()} ASKO. Все права защищены.</span>
         </div>
