@@ -1,20 +1,24 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, DataToolbar, SkeletonCard, filterValueToParam } from '@asko/ui';
 import type { FilterValues } from '@asko/ui';
+import { CalendarClock } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
+import type { PatternRecordDto } from '@/lib/api/schedule';
 import { usersApi } from '@/lib/api/users';
 import type { ScheduleEntry } from './types';
 import { TYPE_FILTER, STATUS_FILTER } from './constants';
 import { ScheduleFormModal } from './schedule-form-modal';
 import { UserScheduleBatch } from './user-schedule-batch';
+
+type RosterUser = { id: string; firstName: string; lastName: string };
 
 export function SchedulePage() {
   const router = useRouter();
@@ -25,7 +29,8 @@ export function SchedulePage() {
 
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
-  const [users, setUsers] = useState<Record<string, { id: string; firstName: string; lastName: string }>>({});
+  const [users, setUsers] = useState<Record<string, RosterUser>>({});
+  const [rosterIds, setRosterIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterValues, setFilterValues] = useState<FilterValues>({ type: '', status: '' });
 
@@ -37,33 +42,57 @@ export function SchedulePage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await scheduleApi.getAll({
-        limit: 500,
-        type: filterValueToParam(filterValues, 'type'),
-        status: filterValueToParam(filterValues, 'status'),
-      });
-      const list: ScheduleEntry[] = (data.data ?? []) as ScheduleEntry[];
+      const [entriesRes, repairersRes, managersRes] = await Promise.all([
+        scheduleApi.getAll({
+          limit: 500,
+          type: filterValueToParam(filterValues, 'type'),
+          status: filterValueToParam(filterValues, 'status'),
+        }),
+        usersApi.getAll({ role: 'repairer', limit: 500 }).catch(() => null),
+        usersApi.getAll({ role: 'manager', limit: 500 }).catch(() => null),
+      ]);
+
+      const list: ScheduleEntry[] = (entriesRes.data.data ?? []) as ScheduleEntry[];
       setEntries(list);
 
-      const userIds = Array.from(new Set(list.map((e) => e.userId).filter(Boolean)));
-      if (userIds.length > 0) {
-        const [patternsRes, usersRes] = await Promise.all([
-          scheduleApi.patternGetMany(userIds).catch(() => ({ data: { data: [] as PatternRecordDto[] } })),
-          usersApi.getBatch(userIds),
-        ]);
-        const byUser: Record<string, PatternRecordDto> = {};
-        for (const p of patternsRes.data?.data ?? []) {
-          byUser[p.userId] = p;
-        }
-        setPatterns(byUser);
+      const roster: RosterUser[] = [];
+      const pushUser = (u: { id: string; firstName?: string; lastName?: string }) => {
+        roster.push({ id: u.id, firstName: u.firstName ?? '', lastName: u.lastName ?? '' });
+      };
+      for (const u of repairersRes?.data?.data ?? []) pushUser(u as any);
+      for (const u of managersRes?.data?.data ?? []) pushUser(u as any);
 
-        const uByUser: Record<string, { id: string; firstName: string; lastName: string }> = {};
-        for (const u of usersRes) uByUser[u.id] = u;
-        setUsers(uByUser);
-      } else {
+      const rosterIdSet = new Set(roster.map((u) => u.id));
+      const orderedRosterIds = roster.map((u) => u.id);
+      setRosterIds(orderedRosterIds);
+
+      const unionIds = Array.from(new Set([
+        ...orderedRosterIds,
+        ...list.map((e) => e.userId).filter(Boolean),
+      ]));
+
+      if (unionIds.length === 0) {
         setPatterns({});
         setUsers({});
+        return;
       }
+
+      const missingUserIds = unionIds.filter((id) => !rosterIdSet.has(id));
+      const [patternsRes, missingUsersRes] = await Promise.all([
+        scheduleApi.patternGetMany(unionIds).catch(() => ({ data: { data: [] as PatternRecordDto[] } })),
+        missingUserIds.length > 0 ? usersApi.getBatch(missingUserIds) : Promise.resolve([] as RosterUser[]),
+      ]);
+
+      const byUser: Record<string, PatternRecordDto> = {};
+      for (const p of patternsRes.data?.data ?? []) {
+        byUser[p.userId] = p;
+      }
+      setPatterns(byUser);
+
+      const uByUser: Record<string, RosterUser> = {};
+      for (const u of roster) uByUser[u.id] = u;
+      for (const u of missingUsersRes) uByUser[u.id] = u;
+      setUsers(uByUser);
     } catch {
       /* handled by interceptor */
     } finally {
@@ -108,6 +137,12 @@ export function SchedulePage() {
   const batches = useMemo(() => {
     const grouped = new Map<string, ScheduleEntry[]>();
     const orderedUserIds: string[] = [];
+    for (const userId of rosterIds) {
+      if (!grouped.has(userId)) {
+        grouped.set(userId, []);
+        orderedUserIds.push(userId);
+      }
+    }
     for (const entry of entries) {
       if (!grouped.has(entry.userId)) {
         grouped.set(entry.userId, []);
@@ -122,7 +157,7 @@ export function SchedulePage() {
       userId,
       entries: grouped.get(userId) ?? [],
     }));
-  }, [entries]);
+  }, [entries, rosterIds]);
 
   const displayName = (userId: string): string => {
     const u = users[userId];
@@ -132,7 +167,15 @@ export function SchedulePage() {
 
   return (
     <PageContainer>
-      <PageHeader>Расписание</PageHeader>
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader>Расписание</PageHeader>
+        <Link href="/account/schedule/my">
+          <Button variant="secondary" className="flex items-center gap-2">
+            <CalendarClock className="w-4 h-4" />
+            Моё расписание
+          </Button>
+        </Link>
+      </div>
 
       <DataToolbar
         filters={filters}
