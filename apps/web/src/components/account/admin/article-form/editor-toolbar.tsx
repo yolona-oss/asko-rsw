@@ -154,11 +154,11 @@ export function EditorToolbar({ articleId, onRequestArticleId }: EditorToolbarPr
         `px-2 py-1 text-sm rounded transition-colors ${
             active
                 ? 'bg-brand-red text-text-on-brand'
-                : 'bg-surface text-text-main hover:bg-gray-100 border border-border-light/30'
+                : 'bg-surface text-text-main hover:bg-surface-secondary border border-border-light/30'
         }`;
 
     return (
-        <div className="flex flex-wrap gap-1 p-2 border-b border-border-light/30 bg-gray-50">
+        <div className="flex flex-wrap gap-1 p-2 border-b border-border-light/30 bg-surface-hover">
             <button type="button" className={btn(isBold)} onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')} title="Жирный">
                 <strong>B</strong>
             </button>

@@ -28,7 +28,7 @@ export function RepairerCard({
       <Card padding="none" className={`p-5 flex flex-col gap-3${onClick ? ' cursor-pointer' : ''}`} onClick={handleClick}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#E8E8E8] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-text-sub" />
             </div>
             <div>

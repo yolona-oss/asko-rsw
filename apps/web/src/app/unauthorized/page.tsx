@@ -17,7 +17,7 @@ export default function UnauthorizedPage() {
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link
             href="/auth"
-            className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red rounded-sm hover:opacity-90 transition-opacity"
           >
             Войти
           </Link>

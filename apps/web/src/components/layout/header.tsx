@@ -15,10 +15,10 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border-light">
       <Container>
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-xl font-bold text-gray-900">
+          <Link href="/" className="text-xl font-bold text-text-main">
             ASKO
           </Link>
 
@@ -28,7 +28,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-sm font-medium text-text-sub hover:text-text-main transition-colors"
               >
                 {link.label}
               </Link>
@@ -39,13 +39,13 @@ export function Header() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              className="text-sm font-medium text-text-main hover:text-text-main transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-text-on-brand bg-info rounded-lg hover:bg-info-deep transition-colors"
             >
               Sign up
             </Link>
@@ -54,7 +54,7 @@ export function Header() {
           {/* Mobile burger */}
           <button
             type="button"
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+            className="md:hidden p-2 text-text-sub hover:text-text-main"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -70,29 +70,29 @@ export function Header() {
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden border-t border-border-light py-4">
             <nav className="flex flex-col gap-3">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 px-2 py-1"
+                  className="text-sm font-medium text-text-sub hover:text-text-main px-2 py-1"
                   onClick={() => setMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <hr className="border-gray-200 my-2" />
+              <hr className="border-border-light my-2" />
               <Link
                 href="/login"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900 px-2 py-1"
+                className="text-sm font-medium text-text-main hover:text-text-main px-2 py-1"
                 onClick={() => setMenuOpen(false)}
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-on-brand bg-info rounded-lg hover:bg-info-deep"
                 onClick={() => setMenuOpen(false)}
               >
                 Sign up

@@ -28,8 +28,8 @@ export function SlotBlock({ entry, index, defaultStart, defaultEnd, interactive,
 
   const base = 'w-[110px] sm:w-[130px] shrink-0 select-none p-2.5 sm:p-3 flex flex-col gap-1 border transition-colors';
   const stateClass = isWork
-    ? 'bg-green-50 border-green-300 text-text-main'
-    : 'bg-gray-50 border-gray-200 text-text-sub';
+    ? 'bg-success-bg border-success-border text-text-main'
+    : 'bg-surface-hover border-border-light text-text-sub';
   const interactiveClass = interactive ? 'cursor-pointer hover:border-text-main' : '';
 
   const content = (

@@ -158,7 +158,7 @@ export function AdminInvitations() {
               {inv.token.slice(0, 14)}...
             </p>
             {link && (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1 p-1.5 bg-green-50 rounded">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 mt-1 p-1.5 bg-success-bg rounded">
                 <p className="text-xs font-mono text-text-main break-all flex-1 min-w-0">{link}</p>
                 <CopyButton text={link} />
               </div>

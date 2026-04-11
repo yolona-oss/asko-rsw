@@ -117,7 +117,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
                             type="button"
                             onClick={() => selectTag(s.tag)}
                             className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${
-                                i === activeIndex ? 'bg-gray-100' : 'hover:bg-surface-hover'
+                                i === activeIndex ? 'bg-surface-secondary' : 'hover:bg-surface-hover'
                             }`}
                         >
                             <span className="text-text-main">{s.tag}</span>

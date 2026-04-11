@@ -199,10 +199,10 @@ export function ArticlesSection() {
                 </Link>
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-4">
-                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#150F0F] max-w-[204px]">
+                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-main max-w-[204px]">
                       {article.title}
                     </h3>
-                    <p className="text-base leading-[22px] tracking-[-0.01em] text-[#150F0F]">
+                    <p className="text-base leading-[22px] tracking-[-0.01em] text-text-main">
                       {article.text}
                     </p>
                   </div>

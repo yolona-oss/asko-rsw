@@ -77,7 +77,7 @@ export function PasswordSection() {
           {changingPassword ? 'Сохранение...' : 'Изменить пароль'}
         </Button>
         {passwordMessage && (
-          <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+          <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
             {passwordMessage.text}
           </p>
         )}

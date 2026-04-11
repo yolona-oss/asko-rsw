@@ -72,7 +72,7 @@ export function ServicesSection() {
               </Link>
               <Link
                 href="#cta"
-                className="hidden md:inline-flex items-center justify-center w-fit px-6 py-2 text-sm font-medium text-white bg-dark shadow-sm"
+                className="hidden md:inline-flex items-center justify-center w-fit px-6 py-2 text-sm font-medium text-text-on-dark bg-dark shadow-sm"
               >
                 Вызвать мастера
               </Link>

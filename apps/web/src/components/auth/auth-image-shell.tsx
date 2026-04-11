@@ -20,7 +20,7 @@ export function AuthImageShell({ children }: AuthImageShellProps) {
         <div className="relative flex-1 flex flex-col">
           <div className="absolute inset-0">
             <Image src="/images/auth-img.webp" alt="" fill className="object-cover" />
-            <div className="absolute inset-0 bg-black/65" />
+            <div className="absolute inset-0 bg-dark-deep/65" />
           </div>
           <div className="relative z-10 flex flex-col flex-1 px-4 pt-8 pb-10">
             <div className="flex-1">{children('mobile')}</div>

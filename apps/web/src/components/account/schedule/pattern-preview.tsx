@@ -34,8 +34,8 @@ export function PatternPreview({ pattern, compact = false }: PatternPreviewProps
               key={i}
               className={`w-[90px] sm:w-[110px] shrink-0 p-2 flex flex-col gap-0.5 border ${
                 isWork
-                  ? 'bg-green-50 border-green-300 text-text-main'
-                  : 'bg-gray-50 border-gray-200 text-text-sub'
+                  ? 'bg-success-bg border-success-border text-text-main'
+                  : 'bg-surface-hover border-border-light text-text-sub'
               }`}
             >
               <span className="text-[10px] sm:text-[11px] font-semibold">День {i + 1}</span>

@@ -66,7 +66,7 @@ export function InvitationCard({
           Истекает: {formatDate(invitation.expiresAt)}
         </p>
         {link && (
-          <p className="text-xs font-mono text-text-main break-all bg-green-50 p-2">{link}</p>
+          <p className="text-xs font-mono text-text-main break-all bg-success-bg p-2">{link}</p>
         )}
       </Card>
     </ContextMenuArea>

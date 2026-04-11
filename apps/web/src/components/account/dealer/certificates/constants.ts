@@ -20,9 +20,9 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  [CertificateStatus.PENDING_PAYMENT]: 'text-orange-600',
+  [CertificateStatus.PENDING_PAYMENT]: 'text-warning',
   [CertificateStatus.VALIDATION_ERROR]: 'text-brand-red',
-  [CertificateStatus.ACTIVE]: 'text-green-600',
+  [CertificateStatus.ACTIVE]: 'text-success',
   [CertificateStatus.EXPIRED]: 'text-text-sub',
   [CertificateStatus.REVOKED]: 'text-brand-red',
 };

@@ -152,7 +152,7 @@ export function MfaSection({ emailVerified }: MfaSectionProps) {
           )}
 
           {mfaMessage && (
-            <p className={`text-sm ${mfaMessage.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+            <p className={`text-sm ${mfaMessage.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
               {mfaMessage.text}
             </p>
           )}

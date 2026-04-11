@@ -225,7 +225,7 @@ export function NotificationBell() {
         className="relative cursor-pointer group"
       >
         <Bell
-          className={`w-6 h-6 text-amber-400 transition-transform duration-200 ${open ? 'scale-110' : 'group-hover:scale-110'}`}
+          className={`w-6 h-6 text-warning transition-transform duration-200 ${open ? 'scale-110' : 'group-hover:scale-110'}`}
           strokeWidth={1.5}
         />
         {unreadCount > 0 && (
@@ -239,7 +239,7 @@ export function NotificationBell() {
       {open && (
         <div className="lg:hidden">
           <div
-            className={`fixed inset-0 z-[9999] bg-black/40 ${overlayAnimation}`}
+            className={`fixed inset-0 z-[9999] bg-dark-deep/40 ${overlayAnimation}`}
             onClick={handleClose}
           />
           <div className={`fixed inset-x-0 bottom-0 z-[10000] bg-surface max-h-[85vh] flex flex-col ${panelAnimation}`}>
@@ -309,7 +309,7 @@ function NotificationList({
                 ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
                 : 'animate-[notification-item_300ms_ease-out_both]'
             } ${
-              clickable && !isRemoving ? 'hover:bg-surface-hover active:bg-gray-100 cursor-pointer' : 'cursor-default'
+              clickable && !isRemoving ? 'hover:bg-surface-hover active:bg-surface-secondary cursor-pointer' : 'cursor-default'
             }`}
             style={isRemoving ? undefined : { animationDelay: `${i * 50}ms` }}
           >

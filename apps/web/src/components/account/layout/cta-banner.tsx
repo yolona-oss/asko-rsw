@@ -15,7 +15,7 @@ export interface CTABannerProps {
 export function CTABanner({ title, description, linkHref, linkLabel, variant = 'default', className = '' }: CTABannerProps) {
   if (variant === 'compact') {
     return (
-      <div className={`relative overflow-hidden bg-[#151515] ${className}`}>
+      <div className={`relative overflow-hidden bg-overlay-dark ${className}`}>
         {/* Decorative red glow - top right */}
         <div className="absolute -top-[100px] -right-[100px] w-[800px] h-[500px] -rotate-[150deg] pointer-events-none animate-[glow-drift-1_8s_ease-in-out_infinite]">
           <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.38)_0%,_transparent_70%)] blur-[69px]" />
@@ -28,10 +28,10 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
         {/* Content - centered */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center gap-6 p-6 h-full">
           <div className="flex flex-col gap-2">
-            <h3 className="text-2xl font-medium leading-[28px] tracking-[-0.01em] text-white">
+            <h3 className="text-2xl font-medium leading-[28px] tracking-[-0.01em] text-text-on-dark">
               {title}
             </h3>
-            <p className="text-lg leading-[22px] tracking-[-0.01em] text-white">
+            <p className="text-lg leading-[22px] tracking-[-0.01em] text-text-on-dark">
               {description}
             </p>
           </div>
@@ -47,7 +47,7 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
   }
 
   return (
-    <div className={`relative overflow-hidden bg-[#151515] ${className}`}>
+    <div className={`relative overflow-hidden bg-overlay-dark ${className}`}>
       {/* Decorative red glow - top right */}
       <div className="absolute -top-[100px] -right-[100px] w-[800px] h-[500px] -rotate-[150deg] pointer-events-none animate-[glow-drift-1_8s_ease-in-out_infinite]">
         <div className="size-full bg-[radial-gradient(ellipse_at_center,_rgba(235,0,28,0.38)_0%,_transparent_70%)] blur-[69px]" />
@@ -60,10 +60,10 @@ export function CTABanner({ title, description, linkHref, linkLabel, variant = '
       {/* Content */}
       <div className="relative z-10 p-6 lg:py-6 lg:px-10 flex flex-col gap-6 max-w-[480px]">
         <div className="flex flex-col gap-2">
-          <h3 className="text-[32px] font-medium leading-[36px] tracking-[-0.01em] text-white">
+          <h3 className="text-[32px] font-medium leading-[36px] tracking-[-0.01em] text-text-on-dark">
             {title}
           </h3>
-          <p className="text-lg leading-[22px] tracking-[-0.01em] text-white">
+          <p className="text-lg leading-[22px] tracking-[-0.01em] text-text-on-dark">
             {description}
           </p>
         </div>

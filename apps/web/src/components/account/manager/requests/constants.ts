@@ -27,11 +27,11 @@ export const STATUS_MAP: Record<string, TabKey> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-green-600 text-white',
-  assigned: 'bg-yellow-500 text-white',
-  in_progress: 'bg-blue-500 text-white',
-  completed: 'bg-gray-600 text-white',
-  cancelled: 'bg-red-500 text-white',
+  pending: 'bg-success text-text-on-dark',
+  assigned: 'bg-warning text-text-on-dark',
+  in_progress: 'bg-info text-text-on-dark',
+  completed: 'bg-text-sub text-text-on-dark',
+  cancelled: 'bg-error text-text-on-dark',
 };
 
 export const STATUS_LABELS: Record<string, string> = {

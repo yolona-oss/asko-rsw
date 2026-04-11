@@ -112,7 +112,7 @@ async function ArticleDetailContent({ slug }: { slug: string }) {
               <div className="mt-8">
                 <Link
                   href={`/articles/${nextArticle.slug}`}
-                  className="inline-flex items-center justify-center px-6 py-[9.5px] min-h-[40px] h-[46px] md:h-auto md:w-auto w-full text-sm font-medium text-white bg-[#D7102A] shadow-sm tracking-[0.07px]"
+                  className="inline-flex items-center justify-center px-6 py-[9.5px] min-h-[40px] h-[46px] md:h-auto md:w-auto w-full text-sm font-medium text-text-on-brand bg-brand-red-dark shadow-sm tracking-[0.07px]"
                 >
                   Следующая статья
                 </Link>

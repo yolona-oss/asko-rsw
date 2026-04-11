@@ -38,11 +38,11 @@ interface GraphLink {
     color: string;
 }
 
-const EDGE_COLORS: Record<string, string> = {
-    tag: '#22c55e',
-    view: '#3b82f6',
-    manual: '#ef4444',
-};
+function cssVar(name: string, fallback: string): string {
+    if (typeof window === 'undefined') return fallback;
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+}
 
 export function ArticleGraph() {
     const router = useRouter();
@@ -76,12 +76,20 @@ export function ArticleGraph() {
 
                 const maxViews = Math.max(1, ...articles.map((a) => a.viewCount ?? 0));
 
+                const nodeColor = cssVar('--color-brand-red-dark', '#D7102A');
+                const edgeColors: Record<string, string> = {
+                    tag: cssVar('--color-success', '#22c55e'),
+                    view: cssVar('--color-info', '#3b82f6'),
+                    manual: cssVar('--color-error', '#ef4444'),
+                };
+                const fallbackEdge = cssVar('--color-text-muted', '#999');
+
                 const nodes: GraphNode[] = articles.map((a) => ({
                     id: a.id,
                     name: a.title.length > 30 ? a.title.slice(0, 30) + '...' : a.title,
                     slug: a.slug,
                     val: 3 + ((a.viewCount ?? 0) / maxViews) * 12,
-                    color: '#D7102A',
+                    color: nodeColor,
                 }));
 
                 // Deduplicate edges (keep highest weight per source-target pair)
@@ -102,7 +110,7 @@ export function ArticleGraph() {
                         target: e.targetId,
                         weight: e.weight,
                         edgeType: e.edgeType,
-                        color: EDGE_COLORS[e.edgeType] ?? '#999',
+                        color: edgeColors[e.edgeType] ?? fallbackEdge,
                     }));
 
                 setGraphData({ nodes, links });
@@ -131,13 +139,13 @@ export function ArticleGraph() {
             {/* Legend */}
             <div className="flex gap-6 text-xs text-text-sub">
                 <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-[#22c55e] inline-block" /> Теги
+                    <span className="w-3 h-0.5 bg-success inline-block" /> Теги
                 </span>
                 <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-[#3b82f6] inline-block" /> Просмотры
+                    <span className="w-3 h-0.5 bg-info inline-block" /> Просмотры
                 </span>
                 <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-0.5 bg-[#ef4444] inline-block" /> Вручную
+                    <span className="w-3 h-0.5 bg-error inline-block" /> Вручную
                 </span>
                 <span className="text-text-sub/50">Размер узла = количество просмотров</span>
             </div>
@@ -163,7 +171,7 @@ export function ArticleGraph() {
                         // Node circle
                         ctx.beginPath();
                         ctx.arc(node.x, node.y, nodeSize, 0, 2 * Math.PI);
-                        ctx.fillStyle = node === selectedNode ? '#ff6b6b' : node.color;
+                        ctx.fillStyle = node === selectedNode ? cssVar('--color-brand-red', '#ff6b6b') : node.color;
                         ctx.fill();
 
                         // Label
@@ -171,7 +179,7 @@ export function ArticleGraph() {
                             ctx.font = `${fontSize}px sans-serif`;
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'top';
-                            ctx.fillStyle = '#323232';
+                            ctx.fillStyle = cssVar('--color-text-main', '#323232');
                             ctx.fillText(label, node.x, node.y + nodeSize + 2);
                         }
                     }}

@@ -306,7 +306,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
           {/* Refusal notice */}
           {request.refuseReason && (
-            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+            <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep">
               Мастер отказался от заявки: {request.refuseReason}
             </div>
           )}
@@ -483,7 +483,7 @@ function AssignSection({
                   key={i}
                   className="w-1.5 h-1.5 rounded-full"
                   animate={{
-                    backgroundColor: i <= messages.indexOf(timedMessage) ? 'var(--color-brand-red, #e53e3e)' : 'var(--color-border-main, #d1d5db)',
+                    backgroundColor: i <= messages.indexOf(timedMessage) ? 'var(--color-brand-red)' : 'var(--color-border-light)',
                   }}
                   transition={{ duration: 0.3 }}
                 />
@@ -497,7 +497,7 @@ function AssignSection({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center gap-2 py-3 px-4 border border-green-300 bg-green-50 text-green-700"
+            className="flex items-center gap-2 py-3 px-4 border border-success-border bg-success-bg text-success-deep"
           >
             <motion.svg
               className="w-5 h-5 flex-shrink-0"

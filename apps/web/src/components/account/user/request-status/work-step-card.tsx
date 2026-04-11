@@ -10,34 +10,34 @@ export function WorkStepCard({ step }: { step: WorkStep }) {
   const isDeclined = step.status === 'declined';
 
   const containerClass = isDeclined
-    ? 'border-border-light bg-[#F5F5F5] opacity-70'
+    ? 'border-border-light bg-surface-muted opacity-70'
     : isCompleted
-    ? 'border-green-200 bg-green-50/50'
+    ? 'border-success-border bg-success-bg/50'
     : isInProgress
-    ? 'border-green-400 bg-surface'
+    ? 'border-success bg-surface'
     : 'border-border-light bg-surface';
 
   const iconClass = isDeclined
-    ? 'bg-[#9CA3AF]'
+    ? 'bg-text-muted'
     : isCompleted
-    ? 'bg-green-600'
+    ? 'bg-success'
     : isInProgress
-    ? 'bg-green-600'
-    : 'bg-[#E8E8E8]';
+    ? 'bg-success'
+    : 'bg-border-light';
 
   const titleClass = isDeclined
     ? 'text-text-sub line-through'
     : isCompleted
-    ? 'text-green-700'
+    ? 'text-success-deep'
     : 'text-text-main';
 
   return (
     <div className={`flex items-start gap-3 p-4 border transition-colors ${containerClass}`}>
       <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 ${iconClass}`}>
         {isDeclined ? (
-          <X className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+          <X className="w-3.5 h-3.5 text-text-on-dark" strokeWidth={3} />
         ) : isCompleted ? (
-          <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+          <Check className="w-3.5 h-3.5 text-text-on-dark" strokeWidth={3} />
         ) : isInProgress ? (
           <div className="w-2 h-2 rounded-full bg-surface animate-pulse" />
         ) : (
@@ -50,7 +50,7 @@ export function WorkStepCard({ step }: { step: WorkStep }) {
             {step.title}
           </span>
           {step.isMandatory && (
-            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 border border-border-light bg-[#F5F5F5] text-text-sub">
+            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 border border-border-light bg-surface-muted text-text-sub">
               Обязательный
             </span>
           )}

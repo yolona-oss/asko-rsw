@@ -296,12 +296,12 @@ export function CreateRequest() {
           const sel = devices.find((d) => d.id === userDeviceId);
           const vs = sel?.address?.validationStatus;
           if (vs === 'pending') return (
-            <div className="px-4 py-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+            <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep">
               Адрес устройства проходит проверку. Отправка заявки будет доступна после подтверждения.
             </div>
           );
           if (vs === 'invalid' || vs === 'error') return (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 text-sm text-red-800">
+            <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep">
               Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}. Обновите адрес в разделе «Сертификаты».
             </div>
           );
@@ -316,7 +316,7 @@ export function CreateRequest() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <span className="font-medium text-text-main">№{applied.cert.certificateNumber}</span>
                   {applied.cert.status === 'pending_payment' ? (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs bg-yellow-50 text-yellow-800 border border-yellow-200">
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs bg-warning-bg text-warning-deep border border-warning-border">
                       Ожидает оплаты
                     </span>
                   ) : (
@@ -412,7 +412,7 @@ export function CreateRequest() {
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(img.id)}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center text-xs leading-none cursor-pointer"
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-dark-deep/60 text-text-on-dark flex items-center justify-center text-xs leading-none cursor-pointer"
                   >
                     &times;
                   </button>

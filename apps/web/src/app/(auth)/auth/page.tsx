@@ -30,8 +30,7 @@ export default function AuthPage() {
       <div className="lg:hidden flex flex-col min-h-screen">
         <LandingHeader />
         <div
-          className="relative flex-1 flex flex-col items-center px-4 pt-12 pb-10 overflow-hidden"
-          style={{ background: '#151515' }}
+          className="relative flex-1 flex flex-col items-center px-4 pt-12 pb-10 overflow-hidden bg-overlay-dark"
         >
           {/* Decorative blurred ellipses */}
           <div
@@ -49,14 +48,14 @@ export default function AuthPage() {
               {/* Header */}
               <div className="flex flex-col items-center gap-2 w-full">
                 <div className="flex flex-col items-center gap-4">
-                  <h1 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-center text-[#F0F0F1]">
+                  <h1 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-center text-text-on-dark">
                     Создание аккаунта
                   </h1>
-                  <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-[#A6A6A6]">
+                  <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-text-muted">
                     Создайте аккаунт для доступа к личному кабинету
                   </p>
                 </div>
-                <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-[#A6A6A6]">
+                <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-text-muted">
                   Регистрация техники &bull; Сервисное обслуживание &bull; Статус ремонта
                 </p>
               </div>
@@ -70,8 +69,7 @@ export default function AuthPage() {
                 />
                 <button
                   type="submit"
-                  className="flex items-center justify-center w-full h-10 text-sm font-medium text-white shadow-sm cursor-pointer"
-                  style={{ background: '#D7102A' }}
+                  className="flex items-center justify-center w-full h-10 text-sm font-medium text-text-on-brand shadow-sm cursor-pointer bg-brand-red-dark"
                 >
                   Создать аккаунт
                 </button>
@@ -79,17 +77,17 @@ export default function AuthPage() {
 
               {/* Divider */}
               <div className="flex items-center gap-1 w-full">
-                <div className="flex-1 h-px bg-[#D9D9D9] opacity-72" />
-                <span className="text-sm leading-[18px] tracking-[-0.01em] text-center text-white whitespace-nowrap px-2">
+                <div className="flex-1 h-px bg-border-light opacity-72" />
+                <span className="text-sm leading-[18px] tracking-[-0.01em] text-center text-text-on-dark whitespace-nowrap px-2">
                   Уже есть аккаунт?
                 </span>
-                <div className="flex-1 h-px bg-[#D9D9D9] opacity-72" />
+                <div className="flex-1 h-px bg-border-light opacity-72" />
               </div>
 
               {/* Login button */}
               <Link
                 href="/login"
-                className="flex items-center justify-center w-full h-10 text-sm font-medium text-white bg-[#323232] shadow-sm cursor-pointer"
+                className="flex items-center justify-center w-full h-10 text-sm font-medium text-text-on-dark bg-dark shadow-sm cursor-pointer"
               >
                 Войти
               </Link>
@@ -112,8 +110,8 @@ export default function AuthPage() {
         {/* Left: dark panel */}
         <div className="relative w-[1120px] h-[676px] bg-surface flex">
           <div
-            className="relative w-1/2 overflow-hidden"
-            style={{ background: '#151515', boxShadow: '0px 10px 60px rgba(226, 236, 249, 0.5)' }}
+            className="relative w-1/2 overflow-hidden bg-overlay-dark"
+            style={{ boxShadow: '0px 10px 60px rgba(226, 236, 249, 0.5)' }}
           >
             {/* Decorative blurred ellipses */}
             <div
@@ -148,7 +146,7 @@ export default function AuthPage() {
                     <h1 className="text-2xl font-medium leading-7 tracking-[-0.01em] text-center text-text-main">
                       Создание аккаунта
                     </h1>
-                    <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-[#A6A6A6]">
+                    <p className="text-sm leading-[18px] tracking-[-0.01em] text-center text-text-muted">
                       Создайте аккаунт для доступа к личному кабинету
                     </p>
                   </div>
@@ -166,8 +164,7 @@ export default function AuthPage() {
                   />
                   <button
                     type="submit"
-                    className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer"
-                    style={{ background: '#D7102A' }}
+                    className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand shadow-sm cursor-pointer bg-brand-red-dark"
                   >
                     Создать аккаунт
                   </button>
@@ -178,17 +175,17 @@ export default function AuthPage() {
               <div className="flex flex-col gap-8 w-full">
                 {/* Divider with text */}
                 <div className="flex items-center gap-1 w-full">
-                  <div className="flex-1 h-px bg-[#D9D9D9] opacity-72" />
+                  <div className="flex-1 h-px bg-border-light opacity-72" />
                   <span className="text-sm leading-[18px] tracking-[-0.01em] text-center text-text-main whitespace-nowrap px-2">
                     Уже есть аккаунт?
                   </span>
-                  <div className="flex-1 h-px bg-[#D9D9D9] opacity-72" />
+                  <div className="flex-1 h-px bg-border-light opacity-72" />
                 </div>
 
                 {/* Login button */}
                 <Link
                   href="/login"
-                  className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-white bg-[#323232] shadow-sm"
+                  className="flex items-center justify-center w-full h-10 text-sm font-medium tracking-[0.005em] text-text-on-dark bg-dark shadow-sm"
                 >
                   Войти
                 </Link>
@@ -196,7 +193,7 @@ export default function AuthPage() {
             </div>
 
             {/* Bottom disclaimer */}
-            <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm leading-[18px] tracking-[-0.01em] text-[#A6A6A6] whitespace-nowrap">
+            <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm leading-[18px] tracking-[-0.01em] text-text-muted whitespace-nowrap">
               Регистрируясь, вы соглашаетесь на обработку персональных данных
             </p>
           </div>

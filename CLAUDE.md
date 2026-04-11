@@ -102,6 +102,7 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 
 ## UI Design Rules
 
+* **Theme tokens only** — never hard-code colors (no `bg-white`, `bg-gray-*`, `bg-green-50`, `text-red-500`, `border-gray-200`, etc.). Use semantic tokens defined in `apps/web/src/styles/globals.css`: surfaces (`page-bg`, `surface`, `surface-hover`, `surface-secondary`), text (`text-main`, `text-sub`, `text-on-dark`, `text-on-brand`), borders (`border`, `border-light`, `border-divider`), brand (`brand-red`, `primary-50..900`), status (`success`, `success-deep`, `warning`, `error`, `info`), icons (`icon`, `icon-active`), skeleton (`skeleton`). The app toggles `.dark` on `<html>` via `ThemeProvider` in `apps/web/src/lib/theme.tsx` (persists to localStorage, honors `prefers-color-scheme`); every token has a dark override in `globals.css`, so semantic classes swap automatically. Hard-coded palette colors break the dark theme — always extend `globals.css` with a new token (plus its dark override) instead.
 * **No border-radius** — sharp corners. Only `rounded-full` for avatars/circles and status badges.
 * **Icons via lucide-react** — never inline `<svg>` for standard icons.
 * **DataGrid** for tables — auto-sized columns via content length + `weight`. Mobile: full-bleed (`-mx-4 lg:mx-0`), border-y only. `onRowClick` (detail modal), `onRowDoubleClick` (edit), auto "Подробнее" in context menu.

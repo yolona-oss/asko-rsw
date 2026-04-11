@@ -42,7 +42,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-dark-deep/40" />
       <div
         className="relative bg-surface w-full max-w-md mx-4 p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
@@ -79,11 +79,11 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
         </div>
 
         {createdLink && (
-          <div className="flex flex-col gap-2 p-3 bg-green-50 border border-green-200">
+          <div className="flex flex-col gap-2 p-3 bg-success-bg border border-success-border">
             <p className="text-xs font-mono text-text-main break-all">{createdLink}</p>
             <button
               type="button"
-              className="text-xs text-[#179242] font-medium hover:underline cursor-pointer text-left"
+              className="text-xs text-success-deep font-medium hover:underline cursor-pointer text-left"
               onClick={handleCopy}
             >
               {copied ? 'Скопировано!' : 'Копировать ссылку'}

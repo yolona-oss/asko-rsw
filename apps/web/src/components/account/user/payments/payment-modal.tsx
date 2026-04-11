@@ -30,8 +30,8 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 const PROVIDER_COLORS: Record<string, string> = {
   dummy: 'bg-brand-red text-text-on-brand',
-  yookassa: 'bg-dark text-white',
-  tbank: 'bg-dark text-white',
+  yookassa: 'bg-dark text-text-on-dark',
+  tbank: 'bg-dark text-text-on-dark',
   card: 'bg-transparent border border-border-light text-text-main',
 };
 
@@ -129,11 +129,11 @@ export function PaymentModal({
                 onClick={() => setSelectedProvider(provider)}
                 className={`flex flex-col items-center gap-3 p-4 border-2 transition-colors cursor-pointer ${
                   isSelected
-                    ? 'border-brand-red bg-[#FFF5F5]'
+                    ? 'border-brand-red bg-primary-50'
                     : 'border-border-light/30 hover:border-text-sub'
                 }`}
               >
-                <div className="w-full aspect-[4/3] bg-[#F5F5F5] flex items-center justify-center">
+                <div className="w-full aspect-[4/3] bg-surface-muted flex items-center justify-center">
                   <span className="text-xs text-text-sub text-center px-1">
                     {PROVIDER_LABELS[provider] ?? provider}
                   </span>
@@ -167,7 +167,7 @@ export function PaymentModal({
           className={`w-full mt-6 py-3 text-sm font-medium cursor-pointer transition-colors ${
             selectedProvider && !creating
               ? (PROVIDER_COLORS[selectedProvider] || 'bg-brand-red text-text-on-brand')
-              : 'bg-gray-200 text-text-sub cursor-not-allowed'
+              : 'bg-border-light text-text-sub cursor-not-allowed'
           }`}
         >
           {creating ? 'Обработка...' : 'Оплатить'}

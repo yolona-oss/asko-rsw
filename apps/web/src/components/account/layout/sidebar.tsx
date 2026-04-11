@@ -298,7 +298,7 @@ export function MobileSidebar() {
       {/* Overlay */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 z-40 bg-black"
+        className="fixed inset-0 z-40 bg-dark-deep"
         style={{ opacity: 0, pointerEvents: 'none' }}
         onClick={() => setMobileOpen(false)}
       />

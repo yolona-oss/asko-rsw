@@ -121,7 +121,7 @@ export function LoginMethodsSection({
           {emailEnabled ? (
             !emailVerified ? (
               <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
-                <span className="text-xs text-amber-600">Не подтверждён</span>
+                <span className="text-xs text-warning">Не подтверждён</span>
                 {onResendEmailConfirmation && (
                   <button
                     type="button"
@@ -140,7 +140,7 @@ export function LoginMethodsSection({
             ) : null
           ) : emailPending ? (
             <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
-              <span className="text-xs text-amber-600">Требуется подтверждение для входа</span>
+              <span className="text-xs text-warning">Требуется подтверждение для входа</span>
               {onResendEmailConfirmation && (
                 <button
                   type="button"
@@ -174,9 +174,9 @@ export function LoginMethodsSection({
             {phoneEnabled ? null : phonePending ? (
               <div className="flex items-center gap-3 ml-11 sm:ml-0 flex-wrap">
                 {phoneSuccess ? (
-                  <span className="text-xs text-green-600">{phoneSuccess}</span>
+                  <span className="text-xs text-success">{phoneSuccess}</span>
                 ) : (
-                  <span className="text-xs text-amber-600">Требуется подтверждение</span>
+                  <span className="text-xs text-warning">Требуется подтверждение</span>
                 )}
                 {phoneOtpStep === 'idle' && !phoneSuccess && (
                   <button
@@ -212,8 +212,7 @@ export function LoginMethodsSection({
                   type="button"
                   onClick={handleConfirmPhone}
                   disabled={phoneCode.length !== 6 || phoneOtpStep === 'verifying'}
-                  className="text-xs text-white font-medium px-3 py-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                  style={{ background: '#EB001C' }}
+                  className="text-xs text-text-on-brand font-medium px-3 py-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed bg-brand-red"
                 >
                   {phoneOtpStep === 'verifying' ? 'Проверка...' : 'Подтвердить'}
                 </button>
@@ -261,13 +260,13 @@ export function LoginMethodsSection({
 function MethodIcon({ active }: { active: boolean }) {
   if (active) {
     return (
-      <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-        <Check className="w-4 h-4 text-green-600" strokeWidth={2} />
+      <div className="w-8 h-8 rounded-full bg-success-bg flex items-center justify-center shrink-0">
+        <Check className="w-4 h-4 text-success" strokeWidth={2} />
       </div>
     );
   }
   return (
-    <div className="w-8 h-8 rounded-full bg-[#F0F0F1] flex items-center justify-center shrink-0">
+    <div className="w-8 h-8 rounded-full bg-surface-muted flex items-center justify-center shrink-0">
       <Minus className="w-4 h-4 text-text-sub" strokeWidth={2} />
     </div>
   );

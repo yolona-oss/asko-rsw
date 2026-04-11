@@ -28,10 +28,10 @@ export function AdvantagesSection() {
               {/* Mobile: dark bg, white text. Desktop: bordered */}
               <div className="bg-dark md:bg-transparent md:border-[7px] md:border-border-light/54 flex flex-col items-center justify-center py-16 md:py-12 px-4">
                 <div className="flex flex-col items-center gap-2 text-center">
-                  <span className="text-[42px] leading-[46px] md:text-5xl lg:text-[64px] font-bold md:font-medium md:leading-[68px] tracking-[-0.01em] text-white md:text-brand-red">
+                  <span className="text-[42px] leading-[46px] md:text-5xl lg:text-[64px] font-bold md:font-medium md:leading-[68px] tracking-[-0.01em] text-text-on-dark md:text-brand-red">
                     {item.keyword}
                   </span>
-                  <span className="text-[32px] leading-9 tracking-[-0.01em] text-white md:text-text-main whitespace-pre-wrap">
+                  <span className="text-[32px] leading-9 tracking-[-0.01em] text-text-on-dark md:text-text-main whitespace-pre-wrap">
                     {item.subtitle}
                   </span>
                 </div>

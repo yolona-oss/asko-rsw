@@ -28,7 +28,7 @@ export function AboutSection() {
           <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-14">
             <div className="flex flex-col gap-4 lg:gap-11 lg:max-w-[464px]">
               <h2 className="text-[42px] leading-[46px] md:text-5xl lg:text-[70px] font-medium lg:leading-[74px] tracking-[-0.01em] text-text-main">
-                О компании ремонт <span className="text-[#EB001C]">ASKO</span>
+                О компании ремонт <span className="text-brand-red">ASKO</span>
               </h2>
               <p className="text-lg leading-[22px] tracking-[-0.01em] text-text-sub">
                 Компания специализируется на профессиональном ремонте техники ASKO и других премиальных брендов, обеспечивая точную диагностику, качественное восстановление и надёжную работу оборудования.

@@ -333,7 +333,7 @@ function FilterBlock({ filter, value, onChange }: FilterSelectProps) {
                 'px-6 py-2 text-lg leading-[18px] tracking-[0.005em] min-h-[40px] transition-colors cursor-pointer',
                 isActive
                   ? 'bg-dark text-text-on-dark'
-                  : 'bg-surface-secondary text-text-main border border-border-light hover:border-[#323232]',
+                  : 'bg-surface-secondary text-text-main border border-border-light hover:border-dark',
               )}
             >
               {opt.label}

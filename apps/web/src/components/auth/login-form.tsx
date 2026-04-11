@@ -124,15 +124,15 @@ export function LoginForm({ variant }: LoginFormProps) {
     ? (login.error as any)?.response?.data?.message ?? 'Ошибка авторизации'
     : null;
 
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const errorBg = variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600';
+  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
   const showPassword = credentialType !== 'phone';
 
   return (
     <>
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {errorMessage && (
-          <div className={`px-3 py-2 text-sm text-white ${errorBg}`}>{errorMessage}</div>
+          <div className={`px-3 py-2 text-sm text-text-on-brand ${errorBg}`}>{errorMessage}</div>
         )}
 
         <div className={`flex flex-col ${variant === 'desktop' ? 'gap-8' : 'gap-6'}`}>
@@ -158,8 +158,7 @@ export function LoginForm({ variant }: LoginFormProps) {
         <button
           type="submit"
           disabled={login.isPending}
-          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6 cursor-pointer'} h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60`}
-          style={{ background: '#EB001C' }}
+          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6 cursor-pointer'} h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm disabled:opacity-60`}
         >
           {login.isPending
             ? 'Загрузка...'
@@ -169,7 +168,7 @@ export function LoginForm({ variant }: LoginFormProps) {
         </button>
 
         {showPassword && variant === 'mobile' && (
-          <Link href="/reset" className="text-2xl font-medium leading-7 tracking-[-0.01em] text-[#F1F1F1]">
+          <Link href="/reset" className="text-2xl font-medium leading-7 tracking-[-0.01em] text-page-bg">
             Забыли пароль?
           </Link>
         )}
@@ -177,7 +176,7 @@ export function LoginForm({ variant }: LoginFormProps) {
 
       <div className={`flex items-center gap-3 ${variant === 'desktop' ? 'mt-6' : 'mt-4'}`}>
         <div className="flex-1 h-px bg-border-light" />
-        <span className={`text-xs ${variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub'}`}>или</span>
+        <span className={`text-xs ${variant === 'mobile' ? 'text-text-muted' : 'text-text-sub'}`}>или</span>
         <div className="flex-1 h-px bg-border-light" />
       </div>
 
@@ -189,7 +188,7 @@ export function LoginForm({ variant }: LoginFormProps) {
         </Link>
       )}
 
-      <p className={`${variant === 'desktop' ? 'mt-4' : 'mt-6'} text-sm ${variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub'}`}>
+      <p className={`${variant === 'desktop' ? 'mt-4' : 'mt-6'} text-sm ${variant === 'mobile' ? 'text-text-muted' : 'text-text-sub'}`}>
         Нет аккаунта?{' '}
         <Link href="/register" className={`font-medium ${labelColor}`}>
           Зарегистрироваться

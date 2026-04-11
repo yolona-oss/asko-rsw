@@ -8,6 +8,8 @@ export interface StatCardTrend {
   label?: string;
 }
 
+export type StatCardSize = 'hero' | 'compact';
+
 export interface StatCardProps {
   /** Small title above the value */
   title: string;
@@ -21,8 +23,37 @@ export interface StatCardProps {
   icon?: ReactNode;
   /** Additional content below */
   children?: ReactNode;
+  /**
+   * Typography scale.
+   * - `hero` (default): big dashboard numbers (82px value, 24px title) — for user/dealer.
+   * - `compact`: denser cards that fit tight grids (40px value, 16px title) — for admin/manager/repairer.
+   */
+  size?: StatCardSize;
   className?: string;
 }
+
+const sizeStyles: Record<StatCardSize, {
+  container: string;
+  title: string;
+  value: string;
+  subtitle: string;
+  trend: string;
+}> = {
+  hero: {
+    container: 'p-6 gap-2',
+    title: 'text-[24px] font-normal leading-[28px] tracking-[-0.01em]',
+    value: 'text-[82px] font-medium leading-[86px] tracking-[-0.01em]',
+    subtitle: 'text-[14px] font-medium leading-[18px] tracking-[-0.01em]',
+    trend: 'text-[14px] leading-[18px] tracking-[-0.01em]',
+  },
+  compact: {
+    container: 'p-5 gap-1.5',
+    title: 'text-[16px] font-normal leading-[20px] tracking-[-0.01em]',
+    value: 'text-[40px] font-medium leading-[44px] tracking-[-0.01em] truncate',
+    subtitle: 'text-[12px] font-medium leading-[16px] tracking-[-0.01em]',
+    trend: 'text-[12px] leading-[16px] tracking-[-0.01em]',
+  },
+};
 
 export function StatCard({
   title,
@@ -31,26 +62,29 @@ export function StatCard({
   trend,
   icon,
   children,
+  size = 'hero',
   className,
 }: StatCardProps) {
+  const s = sizeStyles[size];
   return (
     <div className={cn(
-      'bg-surface border border-border shadow-sm p-6 flex flex-col gap-2',
+      'bg-surface border border-border shadow-sm flex flex-col min-w-0',
+      s.container,
       className,
     )}>
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">{title}</span>
+      <div className="flex items-start justify-between gap-2 min-w-0">
+        <span className={cn(s.title, 'text-text-main min-w-0 truncate')}>{title}</span>
         {icon && <div className="text-text-sub flex-shrink-0">{icon}</div>}
       </div>
-      <div className="text-[82px] font-medium leading-[86px] tracking-[-0.01em] text-text-main">
+      <div className={cn(s.value, 'text-text-main min-w-0')}>
         {value}
       </div>
       {subtitle && (
-        <div className="text-[14px] font-medium leading-[18px] tracking-[-0.01em] text-text-sub">{subtitle}</div>
+        <div className={cn(s.subtitle, 'text-text-sub truncate')}>{subtitle}</div>
       )}
       {trend && (
-        <p className="text-[14px] leading-[18px] tracking-[-0.01em]">
-          <span className={trend.value >= 0 ? 'text-[#2D8B57]' : 'text-brand-red'}>
+        <p className={s.trend}>
+          <span className={trend.value >= 0 ? 'text-success-deep' : 'text-brand-red'}>
             {trend.value >= 0 ? '+' : ''}{trend.value}%
           </span>
           <span className="text-text-sub"> {trend.label ?? 'за период'}</span>

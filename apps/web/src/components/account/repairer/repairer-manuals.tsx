@@ -102,7 +102,7 @@ export function RepairerManuals() {
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-36 bg-[#F5F5F5] animate-pulse rounded" />
+            <div key={i} className="h-36 bg-surface-muted animate-pulse rounded" />
           ))}
         </div>
       ) : view === 'table' ? (

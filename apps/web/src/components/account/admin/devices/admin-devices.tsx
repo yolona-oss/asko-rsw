@@ -142,7 +142,7 @@ export function AdminDevices() {
       width: 96,
       mobileLabel: 'Главная:',
       render: (device) => device.isFeatured ? (
-        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700">Да</span>
+        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-success-bg text-success-deep">Да</span>
       ) : (
         <span className="inline-block px-2 py-0.5 text-xs text-text-sub">Нет</span>
       ),
@@ -274,7 +274,7 @@ export function AdminDevices() {
               </span>
             </div>
 
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+            <div className="w-full h-2 bg-border-light rounded-full overflow-hidden mb-4">
               <div
                 className="h-full bg-brand-red rounded-full transition-all duration-300"
                 style={{
@@ -284,15 +284,15 @@ export function AdminDevices() {
             </div>
 
             <div className="flex gap-4 text-sm mb-4">
-              <span className="text-green-600">Успешно: {importStatus.done}</span>
-              <span className="text-red-600">Ошибки: {importStatus.errors.length}</span>
+              <span className="text-success">Успешно: {importStatus.done}</span>
+              <span className="text-error">Ошибки: {importStatus.errors.length}</span>
             </div>
 
             {importStatus.errors.length > 0 && (
-              <div className="max-h-48 overflow-y-auto border border-gray-200 p-3 mb-4">
+              <div className="max-h-48 overflow-y-auto border border-border-light p-3 mb-4">
                 <ul className="space-y-1">
                   {importStatus.errors.map((err, i) => (
-                    <li key={i} className="text-xs text-red-600">{err}</li>
+                    <li key={i} className="text-xs text-error">{err}</li>
                   ))}
                 </ul>
               </div>

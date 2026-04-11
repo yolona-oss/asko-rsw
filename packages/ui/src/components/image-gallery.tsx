@@ -82,7 +82,7 @@ function CloseIcon({ className }: { className?: string }) {
    ═══════════════════════════════════════════════════════ */
 
 function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cn('w-8 h-8 animate-spin text-[#A6A6A6]', className)} />;
+  return <Loader2 className={cn('w-8 h-8 animate-spin text-text-muted', className)} />;
 }
 
 function LoadableImg({
@@ -112,7 +112,7 @@ function LoadableImg({
   return (
     <>
       {!loaded && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F0F0F0]">
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
           <Spinner />
         </div>
       )}
@@ -359,7 +359,7 @@ function MobileCarousel({
           {images.map((_, i) => (
             <span
               key={i}
-              className={cn('w-[13px] h-[13px] rounded-full transition-colors', i === active ? 'bg-brand-red' : 'bg-[#A6A6A6]')}
+              className={cn('w-[13px] h-[13px] rounded-full transition-colors', i === active ? 'bg-brand-red' : 'bg-text-muted')}
             />
           ))}
         </div>
@@ -476,7 +476,7 @@ export function ImageGallery({
         zoomCfg={zoomCfg}
         clickable={fullscreen}
         onClick={() => openModal(active)}
-        className="w-full aspect-video bg-[#E8E8E8]"
+        className="w-full aspect-video bg-border-light"
       />
       {images.length > 1 && (
         <div className="flex gap-2 flex-wrap">

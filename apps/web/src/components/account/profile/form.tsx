@@ -322,7 +322,7 @@ export function ProfileForm() {
             {saving ? 'Сохранение...' : 'Сохранить'}
           </Button>
           {message && (
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-brand-red'}`}>
+            <p className={`text-sm ${message.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
               {message.text}
             </p>
           )}

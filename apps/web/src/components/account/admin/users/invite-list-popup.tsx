@@ -39,7 +39,7 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-dark-deep/40" />
       <div
         className="relative bg-surface w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -71,11 +71,11 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
                         {INVITE_ROLE_LABELS[inv.role] ?? inv.role}
                       </span>
                       {inv.used ? (
-                        <span className="text-xs text-[#a0a0a0] bg-surface-secondary px-1.5 py-0.5 rounded">Использовано</span>
+                        <span className="text-xs text-text-muted bg-surface-secondary px-1.5 py-0.5 rounded">Использовано</span>
                       ) : expired ? (
-                        <span className="text-xs text-brand-red bg-red-50 px-1.5 py-0.5 rounded">Истёк</span>
+                        <span className="text-xs text-error bg-error-bg px-1.5 py-0.5 rounded">Истёк</span>
                       ) : (
-                        <span className="text-xs text-[#187f43] bg-green-50 px-1.5 py-0.5 rounded">Активно</span>
+                        <span className="text-xs text-success-deep bg-success-bg px-1.5 py-0.5 rounded">Активно</span>
                       )}
                     </div>
                     <p className="text-xs text-text-sub mt-0.5">
@@ -86,7 +86,7 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
                     {!inactive && (
                       <button
                         type="button"
-                        className="text-xs text-[#1855a4] font-medium hover:underline cursor-pointer"
+                        className="text-xs text-info-deep font-medium hover:underline cursor-pointer"
                         onClick={() => handleCopy(inv)}
                       >
                         {copiedId === inv.id ? 'Скопировано!' : 'Копировать'}

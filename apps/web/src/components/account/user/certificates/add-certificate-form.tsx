@@ -253,8 +253,8 @@ export function AddCertificateForm({
         </FormField>
 
         {selectedDeviceState.kind === 'active' && (
-          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200">
-            <p className="text-xs text-amber-800">
+          <div className="flex items-start gap-2 p-3 bg-warning-bg border border-warning-border">
+            <p className="text-xs text-warning-deep">
               У этого устройства уже есть активный сертификат (до{' '}
               {new Date(selectedDeviceState.cert.expiresAt).toLocaleDateString('ru-RU')}).
               Новый сертификат будет создан дополнительно.
@@ -275,7 +275,7 @@ export function AddCertificateForm({
                 onClick={() => setRenewalMode('extend')}
                 className={`flex flex-col items-start gap-1 p-3 border-2 text-left cursor-pointer transition-colors ${
                   renewalMode === 'extend'
-                    ? 'border-brand-red bg-[#FFF5F5]'
+                    ? 'border-brand-red bg-primary-50'
                     : 'border-border-light/50 hover:border-text-sub'
                 }`}
               >
@@ -287,7 +287,7 @@ export function AddCertificateForm({
                 onClick={() => setRenewalMode('new')}
                 className={`flex flex-col items-start gap-1 p-3 border-2 text-left cursor-pointer transition-colors ${
                   renewalMode === 'new'
-                    ? 'border-brand-red bg-[#FFF5F5]'
+                    ? 'border-brand-red bg-primary-50'
                     : 'border-border-light/50 hover:border-text-sub'
                 }`}
               >

@@ -93,7 +93,7 @@ const PAYMENT_STATUS_FILTER = { key: 'status', label: 'Статус', type: 'sel
 
 const pointsColumns: DataGridColumn<IPointsTransaction>[] = [
   { key: 'reason', header: 'Описание', sortable: false, mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
-  { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
+  { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-success' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
   { key: 'type', header: 'Тип', sortable: false, width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
   { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDate(tx.createdAt)}</span> },
 ];
@@ -258,7 +258,7 @@ export function DealerPayments() {
                 <span className="text-sm text-text-main">{tx.reason}</span>
                 <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge>
               </div>
-              <span className={`text-lg font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span>
+              <span className={`text-lg font-medium ${tx.amount > 0 ? 'text-success' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span>
               <span className="text-xs text-text-sub">{formatDate(tx.createdAt)}</span>
             </Card>
           ))}
@@ -305,7 +305,7 @@ export function DealerPayments() {
         renderContent={(item) => (
           <div className="flex flex-col">
             <DetailRow label="Описание" value={item.reason ?? '-'} />
-            <DetailRow label="Сумма" value={<span className={item.amount > 0 ? 'text-green-600' : 'text-brand-red'}>{item.amount > 0 ? '+' : ''}{formatAmount(item.amount)}</span>} />
+            <DetailRow label="Сумма" value={<span className={item.amount > 0 ? 'text-success' : 'text-brand-red'}>{item.amount > 0 ? '+' : ''}{formatAmount(item.amount)}</span>} />
             <DetailRow label="Тип" value={<Badge variant={POINTS_TX_BADGE_VARIANT[item.type] ?? 'neutral'}>{POINTS_TX_LABELS[item.type] ?? item.type}</Badge>} />
             <DetailRow label="Дата" value={formatDate(item.createdAt)} />
           </div>

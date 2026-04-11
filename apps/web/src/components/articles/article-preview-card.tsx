@@ -48,10 +48,10 @@ export function ArticlePreviewCard({
             </div>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.24px] text-[#150F0F] max-w-[204px]">
+                    <h3 className="text-2xl font-medium leading-7 tracking-[-0.24px] text-text-main max-w-[204px]">
                         {title}
                     </h3>
-                    <p className="text-base leading-[22px] tracking-[-0.16px] text-[#150F0F]">
+                    <p className="text-base leading-[22px] tracking-[-0.16px] text-text-main">
                         {previewText}
                     </p>
                 </div>

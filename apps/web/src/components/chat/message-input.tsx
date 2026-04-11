@@ -158,7 +158,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
       {/* Upload error */}
       {uploadError && (
         <div className="px-3 pt-2">
-          <p className="text-xs text-red-500">{uploadError}</p>
+          <p className="text-xs text-error">{uploadError}</p>
         </div>
       )}
 
@@ -173,7 +173,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
                 className="h-20 max-w-[160px] object-cover rounded-lg border border-border-light"
               />
             ) : (
-              <div className="h-20 w-[160px] flex items-center justify-center bg-gray-100 rounded-lg border border-border-light">
+              <div className="h-20 w-[160px] flex items-center justify-center bg-surface-secondary rounded-lg border border-border-light">
                 <div className="text-center">
                   <svg className="w-6 h-6 mx-auto text-text-sub" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -188,7 +188,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
             <button
               type="button"
               onClick={clearAttachment}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-dark text-white text-xs cursor-pointer hover:bg-red-600 transition-colors"
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-dark text-text-on-dark text-xs cursor-pointer hover:bg-brand-red transition-colors"
             >
               &times;
             </button>
@@ -203,7 +203,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={sending}
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-text-sub hover:text-text-main hover:bg-gray-100 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-text-sub hover:text-text-main hover:bg-surface-secondary disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
           title="Прикрепить файл"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -237,7 +237,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
           type="button"
           onClick={send}
           disabled={(!text.trim() && !attachment) || sending}
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-dark text-white disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-opacity"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-dark text-text-on-dark disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-opacity"
         >
           {sending ? (
             <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">

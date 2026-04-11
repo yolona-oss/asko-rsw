@@ -82,7 +82,7 @@ export function Step1({
       )}
 
       {selectedUser && (
-        <p className="text-sm text-green-600">
+        <p className="text-sm text-success">
           Выбран: {[selectedUser.lastName, selectedUser.firstName].filter(Boolean).join(' ') || selectedUser.email}
         </p>
       )}

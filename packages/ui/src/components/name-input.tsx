@@ -153,8 +153,8 @@ export const NameInput = forwardRef<HTMLInputElement, NameInputProps>(
                   onMouseDown={() => complete(suggestion)}
                   className={cn(
                     'px-3 py-2 text-sm cursor-pointer',
-                    'hover:bg-gray-100',
-                    (i === active || isTabTarget) && 'bg-gray-100',
+                    'hover:bg-surface-secondary',
+                    (i === active || isTabTarget) && 'bg-surface-secondary',
                   )}
                 >
                   {/* Previously completed words — muted */}

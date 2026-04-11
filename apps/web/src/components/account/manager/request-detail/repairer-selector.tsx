@@ -196,7 +196,7 @@ export function RepairerSelector({
                   onMouseDown={() => { if (!isCurrent) { onSelect(r.id); setOpen(false); } }}
                   onMouseEnter={() => setFocusIndex(i)}
                   className={`px-3 py-2.5 transition-colors ${
-                    isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-red-50 cursor-pointer' : isFocused ? 'bg-gray-50 cursor-pointer' : 'hover:bg-surface-hover cursor-pointer'
+                    isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-primary-50 cursor-pointer' : isFocused ? 'bg-surface-hover cursor-pointer' : 'hover:bg-surface-hover cursor-pointer'
                   }`}
                 >
                   {/* Row 1: name + badges */}

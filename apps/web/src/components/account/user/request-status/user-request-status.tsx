@@ -210,8 +210,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </>
         )}
         {request.status === RepairRequestStatus.PAID && (
-          <div className="mt-4 px-4 py-3 bg-green-50 border border-green-200">
-            <p className="text-sm text-green-700 font-medium">Заявка оплачена</p>
+          <div className="mt-4 px-4 py-3 bg-success-bg border border-success-border">
+            <p className="text-sm text-success-deep font-medium">Заявка оплачена</p>
           </div>
         )}
       </div>
@@ -340,8 +340,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       )}
 
       {reviewSubmitted && request.status === RepairRequestStatus.COMPLETED && (
-        <div className="max-w-lg mt-6 p-4 bg-green-50 border border-green-200">
-          <p className="text-sm text-green-700 font-medium">Спасибо за ваш отзыв!</p>
+        <div className="max-w-lg mt-6 p-4 bg-success-bg border border-success-border">
+          <p className="text-sm text-success-deep font-medium">Спасибо за ваш отзыв!</p>
         </div>
       )}
 

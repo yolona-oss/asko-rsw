@@ -156,9 +156,9 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
     ? (signup.error as any)?.response?.data?.message ?? 'Ошибка регистрации'
     : null;
 
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const subColor = variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub';
-  const errorBg = variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600';
+  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
+  const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
 
   // ─── Step 2: Verification ──────────────────────────────────────────
 
@@ -176,8 +176,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
           <button
             type="button"
             onClick={() => router.push('/account')}
-            className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer`}
-            style={{ background: '#EB001C' }}
+            className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer`}
           >
             Перейти в аккаунт
           </button>
@@ -203,15 +202,15 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
 
   // ─── Step 1: Credentials ──────────────────────────────────────────
 
-  const activeTabCls = 'bg-[#EB001C] text-white';
+  const activeTabCls = 'bg-brand-red text-text-on-brand';
   const inactiveTabCls = variant === 'mobile'
-    ? 'bg-surface/10 text-white/60'
-    : 'bg-[#F0F0F1] text-text-sub';
+    ? 'bg-surface/10 text-text-on-dark/60'
+    : 'bg-surface-muted text-text-sub';
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {inviteToken && (
-        <p className="text-sm text-[#A6A6A6] tracking-[-0.01em]">
+        <p className="text-sm text-text-muted tracking-[-0.01em]">
           {variant === 'mobile'
             ? 'Вы приглашены по ссылке сотрудника'
             : 'Регистрация аккаунта сотрудника'}
@@ -219,7 +218,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       )}
 
       {errorMessage && (
-        <div className={`px-3 py-2 text-sm text-white ${errorBg}`}>{errorMessage}</div>
+        <div className={`px-3 py-2 text-sm text-text-on-brand ${errorBg}`}>{errorMessage}</div>
       )}
 
       <div className={`flex flex-col ${variant === 'desktop' ? 'gap-8' : 'gap-6'}`}>
@@ -285,7 +284,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
                 <p className="text-xs text-brand-red">Этот email уже зарегистрирован</p>
               )}
               {emailStatus === 'available' && (
-                <p className="text-xs text-[#22C55E]">Email доступен</p>
+                <p className="text-xs text-success">Email доступен</p>
               )}
             </div>
 
@@ -339,8 +338,7 @@ export function RegisterForm({ variant, inviteToken, prefillEmail = '' }: Regist
       <button
         type="submit"
         disabled={signup.isPending || (authMethod === 'email' && (emailStatus === 'taken' || emailStatus === 'checking' || (password.length > 0 && !passwordsMatch)))}
-        className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6'} h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm disabled:opacity-60`}
-        style={{ background: '#EB001C' }}
+        className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit px-6'} h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm disabled:opacity-60`}
       >
         {signup.isPending ? 'Загрузка...' : 'Далее'}
       </button>

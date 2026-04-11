@@ -48,12 +48,12 @@ function getPageRange(page: number, totalPages: number, maxVisible: number): (nu
 }
 
 const prevNextBase = 'flex items-center justify-center min-h-[36px] px-4 py-2 text-sm font-medium select-none transition-opacity';
-const prevNextEnabled = 'text-[#404040] hover:text-[#0a0a0a] cursor-pointer';
-const prevNextDisabled = 'opacity-50 cursor-default pointer-events-none text-[#404040]';
+const prevNextEnabled = 'text-text-sub hover:text-text-main cursor-pointer';
+const prevNextDisabled = 'opacity-50 cursor-default pointer-events-none text-text-sub';
 
 const pageBase = 'flex items-center justify-center min-h-[36px] w-[34px] text-sm font-medium select-none transition-colors cursor-pointer';
-const pageActive = 'border border-[#D7102A] text-[#0a0a0a] shadow-sm';
-const pageInactive = 'text-[#404040] hover:text-[#0a0a0a]';
+const pageActive = 'border border-primary-600 text-text-main shadow-sm';
+const pageInactive = 'text-text-sub hover:text-text-main';
 
 function PrevNextItem({ disabled, label, href, onClick }: { disabled: boolean; label: string; href?: string; onClick?: () => void }) {
   const cls = cn(prevNextBase, disabled ? prevNextDisabled : prevNextEnabled);
@@ -101,7 +101,7 @@ export function Pagination({
         item === 'ellipsis' ? (
           <span
             key={`ellipsis-${index}`}
-            className="flex items-center justify-center min-h-[36px] min-w-[36px] text-sm text-[#404040] select-none"
+            className="flex items-center justify-center min-h-[36px] min-w-[36px] text-sm text-text-sub select-none"
           >
             &hellip;
           </span>

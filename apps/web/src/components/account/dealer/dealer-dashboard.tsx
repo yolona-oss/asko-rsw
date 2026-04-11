@@ -59,7 +59,7 @@ export function DealerDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Баланс баллов" value={loading ? '-' : fmt(s.points)}>
           {!loading && sparkData.length > 2 && (
-            <Sparkline data={sparkData} color="#22c55e" width={120} height={28} fill />
+            <Sparkline data={sparkData} color="var(--color-success)" width={120} height={28} fill />
           )}
         </StatCard>
         <Link href="/account/certificates"><StatCard title="Сертификаты" value={d(s.certsTotal)} subtitle={`${d(s.certsActive)} активных`} className="hover:border-text-main transition-colors h-full" /></Link>
@@ -72,14 +72,14 @@ export function DealerDashboard() {
           <h3 className="text-base font-medium text-text-main">Статусы сертификатов</h3>
           <div className="flex items-center gap-6">
             <DonutChart size={100} thickness={16} segments={[
-              { value: s.certsActive, color: '#22c55e', label: 'Активные' },
-              { value: s.certsPending, color: '#f59e0b', label: 'Ожидание' },
-              { value: certsOther, color: '#9ca3af', label: 'Прочие' },
+              { value: s.certsActive, color: 'var(--color-success)', label: 'Активные' },
+              { value: s.certsPending, color: 'var(--color-warning)', label: 'Ожидание' },
+              { value: certsOther, color: 'var(--color-text-muted)', label: 'Прочие' },
             ]} centerContent={<span className="text-lg font-bold text-text-main">{s.certsTotal}</span>} />
             <MetricComparison className="flex-1" items={[
-              { label: 'Активные', value: s.certsActive, color: '#22c55e' },
-              { label: 'Ожидание', value: s.certsPending, color: '#f59e0b' },
-              { label: 'Прочие', value: certsOther, color: '#9ca3af' },
+              { label: 'Активные', value: s.certsActive, color: 'var(--color-success)' },
+              { label: 'Ожидание', value: s.certsPending, color: 'var(--color-warning)' },
+              { label: 'Прочие', value: certsOther, color: 'var(--color-text-muted)' },
             ]} />
           </div>
         </div>

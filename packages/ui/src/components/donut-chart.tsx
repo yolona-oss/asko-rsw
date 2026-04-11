@@ -35,7 +35,7 @@ export function DonutChart({
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <circle
             cx={size / 2} cy={size / 2} r={(size - thickness) / 2}
-            fill="none" stroke="#f1f1f1" strokeWidth={thickness}
+            fill="none" stroke="var(--color-border)" strokeWidth={thickness}
           />
         </svg>
       </div>

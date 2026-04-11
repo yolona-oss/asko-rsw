@@ -26,9 +26,9 @@ const EDGE_TYPE_LABELS: Record<string, string> = {
 };
 
 const EDGE_TYPE_COLORS: Record<string, string> = {
-    tag: 'bg-green-100 text-green-800',
-    view: 'bg-blue-100 text-blue-800',
-    manual: 'bg-red-100 text-red-800',
+    tag: 'bg-success-bg text-success-deep',
+    view: 'bg-info-bg text-info-deep',
+    manual: 'bg-error-bg text-error-deep',
 };
 
 export function ArticleEdges({ articleId }: { articleId: string }) {
@@ -151,7 +151,7 @@ export function ArticleEdges({ articleId }: { articleId: string }) {
                                                 {targetEdges.map((e) => (
                                                     <span
                                                         key={e.id}
-                                                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${EDGE_TYPE_COLORS[e.edgeType] ?? 'bg-gray-100 text-gray-600'}`}
+                                                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${EDGE_TYPE_COLORS[e.edgeType] ?? 'bg-surface-secondary text-text-sub'}`}
                                                     >
                                                         {EDGE_TYPE_LABELS[e.edgeType] ?? e.edgeType}
                                                     </span>
@@ -178,7 +178,7 @@ export function ArticleEdges({ articleId }: { articleId: string }) {
             )}
 
             {showAdd ? (
-                <div className="flex flex-col gap-3 p-3 bg-gray-50 border border-border-light/30 rounded">
+                <div className="flex flex-col gap-3 p-3 bg-surface-hover border border-border-light/30 rounded">
                     <div className="flex gap-2">
                         <Input
                             type="text"

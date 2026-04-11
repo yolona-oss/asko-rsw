@@ -13,7 +13,7 @@ export function StarRating({ value, onChange }: { value: number; onChange: (v: n
           className="cursor-pointer"
         >
           <Star
-            className={`w-8 h-8 ${star <= value ? 'text-yellow-400 fill-yellow-400' : 'text-[#E8E8E8]'}`}
+            className={`w-8 h-8 ${star <= value ? 'text-warning fill-warning' : 'text-border-light'}`}
           />
         </button>
       ))}

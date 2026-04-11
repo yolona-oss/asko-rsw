@@ -240,12 +240,12 @@ function MenuItemEl({
         className={cn(
           'w-full text-left px-3 py-2 flex items-center gap-2.5 transition-colors',
           item.disabled
-            ? 'text-[#aaa] cursor-default'
-            : 'hover:bg-[#f5f5f5] cursor-pointer',
+            ? 'text-text-muted cursor-default'
+            : 'hover:bg-surface-muted cursor-pointer',
           item.variant === 'danger' &&
             !item.disabled &&
-            'text-red-600 hover:bg-red-50',
-          item.active && !item.disabled && 'text-blue-600 font-medium',
+            'text-error hover:bg-error-bg',
+          item.active && !item.disabled && 'text-info font-medium',
           !item.active && item.variant !== 'danger' && !item.disabled && 'text-text-main',
         )}
         onClick={

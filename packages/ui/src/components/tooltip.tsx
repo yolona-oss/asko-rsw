@@ -24,10 +24,10 @@ const placementStyles: Record<TooltipPlacement, string> = {
 };
 
 const arrowStyles: Record<TooltipPlacement, string> = {
-  top: 'top-full left-1/2 -translate-x-1/2 border-t-[#323232] border-x-transparent border-b-transparent',
-  bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-[#323232] border-x-transparent border-t-transparent',
-  left: 'left-full top-1/2 -translate-y-1/2 border-l-[#323232] border-y-transparent border-r-transparent',
-  right: 'right-full top-1/2 -translate-y-1/2 border-r-[#323232] border-y-transparent border-l-transparent',
+  top: 'top-full left-1/2 -translate-x-1/2 border-t-dark border-x-transparent border-b-transparent',
+  bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-dark border-x-transparent border-t-transparent',
+  left: 'left-full top-1/2 -translate-y-1/2 border-l-dark border-y-transparent border-r-transparent',
+  right: 'right-full top-1/2 -translate-y-1/2 border-r-dark border-y-transparent border-l-transparent',
 };
 
 export function Tooltip({
@@ -102,7 +102,7 @@ export function Tooltip({
           role="tooltip"
           className={cn(
             'absolute z-50 pointer-events-none',
-            'px-3 py-1.5 text-xs text-white bg-[#323232] shadow-lg',
+            'px-3 py-1.5 text-xs text-text-on-dark bg-dark shadow-lg',
             'whitespace-nowrap animate-[fade-in_150ms_ease-out]',
             placementStyles[placement],
             contentClassName,

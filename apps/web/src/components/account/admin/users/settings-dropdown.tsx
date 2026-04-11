@@ -38,7 +38,7 @@ export function SettingsDropdown({
       trigger={
         <button
           type="button"
-          className="text-[#1855a4] font-medium text-base hover:underline cursor-pointer tracking-[-0.16px]"
+          className="text-info-deep font-medium text-base hover:underline cursor-pointer tracking-[-0.16px]"
           disabled={loading}
         >
           Настроить

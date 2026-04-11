@@ -53,7 +53,7 @@ export function ChartCard({
   valueSuffix,
   onBucketClick,
 }: ChartCardProps) {
-  const pctColor = pctChange >= 0 ? 'text-[#2D8B57]' : 'text-brand-red';
+  const pctColor = pctChange >= 0 ? 'text-success-deep' : 'text-brand-red';
 
   return (
     <div className="bg-surface border border-border shadow-sm p-8 flex flex-col gap-1">
@@ -74,7 +74,7 @@ export function ChartCard({
           </p>
           <p className="font-normal tracking-[-0.01em]" style={{ fontSize: 18, lineHeight: '22px' }}>
             <span className={pctColor}>{pctChange >= 0 ? '+' : ''}{pctChange}%</span>
-            <span className="text-[#2D8B57]"> {pctLabel}</span>
+            <span className="text-success-deep"> {pctLabel}</span>
           </p>
         </div>
         <button

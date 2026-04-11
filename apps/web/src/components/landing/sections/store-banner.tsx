@@ -34,7 +34,7 @@ export function StoreBannerSection() {
               fill
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-black/36" />
+            <div className="absolute inset-0 bg-dark-deep/36" />
             <div className="relative py-6 md:py-12">
               <SkeletonImage
                 src="/images/asko-undertext-logo.svg"

@@ -252,7 +252,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
       {/* Apply bar — full-bleed on mobile */}
       {dirty && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 flex items-center gap-3 z-20">
+        <div className="sticky bottom-0 bg-surface border-t border-border-light py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 flex items-center gap-3 z-20">
           <Button variant="primary" onClick={apply} disabled={saving} className="flex-1 sm:flex-none">
             {saving ? 'Сохранение...' : 'Применить'}
           </Button>

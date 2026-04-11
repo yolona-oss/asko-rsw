@@ -98,8 +98,8 @@ export function CertificateCard({
                 <span>
                   Статус:{' '}
                   <span className={
-                    isActive ? 'text-[#108b00] font-medium'
-                      : isPendingPayment ? 'text-orange-600 font-medium'
+                    isActive ? 'text-success-deep font-medium'
+                      : isPendingPayment ? 'text-warning font-medium'
                         : 'text-text-sub font-medium'
                   }>
                     {STATUS_LABELS[cert.status] ?? cert.status}

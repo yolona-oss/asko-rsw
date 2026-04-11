@@ -24,7 +24,7 @@ export function ErrorModal() {
     <Modal open onClose={handleDismiss} className="w-full max-w-md">
       <div className="p-6">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-error-bg flex items-center justify-center">
             <svg
               className="w-5 h-5 text-brand-red"
               fill="none"
@@ -51,7 +51,7 @@ export function ErrorModal() {
                 <summary className="text-xs text-text-sub cursor-pointer hover:text-text-main transition-colors">
                   Подробности
                 </summary>
-                <pre className="mt-2 text-xs text-text-sub bg-gray-50 rounded-sm p-3 overflow-x-auto max-h-32">
+                <pre className="mt-2 text-xs text-text-sub bg-surface-hover rounded-sm p-3 overflow-x-auto max-h-32">
                   {current.details}
                 </pre>
               </details>

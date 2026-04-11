@@ -132,7 +132,7 @@ export function ManagerRequests() {
       render: (req) => {
         const tabKey = STATUS_MAP[req.status] ?? 'pending';
         return (
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}>
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-text-muted text-text-on-dark'}`}>
             {STATUS_LABELS[req.status] ?? req.status}
           </span>
         );

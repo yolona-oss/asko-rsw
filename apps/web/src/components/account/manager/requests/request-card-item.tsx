@@ -32,7 +32,7 @@ export function RequestCardItem({ request, convInfo, currentUserId, onClick, onD
       </div>
       <div className="flex flex-col gap-1.5">
         <span
-          className={`inline-flex items-center self-start px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-gray-400 text-white'}`}
+          className={`inline-flex items-center self-start px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-text-muted text-text-on-dark'}`}
         >
           {STATUS_LABELS[request.status] ?? request.status}
         </span>

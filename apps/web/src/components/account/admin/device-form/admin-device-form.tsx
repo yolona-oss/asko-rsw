@@ -171,7 +171,7 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
             aria-checked={data.isFeatured}
             onClick={() => update({ isFeatured: !data.isFeatured })}
             className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
-              data.isFeatured ? 'bg-[#D7102A]' : 'bg-gray-300'
+              data.isFeatured ? 'bg-brand-red-dark' : 'bg-border-light'
             }`}
           >
             <span

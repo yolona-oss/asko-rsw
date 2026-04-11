@@ -9,14 +9,14 @@ export function NotificationIcon({ type }: { type: string }) {
 
   switch (icon) {
     case 'repair':
-      return <Wrench className="w-5 h-5 text-blue-500" />;
+      return <Wrench className="w-5 h-5 text-info" />;
     case 'payment':
-      return <Banknote className="w-5 h-5 text-green-500" />;
+      return <Banknote className="w-5 h-5 text-success" />;
     case 'certificate':
-      return <FileText className="w-5 h-5 text-amber-500" />;
+      return <FileText className="w-5 h-5 text-warning" />;
     case 'chat':
-      return <MessageCircle className="w-5 h-5 text-violet-500" />;
+      return <MessageCircle className="w-5 h-5 text-info" />;
     default:
-      return <Bell className="w-5 h-5 text-gray-400" />;
+      return <Bell className="w-5 h-5 text-text-muted" />;
   }
 }

@@ -52,7 +52,7 @@ export function UserScheduleBatch({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex flex-col gap-2 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-3 hover:bg-gray-50 transition-colors text-left w-full"
+        className="flex flex-col gap-2 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-3 hover:bg-surface-hover transition-colors text-left w-full"
       >
         <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
           {expanded ? (
@@ -80,7 +80,7 @@ export function UserScheduleBatch({
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-200 p-3 sm:p-4 flex flex-col gap-4">
+        <div className="border-t border-border-light p-3 sm:p-4 flex flex-col gap-4">
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
               <p className="text-[11px] sm:text-[12px] text-text-sub">Рабочий цикл</p>
@@ -102,7 +102,7 @@ export function UserScheduleBatch({
                 {entries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="p-3 border border-gray-200 flex flex-col gap-2"
+                    className="p-3 border border-border-light flex flex-col gap-2"
                   >
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'neutral'}>

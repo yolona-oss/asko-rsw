@@ -30,7 +30,7 @@ export function InviteDropdown() {
         trigger={
           <button
             type="button"
-            className="flex items-center gap-1 bg-[#179242] text-[#f1f1f1] text-sm font-medium px-2 py-1 hover:bg-[#147a38] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 bg-success text-text-on-dark text-sm font-medium px-2 py-1 hover:bg-success-deep cursor-pointer whitespace-nowrap"
           >
             Выдать доступ
             <ChevronDown className="w-4 h-4" />

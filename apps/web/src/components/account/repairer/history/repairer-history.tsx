@@ -223,7 +223,7 @@ export function RepairerHistory() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`w-6 h-6 ${i < starCount ? 'text-amber-400 fill-amber-400' : 'text-[#E5E5E5]'}`}
+              className={`w-6 h-6 ${i < starCount ? 'text-warning fill-warning' : 'text-border-light'}`}
             />
           ))}
         </div>

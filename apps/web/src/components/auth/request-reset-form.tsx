@@ -53,9 +53,9 @@ export function RequestResetForm({ variant }: RequestResetFormProps) {
     }
   }, [email, sending, retryAfter]);
 
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const subColor = variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub';
-  const errorBg = variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600';
+  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
+  const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
 
   if (sent) {
     return (
@@ -71,8 +71,7 @@ export function RequestResetForm({ variant }: RequestResetFormProps) {
           type="button"
           onClick={handleResend}
           disabled={sending || retryAfter > 0}
-          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer disabled:opacity-60`}
-          style={{ background: '#EB001C' }}
+          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer disabled:opacity-60`}
         >
           {retryAfter > 0
             ? `Отправить повторно (${retryAfter}с)`
@@ -82,7 +81,7 @@ export function RequestResetForm({ variant }: RequestResetFormProps) {
         </button>
 
         {error && (
-          <div className={`px-3 py-2 text-sm text-white ${errorBg}`}>{error}</div>
+          <div className={`px-3 py-2 text-sm text-text-on-brand ${errorBg}`}>{error}</div>
         )}
 
         <Link href="/login" className={`text-sm font-medium ${labelColor}`}>
@@ -95,7 +94,7 @@ export function RequestResetForm({ variant }: RequestResetFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
-        <div className={`px-3 py-2 text-sm text-white ${errorBg}`}>{error}</div>
+        <div className={`px-3 py-2 text-sm text-text-on-brand ${errorBg}`}>{error}</div>
       )}
 
       <div className="flex flex-col gap-8">
@@ -122,8 +121,7 @@ export function RequestResetForm({ variant }: RequestResetFormProps) {
       <button
         type="submit"
         disabled={sending || !email}
-        className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer disabled:opacity-60`}
-        style={{ background: '#EB001C' }}
+        className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer disabled:opacity-60`}
       >
         {sending ? 'Отправка...' : 'Отправить ссылку'}
       </button>

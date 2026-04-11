@@ -462,7 +462,7 @@ export function DataGrid<T>({
                   onMouseDown={(e) => handleResizeStart(e, col)}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="w-[3px] h-full rounded-full bg-[#d0d0d0] group-hover/resize:bg-blue-400 transition-colors" />
+                  <div className="w-[3px] h-full rounded-full bg-border-light group-hover/resize:bg-info transition-colors" />
                 </div>
               )}
             </div>

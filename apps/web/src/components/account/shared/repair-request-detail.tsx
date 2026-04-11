@@ -134,7 +134,7 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-[#E5E5E5]'}`}
+                      className={`w-4 h-4 ${i < review.rating ? 'text-warning fill-warning' : 'text-border-light'}`}
                     />
                   ))}
                   <span className="ml-1 text-text-sub">{review.rating}/5</span>

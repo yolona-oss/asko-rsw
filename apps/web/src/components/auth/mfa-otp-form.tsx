@@ -64,13 +64,13 @@ export function MfaOtpForm({
     setCode(val);
   }, []);
 
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const subColor = variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub';
+  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {error && (
-        <div className={`px-3 py-2 text-sm text-white ${variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600'}`}>
+        <div className={`px-3 py-2 text-sm text-text-on-brand ${variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red'}`}>
           {error}
         </div>
       )}
@@ -103,7 +103,7 @@ export function MfaOtpForm({
             type="checkbox"
             checked={trustDevice}
             onChange={(e) => setTrustDevice(e.target.checked)}
-            className="w-4 h-4 accent-[#EB001C]"
+            className="w-4 h-4 accent-brand-red"
           />
           <span className="text-sm">Запомнить устройство на 30 дней</span>
         </label>
@@ -112,8 +112,7 @@ export function MfaOtpForm({
       <button
         type="submit"
         disabled={code.length !== 6 || isPending}
-        className="flex items-center justify-center w-full lg:w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer disabled:opacity-60"
-        style={{ background: '#EB001C' }}
+        className="flex items-center justify-center w-full lg:w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer disabled:opacity-60"
       >
         {isPending ? 'Проверка...' : 'Подтвердить'}
       </button>

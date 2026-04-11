@@ -32,17 +32,17 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'bg-yellow-400',
-  [RepairRequestStatus.PAID]: 'bg-yellow-400',
-  [RepairRequestStatus.ASSIGNED]: 'bg-blue-400',
-  [RepairRequestStatus.ACCEPTED]: 'bg-blue-400',
-  [RepairRequestStatus.IN_PROGRESS]: 'bg-blue-500',
-  [RepairRequestStatus.AWAITING_COMPLETION]: 'bg-blue-500',
-  [RepairRequestStatus.COMPLETED]: 'bg-green-500',
-  [RepairRequestStatus.CANCELLED]: 'bg-gray-400',
-  [RepairRequestStatus.REFUSED]: 'bg-red-500',
-  [RepairRequestStatus.REFUND_REQUESTED]: 'bg-yellow-400',
-  [RepairRequestStatus.REFUNDED]: 'bg-gray-400',
+  [RepairRequestStatus.PENDING]: 'bg-warning',
+  [RepairRequestStatus.PAID]: 'bg-warning',
+  [RepairRequestStatus.ASSIGNED]: 'bg-info',
+  [RepairRequestStatus.ACCEPTED]: 'bg-info',
+  [RepairRequestStatus.IN_PROGRESS]: 'bg-info',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'bg-info',
+  [RepairRequestStatus.COMPLETED]: 'bg-success',
+  [RepairRequestStatus.CANCELLED]: 'bg-text-muted',
+  [RepairRequestStatus.REFUSED]: 'bg-error',
+  [RepairRequestStatus.REFUND_REQUESTED]: 'bg-warning',
+  [RepairRequestStatus.REFUNDED]: 'bg-text-muted',
 };
 
 export function UserDashboard() {
@@ -225,7 +225,7 @@ export function UserDashboard() {
                   Смотреть все заявки...
                 </Link>
               </div>
-              <div className={`w-8 h-8 rounded-full flex-shrink-0 ${STATUS_COLOR[lastRequest.status] ?? 'bg-gray-400'}`} />
+              <div className={`w-8 h-8 rounded-full flex-shrink-0 ${STATUS_COLOR[lastRequest.status] ?? 'bg-text-muted'}`} />
             </Card>
           </div>
         )

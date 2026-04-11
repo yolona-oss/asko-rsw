@@ -22,7 +22,7 @@ export default function GlobalError({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#F1F1F1',
+            backgroundColor: 'var(--color-page-bg, #F1F1F1)',
             padding: '1rem',
           }}
         >
@@ -32,16 +32,16 @@ export default function GlobalError({
                 fontSize: '120px',
                 lineHeight: 1,
                 fontWeight: 700,
-                color: '#D9D9D9',
+                color: 'var(--color-border-light, #D9D9D9)',
                 userSelect: 'none',
               }}
             >
               500
             </p>
-            <h1 style={{ marginTop: '0.5rem', fontSize: '1.5rem', fontWeight: 700, color: '#323232' }}>
+            <h1 style={{ marginTop: '0.5rem', fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-main, #323232)' }}>
               Критическая ошибка
             </h1>
-            <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#515151' }}>
+            <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--color-text-sub, #515151)' }}>
               Произошла критическая ошибка приложения. Попробуйте обновить страницу.
             </p>
             <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
@@ -53,8 +53,8 @@ export default function GlobalError({
                   padding: '0.625rem 1.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#fff',
-                  backgroundColor: '#EB001C',
+                  color: 'var(--color-text-on-brand, #fff)',
+                  backgroundColor: 'var(--color-brand-red, #EB001C)',
                   borderRadius: '2px',
                   border: 'none',
                   cursor: 'pointer',
@@ -70,8 +70,8 @@ export default function GlobalError({
                   padding: '0.625rem 1.5rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#323232',
-                  border: '1px solid #D9D9D9',
+                  color: 'var(--color-text-main, #323232)',
+                  border: '1px solid var(--color-border-light, #D9D9D9)',
                   borderRadius: '2px',
                   textDecoration: 'none',
                 }}

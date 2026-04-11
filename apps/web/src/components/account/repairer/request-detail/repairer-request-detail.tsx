@@ -364,8 +364,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       )}
 
       {isPaused && (
-        <Card className="flex items-center gap-3 border-yellow-300 bg-yellow-50">
-          <p className="text-sm text-yellow-800 flex-1">Заявка приостановлена</p>
+        <Card className="flex items-center gap-3 border-warning-border bg-warning-bg">
+          <p className="text-sm text-warning-deep flex-1">Заявка приостановлена</p>
           <Button variant="primary" size="sm" onClick={handleResume} disabled={actionLoading}>
             {actionLoading ? 'Возобновление...' : 'Возобновить'}
           </Button>
@@ -373,11 +373,11 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       )}
 
       {status === RepairRequestStatus.REFUSED && (
-        <Card className="flex flex-col gap-2 border-red-300 bg-red-50">
-          <p className="text-sm font-medium text-red-900">Вы отказались от этой заявки</p>
-          <p className="text-sm text-red-800">Ожидайте решения менеджера — он передаст заявку другому специалисту.</p>
+        <Card className="flex flex-col gap-2 border-error-border bg-error-bg">
+          <p className="text-sm font-medium text-error-deep">Вы отказались от этой заявки</p>
+          <p className="text-sm text-error-deep">Ожидайте решения менеджера — он передаст заявку другому специалисту.</p>
           {request.refuseReason && (
-            <p className="text-sm text-red-800">Причина: {request.refuseReason}</p>
+            <p className="text-sm text-error-deep">Причина: {request.refuseReason}</p>
           )}
         </Card>
       )}
@@ -507,9 +507,9 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
       {/* ── Diagnostics review (post-transfer) ── */}
       {canReviewDiagnostics && (
-        <Card className="flex flex-col gap-3 border-yellow-300 bg-yellow-50">
-          <h2 className="text-base font-medium text-yellow-900">Проверка диагностики предыдущего мастера</h2>
-          <p className="text-sm text-yellow-800">
+        <Card className="flex flex-col gap-3 border-warning-border bg-warning-bg">
+          <h2 className="text-base font-medium text-warning-deep">Проверка диагностики предыдущего мастера</h2>
+          <p className="text-sm text-warning-deep">
             Подтвердите диагностику, если согласны с ней, или отклоните — будут добавлены новые шаги диагностики, а текущие неактуальные шаги будут удалены.
           </p>
           <div className="flex gap-3 flex-wrap">
@@ -630,7 +630,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           {request.totalCost && <p className="text-sm text-text-sub">Текущая: <span className="font-medium text-text-main">{request.totalCost.toLocaleString('ru-RU')} ₽</span></p>}
           <FormField label="Сумма (₽)"><Input type="number" min="0" step="0.01" value={priceValue} onChange={(e) => { setPriceValue(e.target.value); setPriceSuccess(false); }} placeholder="Введите стоимость ремонта" /></FormField>
           {priceError && <p className="text-sm text-brand-red">{priceError}</p>}
-          {priceSuccess && <p className="text-sm text-green-600">Стоимость сохранена</p>}
+          {priceSuccess && <p className="text-sm text-success">Стоимость сохранена</p>}
           <Button variant="primary" className="w-full lg:w-fit" onClick={handleSetPrice} disabled={priceSaving || !priceValue}>{priceSaving ? 'Сохранение...' : request.totalCost ? 'Обновить стоимость' : 'Сохранить стоимость'}</Button>
         </Card>
       )}

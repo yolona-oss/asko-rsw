@@ -18,7 +18,7 @@ export function HeroSection() {
               </p>
               <Link
                 href="#services"
-                className="inline-flex items-center gap-2 text-sm font-bold text-[#D7102A] underline tracking-[-0.14px] leading-[18px]"
+                className="inline-flex items-center gap-2 text-sm font-bold text-brand-red-dark underline tracking-[-0.14px] leading-[18px]"
               >
                 Узнать больше...
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">

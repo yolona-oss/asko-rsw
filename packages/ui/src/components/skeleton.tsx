@@ -9,7 +9,7 @@ export interface SkeletonBlockProps {
 
 export function SkeletonBlock({ className, red }: SkeletonBlockProps) {
   return (
-    <div className={cn(red ? 'animate-pulse bg-[#F5A3A3]' : pulse, className)} />
+    <div className={cn(red ? 'animate-pulse bg-primary-200' : pulse, className)} />
   );
 }
 

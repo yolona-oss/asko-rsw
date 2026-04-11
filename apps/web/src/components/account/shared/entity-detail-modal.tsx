@@ -87,7 +87,7 @@ export function EntityDetailModal<T>({
             <button
               type="button"
               onClick={() => { onEdit(displayItem); onClose(); }}
-              className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-dark-deep text-white hover:bg-dark transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-dark-deep text-text-on-dark hover:bg-dark transition-colors cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Перейти

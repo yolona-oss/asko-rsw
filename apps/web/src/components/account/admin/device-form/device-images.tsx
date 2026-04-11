@@ -124,7 +124,7 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
               onDragEnter={() => handleDragEnter(i)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              className="relative group border border-gray-200 overflow-hidden cursor-grab active:cursor-grabbing"
+              className="relative group border border-border-light overflow-hidden cursor-grab active:cursor-grabbing"
             >
               <Image
                 src={getImageUrl(img, 'thumbnail')!}
@@ -133,13 +133,13 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
                 height={150}
                 className="w-full h-auto object-cover aspect-square pointer-events-none"
               />
-              <div className="absolute top-1 left-1 w-5 h-5 bg-black/50 text-white rounded-full text-[10px] flex items-center justify-center">
+              <div className="absolute top-1 left-1 w-5 h-5 bg-dark-deep/50 text-text-on-dark rounded-full text-[10px] flex items-center justify-center">
                 {i + 1}
               </div>
               <button
                 type="button"
                 onClick={() => handleDelete(img.id)}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                className="absolute top-1 right-1 w-6 h-6 bg-brand-red text-text-on-brand rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               >
                 &times;
               </button>

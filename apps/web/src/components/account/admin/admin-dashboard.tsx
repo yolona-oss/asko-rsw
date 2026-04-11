@@ -64,10 +64,10 @@ export function AdminDashboard() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/account/devices"><StatCard title="Товары" value={d(s.devices)} className="hover:border-text-main transition-colors h-full" /></Link>
-        <Link href="/account/users"><StatCard title="Пользователи" value={d(s.users)} className="hover:border-text-main transition-colors h-full" /></Link>
-        <StatCard title="Выручка" value={loading ? '-' : `${fmt(s.confirmedTotal)} ₽`} subtitle={`${d(s.confirmedCount)} платежей`} />
-        <StatCard title="Возвраты" value={loading ? '-' : `${fmt(s.refundedTotal)} ₽`} subtitle={`${d(s.refundedCount)} возвратов`} />
+        <Link href="/account/devices"><StatCard size="compact" title="Товары" value={d(s.devices)} className="hover:border-text-main transition-colors h-full" /></Link>
+        <Link href="/account/users"><StatCard size="compact" title="Пользователи" value={d(s.users)} className="hover:border-text-main transition-colors h-full" /></Link>
+        <StatCard size="compact" title="Выручка" value={loading ? '-' : `${fmt(s.confirmedTotal)} ₽`} subtitle={`${d(s.confirmedCount)} платежей`} />
+        <StatCard size="compact" title="Возвраты" value={loading ? '-' : `${fmt(s.refundedTotal)} ₽`} subtitle={`${d(s.refundedCount)} возвратов`} />
       </div>
 
       {/* Breakdown charts */}
@@ -77,14 +77,14 @@ export function AdminDashboard() {
             <h3 className="text-base font-medium text-text-main">Заявки на ремонт</h3>
             <div className="flex items-center gap-6">
               <DonutChart size={100} thickness={16} segments={[
-                { value: s.reqPending, color: '#f59e0b', label: 'Ожидание' },
-                { value: s.reqInProgress, color: '#3b82f6', label: 'В работе' },
-                { value: s.reqCompleted, color: '#22c55e', label: 'Завершено' },
+                { value: s.reqPending, color: 'var(--color-warning)', label: 'Ожидание' },
+                { value: s.reqInProgress, color: 'var(--color-info)', label: 'В работе' },
+                { value: s.reqCompleted, color: 'var(--color-success)', label: 'Завершено' },
               ]} centerContent={<span className="text-lg font-bold text-text-main">{s.reqTotal}</span>} />
               <MetricComparison className="flex-1" items={[
-                { label: 'Ожидание', value: s.reqPending, color: '#f59e0b' },
-                { label: 'В работе', value: s.reqInProgress, color: '#3b82f6' },
-                { label: 'Завершено', value: s.reqCompleted, color: '#22c55e' },
+                { label: 'Ожидание', value: s.reqPending, color: 'var(--color-warning)' },
+                { label: 'В работе', value: s.reqInProgress, color: 'var(--color-info)' },
+                { label: 'Завершено', value: s.reqCompleted, color: 'var(--color-success)' },
               ]} />
             </div>
           </div>
@@ -92,14 +92,14 @@ export function AdminDashboard() {
             <h3 className="text-base font-medium text-text-main">Сертификаты</h3>
             <div className="flex items-center gap-6">
               <DonutChart size={100} thickness={16} segments={[
-                { value: s.certsActive, color: '#22c55e', label: 'Активные' },
-                { value: s.certsExpired, color: '#9ca3af', label: 'Истекшие' },
-                { value: s.certsRevoked, color: '#ef4444', label: 'Отозванные' },
+                { value: s.certsActive, color: 'var(--color-success)', label: 'Активные' },
+                { value: s.certsExpired, color: 'var(--color-text-muted)', label: 'Истекшие' },
+                { value: s.certsRevoked, color: 'var(--color-error)', label: 'Отозванные' },
               ]} centerContent={<span className="text-lg font-bold text-text-main">{s.certificates}</span>} />
               <MetricComparison className="flex-1" items={[
-                { label: 'Активные', value: s.certsActive, color: '#22c55e' },
-                { label: 'Истекшие', value: s.certsExpired, color: '#9ca3af' },
-                { label: 'Отозванные', value: s.certsRevoked, color: '#ef4444' },
+                { label: 'Активные', value: s.certsActive, color: 'var(--color-success)' },
+                { label: 'Истекшие', value: s.certsExpired, color: 'var(--color-text-muted)' },
+                { label: 'Отозванные', value: s.certsRevoked, color: 'var(--color-error)' },
               ]} />
             </div>
           </div>

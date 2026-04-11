@@ -564,7 +564,7 @@ export function AddressInput({
                     e.preventDefault();
                     selectCitySuggestion(r);
                   }}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-surface-secondary"
                 >
                   <span className="text-text-main">{name}</span>
                   {region && <span className="text-text-sub"> — {region}</span>}
@@ -609,7 +609,7 @@ export function AddressInput({
                     e.preventDefault();
                     selectStreetSuggestion(r);
                   }}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-surface-secondary"
                 >
                   <span className="text-text-main">{name}</span>
                   {loc && <span className="text-text-sub"> — {loc}</span>}

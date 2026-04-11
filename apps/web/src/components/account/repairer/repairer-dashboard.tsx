@@ -150,14 +150,14 @@ export function RepairerDashboard() {
       )}
 
       {/* Completed count + history */}
-      <Card className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <span className="text-[24px] font-medium leading-[28px] text-text-sub">Выполненные заявки</span>
-          <span className="text-[82px] font-normal leading-[86px] text-text-main">
+      <Card className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="text-[16px] font-medium leading-[20px] text-text-sub">Выполненные заявки</span>
+          <span className="text-[40px] font-medium leading-[44px] text-text-main">
             {completedCount ?? '-'}
           </span>
         </div>
-        <Link href="/account/history">
+        <Link href="/account/history" className="flex-shrink-0">
           <Button variant="secondary">История</Button>
         </Link>
       </Card>

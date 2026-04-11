@@ -125,7 +125,7 @@ export const PatternInput = forwardRef<HTMLInputElement, PatternInputProps>(
           hasError
             ? 'border-brand-red focus:border-brand-red'
             : showValidBorder && validation?.valid
-              ? 'border-[#22C55E] focus:border-[#22C55E]'
+              ? 'border-success focus:border-success'
               : 'border-border-light focus:border-text-main',
           className,
         )}

@@ -16,11 +16,11 @@ export function MessageStatusIcon({ status, size = 'md', dark }: MessageStatusIc
 
   switch (status) {
     case 'sending':
-      return <Clock className={cn(sizeClass, dark ? 'text-white/50' : 'text-text-sub/50')} />;
+      return <Clock className={cn(sizeClass, dark ? 'text-text-on-dark/50' : 'text-text-sub/50')} />;
     case 'delivered':
-      return <Check className={cn(sizeClass, dark ? 'text-white/60' : 'text-text-sub/60')} />;
+      return <Check className={cn(sizeClass, dark ? 'text-text-on-dark/60' : 'text-text-sub/60')} />;
     case 'seen':
-      return <CheckCheck className={cn(sizeClass, 'text-blue-400')} />;
+      return <CheckCheck className={cn(sizeClass, 'text-info')} />;
     default:
       return null;
   }

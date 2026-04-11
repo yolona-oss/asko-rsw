@@ -82,10 +82,10 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             : 'strong';
 
     const barColors = {
-      empty: 'bg-[#E0E0E0]',
+      empty: 'bg-border-light',
       weak: 'bg-brand-red',
-      medium: 'bg-[#F59E0B]',
-      strong: 'bg-[#22C55E]',
+      medium: 'bg-warning',
+      strong: 'bg-success',
     } as const;
 
     return (
@@ -126,7 +126,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                   key={i}
                   className={cn(
                     'h-1 flex-1 rounded-full transition-colors',
-                    i < passedCount ? barColors[strength] : 'bg-[#E0E0E0]',
+                    i < passedCount ? barColors[strength] : 'bg-border-light',
                   )}
                 />
               ))}

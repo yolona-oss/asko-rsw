@@ -24,7 +24,7 @@ export default function Error({
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
             onClick={reset}
-            className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-brand-red rounded-sm hover:opacity-90 transition-opacity cursor-pointer"
+            className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red rounded-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
             Попробовать снова
           </button>

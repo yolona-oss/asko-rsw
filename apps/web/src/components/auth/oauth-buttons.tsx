@@ -86,7 +86,7 @@ export function OAuthButtons({ linkMode, connectedProviders = [], onUnlink, clas
               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = p.hoverColor; }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = p.color; }}
             >
-              <p.icon className={`w-6 h-6 ${isGoogle ? '' : 'text-white'}`} />
+              <p.icon className={`w-6 h-6 ${isGoogle ? '' : 'text-text-on-dark'}`} />
             </button>
           );
         })}
@@ -108,10 +108,10 @@ export function OAuthButtons({ linkMode, connectedProviders = [], onUnlink, clas
                 className="flex items-center justify-center w-9 h-9 flex-shrink-0 border border-border-light"
                 style={{ backgroundColor: p.color }}
               >
-                <p.icon className={`w-5 h-5 ${isGoogle ? '' : 'text-white'}`} />
+                <p.icon className={`w-5 h-5 ${isGoogle ? '' : 'text-text-on-dark'}`} />
               </div>
               <span className="text-sm text-text-main flex-1">{p.label}</span>
-              <span className="text-xs text-green-600">Подключён</span>
+              <span className="text-xs text-success">Подключён</span>
               {onUnlink && (
                 <button
                   type="button"
@@ -136,7 +136,7 @@ export function OAuthButtons({ linkMode, connectedProviders = [], onUnlink, clas
               className="flex items-center justify-center w-9 h-9 flex-shrink-0 border border-border-light transition-colors"
               style={{ backgroundColor: p.color }}
             >
-              <p.icon className={`w-5 h-5 ${isGoogle ? '' : 'text-white'}`} />
+              <p.icon className={`w-5 h-5 ${isGoogle ? '' : 'text-text-on-dark'}`} />
             </div>
             <span className="text-sm text-text-sub group-hover:text-text-main transition-colors">
               Подключить {p.label}

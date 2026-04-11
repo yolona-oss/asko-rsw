@@ -59,7 +59,7 @@ export function ConversationItem({
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${
         active
-          ? 'bg-gray-100'
+          ? 'bg-surface-secondary'
           : 'hover:bg-surface-hover'
       }`}
     >

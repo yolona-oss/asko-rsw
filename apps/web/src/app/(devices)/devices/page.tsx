@@ -77,7 +77,7 @@ async function DevicesContent({ page }: { page: number }) {
                     href={`/devices/${device.slug}`}
                     className="group flex flex-col bg-surface border border-border-light/30 rounded-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
-                    <div className="relative aspect-square bg-gray-50">
+                    <div className="relative aspect-square bg-surface-hover">
                       <Image
                         src={imgUrl ?? getPlaceholderSrc('device', device.id)}
                         alt={device.name}

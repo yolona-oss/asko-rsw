@@ -46,8 +46,8 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
   if (loading) {
     return (
       <PageContainer>
-        <div className="h-8 w-64 bg-[#F5F5F5] animate-pulse rounded" />
-        <div className="h-64 bg-[#F5F5F5] animate-pulse rounded" />
+        <div className="h-8 w-64 bg-surface-muted animate-pulse rounded" />
+        <div className="h-64 bg-surface-muted animate-pulse rounded" />
       </PageContainer>
     );
   }
@@ -83,7 +83,7 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
       </div>
 
       {noteSuccess && (
-        <div className="px-4 py-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+        <div className="px-4 py-3 bg-success-bg border border-success-border rounded text-sm text-success-deep">
           Заметка сохранена
           {noteIsPublic ? ' и отправлена на модерацию' : ''}
         </div>

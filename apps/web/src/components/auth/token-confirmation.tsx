@@ -57,9 +57,9 @@ export function TokenConfirmation({
       });
   }, [token]);
 
-  const labelColor = variant === 'mobile' ? 'text-[#F1F1F1]' : 'text-text-main';
-  const subColor = variant === 'mobile' ? 'text-[#A6A6A6]' : 'text-text-sub';
-  const errorBg = variant === 'mobile' ? 'bg-red-600/80' : 'bg-red-600';
+  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
+  const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
 
   if (status === 'loading') {
     return (
@@ -68,7 +68,7 @@ export function TokenConfirmation({
           {loadingTitle}
         </p>
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: '#EB001C' }} />
+          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin text-brand-red" />
           <p className={`text-sm ${subColor}`}>{loadingText}</p>
         </div>
       </div>
@@ -89,8 +89,7 @@ export function TokenConfirmation({
         <button
           type="button"
           onClick={() => router.push(successRedirect)}
-          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer`}
-          style={{ background: '#EB001C' }}
+          className={`flex items-center justify-center ${variant === 'mobile' ? 'w-full' : 'w-fit'} px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer`}
         >
           {successButtonText}
         </button>
@@ -103,12 +102,11 @@ export function TokenConfirmation({
       <p className={`text-2xl font-medium leading-7 tracking-[-0.01em] ${labelColor}`}>
         {errorTitle}
       </p>
-      <div className={`px-3 py-2 text-sm text-white ${errorBg}`}>{message}</div>
+      <div className={`px-3 py-2 text-sm text-text-on-brand ${errorBg}`}>{message}</div>
       <p className={`text-sm ${subColor}`}>{errorHint}</p>
       <Link
         href="/login"
-        className="flex items-center justify-center w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-white shadow-sm cursor-pointer"
-        style={{ background: '#EB001C' }}
+        className="flex items-center justify-center w-fit px-6 h-10 text-sm font-medium tracking-[0.005em] text-text-on-brand bg-brand-red shadow-sm cursor-pointer"
       >
         Войти
       </Link>

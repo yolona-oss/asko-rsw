@@ -171,7 +171,7 @@ async function ProductDetailContent({ slug }: { slug: string }) {
             <ProductGallery images={product.images} title={product.title} mobile />
             <Link
               href="#cta"
-              className="flex items-center justify-center w-full py-3 text-sm font-medium text-white bg-[#D7102A] shadow-sm"
+              className="flex items-center justify-center w-full py-3 text-sm font-medium text-text-on-brand bg-brand-red-dark shadow-sm"
             >
               Вызвать мастера
             </Link>

@@ -42,7 +42,7 @@ export function AccountHeader() {
       {user?.avatar ? (
         <Image src={user.avatar} alt="" width={36} height={36} className="object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-3xl text-white font-medium">
+        <div className="w-full h-full flex items-center justify-center text-3xl text-text-on-dark font-medium">
           {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || '?'}
         </div>
       )}
@@ -63,7 +63,7 @@ export function AccountHeader() {
             className="flex flex-col justify-center items-start w-[33px] h-[25px] relative cursor-pointer lg:hidden"
           >
             <span
-              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out origin-center"
               style={{
                 width: '33px',
                 top: mobileOpen ? '10px' : '0px',
@@ -71,7 +71,7 @@ export function AccountHeader() {
               }}
             />
             <span
-              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out"
+              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out"
               style={{
                 width: '16.5px',
                 top: '10px',
@@ -80,7 +80,7 @@ export function AccountHeader() {
               }}
             />
             <span
-              className="block h-[5px] bg-[#323232] absolute left-0 transition-all duration-300 ease-in-out origin-center"
+              className="block h-[5px] bg-dark absolute left-0 transition-all duration-300 ease-in-out origin-center"
               style={{
                 width: '33px',
                 top: mobileOpen ? '10px' : '20px',

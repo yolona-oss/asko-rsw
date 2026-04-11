@@ -68,7 +68,7 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
       <div
         className={`max-w-[75%] rounded-2xl overflow-hidden ${
           isOwn
-            ? 'bg-dark text-white rounded-br-sm'
+            ? 'bg-dark text-text-on-dark rounded-br-sm'
             : 'bg-surface border border-border-light rounded-bl-sm'
         }`}
       >
@@ -114,11 +114,11 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
 
           {/* Timestamp + edit label + status icon */}
           <div className={`flex items-center gap-1 mt-0.5 ${isOwn ? 'justify-end' : ''}`}>
-            <span className={`text-[10px] ${isOwn ? 'text-white/60' : 'text-text-sub/60'}`}>
+            <span className={`text-[10px] ${isOwn ? 'text-text-on-dark/60' : 'text-text-sub/60'}`}>
               {formatTime(message.createdAt)}
             </span>
             {message.isEdited && (
-              <span className={`text-[10px] ${isOwn ? 'text-white/40' : 'text-text-sub/40'}`}>
+              <span className={`text-[10px] ${isOwn ? 'text-text-on-dark/40' : 'text-text-sub/40'}`}>
                 изменено
               </span>
             )}

@@ -118,7 +118,7 @@ export function AdminArticles() {
       render: (article) => (
         <div className="flex flex-wrap gap-1">
           {article.tags?.map((tag) => (
-            <span key={tag} className="px-2 py-0.5 text-xs bg-gray-100 text-text-sub">
+            <span key={tag} className="px-2 py-0.5 text-xs bg-surface-secondary text-text-sub">
               {tag}
             </span>
           ))}

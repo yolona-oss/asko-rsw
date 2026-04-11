@@ -25,7 +25,7 @@ export function VipSection() {
         fill
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-black/47" />
+      <div className="absolute inset-0 bg-dark-deep/47" />
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Mobile layout */}
         <div className="flex flex-col gap-6 lg:hidden">

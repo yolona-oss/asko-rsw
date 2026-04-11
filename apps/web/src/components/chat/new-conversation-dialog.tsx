@@ -86,7 +86,7 @@ export function NewConversationDialog({ onClose, onCreated }: NewConversationDia
               type="button"
               onClick={() => setSelected(user)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm transition-colors cursor-pointer ${
-                selected?.id === user.id ? 'bg-gray-100' : 'hover:bg-surface-hover'
+                selected?.id === user.id ? 'bg-surface-secondary' : 'hover:bg-surface-hover'
               }`}
             >
               <Avatar size="sm" fallback={displayName(user).slice(0, 2)} />

@@ -64,14 +64,14 @@ export function AvatarSection({
               className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl text-white font-medium">
+            <div className="w-full h-full flex items-center justify-center text-3xl text-text-on-brand font-medium">
               {firstName?.[0]?.toUpperCase() || userFirstName?.[0]?.toUpperCase() || '?'}
             </div>
           )}
         </div>
         {uploadingAvatar && (
-          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="absolute inset-0 rounded-full bg-dark-deep/40 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-surface border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
