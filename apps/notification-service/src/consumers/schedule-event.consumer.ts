@@ -212,26 +212,67 @@ export class ScheduleEventConsumer {
         const msg = context.getMessage();
 
         try {
-            const recipients = await this.getStaffRecipients(data.userId);
-            const body = data.staged
-                ? 'Предложено изменение графика работы — требуется подтверждение'
-                : 'График работы был обновлён';
-            await Promise.all(
-                recipients.map((recipientId) =>
-                    this.notificationService.createNotification(
-                        recipientId,
-                        NotificationType.SCHEDULE_PATTERN_UPDATED,
-                        'Изменение графика работы',
-                        body,
-                        NotificationTargetType.SCHEDULE,
-                        data.patternId,
-                        data,
+            const staffActed = data.actorId && data.actorId !== data.userId;
+            if (staffActed) {
+                // Manager/admin edited a repairer's pattern — tell the repairer.
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_PATTERN_UPDATED,
+                    'График работы изменён',
+                    'Менеджер изменил ваш график работы',
+                    NotificationTargetType.SCHEDULE,
+                    data.patternId,
+                    data,
+                );
+            } else {
+                // Repairer proposed a change themselves — notify staff so they can approve.
+                const recipients = await this.getStaffRecipients(data.userId);
+                const body = data.staged
+                    ? 'Предложено изменение графика работы — требуется подтверждение'
+                    : 'График работы был обновлён';
+                await Promise.all(
+                    recipients.map((recipientId) =>
+                        this.notificationService.createNotification(
+                            recipientId,
+                            NotificationType.SCHEDULE_PATTERN_UPDATED,
+                            'Изменение графика работы',
+                            body,
+                            NotificationTargetType.SCHEDULE,
+                            data.patternId,
+                            data,
+                        ),
                     ),
-                ),
-            );
+                );
+            }
             channel.ack(msg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_updated error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('schedule.pattern_deleted')
+    async handlePatternDeleted(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            const staffActed = data.actorId && data.actorId !== data.userId;
+            if (staffActed) {
+                // Manager/admin removed a repairer's pattern — tell the repairer.
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_PATTERN_DELETED,
+                    'График работы удалён',
+                    'Менеджер удалил ваш график работы',
+                    NotificationTargetType.SCHEDULE,
+                    data.patternId,
+                    data,
+                );
+            }
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.pattern_deleted error:', e);
             channel.ack(msg);
         }
     }

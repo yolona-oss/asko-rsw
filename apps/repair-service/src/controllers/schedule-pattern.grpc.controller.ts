@@ -119,7 +119,18 @@ export class SchedulePatternGrpcController {
     @GrpcMethod('SchedulePatternService', 'DeletePattern')
     async deletePattern(data: DeletePatternRequest): Promise<ScheduleEmptyResponse> {
         try {
-            await this.patternService.delete(data.userId);
+            const deleted = await this.patternService.delete(data.userId);
+            if (deleted) {
+                await this.repairEventService.emitSchedulePatternEvent({
+                    type: RepairEventType.SCHEDULE_PATTERN_DELETED,
+                    patternId: deleted.id,
+                    userId: deleted.userId,
+                    actorId: data.actorId || null,
+                    staged: false,
+                    firstSubmission: false,
+                    timestamp: new Date(),
+                });
+            }
             return {};
         } catch (e) {
             throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });

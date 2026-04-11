@@ -66,8 +66,8 @@ export class ScheduleClientService implements OnModuleInit {
         return grpcCall(this.patternService.upsertPattern(data));
     }
 
-    patternDelete(userId: string): Promise<ScheduleEmptyResponse> {
-        return grpcCall(this.patternService.deletePattern({ userId }));
+    patternDelete(userId: string, actorId?: string): Promise<ScheduleEmptyResponse> {
+        return grpcCall(this.patternService.deletePattern({ userId, actorId }));
     }
 
     patternGetMany(userIds: string[]): Promise<PatternListResponse> {

@@ -26,6 +26,7 @@ export enum NotificationType {
     SCHEDULE_DELETED = 'schedule_deleted',
     SCHEDULE_PATTERN_CREATED = 'schedule_pattern_created',
     SCHEDULE_PATTERN_UPDATED = 'schedule_pattern_updated',
+    SCHEDULE_PATTERN_DELETED = 'schedule_pattern_deleted',
     SCHEDULE_PATTERN_APPROVED = 'schedule_pattern_approved',
     SCHEDULE_PATTERN_REJECTED = 'schedule_pattern_rejected',
 }

@@ -108,7 +108,7 @@ export class WScheduleController {
     @Delete('pattern/:userId')
     async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
         assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
-        await this.scheduleClient.patternDelete(userId);
+        await this.scheduleClient.patternDelete(userId, user.sub);
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })

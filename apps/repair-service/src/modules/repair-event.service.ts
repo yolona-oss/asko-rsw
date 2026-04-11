@@ -15,6 +15,7 @@ export enum RepairEventType {
     SCHEDULE_REJECTED = 'schedule.rejected',
     SCHEDULE_PATTERN_CREATED = 'schedule.pattern_created',
     SCHEDULE_PATTERN_UPDATED = 'schedule.pattern_updated',
+    SCHEDULE_PATTERN_DELETED = 'schedule.pattern_deleted',
     SCHEDULE_PATTERN_APPROVED = 'schedule.pattern_approved',
     SCHEDULE_PATTERN_REJECTED = 'schedule.pattern_rejected',
     CERTIFICATE_EXPIRING_SOON = 'certificate.expiring_soon',

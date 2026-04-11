@@ -1453,6 +1453,7 @@ message PatternApproveRequest {
 
 message DeletePatternRequest {
     string userId = 1;
+    string actorId = 2;
 }
 
 message GetManyPatternsRequest {

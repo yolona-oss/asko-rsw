@@ -1491,6 +1491,7 @@ export interface PatternApproveRequest {
 
 export interface DeletePatternRequest {
     userId: string;
+    actorId?: string;
 }
 
 export interface GetManyPatternsRequest {

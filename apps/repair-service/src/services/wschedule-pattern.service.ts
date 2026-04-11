@@ -158,9 +158,12 @@ export class WSchedulePatternService {
     }
 
     @CreateRequestContext()
-    async delete(userId: string): Promise<void> {
+    async delete(userId: string): Promise<{ id: string; userId: string } | null> {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
-        if (pattern) await this.em.removeAndFlush(pattern);
+        if (!pattern) return null;
+        const snapshot = { id: pattern.id, userId: pattern.userId };
+        await this.em.removeAndFlush(pattern);
+        return snapshot;
     }
 
     /**
