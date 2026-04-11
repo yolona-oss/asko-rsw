@@ -52,18 +52,26 @@ export function UserScheduleBatch({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left w-full"
+        className="flex flex-col gap-2 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-3 hover:bg-gray-50 transition-colors text-left w-full"
       >
-        {expanded ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-main truncate">
-            {displayName ?? userId.slice(0, 8)}
-          </p>
-          <p className="text-[12px] text-text-sub">{patternSummary(pattern)}</p>
+        <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+          {expanded ? (
+            <ChevronDown className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : (
+            <ChevronRight className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] sm:text-sm font-medium text-text-main truncate">
+              {displayName ?? userId.slice(0, 8)}
+            </p>
+            <p className="text-[11px] sm:text-[12px] text-text-sub truncate">
+              {patternSummary(pattern)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        <div className="flex items-center gap-1.5 flex-wrap sm:justify-end pl-6 sm:pl-0">
           {pendingCount > 0 && (
-            <Badge variant="warning">{pendingCount} на рассмотрении</Badge>
+            <Badge variant="warning">{pendingCount} на рассм.</Badge>
           )}
           {upcomingVacation > 0 && <Badge variant="warning">{upcomingVacation} отпуск</Badge>}
           {overtimeCount > 0 && <Badge variant="neutral">{overtimeCount} перераб.</Badge>}
@@ -72,12 +80,12 @@ export function UserScheduleBatch({
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-200 p-4 flex flex-col gap-4">
+        <div className="border-t border-gray-200 p-3 sm:p-4 flex flex-col gap-4">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[12px] text-text-sub">Рабочий цикл</p>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-[11px] sm:text-[12px] text-text-sub">Рабочий цикл</p>
               {onViewUser && (
-                <Button variant="secondary" size="sm" onClick={() => onViewUser(userId)}>
+                <Button variant="secondary" size="sm" onClick={() => onViewUser(userId)} className="shrink-0">
                   Открыть
                 </Button>
               )}
@@ -86,7 +94,7 @@ export function UserScheduleBatch({
           </div>
 
           <div>
-            <p className="text-[12px] text-text-sub mb-2">Записи ({entries.length})</p>
+            <p className="text-[11px] sm:text-[12px] text-text-sub mb-2">Записи ({entries.length})</p>
             {entries.length === 0 ? (
               <p className="text-sm text-text-sub">Нет записей</p>
             ) : (
@@ -94,49 +102,56 @@ export function UserScheduleBatch({
                 {entries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="p-3 border border-gray-200 flex items-center gap-3 flex-wrap"
+                    className="p-3 border border-gray-200 flex flex-col gap-2"
                   >
-                    <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'neutral'}>
-                      {TYPE_LABELS[entry.type] ?? entry.type}
-                    </Badge>
-                    <span className="text-sm text-text-main">
-                      {formatRange(entry.dateFrom, entry.dateTo)}
-                    </span>
-                    <span className="text-sm text-text-sub">
-                      {entry.startTime} — {entry.endTime}
-                    </span>
-                    <Badge variant={STATUS_BADGE_VARIANT[entry.status] ?? 'neutral'}>
-                      {STATUS_LABELS[entry.status] ?? entry.status}
-                    </Badge>
-                    {entry.note && (
-                      <span className="text-sm text-text-sub truncate flex-1">{entry.note}</span>
-                    )}
-                    <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-                      {canApprove && entry.status === 'pending' && (
-                        <>
-                          <Button size="sm" variant="success" onClick={() => onApprove?.(entry)}>
-                            Одобрить
-                          </Button>
-                          <Button size="sm" variant="danger" onClick={() => onReject?.(entry)}>
-                            Отклонить
-                          </Button>
-                        </>
-                      )}
-                      {canEdit && (
-                        <>
-                          <Button size="sm" variant="secondary" onClick={() => onEdit?.(entry)}>
-                            Изменить
-                          </Button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete?.(entry)}
-                            className="text-text-sub hover:text-brand-red transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'neutral'}>
+                        {TYPE_LABELS[entry.type] ?? entry.type}
+                      </Badge>
+                      <Badge variant={STATUS_BADGE_VARIANT[entry.status] ?? 'neutral'}>
+                        {STATUS_LABELS[entry.status] ?? entry.status}
+                      </Badge>
                     </div>
+                    <div className="flex items-center gap-2 flex-wrap text-[13px] sm:text-sm">
+                      <span className="text-text-main font-medium">
+                        {formatRange(entry.dateFrom, entry.dateTo)}
+                      </span>
+                      <span className="text-text-sub">
+                        {entry.startTime} — {entry.endTime}
+                      </span>
+                    </div>
+                    {entry.note && (
+                      <p className="text-[12px] sm:text-sm text-text-sub line-clamp-2">{entry.note}</p>
+                    )}
+                    {(canEdit || (canApprove && entry.status === 'pending')) && (
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
+                        {canApprove && entry.status === 'pending' && (
+                          <>
+                            <Button size="sm" variant="success" onClick={() => onApprove?.(entry)} className="flex-1 sm:flex-none">
+                              Одобрить
+                            </Button>
+                            <Button size="sm" variant="danger" onClick={() => onReject?.(entry)} className="flex-1 sm:flex-none">
+                              Отклонить
+                            </Button>
+                          </>
+                        )}
+                        {canEdit && (
+                          <>
+                            <Button size="sm" variant="secondary" onClick={() => onEdit?.(entry)} className="flex-1 sm:flex-none">
+                              Изменить
+                            </Button>
+                            <button
+                              type="button"
+                              onClick={() => onDelete?.(entry)}
+                              className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
+                              aria-label="Удалить"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -99,11 +99,11 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
   };
 
   return (
-    <Modal open={open} onClose={onClose} className="w-full max-w-md p-6">
-      <h2 className="text-lg font-medium text-text-main mb-4">
+    <Modal open={open} onClose={onClose} className="w-full max-w-md p-4 sm:p-6">
+      <h2 className="text-base sm:text-lg font-medium text-text-main mb-4">
         {isEdit ? 'Редактировать запись' : 'Создать запись'}
       </h2>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <FormField label="Тип">
           <Select value={type} onChange={(e) => setType(e.target.value)}>
             {EXCEPTION_TYPES.map((k) => (
@@ -115,7 +115,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
         </FormField>
 
         {isRange ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <FormField label="С">
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </FormField>
@@ -130,7 +130,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
         )}
 
         {needsTimes && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <FormField label="Начало">
               <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </FormField>
@@ -146,11 +146,11 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
-        <div className="flex gap-3">
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+        <div className="flex gap-2 sm:gap-3">
+          <Button variant="primary" onClick={handleSubmit} disabled={saving} className="flex-1 sm:flex-none">
             {saving ? 'Сохранение...' : isEdit ? 'Сохранить' : 'Создать'}
           </Button>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} className="flex-1 sm:flex-none">
             Отмена
           </Button>
         </div>

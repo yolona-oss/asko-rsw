@@ -45,17 +45,17 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
   };
 
   return (
-    <Modal open={open} onClose={onClose} className="w-full max-w-sm p-6">
-      <h2 className="text-lg font-medium text-text-main mb-4">
+    <Modal open={open} onClose={onClose} className="w-full max-w-sm p-4 sm:p-6">
+      <h2 className="text-base sm:text-lg font-medium text-text-main mb-4">
         День цикла №{index + 1}
       </h2>
 
       {isWork ? (
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-text-sub">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <p className="text-[13px] sm:text-sm text-text-sub">
             По умолчанию {defaultStart}—{defaultEnd}. Укажите индивидуальное время или оставьте как есть.
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <FormField label="Начало">
               <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </FormField>
@@ -63,7 +63,7 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
               <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </FormField>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Button variant="primary" size="sm" onClick={handleSaveTimes}>
               Сохранить
             </Button>
@@ -77,9 +77,9 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-text-sub">Этот день сейчас выходной.</p>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <p className="text-[13px] sm:text-sm text-text-sub">Этот день сейчас выходной.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Button variant="primary" size="sm" onClick={handleMakeWork}>
               Сделать рабочим
             </Button>

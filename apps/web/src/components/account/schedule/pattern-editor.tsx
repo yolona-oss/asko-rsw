@@ -6,17 +6,12 @@ import { Button, Input, FormField, SkeletonCard } from '@asko/ui';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecord, PatternSlot } from './types';
 import { PRESETS } from './constants';
-import { SlotBlock } from './slot-block';
+import { SlotBlock, type SlotEntry } from './slot-block';
 import { SlotPopover } from './slot-popover';
 
 interface PatternEditorProps {
   userId: string;
   onChanged?: () => void;
-}
-
-interface SlotEntry {
-  uid: string;
-  slot: PatternSlot;
 }
 
 function todayISO(): string {
@@ -53,7 +48,6 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
   const [entries, setEntries] = useState<SlotEntry[]>([]);
   const [dirty, setDirty] = useState(false);
 
-  // Snapshot for reset
   const [initialSnapshot, setInitialSnapshot] = useState<{
     entries: SlotEntry[];
     defaultStart: string;
@@ -73,7 +67,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         setDefaultEnd(snapshot.defaultEnd);
         setAnchorDate(snapshot.anchorDate);
         setInitialSnapshot(snapshot);
-        setDirty(true); // No saved pattern — editor starts dirty so Apply saves it.
+        setDirty(true);
         return;
       }
       const wrapped = wrap(
@@ -217,7 +211,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
       </div>
 
       {/* Defaults */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-2xl">
         <FormField label="Начало (по умолчанию)">
           <Input type="time" value={defaultStart} onChange={(e) => handleDefaultStartChange(e.target.value)} />
         </FormField>
@@ -231,19 +225,19 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
       {/* Day blocks */}
       <div>
-        <p className="text-[12px] text-text-sub mb-2">
-          Цикл: {entries.length} дн. ({workCount} раб. / {restCount} вых.) — перетащите блоки, чтобы изменить порядок
+        <p className="text-[11px] sm:text-[12px] text-text-sub mb-2">
+          Цикл: {entries.length} дн. ({workCount} раб. / {restCount} вых.) — удерживайте <span className="inline-block align-middle">⋮⋮</span> и перетащите блок в нужное место
         </p>
         <Reorder.Group
           axis="x"
           values={entries}
           onReorder={handleReorder}
-          className="flex flex-nowrap gap-2 overflow-x-auto py-2 -mx-4 px-4 scrollbar-hide"
+          className="flex flex-nowrap gap-2 overflow-x-auto py-2 -mx-4 px-4 lg:-mx-0 lg:px-0 scrollbar-hide touch-pan-y"
         >
           {entries.map((entry, i) => (
             <SlotBlock
               key={entry.uid}
-              slot={entry.slot}
+              entry={entry}
               index={i}
               defaultStart={defaultStart}
               defaultEnd={defaultEnd}
@@ -256,13 +250,13 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
       {error && <p className="text-sm text-brand-red">{error}</p>}
 
-      {/* Apply bar */}
+      {/* Apply bar — full-bleed on mobile */}
       {dirty && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 -mx-4 px-4 flex items-center gap-3 z-20">
-          <Button variant="primary" onClick={apply} disabled={saving}>
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 flex items-center gap-3 z-20">
+          <Button variant="primary" onClick={apply} disabled={saving} className="flex-1 sm:flex-none">
             {saving ? 'Сохранение...' : 'Применить'}
           </Button>
-          <Button variant="secondary" onClick={reset} disabled={saving}>
+          <Button variant="secondary" onClick={reset} disabled={saving} className="flex-1 sm:flex-none">
             Сбросить
           </Button>
         </div>
