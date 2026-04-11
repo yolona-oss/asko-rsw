@@ -19,7 +19,7 @@ import {
     DevicePart,
     BrokenPart,
     WSchedule,
-} from 'entities';
+} from '../entities';
 import { isProdEnv } from '@asko/shared';
 
 @Module({

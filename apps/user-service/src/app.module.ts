@@ -17,7 +17,7 @@ import { TokenCleanupService } from 'services/token-cleanup.service';
 import { redisProvider } from 'providers/redis.provider';
 
 import { UserGrpcController } from 'controllers/user.grpc.controller';
-import { User, Session, InvitationLink, UserOAuthLink } from 'entities';
+import { User, Session, InvitationLink, UserOAuthLink } from './entities';
 import { DatabaseModule } from 'modules/database.module';
 
 @Module({

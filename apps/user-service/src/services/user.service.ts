@@ -24,7 +24,7 @@ import { Writeable } from 'types/writable.type';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { CreateRequestContext, Populate } from '@mikro-orm/core';
 
-import { Session, UserAddress } from 'entities';
+import { Session, UserAddress } from '../entities';
 
 const USER_SORTABLE_FIELDS = ['createdAt', 'firstName', 'lastName', 'email', 'phone', 'isActive'] as const;
 

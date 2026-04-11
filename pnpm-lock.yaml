@@ -384,6 +384,9 @@ importers:
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
         version: 6.6.9(@mikro-orm/core@6.6.9)
+      '@mikro-orm/seeder':
+        specifier: 6.6.9
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1192,6 +1195,9 @@ importers:
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
         version: 6.6.9(@mikro-orm/core@6.6.9)
+      '@mikro-orm/seeder':
+        specifier: 6.6.9
+        version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1306,6 +1312,9 @@ importers:
         version: 6.1.2(@mikro-orm/core@6.6.9)(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)
       '@mikro-orm/postgresql':
         specifier: ^6.5.9
+        version: 6.6.9(@mikro-orm/core@6.6.9)
+      '@mikro-orm/seeder':
+        specifier: 6.6.9
         version: 6.6.9(@mikro-orm/core@6.6.9)
       '@nestjs/common':
         specifier: ^11.1.5
@@ -2495,6 +2504,12 @@ packages:
 
   '@mikro-orm/postgresql@6.6.9':
     resolution: {integrity: sha512-1HYURnRIi5QIOLhifbL0KLMFlNxvZYAEPgWl16AKAElzJqnYzE493fp+P5mrZvG2vE+hudUL3lYVGqakg4Lq+A==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+
+  '@mikro-orm/seeder@6.6.9':
+    resolution: {integrity: sha512-TcZt1o2c5bcQ51sh60AEWwwVgje5YBTdrXoZ66Tab3MDRbGmnC+B8f/RR/K/ENVOkwqaltCsmzUts4BXWkg7ow==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -7567,6 +7582,12 @@ snapshots:
       - sqlite3
       - supports-color
       - tedious
+
+  '@mikro-orm/seeder@6.6.9(@mikro-orm/core@6.6.9)':
+    dependencies:
+      '@mikro-orm/core': 6.6.9
+      fs-extra: 11.3.3
+      globby: 11.1.0
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true

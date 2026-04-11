@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { AppConfig } from '../app.config';
-import { Conversation, ConversationParticipant, Message, UserPresence } from 'entities';
+import { Conversation, ConversationParticipant, Message, UserPresence } from '../entities';
 import { isProdEnv } from '@asko/shared';
 
 @Module({

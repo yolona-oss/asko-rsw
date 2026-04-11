@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
+import { Device, DeviceCategory, UserDevice, Address, DevicePart } from '../entities';
 import { AppErrors } from 'common/error';
 import { slugify } from '@asko/shared';
 import { SignatureService } from './signature.service';

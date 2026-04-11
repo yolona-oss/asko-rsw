@@ -86,6 +86,22 @@
           "enumItems": [],
           "mappedType": "string"
         },
+        "building": {
+          "name": "building",
+          "type": "varchar(50)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 50,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "apartment": {
           "name": "apartment",
           "type": "varchar(50)",
@@ -166,22 +182,6 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
         "latitude": {
           "name": "latitude",
           "type": "float4",
@@ -214,22 +214,6 @@
           "enumItems": [],
           "mappedType": "float"
         },
-        "building": {
-          "name": "building",
-          "type": "varchar(50)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 50,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
         "validation_status": {
           "name": "validation_status",
           "type": "varchar(20)",
@@ -261,6 +245,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "name": "address",
@@ -323,9 +323,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -576,9 +576,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -774,6 +774,22 @@
           "enumItems": [],
           "mappedType": "boolean"
         },
+        "points_awarded": {
+          "name": "points_awarded",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
         "purchase_receipt_url": {
           "name": "purchase_receipt_url",
           "type": "varchar(500)",
@@ -854,22 +870,6 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "points_awarded": {
-          "name": "points_awarded",
-          "type": "bool",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
         "expiry_reminder_sent": {
           "name": "expiry_reminder_sent",
           "type": "bool",
@@ -930,17 +930,6 @@
           "constraint": true,
           "keyName": "certificate_certificate_number_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "expires_at",
-            "status"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "certificate_expires_at_status_index",
-          "unique": false,
           "primary": false
         },
         {
@@ -1040,9 +1029,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -1210,9 +1199,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -1446,9 +1435,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -1495,6 +1484,22 @@
         },
         "name": {
           "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "category_id": {
+          "name": "category_id",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -1668,22 +1673,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
         }
       },
       "name": "device",
@@ -1770,9 +1759,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -1922,7 +1911,7 @@
             "name"
           ],
           "composite": false,
-          "constraint": false,
+          "constraint": true,
           "keyName": "device_category_name_unique",
           "unique": true,
           "primary": false
@@ -1984,9 +1973,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -2218,9 +2207,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -2454,9 +2443,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -2678,9 +2667,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -2844,9 +2833,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ],
           "mappedType": "unknown",
           "nativeEnumName": "repair_request_status"
@@ -2963,54 +2952,6 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "steps_locked": {
-          "name": "steps_locked",
-          "type": "bool",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
         "status_before_pause": {
           "name": "status_before_pause",
           "type": "varchar(255)",
@@ -3050,6 +2991,70 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "steps_locked": {
+          "name": "steps_locked",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "certificate_valid": {
+          "name": "certificate_valid",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
           "unique": false,
           "length": 6,
           "precision": null,
@@ -3122,22 +3127,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
-        },
-        "certificate_valid": {
-          "name": "certificate_valid",
-          "type": "bool",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "true",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "boolean"
         }
       },
       "name": "repair_request",
@@ -3253,9 +3242,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -3521,9 +3510,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -3752,9 +3741,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -4047,9 +4036,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -4142,6 +4131,22 @@
           "enumItems": [],
           "mappedType": "text"
         },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
         "status": {
           "name": "status",
           "type": "work_step_status",
@@ -4196,54 +4201,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "boolean"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 6,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "datetime"
-        },
-        "comment": {
-          "name": "comment",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "text"
         },
         "is_mandatory": {
           "name": "is_mandatory",
@@ -4308,6 +4265,38 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "name": "work_step",
@@ -4384,9 +4373,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -4430,54 +4419,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "varchar(5)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 5,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "varchar(5)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": 5,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
-        "approved_by": {
-          "name": "approved_by",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
         },
         "user_id": {
           "name": "user_id",
@@ -4549,6 +4490,38 @@
           "enumItems": [],
           "mappedType": "date"
         },
+        "start_time": {
+          "name": "start_time",
+          "type": "varchar(5)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 5,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "varchar(5)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 5,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "status": {
           "name": "status",
           "type": "text",
@@ -4568,6 +4541,22 @@
             "rejected"
           ],
           "mappedType": "enum"
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
         "note": {
           "name": "note",
@@ -4694,9 +4683,9 @@
             "completed",
             "refused",
             "cancelled",
+            "paused",
             "refund_requested",
-            "refunded",
-            "paused"
+            "refunded"
           ]
         },
         "withdrawal_status": {
@@ -4768,9 +4757,9 @@
         "completed",
         "refused",
         "cancelled",
+        "paused",
         "refund_requested",
-        "refunded",
-        "paused"
+        "refunded"
       ]
     },
     "withdrawal_status": {

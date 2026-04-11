@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { Role } from '@asko/shared';
 import { RepairerService } from 'services/repairer.service';
+import { DealerService } from 'services/dealer.service';
 
 interface UserRegisteredPayload {
     userId: string;
@@ -14,6 +15,7 @@ export class UserEventConsumer {
 
     constructor(
         private readonly repairerService: RepairerService,
+        private readonly dealerService: DealerService,
     ) {}
 
     @EventPattern('user.registered')
@@ -34,6 +36,19 @@ export class UserEventConsumer {
                 } catch (e: any) {
                     if (/already exists/i.test(String(e?.message))) {
                         this.logger.log(`Repairer profile already exists for user ${data.userId}`);
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+            if (roles.includes(Role.DEALER)) {
+                try {
+                    await this.dealerService.createProfile({ userId: data.userId });
+                    this.logger.log(`Dealer profile created for user ${data.userId}`);
+                } catch (e: any) {
+                    if (/already exists/i.test(String(e?.message))) {
+                        this.logger.log(`Dealer profile already exists for user ${data.userId}`);
                     } else {
                         throw e;
                     }

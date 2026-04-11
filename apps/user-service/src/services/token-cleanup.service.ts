@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
-import { Session } from 'entities';
-import { InvitationLink } from 'entities';
+import { Session, InvitationLink } from '../entities';
 
 @Injectable()
 export class TokenCleanupService {

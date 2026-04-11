@@ -27,7 +27,7 @@ import {
     DevicePart,
     BrokenPart,
     WSchedule,
-} from 'entities';
+} from './entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
 import { RepairerGrpcController } from 'controllers/repairer.grpc.controller';

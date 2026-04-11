@@ -4,7 +4,7 @@ import { getEnvFilePath } from '@asko/shared';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
-import { Conversation, ConversationParticipant, Message, UserPresence } from 'entities';
+import { Conversation, ConversationParticipant, Message, UserPresence } from './entities';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 

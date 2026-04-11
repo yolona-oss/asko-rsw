@@ -19,7 +19,7 @@ import {
     PointsTransaction,
     PointsWithdrawal,
     WSchedule,
-} from 'entities';
+} from './entities';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
 
@@ -48,6 +48,10 @@ const config = defineConfig<PostgreSqlDriver>({
     ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
+    },
+    seeder: {
+        path: path.join(process.cwd(), 'src/seeders'),
+        defaultSeeder: 'DevSeeder',
     },
     debug: process.env.NODE_ENV !== 'production',
 });
