@@ -6,7 +6,7 @@ import { RepairClientService } from 'modules/repair-client/repair-client.service
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { FileClientService } from 'modules/file-client/file-client.service';
-import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum } from '@asko/shared';
+import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum, Role } from '@asko/shared';
 import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
 import {
     ReviewResponseDto,
@@ -71,6 +71,14 @@ export class ReviewController {
     @Get(':id/images')
     async findImages(@Param('id') id: string) {
         return this.fileService.findAttachedImages(ImageTypeEnum.Review, id);
+    }
+
+    @ApiOkResponse({ type: RatingResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Get('rating/my')
+    async findMyRating(@JwtAuthUser() user: JwtPayload) {
+        const { repairer } = await this.repairerClient.getMyProfile(user.sub);
+        return this.repairerClient.getRepairerRating(repairer.id);
     }
 
     @ApiOkResponse({ type: RatingResponseDto })
