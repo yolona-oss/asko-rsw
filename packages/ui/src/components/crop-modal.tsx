@@ -130,23 +130,17 @@ export function CropModal({
     [imgNatural],
   );
 
-  // Max crop dimensions (screen px) that keep all four corners inside the image,
-  // given current scale and offset. The crop rect is center-anchored in the
-  // container, so max half-size per axis = min distance from center to either
-  // image edge on that axis.
+  // Max crop dimensions (screen px). The crop is center-anchored, but the
+  // image is freely pannable, so the crop can grow up to the full image
+  // display size — clampOffset auto-shifts the image after each resize to
+  // keep it covering the enlarged crop. (A tighter offset-aware cap would
+  // lock the crop whenever one image edge touched the crop, even if there
+  // was room on the opposite side.)
   const getMaxCropDims = useCallback(
-    (s: number, ox: number, oy: number) => {
-      const iw = imgNatural.w * s;
-      const ih = imgNatural.h * s;
-      const leftDist = iw / 2 + ox;
-      const rightDist = iw / 2 - ox;
-      const topDist = ih / 2 + oy;
-      const bottomDist = ih / 2 - oy;
-      return {
-        maxW: Math.max(0, 2 * Math.min(leftDist, rightDist)),
-        maxH: Math.max(0, 2 * Math.min(topDist, bottomDist)),
-      };
-    },
+    (s: number) => ({
+      maxW: Math.max(0, imgNatural.w * s),
+      maxH: Math.max(0, imgNatural.h * s),
+    }),
     [imgNatural],
   );
 
@@ -156,7 +150,7 @@ export function CropModal({
       let effectiveMaxW = maxCropSize;
       let effectiveMaxH = maxCropSize;
       if (constrainToImage) {
-        const { maxW, maxH } = getMaxCropDims(scale, offset.x, offset.y);
+        const { maxW, maxH } = getMaxCropDims(scale);
         effectiveMaxW = Math.min(maxCropSize, maxW);
         effectiveMaxH = Math.min(maxCropSize, maxH);
       }
@@ -200,7 +194,6 @@ export function CropModal({
       maxCropSize,
       clampOffset,
       scale,
-      offset,
       constrainToImage,
       magnetThreshold,
       getMaxCropDims,
