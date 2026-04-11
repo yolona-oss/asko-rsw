@@ -6,6 +6,7 @@ import { Image } from 'entities/image.entity';
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { isProdEnv } from '@asko/shared';
+import { Document } from 'entities/document.entity';
 
 @Module({
     imports: [
@@ -18,7 +19,7 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [Image, Video, FileAccess],
+                    entities: [Image, Document, Video, FileAccess],
                     debug: !isProdEnv(),
                 };
             },

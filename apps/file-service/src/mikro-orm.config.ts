@@ -9,6 +9,7 @@ import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
+import { Document } from 'entities/document.entity';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
 
@@ -22,7 +23,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [Image, Video, FileAccess],
+    entities: [Image, Video, Document, FileAccess],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },
