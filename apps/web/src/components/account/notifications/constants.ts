@@ -104,6 +104,18 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
     icon: 'schedule',
     href: () => '/account/schedule/my',
   },
+  schedule_extra_day_requested: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
+  },
+  schedule_extra_day_accepted: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
+  schedule_extra_day_rejected: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
   message: { icon: 'message' },
   system: { icon: 'system' },
 };

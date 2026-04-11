@@ -1367,6 +1367,7 @@ export interface CreateScheduleRequest {
     startTime: string;
     endTime: string;
     note?: string;
+    actorId?: string;
 }
 
 export interface UpdateScheduleRequest {

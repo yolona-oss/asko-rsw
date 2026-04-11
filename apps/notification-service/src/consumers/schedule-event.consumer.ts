@@ -43,20 +43,37 @@ export class ScheduleEventConsumer {
         const msg = context.getMessage();
 
         try {
-            const recipients = await this.getStaffRecipients(data.userId);
-            await Promise.all(
-                recipients.map((recipientId) =>
-                    this.notificationService.createNotification(
-                        recipientId,
-                        NotificationType.SCHEDULE_CREATED,
-                        'Новый запрос расписания',
-                        `Создан новый запрос расписания (${data.scheduleType})`,
-                        NotificationTargetType.SCHEDULE,
-                        data.scheduleId,
-                        data,
+            const staffActed = data.actorId && data.actorId !== data.userId;
+            if (staffActed && data.scheduleType === 'extra_day') {
+                // Manager proposed an extra work day during the repairer's vacation — the
+                // repairer must accept or decline it before assignment is unblocked for that day.
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_EXTRA_DAY_REQUESTED,
+                    'Запрос на доп. рабочий день',
+                    'Менеджер предложил вам дополнительный рабочий день — подтвердите или отклоните',
+                    NotificationTargetType.SCHEDULE,
+                    data.scheduleId,
+                    data,
+                );
+            } else {
+                // Default: repairer (or staff on their own behalf) submitted a request that
+                // still needs staff approval — notify the staff roster.
+                const recipients = await this.getStaffRecipients(data.userId);
+                await Promise.all(
+                    recipients.map((recipientId) =>
+                        this.notificationService.createNotification(
+                            recipientId,
+                            NotificationType.SCHEDULE_CREATED,
+                            'Новый запрос расписания',
+                            `Создан новый запрос расписания (${data.scheduleType})`,
+                            NotificationTargetType.SCHEDULE,
+                            data.scheduleId,
+                            data,
+                        ),
                     ),
-                ),
-            );
+                );
+            }
             channel.ack(msg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.created error:', e);
@@ -70,15 +87,35 @@ export class ScheduleEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.SCHEDULE_APPROVED,
-                'Расписание одобрено',
-                'Ваш запрос расписания был одобрен',
-                NotificationTargetType.SCHEDULE,
-                data.scheduleId,
-                data,
-            );
+            const repairerSelfActed = data.actorId && data.actorId === data.userId;
+            if (repairerSelfActed && data.scheduleType === 'extra_day') {
+                // Repairer accepted a staff-proposed extra day — notify staff so they know
+                // assignment for that day is now unblocked.
+                const recipients = await this.getStaffRecipients(data.userId);
+                await Promise.all(
+                    recipients.map((recipientId) =>
+                        this.notificationService.createNotification(
+                            recipientId,
+                            NotificationType.SCHEDULE_EXTRA_DAY_ACCEPTED,
+                            'Доп. день подтверждён',
+                            'Репейрер согласился выйти на дополнительный рабочий день',
+                            NotificationTargetType.SCHEDULE,
+                            data.scheduleId,
+                            data,
+                        ),
+                    ),
+                );
+            } else {
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_APPROVED,
+                    'Расписание одобрено',
+                    'Ваш запрос расписания был одобрен',
+                    NotificationTargetType.SCHEDULE,
+                    data.scheduleId,
+                    data,
+                );
+            }
             channel.ack(msg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.approved error:', e);
@@ -92,15 +129,34 @@ export class ScheduleEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.SCHEDULE_REJECTED,
-                'Расписание отклонено',
-                'Ваш запрос расписания был отклонён',
-                NotificationTargetType.SCHEDULE,
-                data.scheduleId,
-                data,
-            );
+            const repairerSelfActed = data.actorId && data.actorId === data.userId;
+            if (repairerSelfActed && data.scheduleType === 'extra_day') {
+                // Repairer declined a staff-proposed extra day — notify staff.
+                const recipients = await this.getStaffRecipients(data.userId);
+                await Promise.all(
+                    recipients.map((recipientId) =>
+                        this.notificationService.createNotification(
+                            recipientId,
+                            NotificationType.SCHEDULE_EXTRA_DAY_REJECTED,
+                            'Доп. день отклонён',
+                            'Репейрер отказался выйти на дополнительный рабочий день',
+                            NotificationTargetType.SCHEDULE,
+                            data.scheduleId,
+                            data,
+                        ),
+                    ),
+                );
+            } else {
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.SCHEDULE_REJECTED,
+                    'Расписание отклонено',
+                    'Ваш запрос расписания был отклонён',
+                    NotificationTargetType.SCHEDULE,
+                    data.scheduleId,
+                    data,
+                );
+            }
             channel.ack(msg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.rejected error:', e);

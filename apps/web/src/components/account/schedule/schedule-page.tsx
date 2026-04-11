@@ -36,6 +36,9 @@ export function SchedulePage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<ScheduleEntry | undefined>(undefined);
+  const [formDefaultUserId, setFormDefaultUserId] = useState<string | undefined>(undefined);
+  const [formDefaultType, setFormDefaultType] = useState<'vacation' | 'sick_leave' | 'overtime' | 'extra_day' | undefined>(undefined);
+  const [formLockType, setFormLockType] = useState(false);
 
   const filters = useMemo(() => [TYPE_FILTER, STATUS_FILTER], []);
 
@@ -142,6 +145,17 @@ export function SchedulePage() {
 
   const openEdit = (entry: ScheduleEntry) => {
     setEditItem(entry);
+    setFormDefaultUserId(undefined);
+    setFormDefaultType(undefined);
+    setFormLockType(false);
+    setFormOpen(true);
+  };
+
+  const openProposeExtraDay = (targetUserId: string) => {
+    setEditItem(undefined);
+    setFormDefaultUserId(targetUserId);
+    setFormDefaultType('extra_day');
+    setFormLockType(true);
     setFormOpen(true);
   };
 
@@ -275,6 +289,7 @@ export function SchedulePage() {
             onViewUser={(userId) => router.push(`/account/schedule/${userId}`)}
             onPatternApprove={handlePatternApprove}
             onPatternReject={handlePatternReject}
+            onProposeExtraDay={openProposeExtraDay}
           />
         )}
       />
@@ -284,7 +299,9 @@ export function SchedulePage() {
         onClose={() => setFormOpen(false)}
         onSaved={fetchAll}
         editItem={editItem}
-        defaultUserId={user?.id}
+        defaultUserId={formDefaultUserId ?? user?.id}
+        defaultType={formDefaultType}
+        lockType={formLockType}
       />
     </PageContainer>
   );

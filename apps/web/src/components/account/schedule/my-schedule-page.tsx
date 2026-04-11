@@ -224,12 +224,25 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                   <p className="text-[12px] sm:text-sm text-text-sub line-clamp-2">{entry.note}</p>
                 )}
                 {/* Row 3: actions */}
-                {(canEdit || (canApprove && entry.status === 'pending')) && (
+                {(() => {
+                  const staffCanApprove = canApprove && entry.status === 'pending';
+                  // Repairer can self-accept/decline a pending EXTRA_DAY a manager proposed
+                  // during their vacation — this is the sole non-staff approval path.
+                  const repairerCanApprove =
+                    isOwnSchedule && entry.status === 'pending' && entry.type === 'extra_day';
+                  const showApprove = staffCanApprove || repairerCanApprove;
+                  const showActions = canEdit || showApprove;
+                  if (!showActions) return null;
+                  return (
                   <div className="flex items-center gap-2 flex-wrap pt-1">
-                    {canApprove && entry.status === 'pending' && (
+                    {showApprove && (
                       <>
-                        <Button size="sm" variant="success" onClick={() => handleApprove(entry.id)} className="flex-1 sm:flex-none">Одобрить</Button>
-                        <Button size="sm" variant="danger" onClick={() => handleReject(entry.id)} className="flex-1 sm:flex-none">Отклонить</Button>
+                        <Button size="sm" variant="success" onClick={() => handleApprove(entry.id)} className="flex-1 sm:flex-none">
+                          {repairerCanApprove && !staffCanApprove ? 'Согласиться' : 'Одобрить'}
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => handleReject(entry.id)} className="flex-1 sm:flex-none">
+                          {repairerCanApprove && !staffCanApprove ? 'Отказаться' : 'Отклонить'}
+                        </Button>
                       </>
                     )}
                     {canEdit && (
@@ -246,7 +259,8 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                       </>
                     )}
                   </div>
-                )}
+                  );
+                })()}
               </Card>
             ))}
           </div>

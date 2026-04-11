@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Badge, Button, Card } from '@asko/ui';
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { PatternRecord, ScheduleEntry } from './types';
 import { PatternPreview, patternSummary } from './pattern-preview';
 import {
@@ -27,6 +27,15 @@ interface UserScheduleBatchProps {
   onViewUser?: (userId: string) => void;
   onPatternApprove?: (userId: string) => void;
   onPatternReject?: (userId: string) => void;
+  onProposeExtraDay?: (userId: string) => void;
+}
+
+function isDateInRange(date: Date, fromStr: string, toStr: string): boolean {
+  const from = new Date(fromStr);
+  const to = new Date(toStr);
+  from.setHours(0, 0, 0, 0);
+  to.setHours(23, 59, 59, 999);
+  return date >= from && date <= to;
 }
 
 export function UserScheduleBatch({
@@ -43,6 +52,7 @@ export function UserScheduleBatch({
   onViewUser,
   onPatternApprove,
   onPatternReject,
+  onProposeExtraDay,
 }: UserScheduleBatchProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -50,6 +60,14 @@ export function UserScheduleBatch({
   const upcomingVacation = entries.filter((e) => e.type === 'vacation').length;
   const overtimeCount = entries.filter((e) => e.type === 'overtime').length;
   const extraDayCount = entries.filter((e) => e.type === 'extra_day').length;
+
+  const today = new Date();
+  const onVacationToday = entries.some(
+    (e) =>
+      (e.type === 'vacation' || e.type === 'sick_leave') &&
+      e.status === 'approved' &&
+      isDateInRange(today, e.dateFrom, e.dateTo),
+  );
 
   const patternPendingSubmission = pattern?.status === 'pending' && !!pattern?.id;
   const patternPendingEdit = pattern?.status === 'approved' && !!pattern?.pendingData;
@@ -134,6 +152,26 @@ export function UserScheduleBatch({
               </div>
             )}
           </div>
+
+          {canEdit && onVacationToday && onProposeExtraDay && (
+            <div className="p-3 bg-warning-bg border border-warning-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-warning-deep">Репейрер сейчас в отпуске</p>
+                <p className="text-[11px] sm:text-[12px] text-text-sub">
+                  Предложите дополнительный рабочий день — он должен быть подтверждён репейрером.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => onProposeExtraDay(userId)}
+                className="shrink-0"
+              >
+                <Plus className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Доп. рабочий день</span>
+              </Button>
+            </div>
+          )}
 
           <div>
             <p className="text-[11px] sm:text-[12px] text-text-sub mb-2">Записи ({entries.length})</p>

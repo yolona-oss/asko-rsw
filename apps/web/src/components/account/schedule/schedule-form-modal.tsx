@@ -11,13 +11,15 @@ interface ScheduleFormModalProps {
   onSaved: () => void;
   editItem?: any;
   defaultUserId?: string;
+  defaultType?: 'vacation' | 'sick_leave' | 'overtime' | 'extra_day';
+  lockType?: boolean;
 }
 
 const EXCEPTION_TYPES = ['vacation', 'sick_leave', 'overtime', 'extra_day'] as const;
 
-export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUserId }: ScheduleFormModalProps) {
+export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUserId, defaultType, lockType }: ScheduleFormModalProps) {
   const isEdit = !!editItem;
-  const [type, setType] = useState<string>('vacation');
+  const [type, setType] = useState<string>(defaultType ?? 'vacation');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [startTime, setStartTime] = useState('09:00');
@@ -36,7 +38,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       setNote(editItem.note ?? '');
     } else if (open) {
       const today = new Date().toISOString().slice(0, 10);
-      setType('vacation');
+      setType(defaultType ?? 'vacation');
       setDateFrom(today);
       setDateTo(today);
       setStartTime('09:00');
@@ -44,7 +46,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       setNote('');
     }
     setError('');
-  }, [open, editItem]);
+  }, [open, editItem, defaultType]);
 
   const isRange = type === 'vacation' || type === 'sick_leave';
   const needsTimes = type === 'overtime' || type === 'extra_day';
@@ -105,7 +107,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       </h2>
       <div className="flex flex-col gap-3 sm:gap-4">
         <FormField label="Тип">
-          <Select value={type} onChange={(e) => setType(e.target.value)}>
+          <Select value={type} onChange={(e) => setType(e.target.value)} disabled={lockType}>
             {EXCEPTION_TYPES.map((k) => (
               <option key={k} value={k}>
                 {TYPE_LABELS[k] ?? k}

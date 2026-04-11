@@ -292,17 +292,31 @@ export class RepairRequestService {
         await this.scheduleService.recordExtraDay(repairerUserId, now, start, end, requestId);
     }
 
-    /** Returns the first APPROVED vacation/sick-leave entry covering today, or null. */
+    /**
+     * Returns the first APPROVED vacation/sick-leave entry covering today, or null.
+     * An APPROVED EXTRA_DAY covering today overrides the block — managers can propose
+     * an extra work day during a repairer's vacation, and once the repairer accepts,
+     * the repairer can be assigned to requests for that specific day.
+     */
     private async findBlockingScheduleToday(userId: string): Promise<WSchedule | null> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return this.em.findOne(WSchedule, {
+        const blocking = await this.em.findOne(WSchedule, {
             userId,
             status: ScheduleStatus.APPROVED,
             type: { $in: [ScheduleEntryType.VACATION, ScheduleEntryType.SICK_LEAVE] },
             dateFrom: { $lte: today },
             dateTo: { $gte: today },
         });
+        if (!blocking) return null;
+        const override = await this.em.findOne(WSchedule, {
+            userId,
+            status: ScheduleStatus.APPROVED,
+            type: ScheduleEntryType.EXTRA_DAY,
+            dateFrom: { $lte: today },
+            dateTo: { $gte: today },
+        });
+        return override ? null : blocking;
     }
 
     /** Repairer accepts assigned request */

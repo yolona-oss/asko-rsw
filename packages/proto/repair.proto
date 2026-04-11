@@ -1339,6 +1339,7 @@ message CreateScheduleRequest {
     string startTime = 5;
     string endTime = 6;
     string note = 7;
+    string actorId = 8;
 }
 
 message UpdateScheduleRequest {

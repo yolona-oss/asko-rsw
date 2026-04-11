@@ -54,6 +54,7 @@ export class ScheduleGrpcController {
                 type: RepairEventType.SCHEDULE_CREATED,
                 scheduleId: entry.id,
                 userId: entry.userId,
+                actorId: data.actorId || undefined,
                 scheduleType: entry.type,
                 timestamp: new Date(),
             });

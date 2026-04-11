@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
 import {
     CreateWScheduleDto,
@@ -7,6 +7,7 @@ import {
     CreateVacationDto,
     UpsertPatternDto,
     ScheduleEntryType,
+    ScheduleStatus,
     STAFF_ROLES,
     Role,
     JwtPayload,
@@ -38,6 +39,7 @@ export class WScheduleController {
             startTime: dto.startTime,
             endTime: dto.endTime,
             note: dto.note,
+            actorId: user.sub,
         });
         return result.schedule;
     }
@@ -55,6 +57,7 @@ export class WScheduleController {
             startTime: '00:00',
             endTime: '23:59',
             note: dto.note,
+            actorId: user.sub,
         });
         return result.schedule;
     }
@@ -171,18 +174,40 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post(':id/approve')
     async approve(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        if (!isStaff(user)) await this.assertOwnPendingExtraDay(user, id);
         const result = await this.scheduleClient.approve(id, user.sub);
         return result.schedule;
     }
 
     @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post(':id/reject')
     async reject(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        if (!isStaff(user)) await this.assertOwnPendingExtraDay(user, id);
         const result = await this.scheduleClient.reject(id, user.sub);
         return result.schedule;
+    }
+
+    /**
+     * Non-staff callers can only act on their own pending EXTRA_DAY entries —
+     * the flow where a manager proposes an extra work day during the repairer's
+     * vacation and the repairer accepts or declines it.
+     */
+    private async assertOwnPendingExtraDay(user: JwtPayload, scheduleId: string): Promise<void> {
+        const result = await this.scheduleClient.findById(scheduleId);
+        const entry = result.schedule;
+        if (!entry || !entry.id) throw new NotFoundException('Запись расписания не найдена');
+        if (entry.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+        if (entry.type !== ScheduleEntryType.EXTRA_DAY) {
+            throw new ForbiddenException('Только дополнительные дни можно подтверждать самостоятельно');
+        }
+        if (entry.status !== ScheduleStatus.PENDING) {
+            throw new BadRequestException('Можно подтверждать только ожидающие записи');
+        }
     }
 }
