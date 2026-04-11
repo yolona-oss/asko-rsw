@@ -2,6 +2,17 @@ import type { NotificationRecord } from '@/lib/api/types';
 
 export const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
 
+function scheduleStaffHref(n: NotificationRecord): string {
+  if (!n.metadata) return '/account/schedule';
+  try {
+    const parsed = typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata;
+    const repairerId = parsed?.userId;
+    return repairerId ? `/account/schedule/${repairerId}` : '/account/schedule';
+  } catch {
+    return '/account/schedule';
+  }
+}
+
 export const NOTIFICATION_TYPE_CONFIG: Record<string, {
   icon: string;
   href?: (n: NotificationRecord) => string;
@@ -52,6 +63,38 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
   },
   chat_participant_removed: {
     icon: 'chat',
+  },
+  schedule_created: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
+  schedule_updated: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
+  schedule_approved: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
+  },
+  schedule_rejected: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
+  },
+  schedule_pattern_created: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
+  schedule_pattern_updated: {
+    icon: 'schedule',
+    href: scheduleStaffHref,
+  },
+  schedule_pattern_approved: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
+  },
+  schedule_pattern_rejected: {
+    icon: 'schedule',
+    href: () => '/account/schedule/my',
   },
   message: { icon: 'message' },
   system: { icon: 'system' },
