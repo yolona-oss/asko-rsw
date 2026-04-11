@@ -8,6 +8,7 @@ import type { PatternRecord, PatternSlot } from './types';
 import { PRESETS } from './constants';
 import { SlotBlock, type SlotEntry } from './slot-block';
 import { SlotPopover } from './slot-popover';
+import { WeekProjection, weekdayRu } from './week-projection';
 
 interface PatternEditorProps {
   userId: string;
@@ -191,6 +192,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
   const workCount = useMemo(() => entries.filter((e) => e.slot.work).length, [entries]);
   const restCount = entries.length - workCount;
+  const projectionSlots = useMemo(() => entries.map((e) => e.slot), [entries]);
 
   if (loading) {
     return (
@@ -246,7 +248,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         <FormField label="Конец (по умолчанию)">
           <Input type="time" value={defaultEnd} onChange={(e) => handleDefaultEndChange(e.target.value)} />
         </FormField>
-        <FormField label="Старт цикла">
+        <FormField label={`Старт цикла${weekdayRu(anchorDate) ? ` (${weekdayRu(anchorDate)})` : ''}`}>
           <Input type="date" value={anchorDate} onChange={(e) => handleAnchorChange(e.target.value)} />
         </FormField>
       </div>
@@ -275,6 +277,16 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
           ))}
         </Reorder.Group>
       </div>
+
+      {/* Weekly projection — shows how the cycle lands on the current calendar week */}
+      {entries.length > 0 && (
+        <WeekProjection
+          slots={projectionSlots}
+          anchorDate={anchorDate}
+          defaultStartTime={defaultStart}
+          defaultEndTime={defaultEnd}
+        />
+      )}
 
       {error && <p className="text-sm text-brand-red">{error}</p>}
 

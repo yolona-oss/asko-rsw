@@ -1,6 +1,7 @@
 'use client';
 
 import type { PatternPending, PatternRecord, PatternSlot } from './types';
+import { WeekProjection } from './week-projection';
 
 interface PatternPreviewProps {
   pattern: PatternRecord | null;
@@ -11,6 +12,29 @@ interface SlotGridProps {
   slots: PatternSlot[];
   defaultStartTime: string;
   defaultEndTime: string;
+}
+
+interface CycleBlockProps {
+  slots: PatternSlot[];
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  weekLabel?: string;
+}
+
+function CycleBlock({ slots, anchorDate, defaultStartTime, defaultEndTime, weekLabel }: CycleBlockProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <SlotGrid slots={slots} defaultStartTime={defaultStartTime} defaultEndTime={defaultEndTime} />
+      <WeekProjection
+        slots={slots}
+        anchorDate={anchorDate}
+        defaultStartTime={defaultStartTime}
+        defaultEndTime={defaultEndTime}
+        label={weekLabel}
+      />
+    </div>
+  );
 }
 
 function SlotGrid({ slots, defaultStartTime, defaultEndTime }: SlotGridProps) {
@@ -63,8 +87,9 @@ export function PatternPreview({ pattern, compact = false }: PatternPreviewProps
               Новый график на рассмотрении
             </p>
           )}
-          <SlotGrid
+          <CycleBlock
             slots={pattern.pendingData.slots}
+            anchorDate={pattern.pendingData.anchorDate}
             defaultStartTime={pattern.pendingData.defaultStartTime}
             defaultEndTime={pattern.pendingData.defaultEndTime}
           />
@@ -85,8 +110,9 @@ export function PatternPreview({ pattern, compact = false }: PatternPreviewProps
           {isLivePending && <span className="text-warning-deep"> — на рассмотрении</span>}
         </p>
       )}
-      <SlotGrid
+      <CycleBlock
         slots={pattern.slots}
+        anchorDate={pattern.anchorDate}
         defaultStartTime={pattern.defaultStartTime}
         defaultEndTime={pattern.defaultEndTime}
       />
@@ -100,10 +126,12 @@ export function PatternPreview({ pattern, compact = false }: PatternPreviewProps
               {summaryLine(pending.slots, pending.defaultStartTime, pending.defaultEndTime)}
             </p>
           )}
-          <SlotGrid
+          <CycleBlock
             slots={pending.slots}
+            anchorDate={pending.anchorDate}
             defaultStartTime={pending.defaultStartTime}
             defaultEndTime={pending.defaultEndTime}
+            weekLabel="Эта неделя (после изменений)"
           />
         </div>
       )}
