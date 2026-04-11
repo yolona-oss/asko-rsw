@@ -8,10 +8,11 @@ import {
     UpsertPatternDto,
     ScheduleEntryType,
     STAFF_ROLES,
+    Role,
     JwtPayload,
 } from '@asko/shared';
 import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { RequiredRoles, JwtAuthUser, isStaff, assertSelfOrStaff } from '@asko/gateway-common';
 import {
     WScheduleRecordDto,
     PaginatedScheduleResponseDto,
@@ -25,9 +26,10 @@ export class WScheduleController {
     constructor(private readonly scheduleClient: ScheduleClientService) {}
 
     @ApiCreatedResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post()
-    async create(@Body() dto: CreateWScheduleDto) {
+    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateWScheduleDto) {
+        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: dto.type,
@@ -41,9 +43,10 @@ export class WScheduleController {
     }
 
     @ApiCreatedResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('vacation')
-    async createVacation(@Body() dto: CreateVacationDto) {
+    async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
+        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: ScheduleEntryType.VACATION,
@@ -57,26 +60,32 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: PaginatedScheduleResponseDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Get()
-    async findAll(@Query() query: QueryScheduleDto) {
+    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: QueryScheduleDto) {
+        if (!isStaff(user)) {
+            // Non-staff callers can only list their own entries.
+            query.userId = user.sub;
+        }
         const result = await this.scheduleClient.findAll(query);
         return { ...result, data: result.data ?? [] };
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Get('pattern/:userId')
-    async getPattern(@Param('userId') userId: string) {
+    async getPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         const result = await this.scheduleClient.patternGet(userId);
         // Empty pattern is returned as a blank record (id === '') — client handles as null.
         return result.pattern?.id ? result.pattern : null;
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Put('pattern/:userId')
-    async upsertPattern(@Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
+    async upsertPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
+        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         const result = await this.scheduleClient.patternUpsert({
             userId,
             cycleLength: dto.cycleLength,
@@ -93,9 +102,10 @@ export class WScheduleController {
     }
 
     @ApiOkResponse()
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Delete('pattern/:userId')
-    async deletePattern(@Param('userId') userId: string): Promise<void> {
+    async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
+        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         await this.scheduleClient.patternDelete(userId);
     }
 

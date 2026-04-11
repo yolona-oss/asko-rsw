@@ -23,6 +23,7 @@ export interface RepairRequestDetail {
 
 export interface RepairerOption {
   id: string;
+  userId: string;
   city?: string;
   latitude?: number;
   longitude?: number;
@@ -30,4 +31,12 @@ export interface RepairerOption {
   activeRequestCount?: number;
   currentRequestStatus?: string;
   user?: { firstName?: string; lastName?: string };
+}
+
+export type RepairerScheduleStatus = 'working' | 'off' | 'unknown';
+
+export interface RepairerScheduleInfo {
+  status: RepairerScheduleStatus;
+  startTime?: string;
+  endTime?: string;
 }

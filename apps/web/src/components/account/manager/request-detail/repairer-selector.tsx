@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Badge } from '@asko/ui';
 import { ChevronDown } from 'lucide-react';
-import type { RepairerOption } from './types';
+import type { RepairerOption, RepairerScheduleInfo } from './types';
 import { REPAIRER_REQUEST_STATUS_LABELS } from './constants';
 
 interface RequestAddress {
@@ -14,6 +14,7 @@ interface RequestAddress {
 
 interface RepairerSelectorProps {
   repairers: RepairerOption[];
+  scheduleInfo?: Record<string, RepairerScheduleInfo>;
   selectedId: string;
   onSelect: (id: string) => void;
   requestAddress?: RequestAddress;
@@ -43,6 +44,7 @@ function getRepairerName(r: RepairerOption): string {
 
 export function RepairerSelector({
   repairers,
+  scheduleInfo,
   selectedId,
   onSelect,
   requestAddress,
@@ -184,6 +186,9 @@ export function RepairerSelector({
                 ? REPAIRER_REQUEST_STATUS_LABELS[r.currentRequestStatus] ?? r.currentRequestStatus
                 : '';
 
+              // Schedule status
+              const schedule = scheduleInfo?.[r.id];
+
               return (
                 <div
                   key={r.id}
@@ -227,6 +232,24 @@ export function RepairerSelector({
                     ) : (
                       <Badge variant="success" className="text-xs px-1.5 py-0">
                         Свободен
+                      </Badge>
+                    )}
+
+                    {schedule?.status === 'working' && (
+                      <Badge variant="success" className="text-xs px-1.5 py-0">
+                        {schedule.startTime && schedule.endTime
+                          ? `Работает ${schedule.startTime}–${schedule.endTime}`
+                          : 'Работает сегодня'}
+                      </Badge>
+                    )}
+                    {schedule?.status === 'off' && (
+                      <Badge variant="warning" className="text-xs px-1.5 py-0">
+                        Выходной
+                      </Badge>
+                    )}
+                    {schedule?.status === 'unknown' && (
+                      <Badge variant="neutral" className="text-xs px-1.5 py-0">
+                        Нет графика
                       </Badge>
                     )}
                   </div>

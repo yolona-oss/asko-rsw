@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Badge, Button, ImageGallery, SkeletonCard } from '@asko/ui';
+import { Badge, Button, ImageGallery, Modal, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
@@ -12,15 +12,18 @@ import { CertificateWarningBadge } from '@/components/account/shared/certificate
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
+import { scheduleApi } from '@/lib/api/schedule';
+import type { PatternRecordDto } from '@/lib/api/schedule';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { getImageUrl } from '@/lib/file-url';
 import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
-import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption } from './types';
+import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption, RepairerScheduleInfo } from './types';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 import { RequestChat } from './request-chat';
 import { RepairerSelector } from './repairer-selector';
+import { resolveScheduleForToday, compareBySchedule } from './schedule-resolver';
 
 const ASSIGN_MESSAGES = [
   'Назначение мастера…',
@@ -62,6 +65,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
   const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
+  const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
   const [selectedRepairer, setSelectedRepairer] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +74,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatAttached, setChatAttached] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
+  const [offDayConfirm, setOffDayConfirm] = useState<RepairerOption | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -88,7 +93,18 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         }
 
         const { data: repData } = await repairerApi.getForAssignment({ limit: 100 });
-        setRepairers(repData.data ?? []);
+        const repairerList = (repData.data ?? []) as RepairerOption[];
+        setRepairers(repairerList);
+
+        const userIds = repairerList.map((r) => r.userId).filter(Boolean);
+        if (userIds.length > 0) {
+          try {
+            const { data: patternData } = await scheduleApi.patternGetMany(userIds);
+            const byUser: Record<string, PatternRecordDto> = {};
+            for (const p of patternData?.data ?? []) byUser[p.userId] = p;
+            setPatterns(byUser);
+          } catch { /* non-critical */ }
+        }
 
         try {
           const { data } = await fileUploadApi.getAttachedImages('repair_request', requestId, true);
@@ -105,16 +121,33 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     fetchData();
   }, [requestId, authUser?.id]);
 
-  const handleAssign = async () => {
-    if (!selectedRepairer || !request) return;
+  const scheduleInfoByRepairer = useMemo(() => {
+    const map: Record<string, RepairerScheduleInfo> = {};
+    for (const r of repairers) {
+      map[r.id] = resolveScheduleForToday(patterns[r.userId] ?? null);
+    }
+    return map;
+  }, [repairers, patterns]);
+
+  const sortedRepairers = useMemo(() => {
+    return [...repairers].sort((a, b) =>
+      compareBySchedule(
+        scheduleInfoByRepairer[a.id] ?? { status: 'unknown' },
+        scheduleInfoByRepairer[b.id] ?? { status: 'unknown' },
+      ),
+    );
+  }, [repairers, scheduleInfoByRepairer]);
+
+  const performAssign = async (repairerId: string) => {
+    if (!request) return;
     setAssigning(true);
     setAssignSuccess(false);
     try {
       const isReassign = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
       if (isReassign) {
-        await repairRequestApi.reassign(request.id, selectedRepairer);
+        await repairRequestApi.reassign(request.id, repairerId);
       } else {
-        await repairRequestApi.assign(request.id, selectedRepairer);
+        await repairRequestApi.assign(request.id, repairerId);
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
       setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
@@ -124,6 +157,23 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     } catch {
       setAssigning(false);
     }
+  };
+
+  const handleAssign = async () => {
+    if (!selectedRepairer || !request) return;
+    const candidate = repairers.find((r) => r.id === selectedRepairer);
+    const info = candidate ? scheduleInfoByRepairer[candidate.id] : undefined;
+    if (candidate && info?.status === 'off') {
+      setOffDayConfirm(candidate);
+      return;
+    }
+    await performAssign(selectedRepairer);
+  };
+
+  const handleConfirmOffDayAssign = async () => {
+    const repairer = offDayConfirm;
+    setOffDayConfirm(null);
+    if (repairer) await performAssign(repairer.id);
   };
 
   const handleAcceptChat = async () => {
@@ -269,7 +319,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               assignSuccess={assignSuccess}
               selectedRepairer={selectedRepairer}
               onSelectRepairer={setSelectedRepairer}
-              repairers={repairers}
+              repairers={sortedRepairers}
+              scheduleInfo={scheduleInfoByRepairer}
               onAssign={handleAssign}
               requestAddress={request.address}
               currentRepairerId={request.repairer?.id}
@@ -340,6 +391,26 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           </div>
         )}
       </div>
+
+      <Modal open={!!offDayConfirm} onClose={() => setOffDayConfirm(null)} className="w-full max-w-md p-6">
+        <h2 className="text-lg font-medium text-text-main mb-2">Назначение на выходной</h2>
+        {offDayConfirm && (
+          <p className="text-sm text-text-sub mb-4">
+            У мастера <span className="font-medium text-text-main">
+              {[offDayConfirm.user?.lastName, offDayConfirm.user?.firstName].filter(Boolean).join(' ') || 'Без имени'}
+            </span>{' '}
+            сегодня выходной по графику. При назначении будет автоматически создан дополнительный рабочий день.
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setOffDayConfirm(null)}>
+            Отмена
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
+            Подтвердить
+          </Button>
+        </div>
+      </Modal>
     </PageContainer>
   );
 }
@@ -353,6 +424,7 @@ interface AssignSectionProps {
   selectedRepairer: string;
   onSelectRepairer: (id: string) => void;
   repairers: RepairerOption[];
+  scheduleInfo: Record<string, RepairerScheduleInfo>;
   onAssign: () => void;
   requestAddress?: { city?: string; latitude?: number; longitude?: number };
   currentRepairerId?: string;
@@ -365,6 +437,7 @@ function AssignSection({
   selectedRepairer,
   onSelectRepairer,
   repairers,
+  scheduleInfo,
   onAssign,
   requestAddress,
   currentRepairerId,
@@ -468,6 +541,7 @@ function AssignSection({
             <div className="flex items-center gap-2">
               <RepairerSelector
                 repairers={repairers}
+                scheduleInfo={scheduleInfo}
                 selectedId={selectedRepairer}
                 onSelect={onSelectRepairer}
                 requestAddress={requestAddress}

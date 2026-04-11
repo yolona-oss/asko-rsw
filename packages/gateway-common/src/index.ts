@@ -16,6 +16,9 @@ export { GlobalExceptionFilter } from './filters';
 // gRPC utilities
 export { fromGrpcError, grpcCall } from './grpc';
 
+// Auth utilities
+export { isStaff, isSelf, assertSelfOrStaff } from './auth';
+
 // Config
 export { corsOptions } from './config/cors.config';
 export { helmetOptions } from './config/helmet.config';

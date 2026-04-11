@@ -252,6 +252,8 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.ASSIGNED;
         await this.em.flush();
 
+        await this.ensureExtraDayIfOff(repairer.userId, request.id);
+
         await this.repairEventService.emit({
             type: RepairEventType.ASSIGNED,
             repairId: request.id,
@@ -263,6 +265,20 @@ export class RepairRequestService {
         });
 
         return request;
+    }
+
+    /**
+     * If the repairer has a pattern and today is a rest day (or there's no pattern at all —
+     * treat as "off" since nothing is planned), log an EXTRA_DAY entry so the repairer gets
+     * credit for working an unscheduled day. Idempotent per (user, date).
+     */
+    private async ensureExtraDayIfOff(repairerUserId: string, requestId: string): Promise<void> {
+        const now = new Date();
+        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, now);
+        if (slot && slot.work) return;
+        const start = slot?.startTime || '09:00';
+        const end = slot?.endTime || '18:00';
+        await this.scheduleService.recordExtraDay(repairerUserId, now, start, end, requestId);
     }
 
     /** Repairer accepts assigned request */
@@ -618,6 +634,8 @@ export class RepairRequestService {
         request.statusBeforePause = undefined;
         request.refuseReason = undefined;
         await this.em.flush();
+
+        await this.ensureExtraDayIfOff(newRepairer.userId, request.id);
 
         await this.repairEventService.emit({
             type: RepairEventType.TRANSFERRED,
