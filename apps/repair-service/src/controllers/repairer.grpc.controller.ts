@@ -227,4 +227,13 @@ export class RepairerGrpcController {
             return { review: reviewToRecord(review) };
         } catch (e) { throw toGrpcError(e); }
     }
+
+    @GrpcMethod('RepairerService', 'FindReviewByRequest')
+    async findReviewByRequest(data: RepairerFindByIdRequest) {
+        try {
+            const review = await this.reviewService.findByRepairRequest(data.id);
+            if (!review) throw new RpcException({ code: status.NOT_FOUND, message: 'Review not found' });
+            return { review: reviewToRecord(review) };
+        } catch (e) { throw toGrpcError(e); }
+    }
 }

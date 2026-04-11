@@ -652,6 +652,7 @@ export interface RepairerServiceClient {
     getRepairerRating(request: RepairerFindByIdRequest): Observable<RatingResponse>;
     findReviewsByUser(request: RepairerGetByUserIdRequest): Observable<ReviewListResponse>;
     findUserReview(request: FindUserReviewRequest): Observable<ReviewResponse>;
+    findReviewByRequest(request: RepairerFindByIdRequest): Observable<ReviewResponse>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

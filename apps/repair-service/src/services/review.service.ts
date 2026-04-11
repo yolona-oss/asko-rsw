@@ -104,4 +104,11 @@ export class ReviewService {
         if (!review) throw AppErrors.dbEntityNotFound('Review not found');
         return review;
     }
+
+    @CreateRequestContext()
+    async findByRepairRequest(repairRequestId: string): Promise<Review | null> {
+        return this.em.findOne(Review, { repairRequest: repairRequestId }, {
+            populate: ['repairer'],
+        });
+    }
 }

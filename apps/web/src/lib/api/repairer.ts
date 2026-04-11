@@ -31,7 +31,7 @@ export const repairerApi = {
   },
 
   getProfile() {
-    return api.get<IRepairer>('/repairers/me');
+    return api.get<{ repairer: IRepairer }>('/repairers/me');
   },
 
   updateLocation(data: UpdateLocationDto) {

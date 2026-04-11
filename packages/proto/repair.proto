@@ -85,6 +85,7 @@ service RepairerService {
     rpc GetRepairerRating(FindByIdRequest) returns (RatingResponse);
     rpc FindReviewsByUser(GetByUserIdRequest) returns (ReviewListResponse);
     rpc FindUserReview(FindUserReviewRequest) returns (ReviewResponse);
+    rpc FindReviewByRequest(FindByIdRequest) returns (ReviewResponse);
 }
 
 service RepairService {

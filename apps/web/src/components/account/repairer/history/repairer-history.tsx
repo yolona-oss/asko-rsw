@@ -157,7 +157,7 @@ export function RepairerHistory() {
   useEffect(() => {
     if (!user) return;
     repairerApi.getProfile()
-      .then(({ data }) => reviewApi.getRating(data.id))
+      .then(({ data }) => reviewApi.getRating(data.repairer.id))
       .then((res) => res && setRating(res.data))
       .catch(() => { });
   }, [user]);
