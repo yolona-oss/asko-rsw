@@ -81,11 +81,10 @@ export class RepairerClientService implements OnModuleInit {
 
     // ── Reviews ──
 
-    createReview(repairRequestId: string, userId: string, repairerId: string, rating: number, comment?: string): Promise<ReviewResponse> {
+    createReview(repairRequestId: string, userId: string, rating: number, comment?: string): Promise<ReviewResponse> {
         return grpcCall(this.repairerService.createReview({
             repairRequestId,
             userId,
-            repairerId,
             rating,
             comment: comment ?? '',
         }));

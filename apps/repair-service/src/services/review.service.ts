@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Review } from 'entities/review.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
-import { Repairer } from 'entities/repairer.entity';
 import { RepairRequestStatus } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
@@ -14,12 +13,15 @@ export class ReviewService {
     async create(dto: {
         repairRequestId: string;
         userId: string;
-        repairerId: string;
         rating: number;
         comment?: string;
     }): Promise<Review> {
-        // Validate repair request exists and is COMPLETED
-        const request = await this.em.findOne(RepairRequest, { id: dto.repairRequestId });
+        // Validate repair request exists, is COMPLETED, and has a repairer assigned
+        const request = await this.em.findOne(
+            RepairRequest,
+            { id: dto.repairRequestId },
+            { populate: ['repairer'] },
+        );
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.status !== RepairRequestStatus.COMPLETED) {
             throw AppErrors.badRequest('Отзыв можно оставить только для завершённого ремонта');
@@ -28,9 +30,10 @@ export class ReviewService {
             throw AppErrors.badRequest('Только владелец заявки может оставить отзыв');
         }
 
-        // Check repairer exists
-        const repairer = await this.em.findOne(Repairer, { id: dto.repairerId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        const repairer = request.repairer;
+        if (!repairer) {
+            throw AppErrors.badRequest('К заявке не привязан исполнитель — отзыв невозможен');
+        }
 
         // Check for duplicate review
         const existing = await this.em.findOne(Review, {

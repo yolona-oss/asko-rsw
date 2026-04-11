@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Textarea, SkeletonCard } from '@asko/ui';
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
+import { CreateCertificateModal } from '@/components/account/user/create-request/create-certificate-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
@@ -39,6 +39,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
   // Payment modal state
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [createCertOpen, setCreateCertOpen] = useState(false);
 
   // Review state
   const [reviewRating, setReviewRating] = useState(0);
@@ -180,16 +181,13 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             <CertificateWarningBadge valid={request.certificateValid} />
             <p className="text-xs text-text-sub">
               Сертификат не оплачен или недействителен.{' '}
-              {(request.certificate?.id ?? request.certificateId) ? (
-                <Link
-                  href={`/account/certificates/${request.certificate?.id ?? request.certificateId}`}
-                  className="text-brand-main underline"
-                >
-                  Оплатите, чтобы активировать заявку.
-                </Link>
-              ) : (
-                'Оплатите, чтобы активировать заявку.'
-              )}
+              <button
+                type="button"
+                onClick={() => setCreateCertOpen(true)}
+                className="text-brand-main underline cursor-pointer"
+              >
+                Оплатите, чтобы активировать заявку.
+              </button>
             </p>
           </div>
         )}
@@ -229,6 +227,19 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         targetId={requestId}
         amount={request.totalCost ?? 0}
       />
+
+      {/* Certificate self-create modal */}
+      {request.userDevice?.id && (
+        <CreateCertificateModal
+          open={createCertOpen}
+          userDeviceId={request.userDevice.id}
+          onClose={() => setCreateCertOpen(false)}
+          onSuccess={() => {
+            setCreateCertOpen(false);
+            fetchData();
+          }}
+        />
+      )}
 
       {/* Progress steps */}
       <div className="flex items-start mt-6 pb-6 -mx-4 px-4 lg:mx-0 lg:px-0">

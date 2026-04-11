@@ -181,7 +181,6 @@ export class RepairerGrpcController {
             const review = await this.reviewService.create({
                 repairRequestId: data.repairRequestId,
                 userId: data.userId,
-                repairerId: data.repairerId,
                 rating: data.rating,
                 comment: data.comment || undefined,
             });

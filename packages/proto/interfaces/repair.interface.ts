@@ -570,7 +570,6 @@ export interface FindInCityRequest {
 export interface CreateReviewRequest {
     repairRequestId: string;
     userId: string;
-    repairerId: string;
     rating: number;
     comment: string;
 }

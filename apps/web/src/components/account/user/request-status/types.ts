@@ -25,6 +25,7 @@ export interface RepairRequest {
   certificateValid?: boolean;
   certificateId?: string;
   certificate?: { id: string };
+  userDevice?: { id: string };
   repairer?: {
     user?: { firstName?: string; lastName?: string };
   };

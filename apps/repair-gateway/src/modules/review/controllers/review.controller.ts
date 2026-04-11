@@ -34,7 +34,6 @@ export class ReviewController {
         const result = await this.repairerClient.createReview(
             dto.repairRequestId,
             user.sub,
-            '',
             dto.rating,
             dto.comment,
         );
