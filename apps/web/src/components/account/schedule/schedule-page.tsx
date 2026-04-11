@@ -122,6 +122,20 @@ export function SchedulePage() {
     } catch { /* */ }
   };
 
+  const handlePatternApprove = async (targetUserId: string) => {
+    try {
+      await scheduleApi.patternApprove(targetUserId);
+      await fetchAll();
+    } catch { /* */ }
+  };
+
+  const handlePatternReject = async (targetUserId: string) => {
+    try {
+      await scheduleApi.patternReject(targetUserId);
+      await fetchAll();
+    } catch { /* */ }
+  };
+
   const handleDelete = async (entry: ScheduleEntry) => {
     try {
       await scheduleApi.delete(entry.id);
@@ -183,6 +197,8 @@ export function SchedulePage() {
             onEdit={openEdit}
             onDelete={handleDelete}
             onViewUser={(userId) => router.push(`/account/schedule/${userId}`)}
+            onPatternApprove={handlePatternApprove}
+            onPatternReject={handlePatternReject}
           />
         )}
       />

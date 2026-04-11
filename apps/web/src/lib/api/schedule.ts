@@ -29,6 +29,14 @@ export interface PatternSlotDto {
   endTime?: string | null;
 }
 
+export interface PatternPendingDto {
+  cycleLength: number;
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  slots: PatternSlotDto[];
+}
+
 export interface PatternRecordDto {
   id: string;
   userId: string;
@@ -39,6 +47,11 @@ export interface PatternRecordDto {
   slots: PatternSlotDto[];
   createdAt: string;
   updatedAt: string;
+  status?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  pendingData?: PatternPendingDto | null;
+  hasPendingData?: boolean;
 }
 
 export interface UpsertPatternInput {
@@ -129,5 +142,13 @@ export const scheduleApi = {
     return api.get<{ data: PatternRecordDto[] }>('/schedule/patterns', {
       params: { userIds: userIds.join(',') },
     });
+  },
+
+  patternApprove(userId: string) {
+    return api.post<PatternRecordDto>(`/schedule/pattern/${userId}/approve`);
+  },
+
+  patternReject(userId: string) {
+    return api.post<PatternRecordDto>(`/schedule/pattern/${userId}/reject`);
   },
 };

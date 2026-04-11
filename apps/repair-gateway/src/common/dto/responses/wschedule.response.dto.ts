@@ -33,6 +33,15 @@ export class PatternSlotDto {
     endTime?: string;
 }
 
+export class PatternPendingDto {
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    @ApiProperty({ type: [PatternSlotDto] })
+    slots: PatternSlotDto[];
+}
+
 export class SchedulePatternRecordDto {
     id: string;
     userId: string;
@@ -44,6 +53,13 @@ export class SchedulePatternRecordDto {
     slots: PatternSlotDto[];
     createdAt: string;
     updatedAt: string;
+    @ApiProperty({ enum: ScheduleStatus, enumName: 'ScheduleStatus' })
+    status: ScheduleStatus;
+    approvedBy?: string;
+    approvedAt?: string;
+    @ApiProperty({ type: PatternPendingDto, required: false })
+    pendingData?: PatternPendingDto;
+    hasPendingData: boolean;
 }
 
 export class SchedulePatternListResponseDto {

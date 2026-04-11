@@ -73,4 +73,12 @@ export class ScheduleClientService implements OnModuleInit {
     patternGetMany(userIds: string[]): Promise<PatternListResponse> {
         return grpcCall(this.patternService.getManyPatterns({ userIds }));
     }
+
+    patternApprove(userId: string, approvedBy: string): Promise<PatternResponse> {
+        return grpcCall(this.patternService.approvePattern({ userId, approvedBy }));
+    }
+
+    patternReject(userId: string, approvedBy: string): Promise<PatternResponse> {
+        return grpcCall(this.patternService.rejectPattern({ userId, approvedBy }));
+    }
 }

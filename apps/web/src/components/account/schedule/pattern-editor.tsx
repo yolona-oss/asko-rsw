@@ -57,6 +57,9 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
   const [popoverIndex, setPopoverIndex] = useState<number | null>(null);
 
+  const [patternStatus, setPatternStatus] = useState<string | null>(null);
+  const [hasPendingEdit, setHasPendingEdit] = useState(false);
+
   const applySnapshot = useCallback(
     (pattern: PatternRecord | null) => {
       if (!pattern || !pattern.id) {
@@ -68,10 +71,15 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         setAnchorDate(snapshot.anchorDate);
         setInitialSnapshot(snapshot);
         setDirty(true);
+        setPatternStatus(null);
+        setHasPendingEdit(false);
         return;
       }
+      // Prefer the repairer's pending edit so they see their last proposed
+      // version; fall back to the live approved pattern otherwise.
+      const source = pattern.pendingData ?? pattern;
       const wrapped = wrap(
-        pattern.slots.map((s) => ({
+        source.slots.map((s) => ({
           work: !!s.work,
           startTime: s.startTime || null,
           endTime: s.endTime || null,
@@ -79,9 +87,9 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
       );
       const snap = {
         entries: wrapped,
-        defaultStart: pattern.defaultStartTime || DEFAULT_START,
-        defaultEnd: pattern.defaultEndTime || DEFAULT_END,
-        anchorDate: (pattern.anchorDate || todayISO()).slice(0, 10),
+        defaultStart: source.defaultStartTime || DEFAULT_START,
+        defaultEnd: source.defaultEndTime || DEFAULT_END,
+        anchorDate: ((source as any).anchorDate || todayISO()).slice(0, 10),
       };
       setEntries(snap.entries);
       setDefaultStart(snap.defaultStart);
@@ -89,6 +97,8 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
       setAnchorDate(snap.anchorDate);
       setInitialSnapshot(snap);
       setDirty(false);
+      setPatternStatus(pattern.status ?? null);
+      setHasPendingEdit(!!pattern.pendingData);
     },
     [],
   );
@@ -191,8 +201,26 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
     );
   }
 
+  const statusBanner = (() => {
+    if (patternStatus === 'pending') {
+      return 'Ваш график ожидает подтверждения администратором.';
+    }
+    if (patternStatus === 'rejected' && !hasPendingEdit) {
+      return 'Ваш график был отклонён. Внесите изменения и отправьте повторно.';
+    }
+    if (hasPendingEdit) {
+      return 'Ваши изменения графика ожидают подтверждения. Действующий график пока сохраняется.';
+    }
+    return null;
+  })();
+
   return (
     <div className="flex flex-col gap-4">
+      {statusBanner && (
+        <div className="p-3 bg-warning-bg border border-warning-border text-[12px] sm:text-[13px] text-warning-deep">
+          {statusBanner}
+        </div>
+      )}
       {/* Preset bar */}
       <div>
         <p className="text-[12px] text-text-sub mb-2">Шаблоны</p>

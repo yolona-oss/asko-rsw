@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { WSchedulePattern, PatternSlotData } from 'entities/wschedule-pattern.entity';
+import { WSchedulePattern, PatternSlotData, PatternPendingData } from 'entities/wschedule-pattern.entity';
+import { ScheduleStatus } from 'entities/wschedule.entity';
 import type { UpsertPatternRequest } from '@asko/proto';
 
 const MS_PER_DAY = 86_400_000;
@@ -9,6 +10,18 @@ export interface ResolvedSlot {
     work: boolean;
     startTime: string;
     endTime: string;
+}
+
+export interface PatternEventSummary {
+    userId: string;
+    actorId?: string | null;
+    isFirstSubmission: boolean;
+    wasStaged: boolean;
+}
+
+export interface PatternUpsertResult {
+    pattern: WSchedulePattern;
+    event: PatternEventSummary | null;
 }
 
 @Injectable()
@@ -27,22 +40,119 @@ export class WSchedulePatternService {
     }
 
     @CreateRequestContext()
-    async upsert(data: UpsertPatternRequest): Promise<WSchedulePattern> {
+    async upsert(data: UpsertPatternRequest): Promise<PatternUpsertResult> {
         this.validate(data);
-        let pattern = await this.em.findOne(WSchedulePattern, { userId: data.userId });
-        if (!pattern) {
-            pattern = new WSchedulePattern();
+        const proposed = this.toPendingData(data);
+        const existing = await this.em.findOne(WSchedulePattern, { userId: data.userId });
+        const actorIsStaff = !!data.actorIsStaff;
+
+        if (!existing) {
+            // First-time submission. Always PENDING regardless of actor — no live pattern yet.
+            const pattern = new WSchedulePattern();
             pattern.userId = data.userId;
+            this.applyProposedToLive(pattern, proposed);
+            if (actorIsStaff) {
+                pattern.status = ScheduleStatus.APPROVED;
+                pattern.approvedBy = data.actorId || null;
+                pattern.approvedAt = new Date();
+            } else {
+                pattern.status = ScheduleStatus.PENDING;
+                pattern.approvedBy = null;
+                pattern.approvedAt = null;
+            }
+            pattern.pendingData = null;
+            await this.em.persistAndFlush(pattern);
+            return {
+                pattern,
+                event: {
+                    userId: data.userId,
+                    actorId: data.actorId || null,
+                    isFirstSubmission: true,
+                    wasStaged: !actorIsStaff,
+                },
+            };
         }
-        pattern.cycleLength = data.cycleLength;
-        pattern.anchorDate = new Date(data.anchorDate);
-        pattern.defaultStartTime = data.defaultStartTime;
-        pattern.defaultEndTime = data.defaultEndTime;
-        pattern.slots = data.slots.map((s) => ({
-            work: !!s.work,
-            startTime: s.startTime || null,
-            endTime: s.endTime || null,
-        }));
+
+        if (actorIsStaff) {
+            // Staff edits apply directly and clear any pending stash.
+            this.applyProposedToLive(existing, proposed);
+            existing.status = ScheduleStatus.APPROVED;
+            existing.approvedBy = data.actorId || null;
+            existing.approvedAt = new Date();
+            existing.pendingData = null;
+            await this.em.persistAndFlush(existing);
+            return { pattern: existing, event: null };
+        }
+
+        // Non-staff edits.
+        if (existing.status !== ScheduleStatus.APPROVED) {
+            // Row is still PENDING (or REJECTED) — there's no live version yet, so the
+            // repairer is refining the original submission in place.
+            this.applyProposedToLive(existing, proposed);
+            existing.status = ScheduleStatus.PENDING;
+            existing.approvedBy = null;
+            existing.approvedAt = null;
+            existing.pendingData = null;
+            await this.em.persistAndFlush(existing);
+            return {
+                pattern: existing,
+                event: {
+                    userId: data.userId,
+                    actorId: data.actorId || null,
+                    isFirstSubmission: false,
+                    wasStaged: false,
+                },
+            };
+        }
+
+        // Approved row — stash the proposed edit so the live pattern keeps serving.
+        existing.pendingData = proposed;
+        await this.em.persistAndFlush(existing);
+        return {
+            pattern: existing,
+            event: {
+                userId: data.userId,
+                actorId: data.actorId || null,
+                isFirstSubmission: false,
+                wasStaged: true,
+            },
+        };
+    }
+
+    @CreateRequestContext()
+    async approve(userId: string, approvedBy: string): Promise<WSchedulePattern> {
+        const pattern = await this.em.findOne(WSchedulePattern, { userId });
+        if (!pattern) throw new Error('Pattern not found');
+
+        if (pattern.pendingData) {
+            this.applyProposedToLive(pattern, pattern.pendingData);
+            pattern.pendingData = null;
+        }
+        pattern.status = ScheduleStatus.APPROVED;
+        pattern.approvedBy = approvedBy;
+        pattern.approvedAt = new Date();
+        await this.em.persistAndFlush(pattern);
+        return pattern;
+    }
+
+    @CreateRequestContext()
+    async reject(userId: string, approvedBy: string): Promise<WSchedulePattern> {
+        const pattern = await this.em.findOne(WSchedulePattern, { userId });
+        if (!pattern) throw new Error('Pattern not found');
+
+        if (pattern.pendingData) {
+            // Reject the staged edit only — live approved pattern stays untouched.
+            pattern.pendingData = null;
+            pattern.approvedBy = approvedBy;
+            pattern.approvedAt = new Date();
+            await this.em.persistAndFlush(pattern);
+            return pattern;
+        }
+
+        // Reject a first-time submission (or a row still sitting in PENDING).
+        pattern.status = ScheduleStatus.REJECTED;
+        pattern.approvedBy = approvedBy;
+        pattern.approvedAt = new Date();
         await this.em.persistAndFlush(pattern);
         return pattern;
     }
@@ -55,11 +165,12 @@ export class WSchedulePatternService {
 
     /**
      * Resolve a slot for a specific calendar date (no transaction needed — uses in-memory pattern).
-     * Returns null if the user has no pattern. If the resolved slot is a rest day, `work === false`.
+     * Returns null if the user has no *approved* live pattern. Pending-only rows are ignored so
+     * the repairer's real work schedule only reflects confirmed cycles.
      */
     async resolveSlotForDate(userId: string, date: Date): Promise<ResolvedSlot | null> {
         const pattern = await this.get(userId);
-        if (!pattern) return null;
+        if (!pattern || pattern.status !== ScheduleStatus.APPROVED) return null;
         return this.resolveFromPattern(pattern, date);
     }
 
@@ -72,6 +183,32 @@ export class WSchedulePatternService {
             work: !!slot.work,
             startTime: slot.startTime || pattern.defaultStartTime,
             endTime: slot.endTime || pattern.defaultEndTime,
+        };
+    }
+
+    private applyProposedToLive(pattern: WSchedulePattern, data: PatternPendingData): void {
+        pattern.cycleLength = data.cycleLength;
+        pattern.anchorDate = new Date(data.anchorDate);
+        pattern.defaultStartTime = data.defaultStartTime;
+        pattern.defaultEndTime = data.defaultEndTime;
+        pattern.slots = data.slots.map((s) => ({
+            work: !!s.work,
+            startTime: s.startTime || null,
+            endTime: s.endTime || null,
+        }));
+    }
+
+    private toPendingData(data: UpsertPatternRequest): PatternPendingData {
+        return {
+            cycleLength: data.cycleLength,
+            anchorDate: data.anchorDate,
+            defaultStartTime: data.defaultStartTime,
+            defaultEndTime: data.defaultEndTime,
+            slots: data.slots.map((s) => ({
+                work: !!s.work,
+                startTime: s.startTime || null,
+                endTime: s.endTime || null,
+            })),
         };
     }
 

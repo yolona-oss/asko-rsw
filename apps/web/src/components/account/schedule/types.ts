@@ -20,6 +20,14 @@ export interface PatternSlot {
   endTime?: string | null;
 }
 
+export interface PatternPending {
+  cycleLength: number;
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  slots: PatternSlot[];
+}
+
 export interface PatternRecord {
   id: string;
   userId: string;
@@ -30,6 +38,11 @@ export interface PatternRecord {
   slots: PatternSlot[];
   createdAt: string;
   updatedAt: string;
+  status?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  pendingData?: PatternPending | null;
+  hasPendingData?: boolean;
 }
 
 export interface PatternUpsertInput {

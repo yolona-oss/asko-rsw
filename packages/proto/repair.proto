@@ -159,6 +159,8 @@ service SchedulePatternService {
     rpc UpsertPattern(UpsertPatternRequest) returns (PatternResponse);
     rpc DeletePattern(DeletePatternRequest) returns (ScheduleEmptyResponse);
     rpc GetManyPatterns(GetManyPatternsRequest) returns (PatternListResponse);
+    rpc ApprovePattern(PatternApproveRequest) returns (PatternResponse);
+    rpc RejectPattern(PatternApproveRequest) returns (PatternResponse);
 }
 
 service DealerService {
@@ -1387,6 +1389,14 @@ message PatternSlot {
     string endTime = 3;
 }
 
+message PatternPending {
+    int32 cycleLength = 1;
+    string anchorDate = 2;
+    string defaultStartTime = 3;
+    string defaultEndTime = 4;
+    repeated PatternSlot slots = 5;
+}
+
 message PatternRecord {
     string id = 1;
     string userId = 2;
@@ -1397,6 +1407,11 @@ message PatternRecord {
     repeated PatternSlot slots = 7;
     string createdAt = 8;
     string updatedAt = 9;
+    string status = 10;
+    string approvedBy = 11;
+    string approvedAt = 12;
+    PatternPending pendingData = 13;
+    bool hasPendingData = 14;
 }
 
 message GetPatternRequest {
@@ -1410,6 +1425,13 @@ message UpsertPatternRequest {
     string defaultStartTime = 4;
     string defaultEndTime = 5;
     repeated PatternSlot slots = 6;
+    string actorId = 7;
+    bool actorIsStaff = 8;
+}
+
+message PatternApproveRequest {
+    string userId = 1;
+    string approvedBy = 2;
 }
 
 message DeletePatternRequest {

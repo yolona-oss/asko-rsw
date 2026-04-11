@@ -87,6 +87,24 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     } catch { /* */ }
   };
 
+  const handlePatternApprove = async () => {
+    try {
+      await scheduleApi.patternApprove(userId);
+      fetchData();
+    } catch { /* */ }
+  };
+
+  const handlePatternReject = async () => {
+    try {
+      await scheduleApi.patternReject(userId);
+      fetchData();
+    } catch { /* */ }
+  };
+
+  const patternPendingSubmission = pattern?.status === 'pending' && !!pattern?.id;
+  const patternPendingEdit = pattern?.status === 'approved' && !!pattern?.pendingData;
+  const patternNeedsReview = patternPendingSubmission || patternPendingEdit;
+
   const openCreateException = () => {
     setEditItem(undefined);
     setFormOpen(true);
@@ -122,6 +140,30 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
           </p>
         </Card>
       </div>
+
+      {/* Pattern review banner (for staff reviewing a repairer's pending pattern) */}
+      {canApprove && patternNeedsReview && (
+        <div className="p-3 bg-warning-bg border border-warning-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-warning-deep">
+              {patternPendingSubmission
+                ? 'Новый график работы на рассмотрении'
+                : 'Предложены изменения графика работы'}
+            </p>
+            <p className="text-[11px] sm:text-[12px] text-text-sub">
+              Проверьте предложенный график и примите решение.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="success" onClick={handlePatternApprove} className="flex-1 sm:flex-none">
+              Одобрить
+            </Button>
+            <Button size="sm" variant="danger" onClick={handlePatternReject} className="flex-1 sm:flex-none">
+              Отклонить
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Pattern editor / preview */}
       <section>

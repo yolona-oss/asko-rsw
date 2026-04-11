@@ -23,6 +23,10 @@ export enum NotificationType {
     SCHEDULE_APPROVED = 'schedule_approved',
     SCHEDULE_REJECTED = 'schedule_rejected',
     SCHEDULE_UPDATED = 'schedule_updated',
+    SCHEDULE_PATTERN_CREATED = 'schedule_pattern_created',
+    SCHEDULE_PATTERN_UPDATED = 'schedule_pattern_updated',
+    SCHEDULE_PATTERN_APPROVED = 'schedule_pattern_approved',
+    SCHEDULE_PATTERN_REJECTED = 'schedule_pattern_rejected',
 }
 
 export enum NotificationTargetType {

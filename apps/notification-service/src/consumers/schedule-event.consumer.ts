@@ -123,4 +123,105 @@ export class ScheduleEventConsumer {
             channel.ack(msg);
         }
     }
+
+    @EventPattern('schedule.pattern_created')
+    async handlePatternCreated(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            const recipients = await this.getStaffRecipients(data.userId);
+            await Promise.all(
+                recipients.map((recipientId) =>
+                    this.notificationService.createNotification(
+                        recipientId,
+                        NotificationType.SCHEDULE_PATTERN_CREATED,
+                        'Новый график работы',
+                        'Репейрер прислал свой первый график работы',
+                        NotificationTargetType.SCHEDULE,
+                        data.patternId,
+                        data,
+                    ),
+                ),
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.pattern_created error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('schedule.pattern_updated')
+    async handlePatternUpdated(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            const recipients = await this.getStaffRecipients(data.userId);
+            const body = data.staged
+                ? 'Предложено изменение графика работы — требуется подтверждение'
+                : 'График работы был обновлён';
+            await Promise.all(
+                recipients.map((recipientId) =>
+                    this.notificationService.createNotification(
+                        recipientId,
+                        NotificationType.SCHEDULE_PATTERN_UPDATED,
+                        'Изменение графика работы',
+                        body,
+                        NotificationTargetType.SCHEDULE,
+                        data.patternId,
+                        data,
+                    ),
+                ),
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.pattern_updated error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('schedule.pattern_approved')
+    async handlePatternApproved(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.SCHEDULE_PATTERN_APPROVED,
+                'График работы одобрен',
+                'Ваш график работы был одобрен',
+                NotificationTargetType.SCHEDULE,
+                data.patternId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.pattern_approved error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('schedule.pattern_rejected')
+    async handlePatternRejected(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.SCHEDULE_PATTERN_REJECTED,
+                'График работы отклонён',
+                'Ваш график работы был отклонён',
+                NotificationTargetType.SCHEDULE,
+                data.patternId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[ScheduleEventConsumer] schedule.pattern_rejected error:', e);
+            channel.ack(msg);
+        }
+    }
 }

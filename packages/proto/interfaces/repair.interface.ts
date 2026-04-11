@@ -1430,6 +1430,14 @@ export interface PatternSlot {
     endTime: string;
 }
 
+export interface PatternPending {
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    slots: PatternSlot[];
+}
+
 export interface PatternRecord {
     id: string;
     userId: string;
@@ -1440,6 +1448,11 @@ export interface PatternRecord {
     slots: PatternSlot[];
     createdAt: string;
     updatedAt: string;
+    status: string;
+    approvedBy: string;
+    approvedAt: string;
+    pendingData?: PatternPending;
+    hasPendingData: boolean;
 }
 
 export interface GetPatternRequest {
@@ -1453,6 +1466,13 @@ export interface UpsertPatternRequest {
     defaultStartTime: string;
     defaultEndTime: string;
     slots: PatternSlot[];
+    actorId: string;
+    actorIsStaff: boolean;
+}
+
+export interface PatternApproveRequest {
+    userId: string;
+    approvedBy: string;
 }
 
 export interface DeletePatternRequest {
@@ -1476,4 +1496,6 @@ export interface SchedulePatternServiceClient {
     upsertPattern(data: UpsertPatternRequest): Observable<PatternResponse>;
     deletePattern(data: DeletePatternRequest): Observable<ScheduleEmptyResponse>;
     getManyPatterns(data: GetManyPatternsRequest): Observable<PatternListResponse>;
+    approvePattern(data: PatternApproveRequest): Observable<PatternResponse>;
+    rejectPattern(data: PatternApproveRequest): Observable<PatternResponse>;
 }

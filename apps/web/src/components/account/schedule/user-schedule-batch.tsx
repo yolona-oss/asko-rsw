@@ -25,6 +25,8 @@ interface UserScheduleBatchProps {
   onEdit?: (entry: ScheduleEntry) => void;
   onDelete?: (entry: ScheduleEntry) => void;
   onViewUser?: (userId: string) => void;
+  onPatternApprove?: (userId: string) => void;
+  onPatternReject?: (userId: string) => void;
 }
 
 export function UserScheduleBatch({
@@ -39,6 +41,8 @@ export function UserScheduleBatch({
   onEdit,
   onDelete,
   onViewUser,
+  onPatternApprove,
+  onPatternReject,
 }: UserScheduleBatchProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -46,6 +50,10 @@ export function UserScheduleBatch({
   const upcomingVacation = entries.filter((e) => e.type === 'vacation').length;
   const overtimeCount = entries.filter((e) => e.type === 'overtime').length;
   const extraDayCount = entries.filter((e) => e.type === 'extra_day').length;
+
+  const patternPendingSubmission = pattern?.status === 'pending' && !!pattern?.id;
+  const patternPendingEdit = pattern?.status === 'approved' && !!pattern?.pendingData;
+  const patternNeedsReview = patternPendingSubmission || patternPendingEdit;
 
   return (
     <Card padding="none" className="flex flex-col">
@@ -70,6 +78,12 @@ export function UserScheduleBatch({
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap sm:justify-end pl-6 sm:pl-0">
+          {patternPendingSubmission && (
+            <Badge variant="warning">Новый график</Badge>
+          )}
+          {patternPendingEdit && (
+            <Badge variant="warning">Изм. графика</Badge>
+          )}
           {pendingCount > 0 && (
             <Badge variant="warning">{pendingCount} на рассм.</Badge>
           )}
@@ -83,7 +97,15 @@ export function UserScheduleBatch({
         <div className="border-t border-border-light p-3 sm:p-4 flex flex-col gap-4">
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
-              <p className="text-[11px] sm:text-[12px] text-text-sub">Рабочий цикл</p>
+              <p className="text-[11px] sm:text-[12px] text-text-sub">
+                Рабочий цикл
+                {patternPendingSubmission && (
+                  <span className="ml-2 text-warning-deep">— новый график на рассмотрении</span>
+                )}
+                {patternPendingEdit && (
+                  <span className="ml-2 text-warning-deep">— есть предложенные изменения</span>
+                )}
+              </p>
               {onViewUser && (
                 <Button variant="secondary" size="sm" onClick={() => onViewUser(userId)} className="shrink-0">
                   Открыть
@@ -91,6 +113,26 @@ export function UserScheduleBatch({
               )}
             </div>
             <PatternPreview pattern={pattern} compact />
+            {canApprove && patternNeedsReview && (
+              <div className="flex items-center gap-2 flex-wrap pt-3">
+                <Button
+                  size="sm"
+                  variant="success"
+                  onClick={() => onPatternApprove?.(userId)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Одобрить график
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => onPatternReject?.(userId)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Отклонить
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>

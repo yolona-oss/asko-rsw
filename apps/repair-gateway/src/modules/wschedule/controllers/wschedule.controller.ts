@@ -97,6 +97,8 @@ export class WScheduleController {
                 startTime: s.startTime || '',
                 endTime: s.endTime || '',
             })),
+            actorId: user.sub,
+            actorIsStaff: isStaff(user),
         });
         return result.pattern;
     }
@@ -107,6 +109,22 @@ export class WScheduleController {
     async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
         assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         await this.scheduleClient.patternDelete(userId);
+    }
+
+    @ApiOkResponse({ type: SchedulePatternRecordDto })
+    @RequiredRoles(...STAFF_ROLES)
+    @Post('pattern/:userId/approve')
+    async approvePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+        const result = await this.scheduleClient.patternApprove(userId, user.sub);
+        return result.pattern;
+    }
+
+    @ApiOkResponse({ type: SchedulePatternRecordDto })
+    @RequiredRoles(...STAFF_ROLES)
+    @Post('pattern/:userId/reject')
+    async rejectPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+        const result = await this.scheduleClient.patternReject(userId, user.sub);
+        return result.pattern;
     }
 
     @ApiOkResponse({ type: SchedulePatternListResponseDto })
