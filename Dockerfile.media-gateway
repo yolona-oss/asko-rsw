@@ -27,6 +27,11 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/media-gateway/dist ./apps/media-gateway/dist
 COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
+# @nestjs/swagger CLI plugin emits `require('.../packages/shared/dist/<enum>')` using
+# a source-relative path, so a `packages/shared/dist` tree must also exist in the
+# runner. Gateway runtime is CJS — copy the CJS variant, whose bundled package.json
+# flags the files as "type":"commonjs".
+COPY --from=builder /app/packages/shared/dist/cjs ./packages/shared/dist
 COPY --from=builder /app/packages/gateway-common ./node_modules/@asko/gateway-common
 COPY --from=builder /app/packages/gateway-common ./packages/gateway-common
 COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
