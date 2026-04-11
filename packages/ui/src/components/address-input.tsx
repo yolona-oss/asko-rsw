@@ -8,9 +8,9 @@ import {
   useMemo,
   type KeyboardEvent,
 } from 'react';
+import { Navigation, Map as MapIcon, X } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
-import { FormField } from './form-field';
 import { cn } from '../utils/cn';
 
 export interface AddressValue {
@@ -99,31 +99,61 @@ interface ParsedAddress {
   room?: string;
 }
 
-function parseAddressString(text: string): ParsedAddress | null {
-  const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
-  if (parts.length < 3) return null;
+type TokenKey =
+  | 'city'
+  | 'settlement'
+  | 'street'
+  | 'house'
+  | 'building'
+  | 'floor'
+  | 'room';
 
-  let city: string | undefined;
-  let settlement: string | undefined;
-  let street: string | undefined;
-  let house: string | undefined;
-  let building: string | undefined;
-  let floor: string | undefined;
-  let room: string | undefined;
+// Canonical labels (with trailing space) in priority order.
+// Every label at the start of a segment must exactly match one of these.
+const TOKEN_LABELS: Record<TokenKey, string> = {
+  city: 'Город ',
+  settlement: 'р-н ',
+  street: 'Улица ',
+  house: 'дом ',
+  building: 'корп ',
+  floor: 'эт. ',
+  room: 'кв. ',
+};
+
+const TOKEN_ORDER: TokenKey[] = [
+  'city',
+  'settlement',
+  'street',
+  'house',
+  'building',
+  'floor',
+  'room',
+];
+
+const LABEL_STRINGS = TOKEN_ORDER.map((k) => TOKEN_LABELS[k]);
+
+function parseAddressPartial(text: string): Partial<ParsedAddress> {
+  const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
+  const result: Partial<ParsedAddress> = {};
 
   for (const part of parts) {
     let m: RegExpMatchArray | null;
-    if ((m = part.match(CITY_RX))) { city = m[1].trim(); continue; }
-    if ((m = part.match(SETTLEMENT_RX))) { settlement = m[1].trim(); continue; }
-    if ((m = part.match(STREET_RX))) { street = m[1].trim(); continue; }
-    if ((m = part.match(HOUSE_RX))) { house = m[1].trim(); continue; }
-    if ((m = part.match(BUILDING_RX))) { building = m[1].trim(); continue; }
-    if ((m = part.match(FLOOR_RX))) { floor = m[1].trim(); continue; }
-    if ((m = part.match(ROOM_RX))) { room = m[1].trim(); continue; }
+    if ((m = part.match(CITY_RX))) { result.city = m[1].trim(); continue; }
+    if ((m = part.match(SETTLEMENT_RX))) { result.settlement = m[1].trim(); continue; }
+    if ((m = part.match(STREET_RX))) { result.street = m[1].trim(); continue; }
+    if ((m = part.match(HOUSE_RX))) { result.house = m[1].trim(); continue; }
+    if ((m = part.match(BUILDING_RX))) { result.building = m[1].trim(); continue; }
+    if ((m = part.match(FLOOR_RX))) { result.floor = m[1].trim(); continue; }
+    if ((m = part.match(ROOM_RX))) { result.room = m[1].trim(); continue; }
   }
 
-  if (!city || !street || !house) return null;
-  return { city, settlement, street, house, building, floor, room };
+  return result;
+}
+
+function parseAddressString(text: string): ParsedAddress | null {
+  const p = parseAddressPartial(text);
+  if (!p.city || !p.street || !p.house) return null;
+  return p as ParsedAddress;
 }
 
 function formatAddressString(p: {
@@ -152,8 +182,6 @@ function normalizeNominatim(r: NominatimResult): string | null {
   const houseRaw = a.house_number || '';
   if (!cityRaw || !streetRaw || !houseRaw) return null;
 
-  // Nominatim often returns house numbers with letters, fractions, slashes.
-  // Reject anything that doesn't look like our canonical house-number shape.
   if (!new RegExp(`^${HOUSE_NUMBER_RX.source}$`).test(houseRaw)) return null;
 
   const city = stripCityPrefix(cityRaw);
@@ -166,6 +194,64 @@ function normalizeNominatim(r: NominatimResult): string | null {
     settlementCandidate && settlementCandidate !== city ? settlementCandidate : undefined;
 
   return formatAddressString({ city, settlement, street, house: houseRaw });
+}
+
+// ── Label ghost / backspace helpers ──────────────────────────────────
+
+function getCurrentSegment(query: string): { text: string; start: number } {
+  const lastSep = query.lastIndexOf(', ');
+  if (lastSep === -1) return { text: query, start: 0 };
+  return { text: query.slice(lastSep + 2), start: lastSep + 2 };
+}
+
+function getMissingTokens(partial: Partial<ParsedAddress>): TokenKey[] {
+  return TOKEN_ORDER.filter((t) => partial[t] == null);
+}
+
+// Return the remaining characters of the next missing-token canonical label
+// when the user's current segment is a case-insensitive prefix of it.
+// Empty string means "no label ghost".
+function computeLabelGhost(
+  query: string,
+  partial: Partial<ParsedAddress>,
+): string {
+  const { text: segment } = getCurrentSegment(query);
+  const missing = getMissingTokens(partial);
+
+  // Empty segment → propose the next missing label in canonical order.
+  if (segment.length === 0) {
+    return missing[0] ? TOKEN_LABELS[missing[0]] : '';
+  }
+
+  for (const token of missing) {
+    const label = TOKEN_LABELS[token];
+    if (segment.length >= label.length) continue;
+    if (label.toLowerCase().startsWith(segment.toLowerCase())) {
+      return label.slice(segment.length);
+    }
+  }
+  return '';
+}
+
+// If the char range ending at `position` exactly matches a canonical label
+// and starts at a segment boundary (index 0 or after ", "), return that span
+// together with the separator start (so callers can also strip ", ").
+function findLabelEndingAt(
+  query: string,
+  position: number,
+): { sepStart: number; labelEnd: number } | null {
+  for (const label of LABEL_STRINGS) {
+    const labelStart = position - label.length;
+    if (labelStart < 0) continue;
+    if (query.slice(labelStart, position).toLowerCase() !== label.toLowerCase()) continue;
+    if (labelStart === 0) {
+      return { sepStart: 0, labelEnd: position };
+    }
+    if (labelStart >= 2 && query.slice(labelStart - 2, labelStart) === ', ') {
+      return { sepStart: labelStart - 2, labelEnd: position };
+    }
+  }
+  return null;
 }
 
 // Advance `current` position to the end of the next character-class run in `full`.
@@ -207,6 +293,138 @@ async function reverseGeocode(
   }
 }
 
+// ── Map picker modal ─────────────────────────────────────────────────
+// Dynamically loads Leaflet from CDN (no dep on the UI package).
+
+interface MapPickerModalProps {
+  initialLat?: number;
+  initialLon?: number;
+  onConfirm: (lat: number, lon: number) => void;
+  onClose: () => void;
+}
+
+function MapPickerModal({ initialLat, initialLon, onConfirm, onClose }: MapPickerModalProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<{ lat: number; lon: number } | null>(
+    initialLat != null && initialLon != null ? { lat: initialLat, lon: initialLon } : null,
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const ensureLeaflet = (): Promise<any> => {
+      const w = window as any;
+      if (w.L) return Promise.resolve(w.L);
+
+      if (!document.querySelector('link[data-leaflet]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.setAttribute('data-leaflet', 'true');
+        document.head.appendChild(link);
+      }
+
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-leaflet]') as HTMLScriptElement | null;
+        if (existing) {
+          existing.addEventListener('load', () => resolve((window as any).L));
+          existing.addEventListener('error', reject);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.setAttribute('data-leaflet', 'true');
+        script.onload = () => resolve((window as any).L);
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+    };
+
+    ensureLeaflet().then((L) => {
+      if (disposed || !mapRef.current) return;
+      setLoading(false);
+
+      const center: [number, number] =
+        initialLat != null && initialLon != null ? [initialLat, initialLon] : [55.7558, 37.6173];
+      const map = L.map(mapRef.current).setView(center, initialLat != null ? 14 : 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
+
+      let marker: any = null;
+      if (initialLat != null && initialLon != null) {
+        marker = L.marker([initialLat, initialLon]).addTo(map);
+      }
+
+      map.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        if (marker) marker.setLatLng(e.latlng);
+        else marker = L.marker(e.latlng).addTo(map);
+        setSelected({ lat, lon: lng });
+      });
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, [initialLat, initialLon]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface w-full max-w-3xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
+          <p className="text-sm font-bold text-text-main">Выбрать точку на карте</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-text-sub hover:text-text-main cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="relative flex-1 min-h-[400px]">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-text-sub">
+              Загрузка карты...
+            </div>
+          )}
+          <div ref={mapRef} className="w-full h-full min-h-[400px]" />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-border-light">
+          <p className="text-xs text-text-sub">
+            {selected
+              ? `Координаты: ${selected.lat.toFixed(6)}, ${selected.lon.toFixed(6)}`
+              : 'Кликните на карту, чтобы выбрать точку'}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+              Отмена
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              type="button"
+              disabled={!selected}
+              onClick={() => selected && onConfirm(selected.lat, selected.lon)}
+            >
+              Подтвердить
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AddressInput({
   value,
   onChange,
@@ -215,26 +433,23 @@ export function AddressInput({
   label = 'Адрес',
   className,
 }: AddressInputProps) {
-  const [inputMode, setInputMode] = useState<'address' | 'coords'>('address');
-
   const [query, setQuery] = useState('');
   const [lat, setLat] = useState<number | undefined>();
   const [lon, setLon] = useState<number | undefined>();
 
-  const [coordLat, setCoordLat] = useState('');
-  const [coordLon, setCoordLon] = useState('');
-  const [reversing, setReversing] = useState(false);
-
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+
   const [detecting, setDetecting] = useState(false);
   const [geoError, setGeoError] = useState('');
+  const [mapOpen, setMapOpen] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 400);
   const mountedRef = useRef(false);
+  const pendingCursorRef = useRef<number | null>(null);
 
   // Hydrate from external value on mount
   useEffect(() => {
@@ -248,21 +463,26 @@ export function AddressInput({
         room: value.room,
       });
       setQuery(q);
-      if (value.latitude != null) {
-        setLat(value.latitude);
-        setCoordLat(String(value.latitude));
-      }
-      if (value.longitude != null) {
-        setLon(value.longitude);
-        setCoordLon(String(value.longitude));
-      }
+      if (value.latitude != null) setLat(value.latitude);
+      if (value.longitude != null) setLon(value.longitude);
     }
     mountedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Parse `query` on every change and emit a structured AddressValue
+  // Apply any pending cursor position after query updates that came from programmatic edits.
+  useEffect(() => {
+    if (pendingCursorRef.current !== null && inputRef.current) {
+      const pos = pendingCursorRef.current;
+      pendingCursorRef.current = null;
+      inputRef.current.setSelectionRange(pos, pos);
+    }
+  }, [query]);
+
+  // Parse `query` on every change and emit a structured AddressValue.
   const parsed = useMemo(() => parseAddressString(query), [query]);
+  const partial = useMemo(() => parseAddressPartial(query), [query]);
+
   useEffect(() => {
     if (parsed) {
       const houseNum = Number(parsed.house.replace(/[^\d]/g, ''));
@@ -286,14 +506,13 @@ export function AddressInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsed, lat, lon]);
 
-  // Forward geocode: refresh coords when the city/street/house portion settles
+  // Forward geocode: refresh coords when the city/street/house portion settles.
   const debouncedParsedKey = useDebounce(
     parsed ? `${parsed.city}|${parsed.street}|${parsed.house}` : '',
     800,
   );
   useEffect(() => {
     if (!debouncedParsedKey || !parsed) return;
-    // Unlabeled query for Nominatim (it doesn't understand "Город X, Улица Y").
     const q = `${parsed.city}, ${parsed.street} ${parsed.house}`;
     const controller = new AbortController();
     fetch(
@@ -316,9 +535,8 @@ export function AddressInput({
     return () => controller.abort();
   }, [debouncedParsedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Nominatim autocomplete search → normalize → deduplicate
+  // Nominatim autocomplete search → normalize → deduplicate.
   useEffect(() => {
-    if (inputMode !== 'address') return;
     const bareQuery = stripLabels(debouncedQuery);
     if (bareQuery.length < 3) {
       setSuggestions([]);
@@ -345,9 +563,8 @@ export function AddressInput({
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [debouncedQuery, inputMode]);
+  }, [debouncedQuery]);
 
-  // Filter suggestions by the current query prefix (case-insensitive)
   const prefixMatches = useMemo(() => {
     if (!query) return suggestions;
     const q = query.toLowerCase();
@@ -361,12 +578,17 @@ export function AddressInput({
     return prefixMatches[idx];
   }, [prefixMatches, activeIndex, showSuggestions]);
 
-  const ghostSuffix = useMemo(() => {
+  // Label ghost takes priority over Nominatim ghost.
+  const labelGhost = useMemo(() => computeLabelGhost(query, partial), [query, partial]);
+
+  const nominatimGhost = useMemo(() => {
     if (!topSuggestion) return '';
     if (topSuggestion.length <= query.length) return '';
     if (!topSuggestion.toLowerCase().startsWith(query.toLowerCase())) return '';
     return topSuggestion.slice(query.length);
   }, [topSuggestion, query]);
+
+  const ghostSuffix = labelGhost || nominatimGhost;
 
   // Click outside closes dropdown
   useEffect(() => {
@@ -386,10 +608,34 @@ export function AddressInput({
   }, []);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    // Tab — advance query by one unit of the top suggestion
+    // Smart backspace: deleting into a canonical label removes the whole
+    // label token together with its leading ", " separator.
+    if (e.key === 'Backspace') {
+      const input = inputRef.current;
+      if (input && input.selectionStart === input.selectionEnd) {
+        const cursorPos = input.selectionStart ?? 0;
+        const match = findLabelEndingAt(query, cursorPos);
+        if (match) {
+          e.preventDefault();
+          const newQuery = query.slice(0, match.sepStart) + query.slice(match.labelEnd);
+          pendingCursorRef.current = match.sepStart;
+          setQuery(newQuery);
+          setShowSuggestions(true);
+          setActiveIndex(-1);
+          return;
+        }
+      }
+    }
+
+    // Tab — label ghost completes the whole label; Nominatim ghost advances one unit.
     if (e.key === 'Tab') {
+      if (labelGhost) {
+        e.preventDefault();
+        setQuery(query + labelGhost);
+        return;
+      }
       if (!topSuggestion || topSuggestion.length <= query.length) {
-        return; // fall through to browser default
+        return;
       }
       const nextEnd = advanceOneUnit(topSuggestion, query.length);
       if (nextEnd <= query.length) return;
@@ -435,8 +681,6 @@ export function AddressInput({
       if (result) {
         setLat(result.lat);
         setLon(result.lon);
-        setCoordLat(String(result.lat));
-        setCoordLon(String(result.lon));
         setQuery(result.suggestion);
       } else {
         setGeoError('Не удалось определить адрес');
@@ -448,178 +692,119 @@ export function AddressInput({
     }
   };
 
-  // ── Manual coords → reverse geocode ──
-  const handleReverseGeocode = async () => {
-    const parsedLat = parseFloat(coordLat);
-    const parsedLon = parseFloat(coordLon);
-    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLon)) {
-      setGeoError('Введите корректные координаты');
-      return;
-    }
-    setReversing(true);
+  const handleMapConfirm = async (pickedLat: number, pickedLon: number) => {
+    setMapOpen(false);
     setGeoError('');
-    const result = await reverseGeocode(parsedLat, parsedLon);
+    const result = await reverseGeocode(pickedLat, pickedLon);
     if (result) {
       setLat(result.lat);
       setLon(result.lon);
       setQuery(result.suggestion);
     } else {
-      setGeoError('Не удалось определить адрес по координатам');
+      setLat(pickedLat);
+      setLon(pickedLon);
+      setGeoError('Не удалось определить адрес по выбранной точке');
     }
-    setReversing(false);
   };
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      {/* Header row */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-sm font-bold text-text-main">{label}</p>
+      {/* Label */}
+      <p className="text-sm font-bold text-text-main">{label}</p>
 
-        <div className="flex items-center gap-2">
-          <div className="flex border border-border-main text-xs overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setInputMode('address')}
-              className={cn(
-                'px-2.5 py-1 transition-colors cursor-pointer',
-                inputMode === 'address'
-                  ? 'bg-text-main text-text-on-dark'
-                  : 'bg-surface text-text-sub hover:bg-surface-hover',
-              )}
-            >
-              По адресу
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMode('coords')}
-              className={cn(
-                'px-2.5 py-1 transition-colors cursor-pointer',
-                inputMode === 'coords'
-                  ? 'bg-text-main text-text-on-dark'
-                  : 'bg-surface text-text-sub hover:bg-surface-hover',
-              )}
-            >
-              По координатам
-            </button>
-          </div>
-
-          {showGeolocation && (
-            <Button
-              variant="secondary"
-              size="sm"
-              type="button"
-              onClick={detectAddress}
-              disabled={detecting}
-            >
-              {detecting ? 'Определение...' : 'GPS'}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Address mode: single autocomplete input with ghost text ── */}
-      {inputMode === 'address' && (
-        <div ref={wrapperRef} className="relative w-full">
-          {/* Ghost text overlay — faded suffix of the top suggestion */}
-          {ghostSuffix && (
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none px-4 py-2.5 text-sm overflow-hidden whitespace-nowrap"
-            >
-              <span className="invisible">{query}</span>
-              <span className="text-text-main/25">{ghostSuffix}</span>
-            </div>
-          )}
-
-          <Input
-            ref={inputRef}
-            placeholder="Город Москва, Улица Ленина, дом 4, корп 2, эт. 5, кв. 59"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setShowSuggestions(true);
-              setActiveIndex(-1);
-            }}
-            onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
-            }}
-            onKeyDown={handleKeyDown}
-            error={!!error}
-            className={cn(ghostSuffix && 'bg-transparent')}
-          />
-
-          {showSuggestions && prefixMatches.length > 0 && (
-            <div
-              className={cn(
-                'absolute z-50 mt-1 w-full',
-                'bg-surface border border-border-light',
-                'shadow-md',
-                'max-h-60 overflow-auto',
-              )}
-            >
-              {prefixMatches.map((s, i) => {
-                const matchLen = query.length;
-                const isActive = activeIndex >= 0 ? i === activeIndex : i === 0;
-                return (
-                  <div
-                    key={s}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      acceptFullSuggestion(s);
-                    }}
-                    className={cn(
-                      'px-3 py-2 text-sm cursor-pointer',
-                      'hover:bg-gray-100',
-                      isActive && 'bg-gray-100',
-                    )}
-                  >
-                    <span className="font-semibold">{s.slice(0, matchLen)}</span>
-                    <span>{s.slice(matchLen)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <p className="text-xs text-text-sub mt-1">
-            Tab — дополнить слово, Enter — принять предложение
-          </p>
-        </div>
-      )}
-
-      {/* ── Coords mode: lat/lng inputs + reverse geocode ── */}
-      {inputMode === 'coords' && (
-        <div className="flex items-end gap-2">
-          <FormField label="Широта" className="flex-1">
-            <Input
-              value={coordLat}
-              onChange={(e) => setCoordLat(e.target.value)}
-              placeholder="55.7558"
-              type="number"
-              error={!!error}
-            />
-          </FormField>
-          <FormField label="Долгота" className="flex-1">
-            <Input
-              value={coordLon}
-              onChange={(e) => setCoordLon(e.target.value)}
-              placeholder="37.6173"
-              type="number"
-              error={!!error}
-            />
-          </FormField>
+      {/* Action buttons — new line after the label */}
+      {showGeolocation && (
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
-            variant="primary"
+            variant="secondary"
             size="sm"
             type="button"
-            onClick={handleReverseGeocode}
-            disabled={reversing || !coordLat || !coordLon}
-            className="whitespace-nowrap mb-0.5"
+            onClick={detectAddress}
+            disabled={detecting}
+            className="inline-flex items-center gap-1.5"
           >
-            {reversing ? 'Поиск...' : 'Определить адрес'}
+            <Navigation className="w-4 h-4" />
+            {detecting ? 'Определение...' : 'Авто'}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            type="button"
+            onClick={() => setMapOpen(true)}
+            className="inline-flex items-center gap-1.5"
+          >
+            <MapIcon className="w-4 h-4" />
+            На карте
           </Button>
         </div>
       )}
+
+      {/* Autocomplete input with ghost text */}
+      <div ref={wrapperRef} className="relative w-full">
+        {ghostSuffix && (
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none px-4 py-2.5 text-sm overflow-hidden whitespace-nowrap"
+          >
+            <span className="invisible">{query}</span>
+            <span className="text-text-main/25">{ghostSuffix}</span>
+          </div>
+        )}
+
+        <Input
+          ref={inputRef}
+          placeholder="Город Москва, Улица Ленина, дом 4, корп 2, эт. 5, кв. 59"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setShowSuggestions(true);
+            setActiveIndex(-1);
+          }}
+          onFocus={() => {
+            if (suggestions.length > 0) setShowSuggestions(true);
+          }}
+          onKeyDown={handleKeyDown}
+          error={!!error}
+          className={cn(ghostSuffix && 'bg-transparent')}
+        />
+
+        {showSuggestions && prefixMatches.length > 0 && (
+          <div
+            className={cn(
+              'absolute z-50 mt-1 w-full',
+              'bg-surface border border-border-light',
+              'shadow-md',
+              'max-h-60 overflow-auto',
+            )}
+          >
+            {prefixMatches.map((s, i) => {
+              const matchLen = query.length;
+              const isActive = activeIndex >= 0 ? i === activeIndex : i === 0;
+              return (
+                <div
+                  key={s}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    acceptFullSuggestion(s);
+                  }}
+                  className={cn(
+                    'px-3 py-2 text-sm cursor-pointer',
+                    'hover:bg-gray-100',
+                    isActive && 'bg-gray-100',
+                  )}
+                >
+                  <span className="font-semibold">{s.slice(0, matchLen)}</span>
+                  <span>{s.slice(matchLen)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="text-xs text-text-sub mt-1">
+          Tab — дополнить, Enter — принять предложение, Backspace — удалить токен
+        </p>
+      </div>
 
       {/* Coords display (when available) */}
       {parsed && lat != null && lon != null && (
@@ -631,6 +816,16 @@ export function AddressInput({
       {/* Error messages */}
       {error && <p className="text-sm text-brand-red">{error}</p>}
       {geoError && <p className="text-sm text-brand-red">{geoError}</p>}
+
+      {/* Map picker modal */}
+      {mapOpen && (
+        <MapPickerModal
+          initialLat={lat}
+          initialLon={lon}
+          onConfirm={handleMapConfirm}
+          onClose={() => setMapOpen(false)}
+        />
+      )}
     </div>
   );
 }

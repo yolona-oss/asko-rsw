@@ -1015,22 +1015,6 @@
           "enumItems": [],
           "mappedType": "integer"
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": true,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
         "mfa_methods": {
           "name": "mfa_methods",
           "type": "text[]",
@@ -1151,34 +1135,10 @@
           "keyName": "user_settings_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "user_id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "keyName": "user_settings_user_id_key",
-          "unique": true,
-          "primary": false
         }
       ],
       "checks": [],
-      "foreignKeys": {
-        "user_settings_user_id_fkey": {
-          "columnNames": [
-            "user_id"
-          ],
-          "constraintName": "user_settings_user_id_fkey",
-          "localTableName": "public.user_settings",
-          "referencedTableName": "public.user",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "updateRule": "no action",
-          "deleteRule": "cascade"
-        }
-      },
+      "foreignKeys": {},
       "nativeEnums": {
         "role": {
           "name": "role",

@@ -137,7 +137,7 @@ export function UserDashboard() {
       {/* Stat cards - mobile stacked, desktop 3-col */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Мои заявки */}
-        <div className="bg-surface border border-border shadow-[0px_10px_60px_rgba(226,236,249,0.5)] p-6 flex flex-col h-[312px] lg:h-[214px] lg:w-[286px]">
+        <Card className="flex flex-row items-center justify-between gap-4 lg:flex-col lg:items-start lg:gap-2">
           <div className="flex flex-col gap-2">
             <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">
               Мои заявки:
@@ -164,7 +164,7 @@ export function UserDashboard() {
               </Link>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Активные сертификаты */}
         <Card className="flex flex-row items-center justify-between gap-4 lg:flex-col lg:items-start lg:gap-2">
@@ -205,29 +205,31 @@ export function UserDashboard() {
       </div>
 
       {/* Last request card - desktop only */}
-      {lastRequest && (
-        <div className="hidden lg:block">
-          <Card className="flex items-start justify-between">
-            <div className="flex flex-col gap-2">
-              <p className="text-[24px] font-bold leading-[28px] text-text-main">Последняя заявка:</p>
-              <p className="text-[14px] leading-[18px] text-text-main">{lastRequest.deviceName}</p>
-              {lastRequest.address && (
-                <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
-              )}
-              <p className="text-[14px] leading-[18px] text-text-sub">
-                {STATUS_LABELS[lastRequest.status] ?? lastRequest.status}
-              </p>
-              <Link
-                href="/account/requests"
-                className="text-[14px] leading-[18px] text-text-sub underline mt-2"
-              >
-                Смотреть все заявки...
-              </Link>
-            </div>
-            <div className={`w-8 h-8 rounded-full flex-shrink-0 ${STATUS_COLOR[lastRequest.status] ?? 'bg-gray-400'}`} />
-          </Card>
-        </div>
-      )}
+      {
+        lastRequest && (
+          <div className="hidden lg:block">
+            <Card className="flex items-start justify-between">
+              <div className="flex flex-col gap-2">
+                <p className="text-[24px] font-bold leading-[28px] text-text-main">Последняя заявка:</p>
+                <p className="text-[14px] leading-[18px] text-text-main">{lastRequest.deviceName}</p>
+                {lastRequest.address && (
+                  <p className="text-[14px] leading-[18px] text-text-sub">{lastRequest.address}</p>
+                )}
+                <p className="text-[14px] leading-[18px] text-text-sub">
+                  {STATUS_LABELS[lastRequest.status] ?? lastRequest.status}
+                </p>
+                <Link
+                  href="/account/requests"
+                  className="text-[14px] leading-[18px] text-text-sub underline mt-2"
+                >
+                  Смотреть все заявки...
+                </Link>
+              </div>
+              <div className={`w-8 h-8 rounded-full flex-shrink-0 ${STATUS_COLOR[lastRequest.status] ?? 'bg-gray-400'}`} />
+            </Card>
+          </div>
+        )
+      }
 
       {/* CTA Banner */}
       <CTABanner
@@ -271,15 +273,17 @@ export function UserDashboard() {
       </Modal>
 
       {/* Payment modal */}
-      {selectedPayment && (
-        <PaymentModal
-          open={paymentModalOpen}
-          onClose={handlePaymentClose}
-          targetType={(selectedPayment.targetType as 'repairRequest' | 'certificate') ?? 'repairRequest'}
-          targetId={selectedPayment.targetId ?? selectedPayment.id}
-          amount={selectedPayment.amount}
-        />
-      )}
-    </PageContainer>
+      {
+        selectedPayment && (
+          <PaymentModal
+            open={paymentModalOpen}
+            onClose={handlePaymentClose}
+            targetType={(selectedPayment.targetType as 'repairRequest' | 'certificate') ?? 'repairRequest'}
+            targetId={selectedPayment.targetId ?? selectedPayment.id}
+            amount={selectedPayment.amount}
+          />
+        )
+      }
+    </PageContainer >
   );
 }
