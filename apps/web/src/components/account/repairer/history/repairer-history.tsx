@@ -124,16 +124,16 @@ export function RepairerHistory() {
 
       {/* Rating */}
       <Card className="flex items-center gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-text-sub">Мой рейтинг</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">Мой рейтинг</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-text-main">
+            <span className="text-[82px] font-medium leading-[86px] tracking-[-0.01em] text-text-main">
               {rating ? rating.average.toFixed(1) : '-'}
             </span>
-            <span className="text-text-sub text-sm">/ 5.0</span>
+            <span className="text-[24px] font-normal leading-[28px] text-text-sub">/ 5.0</span>
           </div>
           {rating && (
-            <span className="text-xs text-text-sub">{rating.count} отзывов</span>
+            <span className="text-[14px] font-medium leading-[18px] tracking-[-0.01em] text-text-sub">{rating.count} отзывов</span>
           )}
         </div>
         <div className="flex gap-1">

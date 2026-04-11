@@ -39,17 +39,17 @@ export function StatCard({
       className,
     )}>
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm text-text-sub">{title}</span>
+        <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">{title}</span>
         {icon && <div className="text-text-sub flex-shrink-0">{icon}</div>}
       </div>
-      <div className="text-[32px] lg:text-[42px] font-bold leading-tight tracking-[-0.01em] text-text-main">
+      <div className="text-[82px] font-medium leading-[86px] tracking-[-0.01em] text-text-main">
         {value}
       </div>
       {subtitle && (
-        <div className="text-sm text-text-sub">{subtitle}</div>
+        <div className="text-[14px] font-medium leading-[18px] tracking-[-0.01em] text-text-sub">{subtitle}</div>
       )}
       {trend && (
-        <p className="text-sm">
+        <p className="text-[14px] leading-[18px] tracking-[-0.01em]">
           <span className={trend.value >= 0 ? 'text-[#2D8B57]' : 'text-brand-red'}>
             {trend.value >= 0 ? '+' : ''}{trend.value}%
           </span>

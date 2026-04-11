@@ -214,9 +214,9 @@ export function DealerPayments() {
 
       {/* Balance card */}
       <Card className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-text-sub">Баланс баллов</span>
-          <span className="text-3xl lg:text-[48px] font-bold text-text-main leading-tight">
+        <div className="flex flex-col gap-2">
+          <span className="text-[24px] font-normal leading-[28px] tracking-[-0.01em] text-text-main">Баланс баллов</span>
+          <span className="text-[82px] font-medium leading-[86px] tracking-[-0.01em] text-text-main">
             {loading ? '-' : formatAmount(pointsBalance)}
           </span>
         </div>
