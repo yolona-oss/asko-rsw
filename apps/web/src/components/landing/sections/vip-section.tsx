@@ -29,30 +29,30 @@ export function VipSection() {
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Mobile layout */}
         <div className="flex flex-col gap-6 lg:hidden">
-          <h2 className="text-[42px] leading-[46px] font-medium text-page-bg">
+          <h2 className="text-[42px] leading-[46px] font-medium text-text-on-dark">
             Станьте VIP клиентом ASKO
           </h2>
-          <p className="text-lg font-bold leading-[22px] tracking-[-0.01em] text-page-bg">
+          <p className="text-lg font-bold leading-[22px] tracking-[-0.01em] text-text-on-dark">
             VIP клиенты получают приоритетный доступ к сервису, персональное сопровождение и обслуживание с использованием оригинальных комплектующих ASKO.
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             {vipCards.slice(0, 2).map((card) => (
-              <div key={card.title} className="bg-page-bg/[0.19] p-4">
-                <h3 className="text-lg font-normal leading-[22px] tracking-[-0.01em] text-page-bg mb-3">
+              <div key={card.title} className="bg-text-on-dark/[0.19] p-4">
+                <h3 className="text-lg font-normal leading-[22px] tracking-[-0.01em] text-text-on-dark mb-3">
                   {card.title}
                 </h3>
-                <p className="text-sm leading-[18px] tracking-[-0.01em] text-page-bg">
+                <p className="text-sm leading-[18px] tracking-[-0.01em] text-text-on-dark">
                   {card.description}
                 </p>
               </div>
             ))}
           </div>
-          <div className="bg-page-bg/[0.19] p-4">
-            <h3 className="text-lg font-normal leading-[22px] tracking-[-0.01em] text-page-bg mb-3">
+          <div className="bg-text-on-dark/[0.19] p-4">
+            <h3 className="text-lg font-normal leading-[22px] tracking-[-0.01em] text-text-on-dark mb-3">
               {vipCards[2].title}
             </h3>
-            <p className="text-sm leading-[18px] tracking-[-0.01em] text-page-bg">
+            <p className="text-sm leading-[18px] tracking-[-0.01em] text-text-on-dark">
               {vipCards[2].description}
             </p>
           </div>
@@ -71,10 +71,10 @@ export function VipSection() {
           <div className="flex justify-end">
             <div className="flex flex-col gap-8 max-w-[555px]">
               <div className="flex flex-col gap-6">
-                <h2 className="text-[70px] font-medium leading-[74px] text-page-bg">
+                <h2 className="text-[70px] font-medium leading-[74px] text-text-on-dark">
                   Станьте VIP клиентом ASKO
                 </h2>
-                <p className="text-lg font-bold leading-[22px] tracking-[-0.01em] text-page-bg">
+                <p className="text-lg font-bold leading-[22px] tracking-[-0.01em] text-text-on-dark">
                   VIP клиенты получают приоритетный доступ к сервису, персональное сопровождение и обслуживание с использованием оригинальных комплектующих ASKO.
                 </p>
               </div>
@@ -91,22 +91,22 @@ export function VipSection() {
           <div className="flex items-start justify-between">
             <div className="flex gap-6">
               {vipCards.slice(0, 2).map((card) => (
-                <div key={card.title} className="bg-page-bg/[0.19] p-6 w-[262px] h-[272px]">
-                  <h3 className="text-2xl font-normal leading-7 tracking-[-0.01em] text-page-bg mb-4">
+                <div key={card.title} className="bg-text-on-dark/[0.19] p-6 w-[262px] h-[272px]">
+                  <h3 className="text-2xl font-normal leading-7 tracking-[-0.01em] text-text-on-dark mb-4">
                     {card.title}
                   </h3>
-                  <p className="text-base leading-[22px] tracking-[-0.01em] text-page-bg">
+                  <p className="text-base leading-[22px] tracking-[-0.01em] text-text-on-dark">
                     {card.description}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="bg-page-bg/[0.19] p-6 w-[262px] h-[272px]">
-              <h3 className="text-2xl font-normal leading-7 tracking-[-0.01em] text-page-bg mb-4">
+            <div className="bg-text-on-dark/[0.19] p-6 w-[262px] h-[272px]">
+              <h3 className="text-2xl font-normal leading-7 tracking-[-0.01em] text-text-on-dark mb-4">
                 {vipCards[2].title}
               </h3>
-              <p className="text-base leading-[22px] tracking-[-0.01em] text-page-bg">
+              <p className="text-base leading-[22px] tracking-[-0.01em] text-text-on-dark">
                 {vipCards[2].description}
               </p>
             </div>

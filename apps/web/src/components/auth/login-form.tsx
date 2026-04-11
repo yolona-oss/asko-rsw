@@ -124,7 +124,7 @@ export function LoginForm({ variant }: LoginFormProps) {
     ? (login.error as any)?.response?.data?.message ?? 'Ошибка авторизации'
     : null;
 
-  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const labelColor = variant === 'mobile' ? 'text-text-on-dark' : 'text-text-main';
   const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
   const showPassword = credentialType !== 'phone';
 
@@ -168,7 +168,7 @@ export function LoginForm({ variant }: LoginFormProps) {
         </button>
 
         {showPassword && variant === 'mobile' && (
-          <Link href="/reset" className="text-2xl font-medium leading-7 tracking-[-0.01em] text-page-bg">
+          <Link href="/reset" className="text-2xl font-medium leading-7 tracking-[-0.01em] text-text-on-dark">
             Забыли пароль?
           </Link>
         )}

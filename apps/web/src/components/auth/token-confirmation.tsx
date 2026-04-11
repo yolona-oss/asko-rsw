@@ -57,7 +57,7 @@ export function TokenConfirmation({
       });
   }, [token]);
 
-  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const labelColor = variant === 'mobile' ? 'text-text-on-dark' : 'text-text-main';
   const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
   const errorBg = variant === 'mobile' ? 'bg-brand-red/80' : 'bg-brand-red';
 

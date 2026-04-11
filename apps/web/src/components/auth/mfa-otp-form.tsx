@@ -64,7 +64,7 @@ export function MfaOtpForm({
     setCode(val);
   }, []);
 
-  const labelColor = variant === 'mobile' ? 'text-page-bg' : 'text-text-main';
+  const labelColor = variant === 'mobile' ? 'text-text-on-dark' : 'text-text-main';
   const subColor = variant === 'mobile' ? 'text-text-muted' : 'text-text-sub';
 
   return (
