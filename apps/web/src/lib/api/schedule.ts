@@ -4,8 +4,8 @@ export interface ScheduleRecord {
   id: string;
   userId: string;
   type: string;
-  dayOfWeek?: number;
-  date?: string;
+  dateFrom: string;
+  dateTo: string;
   startTime: string;
   endTime: string;
   status: string;
@@ -21,6 +21,32 @@ export interface PaginatedSchedules {
   overallCount: number;
   page: number;
   limit: number;
+}
+
+export interface PatternSlotDto {
+  work: boolean;
+  startTime?: string | null;
+  endTime?: string | null;
+}
+
+export interface PatternRecordDto {
+  id: string;
+  userId: string;
+  cycleLength: number;
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  slots: PatternSlotDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertPatternInput {
+  cycleLength: number;
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  slots: PatternSlotDto[];
 }
 
 export const scheduleApi = {
@@ -42,15 +68,11 @@ export const scheduleApi = {
     return api.get<ScheduleRecord>(`/schedule/${id}`);
   },
 
-  getWeekly(userId: string) {
-    return api.get<ScheduleRecord[]>(`/schedule/weekly/${userId}`);
-  },
-
   create(data: {
     userId: string;
     type: string;
-    dayOfWeek?: number;
-    date?: string;
+    dateFrom: string;
+    dateTo: string;
     startTime: string;
     endTime: string;
     note?: string;
@@ -58,10 +80,19 @@ export const scheduleApi = {
     return api.post<ScheduleRecord>('/schedule', data);
   },
 
+  createVacation(data: {
+    userId: string;
+    dateFrom: string;
+    dateTo: string;
+    note?: string;
+  }) {
+    return api.post<ScheduleRecord>('/schedule/vacation', data);
+  },
+
   update(id: string, data: {
     type?: string;
-    dayOfWeek?: number | null;
-    date?: string | null;
+    dateFrom?: string;
+    dateTo?: string;
     startTime?: string;
     endTime?: string;
     status?: string;
@@ -80,5 +111,23 @@ export const scheduleApi = {
 
   reject(id: string) {
     return api.post<ScheduleRecord>(`/schedule/${id}/reject`);
+  },
+
+  patternGet(userId: string) {
+    return api.get<PatternRecordDto | null>(`/schedule/pattern/${userId}`);
+  },
+
+  patternUpsert(userId: string, data: UpsertPatternInput) {
+    return api.put<PatternRecordDto>(`/schedule/pattern/${userId}`, data);
+  },
+
+  patternDelete(userId: string) {
+    return api.delete(`/schedule/pattern/${userId}`);
+  },
+
+  patternGetMany(userIds: string[]) {
+    return api.get<{ data: PatternRecordDto[] }>('/schedule/patterns', {
+      params: { userIds: userIds.join(',') },
+    });
   },
 };

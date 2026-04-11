@@ -28,6 +28,7 @@ export const REPAIRER_SERVICE_NAME = 'RepairerService';
 export const CERTIFICATE_SERVICE_NAME = 'CertificateService';
 export const DEALER_SERVICE_NAME = 'DealerService';
 export const SCHEDULE_SERVICE_NAME = 'ScheduleService';
+export const SCHEDULE_PATTERN_SERVICE_NAME = 'SchedulePatternService';
 
 export const NOTIFICATION_PROTO_PATH = join(__dirname, 'notification.proto');
 export const NOTIFICATION_PACKAGE_NAME = 'notification';

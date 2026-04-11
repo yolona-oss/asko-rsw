@@ -6,8 +6,8 @@ export class WScheduleRecordDto {
     userId: string;
     @ApiProperty({ enum: ScheduleEntryType, enumName: 'ScheduleEntryType' })
     type: ScheduleEntryType;
-    dayOfWeek?: number;
-    date?: string;
+    dateFrom: string;
+    dateTo: string;
     startTime: string;
     endTime: string;
     @ApiProperty({ enum: ScheduleStatus, enumName: 'ScheduleStatus' })
@@ -25,4 +25,28 @@ export class PaginatedScheduleResponseDto {
     overallCount: number;
     page: number;
     limit: number;
+}
+
+export class PatternSlotDto {
+    work: boolean;
+    startTime?: string;
+    endTime?: string;
+}
+
+export class SchedulePatternRecordDto {
+    id: string;
+    userId: string;
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    @ApiProperty({ type: [PatternSlotDto] })
+    slots: PatternSlotDto[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export class SchedulePatternListResponseDto {
+    @ApiProperty({ type: [SchedulePatternRecordDto] })
+    data: SchedulePatternRecordDto[];
 }

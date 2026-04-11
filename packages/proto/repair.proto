@@ -152,7 +152,13 @@ service ScheduleService {
     rpc DeleteSchedule(ScheduleDeleteRequest) returns (ScheduleEmptyResponse);
     rpc ApproveSchedule(ScheduleApproveRequest) returns (ScheduleResponse);
     rpc RejectSchedule(ScheduleApproveRequest) returns (ScheduleResponse);
-    rpc GetWeeklyTemplate(ScheduleWeeklyRequest) returns (ScheduleListResponse);
+}
+
+service SchedulePatternService {
+    rpc GetPattern(GetPatternRequest) returns (PatternResponse);
+    rpc UpsertPattern(UpsertPatternRequest) returns (PatternResponse);
+    rpc DeletePattern(DeletePatternRequest) returns (ScheduleEmptyResponse);
+    rpc GetManyPatterns(GetManyPatternsRequest) returns (PatternListResponse);
 }
 
 service DealerService {
@@ -1296,8 +1302,8 @@ message ScheduleRecord {
     string id = 1;
     string userId = 2;
     string type = 3;
-    int32 dayOfWeek = 4;
-    string date = 5;
+    string dateFrom = 4;
+    string dateTo = 5;
     string startTime = 6;
     string endTime = 7;
     string status = 8;
@@ -1311,8 +1317,8 @@ message ScheduleRecord {
 message CreateScheduleRequest {
     string userId = 1;
     string type = 2;
-    int32 dayOfWeek = 3;
-    string date = 4;
+    string dateFrom = 3;
+    string dateTo = 4;
     string startTime = 5;
     string endTime = 6;
     string note = 7;
@@ -1321,8 +1327,8 @@ message CreateScheduleRequest {
 message UpdateScheduleRequest {
     string id = 1;
     string type = 2;
-    int32 dayOfWeek = 3;
-    string date = 4;
+    string dateFrom = 3;
+    string dateTo = 4;
     string startTime = 5;
     string endTime = 6;
     string status = 7;
@@ -1354,10 +1360,6 @@ message ScheduleApproveRequest {
     string approvedBy = 2;
 }
 
-message ScheduleWeeklyRequest {
-    string userId = 1;
-}
-
 message ScheduleEmptyResponse {}
 
 message ScheduleResponse {
@@ -1373,6 +1375,57 @@ message SchedulePaginatedResponse {
     int32 overallCount = 2;
     int32 page = 3;
     int32 limit = 4;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Schedule Pattern Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message PatternSlot {
+    bool work = 1;
+    string startTime = 2;
+    string endTime = 3;
+}
+
+message PatternRecord {
+    string id = 1;
+    string userId = 2;
+    int32 cycleLength = 3;
+    string anchorDate = 4;
+    string defaultStartTime = 5;
+    string defaultEndTime = 6;
+    repeated PatternSlot slots = 7;
+    string createdAt = 8;
+    string updatedAt = 9;
+}
+
+message GetPatternRequest {
+    string userId = 1;
+}
+
+message UpsertPatternRequest {
+    string userId = 1;
+    int32 cycleLength = 2;
+    string anchorDate = 3;
+    string defaultStartTime = 4;
+    string defaultEndTime = 5;
+    repeated PatternSlot slots = 6;
+}
+
+message DeletePatternRequest {
+    string userId = 1;
+}
+
+message GetManyPatternsRequest {
+    repeated string userIds = 1;
+}
+
+message PatternResponse {
+    PatternRecord pattern = 1;
+}
+
+message PatternListResponse {
+    repeated PatternRecord data = 1;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

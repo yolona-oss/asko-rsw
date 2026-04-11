@@ -1,31 +1,29 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button, Badge, Card, Modal, SkeletonCard } from '@asko/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { ScheduleRecord } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';
+import { PatternEditor } from './pattern-editor';
+import { PatternPreview } from './pattern-preview';
+import { computeStats } from './stats';
 import {
   TYPE_LABELS,
   STATUS_LABELS,
   STATUS_BADGE_VARIANT,
   TYPE_BADGE_VARIANT,
-  DAY_LABELS,
-  formatDate,
+  formatRange,
 } from './constants';
 
 interface MySchedulePageProps {
-  /** If provided, show schedule for this user (manager viewing someone else's). Otherwise show current user's schedule. */
   targetUserId?: string;
-  /** Display name of the target user (for the header) */
   targetUserName?: string;
-  /** If true, the viewer can edit (manager/admin viewing) */
   canEdit?: boolean;
-  /** If true, the viewer can approve/reject */
   canApprove?: boolean;
 }
 
@@ -34,7 +32,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   const userId = targetUserId ?? user?.id ?? '';
   const isOwnSchedule = !targetUserId || targetUserId === user?.id;
 
-  const [weekly, setWeekly] = useState<ScheduleRecord[]>([]);
+  const [pattern, setPattern] = useState<PatternRecordDto | null>(null);
   const [dateEntries, setDateEntries] = useState<ScheduleRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,13 +44,12 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     if (!userId) return;
     setLoading(true);
     try {
-      const [weeklyRes, dateRes] = await Promise.all([
-        scheduleApi.getWeekly(userId),
-        scheduleApi.getAll({ userId, limit: 100, type: undefined }),
+      const [patternRes, dateRes] = await Promise.all([
+        scheduleApi.patternGet(userId),
+        scheduleApi.getAll({ userId, limit: 200 }),
       ]);
-      setWeekly(weeklyRes.data ?? []);
-      const allEntries = dateRes.data?.data ?? [];
-      setDateEntries(allEntries.filter((e: ScheduleRecord) => e.type !== 'work'));
+      setPattern(patternRes.data);
+      setDateEntries(dateRes.data?.data ?? []);
     } catch {
       /* handled by interceptor */
     } finally {
@@ -63,6 +60,8 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const stats = useMemo(() => computeStats(dateEntries), [dateEntries]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -88,8 +87,8 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     } catch { /* */ }
   };
 
-  const openCreate = (type?: string, dayOfWeek?: number) => {
-    setEditItem(type && dayOfWeek !== undefined ? { type, dayOfWeek } : undefined);
+  const openCreateException = () => {
+    setEditItem(undefined);
     setFormOpen(true);
   };
 
@@ -108,53 +107,47 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
         <PageHeader>{title}</PageHeader>
       </div>
 
-      {/* Weekly template grid */}
+      {/* Stats strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card padding="none" className="p-4 flex flex-col gap-1">
+          <p className="text-[12px] text-text-sub">Переработки (30 дн.)</p>
+          <p className="text-[24px] leading-[28px] font-semibold text-text-main">{stats.overtimeLabel}</p>
+        </Card>
+        <Card padding="none" className="p-4 flex flex-col gap-1">
+          <p className="text-[12px] text-text-sub">Доп. дни (30 дн.)</p>
+          <p className="text-[24px] leading-[28px] font-semibold text-text-main">{stats.extraDaysCount}</p>
+        </Card>
+        <Card padding="none" className="p-4 flex flex-col gap-1">
+          <p className="text-[12px] text-text-sub">Отпуск</p>
+          <p className="text-[14px] leading-[18px] font-medium text-text-main">
+            {stats.vacationLabel ?? 'Нет запланированного'}
+          </p>
+        </Card>
+      </div>
+
+      {/* Pattern editor / preview */}
       <div>
         <h2 className="text-[14px] leading-[18px] font-bold text-text-main mb-3">Рабочий график</h2>
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
-            {Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} className="h-28" />)}
-          </div>
+          <SkeletonCard className="h-32 w-full" />
+        ) : canEdit ? (
+          <PatternEditor userId={userId} onChanged={fetchData} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
-            {DAY_LABELS.map((dayLabel, dayIndex) => {
-              const entry = weekly.find((e) => e.dayOfWeek === dayIndex);
-              return (
-                <Card
-                  key={dayIndex}
-                  padding="none"
-                  className={`p-4 flex flex-col gap-2 ${entry ? 'border-green-200 bg-green-50/30' : 'opacity-50'} ${canEdit ? 'cursor-pointer hover:border-text-sub transition-colors' : ''}`}
-                  onClick={canEdit ? () => entry ? openEdit(entry) : openCreate('work', dayIndex) : undefined}
-                >
-                  <p className="text-sm font-medium text-text-main">{dayLabel}</p>
-                  {entry ? (
-                    <>
-                      <p className="text-sm text-text-main">{entry.startTime} — {entry.endTime}</p>
-                      <Badge variant={STATUS_BADGE_VARIANT[entry.status] ?? 'neutral'} className="self-start">
-                        {STATUS_LABELS[entry.status] ?? entry.status}
-                      </Badge>
-                    </>
-                  ) : (
-                    <p className="text-xs text-text-sub">Выходной</p>
-                  )}
-                </Card>
-              );
-            })}
-          </div>
+          <PatternPreview pattern={pattern} />
         )}
-        <div>
+      </div>
+
+      {/* Exception entries */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[14px] leading-[18px] font-bold text-text-main">Отпуска, больничные, переработки</h2>
           {canEdit && (
-            <Button size="sm" onClick={() => openCreate()}>
+            <Button size="sm" onClick={openCreateException}>
               <Plus className="w-4 h-4 mr-1" />
               Добавить
             </Button>
           )}
         </div>
-      </div>
-
-      {/* Date-specific entries */}
-      <div>
-        <h2 className="text-[14px] leading-[18px] font-bold text-text-main mb-3">Отпуска, больничные, переработки</h2>
         {loading ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} className="h-14" />)}
@@ -164,12 +157,12 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
         ) : (
           <div className="flex flex-col gap-2">
             {dateEntries.map((entry) => (
-              <Card key={entry.id} padding="none" className="p-4 flex items-center gap-4">
+              <Card key={entry.id} padding="none" className="p-4 flex items-center gap-4 flex-wrap">
                 <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'neutral'}>
                   {TYPE_LABELS[entry.type] ?? entry.type}
                 </Badge>
                 <span className="text-sm text-text-main">
-                  {entry.date ? formatDate(entry.date) : '-'}
+                  {formatRange(entry.dateFrom, entry.dateTo)}
                 </span>
                 <span className="text-sm text-text-sub">
                   {entry.startTime} — {entry.endTime}

@@ -1,5 +1,20 @@
-import { IsString, IsEnum, IsOptional, IsInt, Min, Max, Matches } from 'class-validator';
+import {
+    IsString,
+    IsEnum,
+    IsOptional,
+    IsInt,
+    Min,
+    Max,
+    Matches,
+    IsArray,
+    IsBoolean,
+    ArrayMinSize,
+    ArrayMaxSize,
+} from 'class-validator';
 import { ScheduleEntryType, ScheduleStatus } from './schedule.type.js';
+
+const TIME_REGEX = /^\d{2}:\d{2}$/;
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(T.*)?$/;
 
 export class CreateWScheduleDto {
     @IsString()
@@ -8,22 +23,20 @@ export class CreateWScheduleDto {
     @IsEnum(ScheduleEntryType)
     type!: ScheduleEntryType;
 
-    @IsOptional()
-    @IsInt()
-    @Min(0)
-    @Max(6)
-    dayOfWeek?: number;
-
-    @IsOptional()
     @IsString()
-    date?: string;
+    @Matches(ISO_DATE_REGEX)
+    dateFrom!: string;
 
     @IsString()
-    @Matches(/^\d{2}:\d{2}$/)
+    @Matches(ISO_DATE_REGEX)
+    dateTo!: string;
+
+    @IsString()
+    @Matches(TIME_REGEX)
     startTime!: string;
 
     @IsString()
-    @Matches(/^\d{2}:\d{2}$/)
+    @Matches(TIME_REGEX)
     endTime!: string;
 
     @IsOptional()
@@ -37,23 +50,23 @@ export class UpdateWScheduleDto {
     type?: ScheduleEntryType;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
-    @Max(6)
-    dayOfWeek?: number | null;
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    dateFrom?: string;
 
     @IsOptional()
     @IsString()
-    date?: string | null;
+    @Matches(ISO_DATE_REGEX)
+    dateTo?: string;
 
     @IsOptional()
     @IsString()
-    @Matches(/^\d{2}:\d{2}$/)
+    @Matches(TIME_REGEX)
     startTime?: string;
 
     @IsOptional()
     @IsString()
-    @Matches(/^\d{2}:\d{2}$/)
+    @Matches(TIME_REGEX)
     endTime?: string;
 
     @IsOptional()
@@ -103,4 +116,60 @@ export class QueryScheduleDto {
     @IsOptional()
     @IsString()
     sortOrder?: 'asc' | 'desc';
+}
+
+export class CreateVacationDto {
+    @IsString()
+    userId!: string;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    dateFrom!: string;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    dateTo!: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class PatternSlotDto {
+    @IsBoolean()
+    work!: boolean;
+
+    @IsOptional()
+    @IsString()
+    @Matches(TIME_REGEX)
+    startTime?: string | null;
+
+    @IsOptional()
+    @IsString()
+    @Matches(TIME_REGEX)
+    endTime?: string | null;
+}
+
+export class UpsertPatternDto {
+    @IsInt()
+    @Min(1)
+    @Max(14)
+    cycleLength!: number;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    anchorDate!: string;
+
+    @IsString()
+    @Matches(TIME_REGEX)
+    defaultStartTime!: string;
+
+    @IsString()
+    @Matches(TIME_REGEX)
+    defaultEndTime!: string;
+
+    @IsArray()
+    @ArrayMinSize(1)
+    @ArrayMaxSize(14)
+    slots!: PatternSlotDto[];
 }

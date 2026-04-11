@@ -9,8 +9,8 @@ import {
   STATUS_LABELS,
   STATUS_BADGE_VARIANT,
   TYPE_BADGE_VARIANT,
-  DAY_LABELS,
   formatDate,
+  formatRange,
 } from './constants';
 
 export async function fetchScheduleOne(item: ScheduleEntry): Promise<ScheduleEntry> {
@@ -41,10 +41,7 @@ export function ScheduleDetail({ item, loading }: { item: ScheduleEntry; loading
           </Badge>
         }
       />
-      {item.dayOfWeek != null && item.dayOfWeek >= 0 && (
-        <DetailRow label="День недели" value={DAY_LABELS[item.dayOfWeek] ?? '-'} />
-      )}
-      {item.date && <DetailRow label="Дата" value={formatDate(item.date)} />}
+      <DetailRow label="Период" value={formatRange(item.dateFrom, item.dateTo)} />
       <DetailRow label="Начало" value={item.startTime} />
       <DetailRow label="Конец" value={item.endTime} />
       {item.note && <DetailRow label="Примечание" value={item.note} />}

@@ -27,6 +27,7 @@ import {
     DevicePart,
     BrokenPart,
     WSchedule,
+    WSchedulePattern,
 } from './entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
@@ -34,6 +35,7 @@ import { RepairerGrpcController } from 'controllers/repairer.grpc.controller';
 import { RepairGrpcController } from 'controllers/repair.grpc.controller';
 import { DealerGrpcController } from 'controllers/dealer.grpc.controller';
 import { ScheduleGrpcController } from 'controllers/schedule.grpc.controller';
+import { SchedulePatternGrpcController } from 'controllers/schedule-pattern.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { ScheduleCommandConsumer } from 'consumers/schedule-command.consumer';
 import { UserEventConsumer } from 'consumers/user-event.consumer';
@@ -51,6 +53,7 @@ import { BrokenPartService } from 'services/broken-part.service';
 import { SignatureService } from 'services/signature.service';
 import { DeviceCategoryService } from 'services/device-category.service';
 import { WScheduleService } from 'services/wschedule.service';
+import { WSchedulePatternService } from 'services/wschedule-pattern.service';
 import { SupplierService } from 'providers/supplier/supplier.service';
 import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provider';
 
@@ -77,6 +80,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
             DevicePart,
             BrokenPart,
             WSchedule,
+            WSchedulePattern,
         ]),
         PaymentClientModule,
         ClientsModule.registerAsync([
@@ -125,6 +129,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         RepairGrpcController,
         DealerGrpcController,
         ScheduleGrpcController,
+        SchedulePatternGrpcController,
         PaymentEventConsumer,
         AddressValidationConsumer,
         ScheduleCommandConsumer,
@@ -148,6 +153,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         PaymentCommandService,
         AddressValidationPublisher,
         WScheduleService,
+        WSchedulePatternService,
         DummySupplierProvider,
         SupplierService,
     ],

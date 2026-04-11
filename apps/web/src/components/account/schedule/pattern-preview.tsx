@@ -1,0 +1,63 @@
+'use client';
+
+import type { PatternRecord } from './types';
+
+interface PatternPreviewProps {
+  pattern: PatternRecord | null;
+  compact?: boolean;
+}
+
+export function PatternPreview({ pattern, compact = false }: PatternPreviewProps) {
+  if (!pattern || !pattern.slots || pattern.slots.length === 0) {
+    return <p className="text-sm text-text-sub">Шаблон не задан</p>;
+  }
+
+  const { slots, defaultStartTime, defaultEndTime } = pattern;
+  const workCount = slots.filter((s) => s.work).length;
+  const restCount = slots.length - workCount;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {!compact && (
+        <p className="text-[12px] text-text-sub">
+          Цикл: {slots.length} дн. ({workCount} раб. / {restCount} вых.) — {defaultStartTime}–{defaultEndTime}
+        </p>
+      )}
+      <div className="flex flex-nowrap gap-2 overflow-x-auto py-1 scrollbar-hide">
+        {slots.map((slot, i) => {
+          const isWork = !!slot.work;
+          const start = slot.startTime || defaultStartTime;
+          const end = slot.endTime || defaultEndTime;
+          const hasOverride = !!slot.startTime || !!slot.endTime;
+          return (
+            <div
+              key={i}
+              className={`min-w-[100px] p-2 flex flex-col gap-1 border ${
+                isWork
+                  ? 'bg-green-50 border-green-300 text-text-main'
+                  : 'bg-gray-50 border-gray-200 text-text-sub'
+              }`}
+            >
+              <span className="text-[11px] font-semibold">День {i + 1}</span>
+              {isWork ? (
+                <>
+                  <span className="text-xs font-medium">{start} — {end}</span>
+                  {hasOverride && <span className="text-[10px] text-text-sub">Индив.</span>}
+                </>
+              ) : (
+                <span className="text-xs">Выходной</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function patternSummary(pattern: PatternRecord | null): string {
+  if (!pattern || !pattern.slots || pattern.slots.length === 0) return 'Нет шаблона';
+  const work = pattern.slots.filter((s) => s.work).length;
+  const rest = pattern.slots.length - work;
+  return `${work}/${rest} · ${pattern.defaultStartTime}–${pattern.defaultEndTime}`;
+}

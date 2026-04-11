@@ -3234,14 +3234,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/schedule/weekly/{userId}": {
+    "/schedule/vacation": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["WScheduleController_getWeeklyTemplate"];
+        get?: never;
+        put?: never;
+        post: operations["WScheduleController_createVacation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule/pattern/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WScheduleController_getPattern"];
+        put: operations["WScheduleController_upsertPattern"];
+        post?: never;
+        delete: operations["WScheduleController_deletePattern"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule/patterns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WScheduleController_getManyPatterns"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4183,7 +4215,7 @@ export interface components {
         };
         CreateWScheduleDto: Record<string, never>;
         /** @enum {string} */
-        ScheduleEntryType: "work" | "vacation" | "sick_leave" | "overtime" | "extra_day";
+        ScheduleEntryType: "vacation" | "sick_leave" | "overtime" | "extra_day";
         /** @enum {string} */
         ScheduleStatus: "pending" | "approved" | "rejected";
         WScheduleRecordDto: {
@@ -4191,8 +4223,8 @@ export interface components {
             status: components["schemas"]["ScheduleStatus"];
             id: string;
             userId: string;
-            dayOfWeek?: number;
-            date?: string;
+            dateFrom: string;
+            dateTo: string;
             startTime: string;
             endTime: string;
             approvedBy?: string;
@@ -4201,11 +4233,32 @@ export interface components {
             createdAt: string;
             updatedAt: string;
         };
+        CreateVacationDto: Record<string, never>;
         PaginatedScheduleResponseDto: {
             data: components["schemas"]["WScheduleRecordDto"][];
             overallCount: number;
             page: number;
             limit: number;
+        };
+        PatternSlotDto: {
+            work: boolean;
+            startTime?: string;
+            endTime?: string;
+        };
+        SchedulePatternRecordDto: {
+            slots: components["schemas"]["PatternSlotDto"][];
+            id: string;
+            userId: string;
+            cycleLength: number;
+            anchorDate: string;
+            defaultStartTime: string;
+            defaultEndTime: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        UpsertPatternDto: Record<string, never>;
+        SchedulePatternListResponseDto: {
+            data: components["schemas"]["SchedulePatternRecordDto"][];
         };
         UpdateWScheduleDto: Record<string, never>;
         CreateAddressDto: Record<string, never>;
@@ -9273,7 +9326,30 @@ export interface operations {
             };
         };
     };
-    WScheduleController_getWeeklyTemplate: {
+    WScheduleController_createVacation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVacationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WScheduleRecordDto"];
+                };
+            };
+        };
+    };
+    WScheduleController_getPattern: {
         parameters: {
             query?: never;
             header?: never;
@@ -9289,7 +9365,73 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WScheduleRecordDto"][];
+                    "application/json": components["schemas"]["SchedulePatternRecordDto"];
+                };
+            };
+        };
+    };
+    WScheduleController_upsertPattern: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertPatternDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePatternRecordDto"];
+                };
+            };
+        };
+    };
+    WScheduleController_deletePattern: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WScheduleController_getManyPatterns: {
+        parameters: {
+            query: {
+                /** @description Comma-separated user IDs */
+                userIds: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePatternListResponseDto"];
                 };
             };
         };

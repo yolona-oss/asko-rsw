@@ -1,55 +1,32 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import Link from 'next/link';
-import { useEntityDetail } from '@/hooks/use-entity-detail';
-import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
-import { ScheduleDetail, fetchScheduleOne } from './schedule-detail';
-import { ScheduleCard } from './schedule-card';
-import { ScheduleFormModal } from './schedule-form-modal';
-import {
-  Button,
-  DataGrid,
-  DataToolbar,
-  ViewSwitcher,
-  Pagination,
-  Badge,
-  VIEW_TABLE,
-  VIEW_CARD,
-  SkeletonCard,
-  filterValueToParam,
-} from '@asko/ui';
-import type { DataGridColumn, DropdownMenuEntry, FilterValues } from '@asko/ui';
+import { useRouter } from 'next/navigation';
+import { Button, DataToolbar, SkeletonCard, filterValueToParam } from '@asko/ui';
+import type { FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
+import { usersApi } from '@/lib/api/users';
 import type { ScheduleEntry } from './types';
-import {
-  TYPE_LABELS,
-  STATUS_LABELS,
-  STATUS_BADGE_VARIANT,
-  TYPE_BADGE_VARIANT,
-  DAY_LABELS,
-  TYPE_FILTER,
-  STATUS_FILTER,
-  formatDate,
-} from './constants';
-
-const PAGE_SIZE = 20;
+import { TYPE_FILTER, STATUS_FILTER } from './constants';
+import { ScheduleFormModal } from './schedule-form-modal';
+import { UserScheduleBatch } from './user-schedule-batch';
 
 export function SchedulePage() {
+  const router = useRouter();
   const { user } = useAccount();
   const role = user ? primaryRole(user) : 'user';
   const canApprove = role === 'admin' || role === 'manager';
+  const canEdit = role === 'admin' || role === 'manager';
 
-  const detail = useEntityDetail<ScheduleEntry>();
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
+  const [users, setUsers] = useState<Record<string, { id: string; firstName: string; lastName: string }>>({});
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('table');
   const [filterValues, setFilterValues] = useState<FilterValues>({ type: '', status: '' });
 
   const [formOpen, setFormOpen] = useState(false);
@@ -57,64 +34,70 @@ export function SchedulePage() {
 
   const filters = useMemo(() => [TYPE_FILTER, STATUS_FILTER], []);
 
-  const fetchEntries = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await scheduleApi.getAll({
-        page,
-        limit: PAGE_SIZE,
+        limit: 500,
         type: filterValueToParam(filterValues, 'type'),
         status: filterValueToParam(filterValues, 'status'),
       });
-      setEntries(data.data ?? []);
-      setTotal(data.overallCount ?? 0);
+      const list: ScheduleEntry[] = (data.data ?? []) as ScheduleEntry[];
+      setEntries(list);
+
+      const userIds = Array.from(new Set(list.map((e) => e.userId).filter(Boolean)));
+      if (userIds.length > 0) {
+        const [patternsRes, usersRes] = await Promise.all([
+          scheduleApi.patternGetMany(userIds).catch(() => ({ data: { data: [] as PatternRecordDto[] } })),
+          usersApi.getBatch(userIds),
+        ]);
+        const byUser: Record<string, PatternRecordDto> = {};
+        for (const p of patternsRes.data?.data ?? []) {
+          byUser[p.userId] = p;
+        }
+        setPatterns(byUser);
+
+        const uByUser: Record<string, { id: string; firstName: string; lastName: string }> = {};
+        for (const u of usersRes) uByUser[u.id] = u;
+        setUsers(uByUser);
+      } else {
+        setPatterns({});
+        setUsers({});
+      }
     } catch {
       /* handled by interceptor */
     } finally {
       setLoading(false);
     }
-  }, [page, filterValues.type, filterValues.status]);
+  }, [filterValues.type, filterValues.status]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+    fetchAll();
+  }, [fetchAll]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
   };
 
   const handleApprove = async (entry: ScheduleEntry) => {
     try {
       await scheduleApi.approve(entry.id);
-      await fetchEntries();
-    } catch {
-      /* handled by interceptor */
-    }
+      await fetchAll();
+    } catch { /* */ }
   };
 
   const handleReject = async (entry: ScheduleEntry) => {
     try {
       await scheduleApi.reject(entry.id);
-      await fetchEntries();
-    } catch {
-      /* handled by interceptor */
-    }
+      await fetchAll();
+    } catch { /* */ }
   };
 
   const handleDelete = async (entry: ScheduleEntry) => {
     try {
       await scheduleApi.delete(entry.id);
       setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-      setTotal((prev) => prev - 1);
-    } catch {
-      /* handled by interceptor */
-    }
-  };
-
-  const openCreate = () => {
-    setEditItem(undefined);
-    setFormOpen(true);
+    } catch { /* */ }
   };
 
   const openEdit = (entry: ScheduleEntry) => {
@@ -122,138 +105,30 @@ export function SchedulePage() {
     setFormOpen(true);
   };
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const columns: DataGridColumn<ScheduleEntry>[] = useMemo(
-    () => [
-      {
-        key: 'userId',
-        header: 'Пользователь',
-        width: 120,
-        mobileLabel: 'Пользователь:',
-        render: (entry: ScheduleEntry) => (
-          <Link
-            href={`/account/schedule/${entry.userId}`}
-            className="text-sm text-text-main hover:text-brand-red underline"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            {entry.userId.slice(0, 8)}...
-          </Link>
-        ),
-      },
-      {
-        key: 'type',
-        header: 'Тип',
-        width: 160,
-        mobileLabel: 'Тип:',
-        render: (entry) => (
-          <Badge variant={TYPE_BADGE_VARIANT[entry.type] ?? 'neutral'}>
-            {TYPE_LABELS[entry.type] ?? entry.type}
-          </Badge>
-        ),
-      },
-      {
-        key: 'dayOrDate',
-        header: 'День / Дата',
-        width: 140,
-        mobileLabel: 'День / Дата:',
-        render: (entry) => (
-          <p className="text-sm text-text-main">
-            {entry.dayOfWeek != null && entry.dayOfWeek >= 0
-              ? DAY_LABELS[entry.dayOfWeek] ?? '-'
-              : entry.date
-                ? formatDate(entry.date)
-                : '-'}
-          </p>
-        ),
-      },
-      {
-        key: 'time',
-        header: 'Время',
-        width: 130,
-        mobileLabel: 'Время:',
-        render: (entry) => (
-          <p className="text-sm text-text-main">
-            {entry.startTime} — {entry.endTime}
-          </p>
-        ),
-      },
-      {
-        key: 'status',
-        header: 'Статус',
-        width: 140,
-        mobileLabel: 'Статус:',
-        render: (entry) => (
-          <Badge variant={STATUS_BADGE_VARIANT[entry.status] ?? 'neutral'}>
-            {STATUS_LABELS[entry.status] ?? entry.status}
-          </Badge>
-        ),
-      },
-      {
-        key: 'note',
-        header: 'Примечание',
-        mobileLabel: 'Примечание:',
-        render: (entry) => (
-          <p className="text-sm text-text-sub truncate">{entry.note || '-'}</p>
-        ),
-      },
-      {
-        key: 'autoGenerated',
-        header: 'Авто',
-        width: 70,
-        mobileLabel: 'Авто:',
-        render: (entry) => (
-          <p className="text-sm text-text-sub">{entry.autoGenerated ? 'Да' : 'Нет'}</p>
-        ),
-      },
-      {
-        key: 'createdAt',
-        header: 'Создано',
-        width: 110,
-        mobileLabel: 'Создано:',
-        render: (entry) => (
-          <p className="text-sm text-text-sub">{entry.createdAt ? formatDate(entry.createdAt) : '-'}</p>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const rowMenu = useCallback(
-    (entry: ScheduleEntry): DropdownMenuEntry[] => {
-      const items: DropdownMenuEntry[] = [];
-
-      if (canApprove && entry.status === 'pending') {
-        items.push({
-          key: 'approve',
-          label: 'Одобрить',
-          onClick: () => handleApprove(entry),
-        });
-        items.push({
-          key: 'reject',
-          label: 'Отклонить',
-          variant: 'danger' as const,
-          onClick: () => handleReject(entry),
-        });
+  const batches = useMemo(() => {
+    const grouped = new Map<string, ScheduleEntry[]>();
+    const orderedUserIds: string[] = [];
+    for (const entry of entries) {
+      if (!grouped.has(entry.userId)) {
+        grouped.set(entry.userId, []);
+        orderedUserIds.push(entry.userId);
       }
+      grouped.get(entry.userId)!.push(entry);
+    }
+    for (const [, list] of grouped) {
+      list.sort((a, b) => (a.dateFrom < b.dateFrom ? 1 : -1));
+    }
+    return orderedUserIds.map((userId) => ({
+      userId,
+      entries: grouped.get(userId) ?? [],
+    }));
+  }, [entries]);
 
-      items.push({
-        key: 'edit',
-        label: 'Редактировать',
-        onClick: () => openEdit(entry),
-      });
-
-      items.push({
-        key: 'delete',
-        label: 'Удалить',
-        variant: 'danger' as const,
-        onClick: () => handleDelete(entry),
-      });
-
-      return items;
-    },
-    [canApprove],
-  );
+  const displayName = (userId: string): string => {
+    const u = users[userId];
+    if (!u) return userId.slice(0, 8);
+    return [u.lastName, u.firstName].filter(Boolean).join(' ') || userId.slice(0, 8);
+  };
 
   return (
     <PageContainer>
@@ -263,74 +138,39 @@ export function SchedulePage() {
         filters={filters}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        actions={<>
-          <Link href="/account/schedule/my">
-            <Button variant="secondary" size="sm">Моё расписание</Button>
-          </Link>
-          <Button size="sm" onClick={openCreate}>
-            Создать запись
-          </Button>
-        </>}
-        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 
-      {view === 'table' ? (
-        <DataGrid
-          loading={loading}
-          columns={columns}
-          data={entries}
-          keyExtractor={(entry) => entry.id}
-          emptyContent="Нет записей в расписании"
-          onRowClick={detail.onRowClick}
-          onRowDoubleClick={(entry) => openEdit(entry)}
-          rowMenu={rowMenu}
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <span>
-                Показано {entries.length} из {total}
-              </span>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          }
-        />
-      ) : loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+      {loading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} className="h-20" />)}
         </div>
+      ) : batches.length === 0 ? (
+        <p className="text-sm text-text-sub text-center py-8">Нет записей в расписании</p>
       ) : (
-        <>
-          {entries.length === 0 ? (
-            <p className="text-sm text-text-sub text-center py-8">Нет записей в расписании</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {entries.map((entry) => (
-                <ScheduleCard
-                  key={entry.id}
-                  entry={entry}
-                  onClick={() => detail.onRowClick(entry)}
-                  onDoubleClick={() => openEdit(entry)}
-                />
-              ))}
-            </div>
-          )}
-
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
-        </>
+        <div className="flex flex-col gap-3">
+          {batches.map((batch) => (
+            <UserScheduleBatch
+              key={batch.userId}
+              userId={batch.userId}
+              displayName={displayName(batch.userId)}
+              pattern={(patterns[batch.userId] ?? null) as any}
+              entries={batch.entries}
+              canApprove={canApprove}
+              canEdit={canEdit}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onViewUser={(userId) => router.push(`/account/schedule/${userId}`)}
+            />
+          ))}
+        </div>
       )}
-
-      <EntityDetailModal
-        open={detail.open}
-        onClose={detail.onClose}
-        item={detail.selectedItem}
-        title="Детали расписания"
-        fetchOne={fetchScheduleOne}
-        renderContent={(item, loading) => <ScheduleDetail item={item} loading={loading} />}
-      />
 
       <ScheduleFormModal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        onSaved={fetchEntries}
+        onSaved={fetchAll}
         editItem={editItem}
         defaultUserId={user?.id}
       />

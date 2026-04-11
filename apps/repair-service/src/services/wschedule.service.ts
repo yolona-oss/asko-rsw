@@ -3,6 +3,10 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedule, ScheduleEntryType, ScheduleStatus } from 'entities/wschedule.entity';
 import type { CreateScheduleRequest, UpdateScheduleRequest, FindAllSchedulesRequest } from '@asko/proto';
 
+function parseDate(value: string): Date {
+    return new Date(value);
+}
+
 @Injectable()
 export class WScheduleService {
     constructor(private readonly em: EntityManager) {}
@@ -12,8 +16,8 @@ export class WScheduleService {
         const entry = new WSchedule();
         entry.userId = data.userId;
         entry.type = data.type as ScheduleEntryType;
-        entry.dayOfWeek = data.dayOfWeek ?? null;
-        entry.date = data.date ? new Date(data.date) : null;
+        entry.dateFrom = parseDate(data.dateFrom);
+        entry.dateTo = parseDate(data.dateTo);
         entry.startTime = data.startTime;
         entry.endTime = data.endTime;
         entry.note = data.note || null;
@@ -30,14 +34,12 @@ export class WScheduleService {
         if (query.userId) where.userId = query.userId;
         if (query.type) where.type = query.type;
         if (query.status) where.status = query.status.includes(",") ? { $in: query.status.split(",") } : query.status;
-        if (query.dateFrom || query.dateTo) {
-            where.date = {};
-            if (query.dateFrom) where.date.$gte = new Date(query.dateFrom);
-            if (query.dateTo) where.date.$lte = new Date(query.dateTo);
-        }
+        // Overlap filter: entry.dateFrom <= query.dateTo AND entry.dateTo >= query.dateFrom
+        if (query.dateFrom) where.dateTo = { $gte: parseDate(query.dateFrom) };
+        if (query.dateTo) where.dateFrom = { $lte: parseDate(query.dateTo) };
         const orderBy: any = {};
         if (query.sortBy) orderBy[query.sortBy] = query.sortOrder === 'desc' ? 'DESC' : 'ASC';
-        else orderBy.createdAt = 'DESC';
+        else orderBy.dateFrom = 'DESC';
 
         const [data, overallCount] = await this.em.findAndCount(WSchedule, where, {
             orderBy,
@@ -56,11 +58,11 @@ export class WScheduleService {
     async update(id: string, data: UpdateScheduleRequest): Promise<WSchedule> {
         const entry = await this.em.findOneOrFail(WSchedule, { id });
         if (data.type !== undefined) entry.type = data.type as ScheduleEntryType;
-        if (data.dayOfWeek !== undefined) entry.dayOfWeek = data.dayOfWeek;
-        if (data.date !== undefined) entry.date = data.date ? new Date(data.date) : null;
-        if (data.startTime !== undefined) entry.startTime = data.startTime;
-        if (data.endTime !== undefined) entry.endTime = data.endTime;
-        if (data.status !== undefined) entry.status = data.status as ScheduleStatus;
+        if (data.dateFrom !== undefined && data.dateFrom !== '') entry.dateFrom = parseDate(data.dateFrom);
+        if (data.dateTo !== undefined && data.dateTo !== '') entry.dateTo = parseDate(data.dateTo);
+        if (data.startTime !== undefined && data.startTime !== '') entry.startTime = data.startTime;
+        if (data.endTime !== undefined && data.endTime !== '') entry.endTime = data.endTime;
+        if (data.status !== undefined && data.status !== '') entry.status = data.status as ScheduleStatus;
         if (data.note !== undefined) entry.note = data.note || null;
         await this.em.flush();
         return entry;
@@ -91,20 +93,12 @@ export class WScheduleService {
     }
 
     @CreateRequestContext()
-    async getWeeklyTemplate(userId: string): Promise<WSchedule[]> {
-        return this.em.find(WSchedule, {
-            userId,
-            type: ScheduleEntryType.WORK,
-            status: ScheduleStatus.APPROVED,
-        }, { orderBy: { dayOfWeek: 'ASC' } });
-    }
-
-    @CreateRequestContext()
     async recordOvertime(userId: string, date: Date, startTime: string, endTime: string, requestId: string): Promise<WSchedule> {
         const entry = new WSchedule();
         entry.userId = userId;
         entry.type = ScheduleEntryType.OVERTIME;
-        entry.date = date;
+        entry.dateFrom = date;
+        entry.dateTo = date;
         entry.startTime = startTime;
         entry.endTime = endTime;
         entry.status = ScheduleStatus.APPROVED;

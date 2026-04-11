@@ -1,7 +1,7 @@
 import type { BadgeVariant, FilterDefinition } from '@asko/ui';
+import type { PatternSlot } from './types';
 
 export const TYPE_LABELS: Record<string, string> = {
-  work: 'Рабочий день',
   vacation: 'Отпуск',
   sick_leave: 'Больничный',
   overtime: 'Переработка',
@@ -21,17 +21,20 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export const TYPE_BADGE_VARIANT: Record<string, BadgeVariant> = {
-  work: 'info',
   vacation: 'warning',
   sick_leave: 'error',
   overtime: 'neutral',
   extra_day: 'success',
 };
 
-export const DAY_LABELS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-
 export function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+export function formatRange(from?: string, to?: string) {
+  if (!from && !to) return '-';
+  if (from && to && from !== to) return `${formatDate(from)} — ${formatDate(to)}`;
+  return formatDate(from || to || '');
 }
 
 export const TYPE_FILTER: FilterDefinition = {
@@ -40,7 +43,6 @@ export const TYPE_FILTER: FilterDefinition = {
   type: 'tabs',
   options: [
     { value: '', label: 'Все' },
-    { value: 'work', label: 'Рабочие' },
     { value: 'vacation', label: 'Отпуск' },
     { value: 'sick_leave', label: 'Больничные' },
     { value: 'overtime', label: 'Переработки' },
@@ -59,3 +61,24 @@ export const STATUS_FILTER: FilterDefinition = {
     { value: 'rejected', label: 'Отклонённые' },
   ],
 };
+
+export interface PresetDefinition {
+  label: string;
+  description?: string;
+  slots: PatternSlot[];
+}
+
+function buildSlots(work: number, rest: number): PatternSlot[] {
+  const out: PatternSlot[] = [];
+  for (let i = 0; i < work; i++) out.push({ work: true });
+  for (let i = 0; i < rest; i++) out.push({ work: false });
+  return out;
+}
+
+export const PRESETS: PresetDefinition[] = [
+  { label: '5/2', description: '5 рабочих, 2 выходных', slots: buildSlots(5, 2) },
+  { label: '2/2', description: '2 рабочих, 2 выходных', slots: buildSlots(2, 2) },
+  { label: '3/3', description: '3 рабочих, 3 выходных', slots: buildSlots(3, 3) },
+  { label: '6/1', description: '6 рабочих, 1 выходной', slots: buildSlots(6, 1) },
+  { label: '7/0', description: 'Каждый день рабочий', slots: buildSlots(7, 0) },
+];

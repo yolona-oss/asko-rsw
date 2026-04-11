@@ -1,9 +1,23 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { CreateWScheduleDto, UpdateWScheduleDto, QueryScheduleDto, STAFF_ROLES, JwtPayload } from '@asko/shared';
+import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
+import {
+    CreateWScheduleDto,
+    UpdateWScheduleDto,
+    QueryScheduleDto,
+    CreateVacationDto,
+    UpsertPatternDto,
+    ScheduleEntryType,
+    STAFF_ROLES,
+    JwtPayload,
+} from '@asko/shared';
 import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
 import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
-import { WScheduleRecordDto, PaginatedScheduleResponseDto } from 'common/dto/responses/wschedule.response.dto';
+import {
+    WScheduleRecordDto,
+    PaginatedScheduleResponseDto,
+    SchedulePatternRecordDto,
+    SchedulePatternListResponseDto,
+} from 'common/dto/responses/wschedule.response.dto';
 
 @ApiTags('Schedule')
 @Controller('schedule')
@@ -17,10 +31,26 @@ export class WScheduleController {
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: dto.type,
-            dayOfWeek: dto.dayOfWeek,
-            date: dto.date,
+            dateFrom: dto.dateFrom,
+            dateTo: dto.dateTo,
             startTime: dto.startTime,
             endTime: dto.endTime,
+            note: dto.note,
+        });
+        return result.schedule;
+    }
+
+    @ApiCreatedResponse({ type: WScheduleRecordDto })
+    @RequiredRoles(...STAFF_ROLES)
+    @Post('vacation')
+    async createVacation(@Body() dto: CreateVacationDto) {
+        const result = await this.scheduleClient.create({
+            userId: dto.userId,
+            type: ScheduleEntryType.VACATION,
+            dateFrom: dto.dateFrom,
+            dateTo: dto.dateTo,
+            startTime: '00:00',
+            endTime: '23:59',
             note: dto.note,
         });
         return result.schedule;
@@ -34,12 +64,49 @@ export class WScheduleController {
         return { ...result, data: result.data ?? [] };
     }
 
-    @ApiOkResponse({ type: [WScheduleRecordDto] })
+    @ApiOkResponse({ type: SchedulePatternRecordDto })
     @RequiredRoles(...STAFF_ROLES)
-    @Get('weekly/:userId')
-    async getWeeklyTemplate(@Param('userId') userId: string) {
-        const result = await this.scheduleClient.getWeeklyTemplate(userId);
-        return result.data ?? [];
+    @Get('pattern/:userId')
+    async getPattern(@Param('userId') userId: string) {
+        const result = await this.scheduleClient.patternGet(userId);
+        // Empty pattern is returned as a blank record (id === '') — client handles as null.
+        return result.pattern?.id ? result.pattern : null;
+    }
+
+    @ApiOkResponse({ type: SchedulePatternRecordDto })
+    @RequiredRoles(...STAFF_ROLES)
+    @Put('pattern/:userId')
+    async upsertPattern(@Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
+        const result = await this.scheduleClient.patternUpsert({
+            userId,
+            cycleLength: dto.cycleLength,
+            anchorDate: dto.anchorDate,
+            defaultStartTime: dto.defaultStartTime,
+            defaultEndTime: dto.defaultEndTime,
+            slots: dto.slots.map((s) => ({
+                work: !!s.work,
+                startTime: s.startTime || '',
+                endTime: s.endTime || '',
+            })),
+        });
+        return result.pattern;
+    }
+
+    @ApiOkResponse()
+    @RequiredRoles(...STAFF_ROLES)
+    @Delete('pattern/:userId')
+    async deletePattern(@Param('userId') userId: string): Promise<void> {
+        await this.scheduleClient.patternDelete(userId);
+    }
+
+    @ApiOkResponse({ type: SchedulePatternListResponseDto })
+    @ApiQuery({ name: 'userIds', required: true, description: 'Comma-separated user IDs' })
+    @RequiredRoles(...STAFF_ROLES)
+    @Get('patterns')
+    async getManyPatterns(@Query('userIds') userIds?: string) {
+        const ids = (userIds ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+        const result = await this.scheduleClient.patternGetMany(ids);
+        return { data: result.data ?? [] };
     }
 
     @ApiOkResponse({ type: WScheduleRecordDto })
@@ -57,8 +124,8 @@ export class WScheduleController {
         const result = await this.scheduleClient.update({
             id,
             type: dto.type,
-            dayOfWeek: dto.dayOfWeek ?? undefined,
-            date: dto.date ?? undefined,
+            dateFrom: dto.dateFrom ?? undefined,
+            dateTo: dto.dateTo ?? undefined,
             startTime: dto.startTime,
             endTime: dto.endTime,
             status: dto.status,

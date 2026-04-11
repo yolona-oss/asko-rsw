@@ -15,6 +15,7 @@ import { BrokenPartService } from './broken-part.service';
 import { CertificateService } from './certificate.service';
 import { SignatureService } from './signature.service';
 import { WScheduleService } from './wschedule.service';
+import { WSchedulePatternService } from './wschedule-pattern.service';
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
 
@@ -34,6 +35,7 @@ export class RepairRequestService {
         private readonly certificateService: CertificateService,
         private readonly signatureService: SignatureService,
         private readonly scheduleService: WScheduleService,
+        private readonly schedulePatternService: WSchedulePatternService,
     ) {}
 
     /** User creates a repair request */
@@ -486,16 +488,14 @@ export class RepairRequestService {
                 const repairer = await this.em.findOne(Repairer, { id: repairerId });
                 if (repairer) {
                     const now = new Date();
-                    const dayOfWeek = (now.getDay() + 6) % 7; // JS Sun=0 → Mon=0
-                    const weekly = await this.scheduleService.getWeeklyTemplate(repairer.userId);
-                    const todaySchedule = weekly.find((s) => s.dayOfWeek === dayOfWeek);
-                    if (todaySchedule) {
-                        const nowTime = now.toTimeString().slice(0, 5); // "HH:MM"
-                        if (nowTime > todaySchedule.endTime) {
+                    const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, now);
+                    if (slot && slot.work) {
+                        const nowTime = now.toTimeString().slice(0, 5);
+                        if (nowTime > slot.endTime) {
                             await this.scheduleService.recordOvertime(
                                 repairer.userId,
                                 now,
-                                todaySchedule.endTime,
+                                slot.endTime,
                                 nowTime,
                                 request.id,
                             );

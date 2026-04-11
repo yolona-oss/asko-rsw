@@ -11,21 +11,23 @@ import type {
     ScheduleFindByIdRequest,
     ScheduleDeleteRequest,
     ScheduleApproveRequest,
-    ScheduleWeeklyRequest,
     ScheduleRecord,
     ScheduleResponse,
     SchedulePaginatedResponse,
-    ScheduleListResponse,
     ScheduleEmptyResponse,
 } from '@asko/proto';
+
+function formatDate(d: Date): string {
+    return d.toISOString().split('T')[0];
+}
 
 function toRecord(entry: WSchedule): ScheduleRecord {
     return {
         id: entry.id,
         userId: entry.userId,
         type: entry.type,
-        dayOfWeek: entry.dayOfWeek ?? -1,
-        date: entry.date ? entry.date.toISOString().split('T')[0] : '',
+        dateFrom: formatDate(entry.dateFrom),
+        dateTo: formatDate(entry.dateTo),
         startTime: entry.startTime,
         endTime: entry.endTime,
         status: entry.status,
@@ -149,16 +151,6 @@ export class ScheduleGrpcController {
             return { schedule: toRecord(entry) };
         } catch (e) {
             if (e instanceof RpcException) throw e;
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
-        }
-    }
-
-    @GrpcMethod('ScheduleService', 'GetWeeklyTemplate')
-    async getWeeklyTemplate(data: ScheduleWeeklyRequest): Promise<ScheduleListResponse> {
-        try {
-            const entries = await this.scheduleService.getWeeklyTemplate(data.userId);
-            return { data: entries.map(toRecord) };
-        } catch (e) {
             throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
         }
     }

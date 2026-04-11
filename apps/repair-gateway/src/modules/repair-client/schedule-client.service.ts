@@ -4,18 +4,22 @@ import { grpcCall } from '@asko/gateway-common';
 
 import type {
     ScheduleServiceClient,
+    SchedulePatternServiceClient,
     CreateScheduleRequest,
     UpdateScheduleRequest,
     FindAllSchedulesRequest,
     ScheduleResponse,
     SchedulePaginatedResponse,
-    ScheduleListResponse,
     ScheduleEmptyResponse,
+    UpsertPatternRequest,
+    PatternResponse,
+    PatternListResponse,
 } from '@asko/proto';
 
 @Injectable()
 export class ScheduleClientService implements OnModuleInit {
     private scheduleService!: ScheduleServiceClient;
+    private patternService!: SchedulePatternServiceClient;
 
     constructor(
         @Inject('REPAIR_PACKAGE') private readonly client: ClientGrpc,
@@ -23,6 +27,7 @@ export class ScheduleClientService implements OnModuleInit {
 
     onModuleInit() {
         this.scheduleService = this.client.getService<ScheduleServiceClient>('ScheduleService');
+        this.patternService = this.client.getService<SchedulePatternServiceClient>('SchedulePatternService');
     }
 
     create(data: CreateScheduleRequest): Promise<ScheduleResponse> {
@@ -53,7 +58,19 @@ export class ScheduleClientService implements OnModuleInit {
         return grpcCall(this.scheduleService.rejectSchedule({ id, approvedBy }));
     }
 
-    getWeeklyTemplate(userId: string): Promise<ScheduleListResponse> {
-        return grpcCall(this.scheduleService.getWeeklyTemplate({ userId }));
+    patternGet(userId: string): Promise<PatternResponse> {
+        return grpcCall(this.patternService.getPattern({ userId }));
+    }
+
+    patternUpsert(data: UpsertPatternRequest): Promise<PatternResponse> {
+        return grpcCall(this.patternService.upsertPattern(data));
+    }
+
+    patternDelete(userId: string): Promise<ScheduleEmptyResponse> {
+        return grpcCall(this.patternService.deletePattern({ userId }));
+    }
+
+    patternGetMany(userIds: string[]): Promise<PatternListResponse> {
+        return grpcCall(this.patternService.getManyPatterns({ userIds }));
     }
 }

@@ -1335,8 +1335,8 @@ export interface ScheduleRecord {
     id: string;
     userId: string;
     type: string;
-    dayOfWeek: number;
-    date: string;
+    dateFrom: string;
+    dateTo: string;
     startTime: string;
     endTime: string;
     status: string;
@@ -1350,8 +1350,8 @@ export interface ScheduleRecord {
 export interface CreateScheduleRequest {
     userId: string;
     type: string;
-    dayOfWeek?: number;
-    date?: string;
+    dateFrom: string;
+    dateTo: string;
     startTime: string;
     endTime: string;
     note?: string;
@@ -1360,8 +1360,8 @@ export interface CreateScheduleRequest {
 export interface UpdateScheduleRequest {
     id: string;
     type?: string;
-    dayOfWeek?: number;
-    date?: string;
+    dateFrom?: string;
+    dateTo?: string;
     startTime?: string;
     endTime?: string;
     status?: string;
@@ -1393,10 +1393,6 @@ export interface ScheduleApproveRequest {
     approvedBy: string;
 }
 
-export interface ScheduleWeeklyRequest {
-    userId: string;
-}
-
 export interface ScheduleEmptyResponse {}
 
 export interface ScheduleResponse {
@@ -1422,5 +1418,62 @@ export interface ScheduleServiceClient {
     deleteSchedule(data: ScheduleDeleteRequest): Observable<ScheduleEmptyResponse>;
     approveSchedule(data: ScheduleApproveRequest): Observable<ScheduleResponse>;
     rejectSchedule(data: ScheduleApproveRequest): Observable<ScheduleResponse>;
-    getWeeklyTemplate(data: ScheduleWeeklyRequest): Observable<ScheduleListResponse>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCHEDULE PATTERN DOMAIN
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface PatternSlot {
+    work: boolean;
+    startTime: string;
+    endTime: string;
+}
+
+export interface PatternRecord {
+    id: string;
+    userId: string;
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    slots: PatternSlot[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetPatternRequest {
+    userId: string;
+}
+
+export interface UpsertPatternRequest {
+    userId: string;
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    slots: PatternSlot[];
+}
+
+export interface DeletePatternRequest {
+    userId: string;
+}
+
+export interface GetManyPatternsRequest {
+    userIds: string[];
+}
+
+export interface PatternResponse {
+    pattern: PatternRecord;
+}
+
+export interface PatternListResponse {
+    data: PatternRecord[];
+}
+
+export interface SchedulePatternServiceClient {
+    getPattern(data: GetPatternRequest): Observable<PatternResponse>;
+    upsertPattern(data: UpsertPatternRequest): Observable<PatternResponse>;
+    deletePattern(data: DeletePatternRequest): Observable<ScheduleEmptyResponse>;
+    getManyPatterns(data: GetManyPatternsRequest): Observable<PatternListResponse>;
 }

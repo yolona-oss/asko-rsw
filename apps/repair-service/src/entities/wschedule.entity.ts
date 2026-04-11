@@ -2,7 +2,6 @@ import { Entity, PrimaryKey, Property, Enum } from '@mikro-orm/core';
 import { v4 } from 'uuid';
 
 export enum ScheduleEntryType {
-    WORK = 'work',
     VACATION = 'vacation',
     SICK_LEAVE = 'sick_leave',
     OVERTIME = 'overtime',
@@ -26,11 +25,11 @@ export class WSchedule {
     @Enum(() => ScheduleEntryType)
     type!: ScheduleEntryType;
 
-    @Property({ type: 'int', nullable: true })
-    dayOfWeek?: number | null;
+    @Property({ type: 'date' })
+    dateFrom!: Date;
 
-    @Property({ type: 'date', nullable: true })
-    date?: Date | null;
+    @Property({ type: 'date' })
+    dateTo!: Date;
 
     @Property({ type: 'varchar', length: 5 })
     startTime!: string;

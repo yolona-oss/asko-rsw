@@ -19,6 +19,7 @@ import {
     DevicePart,
     BrokenPart,
     WSchedule,
+    WSchedulePattern,
 } from '../entities';
 import { isProdEnv } from '@asko/shared';
 
@@ -50,6 +51,7 @@ import { isProdEnv } from '@asko/shared';
                         DevicePart,
                         BrokenPart,
                         WSchedule,
+                        WSchedulePattern,
                     ],
                     debug: !isProdEnv(),
                 };
