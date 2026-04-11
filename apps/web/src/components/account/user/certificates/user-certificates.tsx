@@ -240,6 +240,7 @@ export function UserCertificates() {
         <>
           <DeviceSlider
             devices={devices}
+            certificates={certificates}
             loading={loadingDevices}
             onEditAddress={setEditDevice}
           />
@@ -347,6 +348,7 @@ export function UserCertificates() {
       <AddCertificateForm
         open={showAddForm}
         onClose={() => setShowAddForm(false)}
+        certificates={certificates}
         onSuccess={(cert) => {
           fetchCertificates();
           if (cert.status === CertificateStatus.PENDING_PAYMENT && cert.price) {

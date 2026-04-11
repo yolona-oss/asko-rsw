@@ -1,19 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { AddressView, DataCard } from '@asko/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { AddressView, Badge, DataCard } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
+import { CertificateStatus } from '@asko/shared/client';
 import { deviceApi } from '@/lib/api/device';
 import { getImageUrl } from '@/lib/image-url';
 import { getPlaceholderSrc } from '@/lib/placeholders';
+import type { ICertificate } from '@/lib/api/types';
 import type { UserDevice } from './types';
+
+type DeviceCertKind = 'none' | 'active' | 'expired';
+
+function resolveKind(deviceId: string, certificates: ICertificate[]): DeviceCertKind {
+  const forDevice = certificates.filter(
+    (c) =>
+      c.userDeviceId === deviceId &&
+      c.status !== CertificateStatus.REVOKED &&
+      c.status !== CertificateStatus.VALIDATION_ERROR,
+  );
+  if (forDevice.length === 0) return 'none';
+  const now = Date.now();
+  const hasActive = forDevice.some(
+    (c) =>
+      (c.status === CertificateStatus.ACTIVE ||
+        c.status === CertificateStatus.PENDING_PAYMENT) &&
+      new Date(c.expiresAt).getTime() >= now,
+  );
+  if (hasActive) return 'active';
+  const hasExpired = forDevice.some(
+    (c) =>
+      c.status === CertificateStatus.EXPIRED ||
+      new Date(c.expiresAt).getTime() < now,
+  );
+  return hasExpired ? 'expired' : 'none';
+}
 
 export function DeviceSlider({
   devices,
+  certificates,
   loading,
   onEditAddress,
 }: {
   devices: UserDevice[];
+  certificates: ICertificate[];
   loading: boolean;
   onEditAddress?: (device: UserDevice) => void;
 }) {
@@ -28,6 +58,7 @@ export function DeviceSlider({
           <DeviceSliderCard
             key={ud.id}
             device={ud}
+            certificates={certificates}
             onEditAddress={onEditAddress}
           />
         ))}
@@ -38,11 +69,17 @@ export function DeviceSlider({
 
 function DeviceSliderCard({
   device,
+  certificates,
   onEditAddress,
 }: {
   device: UserDevice;
+  certificates: ICertificate[];
   onEditAddress?: (device: UserDevice) => void;
 }) {
+  const certKind = useMemo(
+    () => resolveKind(device.id, certificates),
+    [device.id, certificates],
+  );
   const deviceId = device.device?.id;
   const [imageUrl, setImageUrl] = useState<string>(() =>
     getPlaceholderSrc('device', deviceId),
@@ -82,7 +119,12 @@ function DeviceSliderCard({
           className="w-16 h-16 flex-shrink-0 object-contain"
         />
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-          <p className="text-sm font-medium text-text-main truncate">{name}</p>
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="text-sm font-medium text-text-main truncate">{name}</p>
+            {certKind === 'expired' && (
+              <Badge variant="error" className="flex-shrink-0">Сертификат истёк</Badge>
+            )}
+          </div>
           {subtitle && <p className="text-xs text-text-sub truncate">{subtitle}</p>}
           {device.serialNumber && (
             <p className="text-xs text-text-sub truncate">S/N: {device.serialNumber}</p>

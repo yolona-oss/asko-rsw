@@ -2,6 +2,7 @@ import type {
   AddCertificateDto,
   CreateCertificateDto,
   SelfCreateCertificateDto,
+  ReapplyCertificateDto,
 } from '@asko/shared/client';
 import type {
   ICertificate,
@@ -38,6 +39,16 @@ export const certificateApi = {
 
   selfCreate(data: SelfCreateCertificateDto) {
     return api.post<{ certificate: ICertificate }>('/certificates/self-create', data);
+  },
+
+  reapply(id: string, data: ReapplyCertificateDto) {
+    return api.post<ICertificate>(`/certificates/${id}/reapply`, data);
+  },
+
+  calculatePrice(userDeviceId: string, durationMonths: number) {
+    return api.get<{ price: number }>('/certificates/calculate-price', {
+      params: { userDeviceId, durationMonths },
+    });
   },
 
   revoke(id: string) {

@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { Button, FormField, Select, Input, Modal } from '@asko/ui';
+import { useState, useEffect } from 'react';
+import { Button, FormField, Select, Input, Modal, SkeletonBlock } from '@asko/ui';
 import { CERTIFICATE_DURATION_OPTIONS, CERTIFICATE_DURATION_LABELS } from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
 import type { ICertificate } from '@/lib/api/types';
+
+const priceFormatter = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+});
 
 export function CreateCertificateModal({
   open,
@@ -21,6 +27,27 @@ export function CreateCertificateModal({
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [price, setPrice] = useState<number | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !userDeviceId || !durationMonths) {
+      setPrice(null);
+      return;
+    }
+    setPriceLoading(true);
+    const handle = setTimeout(() => {
+      certificateApi
+        .calculatePrice(userDeviceId, durationMonths)
+        .then(({ data }) => setPrice(data.price))
+        .catch(() => setPrice(null))
+        .finally(() => setPriceLoading(false));
+    }, 200);
+    return () => {
+      clearTimeout(handle);
+      setPriceLoading(false);
+    };
+  }, [open, userDeviceId, durationMonths]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,6 +101,19 @@ export function CreateCertificateModal({
             onChange={(e) => setDescription(e.target.value)}
           />
         </FormField>
+
+        <div className="flex items-center justify-between py-2 border-t border-border-light">
+          <span className="text-sm text-text-sub">Стоимость</span>
+          {priceLoading ? (
+            <SkeletonBlock className="h-5 w-24" />
+          ) : price != null ? (
+            <span className="text-base font-medium text-text-main">
+              {priceFormatter.format(price)}
+            </span>
+          ) : (
+            <span className="text-sm text-text-sub">—</span>
+          )}
+        </div>
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 

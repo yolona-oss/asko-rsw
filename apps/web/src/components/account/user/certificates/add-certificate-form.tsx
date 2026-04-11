@@ -1,90 +1,208 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
-  Input,
   FormField,
   Select,
   Modal,
   SkeletonBlock,
 } from '@asko/ui';
+import {
+  CERTIFICATE_DURATION_OPTIONS,
+  CERTIFICATE_DURATION_LABELS,
+  CertificateStatus,
+} from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
 import type { ICertificate } from '@/lib/api/types';
 import type { UserDevice } from './types';
+
+type DeviceCertState =
+  | { kind: 'none' }
+  | { kind: 'active'; cert: ICertificate }
+  | { kind: 'expired'; cert: ICertificate };
+
+type RenewalMode = 'extend' | 'new';
+
+function isExpired(cert: ICertificate): boolean {
+  return (
+    cert.status === CertificateStatus.EXPIRED ||
+    new Date(cert.expiresAt).getTime() < Date.now()
+  );
+}
+
+function isActiveOrPending(cert: ICertificate): boolean {
+  return (
+    (cert.status === CertificateStatus.ACTIVE ||
+      cert.status === CertificateStatus.PENDING_PAYMENT) &&
+    new Date(cert.expiresAt).getTime() >= Date.now()
+  );
+}
+
+/**
+ * For a given user device, determine which certificate (if any) governs its
+ * current state. Priority: latest active/pending > latest expired > none.
+ */
+function resolveDeviceCertState(
+  deviceId: string,
+  certificates: ICertificate[],
+): DeviceCertState {
+  const forDevice = certificates.filter(
+    (c) =>
+      c.userDeviceId === deviceId &&
+      c.status !== CertificateStatus.REVOKED &&
+      c.status !== CertificateStatus.VALIDATION_ERROR,
+  );
+  if (forDevice.length === 0) return { kind: 'none' };
+
+  const activeOrPending = forDevice
+    .filter(isActiveOrPending)
+    .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime());
+  if (activeOrPending.length > 0) {
+    return { kind: 'active', cert: activeOrPending[0] };
+  }
+
+  const expired = forDevice
+    .filter(isExpired)
+    .sort((a, b) => new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime());
+  if (expired.length > 0) {
+    return { kind: 'expired', cert: expired[0] };
+  }
+
+  return { kind: 'none' };
+}
+
+const priceFormatter = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+});
 
 export function AddCertificateForm({
   open,
   onClose,
   onSuccess,
   onOpenAddDevice,
+  certificates,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: (cert: ICertificate) => void;
   onOpenAddDevice?: () => void;
+  certificates: ICertificate[];
 }) {
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [deviceId, setDeviceId] = useState('');
-  const [certNumber, setCertNumber] = useState('');
-  const [expiresAt, setExpiresAt] = useState('');
+  const [durationMonths, setDurationMonths] = useState<number>(12);
+  const [renewalMode, setRenewalMode] = useState<RenewalMode>('extend');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Price preview
+  const [price, setPrice] = useState<number | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setLoadingDevices(true);
+    setError('');
     userDeviceApi
       .getMy()
       .then(({ data }) => {
         setDevices(data);
         if (data.length > 0 && !deviceId) setDeviceId(data[0].id);
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setLoadingDevices(false));
   }, [open]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!deviceId || !certNumber || !expiresAt) return;
+  const selectedDevice = devices.find((d) => d.id === deviceId);
+  const selectedDeviceState = useMemo(
+    () => (deviceId ? resolveDeviceCertState(deviceId, certificates) : { kind: 'none' as const }),
+    [deviceId, certificates],
+  );
 
-    const selectedDev = devices.find((d) => d.id === deviceId);
-    const vs = selectedDev?.address?.validationStatus;
-    if (vs === 'pending') {
-      setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+  // Reset renewal mode on device change
+  useEffect(() => {
+    setRenewalMode('extend');
+  }, [deviceId]);
+
+  // Price preview — debounced
+  useEffect(() => {
+    if (!deviceId || !durationMonths) {
+      setPrice(null);
       return;
     }
-    if (vs === 'invalid' || vs === 'error') {
-      setError('Адрес устройства не прошёл проверку. Обновите адрес устройства.');
-      return;
-    }
+    setPriceLoading(true);
+    const handle = setTimeout(() => {
+      certificateApi
+        .calculatePrice(deviceId, durationMonths)
+        .then(({ data }) => setPrice(data.price))
+        .catch(() => setPrice(null))
+        .finally(() => setPriceLoading(false));
+    }, 200);
+    return () => {
+      clearTimeout(handle);
+      setPriceLoading(false);
+    };
+  }, [deviceId, durationMonths]);
 
-    setSubmitting(true);
-    setError('');
-    try {
-      const { data: newCert } = await certificateApi.add({
-        userDeviceId: deviceId,
-        certificateNumber: certNumber.trim(),
-        expiresAt,
-      });
-      setCertNumber('');
-      setExpiresAt('');
-      setDeviceId('');
-      onClose();
-      onSuccess(newCert);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Не удалось добавить сертификат');
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!deviceId) return;
+
+      const vs = selectedDevice?.address?.validationStatus;
+      if (vs === 'pending') {
+        setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+        return;
+      }
+      if (vs === 'invalid' || vs === 'error') {
+        setError('Адрес устройства не прошёл проверку. Обновите адрес устройства.');
+        return;
+      }
+
+      setSubmitting(true);
+      setError('');
+      try {
+        const useExtend =
+          selectedDeviceState.kind === 'expired' && renewalMode === 'extend';
+
+        let newCert: ICertificate;
+        if (useExtend) {
+          const { data } = await certificateApi.reapply(selectedDeviceState.cert.id, {
+            durationMonths,
+          });
+          newCert = data;
+        } else {
+          const { data } = await certificateApi.selfCreate({
+            userDeviceId: deviceId,
+            durationMonths,
+          });
+          newCert = data.certificate;
+        }
+        setDurationMonths(12);
+        onClose();
+        onSuccess(newCert);
+      } catch (err: any) {
+        setError(err?.response?.data?.message ?? 'Не удалось добавить сертификат');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [deviceId, durationMonths, selectedDevice, selectedDeviceState, renewalMode, onClose, onSuccess],
+  );
 
   return (
     <Modal open={open} onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 w-full sm:w-[420px]">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 w-full sm:w-[460px]">
         <h2 className="text-xl font-medium text-text-main">Добавить сертификат</h2>
+        <p className="text-sm text-text-sub">
+          Сертификат будет привязан к выбранному устройству. Стоимость зависит от срока действия и цены устройства.
+        </p>
+
         <FormField label="Устройство">
           {loadingDevices ? (
             <SkeletonBlock className="h-10 w-full" />
@@ -107,7 +225,13 @@ export function AddCertificateForm({
                 {devices.map((d) => {
                   const vs = d.address?.validationStatus;
                   const blocked = vs === 'invalid' || vs === 'error';
-                  const suffix = blocked ? ' — адрес не подтверждён' : vs === 'pending' ? ' — проверка адреса...' : '';
+                  const state = resolveDeviceCertState(d.id, certificates);
+                  const parts: string[] = [];
+                  if (blocked) parts.push('адрес не подтверждён');
+                  else if (vs === 'pending') parts.push('проверка адреса...');
+                  if (state.kind === 'active') parts.push('сертификат активен');
+                  else if (state.kind === 'expired') parts.push('сертификат истёк');
+                  const suffix = parts.length > 0 ? ` — ${parts.join(', ')}` : '';
                   return (
                     <option key={d.id} value={d.id} disabled={blocked}>
                       {d.device?.name ?? d.id}{suffix}
@@ -128,23 +252,77 @@ export function AddCertificateForm({
           )}
         </FormField>
 
-        <FormField label="Номер сертификата">
-          <Input
-            placeholder="ASKO-0000-0000"
-            value={certNumber}
-            onChange={(e) => setCertNumber(e.target.value)}
-            required
-          />
+        {selectedDeviceState.kind === 'active' && (
+          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200">
+            <p className="text-xs text-amber-800">
+              У этого устройства уже есть активный сертификат (до{' '}
+              {new Date(selectedDeviceState.cert.expiresAt).toLocaleDateString('ru-RU')}).
+              Новый сертификат будет создан дополнительно.
+            </p>
+          </div>
+        )}
+
+        {selectedDeviceState.kind === 'expired' && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-text-sub">
+              Сертификат устройства истёк{' '}
+              {new Date(selectedDeviceState.cert.expiresAt).toLocaleDateString('ru-RU')}.
+              Выберите действие:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRenewalMode('extend')}
+                className={`flex flex-col items-start gap-1 p-3 border-2 text-left cursor-pointer transition-colors ${
+                  renewalMode === 'extend'
+                    ? 'border-brand-red bg-[#FFF5F5]'
+                    : 'border-border-light/50 hover:border-text-sub'
+                }`}
+              >
+                <span className="text-sm font-medium text-text-main">Продлить</span>
+                <span className="text-xs text-text-sub">Сохранить историю устройства</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRenewalMode('new')}
+                className={`flex flex-col items-start gap-1 p-3 border-2 text-left cursor-pointer transition-colors ${
+                  renewalMode === 'new'
+                    ? 'border-brand-red bg-[#FFF5F5]'
+                    : 'border-border-light/50 hover:border-text-sub'
+                }`}
+              >
+                <span className="text-sm font-medium text-text-main">Новый сертификат</span>
+                <span className="text-xs text-text-sub">Отдельная запись</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        <FormField label="Срок действия">
+          <Select
+            value={String(durationMonths)}
+            onChange={(e) => setDurationMonths(Number(e.target.value))}
+          >
+            {CERTIFICATE_DURATION_OPTIONS.map((months) => (
+              <option key={months} value={months}>
+                {CERTIFICATE_DURATION_LABELS[months]}
+              </option>
+            ))}
+          </Select>
         </FormField>
 
-        <FormField label="Действителен до">
-          <Input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            required
-          />
-        </FormField>
+        <div className="flex items-center justify-between py-2 border-t border-border-light">
+          <span className="text-sm text-text-sub">Стоимость</span>
+          {priceLoading ? (
+            <SkeletonBlock className="h-5 w-24" />
+          ) : price != null ? (
+            <span className="text-base font-medium text-text-main">
+              {priceFormatter.format(price)}
+            </span>
+          ) : (
+            <span className="text-sm text-text-sub">—</span>
+          )}
+        </div>
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
@@ -155,7 +333,7 @@ export function AddCertificateForm({
           <Button
             variant="primary"
             type="submit"
-            disabled={submitting || !deviceId || !certNumber || !expiresAt}
+            disabled={submitting || !deviceId || !durationMonths}
           >
             {submitting ? 'Отправка...' : 'Добавить'}
           </Button>
