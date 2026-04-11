@@ -5,9 +5,7 @@ import {
     IsArray,
     IsBoolean,
     IsObject,
-    ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { Role } from '../../types/roles.type';
 
 export class CreateUserDto {
@@ -93,7 +91,6 @@ export class UpdateUserDto {
     password?: string;
 
     @IsOptional()
-    @ValidateNested()
-    @Type(() => UpdateUserSettingsDto)
+    @IsObject()
     settings?: UpdateUserSettingsDto;
 }
