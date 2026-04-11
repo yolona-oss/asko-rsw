@@ -7,6 +7,7 @@ import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/shared/entity-detail-modal';
 import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/shared/repair-request-detail';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { repairerApi } from '@/lib/api/repairer';
 import { reviewApi } from '@/lib/api/review';
 import {
   Card,
@@ -87,8 +88,9 @@ export function RepairerHistory() {
 
   useEffect(() => {
     if (!user) return;
-    reviewApi.getRating(user.id)
-      .then(({ data }) => setRating(data))
+    repairerApi.getProfile()
+      .then(({ data }) => reviewApi.getRating(data.id))
+      .then((res) => res && setRating(res.data))
       .catch(() => { });
   }, [user]);
 
