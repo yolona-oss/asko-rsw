@@ -435,7 +435,9 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             ? 'Мастер в отпуске'
             : info?.status === 'sick_leave'
               ? 'Мастер на больничном'
-              : 'Назначение на выходной';
+              : info?.status == 'overtime' as unknown
+                ? "Дополнительные часы"
+                : 'Назначение на выходной';
           const body = info?.status === 'vacation'
             ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый отпуск. Чтобы назначить его на заявку, сначала отмените запись отпуска на странице расписания.</>
             : info?.status === 'sick_leave'

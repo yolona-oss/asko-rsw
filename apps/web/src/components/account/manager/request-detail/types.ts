@@ -1,4 +1,4 @@
-import { RepairRequestStatus } from '@asko/shared/client';
+import { RepairRequestStatus, ScheduleEntryType } from '@asko/shared/client';
 
 export interface RepairRequestDetail {
   id: string;
@@ -42,7 +42,8 @@ export interface RepairerOption {
   user?: { firstName?: string; lastName?: string };
 }
 
-export type RepairerScheduleStatus = 'working' | 'off' | 'vacation' | 'sick_leave' | 'unknown';
+export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "off" | "working" | "unknown";
+// export type RepairerScheduleStatus = ScheduleEntryType | "off" | "working" | "unknown";
 
 export interface RepairerScheduleInfo {
   status: RepairerScheduleStatus;
