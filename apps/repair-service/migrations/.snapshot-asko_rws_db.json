@@ -4217,17 +4217,6 @@
       "indexes": [
         {
           "columnNames": [
-            "user_id",
-            "changed_at"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_user_status_user_changed",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -4874,32 +4863,6 @@
       "indexes": [
         {
           "columnNames": [
-            "user_id",
-            "status",
-            "date_from",
-            "date_to"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_wschedule_user_status_dates",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "user_id",
-            "type",
-            "date_from",
-            "date_to"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_wschedule_user_type_dates",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -5544,28 +5507,6 @@
       "name": "wschedule_pattern_history",
       "schema": "public",
       "indexes": [
-        {
-          "columnNames": [
-            "user_id",
-            "changed_at"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_pattern_history_user_changed",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "user_id",
-            "effective_from"
-          ],
-          "composite": true,
-          "constraint": false,
-          "keyName": "idx_pattern_history_user_effective",
-          "unique": false,
-          "primary": false
-        },
         {
           "columnNames": [
             "id"
