@@ -177,9 +177,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           {statusTitle}
         </h2>
         <span className="text-sm text-text-sub">{formatDate(request.updatedAt)}</span>
-        {request.certificateValid === false && (
+        {request.certificateValid === false && !(!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active') && (
           <div className="flex flex-col gap-1 mt-2">
-            <CertificateWarningBadge valid={request.certificateValid} />
+            <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
             <p className="text-xs text-text-sub">
               Сертификат не оплачен или недействителен.{' '}
               <button
@@ -192,12 +192,13 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             </p>
           </div>
         )}
-        {request.certificateValid === true && (request.certificateSnapshot || request.certificate) && (
+        {(request.certificateValid === true || (!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active')) && (request.certificateSnapshot || request.certificate) && (
           <div className="mt-2">
             <CertificateAppliedBadge
               valid={request.certificateValid}
               snapshot={request.certificateSnapshot}
               expiresAt={request.certificate?.expiresAt}
+              certificate={request.certificate}
             />
           </div>
         )}

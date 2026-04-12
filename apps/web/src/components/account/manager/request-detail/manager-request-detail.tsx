@@ -198,9 +198,22 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     setOffDayConfirm(null);
     if (!repairer) return;
     const info = scheduleInfoByRepairer[repairer.id];
-    // Vacation/sick-leave is blocked server-side — the modal button is disabled,
-    // so this path is only reachable for regular off-days.
-    if (info?.status === 'vacation' || info?.status === 'sick_leave') return;
+    if (info?.status === 'vacation' || info?.status === 'sick_leave') {
+      const today = new Date().toISOString().slice(0, 10);
+      try {
+        const { data: entry } = await scheduleApi.create({
+          userId: repairer.userId,
+          type: 'extra_day',
+          dateFrom: today,
+          dateTo: today,
+          startTime: '09:00',
+          endTime: '18:00',
+        });
+        if (entry?.id) await scheduleApi.approve(entry.id);
+      } catch {
+        return;
+      }
+    }
     await performAssign(repairer.id);
   };
 
@@ -277,11 +290,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           >
             {STATUS_LABELS[request.status] ?? request.status}
           </Badge>
-          <CertificateWarningBadge valid={request.certificateValid} />
+          <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
           <CertificateAppliedBadge
             valid={request.certificateValid}
             snapshot={request.certificateSnapshot}
             expiresAt={request.certificate?.expiresAt}
+            certificate={request.certificate}
           />
         </div>
         <div className="flex items-center gap-2 text-sm text-text-sub">
@@ -430,18 +444,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           if (!offDayConfirm) return null;
           const info = scheduleInfoByRepairer[offDayConfirm.id];
           const name = [offDayConfirm.user?.lastName, offDayConfirm.user?.firstName].filter(Boolean).join(' ') || 'Без имени';
-          const blocked = info?.status === 'vacation' || info?.status === 'sick_leave';
           const title = info?.status === 'vacation'
             ? 'Мастер в отпуске'
             : info?.status === 'sick_leave'
               ? 'Мастер на больничном'
-              : info?.status == 'overtime' as unknown
-                ? "Дополнительные часы"
-                : 'Назначение на выходной';
+              : 'Назначение на выходной';
           const body = info?.status === 'vacation'
-            ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый отпуск. Чтобы назначить его на заявку, сначала отмените запись отпуска на странице расписания.</>
+            ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый отпуск. При назначении будет создан дополнительный рабочий день.</>
             : info?.status === 'sick_leave'
-              ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый больничный. Чтобы назначить его на заявку, сначала отмените запись больничного на странице расписания.</>
+              ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый больничный. При назначении будет создан дополнительный рабочий день.</>
               : <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня выходной по графику. При назначении будет автоматически создан дополнительный рабочий день.</>;
           return (
             <>
@@ -449,13 +460,11 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               <p className="text-sm text-text-sub mb-4">{body}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" size="sm" onClick={() => setOffDayConfirm(null)}>
-                  {blocked ? 'Закрыть' : 'Отмена'}
+                  Отмена
                 </Button>
-                {!blocked && (
-                  <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
-                    Подтвердить
-                  </Button>
-                )}
+                <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
+                  Подтвердить
+                </Button>
               </div>
             </>
           );

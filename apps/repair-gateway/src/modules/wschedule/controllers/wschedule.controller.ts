@@ -44,6 +44,34 @@ function assertNotInPast(dateIso: string, time: string, message = 'Нельзя 
     }
 }
 
+function assertDateNotBeforeToday(dateIso: string): void {
+    const target = startOfDay(parseDateTime(dateIso, '00:00'));
+    const today = startOfDay(new Date());
+    if (target.getTime() < today.getTime()) {
+        throw new BadRequestException('Нельзя создавать запись за прошедший день');
+    }
+}
+
+function assertDateIsToday(dateIso: string): void {
+    const target = startOfDay(parseDateTime(dateIso, '00:00'));
+    const today = startOfDay(new Date());
+    if (target.getTime() !== today.getTime()) {
+        throw new BadRequestException('Дополнительный день можно создать только на сегодня');
+    }
+}
+
+function assertMaxDuration(dateFromIso: string, dateToIso: string, maxDays: number): void {
+    const from = startOfDay(parseDateTime(dateFromIso, '00:00'));
+    const to = startOfDay(parseDateTime(dateToIso, '00:00'));
+    const diffMs = to.getTime() - from.getTime();
+    if (diffMs < 0) {
+        throw new BadRequestException('Дата окончания раньше даты начала');
+    }
+    if (diffMs > maxDays * 86_400_000) {
+        throw new BadRequestException(`Максимальная длительность — ${maxDays} дней`);
+    }
+}
+
 @ApiTags('Schedule')
 @Controller('schedule')
 export class WScheduleController {
@@ -54,8 +82,16 @@ export class WScheduleController {
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateWScheduleDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
-        // Strict check: creation must be for a moment in the future.
-        assertNotInPast(dto.dateFrom, dto.startTime ?? '00:00');
+        if (dto.type === ScheduleEntryType.EXTRA_DAY) {
+            assertDateIsToday(dto.dateFrom);
+        } else if (dto.type === ScheduleEntryType.OVERTIME) {
+            assertDateNotBeforeToday(dto.dateFrom);
+        } else if (dto.type === ScheduleEntryType.SICK_LEAVE) {
+            assertDateNotBeforeToday(dto.dateFrom);
+            assertMaxDuration(dto.dateFrom, dto.dateTo, 30);
+        } else {
+            assertNotInPast(dto.dateFrom, dto.startTime ?? '00:00');
+        }
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: dto.type,

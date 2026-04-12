@@ -13,10 +13,20 @@ interface CertificateAppliedBadgeProps {
   /** Live cert expiry — used as fallback for in-progress requests where the
    *  snapshot has not been frozen yet. */
   expiresAt?: string | Date | null;
+  /** Live certificate data for detecting stale `valid=false` on the request. */
+  certificate?: { paid?: boolean; status?: string; expiresAt?: string } | null;
 }
 
-export function CertificateAppliedBadge({ valid, snapshot, expiresAt }: CertificateAppliedBadgeProps) {
-  if (valid !== true) return null;
+export function CertificateAppliedBadge({ valid, snapshot, expiresAt, certificate }: CertificateAppliedBadgeProps) {
+  // When a snapshot exists the request is in a terminal state — `valid` is
+  // frozen and authoritative; the live cert must not override it.
+  const liveCertActive =
+    !snapshot &&
+    !!certificate?.paid &&
+    certificate.status !== 'revoked' &&
+    certificate.status !== 'expired' &&
+    !(certificate.expiresAt && new Date(certificate.expiresAt).getTime() < Date.now());
+  if (valid !== true && !liveCertActive) return null;
 
   const effectiveExpires = snapshot?.expiresAt ?? expiresAt ?? null;
   const expired = !!effectiveExpires && new Date(effectiveExpires).getTime() < Date.now();

@@ -24,7 +24,7 @@ export interface RepairRequest {
   totalCost?: number;
   certificateValid?: boolean;
   certificateId?: string;
-  certificate?: { id: string; expiresAt?: string };
+  certificate?: { id: string; expiresAt?: string; paid?: boolean; status?: string };
   certificateSnapshot?: {
     id: string;
     certificateNumber: string;

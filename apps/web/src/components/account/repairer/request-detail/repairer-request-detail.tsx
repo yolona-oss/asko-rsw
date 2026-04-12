@@ -444,11 +444,12 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="text-lg font-medium text-text-main">Сертификат</h2>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <CertificateWarningBadge valid={request.certificateValid} />
+                  <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
                   <CertificateAppliedBadge
                     valid={request.certificateValid}
                     snapshot={request.certificateSnapshot}
                     expiresAt={request.certificate.expiresAt}
+                    certificate={request.certificate}
                   />
                 </div>
               </div>

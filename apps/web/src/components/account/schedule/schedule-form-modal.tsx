@@ -101,11 +101,8 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
 
   const createBlockedReason = useMemo<string | null>(() => {
     if (isEdit) return null;
-    if (!isAdmin && type !== 'vacation') {
-      return 'Можно создавать только записи отпуска';
-    }
     return null;
-  }, [isEdit, isAdmin, type]);
+  }, [isEdit]);
 
   const handleSubmit = async () => {
     setError('');
@@ -126,9 +123,28 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       setError('Дата окончания раньше даты начала');
       return;
     }
-    // Strict: creation/edit must be for a moment in the future (server enforces too).
     const effectiveStart = needsTimes ? startTime : '00:00';
-    if (combineDateTime(dateFrom, effectiveStart) < Date.now()) {
+    if (type === 'extra_day') {
+      if (dateFrom !== todayISO()) {
+        setError('Дополнительный день можно создать только на сегодня');
+        return;
+      }
+    } else if (type === 'overtime') {
+      if (combineDateTime(dateFrom, '00:00') < combineDateTime(todayISO(), '00:00')) {
+        setError('Нельзя создавать запись за прошедший день');
+        return;
+      }
+    } else if (type === 'sick_leave') {
+      if (combineDateTime(dateFrom, '00:00') < combineDateTime(todayISO(), '00:00')) {
+        setError('Нельзя создавать запись за прошедший день');
+        return;
+      }
+      const diffDays = (new Date(effectiveTo).getTime() - new Date(dateFrom).getTime()) / 86_400_000;
+      if (diffDays > 30) {
+        setError('Максимальная длительность больничного — 30 дней');
+        return;
+      }
+    } else if (combineDateTime(dateFrom, effectiveStart) < Date.now()) {
       setError('Нельзя создавать запись в прошлом');
       return;
     }
@@ -170,9 +186,8 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
     }
   };
 
-  // Non-admins see only vacation in the type list (they can only create vacation entries).
-  const availableTypes = isAdmin ? EXCEPTION_TYPES : (['vacation'] as const);
-  const typeSelectDisabled = lockType || !isAdmin;
+  const availableTypes = EXCEPTION_TYPES;
+  const typeSelectDisabled = !!lockType;
   const submitDisabled = saving || !!editBlockedReason || !!createBlockedReason;
 
   return (
@@ -187,7 +202,11 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
           </p>
         )}
         <FormField label="Тип">
-          <Select value={type} onChange={(e) => setType(e.target.value)} disabled={typeSelectDisabled}>
+          <Select value={type} onChange={(e) => {
+            const v = e.target.value;
+            setType(v);
+            if (v === 'extra_day') { setDateFrom(todayISO()); setDateTo(todayISO()); }
+          }} disabled={typeSelectDisabled}>
             {availableTypes.map((k) => (
               <option key={k} value={k}>
                 {TYPE_LABELS[k] ?? k}
@@ -202,12 +221,25 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
               <Input type="date" min={todayISO()} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </FormField>
             <FormField label="По">
-              <Input type="date" min={dateFrom || todayISO()} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <Input
+                type="date"
+                min={dateFrom || todayISO()}
+                max={type === 'sick_leave' ? (() => { const d = new Date(dateFrom || todayISO()); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); })() : undefined}
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
             </FormField>
           </div>
         ) : (
           <FormField label="Дата">
-            <Input type="date" min={todayISO()} value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDateTo(e.target.value); }} />
+            <Input
+              type="date"
+              min={todayISO()}
+              max={type === 'extra_day' ? todayISO() : undefined}
+              value={type === 'extra_day' ? todayISO() : dateFrom}
+              disabled={type === 'extra_day'}
+              onChange={(e) => { setDateFrom(e.target.value); setDateTo(e.target.value); }}
+            />
           </FormField>
         )}
 
