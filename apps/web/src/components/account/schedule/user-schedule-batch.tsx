@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Badge, Button, Card } from '@asko/ui';
-import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { PatternRecord, ScheduleEntry } from './types';
 import { PatternPreview, patternSummary } from './pattern-preview';
 import {
@@ -30,6 +30,7 @@ interface UserScheduleBatchProps {
   onPatternReject?: (userId: string) => void;
   onProposeExtraDay?: (userId: string) => void;
   onEndSickLeave?: (entry: ScheduleEntry) => void;
+  onReport?: (userId: string) => void;
 }
 
 function isDateInRange(date: Date, fromStr: string, toStr: string): boolean {
@@ -57,6 +58,7 @@ export function UserScheduleBatch({
   onPatternReject,
   onProposeExtraDay,
   onEndSickLeave,
+  onReport,
 }: UserScheduleBatchProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -138,11 +140,19 @@ export function UserScheduleBatch({
                   <span className="ml-2 text-warning-deep">— есть предложенные изменения</span>
                 )}
               </p>
-              {onViewUser && (
-                <Button variant="secondary" size="sm" onClick={() => onViewUser(userId)} className="shrink-0">
-                  Открыть
-                </Button>
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {onReport && (
+                  <Button variant="secondary" size="sm" onClick={() => onReport(userId)}>
+                    <BarChart3 className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Отчёт</span>
+                  </Button>
+                )}
+                {onViewUser && (
+                  <Button variant="secondary" size="sm" onClick={() => onViewUser(userId)}>
+                    Открыть
+                  </Button>
+                )}
+              </div>
             </div>
             <PatternPreview pattern={pattern} compact />
             {canApprove && patternNeedsReview && (

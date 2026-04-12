@@ -11,7 +11,7 @@ if [[ "${1:-}" != "--confirm" ]]; then
     cat <<EOF
 ERROR: prod drop requires --confirm flag.
 
-!! THIS WILL DESTROY ALL PRODUCTION DATA !!
+**THIS WILL DESTROY ALL PRODUCTION DATA!!
 
 This script runs mikro-orm schema:drop with NODE_ENV=prod against every
 service's production database. Tables, migrations history, and all rows
@@ -57,7 +57,7 @@ echo "!!  Services: ${SERVICES[*]}"
 echo "!!  This will delete ALL data in the listed services.     !!"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo ""
-read -r -p 'Type exactly "DROP PROD" to continue: ' reply
+read -r -p 'Type exactly "IM DUMB" to continue: ' reply
 if [[ "$reply" != "DROP PROD" ]]; then
     echo "Aborted."
     exit 1

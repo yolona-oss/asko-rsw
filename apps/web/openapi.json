@@ -7108,6 +7108,114 @@
         ]
       }
     },
+    "/schedule/pattern/{userId}/history": {
+      "get": {
+        "operationId": "WScheduleController_getPatternHistory",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
+    "/schedule/report/{userId}": {
+      "get": {
+        "operationId": "WScheduleController_getScheduleReport",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Schedule"
+        ]
+      }
+    },
     "/schedule/{id}": {
       "get": {
         "operationId": "WScheduleController_findOne",
@@ -8736,6 +8844,9 @@
           "payment_paid",
           "payment_failed",
           "payment_refunded",
+          "invoice_unpaid_reminder",
+          "repair_assignment_reminder",
+          "repair_in_progress_stuck",
           "certificate_issued",
           "certificate_expiring_soon",
           "certificate_expired",
@@ -8749,8 +8860,13 @@
           "schedule_approved",
           "schedule_rejected",
           "schedule_updated",
+          "schedule_deleted",
+          "schedule_extra_day_requested",
+          "schedule_extra_day_accepted",
+          "schedule_extra_day_rejected",
           "schedule_pattern_created",
           "schedule_pattern_updated",
+          "schedule_pattern_deleted",
           "schedule_pattern_approved",
           "schedule_pattern_rejected"
         ]

@@ -23,3 +23,8 @@ export function formatIsoDate(d: Date): string {
 export function combineDateTimeMs(dateIso: string, time: string): number {
     return parseDateTime(dateIso, time).getTime();
 }
+
+export const MONTH_NAMES_RU = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+] as const;

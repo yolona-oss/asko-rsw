@@ -54,6 +54,50 @@ export interface PatternRecordDto {
   hasPendingData?: boolean;
 }
 
+export interface PatternHistoryRecord {
+  id: string;
+  patternId: string;
+  userId: string;
+  cycleLength: number;
+  anchorDate: string;
+  defaultStartTime: string;
+  defaultEndTime: string;
+  slots: PatternSlotDto[];
+  status: string;
+  pendingData?: PatternPendingDto;
+  changeType: string;
+  changedBy?: string;
+  isActive: boolean;
+  effectiveFrom: string;
+  changedAt: string;
+}
+
+export interface PaginatedPatternHistory {
+  data: PatternHistoryRecord[];
+  overallCount: number;
+  page: number;
+  limit: number;
+}
+
+export interface ScheduleAggregateReport {
+  userId: string;
+  dateFrom: string;
+  dateTo: string;
+  isCurrentlyActive: boolean;
+  totalDays: number;
+  activeDays: number;
+  inactiveDays: number;
+  workDays: number;
+  restDays: number;
+  noPatternDays: number;
+  vacationDays: number;
+  sickLeaveDays: number;
+  overtimeCount: number;
+  overtimeTotalMinutes: number;
+  extraDayCount: number;
+  patternRevisions: number;
+}
+
 export interface UpsertPatternInput {
   cycleLength: number;
   anchorDate: string;
@@ -150,5 +194,13 @@ export const scheduleApi = {
 
   patternReject(userId: string) {
     return api.post<PatternRecordDto>(`/schedule/pattern/${userId}/reject`);
+  },
+
+  patternHistory(userId: string, params?: { dateFrom?: string; dateTo?: string; page?: number; limit?: number }) {
+    return api.get<PaginatedPatternHistory>(`/schedule/pattern/${userId}/history`, { params });
+  },
+
+  scheduleReport(userId: string, dateFrom: string, dateTo: string) {
+    return api.get<ScheduleAggregateReport>(`/schedule/report/${userId}`, { params: { dateFrom, dateTo } });
   },
 };

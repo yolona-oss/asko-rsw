@@ -3314,6 +3314,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedule/pattern/{userId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WScheduleController_getPatternHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule/report/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WScheduleController_getScheduleReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schedule/{id}": {
         parameters: {
             query?: never;
@@ -3784,7 +3816,7 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_approved" | "schedule_pattern_rejected";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected";
         /** @enum {string} */
         NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "system";
         NotificationRecordDto: {
@@ -9545,6 +9577,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SchedulePatternListResponseDto"];
+                };
+            };
+        };
+    };
+    WScheduleController_getPatternHistory: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                page: string;
+                limit: string;
+            };
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    WScheduleController_getScheduleReport: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

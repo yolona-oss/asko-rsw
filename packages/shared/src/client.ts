@@ -55,6 +55,7 @@ export {
     todayISO,
     formatIsoDate,
     combineDateTimeMs,
+    MONTH_NAMES_RU,
 } from './utils/date.js';
 
 // Chat

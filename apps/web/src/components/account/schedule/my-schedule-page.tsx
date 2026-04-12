@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button, Badge, Card, Modal, SkeletonCard } from '@asko/ui';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, BarChart3 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
@@ -10,6 +10,7 @@ import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';
+import { ScheduleReportModal } from './schedule-report-modal';
 import { PatternEditor } from './pattern-editor';
 import { PatternPreview } from './pattern-preview';
 import { computeStats } from './stats';
@@ -43,6 +44,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!userId) return;
@@ -132,9 +134,17 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     ? 'Моё расписание'
     : `Расписание: ${targetUserName ?? userId.slice(0, 8)}`;
 
+  const isStaff = role === 'admin' || role === 'manager';
+
   return (
     <PageContainer>
-      <PageHeader>{title}</PageHeader>
+      <div className="flex items-center justify-between gap-3">
+        <PageHeader>{title}</PageHeader>
+        <Button variant="secondary" size="sm" onClick={() => setReportOpen(true)}>
+          <BarChart3 className="w-4 h-4 sm:mr-1" />
+          <span className="hidden sm:inline">Отчёт</span>
+        </Button>
+      </div>
 
       {/* Stats strip — stacks on mobile, row on sm+ */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -322,6 +332,14 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
           <Button variant="danger" size="sm" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Удалить</Button>
         </div>
       </Modal>
+
+      <ScheduleReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        userId={userId}
+        userName={isOwnSchedule ? undefined : (targetUserName ?? undefined)}
+        canExportPdf={isStaff}
+      />
     </PageContainer>
   );
 }

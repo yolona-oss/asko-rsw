@@ -16,6 +16,7 @@ import { usersApi } from '@/lib/api/users';
 import type { ScheduleEntry } from './types';
 import { TYPE_FILTER, STATUS_FILTER } from './constants';
 import { ScheduleFormModal } from './schedule-form-modal';
+import { ScheduleReportModal } from './schedule-report-modal';
 import { UserScheduleBatch } from './user-schedule-batch';
 
 type RosterUser = { id: string; firstName: string; lastName: string };
@@ -41,6 +42,7 @@ export function SchedulePage() {
   const [formDefaultUserId, setFormDefaultUserId] = useState<string | undefined>(undefined);
   const [formDefaultType, setFormDefaultType] = useState<'vacation' | 'sick_leave' | 'overtime' | 'extra_day' | undefined>(undefined);
   const [formLockType, setFormLockType] = useState(false);
+  const [reportUserId, setReportUserId] = useState<string | null>(null);
 
   const filters = useMemo(() => [TYPE_FILTER, STATUS_FILTER], []);
 
@@ -303,6 +305,7 @@ export function SchedulePage() {
             onPatternReject={handlePatternReject}
             onProposeExtraDay={openProposeExtraDay}
             onEndSickLeave={handleEndSickLeave}
+            onReport={(uid: string) => setReportUserId(uid)}
           />
         )}
       />
@@ -316,6 +319,16 @@ export function SchedulePage() {
         defaultType={formDefaultType}
         lockType={formLockType}
       />
+
+      {reportUserId && (
+        <ScheduleReportModal
+          open
+          onClose={() => setReportUserId(null)}
+          userId={reportUserId}
+          userName={users[reportUserId] ? [users[reportUserId].lastName, users[reportUserId].firstName].filter(Boolean).join(' ') : undefined}
+          canExportPdf
+        />
+      )}
     </PageContainer>
   );
 }
