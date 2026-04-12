@@ -26,6 +26,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { CreateRequestContext, Populate } from '@mikro-orm/core';
 
 import { Session, UserAddress } from '../entities';
+import { UserEventService } from './user-event.service';
 
 const USER_SORTABLE_FIELDS = ['createdAt', 'firstName', 'lastName', 'email', 'phone', 'isActive'] as const;
 
@@ -33,6 +34,7 @@ const USER_SORTABLE_FIELDS = ['createdAt', 'firstName', 'lastName', 'email', 'ph
 export class UserService {
     constructor(
         private readonly em: EntityManager,
+        private readonly userEvents: UserEventService,
     ) { }
 
     @CreateRequestContext()
@@ -219,6 +221,7 @@ export class UserService {
         })
 
         await this.em.persistAndFlush(user)
+        this.userEvents.emitUserCreated(user.id, user.roles as Role[])
 
         return user
     }
@@ -229,7 +232,9 @@ export class UserService {
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found')
         }
+        const userId = user.id
         await this.em.removeAndFlush(user)
+        this.userEvents.emitUserDeleted(userId)
     }
 
     @CreateRequestContext()
@@ -370,6 +375,7 @@ export class UserService {
         });
 
         await this.em.persistAndFlush(user);
+        this.userEvents.emitUserCreated(user.id, user.roles as Role[]);
         return user;
     }
 
@@ -394,6 +400,7 @@ export class UserService {
         }
         user.roles.push(role)
         await this.em.persistAndFlush(user)
+        this.userEvents.emitRoleAdded(user.id, role)
     }
 
     @CreateRequestContext()
@@ -407,6 +414,7 @@ export class UserService {
         }
         user.roles = user.roles.filter(r => r !== role)
         await this.em.persistAndFlush(user)
+        this.userEvents.emitRoleRemoved(user.id, role)
     }
 
     @CreateRequestContext()
@@ -553,6 +561,7 @@ export class UserService {
         user.roles = [DEFAULT_USER_ROLE];
         user.settings = new UserSettings();
         await this.em.persistAndFlush(user);
+        this.userEvents.emitUserCreated(user.id, user.roles as Role[]);
 
         await this.linkOAuth(user.id, data.provider, data.providerId, data.email, data.avatarUrl);
         return user;

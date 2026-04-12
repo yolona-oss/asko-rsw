@@ -7,14 +7,18 @@ set -euo pipefail
 # Uses NODE_ENV=dev so mikro-orm.config.ts loads apps/<svc>/.env.dev via
 # getEnvFilePath() — never .env.prod.
 #
+# Services dispatched:
+#   user-service / repair-service / content-service  — MikroORM DevSeeder class
+#   notification-service                              — seed-audience.ts (gRPC → user-service)
+#
 # Usage: ./scripts/seed-dev.sh [service...]
-#   No args  — seed user-service, repair-service, content-service (in order)
+#   No args  — seed user-service, repair-service, content-service, notification-service
 #   service  — seed only the listed services
 
 if [[ $# -gt 0 ]]; then
     SERVICES=("$@")
 else
-    SERVICES=(user-service repair-service content-service)
+    SERVICES=(user-service repair-service content-service notification-service)
 fi
 
 # Pre-flight: every requested service must have .env.dev
@@ -33,13 +37,28 @@ run_seeder() {
     (cd "apps/$service" && NODE_ENV=dev npx mikro-orm seeder:run --class "$class")
 }
 
+run_audience_seed() {
+    echo ""
+    echo "=== [notification-service] seed-audience (env: apps/notification-service/.env.dev) ==="
+    echo "    (pulls users from user-service via gRPC, populates audience_membership)"
+    (cd apps/notification-service && NODE_ENV=dev pnpm run seed:audience)
+}
+
 echo "=== ASKO dev seeding ==="
 echo "Services: ${SERVICES[*]}"
 
 # Order matters: user-service first (so the referenced user IDs exist
-# conceptually), then repair-service, then content-service.
+# conceptually), then repair-service, then content-service, then
+# notification-service (which depends on user-service being up).
 for svc in "${SERVICES[@]}"; do
-    run_seeder "$svc" "DevSeeder"
+    case "$svc" in
+        notification-service)
+            run_audience_seed
+            ;;
+        *)
+            run_seeder "$svc" "DevSeeder"
+            ;;
+    esac
 done
 
 echo ""

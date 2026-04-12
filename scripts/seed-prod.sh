@@ -2,9 +2,10 @@
 set -euo pipefail
 
 # Runs idempotent prod seeders for core services. Safe to re-run.
-#   user-service     — creates SUPER_ADMIN from SEED_ADMIN_* env vars if none exists
-#   repair-service   — inserts base device categories if missing
-#   content-service  — inserts welcome article if missing
+#   user-service          — creates SUPER_ADMIN from SEED_ADMIN_* env vars if none exists
+#   repair-service        — inserts base device categories if missing
+#   content-service       — inserts welcome article if missing
+#   notification-service  — rebuilds audience_membership from user-service (gRPC pull)
 #
 # Requires explicit --confirm to prevent accidental runs against prod DB.
 #
@@ -24,6 +25,9 @@ Required env vars in apps/user-service/.env.prod:
     SEED_ADMIN_EMAIL
     SEED_ADMIN_PHONE
     SEED_ADMIN_PASSWORD
+
+Required env vars in apps/notification-service/.env.prod:
+    USER_SERVICE_ADDR  — gRPC addr of running user-service (e.g. user-service:5000)
 EOF
     exit 1
 fi
@@ -32,7 +36,7 @@ shift
 if [[ $# -gt 0 ]]; then
     SERVICES=("$@")
 else
-    SERVICES=(user-service repair-service content-service)
+    SERVICES=(user-service repair-service content-service notification-service)
 fi
 
 # Pre-flight: every requested service must have .env.prod
@@ -51,11 +55,25 @@ run_seeder() {
     (cd "apps/$service" && NODE_ENV=prod npx mikro-orm seeder:run --class "$class")
 }
 
+run_audience_seed() {
+    echo ""
+    echo "=== [notification-service] seed-audience (env: apps/notification-service/.env.prod) ==="
+    echo "    (pulls users from user-service via gRPC, populates audience_membership)"
+    (cd apps/notification-service && NODE_ENV=prod pnpm run seed:audience)
+}
+
 echo "=== ASKO prod seeding (idempotent) ==="
 echo "Services: ${SERVICES[*]}"
 
 for svc in "${SERVICES[@]}"; do
-    run_seeder "$svc" "ProdSeeder"
+    case "$svc" in
+        notification-service)
+            run_audience_seed
+            ;;
+        *)
+            run_seeder "$svc" "ProdSeeder"
+            ;;
+    esac
 done
 
 echo ""

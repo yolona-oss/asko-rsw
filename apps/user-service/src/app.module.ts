@@ -13,6 +13,7 @@ import { LoginThrottleService } from 'services/login-throttle.service';
 import { OtpService } from 'services/otp.service';
 import { MfaService } from 'services/mfa.service';
 import { EmailEventService } from 'services/email-event.service';
+import { UserEventService } from 'services/user-event.service';
 import { TokenCleanupService } from 'services/token-cleanup.service';
 import { redisProvider } from 'providers/redis.provider';
 
@@ -33,6 +34,7 @@ import { DatabaseModule } from 'modules/database.module';
         OtpService,
         MfaService,
         EmailEventService,
+        UserEventService,
         TokenCleanupService,
     ],
     imports: [

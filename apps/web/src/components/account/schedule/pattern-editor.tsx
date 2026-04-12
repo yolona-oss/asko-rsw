@@ -2,21 +2,60 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Reorder } from 'framer-motion';
-import { Button, Input, FormField, SkeletonCard } from '@asko/ui';
+import { Button, Input, FormField, Select, SkeletonCard } from '@asko/ui';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecord, PatternSlot } from './types';
 import { PRESETS } from './constants';
 import { SlotBlock, type SlotEntry } from './slot-block';
 import { SlotPopover } from './slot-popover';
-import { WeekProjection, weekdayRu } from './week-projection';
+import { WeekProjection } from './week-projection';
 
 interface PatternEditorProps {
   userId: string;
   onChanged?: () => void;
 }
 
+// Monday-first weekday options (getDay() returns 0=Sunday..6=Saturday).
+const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
+  { value: 1, label: 'Пн' },
+  { value: 2, label: 'Вт' },
+  { value: 3, label: 'Ср' },
+  { value: 4, label: 'Чт' },
+  { value: 5, label: 'Пт' },
+  { value: 6, label: 'Сб' },
+  { value: 0, label: 'Вс' },
+];
+
+function formatIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  return formatIsoDate(new Date());
+}
+
+/**
+ * Given a target weekday (0=Sun..6=Sat), return the ISO date of the most recent
+ * occurrence of that weekday that is <= today. This keeps the pattern's first
+ * work day anchored in the current or past week so the current week projection
+ * is populated with cycle data.
+ */
+function mostRecentWeekdayOnOrBefore(weekday: number, reference = new Date()): string {
+  const base = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate());
+  const diff = (base.getDay() - weekday + 7) % 7;
+  base.setDate(base.getDate() - diff);
+  return formatIsoDate(base);
+}
+
+/** Weekday (0..6) of the given ISO date, or null if invalid. */
+function weekdayOf(isoDate: string): number | null {
+  if (!isoDate) return null;
+  const [y, m, d] = isoDate.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d).getDay();
 }
 
 function makeUid(): string {
@@ -146,10 +185,12 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
     setDirty(true);
   };
 
-  const handleAnchorChange = (v: string) => {
-    setAnchorDate(v);
+  const handleWeekdayChange = (weekday: number) => {
+    setAnchorDate(mostRecentWeekdayOnOrBefore(weekday));
     setDirty(true);
   };
+
+  const selectedWeekday = weekdayOf(anchorDate);
 
   const reset = () => {
     if (!initialSnapshot) return;
@@ -248,8 +289,17 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         <FormField label="Конец (по умолчанию)">
           <Input type="time" value={defaultEnd} onChange={(e) => handleDefaultEndChange(e.target.value)} />
         </FormField>
-        <FormField label={`Старт цикла${weekdayRu(anchorDate) ? ` (${weekdayRu(anchorDate)})` : ''}`}>
-          <Input type="date" value={anchorDate} onChange={(e) => handleAnchorChange(e.target.value)} />
+        <FormField label="Старт цикла (день недели)">
+          <Select
+            value={selectedWeekday ?? 1}
+            onChange={(e) => handleWeekdayChange(Number(e.target.value))}
+          >
+            {WEEKDAY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
         </FormField>
       </div>
 

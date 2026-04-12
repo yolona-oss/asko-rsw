@@ -45,7 +45,7 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
   };
 
   return (
-    <Modal open={open} onClose={onClose} className="w-full max-w-sm p-4 sm:p-6">
+    <Modal open={open} onClose={onClose} className="w-full max-w-md p-4 sm:p-6">
       <h2 className="text-base sm:text-lg font-medium text-text-main mb-4">
         День цикла №{index + 1}
       </h2>

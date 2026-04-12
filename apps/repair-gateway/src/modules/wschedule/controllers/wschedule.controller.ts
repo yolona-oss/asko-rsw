@@ -9,17 +9,40 @@ import {
     ScheduleEntryType,
     ScheduleStatus,
     STAFF_ROLES,
+    ADMIN_ROLES,
     Role,
     JwtPayload,
 } from '@asko/shared';
 import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
-import { RequiredRoles, JwtAuthUser, isStaff, assertSelfOrStaff } from '@asko/gateway-common';
+import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
 import {
     WScheduleRecordDto,
     PaginatedScheduleResponseDto,
     SchedulePatternRecordDto,
     SchedulePatternListResponseDto,
 } from 'common/dto/responses/wschedule.response.dto';
+
+function parseDateTime(dateIso: string, time: string): Date {
+    // dateIso may be 'YYYY-MM-DD' or full ISO; keep only the date portion and combine with time.
+    const datePart = dateIso.slice(0, 10);
+    const [y, m, d] = datePart.split('-').map(Number);
+    const [hh = 0, mm = 0] = (time || '00:00').split(':').map(Number);
+    return new Date(y, (m ?? 1) - 1, d ?? 1, hh, mm, 0, 0);
+}
+
+function startOfDay(d: Date): Date {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function assertNotInPast(dateIso: string, time: string, message = 'Нельзя создавать запись в прошлом'): void {
+    const target = parseDateTime(dateIso, time);
+    if (Number.isNaN(target.getTime())) {
+        throw new BadRequestException('Некорректная дата или время');
+    }
+    if (target.getTime() < Date.now()) {
+        throw new BadRequestException(message);
+    }
+}
 
 @ApiTags('Schedule')
 @Controller('schedule')
@@ -31,6 +54,8 @@ export class WScheduleController {
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateWScheduleDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        // Strict check: creation must be for a moment in the future.
+        assertNotInPast(dto.dateFrom, dto.startTime ?? '00:00');
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: dto.type,
@@ -49,6 +74,8 @@ export class WScheduleController {
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        // Vacation starts at 00:00, so it must be for today (not yet ended) or later.
+        assertNotInPast(dto.dateFrom, '00:00');
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: ScheduleEntryType.VACATION,
@@ -149,9 +176,54 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Put(':id')
     async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateWScheduleDto) {
+        const existing = (await this.scheduleClient.findById(id)).schedule;
+        if (!existing || !existing.id) throw new NotFoundException('Запись расписания не найдена');
+
+        const userIsAdmin = isAdmin(user);
+        const userIsStaff = isStaff(user);
+
+        // Non-staff callers may only touch their own records.
+        if (!userIsStaff && existing.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+
+        // Non-admin users can ONLY edit their own VACATION, and only while it
+        // hasn't started yet. After the edit the entry reverts to PENDING so
+        // staff must re-approve it.
+        let forceStatusPending = false;
+        if (!userIsAdmin) {
+            if (existing.type !== ScheduleEntryType.VACATION) {
+                throw new ForbiddenException('Изменять можно только записи отпуска');
+            }
+            if (dto.type !== undefined && dto.type !== ScheduleEntryType.VACATION) {
+                throw new ForbiddenException('Нельзя изменить тип записи');
+            }
+            const startsAt = parseDateTime(existing.dateFrom, existing.startTime || '00:00');
+            if (startsAt.getTime() <= Date.now()) {
+                throw new ForbiddenException('Нельзя изменить запись отпуска после её начала');
+            }
+            if (dto.dateFrom !== undefined && dto.dateFrom !== '') {
+                assertNotInPast(dto.dateFrom, dto.startTime ?? existing.startTime ?? '00:00');
+            }
+            if (dto.status !== undefined && dto.status !== ScheduleStatus.PENDING) {
+                throw new ForbiddenException('Нельзя менять статус записи');
+            }
+            forceStatusPending = true;
+        }
+
+        // Extra day can only be edited on the calendar day it was created for —
+        // applies to admins too. Use startOfDay comparison against today.
+        if (existing.type === ScheduleEntryType.EXTRA_DAY) {
+            const existingDay = startOfDay(parseDateTime(existing.dateFrom, '00:00')).getTime();
+            const today = startOfDay(new Date()).getTime();
+            if (existingDay !== today) {
+                throw new ForbiddenException('Дополнительный день можно изменить только в тот день, на который он создан');
+            }
+        }
+
         const result = await this.scheduleClient.update({
             id,
             type: dto.type,
@@ -159,7 +231,7 @@ export class WScheduleController {
             dateTo: dto.dateTo ?? undefined,
             startTime: dto.startTime,
             endTime: dto.endTime,
-            status: dto.status,
+            status: forceStatusPending ? ScheduleStatus.PENDING : dto.status,
             note: dto.note ?? undefined,
             actorId: user.sub,
         });
@@ -167,7 +239,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse()
-    @RequiredRoles(...STAFF_ROLES)
+    @RequiredRoles(...ADMIN_ROLES)
     @Delete(':id')
     async delete(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
         await this.scheduleClient.delete(id, user.sub);

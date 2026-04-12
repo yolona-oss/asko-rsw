@@ -26,6 +26,8 @@ export function SchedulePage() {
   const role = user ? primaryRole(user) : 'user';
   const canApprove = role === 'admin' || role === 'manager';
   const canEdit = role === 'admin' || role === 'manager';
+  // Delete is restricted to admins (super_admin + admin map to 'admin' client-side).
+  const canDelete = role === 'admin';
 
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
@@ -282,6 +284,7 @@ export function SchedulePage() {
             entries={items}
             canApprove={canApprove}
             canEdit={canEdit}
+            canDelete={canDelete}
             onApprove={handleApprove}
             onReject={handleReject}
             onEdit={openEdit}

@@ -1,1 +1,1 @@
-export { isStaff, isSelf, assertSelfOrStaff } from './self-or-staff';
+export { isStaff, isAdmin, isSuperAdmin, isSelf, assertSelfOrStaff } from './self-or-staff';

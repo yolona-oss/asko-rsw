@@ -18,12 +18,13 @@
 8. [Real-Time Push Pipeline](#8-real-time-push-pipeline)
 9. [Email Pipeline (BullMQ)](#9-email-pipeline-bullmq)
 10. [Reminder Watchdog](#10-reminder-watchdog)
-11. [Deployment Topology](#11-deployment-topology)
-12. [Configuration](#12-configuration)
-13. [Error Model](#13-error-model)
-14. [Observability](#14-observability)
-15. [Notification & Target Type Catalog](#15-notification--target-type-catalog)
-16. [Releases](#16-releases)
+11. [Audience Projection](#11-audience-projection)
+12. [Deployment Topology](#12-deployment-topology)
+13. [Configuration](#13-configuration)
+14. [Error Model](#14-error-model)
+15. [Observability](#15-observability)
+16. [Notification & Target Type Catalog](#16-notification--target-type-catalog)
+17. [Releases](#17-releases)
 
 ---
 
@@ -35,8 +36,8 @@
 | gRPC port        | `GRPC_PORT` (default **5004**)                           |
 | Metrics port     | `METRICS_PORT` (default **9104**)                        |
 | Database         | PostgreSQL — `asko_rws_notify_db`                        |
-| Transports in    | gRPC (NestJS microservice) + RabbitMQ (`notification_queue`) |
-| Transports out   | RabbitMQ (`chat_queue`), Redis Pub/Sub, SMTP (nodemailer), gRPC → user-service |
+| Transports in    | gRPC (NestJS microservice) + RabbitMQ (`notification_queue`, incl. `user.*` lifecycle events) |
+| Transports out   | RabbitMQ (`chat_queue`), Redis Pub/Sub, SMTP (nodemailer)    |
 | Job queue        | BullMQ over Redis — queue name `email`                   |
 | ORM              | MikroORM v6 (PostgreSQL driver)                          |
 | Framework        | NestJS 11 (ESM, ES2022, TypeScript strict)               |
@@ -59,6 +60,7 @@ mindmap
         certificate.*
         chat.*
         schedule.*
+        user.*
         email.send
     Outbound
       Redis Pub/Sub
@@ -67,8 +69,6 @@ mindmap
         notification.created → chat_queue
       SMTP
         nodemailer transport
-      gRPC
-        user-service.FindAllUsers
     Scheduling
       Reminder Watchdog
         @Cron sweep
@@ -78,10 +78,15 @@ mindmap
         payment_unpaid
         repair_assignment_pending
         repair_in_progress_stuck
+    Audience Projection
+      Local membership table
+      AudienceKey helpers
+      Seed from user-service
     Storage
       PostgreSQL
         notification table
         reminder_job table
+        audience_membership table
       Redis
         BullMQ email queue
         Pub/Sub channel
@@ -134,6 +139,7 @@ flowchart LR
     CS -- chat.* --> RMQ
     RS -- schedule.* --> RMQ
     RS -- certificate.* --> RMQ
+    US -- "user.* (created/role_*/deleted)" --> RMQ
     PS -- email.send --> RMQ
 
     RMQ -- notification_queue --> CONS
@@ -153,8 +159,6 @@ flowchart LR
 
     EMAIL --> SMTP
     EMAIL <--> REDIS
-
-    CONS -- FindAllUsers --> US
 
     classDef svc fill:#fef3c7,stroke:#b45309,stroke-width:2px,color:#78350f;
     classDef infra fill:#e0e7ff,stroke:#4338ca,stroke-width:1.5px,color:#312e81;
@@ -186,12 +190,16 @@ flowchart TB
             CC["ChatEventConsumer"]
             SC["ScheduleEventConsumer"]
             EC["EmailEventConsumer"]
+            UC["UserLifecycleEventConsumer"]
         end
 
         subgraph Services
             NSV["NotificationService"]
             NPS["NotificationPushService"]
             NEP["NotificationEventPublisher"]
+            APS["AudienceProjectionService"]
+            RSV["ReminderService"]
+            RSW["ReminderSweepService"]
             ETS["EmailTransportService"]
             EP["EmailProcessor<br/>@Processor('email')"]
         end
@@ -199,21 +207,27 @@ flowchart TB
         subgraph SubModules["Sub-Modules"]
             DB["DatabaseModule<br/>MikroORM → Postgres"]
             EQ["EmailQueueModule<br/>BullMQ ← Redis"]
-            UCM["UserClientModule<br/>gRPC → user-service"]
         end
     end
 
     GC --> NSV
     RC --> NSV
+    RC --> RSV
+    RC -. staff lookup .-> APS
     PC --> NSV
+    PC --> RSV
     CC --> NSV
     SC --> NSV
-    SC -. staff lookup .-> UCM
+    SC -. staff lookup .-> APS
+    UC --> APS
     EC --> EQ
 
     NSV --> DB
     NSV --> NPS
     NSV --> NEP
+    APS --> DB
+    RSV --> NSV
+    RSW --> RSV
 
     EP --> ETS
     EP --> EQ
@@ -223,9 +237,9 @@ flowchart TB
     classDef svc  fill:#fef3c7,stroke:#b45309;
     classDef mod  fill:#dcfce7,stroke:#15803d;
     class GC ctrl;
-    class RC,PC,CC,SC,EC cons;
-    class NSV,NPS,NEP,ETS,EP svc;
-    class DB,EQ,UCM mod;
+    class RC,PC,CC,SC,EC,UC cons;
+    class NSV,NPS,NEP,APS,RSV,RSW,ETS,EP svc;
+    class DB,EQ mod;
 ```
 
 ### Class Diagram — Service Layer
@@ -270,11 +284,15 @@ classDiagram
         +process(job: Job~EmailJobData~) void
     }
 
-    class UserClientService {
-        <<gRPC client>>
-        -client: UserServiceClient
-        +onModuleInit() void
-        +findAllUsers(opts) PaginatedUsersResponse
+    class AudienceProjectionService {
+        -em: EntityManager
+        +add(userId, key, source?, metadata?) void
+        +addMany(userId, keys[], source?) number
+        +remove(userId, key) boolean
+        +removeAllForUser(userId) number
+        +resolve(key) string[]
+        +resolveMany(keys[]) string[]
+        +countForKey(key) number
     }
 
     NotificationService --> NotificationPushService
@@ -283,6 +301,7 @@ classDiagram
     NotificationService ..> NotificationEntity : manages
     NotificationPushService ..> Redis : publishes
     NotificationEventPublisher ..> RabbitMQ : emits
+    AudienceProjectionService ..> AudienceMembershipEntity : manages
 ```
 
 ---
@@ -327,7 +346,16 @@ erDiagram
         timestamptz updated_at
     }
 
+    AUDIENCE_MEMBERSHIP {
+        varchar(255) user_id PK "composite PK"
+        varchar(100) audience_key PK "composite PK, indexed"
+        varchar(100) source "nullable — event that added the row"
+        jsonb metadata "nullable"
+        timestamptz added_at
+    }
+
     NOTIFICATION ||..o{ REMINDER_JOB : "skip-if-unread lookup by (user_id, target_type, target_id, is_read)"
+    AUDIENCE_MEMBERSHIP ||..o{ REMINDER_JOB : "recipient_user_ids[] sourced via AudienceProjectionService.resolveMany()"
 ```
 
 - No foreign keys — `user_id`, `target_id`, `recipient_user_ids[]` are soft references owned by other services.
@@ -336,8 +364,9 @@ erDiagram
   - `idx_reminder_job_sweep` on `(status, next_fire_at)` — the hot path for the sweep query.
   - `idx_reminder_job_target` on `(target_type, target_id, status)` — supports `cancelReminder()`.
   - `idx_reminder_job_kind_target` on `(kind, target_type, target_id, status)` — supports dedupe in `scheduleReminder()`.
+- `audience_membership` has a composite primary key `(user_id, audience_key)` — a user can belong to many groups, groups can overlap naturally, and duplicates are prevented at the DB level. Secondary index `idx_audience_membership_key` on `audience_key` backs `resolve()` / `resolveMany()`.
 - `metadata` is free-form JSONB — consumers shape it per notification type (e.g. `{ messageId, senderId, conversationId, messageType }` for chat, `{ paymentId, amount, currency }` for reminders).
-- The `NOTIFICATION ||..o{ REMINDER_JOB` line is *not* a DB relation — it's the logical join the sweep performs at fire time to implement the skip-if-unread rule.
+- The `NOTIFICATION ||..o{ REMINDER_JOB` line is *not* a DB relation — it's the logical join the sweep performs at fire time to implement the skip-if-unread rule. Same caveat applies to `AUDIENCE_MEMBERSHIP ||..o{ REMINDER_JOB` — recipients are materialized into `recipient_user_ids[]` at schedule time, not joined at fire time.
 
 ### State Machine — Single Notification
 
@@ -407,6 +436,7 @@ flowchart TB
         P["payment-event.consumer.ts"]
         C["chat-event.consumer.ts"]
         S["schedule-event.consumer.ts"]
+        U["user-lifecycle-event.consumer.ts"]
         E["email-event.consumer.ts"]
     end
 
@@ -414,17 +444,21 @@ flowchart TB
     RMQ -- "payment.*" --> P
     RMQ -- "chat.*" --> C
     RMQ -- "schedule.*" --> S
+    RMQ -- "user.*" --> U
     RMQ -- "email.send" --> E
 
     R --> NS["NotificationService.createNotification()"]
     P --> NS
     C --> NS
     S --> NS
-    S -. role=ADMIN/MANAGER .-> UC["UserClientService.findAllUsers()"]
+    R -. role=ADMIN/MANAGER .-> AP["AudienceProjectionService.resolveMany()"]
+    S -. role=ADMIN/MANAGER .-> AP
+    U --> AP
     E --> BQ["BullMQ 'email' queue"]
 
     style RMQ fill:#fb923c,color:#fff,stroke:#9a3412
     style NS fill:#fde68a,stroke:#b45309
+    style AP fill:#ede9fe,stroke:#6d28d9
     style BQ fill:#fecaca,stroke:#b91c1c
 ```
 
@@ -453,6 +487,10 @@ flowchart TB
 | repair-service   | `schedule.updated`             | `SCHEDULE_UPDATED`                            | `SCHEDULE`         |
 | repair-service   | `schedule.deleted`             | `SCHEDULE_DELETED`                            | `SCHEDULE`         |
 | repair-service   | `schedule.pattern_*`           | `SCHEDULE_PATTERN_*`                          | `SCHEDULE`         |
+| user-service     | `user.created`                 | *(populates `audience_membership` with `role:<R>` rows — see §11)* | —     |
+| user-service     | `user.role_added`              | *(inserts one `role:<R>` membership row)*                          | —     |
+| user-service     | `user.role_removed`            | *(deletes the matching `role:<R>` membership row)*                 | —     |
+| user-service     | `user.deleted`                 | *(removes all memberships for the user)*                           | —     |
 | any              | `email.send`                   | *(enqueued as BullMQ job, not a notification)*| —                  |
 
 ### Reminder hooks inside consumers
@@ -476,7 +514,7 @@ flowchart TD
     Actor{actorId === userId ?}
     Type{scheduleType?}
     Extra{extra_day?}
-    StaffNotif["Fan-out to<br/>ADMIN / MANAGER / SUPER_ADMIN<br/>via UserClientService"]
+    StaffNotif["Fan-out to<br/>ADMIN / MANAGER / SUPER_ADMIN<br/>via AudienceProjectionService"]
     UserNotif["Single notification<br/>to userId (repairer)"]
 
     Start --> Actor
@@ -817,7 +855,7 @@ flowchart TD
 | `repair_assignment_pending`    | `repairRequest`   | 15 min           | 3         | Assigned repairer (by `repairerUserId`)                     | Any `repair.status_changed` leaving `assigned`, `repair.transferred`, `repair.completed` |
 | `repair_in_progress_stuck`     | `repairRequest`   | 8 h              | **1**     | Repairer + all `ADMIN` / `MANAGER` / `SUPER_ADMIN` (deduped)| Any `repair.status_changed` leaving `in_progress`, `repair.completed`         |
 
-Defaults come from `AppConfig.reminders.*` and are fully env-overridable — see §12.
+Defaults come from `AppConfig.reminders.*` and are fully env-overridable — see §13.
 
 ### Multi-replica safety
 
@@ -886,7 +924,113 @@ interface ReminderService {
 
 ---
 
-## 11. Deployment Topology
+## 11. Audience Projection
+
+The reminder watchdog (§10) and the schedule / repair consumers (§6) need to resolve **“all users in role X”** at event-handling time. Historically that was a gRPC call to `user-service.FindAllUsers`, which coupled the notification-service hot path to user-service availability and added a network hop on every fan-out. v1.2.0 replaces that with a **local audience projection table** fed by `user.*` lifecycle events.
+
+### Why
+
+- **Latency:** `resolveMany([AudienceKey.role('ADMIN'), ...])` is a single indexed Postgres query against the local DB — no gRPC round-trip.
+- **Decoupling:** notification-service no longer has a compile-time dependency on `user-service` at runtime (removed `UserClientModule`). A user-service outage does not stop reminder fan-out or schedule notifications.
+- **Extensibility:** the same table supports arbitrary audience groups — `role:ADMIN`, `certificate:holder`, `feed:<id>`, etc. — because `audience_key` is just an opaque string.
+- **Overlap:** composite primary key `(user_id, audience_key)` lets a single user belong to many groups at once with natural dedupe and overlapping membership.
+
+### Data flow
+
+```mermaid
+flowchart LR
+    subgraph UserSvc["user-service"]
+        US_Svc["UserService.create /<br/>remove / addRole / removeRole"]
+        UES["UserEventService<br/>(NOTIFICATION_SERVICE ClientProxy)"]
+    end
+
+    subgraph NotifSvc["notification-service"]
+        ULC["UserLifecycleEventConsumer<br/>@EventPattern('user.*')"]
+        APS["AudienceProjectionService"]
+        AM[("audience_membership")]
+        RS["ReminderService /<br/>consumers (staff lookup)"]
+    end
+
+    US_Svc -- emit --> UES
+    UES -- "user.created / role_* / deleted" --> RMQ[("🐇 RabbitMQ<br/>notification_queue")]
+    RMQ --> ULC
+    ULC -- add/addMany/remove/removeAllForUser --> APS
+    APS -- persist --> AM
+    RS -- resolveMany --> APS
+    APS -- "SELECT userId FROM audience_membership<br/>WHERE audience_key IN (...)" --> AM
+
+    classDef ext fill:#dbeafe,stroke:#1d4ed8;
+    classDef svc fill:#fef3c7,stroke:#b45309;
+    classDef store fill:#ede9fe,stroke:#6d28d9;
+    class US_Svc,UES ext;
+    class ULC,APS,RS svc;
+    class AM,RMQ store;
+```
+
+### AudienceKey helpers
+
+The `AudienceKey` helper in `src/services/audience-projection.service.ts` centralizes key construction so producers and consumers can't drift:
+
+```ts
+export const AudienceKey = {
+  role: (role: string) => `role:${role}`,               // e.g. "role:ADMIN"
+  certificateHolder: () => 'certificate:holder',         // users who currently hold a certificate
+  feed: (feedId: string) => `feed:${feedId}`,           // feed subscribers
+};
+```
+
+Adding a new group is a one-liner here + a new place that calls `audience.add(...)` on the triggering event. No schema change, no migration, no new table.
+
+### `user.*` event handling
+
+| RMQ routing key     | Payload                                  | Handler action                                                               |
+|---------------------|------------------------------------------|------------------------------------------------------------------------------|
+| `user.created`      | `{ userId, roles: string[] }`            | `addMany(userId, roles.map(role => AudienceKey.role(role)), 'user.created')` |
+| `user.role_added`   | `{ userId, role }`                       | `add(userId, AudienceKey.role(role), 'user.role_added')`                     |
+| `user.role_removed` | `{ userId, role }`                       | `remove(userId, AudienceKey.role(role))`                                     |
+| `user.deleted`      | `{ userId }`                             | `removeAllForUser(userId)` — wipes every membership for the user             |
+
+All handlers always ACK (success and failure) — a bad payload must not park the queue. Errors are logged via the service's Pino logger.
+
+### Initial bootstrap — `seed-audience.ts`
+
+Fresh installs (or any env where users existed before this feature shipped) need a one-time backfill. The service ships a standalone script that pulls every user via a temporary gRPC client to `user-service` and inserts their `role:*` rows:
+
+```bash
+pnpm --filter @asko/notification-service run seed:audience
+```
+
+What it does:
+1. Opens a MikroORM connection using `src/mikro-orm.config.ts`.
+2. Wipes existing `role:*` rows (source of truth is user-service).
+3. Paginates `FindAllUsers` in batches of 200.
+4. For every user, calls `em.persist(...)` for each `role:<R>` pair.
+5. Flushes in batches and closes the gRPC client.
+
+The script is wired into `./scripts/seed-dev.sh` and `./scripts/seed-prod.sh`, so the standard deploy seed flow takes care of it after user-service is seeded. It is idempotent — the pre-delete step makes re-runs safe.
+
+> **Why not keep `UserClientService` just for the hot path?** Because every staff-fanout event would re-pay a gRPC round-trip. The seed script pays it **once** at deploy time, and from then on the hot path is a single indexed Postgres lookup.
+
+### Public surface of `AudienceProjectionService`
+
+```ts
+interface AudienceProjectionService {
+  add(userId: string, audienceKey: string, source?: string, metadata?: Record<string, any>): Promise<void>;
+  addMany(userId: string, audienceKeys: string[], source?: string): Promise<number>;  // count inserted
+  remove(userId: string, audienceKey: string): Promise<boolean>;                      // true if a row was deleted
+  removeMany(userId: string, audienceKeys: string[]): Promise<number>;                // count deleted
+  removeAllForUser(userId: string): Promise<number>;                                  // wipe all memberships for a user
+  resolve(audienceKey: string): Promise<string[]>;                                    // userIds in a single group
+  resolveMany(audienceKeys: string[]): Promise<string[]>;                             // unioned + deduped across groups
+  countForKey(audienceKey: string): Promise<number>;                                  // group size (for dashboards)
+}
+```
+
+All methods are `@CreateRequestContext()`-decorated, so they can be called from RMQ consumers without a pre-existing MikroORM request context.
+
+---
+
+## 12. Deployment Topology
 
 ```mermaid
 flowchart TB
@@ -925,7 +1069,7 @@ flowchart TB
 
 ---
 
-## 12. Configuration
+## 13. Configuration
 
 All env vars are loaded through `@asko/shared`'s `getEnvFilePath()` helper (resolves `.env.prod` / `.env.dev` or falls back to `process.env`).
 
@@ -967,7 +1111,7 @@ All env vars are loaded through `@asko/shared`'s `getEnvFilePath()` helper (reso
 
 ---
 
-## 13. Error Model
+## 14. Error Model
 
 Domain errors live in `src/common/error/` and extend `@asko/shared`'s `AppError` registry. Codes start at **1100** to avoid collisions with other services.
 
@@ -1000,7 +1144,7 @@ The gRPC controller converts any thrown `AppError` into an `RpcException` with t
 
 ---
 
-## 14. Observability
+## 15. Observability
 
 - **Logging:** `@asko/observability`'s `PinoLogger` is wired in `main.ts` with service name `notification-service`.
 - **Metrics:** A standalone HTTP server is started on `METRICS_PORT` via `createMetricsServer()` from `@asko/observability`. Default Node/Prometheus metrics are collected in the constructor (`collectDefaultMetrics()`).
@@ -1009,7 +1153,7 @@ The gRPC controller converts any thrown `AppError` into an `RpcException` with t
 
 ---
 
-## 15. Notification & Target Type Catalog
+## 16. Notification & Target Type Catalog
 
 All enums live in `@asko/shared` so every producer and consumer uses the same string literals.
 
@@ -1038,13 +1182,19 @@ All enums live in `@asko/shared` so every producer and consumer uses the same st
 
 ---
 
-## 16. Releases
+## 17. Releases
 
 A chronological log of user-visible changes. Entries are grouped by semantic version; each line links the change to a concrete file path so a reader can jump straight to the code.
 
 ```mermaid
 timeline
     title notification-service release timeline
+    section v1.2.0 — Audience projection
+        2026-04-12 : Local audience_membership table
+                   : user.* lifecycle consumers
+                   : AudienceProjectionService (resolve/addMany/remove)
+                   : UserClientModule removed from hot path
+                   : seed-audience.ts bootstrap script
     section v1.1.0 — Reminder watchdog
         2026-04-12 : Persistent reminder_job table
                    : @Cron sweep with Postgres advisory lock
@@ -1056,6 +1206,35 @@ timeline
                    : BullMQ email pipeline
                    : Redis pub/sub real-time push
 ```
+
+### v1.2.0 — Audience Projection _(2026-04-12)_
+
+Moves “resolve all users in role X” off the hot-path gRPC call to user-service and onto a local, event-sourced projection table. Also extends the model to arbitrary audience groups (`role:*`, `certificate:holder`, `feed:<id>`, …) with natural multi-group overlap. See §11 for the full model.
+
+**Added**
+- Entity `AudienceMembershipEntity` with composite PK `(user_id, audience_key)` and `idx_audience_membership_key` for resolution — `src/entities/audience-membership.entity.ts`.
+- Migration `Migration20260412150000` creating `audience_membership` — `migrations/Migration20260412150000.ts`.
+- `AudienceProjectionService` (`add` / `addMany` / `remove` / `removeMany` / `removeAllForUser` / `resolve` / `resolveMany` / `countForKey`) with `AudienceKey` helper (`role`, `certificateHolder`, `feed`) — `src/services/audience-projection.service.ts`.
+- `UserLifecycleEventConsumer` handling `user.created` / `user.role_added` / `user.role_removed` / `user.deleted` RMQ events — `src/consumers/user-lifecycle-event.consumer.ts`.
+- `UserEventService` in user-service publishing the four lifecycle events through the existing `NOTIFICATION_SERVICE` ClientProxy — `apps/user-service/src/services/user-event.service.ts`. Wired into `UserService.create_roleWrap / remove / addRole / removeRole / createPhoneUser / createOAuthUser`.
+- `scripts/seed-audience.ts` — standalone ts-node script that bootstraps the table from user-service via a temporary gRPC client. Added `pnpm seed:audience` npm script.
+- `./scripts/seed-dev.sh` and `./scripts/seed-prod.sh` dispatch `notification-service` through the new seed script (instead of the MikroORM seeder). `notification-service` is now part of the default seed service list.
+- Unit tests: `audience-projection.service.spec.ts` (14 specs covering AudienceKey helpers, idempotent add, multi-group overlap in addMany/resolveMany, remove semantics, wipe on user delete).
+
+**Changed**
+- `RepairEventConsumer` staff fanout now uses `AudienceProjectionService.resolveMany([role:ADMIN, role:SUPER_ADMIN, role:MANAGER])` instead of three gRPC calls to user-service — `src/consumers/repair-event.consumer.ts`.
+- `ScheduleEventConsumer` staff fanout switched to the same audience resolution path — `src/consumers/schedule-event.consumer.ts`.
+- `AppModule` registers `AudienceMembershipEntity`, adds `AudienceProjectionService` to providers, adds `UserLifecycleEventConsumer` to controllers — `src/app.module.ts`.
+- MikroORM config and `DatabaseModule` register the new entity — `src/mikro-orm.config.ts`, `src/modules/database.module.ts`.
+
+**Removed**
+- `src/modules/user-client/` — the gRPC-backed `UserClientModule` / `UserClientService` is gone. `notification-service` has zero compile-time and runtime references to user-service on the event-handling path. The only remaining coupling is the one-time seed script at deploy time.
+
+**Operational notes**
+- **Bootstrap on existing environments:** run `pnpm --filter @asko/notification-service run seed:audience` after deploying — required on any env where users existed before v1.2.0 shipped. Idempotent (wipes and rebuilds `role:*` rows).
+- **Fresh deploys:** `./scripts/seed-dev.sh` and `./scripts/seed-prod.sh --confirm` handle it automatically as part of the standard seed flow.
+- **Required env var on prod:** `apps/notification-service/.env.prod` must have `USER_SERVICE_ADDR` pointing at a reachable user-service gRPC endpoint when seeding.
+- **Rollback:** dropping the `user.*` consumer would stop the projection from being updated, but the existing rows and the staff fan-out would keep working until the next user-roles divergence. Restore by re-running the seed script.
 
 ### v1.1.0 — Reminder Watchdog _(2026-04-12)_
 
@@ -1118,12 +1297,15 @@ First production cut of the service.
 | Config                | `src/app.config.ts`                                              |
 | Notification entity   | `src/entities/notification.entity.ts`                            |
 | Reminder entity       | `src/entities/reminder-job.entity.ts`                            |
+| Audience entity       | `src/entities/audience-membership.entity.ts`                     |
 | Migration (v1.0.0)    | `migrations/Migration20260324123852.ts`                          |
 | Migration (v1.1.0)    | `migrations/Migration20260412120000.ts`                          |
+| Migration (v1.2.0)    | `migrations/Migration20260412150000.ts`                          |
 | gRPC controller       | `src/controllers/notification.grpc.controller.ts`                |
 | Core service          | `src/services/notification.service.ts`                           |
 | Reminder service      | `src/services/reminder.service.ts`                               |
 | Reminder sweep        | `src/services/reminder-sweep.service.ts`                         |
+| Audience projection   | `src/services/audience-projection.service.ts`                    |
 | Push (Redis)          | `src/services/notification-push.service.ts`                      |
 | RMQ publisher         | `src/services/notification-event.publisher.ts`                   |
 | SMTP transport        | `src/services/email-transport.service.ts`                        |
@@ -1133,10 +1315,12 @@ First production cut of the service.
 | Chat consumer         | `src/consumers/chat-event.consumer.ts`                           |
 | Schedule consumer     | `src/consumers/schedule-event.consumer.ts`                       |
 | Email consumer        | `src/consumers/email-event.consumer.ts`                          |
+| User lifecycle consumer | `src/consumers/user-lifecycle-event.consumer.ts`               |
 | Database module       | `src/modules/database.module.ts`                                 |
 | Email queue module    | `src/modules/email-queue.module.ts`                              |
-| User gRPC client      | `src/modules/user-client/user-client.{module,service}.ts`        |
+| Audience seed script  | `scripts/seed-audience.ts`                                       |
 | Errors                | `src/common/error/{definition,error-type.enum,eval,index}.ts`    |
 | Email job interface   | `src/common/email-job.interface.ts`                              |
 | Notification spec     | `src/services/notification.service.spec.ts`                      |
 | Reminder spec         | `src/services/reminder.service.spec.ts`                          |
+| Audience spec         | `src/services/audience-projection.service.spec.ts`               |

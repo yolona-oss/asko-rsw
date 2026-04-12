@@ -30,6 +30,10 @@ export interface ScheduleStats {
   overtimeLabel: string;
   extraDaysCount: number;
   vacationLabel: string | null;
+  /** True when an approved EXTRA_DAY covers today — overrides vacation for display. */
+  extraDayActive: boolean;
+  /** Human label shown on the repairer dashboard when extra day is active. */
+  extraDayActiveLabel: string | null;
 }
 
 export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
@@ -41,6 +45,7 @@ export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
   let extraDaysCount = 0;
   let activeVacation: ScheduleEntry | null = null;
   let nextVacation: ScheduleEntry | null = null;
+  let activeExtraDay: ScheduleEntry | null = null;
 
   for (const entry of entries) {
     if (entry.status === 'rejected') continue;
@@ -55,6 +60,10 @@ export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
       const from = parseDate(entry.dateFrom);
       const to = parseDate(entry.dateTo);
       extraDaysCount += countDays(from < now ? now : from, to > next30 ? next30 : to);
+      // Only APPROVED extra day overrides display state — pending proposals don't count.
+      if (entry.status === 'approved' && from <= now && to >= now) {
+        activeExtraDay = entry;
+      }
     }
 
     if (entry.type === 'vacation') {
@@ -79,8 +88,16 @@ export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
         ? `${overtimeHours}ч`
         : `${overtimeHours}ч ${overtimeRestMin}м`;
 
+  const extraDayActive = !!activeExtraDay;
+  let extraDayActiveLabel: string | null = null;
+  if (activeExtraDay) {
+    const to = parseDate(activeExtraDay.dateTo);
+    const daysLeft = countDays(now, to);
+    extraDayActiveLabel = daysLeft > 1 ? `Сейчас доп. день, ещё ${daysLeft} дн.` : 'Сегодня доп. день';
+  }
+
   let vacationLabel: string | null = null;
-  if (activeVacation) {
+  if (activeVacation && !extraDayActive) {
     const to = parseDate(activeVacation.dateTo);
     const daysLeft = countDays(now, to);
     vacationLabel = `Сейчас, ещё ${daysLeft} дн.`;
@@ -95,5 +112,7 @@ export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
     overtimeLabel,
     extraDaysCount,
     vacationLabel,
+    extraDayActive,
+    extraDayActiveLabel,
   };
 }

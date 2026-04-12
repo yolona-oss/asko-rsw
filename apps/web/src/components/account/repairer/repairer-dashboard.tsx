@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/layout/provider';
 import { displayName, getGreeting } from '@/lib/account';
 import { repairerApi } from '@/lib/api/repairer';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { scheduleApi } from '@/lib/api/schedule';
+import type { ScheduleRecord } from '@/lib/api/schedule';
+import { computeStats } from '@/components/account/schedule/stats';
 import { Card, Button, Badge } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -33,6 +36,7 @@ export function RepairerDashboard() {
   const [detectedAddress, setDetectedAddress] = useState<string | null>(null);
   const [activeRequest, setActiveRequest] = useState<any | null>(null);
   const [completedCount, setCompletedCount] = useState<number | null>(null);
+  const [scheduleEntries, setScheduleEntries] = useState<ScheduleRecord[]>([]);
 
   const sendLocation = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -87,7 +91,19 @@ export function RepairerDashboard() {
     repairRequestApi.getAssigned({ status: 'completed', limit: 1 })
       .then(({ data }) => setCompletedCount(data?.overallCount ?? 0))
       .catch(() => setCompletedCount(0));
-  }, []);
+
+    if (user?.id) {
+      scheduleApi.getAll({ userId: user.id, limit: 200 })
+        .then(({ data }) => setScheduleEntries(data?.data ?? []))
+        .catch(() => setScheduleEntries([]));
+    }
+  }, [user?.id]);
+
+  const scheduleStats = useMemo(() => computeStats(scheduleEntries), [scheduleEntries]);
+  const scheduleStatusLabel = scheduleStats.extraDayActiveLabel
+    ?? (scheduleStats.vacationLabel && scheduleStats.vacationLabel.startsWith('Сейчас')
+        ? `Отпуск: ${scheduleStats.vacationLabel.replace('Сейчас, ', '')}`
+        : null);
 
   return (
     <PageContainer>
@@ -123,6 +139,21 @@ export function RepairerDashboard() {
           </div>
         )}
       </Card>
+
+      {/* Schedule status card — shows active vacation / extra day */}
+      {scheduleStatusLabel && (
+        <Card className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-[14px] leading-[18px] text-text-sub">Статус расписания</span>
+            <span className={`text-[16px] leading-[20px] font-medium ${scheduleStats.extraDayActive ? 'text-success-deep' : 'text-text-main'}`}>
+              {scheduleStatusLabel}
+            </span>
+          </div>
+          <Link href="/account/schedule/my" className="flex-shrink-0">
+            <Button variant="secondary" size="sm">Открыть</Button>
+          </Link>
+        </Card>
+      )}
 
       {/* Active request card */}
       {activeRequest ? (

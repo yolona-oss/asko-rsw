@@ -6,6 +6,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
+import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';
@@ -31,6 +32,9 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   const { user } = useAccount();
   const userId = targetUserId ?? user?.id ?? '';
   const isOwnSchedule = !targetUserId || targetUserId === user?.id;
+  const role = user ? primaryRole(user) : 'user';
+  // Delete is restricted to admins (super_admin + admin map to 'admin' client-side).
+  const canDelete = role === 'admin';
 
   const [pattern, setPattern] = useState<PatternRecordDto | null>(null);
   const [dateEntries, setDateEntries] = useState<ScheduleRecord[]>([]);
@@ -132,12 +136,22 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
         <Card padding="none" className="p-3 sm:p-4 flex flex-col gap-1">
           <p className="text-[11px] sm:text-[12px] text-text-sub">Доп. дни (30 дн.)</p>
           <p className="text-[20px] sm:text-[24px] leading-[24px] sm:leading-[28px] font-semibold text-text-main">{stats.extraDaysCount}</p>
+          {stats.extraDayActiveLabel && (
+            <p className="text-[11px] sm:text-[12px] leading-[14px] font-medium text-success-deep">
+              {stats.extraDayActiveLabel}
+            </p>
+          )}
         </Card>
         <Card padding="none" className="p-3 sm:p-4 flex flex-col gap-1">
           <p className="text-[11px] sm:text-[12px] text-text-sub">Отпуск</p>
           <p className="text-[13px] sm:text-[14px] leading-[18px] font-medium text-text-main">
             {stats.vacationLabel ?? 'Нет запланированного'}
           </p>
+          {stats.extraDayActive && (
+            <p className="text-[11px] sm:text-[12px] leading-[14px] text-text-sub">
+              Отпуск перекрыт доп. днём
+            </p>
+          )}
         </Card>
       </div>
 
@@ -231,7 +245,15 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                   const repairerCanApprove =
                     isOwnSchedule && entry.status === 'pending' && entry.type === 'extra_day';
                   const showApprove = staffCanApprove || repairerCanApprove;
-                  const showActions = canEdit || showApprove;
+                  // Edit is allowed for staff, or for the owner on their own vacation
+                  // before it starts (server enforces too — this just gates the UI).
+                  const selfCanEditVacation =
+                    isOwnSchedule &&
+                    entry.type === 'vacation' &&
+                    new Date(`${entry.dateFrom.slice(0, 10)}T${entry.startTime || '00:00'}:00`).getTime() > Date.now();
+                  const showEdit = canEdit || selfCanEditVacation;
+                  const showDelete = canDelete;
+                  const showActions = showEdit || showDelete || showApprove;
                   if (!showActions) return null;
                   return (
                   <div className="flex items-center gap-2 flex-wrap pt-1">
@@ -245,18 +267,18 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                         </Button>
                       </>
                     )}
-                    {canEdit && (
-                      <>
-                        <Button size="sm" variant="secondary" onClick={() => openEdit(entry)} className="flex-1 sm:flex-none">Изменить</Button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirm(entry.id)}
-                          className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
-                          aria-label="Удалить"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </>
+                    {showEdit && (
+                      <Button size="sm" variant="secondary" onClick={() => openEdit(entry)} className="flex-1 sm:flex-none">Изменить</Button>
+                    )}
+                    {showDelete && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirm(entry.id)}
+                        className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
+                        aria-label="Удалить"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                   );

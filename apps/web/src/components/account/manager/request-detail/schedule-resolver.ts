@@ -23,16 +23,19 @@ export function resolveScheduleForToday(
     (e) => e.status === 'approved' && coversToday(e, todayStart),
   );
 
+  // EXTRA_DAY overrides vacation/sick — a manager-proposed, repairer-accepted
+  // extra work day means the repairer is available today despite an overlapping
+  // vacation. Check it first.
+  const extra = approvedToday.find((e) => e.type === 'extra_day' || e.type === 'overtime');
+  if (extra) {
+    return { status: 'working', startTime: extra.startTime, endTime: extra.endTime };
+  }
+
   const vacation = approvedToday.find((e) => e.type === 'vacation');
   if (vacation) return { status: 'vacation' };
 
   const sick = approvedToday.find((e) => e.type === 'sick_leave');
   if (sick) return { status: 'sick_leave' };
-
-  const extra = approvedToday.find((e) => e.type === 'extra_day' || e.type === 'overtime');
-  if (extra) {
-    return { status: 'working', startTime: extra.startTime, endTime: extra.endTime };
-  }
 
   if (!pattern || !pattern.slots?.length) {
     return { status: 'unknown' };

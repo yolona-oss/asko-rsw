@@ -20,6 +20,7 @@ interface UserScheduleBatchProps {
   entries: ScheduleEntry[];
   canApprove: boolean;
   canEdit: boolean;
+  canDelete?: boolean;
   onApprove?: (entry: ScheduleEntry) => void;
   onReject?: (entry: ScheduleEntry) => void;
   onEdit?: (entry: ScheduleEntry) => void;
@@ -45,6 +46,7 @@ export function UserScheduleBatch({
   entries,
   canApprove,
   canEdit,
+  canDelete = false,
   onApprove,
   onReject,
   onEdit,
@@ -62,12 +64,22 @@ export function UserScheduleBatch({
   const extraDayCount = entries.filter((e) => e.type === 'extra_day').length;
 
   const today = new Date();
-  const onVacationToday = entries.some(
+  const hasExtraDayToday = entries.some(
     (e) =>
-      (e.type === 'vacation' || e.type === 'sick_leave') &&
+      e.type === 'extra_day' &&
       e.status === 'approved' &&
       isDateInRange(today, e.dateFrom, e.dateTo),
   );
+  // An approved EXTRA_DAY covering today overrides vacation/sick: the repairer
+  // is effectively working, so the manager shouldn't see the "propose extra day" prompt.
+  const onVacationToday =
+    !hasExtraDayToday &&
+    entries.some(
+      (e) =>
+        (e.type === 'vacation' || e.type === 'sick_leave') &&
+        e.status === 'approved' &&
+        isDateInRange(today, e.dateFrom, e.dateTo),
+    );
 
   const patternPendingSubmission = pattern?.status === 'pending' && !!pattern?.id;
   const patternPendingEdit = pattern?.status === 'approved' && !!pattern?.pendingData;
@@ -158,7 +170,7 @@ export function UserScheduleBatch({
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-warning-deep">Мастер сейчас в отпуске</p>
                 <p className="text-[11px] sm:text-[12px] text-text-sub">
-                  Предложите дополнительный рабочий день — он должен быть подтверждён репейрером.
+                  Предложите дополнительный рабочий день — он должен быть подтверждён мастером.
                 </p>
               </div>
               <Button
@@ -203,7 +215,7 @@ export function UserScheduleBatch({
                     {entry.note && (
                       <p className="text-[12px] sm:text-sm text-text-sub line-clamp-2">{entry.note}</p>
                     )}
-                    {(canEdit || (canApprove && entry.status === 'pending')) && (
+                    {(canEdit || canDelete || (canApprove && entry.status === 'pending')) && (
                       <div className="flex items-center gap-2 flex-wrap pt-1">
                         {canApprove && entry.status === 'pending' && (
                           <>
@@ -216,19 +228,19 @@ export function UserScheduleBatch({
                           </>
                         )}
                         {canEdit && (
-                          <>
-                            <Button size="sm" variant="secondary" onClick={() => onEdit?.(entry)} className="flex-1 sm:flex-none">
-                              Изменить
-                            </Button>
-                            <button
-                              type="button"
-                              onClick={() => onDelete?.(entry)}
-                              className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
-                              aria-label="Удалить"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
+                          <Button size="sm" variant="secondary" onClick={() => onEdit?.(entry)} className="flex-1 sm:flex-none">
+                            Изменить
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => onDelete?.(entry)}
+                            className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
+                            aria-label="Удалить"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         )}
                       </div>
                     )}

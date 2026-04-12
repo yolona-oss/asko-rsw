@@ -1,8 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
-import { UserClientService } from 'modules/user-client/user-client.service';
+import { AudienceProjectionService, AudienceKey } from 'services/audience-projection.service';
 import { NotificationType, NotificationTargetType, Role } from '@asko/shared';
+
+const STAFF_AUDIENCE_KEYS = [
+    AudienceKey.role(Role.ADMIN),
+    AudienceKey.role(Role.SUPER_ADMIN),
+    AudienceKey.role(Role.MANAGER),
+];
 
 const SCHEDULE_TYPE_LABELS: Record<string, { nominative: string; accusative: string }> = {
     vacation: { nominative: 'Отпуск', accusative: 'отпуск' },
@@ -19,22 +25,12 @@ function scheduleLabel(type: string | undefined): { nominative: string; accusati
 export class ScheduleEventConsumer {
     constructor(
         private readonly notificationService: NotificationService,
-        private readonly userClient: UserClientService,
+        private readonly audience: AudienceProjectionService,
     ) {}
 
     private async getStaffRecipients(excludeUserId?: string): Promise<string[]> {
-        const ids = new Set<string>();
-        for (const role of [Role.ADMIN, Role.SUPER_ADMIN, Role.MANAGER]) {
-            try {
-                const res = await this.userClient.findAllUsers({ role });
-                for (const u of res.data ?? []) {
-                    if (u.id && u.id !== excludeUserId) ids.add(u.id);
-                }
-            } catch (e) {
-                console.error(`[ScheduleEventConsumer] failed to fetch ${role}s:`, e);
-            }
-        }
-        return Array.from(ids);
+        const ids = await this.audience.resolveMany(STAFF_AUDIENCE_KEYS);
+        return excludeUserId ? ids.filter((id) => id !== excludeUserId) : ids;
     }
 
     @EventPattern('schedule.created')

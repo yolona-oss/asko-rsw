@@ -93,7 +93,7 @@ export function LineChart({
       </div>
       <div className="flex">
         {buckets.map((b, i) => (
-          <div key={i} className="flex-1 min-w-0 text-center overflow-hidden">
+          <div key={i} className="flex-1 min-w-0 text-center">
             {i % showEvery === 0 ? (
               <span className="text-[9px] text-text-sub leading-none whitespace-nowrap">{b.label}</span>
             ) : null}

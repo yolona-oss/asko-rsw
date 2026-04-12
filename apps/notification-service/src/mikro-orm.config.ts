@@ -6,6 +6,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
 import { NotificationEntity } from 'entities/notification.entity';
 import { ReminderJobEntity } from 'entities/reminder-job.entity';
+import { AudienceMembershipEntity } from 'entities/audience-membership.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
 
@@ -21,7 +22,7 @@ const config = defineConfig<PostgreSqlDriver>({
     dbName: appConfig.database.name,
     host: appConfig.database.host,
     port: parseInt(appConfig.database.port),
-    entities: [NotificationEntity, ReminderJobEntity],
+    entities: [NotificationEntity, ReminderJobEntity, AudienceMembershipEntity],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),
     },

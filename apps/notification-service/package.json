@@ -11,6 +11,7 @@
         "start:debug": "cross-env NODE_ENV=dev nest start --debug --watch",
         "start:prod": "cross-env NODE_ENV=prod node dist/src/main",
         "lint": "eslint src/",
+        "seed:audience": "ts-node -r tsconfig-paths/register scripts/seed-audience.ts",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:cov": "jest --coverage"

@@ -7,19 +7,21 @@ import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { NotificationEntity } from 'entities/notification.entity';
 import { ReminderJobEntity } from 'entities/reminder-job.entity';
+import { AudienceMembershipEntity } from 'entities/audience-membership.entity';
 import { NotificationService } from 'services/notification.service';
 import { NotificationPushService } from 'services/notification-push.service';
 import { NotificationEventPublisher } from 'services/notification-event.publisher';
 import { ReminderService } from 'services/reminder.service';
 import { ReminderSweepService } from 'services/reminder-sweep.service';
+import { AudienceProjectionService } from 'services/audience-projection.service';
 import { NotificationGrpcController } from 'controllers/notification.grpc.controller';
 import { PaymentEventConsumer } from 'consumers/payment-event.consumer';
 import { RepairEventConsumer } from 'consumers/repair-event.consumer';
 import { ChatEventConsumer } from 'consumers/chat-event.consumer';
 import { EmailEventConsumer } from 'consumers/email-event.consumer';
 import { ScheduleEventConsumer } from 'consumers/schedule-event.consumer';
+import { UserLifecycleEventConsumer } from 'consumers/user-lifecycle-event.consumer';
 import { EmailQueueModule } from 'modules/email-queue.module';
-import { UserClientModule } from 'modules/user-client/user-client.module';
 
 @Module({
     imports: [
@@ -27,9 +29,8 @@ import { UserClientModule } from 'modules/user-client/user-client.module';
         ScheduleModule.forRoot(),
         MetricsModule.register({ serviceName: 'notification-service' }),
         DatabaseModule,
-        MikroOrmModule.forFeature([NotificationEntity, ReminderJobEntity]),
+        MikroOrmModule.forFeature([NotificationEntity, ReminderJobEntity, AudienceMembershipEntity]),
         EmailQueueModule,
-        UserClientModule,
         ClientsModule.registerAsync([
             {
                 name: 'NOTIFICATION_EVENTS',
@@ -52,6 +53,7 @@ import { UserClientModule } from 'modules/user-client/user-client.module';
         ChatEventConsumer,
         EmailEventConsumer,
         ScheduleEventConsumer,
+        UserLifecycleEventConsumer,
     ],
     providers: [
         NotificationService,
@@ -59,6 +61,7 @@ import { UserClientModule } from 'modules/user-client/user-client.module';
         NotificationEventPublisher,
         ReminderService,
         ReminderSweepService,
+        AudienceProjectionService,
     ],
 })
 export class AppModule {}
