@@ -12,6 +12,12 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
+    parseDateTime,
+    startOfDay,
+    assertNotInPast,
+    assertDateNotBeforeToday,
+    assertDateIsToday,
+    assertMaxDuration,
 } from '@asko/shared';
 import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
 import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
@@ -21,56 +27,6 @@ import {
     SchedulePatternRecordDto,
     SchedulePatternListResponseDto,
 } from 'common/dto/responses/wschedule.response.dto';
-
-function parseDateTime(dateIso: string, time: string): Date {
-    // dateIso may be 'YYYY-MM-DD' or full ISO; keep only the date portion and combine with time.
-    const datePart = dateIso.slice(0, 10);
-    const [y, m, d] = datePart.split('-').map(Number);
-    const [hh = 0, mm = 0] = (time || '00:00').split(':').map(Number);
-    return new Date(y, (m ?? 1) - 1, d ?? 1, hh, mm, 0, 0);
-}
-
-function startOfDay(d: Date): Date {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function assertNotInPast(dateIso: string, time: string, message = 'Нельзя создавать запись в прошлом'): void {
-    const target = parseDateTime(dateIso, time);
-    if (Number.isNaN(target.getTime())) {
-        throw new BadRequestException('Некорректная дата или время');
-    }
-    if (target.getTime() < Date.now()) {
-        throw new BadRequestException(message);
-    }
-}
-
-function assertDateNotBeforeToday(dateIso: string): void {
-    const target = startOfDay(parseDateTime(dateIso, '00:00'));
-    const today = startOfDay(new Date());
-    if (target.getTime() < today.getTime()) {
-        throw new BadRequestException('Нельзя создавать запись за прошедший день');
-    }
-}
-
-function assertDateIsToday(dateIso: string): void {
-    const target = startOfDay(parseDateTime(dateIso, '00:00'));
-    const today = startOfDay(new Date());
-    if (target.getTime() !== today.getTime()) {
-        throw new BadRequestException('Дополнительный день можно создать только на сегодня');
-    }
-}
-
-function assertMaxDuration(dateFromIso: string, dateToIso: string, maxDays: number): void {
-    const from = startOfDay(parseDateTime(dateFromIso, '00:00'));
-    const to = startOfDay(parseDateTime(dateToIso, '00:00'));
-    const diffMs = to.getTime() - from.getTime();
-    if (diffMs < 0) {
-        throw new BadRequestException('Дата окончания раньше даты начала');
-    }
-    if (diffMs > maxDays * 86_400_000) {
-        throw new BadRequestException(`Максимальная длительность — ${maxDays} дней`);
-    }
-}
 
 @ApiTags('Schedule')
 @Controller('schedule')

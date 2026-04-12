@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, FormField, Input, Select, Textarea } from '@asko/ui';
+import { todayISO, combineDateTimeMs } from '@asko/shared/client';
 import { scheduleApi } from '@/lib/api/schedule';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
@@ -19,23 +20,8 @@ interface ScheduleFormModalProps {
 
 const EXCEPTION_TYPES = ['vacation', 'sick_leave', 'overtime', 'extra_day'] as const;
 
-function todayISO(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 function isSameDay(a: string, b: string): boolean {
   return a.slice(0, 10) === b.slice(0, 10);
-}
-
-function combineDateTime(dateIso: string, time: string): number {
-  const d = dateIso.slice(0, 10);
-  const [y, mo, da] = d.split('-').map(Number);
-  const [h = 0, mi = 0] = (time || '00:00').split(':').map(Number);
-  return new Date(y, (mo ?? 1) - 1, da ?? 1, h, mi, 0, 0).getTime();
 }
 
 export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUserId, defaultType, lockType }: ScheduleFormModalProps) {
@@ -91,7 +77,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       if (itemType !== 'vacation') {
         return 'Изменять можно только записи отпуска';
       }
-      const startsAt = combineDateTime(editItem.dateFrom ?? '', editItem.startTime ?? '00:00');
+      const startsAt = combineDateTimeMs(editItem.dateFrom ?? '', editItem.startTime ?? '00:00');
       if (startsAt <= Date.now()) {
         return 'Нельзя изменить запись отпуска после её начала';
       }
@@ -130,12 +116,12 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
         return;
       }
     } else if (type === 'overtime') {
-      if (combineDateTime(dateFrom, '00:00') < combineDateTime(todayISO(), '00:00')) {
+      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00')) {
         setError('Нельзя создавать запись за прошедший день');
         return;
       }
     } else if (type === 'sick_leave') {
-      if (combineDateTime(dateFrom, '00:00') < combineDateTime(todayISO(), '00:00')) {
+      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00')) {
         setError('Нельзя создавать запись за прошедший день');
         return;
       }
@@ -144,7 +130,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
         setError('Максимальная длительность больничного — 30 дней');
         return;
       }
-    } else if (combineDateTime(dateFrom, effectiveStart) < Date.now()) {
+    } else if (combineDateTimeMs(dateFrom, effectiveStart) < Date.now()) {
       setError('Нельзя создавать запись в прошлом');
       return;
     }

@@ -144,7 +144,7 @@ export function ManagerRequests() {
       sortable: false,
       width: 140,
       mobileLabel: 'Чат:',
-      render: (req) => req.conversationId ? <ChatStatusBadges convInfo={convInfoMap[req.id]} currentUserId={currentUserId} /> : null,
+      render: (req) => req.conversationId ? <ChatStatusBadges convInfo={convInfoMap[req.id]} currentUserId={currentUserId} requestStatus={req.status} /> : null,
     },
     {
       key: 'date',

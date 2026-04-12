@@ -48,6 +48,15 @@ export { PointsTransactionType, WithdrawalStatus } from './dealer/dealer.type.js
 // Schedule
 export { ScheduleEntryType, ScheduleStatus } from './schedule/schedule.type.js';
 
+// Date utilities
+export {
+    parseDateTime,
+    startOfDay,
+    todayISO,
+    formatIsoDate,
+    combineDateTimeMs,
+} from './utils/date.js';
+
 // Chat
 export {
     ConversationType,

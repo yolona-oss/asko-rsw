@@ -1,13 +1,10 @@
+import { startOfDay } from '@asko/shared/client';
 import type { ScheduleEntry } from './types';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function parseDate(s: string): Date {
   return new Date(s.slice(0, 10));
-}
-
-function dayStart(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 function overlaps(entry: ScheduleEntry, from: Date, to: Date): boolean {
@@ -17,7 +14,7 @@ function overlaps(entry: ScheduleEntry, from: Date, to: Date): boolean {
 }
 
 function countDays(from: Date, to: Date): number {
-  return Math.floor((dayStart(to).getTime() - dayStart(from).getTime()) / MS_PER_DAY) + 1;
+  return Math.floor((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY) + 1;
 }
 
 function timeToMinutes(t: string): number {
@@ -37,7 +34,7 @@ export interface ScheduleStats {
 }
 
 export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
-  const now = dayStart(new Date());
+  const now = startOfDay(new Date());
   const past30 = new Date(now.getTime() - 30 * MS_PER_DAY);
   const next30 = new Date(now.getTime() + 30 * MS_PER_DAY);
 

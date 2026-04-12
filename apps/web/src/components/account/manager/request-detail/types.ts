@@ -42,11 +42,11 @@ export interface RepairerOption {
   user?: { firstName?: string; lastName?: string };
 }
 
-export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "off" | "working" | "unknown";
-// export type RepairerScheduleStatus = ScheduleEntryType | "off" | "working" | "unknown";
+export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "extra_day" | "off" | "working" | "unknown";
 
 export interface RepairerScheduleInfo {
   status: RepairerScheduleStatus;
   startTime?: string;
   endTime?: string;
+  pendingExtraDay?: boolean;
 }

@@ -1,10 +1,19 @@
 'use client';
 
 import { Badge } from '@asko/ui';
+import { RepairRequestStatus } from '@asko/shared/client';
 import type { ConversationInfo } from './types';
 
-export function ChatStatusBadges({ convInfo, currentUserId }: { convInfo?: ConversationInfo; currentUserId: string }) {
+const TERMINAL_STATUSES: Set<string> = new Set([
+  RepairRequestStatus.COMPLETED,
+  RepairRequestStatus.CANCELLED,
+  RepairRequestStatus.REFUSED,
+  RepairRequestStatus.REFUNDED,
+]);
+
+export function ChatStatusBadges({ convInfo, currentUserId, requestStatus }: { convInfo?: ConversationInfo; currentUserId: string; requestStatus?: string }) {
   if (!convInfo) return null;
+  if (requestStatus && TERMINAL_STATUSES.has(requestStatus)) return null;
 
   const iAmIn = convInfo.participantUserIds.includes(currentUserId);
   const hasManager = convInfo.participantUserIds.length > 1;

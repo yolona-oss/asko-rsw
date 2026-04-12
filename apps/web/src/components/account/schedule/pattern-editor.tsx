@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Reorder } from 'framer-motion';
 import { Button, Input, FormField, Select, SkeletonCard } from '@asko/ui';
+import { todayISO, formatIsoDate } from '@asko/shared/client';
 import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecord, PatternSlot } from './types';
 import { PRESETS } from './constants';
@@ -25,17 +26,6 @@ const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
   { value: 6, label: 'Сб' },
   { value: 0, label: 'Вс' },
 ];
-
-function formatIsoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function todayISO(): string {
-  return formatIsoDate(new Date());
-}
 
 /**
  * Given a target weekday (0=Sun..6=Sat), return the ISO date of the most recent

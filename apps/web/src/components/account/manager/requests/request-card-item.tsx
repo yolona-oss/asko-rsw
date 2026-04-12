@@ -37,7 +37,7 @@ export function RequestCardItem({ request, convInfo, currentUserId, onClick, onD
           {STATUS_LABELS[request.status] ?? request.status}
         </span>
         {request.conversationId && (
-          <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} />
+          <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} requestStatus={request.status} />
         )}
       </div>
       <p className="text-sm font-medium text-text-main">{userName}</p>

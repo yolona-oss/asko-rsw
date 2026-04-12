@@ -199,78 +199,66 @@ export function RepairerSelector({
                     isCurrent ? 'opacity-50 cursor-default' : isSelected ? 'bg-primary-50 cursor-pointer' : isFocused ? 'bg-surface-hover cursor-pointer' : 'hover:bg-surface-hover cursor-pointer'
                   }`}
                 >
-                  {/* Row 1: name + badges */}
-                  <div className="flex items-center gap-2 flex-wrap">
+                  {/* Row 1: name + distance */}
+                  <div className="flex items-center gap-2">
                     <span className={`text-sm font-medium ${isCurrent ? 'text-text-sub' : isSelected ? 'text-brand-red' : 'text-text-main'}`}>
                       {name}
                     </span>
-
                     {isCurrent && (
-                      <Badge variant="neutral" className="text-xs px-1.5 py-0">
-                        Текущий
-                      </Badge>
+                      <Badge variant="neutral" className="text-xs px-1.5 py-0">Текущий</Badge>
                     )}
-
+                    <span className="flex-1" />
                     {distanceLabel ? (
-                      <Badge variant="info" className="text-xs px-1.5 py-0">
-                        {distanceLabel}
-                      </Badge>
+                      <Badge variant="info" className="text-xs px-1.5 py-0">{distanceLabel}</Badge>
                     ) : sameCity ? (
-                      <Badge variant="success" className="text-xs px-1.5 py-0">
-                        Тот же город
-                      </Badge>
+                      <Badge variant="success" className="text-xs px-1.5 py-0">Тот же город</Badge>
                     ) : r.city ? (
-                      <Badge variant="neutral" className="text-xs px-1.5 py-0">
-                        {r.city}
-                      </Badge>
+                      <Badge variant="neutral" className="text-xs px-1.5 py-0">{r.city}</Badge>
                     ) : null}
+                  </div>
 
+                  {/* Row 2: status badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
                     {isBusy ? (
-                      <Badge variant="warning" className="text-xs px-1.5 py-0">
-                        Занят ({activeCount})
-                      </Badge>
+                      <Badge variant="warning" className="text-xs px-1.5 py-0">Занят ({activeCount})</Badge>
                     ) : (
-                      <Badge variant="success" className="text-xs px-1.5 py-0">
-                        Свободен
-                      </Badge>
+                      <Badge variant="success" className="text-xs px-1.5 py-0">Свободен</Badge>
                     )}
-
                     {schedule?.status === 'working' && (
                       <Badge variant="success" className="text-xs px-1.5 py-0">
-                        {schedule.startTime && schedule.endTime
-                          ? `Работает ${schedule.startTime}–${schedule.endTime}`
-                          : 'Работает сегодня'}
+                        {schedule.startTime && schedule.endTime ? `Работает ${schedule.startTime}–${schedule.endTime}` : 'Работает сегодня'}
+                      </Badge>
+                    )}
+                    {schedule?.status === 'extra_day' && (
+                      <Badge variant="success" className="text-xs px-1.5 py-0">
+                        {schedule.startTime && schedule.endTime ? `Доп. день ${schedule.startTime}–${schedule.endTime}` : 'Доп. день'}
+                      </Badge>
+                    )}
+                    {schedule?.status === 'overtime' && (
+                      <Badge variant="info" className="text-xs px-1.5 py-0">
+                        {schedule.startTime && schedule.endTime ? `Переработка ${schedule.startTime}–${schedule.endTime}` : 'Переработка'}
                       </Badge>
                     )}
                     {schedule?.status === 'off' && (
-                      <Badge variant="warning" className="text-xs px-1.5 py-0">
-                        Выходной
-                      </Badge>
+                      <Badge variant="warning" className="text-xs px-1.5 py-0">Выходной</Badge>
                     )}
                     {schedule?.status === 'vacation' && (
-                      <Badge variant="error" className="text-xs px-1.5 py-0">
-                        В отпуске
-                      </Badge>
+                      <Badge variant="error" className="text-xs px-1.5 py-0">В отпуске</Badge>
                     )}
                     {schedule?.status === 'sick_leave' && (
-                      <Badge variant="error" className="text-xs px-1.5 py-0">
-                        На больничном
-                      </Badge>
+                      <Badge variant="error" className="text-xs px-1.5 py-0">На больничном</Badge>
                     )}
                     {schedule?.status === 'unknown' && (
-                      <Badge variant="neutral" className="text-xs px-1.5 py-0">
-                        Нет графика
-                      </Badge>
+                      <Badge variant="neutral" className="text-xs px-1.5 py-0">Нет графика</Badge>
                     )}
-                  </div>
-
-                  {/* Row 2: details */}
-                  <div className="flex items-center gap-3 mt-0.5 text-xs text-text-sub">
+                    {schedule?.pendingExtraDay && (
+                      <Badge variant="info" className="text-xs px-1.5 py-0">Ожидает доп. день</Badge>
+                    )}
                     {isBusy && statusLabel && (
-                      <span>Текущая: {statusLabel}</span>
+                      <span className="text-xs text-text-sub">Текущая: {statusLabel}</span>
                     )}
                     {(r.completedRepairs ?? 0) > 0 && (
-                      <span>Выполнено: {r.completedRepairs}</span>
+                      <span className="text-xs text-text-sub">Выполнено: {r.completedRepairs}</span>
                     )}
                   </div>
                 </div>

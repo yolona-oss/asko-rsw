@@ -18,24 +18,31 @@ export function resolveScheduleForToday(
   entries?: ScheduleRecord[] | null,
 ): RepairerScheduleInfo {
   const todayStart = utcDayStart(new Date());
+  const all = entries ?? [];
 
-  const approvedToday = (entries ?? []).filter(
+  const approvedToday = all.filter(
     (e) => e.status === 'approved' && coversToday(e, todayStart),
   );
 
-  // EXTRA_DAY overrides vacation/sick — a manager-proposed, repairer-accepted
-  // extra work day means the repairer is available today despite an overlapping
-  // vacation. Check it first.
-  const extra = approvedToday.find((e) => e.type === 'extra_day' || e.type === 'overtime');
-  if (extra) {
-    return { status: 'working', startTime: extra.startTime, endTime: extra.endTime };
+  const hasPendingExtraDay = all.some(
+    (e) => e.type === 'extra_day' && e.status === 'pending' && coversToday(e, todayStart),
+  );
+
+  const extraDay = approvedToday.find((e) => e.type === 'extra_day');
+  if (extraDay) {
+    return { status: 'extra_day', startTime: extraDay.startTime, endTime: extraDay.endTime };
+  }
+
+  const overtime = approvedToday.find((e) => e.type === 'overtime');
+  if (overtime) {
+    return { status: 'overtime', startTime: overtime.startTime, endTime: overtime.endTime };
   }
 
   const vacation = approvedToday.find((e) => e.type === 'vacation');
-  if (vacation) return { status: 'vacation' };
+  if (vacation) return { status: 'vacation', pendingExtraDay: hasPendingExtraDay };
 
   const sick = approvedToday.find((e) => e.type === 'sick_leave');
-  if (sick) return { status: 'sick_leave' };
+  if (sick) return { status: 'sick_leave', pendingExtraDay: hasPendingExtraDay };
 
   if (!pattern || !pattern.slots?.length) {
     return { status: 'unknown' };
@@ -46,7 +53,7 @@ export function resolveScheduleForToday(
   const position = ((diffDays % len) + len) % len;
   const slot = pattern.slots[position];
   if (!slot) return { status: 'unknown' };
-  if (!slot.work) return { status: 'off' };
+  if (!slot.work) return { status: 'off', pendingExtraDay: hasPendingExtraDay };
   return {
     status: 'working',
     startTime: slot.startTime || pattern.defaultStartTime,
@@ -59,7 +66,7 @@ export function compareBySchedule(
   b: RepairerScheduleInfo,
 ): number {
   const rank = (s: RepairerScheduleInfo['status']): number => {
-    if (s === 'working') return 0;
+    if (s === 'working' || s === 'extra_day' || s === 'overtime') return 0;
     if (s === 'unknown') return 1;
     if (s === 'off') return 2;
     if (s === 'sick_leave') return 3;

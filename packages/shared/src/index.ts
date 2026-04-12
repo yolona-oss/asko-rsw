@@ -26,6 +26,7 @@ export * from './utils/nodeEnv.js';
 export * from './utils/slugify.js';
 export * from './utils/sleep.js';
 export * from './utils/envFile.js';
+export * from './utils/date.js';
 
 // External integrations
 export { SmsRu } from './external/sms_ru/index.js';

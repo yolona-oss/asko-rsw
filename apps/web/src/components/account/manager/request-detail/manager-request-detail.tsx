@@ -104,7 +104,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           const [patternRes, entriesRes] = await Promise.allSettled([
             scheduleApi.patternGetMany(userIds),
             scheduleApi.getAll({
-              status: 'approved',
               dateFrom: today,
               dateTo: today,
               limit: 500,
@@ -193,28 +192,21 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     await performAssign(selectedRepairer);
   };
 
-  const handleConfirmOffDayAssign = async () => {
+  const handleProposeExtraDay = async () => {
     const repairer = offDayConfirm;
     setOffDayConfirm(null);
     if (!repairer) return;
-    const info = scheduleInfoByRepairer[repairer.id];
-    if (info?.status === 'vacation' || info?.status === 'sick_leave') {
-      const today = new Date().toISOString().slice(0, 10);
-      try {
-        const { data: entry } = await scheduleApi.create({
-          userId: repairer.userId,
-          type: 'extra_day',
-          dateFrom: today,
-          dateTo: today,
-          startTime: '09:00',
-          endTime: '18:00',
-        });
-        if (entry?.id) await scheduleApi.approve(entry.id);
-      } catch {
-        return;
-      }
-    }
-    await performAssign(repairer.id);
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      await scheduleApi.create({
+        userId: repairer.userId,
+        type: 'extra_day',
+        dateFrom: today,
+        dateTo: today,
+        startTime: '09:00',
+        endTime: '18:00',
+      });
+    } catch { /* */ }
   };
 
   const handleAcceptChat = async () => {
@@ -448,12 +440,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             ? 'Мастер в отпуске'
             : info?.status === 'sick_leave'
               ? 'Мастер на больничном'
-              : 'Назначение на выходной';
-          const body = info?.status === 'vacation'
-            ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый отпуск. При назначении будет создан дополнительный рабочий день.</>
-            : info?.status === 'sick_leave'
-              ? <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня утверждённый больничный. При назначении будет создан дополнительный рабочий день.</>
-              : <>У мастера <span className="font-medium text-text-main">{name}</span> сегодня выходной по графику. При назначении будет автоматически создан дополнительный рабочий день.</>;
+              : 'Мастер на выходном';
+          const body = <>
+            У мастера <span className="font-medium text-text-main">{name}</span>{' '}
+            {info?.status === 'vacation' ? 'сегодня утверждённый отпуск' : info?.status === 'sick_leave' ? 'сегодня утверждённый больничный' : 'сегодня выходной по графику'}.
+            {' '}Вы можете предложить дополнительный рабочий день — мастер должен будет его подтвердить, после чего назначение станет доступно.
+          </>;
           return (
             <>
               <h2 className="text-lg font-medium text-text-main mb-2">{title}</h2>
@@ -462,8 +454,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
                 <Button variant="secondary" size="sm" onClick={() => setOffDayConfirm(null)}>
                   Отмена
                 </Button>
-                <Button variant="primary" size="sm" onClick={handleConfirmOffDayAssign}>
-                  Подтвердить
+                <Button variant="primary" size="sm" onClick={handleProposeExtraDay}>
+                  Предложить доп. день
                 </Button>
               </div>
             </>

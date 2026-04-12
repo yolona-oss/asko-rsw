@@ -1,14 +1,11 @@
 'use client';
 
+import { startOfDay } from '@asko/shared/client';
 import type { PatternSlot } from './types';
 
 const MS_PER_DAY = 86_400_000;
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const WEEK_ORDER_MON_FIRST = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
 
 function startOfWeekMon(d: Date): Date {
   const base = startOfDay(d);
