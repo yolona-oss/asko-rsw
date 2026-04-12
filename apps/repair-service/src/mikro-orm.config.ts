@@ -7,6 +7,8 @@ import path from 'path';
 import {
     DeviceCategory,
     Device,
+    DevicePart,
+    BrokenPart,
     Address,
     UserDevice,
     Certificate,
@@ -36,6 +38,8 @@ const config = defineConfig<PostgreSqlDriver>({
     entities: [
         DeviceCategory,
         Device,
+        DevicePart,
+        BrokenPart,
         Address,
         UserDevice,
         Certificate,
