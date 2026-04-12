@@ -31,4 +31,8 @@ export class UserEventService implements OnModuleInit {
     emitRoleRemoved(userId: string, role: Role): void {
         this.client.emit('user.role_removed', { userId, role });
     }
+
+    emitStatusChanged(userId: string, isActive: boolean, changedBy?: string): void {
+        this.client.emit('user.status_changed', { userId, isActive, changedBy: changedBy ?? null, timestamp: new Date().toISOString() });
+    }
 }

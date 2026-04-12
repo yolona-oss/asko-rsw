@@ -20,6 +20,8 @@ import {
     PointsWithdrawal,
     WSchedule,
     WSchedulePattern,
+    WSchedulePatternHistory,
+    UserStatusHistory,
 } from './entities';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
@@ -47,6 +49,8 @@ const config = defineConfig<PostgreSqlDriver>({
         PointsWithdrawal,
         WSchedule,
         WSchedulePattern,
+        WSchedulePatternHistory,
+        UserStatusHistory,
     ],
     migrations: {
         path: path.join(process.cwd(), 'migrations'),

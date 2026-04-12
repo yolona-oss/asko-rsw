@@ -161,6 +161,8 @@ service SchedulePatternService {
     rpc GetManyPatterns(GetManyPatternsRequest) returns (PatternListResponse);
     rpc ApprovePattern(PatternApproveRequest) returns (PatternResponse);
     rpc RejectPattern(PatternApproveRequest) returns (PatternResponse);
+    rpc GetPatternHistory(GetPatternHistoryRequest) returns (PatternHistoryResponse);
+    rpc GetScheduleReport(GetScheduleReportRequest) returns (ScheduleAggregateReportResponse);
 }
 
 service DealerService {
@@ -1467,6 +1469,68 @@ message PatternResponse {
 
 message PatternListResponse {
     repeated PatternRecord data = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Schedule Pattern History & Report Messages
+// ═══════════════════════════════════════════════════════════════════════════
+
+message PatternHistoryRecord {
+    string id = 1;
+    string patternId = 2;
+    string userId = 3;
+    int32 cycleLength = 4;
+    string anchorDate = 5;
+    string defaultStartTime = 6;
+    string defaultEndTime = 7;
+    repeated PatternSlot slots = 8;
+    string status = 9;
+    PatternPending pendingData = 10;
+    string changeType = 11;
+    string changedBy = 12;
+    bool isActive = 13;
+    string effectiveFrom = 14;
+    string changedAt = 15;
+}
+
+message GetPatternHistoryRequest {
+    string userId = 1;
+    string dateFrom = 2;
+    string dateTo = 3;
+    int32 page = 4;
+    int32 limit = 5;
+}
+
+message PatternHistoryResponse {
+    repeated PatternHistoryRecord data = 1;
+    int32 overallCount = 2;
+    int32 page = 3;
+    int32 limit = 4;
+}
+
+message GetScheduleReportRequest {
+    string userId = 1;
+    string dateFrom = 2;
+    string dateTo = 3;
+}
+
+message ScheduleAggregateReportResponse {
+    string userId = 1;
+    string dateFrom = 2;
+    string dateTo = 3;
+    bool isCurrentlyActive = 4;
+    int32 totalDays = 5;
+    int32 activeDays = 6;
+    int32 inactiveDays = 7;
+    int32 workDays = 8;
+    int32 restDays = 9;
+    int32 noPatternDays = 10;
+    int32 vacationDays = 11;
+    int32 sickLeaveDays = 12;
+    int32 overtimeCount = 13;
+    int32 overtimeTotalMinutes = 14;
+    int32 extraDayCount = 15;
+    int32 patternRevisions = 16;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

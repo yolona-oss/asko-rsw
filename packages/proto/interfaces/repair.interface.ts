@@ -1507,6 +1507,64 @@ export interface PatternListResponse {
     data: PatternRecord[];
 }
 
+export interface PatternHistoryRecord {
+    id: string;
+    patternId: string;
+    userId: string;
+    cycleLength: number;
+    anchorDate: string;
+    defaultStartTime: string;
+    defaultEndTime: string;
+    slots: PatternSlot[];
+    status: string;
+    pendingData?: PatternPending;
+    changeType: string;
+    changedBy?: string;
+    isActive: boolean;
+    effectiveFrom: string;
+    changedAt: string;
+}
+
+export interface GetPatternHistoryRequest {
+    userId: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
+}
+
+export interface PatternHistoryResponse {
+    data: PatternHistoryRecord[];
+    overallCount: number;
+    page: number;
+    limit: number;
+}
+
+export interface GetScheduleReportRequest {
+    userId: string;
+    dateFrom: string;
+    dateTo: string;
+}
+
+export interface ScheduleAggregateReportResponse {
+    userId: string;
+    dateFrom: string;
+    dateTo: string;
+    isCurrentlyActive: boolean;
+    totalDays: number;
+    activeDays: number;
+    inactiveDays: number;
+    workDays: number;
+    restDays: number;
+    noPatternDays: number;
+    vacationDays: number;
+    sickLeaveDays: number;
+    overtimeCount: number;
+    overtimeTotalMinutes: number;
+    extraDayCount: number;
+    patternRevisions: number;
+}
+
 export interface SchedulePatternServiceClient {
     getPattern(data: GetPatternRequest): Observable<PatternResponse>;
     upsertPattern(data: UpsertPatternRequest): Observable<PatternResponse>;
@@ -1514,4 +1572,6 @@ export interface SchedulePatternServiceClient {
     getManyPatterns(data: GetManyPatternsRequest): Observable<PatternListResponse>;
     approvePattern(data: PatternApproveRequest): Observable<PatternResponse>;
     rejectPattern(data: PatternApproveRequest): Observable<PatternResponse>;
+    getPatternHistory(data: GetPatternHistoryRequest): Observable<PatternHistoryResponse>;
+    getScheduleReport(data: GetScheduleReportRequest): Observable<ScheduleAggregateReportResponse>;
 }

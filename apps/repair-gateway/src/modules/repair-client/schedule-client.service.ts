@@ -14,6 +14,10 @@ import type {
     UpsertPatternRequest,
     PatternResponse,
     PatternListResponse,
+    GetPatternHistoryRequest,
+    PatternHistoryResponse,
+    GetScheduleReportRequest,
+    ScheduleAggregateReportResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -80,5 +84,13 @@ export class ScheduleClientService implements OnModuleInit {
 
     patternReject(userId: string, approvedBy: string): Promise<PatternResponse> {
         return grpcCall(this.patternService.rejectPattern({ userId, approvedBy }));
+    }
+
+    patternHistory(data: GetPatternHistoryRequest): Promise<PatternHistoryResponse> {
+        return grpcCall(this.patternService.getPatternHistory(data));
+    }
+
+    scheduleReport(data: GetScheduleReportRequest): Promise<ScheduleAggregateReportResponse> {
+        return grpcCall(this.patternService.getScheduleReport(data));
     }
 }

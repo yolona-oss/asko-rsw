@@ -15,3 +15,5 @@ export { DevicePart } from './device-part.entity';
 export { BrokenPart } from './broken-part.entity';
 export { WSchedule } from './wschedule.entity';
 export { WSchedulePattern } from './wschedule-pattern.entity';
+export { WSchedulePatternHistory, PatternChangeType } from './wschedule-pattern-history.entity';
+export { UserStatusHistory } from './user-status-history.entity';

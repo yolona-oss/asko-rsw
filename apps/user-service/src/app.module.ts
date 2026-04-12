@@ -18,7 +18,7 @@ import { TokenCleanupService } from 'services/token-cleanup.service';
 import { redisProvider } from 'providers/redis.provider';
 
 import { UserGrpcController } from 'controllers/user.grpc.controller';
-import { User, Session, InvitationLink, UserOAuthLink, UserSettings } from './entities';
+import { User, Session, InvitationLink, UserOAuthLink, UserSettings, UserStatusHistory } from './entities';
 import { DatabaseModule } from 'modules/database.module';
 
 @Module({
@@ -74,6 +74,7 @@ import { DatabaseModule } from 'modules/database.module';
             InvitationLink,
             UserOAuthLink,
             UserSettings,
+            UserStatusHistory,
         ]),
         JwtModule.registerAsync({
             inject: [AppConfig],

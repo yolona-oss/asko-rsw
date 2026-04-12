@@ -165,6 +165,39 @@ export class WScheduleController {
         return { data: result.data ?? [] };
     }
 
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Get('pattern/:userId/history')
+    async getPatternHistory(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('userId') userId: string,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        assertSelfOrStaff(user, userId, 'Нет доступа к истории расписания другого пользователя');
+        return this.scheduleClient.patternHistory({
+            userId,
+            dateFrom: dateFrom || '',
+            dateTo: dateTo || '',
+            page: page ? parseInt(page, 10) : 1,
+            limit: limit ? parseInt(limit, 10) : 20,
+        });
+    }
+
+    @RequiredRoles(...STAFF_ROLES)
+    @Get('report/:userId')
+    async getScheduleReport(
+        @Param('userId') userId: string,
+        @Query('dateFrom') dateFrom: string,
+        @Query('dateTo') dateTo: string,
+    ) {
+        if (!dateFrom || !dateTo) {
+            throw new BadRequestException('dateFrom и dateTo обязательны');
+        }
+        return this.scheduleClient.scheduleReport({ userId, dateFrom, dateTo });
+    }
+
     @ApiOkResponse({ type: WScheduleRecordDto })
     @RequiredRoles(...STAFF_ROLES)
     @Get(':id')

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User, UserPopulateHints } from 'entities/auth/user.entity';
 import { UserOAuthLink } from 'entities/auth/user-oauth-link.entity';
 import { UserSettings } from 'entities/auth/user-settings.entity';
+import { UserStatusHistory } from 'entities/auth/user-status-history.entity';
 
 import { AppErrors } from 'common/error';
 import { DeepPartial } from 'types/deep-partial.type';
@@ -380,13 +381,30 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async setActive(id: string, isActive: boolean) {
+    async setActive(id: string, isActive: boolean, changedBy?: string) {
         const user = await this.findById(id)
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found')
         }
+        if (user.isActive !== isActive) {
+            const history = new UserStatusHistory();
+            history.userId = user.id;
+            history.isActive = isActive;
+            history.changedBy = changedBy ?? null;
+            history.changedAt = new Date();
+            this.em.persist(history);
+        }
         user.isActive = isActive
         await this.em.persistAndFlush(user)
+        this.userEvents.emitStatusChanged(user.id, isActive, changedBy);
+    }
+
+    @CreateRequestContext()
+    async getUserStatusHistory(userId: string, dateFrom?: string, dateTo?: string): Promise<UserStatusHistory[]> {
+        const where: any = { userId };
+        if (dateFrom) where.changedAt = { ...where.changedAt, $gte: new Date(dateFrom) };
+        if (dateTo) where.changedAt = { ...where.changedAt, $lte: new Date(dateTo) };
+        return this.em.find(UserStatusHistory, where, { orderBy: { changedAt: 'ASC' } });
     }
 
     @CreateRequestContext()

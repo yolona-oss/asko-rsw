@@ -31,6 +31,8 @@ import type {
     AddRoleRequest,
     RemoveRoleRequest,
     SetUserActiveRequest,
+    GetUserStatusHistoryRequest,
+    UserStatusHistoryResponse,
     UserResponse,
     CreateInviteRequest,
     InviteCreatedResponse,
@@ -542,8 +544,24 @@ export class UserGrpcController {
     @GrpcMethod('UserService', 'SetUserActive')
     async setUserActive(data: SetUserActiveRequest): Promise<EmptyResponse> {
         try {
-            await this.userService.setActive(data.id, data.isActive);
+            await this.userService.setActive(data.id, data.isActive, data.changedBy);
             return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'GetUserStatusHistory')
+    async getUserStatusHistory(data: GetUserStatusHistoryRequest): Promise<UserStatusHistoryResponse> {
+        try {
+            const rows = await this.userService.getUserStatusHistory(data.userId, data.dateFrom, data.dateTo);
+            return {
+                data: rows.map((r) => ({
+                    id: r.id,
+                    userId: r.userId,
+                    isActive: r.isActive,
+                    changedBy: r.changedBy ?? '',
+                    changedAt: r.changedAt.toISOString(),
+                })),
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

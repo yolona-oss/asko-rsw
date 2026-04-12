@@ -178,6 +178,25 @@ export interface ResetPasswordResponse {
 export interface SetUserActiveRequest {
     id: string;
     isActive: boolean;
+    changedBy?: string;
+}
+
+export interface UserStatusHistoryRecord {
+    id: string;
+    userId: string;
+    isActive: boolean;
+    changedBy?: string;
+    changedAt: string;
+}
+
+export interface GetUserStatusHistoryRequest {
+    userId: string;
+    dateFrom?: string;
+    dateTo?: string;
+}
+
+export interface UserStatusHistoryResponse {
+    data: UserStatusHistoryRecord[];
 }
 
 export interface AddRoleRequest {
@@ -474,6 +493,7 @@ export interface UserServiceClient {
     addRole(request: AddRoleRequest): Observable<EmptyResponse>;
     removeRole(request: RemoveRoleRequest): Observable<EmptyResponse>;
     setUserActive(request: SetUserActiveRequest): Observable<EmptyResponse>;
+    getUserStatusHistory(request: GetUserStatusHistoryRequest): Observable<UserStatusHistoryResponse>;
 
     createInvite(request: CreateInviteRequest): Observable<InviteCreatedResponse>;
     findAllInvites(request: EmptyRequest): Observable<InviteListResponse>;

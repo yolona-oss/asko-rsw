@@ -1,12 +1,21 @@
 import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Role } from '@asko/shared';
 import { RepairerService } from 'services/repairer.service';
 import { DealerService } from 'services/dealer.service';
+import { UserStatusHistory } from 'entities/user-status-history.entity';
 
 interface UserRegisteredPayload {
     userId: string;
     roles: Role[];
+}
+
+interface UserStatusChangedPayload {
+    userId: string;
+    isActive: boolean;
+    changedBy?: string | null;
+    timestamp: string;
 }
 
 @Controller()
@@ -16,6 +25,7 @@ export class UserEventConsumer {
     constructor(
         private readonly repairerService: RepairerService,
         private readonly dealerService: DealerService,
+        private readonly em: EntityManager,
     ) {}
 
     @EventPattern('user.registered')
@@ -58,6 +68,30 @@ export class UserEventConsumer {
             channel.ack(msg);
         } catch (e) {
             this.logger.error(`user.registered error: ${e}`);
+            channel.nack(msg, false, false);
+        }
+    }
+
+    @EventPattern('user.status_changed')
+    async handleUserStatusChanged(
+        @Payload() data: UserStatusChangedPayload,
+        @Ctx() context: RmqContext,
+    ) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            const fork = this.em.fork();
+            const entry = new UserStatusHistory();
+            entry.userId = data.userId;
+            entry.isActive = data.isActive;
+            entry.changedBy = data.changedBy ?? null;
+            entry.changedAt = new Date(data.timestamp);
+            await fork.persistAndFlush(entry);
+            this.logger.log(`User status history recorded: ${data.userId} isActive=${data.isActive}`);
+            channel.ack(msg);
+        } catch (e) {
+            this.logger.error(`user.status_changed error: ${e}`);
             channel.nack(msg, false, false);
         }
     }

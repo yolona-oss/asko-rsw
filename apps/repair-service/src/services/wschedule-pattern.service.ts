@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedulePattern, PatternSlotData, PatternPendingData } from 'entities/wschedule-pattern.entity';
+import { PatternChangeType } from 'entities/wschedule-pattern-history.entity';
 import { ScheduleStatus } from 'entities/wschedule.entity';
+import { WSchedulePatternHistoryService } from './wschedule-pattern-history.service';
 import type { UpsertPatternRequest } from '@asko/proto';
 
 const MS_PER_DAY = 86_400_000;
@@ -26,7 +28,10 @@ export interface PatternUpsertResult {
 
 @Injectable()
 export class WSchedulePatternService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        private readonly historyService: WSchedulePatternHistoryService,
+    ) {}
 
     @CreateRequestContext()
     async get(userId: string): Promise<WSchedulePattern | null> {
@@ -75,6 +80,7 @@ export class WSchedulePatternService {
 
         if (actorIsStaff) {
             // Staff edits apply directly and clear any pending stash.
+            await this.historyService.snapshot(this.em, existing, PatternChangeType.UPDATED, data.actorId || null);
             this.applyProposedToLive(existing, proposed);
             existing.status = ScheduleStatus.APPROVED;
             existing.approvedBy = data.actorId || null;
@@ -88,6 +94,7 @@ export class WSchedulePatternService {
         if (existing.status !== ScheduleStatus.APPROVED) {
             // Row is still PENDING (or REJECTED) — there's no live version yet, so the
             // repairer is refining the original submission in place.
+            await this.historyService.snapshot(this.em, existing, PatternChangeType.UPDATED, data.actorId || null);
             this.applyProposedToLive(existing, proposed);
             existing.status = ScheduleStatus.PENDING;
             existing.approvedBy = null;
@@ -106,6 +113,7 @@ export class WSchedulePatternService {
         }
 
         // Approved row — stash the proposed edit so the live pattern keeps serving.
+        await this.historyService.snapshot(this.em, existing, PatternChangeType.UPDATED, data.actorId || null);
         existing.pendingData = proposed;
         await this.em.persistAndFlush(existing);
         return {
@@ -124,6 +132,7 @@ export class WSchedulePatternService {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
         if (!pattern) throw new Error('Pattern not found');
 
+        await this.historyService.snapshot(this.em, pattern, PatternChangeType.APPROVED, approvedBy);
         if (pattern.pendingData) {
             this.applyProposedToLive(pattern, pattern.pendingData);
             pattern.pendingData = null;
@@ -140,6 +149,7 @@ export class WSchedulePatternService {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
         if (!pattern) throw new Error('Pattern not found');
 
+        await this.historyService.snapshot(this.em, pattern, PatternChangeType.REJECTED, approvedBy);
         if (pattern.pendingData) {
             // Reject the staged edit only — live approved pattern stays untouched.
             pattern.pendingData = null;
@@ -161,9 +171,11 @@ export class WSchedulePatternService {
     async delete(userId: string): Promise<{ id: string; userId: string } | null> {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
         if (!pattern) return null;
-        const snapshot = { id: pattern.id, userId: pattern.userId };
+        await this.historyService.snapshot(this.em, pattern, PatternChangeType.DELETED, null);
+        await this.em.flush();
+        const result = { id: pattern.id, userId: pattern.userId };
         await this.em.removeAndFlush(pattern);
-        return snapshot;
+        return result;
     }
 
     /**

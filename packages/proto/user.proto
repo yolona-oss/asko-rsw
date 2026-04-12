@@ -180,6 +180,25 @@ message ResetPasswordResponse {
 message SetUserActiveRequest {
     string id = 1;
     bool is_active = 2;
+    string changed_by = 3;
+}
+
+message UserStatusHistoryRecord {
+    string id = 1;
+    string userId = 2;
+    bool isActive = 3;
+    string changedBy = 4;
+    string changedAt = 5;
+}
+
+message GetUserStatusHistoryRequest {
+    string userId = 1;
+    string dateFrom = 2;
+    string dateTo = 3;
+}
+
+message UserStatusHistoryResponse {
+    repeated UserStatusHistoryRecord data = 1;
 }
 
 message AddRoleRequest {
@@ -477,6 +496,7 @@ service UserService {
     rpc AddRole(AddRoleRequest) returns (EmptyResponse);
     rpc RemoveRole(RemoveRoleRequest) returns (EmptyResponse);
     rpc SetUserActive(SetUserActiveRequest) returns (EmptyResponse);
+    rpc GetUserStatusHistory(GetUserStatusHistoryRequest) returns (UserStatusHistoryResponse);
 
     // Invite
     rpc CreateInvite(CreateInviteRequest) returns (InviteCreatedResponse);

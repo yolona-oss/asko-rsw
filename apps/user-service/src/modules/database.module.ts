@@ -4,7 +4,7 @@ import { AppConfig } from "../app.config";
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 
-import { User, Session, InvitationLink, UserAddress, UserOAuthLink } from '../entities'
+import { User, Session, InvitationLink, UserAddress, UserOAuthLink, UserStatusHistory } from '../entities'
 import { isProdEnv } from "@asko/shared";
 
 @Module({
@@ -24,6 +24,7 @@ import { isProdEnv } from "@asko/shared";
                         InvitationLink,
                         UserAddress,
                         UserOAuthLink,
+                        UserStatusHistory,
                     ],
                     debug: !isProdEnv(),
                 }

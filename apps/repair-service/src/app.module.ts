@@ -28,6 +28,8 @@ import {
     BrokenPart,
     WSchedule,
     WSchedulePattern,
+    WSchedulePatternHistory,
+    UserStatusHistory,
 } from './entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
@@ -54,6 +56,8 @@ import { SignatureService } from 'services/signature.service';
 import { DeviceCategoryService } from 'services/device-category.service';
 import { WScheduleService } from 'services/wschedule.service';
 import { WSchedulePatternService } from 'services/wschedule-pattern.service';
+import { WSchedulePatternHistoryService } from 'services/wschedule-pattern-history.service';
+import { WScheduleReportService } from 'services/wschedule-report.service';
 import { SupplierService } from 'providers/supplier/supplier.service';
 import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provider';
 
@@ -81,6 +85,8 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
             BrokenPart,
             WSchedule,
             WSchedulePattern,
+            WSchedulePatternHistory,
+            UserStatusHistory,
         ]),
         PaymentClientModule,
         ClientsModule.registerAsync([
@@ -154,6 +160,8 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         AddressValidationPublisher,
         WScheduleService,
         WSchedulePatternService,
+        WSchedulePatternHistoryService,
+        WScheduleReportService,
         DummySupplierProvider,
         SupplierService,
     ],
