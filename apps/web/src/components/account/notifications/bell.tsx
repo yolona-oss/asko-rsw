@@ -4,14 +4,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, X, ChevronRight } from 'lucide-react';
+import { Bell, X, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { notificationApi } from '@/lib/api/notification';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
+import { useSoundMute } from '@/lib/hooks/use-sound-mute';
+import { playSound, isReminderEnabled } from '@/lib/sound';
 import { getActiveConversation } from '@/lib/active-conversation';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, getTimeAgo } from './constants';
 import { NotificationIcon } from './icon';
+
+const REMINDER_MS = 5 * 60 * 1000;
+
+function isNotificationNavigable(n: NotificationRecord): boolean {
+  return !!NOTIFICATION_TYPE_CONFIG[n.type]?.href;
+}
 
 export function NotificationBell() {
   const router = useRouter();
@@ -21,7 +29,9 @@ export function NotificationBell() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const desktopPanelRef = useRef<HTMLDivElement>(null);
   const [desktopPos, setDesktopPos] = useState<{ x: number; y: number } | null>(null);
+  const [soundMuted, toggleMute] = useSoundMute('notification');
 
+  // ── Queries ──────────────────────────────────────────────────
   const { data: countData } = useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: async () => {
@@ -44,6 +54,35 @@ export function NotificationBell() {
   const unreadCount = countData?.count ?? 0;
   const notifications = listData?.data ?? [];
 
+  // ── Sound reminder (re-ping every 5 min while unread) ────────
+  const reminderRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearReminder = useCallback(() => {
+    if (reminderRef.current) {
+      clearTimeout(reminderRef.current);
+      reminderRef.current = null;
+    }
+  }, []);
+
+  const scheduleReminder = useCallback(() => {
+    clearReminder();
+    reminderRef.current = setTimeout(function remind() {
+      const current = queryClient.getQueryData<{ count: number }>(['notifications-unread-count']);
+      if (current && current.count > 0) {
+        if (isReminderEnabled()) playSound('notification');
+        reminderRef.current = setTimeout(remind, REMINDER_MS);
+      }
+    }, REMINDER_MS);
+  }, [queryClient, clearReminder]);
+
+  const hasUnread = unreadCount > 0;
+  useEffect(() => {
+    if (hasUnread) scheduleReminder();
+    else clearReminder();
+  }, [hasUnread, scheduleReminder, clearReminder]);
+
+  useEffect(() => clearReminder, [clearReminder]);
+
   // ── Real-time via WebSocket ──────────────────────────────────
   useNotificationSocket(
     useCallback((notification: NotificationRecord) => {
@@ -62,7 +101,10 @@ export function NotificationBell() {
           return { ...old, data: [notification, ...old.data], overallCount: old.overallCount + 1 };
         },
       );
-    }, [queryClient]),
+
+      playSound('notification');
+      scheduleReminder();
+    }, [queryClient, scheduleReminder]),
     useCallback((delta: number) => {
       queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
         count: Math.max(0, (old?.count ?? 0) + delta),
@@ -102,16 +144,37 @@ export function NotificationBell() {
     notificationApi.markAllAsRead().finally(() => setMarkingAll(false));
   }, [queryClient]);
 
-  // ── Open / Close ─────────────────────────────────────────────
+  // ── Expand / Collapse notification body ──────────────────────
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // ── Open / Close panel ───────────────────────────────────────
   const handleClose = useCallback(() => {
     setClosing(true);
-    setTimeout(() => { setOpen(false); setClosing(false); }, 200);
+    setTimeout(() => { setOpen(false); setClosing(false); setExpandedIds(new Set()); }, 200);
   }, []);
 
   const handleToggle = useCallback(() => {
     if (open) handleClose();
     else setOpen(true);
   }, [open, handleClose]);
+
+  // ── Navigate to notification target ──────────────────────────
+  const handleNavigate = useCallback((n: NotificationRecord) => {
+    const config = NOTIFICATION_TYPE_CONFIG[n.type];
+    const href = config?.href?.(n);
+    markRead(n.id);
+    handleClose();
+    if (href) router.push(href);
+  }, [markRead, handleClose, router]);
 
   // ── Desktop panel positioning ────────────────────────────────
   useEffect(() => {
@@ -155,20 +218,6 @@ export function NotificationBell() {
     }
   }, [open]);
 
-  // ── Notification click handler ───────────────────────────────
-  function handleNotificationClick(n: NotificationRecord) {
-    const config = NOTIFICATION_TYPE_CONFIG[n.type];
-    const href = config?.href?.(n);
-    markRead(n.id);
-    handleClose();
-    if (href) router.push(href);
-  }
-
-  function isClickable(n: NotificationRecord): boolean {
-    const config = NOTIFICATION_TYPE_CONFIG[n.type];
-    return !!config?.href;
-  }
-
   // ── Animations ───────────────────────────────────────────────
   const panelAnimation = closing
     ? 'animate-[notification-out_200ms_ease-in_forwards]'
@@ -178,11 +227,21 @@ export function NotificationBell() {
     ? 'animate-[fade-out_200ms_ease-in_forwards]'
     : 'animate-[fade-in_200ms_ease-out]';
 
-  // ── Shared panel header ──────────────────────────────────────
+  // ── Panel header ─────────────────────────────────────────────
   const panelHeader = (
     <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
       <span className="text-sm font-medium text-text-main">Уведомления</span>
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="text-text-sub hover:text-text-main cursor-pointer"
+          aria-label={soundMuted ? 'Включить звук' : 'Выключить звук'}
+        >
+          {soundMuted
+            ? <VolumeX className="w-4 h-4" />
+            : <Volume2 className="w-4 h-4" />}
+        </button>
         {unreadCount > 0 && (
           <button
             type="button"
@@ -209,8 +268,10 @@ export function NotificationBell() {
     <NotificationList
       notifications={notifications}
       removingIds={removingIds}
-      onNotificationClick={handleNotificationClick}
-      isClickable={isClickable}
+      expandedIds={expandedIds}
+      onToggleExpand={toggleExpand}
+      onMarkRead={markRead}
+      onNavigate={handleNavigate}
     />
   );
 
@@ -278,13 +339,17 @@ export function NotificationBell() {
 function NotificationList({
   notifications,
   removingIds,
-  onNotificationClick,
-  isClickable,
+  expandedIds,
+  onToggleExpand,
+  onMarkRead,
+  onNavigate,
 }: {
   notifications: NotificationRecord[];
   removingIds: Set<string>;
-  onNotificationClick: (n: NotificationRecord) => void;
-  isClickable: (n: NotificationRecord) => boolean;
+  expandedIds: Set<string>;
+  onToggleExpand: (id: string) => void;
+  onMarkRead: (id: string) => void;
+  onNavigate: (n: NotificationRecord) => void;
 }) {
   if (notifications.length === 0) {
     return (
@@ -297,40 +362,68 @@ function NotificationList({
   return (
     <>
       {notifications.map((n, i) => {
-        const clickable = isClickable(n);
+        const navigable = isNotificationNavigable(n);
         const isRemoving = removingIds.has(n.id);
+        const isExpanded = expandedIds.has(n.id);
         return (
-          <button
+          <div
             key={n.id}
-            type="button"
-            onClick={() => onNotificationClick(n)}
-            className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors border-b border-border-light/50 last:border-b-0 ${
+            className={`px-4 py-3 border-b border-border-light/50 last:border-b-0 ${
               isRemoving
                 ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
                 : 'animate-[notification-item_300ms_ease-out_both]'
-            } ${
-              clickable && !isRemoving ? 'hover:bg-surface-hover active:bg-surface-secondary cursor-pointer' : 'cursor-default'
             }`}
             style={isRemoving ? undefined : { animationDelay: `${i * 50}ms` }}
           >
-            <div className="flex-shrink-0 mt-0.5">
-              <NotificationIcon type={n.type} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-main leading-tight truncate">
-                {n.title}
-              </p>
-              <p className="text-xs text-text-sub mt-0.5 line-clamp-2">
-                {n.body}
-              </p>
-              <p className="text-[10px] text-text-sub/60 mt-1">
+            {/* Main area — click to expand / collapse */}
+            <button
+              type="button"
+              onClick={() => onToggleExpand(n.id)}
+              className="w-full flex items-start gap-3 text-left cursor-pointer"
+            >
+              <div className="flex-shrink-0 mt-0.5">
+                <NotificationIcon type={n.type} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text-main leading-tight">
+                  {n.title}
+                </p>
+                <p className={`text-xs text-text-sub mt-0.5 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                  {n.body}
+                </p>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-text-sub/40 flex-shrink-0 mt-1 transition-transform duration-200 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {/* Footer — time + action buttons */}
+            <div className="flex items-center justify-between mt-1.5 pl-8">
+              <span className="text-[10px] text-text-sub/60">
                 {getTimeAgo(n.createdAt)}
-              </p>
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => onMarkRead(n.id)}
+                  className="text-[11px] text-brand-red hover:underline cursor-pointer"
+                >
+                  Прочитано
+                </button>
+                {navigable && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(n)}
+                    className="text-[11px] text-text-sub hover:text-text-main cursor-pointer"
+                  >
+                    Перейти &rarr;
+                  </button>
+                )}
+              </div>
             </div>
-            {clickable && (
-              <ChevronRight className="w-4 h-4 text-text-sub/40 flex-shrink-0 mt-1" />
-            )}
-          </button>
+          </div>
         );
       })}
     </>

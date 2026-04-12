@@ -1,7 +1,7 @@
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { Seeder } from '@mikro-orm/seeder';
 import { Role, AuthProvider } from '@asko/shared';
-import { User } from '../entities';
+import { User, UserStatusHistory } from '../entities';
 import CryptoService from '../services/crypto.service';
 
 export class ProdSeeder extends Seeder {
@@ -24,7 +24,7 @@ export class ProdSeeder extends Seeder {
         }
 
         const now = new Date();
-        em.create(User, {
+        const user = em.create(User, {
             firstName: name,
             email,
             phone,
@@ -36,6 +36,12 @@ export class ProdSeeder extends Seeder {
             phoneVerified: true,
             createdAt: now,
             updatedAt: now,
+        });
+        em.create(UserStatusHistory, {
+            userId: user.id,
+            isActive: true,
+            changedBy: null,
+            changedAt: now,
         });
 
         await em.flush();

@@ -15,6 +15,7 @@ import { ChatPreferencesSection } from './chat-preferences-section';
 import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
+import { SoundSettingsSection } from './sound-settings-section';
 
 import {
   RUSSIAN_NAMES,
@@ -307,6 +308,10 @@ export function ProfileForm() {
           chatSearchable={chatSearchable}
           setChatSearchable={setChatSearchable}
         />
+
+        {/* Sounds */}
+        <div className="h-px bg-border-light" />
+        <SoundSettingsSection />
 
         {/* MFA */}
         <div className="h-px bg-border-light" />

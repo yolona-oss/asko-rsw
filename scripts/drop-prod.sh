@@ -49,6 +49,8 @@ for svc in "${SERVICES[@]}"; do
     fi
 done
 
+PROCEED_PASS="IM DUMB"
+
 # Interactive typed confirmation — no way to bypass accidentally.
 echo ""
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -57,8 +59,8 @@ echo "!!  Services: ${SERVICES[*]}"
 echo "!!  This will delete ALL data in the listed services.     !!"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo ""
-read -r -p 'Type exactly "IM DUMB" to continue: ' reply
-if [[ "$reply" != "DROP PROD" ]]; then
+read -r -p "Type exactly \"${PROCEED_PASS}\" to continue: " reply
+if [[ "$reply" != ${PROCEED_PASS} ]]; then
     echo "Aborted."
     exit 1
 fi
