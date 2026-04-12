@@ -17,7 +17,7 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
+  [RepairRequestStatus.PENDING]: 'Ожидает внимания',
   [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
