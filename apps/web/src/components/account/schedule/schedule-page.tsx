@@ -145,6 +145,15 @@ export function SchedulePage() {
     } catch { /* */ }
   };
 
+  const handleEndSickLeave = async (entry: ScheduleEntry) => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    try {
+      await scheduleApi.update(entry.id, { dateTo: todayStr });
+      await fetchAll();
+    } catch { /* */ }
+  };
+
   const openEdit = (entry: ScheduleEntry) => {
     setEditItem(entry);
     setFormDefaultUserId(undefined);
@@ -293,6 +302,7 @@ export function SchedulePage() {
             onPatternApprove={handlePatternApprove}
             onPatternReject={handlePatternReject}
             onProposeExtraDay={openProposeExtraDay}
+            onEndSickLeave={handleEndSickLeave}
           />
         )}
       />

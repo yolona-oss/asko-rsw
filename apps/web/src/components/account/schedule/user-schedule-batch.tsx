@@ -29,6 +29,7 @@ interface UserScheduleBatchProps {
   onPatternApprove?: (userId: string) => void;
   onPatternReject?: (userId: string) => void;
   onProposeExtraDay?: (userId: string) => void;
+  onEndSickLeave?: (entry: ScheduleEntry) => void;
 }
 
 function isDateInRange(date: Date, fromStr: string, toStr: string): boolean {
@@ -55,6 +56,7 @@ export function UserScheduleBatch({
   onPatternApprove,
   onPatternReject,
   onProposeExtraDay,
+  onEndSickLeave,
 }: UserScheduleBatchProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -215,7 +217,16 @@ export function UserScheduleBatch({
                     {entry.note && (
                       <p className="text-[12px] sm:text-sm text-text-sub line-clamp-2">{entry.note}</p>
                     )}
-                    {(canEdit || canDelete || (canApprove && entry.status === 'pending')) && (
+                    {(() => {
+                      const sickActive =
+                        !!onEndSickLeave &&
+                        entry.type === 'sick_leave' &&
+                        entry.status !== 'rejected' &&
+                        new Date(entry.dateFrom) <= new Date() &&
+                        new Date(entry.dateTo) >= new Date();
+                      const showActions = canEdit || canDelete || (canApprove && entry.status === 'pending') || sickActive;
+                      if (!showActions) return null;
+                      return (
                       <div className="flex items-center gap-2 flex-wrap pt-1">
                         {canApprove && entry.status === 'pending' && (
                           <>
@@ -226,6 +237,11 @@ export function UserScheduleBatch({
                               Отклонить
                             </Button>
                           </>
+                        )}
+                        {sickActive && (
+                          <Button size="sm" variant="primary" onClick={() => onEndSickLeave(entry)} className="flex-1 sm:flex-none">
+                            Завершить больничный
+                          </Button>
                         )}
                         {canEdit && (
                           <Button size="sm" variant="secondary" onClick={() => onEdit?.(entry)} className="flex-1 sm:flex-none">
@@ -243,7 +259,8 @@ export function UserScheduleBatch({
                           </button>
                         )}
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

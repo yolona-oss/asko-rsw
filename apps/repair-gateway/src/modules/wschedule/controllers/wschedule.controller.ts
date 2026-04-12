@@ -92,6 +92,12 @@ export class WScheduleController {
         } else {
             assertNotInPast(dto.dateFrom, dto.startTime ?? '00:00');
         }
+        if (dto.type === ScheduleEntryType.VACATION) {
+            await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
+        }
+        if (dto.type === ScheduleEntryType.SICK_LEAVE) {
+            await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.SICK_LEAVE, 'больничный');
+        }
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: dto.type,
@@ -110,8 +116,8 @@ export class WScheduleController {
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
-        // Vacation starts at 00:00, so it must be for today (not yet ended) or later.
         assertNotInPast(dto.dateFrom, '00:00');
+        await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
         const result = await this.scheduleClient.create({
             userId: dto.userId,
             type: ScheduleEntryType.VACATION,
@@ -226,32 +232,55 @@ export class WScheduleController {
             throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
         }
 
-        // Non-admin users can ONLY edit their own VACATION, and only while it
-        // hasn't started yet. After the edit the entry reverts to PENDING so
-        // staff must re-approve it.
         let forceStatusPending = false;
         if (!userIsAdmin) {
-            if (existing.type !== ScheduleEntryType.VACATION) {
-                throw new ForbiddenException('Изменять можно только записи отпуска');
+            if (existing.type === ScheduleEntryType.SICK_LEAVE) {
+                if (dto.type !== undefined && dto.type !== ScheduleEntryType.SICK_LEAVE) {
+                    throw new ForbiddenException('Нельзя изменить тип записи');
+                }
+                if (dto.dateFrom !== undefined || dto.startTime !== undefined || dto.endTime !== undefined) {
+                    throw new ForbiddenException('Можно только завершить больничный раньше');
+                }
+                if (!dto.dateTo) {
+                    throw new ForbiddenException('Укажите дату завершения');
+                }
+                const today = startOfDay(new Date());
+                const newTo = startOfDay(parseDateTime(dto.dateTo, '00:00'));
+                const from = startOfDay(parseDateTime(existing.dateFrom, '00:00'));
+                if (newTo.getTime() < from.getTime()) {
+                    throw new BadRequestException('Дата завершения не может быть раньше даты начала');
+                }
+                if (newTo.getTime() > today.getTime()) {
+                    throw new BadRequestException('Можно завершить больничный только сегодняшним днём или раньше');
+                }
+            } else if (existing.type === ScheduleEntryType.VACATION) {
+                if (dto.type !== undefined && dto.type !== ScheduleEntryType.VACATION) {
+                    throw new ForbiddenException('Нельзя изменить тип записи');
+                }
+                const startsAt = parseDateTime(existing.dateFrom, existing.startTime || '00:00');
+                if (startsAt.getTime() <= Date.now()) {
+                    throw new ForbiddenException('Нельзя изменить запись отпуска после её начала');
+                }
+                if (dto.dateFrom !== undefined && dto.dateFrom !== '') {
+                    assertNotInPast(dto.dateFrom, dto.startTime ?? existing.startTime ?? '00:00');
+                }
+                if (dto.status !== undefined && dto.status !== ScheduleStatus.PENDING) {
+                    throw new ForbiddenException('Нельзя менять статус записи');
+                }
+                forceStatusPending = true;
+            } else {
+                throw new ForbiddenException('Нет прав на изменение этой записи');
             }
-            if (dto.type !== undefined && dto.type !== ScheduleEntryType.VACATION) {
-                throw new ForbiddenException('Нельзя изменить тип записи');
-            }
-            const startsAt = parseDateTime(existing.dateFrom, existing.startTime || '00:00');
-            if (startsAt.getTime() <= Date.now()) {
-                throw new ForbiddenException('Нельзя изменить запись отпуска после её начала');
-            }
-            if (dto.dateFrom !== undefined && dto.dateFrom !== '') {
-                assertNotInPast(dto.dateFrom, dto.startTime ?? existing.startTime ?? '00:00');
-            }
-            if (dto.status !== undefined && dto.status !== ScheduleStatus.PENDING) {
-                throw new ForbiddenException('Нельзя менять статус записи');
-            }
-            forceStatusPending = true;
         }
 
-        // Extra day can only be edited on the calendar day it was created for —
-        // applies to admins too. Use startOfDay comparison against today.
+        const effectiveType = dto.type ?? existing.type;
+        if (effectiveType === ScheduleEntryType.VACATION) {
+            await this.assertNoActiveEntry(existing.userId, ScheduleEntryType.VACATION, 'отпуск', id);
+        }
+        if (effectiveType === ScheduleEntryType.SICK_LEAVE) {
+            await this.assertNoActiveEntry(existing.userId, ScheduleEntryType.SICK_LEAVE, 'больничный', id);
+        }
+
         if (existing.type === ScheduleEntryType.EXTRA_DAY) {
             const existingDay = startOfDay(parseDateTime(existing.dateFrom, '00:00')).getTime();
             const today = startOfDay(new Date()).getTime();
@@ -304,6 +333,21 @@ export class WScheduleController {
      * the flow where a manager proposes an extra work day during the repairer's
      * vacation and the repairer accepts or declines it.
      */
+    private async assertNoActiveEntry(userId: string, type: ScheduleEntryType, label: string, excludeId?: string): Promise<void> {
+        const today = new Date().toISOString().slice(0, 10);
+        const result = await this.scheduleClient.findAll({
+            userId,
+            type,
+            limit: 50,
+        });
+        const hasActive = (result.data ?? []).some(
+            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today && e.id !== excludeId,
+        );
+        if (hasActive) {
+            throw new BadRequestException(`У пользователя уже есть активный ${label}`);
+        }
+    }
+
     private async assertOwnPendingExtraDay(user: JwtPayload, scheduleId: string): Promise<void> {
         const result = await this.scheduleClient.findById(scheduleId);
         const entry = result.schedule;

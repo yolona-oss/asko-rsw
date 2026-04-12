@@ -91,6 +91,15 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     } catch { /* */ }
   };
 
+  const handleEndSickLeave = async (id: string) => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    try {
+      await scheduleApi.update(id, { dateTo: todayStr });
+      fetchData();
+    } catch { /* */ }
+  };
+
   const handlePatternApprove = async () => {
     try {
       await scheduleApi.patternApprove(userId);
@@ -240,20 +249,23 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                 {/* Row 3: actions */}
                 {(() => {
                   const staffCanApprove = canApprove && entry.status === 'pending';
-                  // Repairer can self-accept/decline a pending EXTRA_DAY a manager proposed
-                  // during their vacation — this is the sole non-staff approval path.
                   const repairerCanApprove =
                     isOwnSchedule && entry.status === 'pending' && entry.type === 'extra_day';
                   const showApprove = staffCanApprove || repairerCanApprove;
-                  // Edit is allowed for staff, or for the owner on their own vacation
-                  // before it starts (server enforces too — this just gates the UI).
                   const selfCanEditVacation =
                     isOwnSchedule &&
                     entry.type === 'vacation' &&
                     new Date(`${entry.dateFrom.slice(0, 10)}T${entry.startTime || '00:00'}:00`).getTime() > Date.now();
                   const showEdit = canEdit || selfCanEditVacation;
                   const showDelete = canDelete;
-                  const showActions = showEdit || showDelete || showApprove;
+                  const now = new Date();
+                  const sickActive =
+                    isOwnSchedule &&
+                    entry.type === 'sick_leave' &&
+                    entry.status !== 'rejected' &&
+                    new Date(entry.dateFrom) <= now &&
+                    new Date(entry.dateTo) >= now;
+                  const showActions = showEdit || showDelete || showApprove || sickActive;
                   if (!showActions) return null;
                   return (
                   <div className="flex items-center gap-2 flex-wrap pt-1">
@@ -266,6 +278,11 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                           {repairerCanApprove && !staffCanApprove ? 'Отказаться' : 'Отклонить'}
                         </Button>
                       </>
+                    )}
+                    {sickActive && (
+                      <Button size="sm" variant="primary" onClick={() => handleEndSickLeave(entry.id)} className="flex-1 sm:flex-none">
+                        Завершить больничный
+                      </Button>
                     )}
                     {showEdit && (
                       <Button size="sm" variant="secondary" onClick={() => openEdit(entry)} className="flex-1 sm:flex-none">Изменить</Button>
