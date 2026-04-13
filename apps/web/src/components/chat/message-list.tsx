@@ -31,15 +31,24 @@ export function MessageList({
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const MESSAGES_LIMIT = 50;
+
   const { data, isLoading } = useQuery({
     queryKey: ['chat-messages', conversationId],
     queryFn: async () => {
-      const { data } = await chatApi.listMessages(conversationId, { limit: 50 });
+      const { data } = await chatApi.listMessages(conversationId, { limit: MESSAGES_LIMIT });
       return data;
     },
   });
 
   const fetchedMessages = data?.data ?? [];
+
+  // If the initial fetch returned fewer than the limit, all messages are already loaded
+  useEffect(() => {
+    if (data && data.data.length < MESSAGES_LIMIT) {
+      setHasMore(false);
+    }
+  }, [data]);
 
   // Combine all messages: older loaded + initial fetch + realtime
   const allMessages = useMemo(
@@ -100,12 +109,13 @@ export function MessageList({
     const oldest = allMessages[0];
     try {
       const { data: older } = await chatApi.listMessages(conversationId, {
-        limit: 50,
+        limit: MESSAGES_LIMIT,
         beforeId: oldest.id,
       });
-      if (older.data.length === 0) {
+      if (older.data.length < MESSAGES_LIMIT) {
         setHasMore(false);
-      } else {
+      }
+      if (older.data.length > 0) {
         setOlderMessages(prev => [...older.data, ...prev]);
         // Preserve scroll position after prepend
         requestAnimationFrame(() => {

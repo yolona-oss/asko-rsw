@@ -108,6 +108,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     try {
       await repairRequestApi.accept(request.id);
       setRequest({ ...request, status: RepairRequestStatus.ACCEPTED });
+      const { data } = await repairRequestApi.getSteps(request.id);
+      setSteps(data.steps ?? []);
     } catch {} finally { setActionLoading(false); }
   };
 

@@ -69,18 +69,16 @@ export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
 
   return (
     <PageContainer>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <Link href="/account/man" className="text-sm text-text-sub hover:text-brand-red">
-            ← Мануалы
-          </Link>
-          <PageHeader>{device.name}</PageHeader>
-          <p className="text-sm text-text-sub">{device.brand} · {device.model}</p>
-        </div>
-        <Button variant="secondary" onClick={() => { setNoteSuccess(false); setNoteError(''); setNoteOpen(true); }}>
-          Добавить заметку
-        </Button>
+      <div className="flex flex-col gap-1">
+        <Link href="/account/man" className="text-sm text-text-sub hover:text-brand-red">
+          ← Мануалы
+        </Link>
+        <PageHeader>{device.name}</PageHeader>
+        <p className="text-sm text-text-sub">{device.brand} · {device.model}</p>
       </div>
+      <Button variant="secondary" className="self-start" onClick={() => { setNoteSuccess(false); setNoteError(''); setNoteOpen(true); }}>
+        Добавить заметку
+      </Button>
 
       {noteSuccess && (
         <div className="px-4 py-3 bg-success-bg border border-success-border rounded text-sm text-success-deep">

@@ -138,13 +138,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between gap-3">
-        <PageHeader>{title}</PageHeader>
-        <Button variant="secondary" size="sm" onClick={() => setReportOpen(true)}>
-          <BarChart3 className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:inline">Отчёт</span>
-        </Button>
-      </div>
+      <PageHeader>{title}</PageHeader>
 
       {/* Stats strip — stacks on mobile, row on sm+ */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -216,12 +210,18 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
           <h2 className="text-[13px] sm:text-[14px] leading-[18px] font-bold text-text-main">
             Отпуска, больничные, переработки
           </h2>
-          {canEdit && (
-            <Button size="sm" onClick={openCreateException} className="shrink-0">
-              <Plus className="w-4 h-4 sm:mr-1" />
-              <span className="hidden sm:inline">Добавить</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="secondary" size="sm" onClick={() => setReportOpen(true)}>
+              <BarChart3 className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Отчёт</span>
             </Button>
-          )}
+            {canEdit && (
+              <Button size="sm" onClick={openCreateException}>
+                <Plus className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Добавить</span>
+              </Button>
+            )}
+          </div>
         </div>
         {loading ? (
           <div className="flex flex-col gap-2">
