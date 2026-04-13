@@ -16,8 +16,8 @@ import { RepairRequestDocuments } from '@/components/account/shared/repair-reque
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { RequestChat } from '@/components/account/manager/request-detail/request-chat';
-import { STEP_STATUS_LABEL, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
-import { StepCircle } from './step-circle';
+import { Trash2 } from 'lucide-react';
+import { STEP_STATUS_LABEL, STEP_STATUS_BADGE_VARIANT, STEP_BLOCK_CLASS, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
 
 // ── Main Component ──
 
@@ -536,103 +536,165 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       )}
 
       {/* ── Work steps ── */}
-      <Card className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+      <Card className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-medium text-text-main">Шаги ремонта</h2>
-          {stepsLocked && <Badge variant="neutral" className="text-xs">Заблокированы</Badge>}
+          {stepsLocked && <Badge variant="neutral">Зафиксированы</Badge>}
         </div>
+
+        {steps.length > 0 && (() => {
+          const active = steps.filter(s => s.status !== WorkStepStatus.DECLINED);
+          const done = active.filter(s => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED).length;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-1.5 bg-surface-secondary overflow-hidden">
+                <div className="h-full bg-success transition-all duration-300" style={{ width: `${active.length ? (done / active.length) * 100 : 0}%` }} />
+              </div>
+              <span className="text-[12px] sm:text-sm text-text-sub shrink-0">{done}/{active.length}</span>
+            </div>
+          );
+        })()}
 
         {steps.length === 0 ? (
           <p className="text-sm text-text-sub">Шаги не назначены</p>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {steps.map((step, idx) => {
               const isDeclined = step.status === WorkStepStatus.DECLINED;
               const isMandatory = !!step.isMandatory;
               const isEditingComment = commentEditId === step.id;
-              const canEditComment = isMandatory && !isDeclined && !isTerminal
+              const canStepComment = isMandatory && !isDeclined && !isTerminal
                 && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
 
+              const showFlowActions = !isDeclined && (canControlFlow || status === RepairRequestStatus.IN_PROGRESS);
+              const showStart = showFlowActions && step.status === WorkStepStatus.PENDING;
+              const showComplete = showFlowActions && step.status === WorkStepStatus.IN_PROGRESS;
+              const showSkip = showComplete && !isMandatory;
+              const showCommentBtn = !isDeclined && !isEditingComment && (
+                (showFlowActions && canStepComment) || (canEditSteps && isMandatory)
+              );
+              const showDelete = !isDeclined && canEditSteps && !isMandatory;
+              const hasActions = showStart || showComplete || showSkip || showCommentBtn || showDelete;
+
               return (
-                <div key={step.id} className={`flex items-start gap-3 ${isDeclined ? 'opacity-60' : ''}`}>
-                  <StepCircle status={step.status} index={idx} />
-                  <div className="flex-1 flex flex-col gap-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-sm font-medium text-text-main ${isDeclined ? 'line-through' : ''}`}>{step.title}</span>
-                      {isMandatory && <Badge variant="neutral" className="text-[10px] uppercase">Обязательный</Badge>}
-                      {step.isFinal && <Badge variant="info">финальный</Badge>}
-                      <span className="text-xs text-text-sub ml-auto">{STEP_STATUS_LABEL[step.status] ?? step.status}</span>
-                    </div>
-                    {step.description && <p className="text-xs text-text-sub">{step.description}</p>}
-
-                    {/* Comment (client-visible) */}
-                    {isEditingComment ? (
-                      <div className="flex flex-col gap-2 mt-2">
-                        <Textarea
-                          value={commentDraft}
-                          onChange={(e) => setCommentDraft(e.target.value)}
-                          placeholder="Комментарий, видимый клиенту..."
-                          rows={3}
-                        />
-                        <div className="flex gap-2">
-                          <Button variant="primary" size="sm" onClick={saveEditComment} disabled={commentSaving}>
-                            {commentSaving ? 'Сохранение...' : 'Сохранить'}
-                          </Button>
-                          <Button variant="secondary" size="sm" onClick={cancelEditComment} disabled={commentSaving}>
-                            Отмена
-                          </Button>
-                        </div>
-                      </div>
-                    ) : step.comment ? (
-                      <div className="mt-1 pl-2 border-l-2 border-border-light">
-                        <p className="text-xs text-text-main whitespace-pre-wrap">{step.comment}</p>
-                      </div>
-                    ) : null}
-
-                    {isDeclined && (
-                      <p className="text-xs text-text-sub mt-1">
-                        Отклонён новым мастером{step.declinedAt ? ` — ${formatDate(step.declinedAt)}` : ''}
-                      </p>
-                    )}
-
-                    {!isDeclined && (canControlFlow || status === RepairRequestStatus.IN_PROGRESS) && (
-                      <div className="flex gap-3 mt-1 flex-wrap">
-                        {step.status === WorkStepStatus.PENDING && <button type="button" onClick={() => handleStepStart(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Начать</button>}
-                        {step.status === WorkStepStatus.IN_PROGRESS && (
-                          <>
-                            <button type="button" onClick={() => handleStepComplete(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Выполнено</button>
-                            {!isMandatory && <button type="button" onClick={() => handleStepSkip(step.id)} className="text-xs text-text-sub hover:underline cursor-pointer">Пропустить</button>}
-                          </>
-                        )}
-                        {canEditComment && !isEditingComment && (
-                          <button type="button" onClick={() => startEditComment(step)} className="text-xs text-text-sub hover:underline cursor-pointer">
-                            {step.comment ? 'Изменить комментарий' : 'Добавить комментарий'}
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {!isDeclined && canEditSteps && !isMandatory && (
-                      <div className="flex gap-3 mt-1">
-                        <button type="button" onClick={() => handleDeleteStep(step.id)} className="text-xs text-brand-red hover:underline cursor-pointer">Удалить</button>
-                      </div>
-                    )}
-                    {!isDeclined && canEditSteps && isMandatory && !isEditingComment && (
-                      <div className="flex gap-3 mt-1">
-                        <button type="button" onClick={() => startEditComment(step)} className="text-xs text-text-sub hover:underline cursor-pointer">
-                          {step.comment ? 'Изменить комментарий' : 'Добавить комментарий'}
-                        </button>
-                      </div>
-                    )}
+                <div
+                  key={step.id}
+                  className={`p-3 sm:p-4 border flex flex-col gap-2 transition-colors ${STEP_BLOCK_CLASS[step.status] ?? 'border-border-light bg-surface'}`}
+                >
+                  {/* Badges row */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant={STEP_STATUS_BADGE_VARIANT[step.status] ?? 'neutral'}>
+                      {STEP_STATUS_LABEL[step.status] ?? step.status}
+                    </Badge>
+                    {isMandatory && <Badge variant="neutral">Обязательный</Badge>}
+                    {step.isFinal && <Badge variant="info">Финальный</Badge>}
                   </div>
+
+                  {/* Title */}
+                  <div className="flex items-center gap-2 text-[13px] sm:text-sm">
+                    <span className="text-text-sub font-semibold shrink-0">Шаг {idx + 1}.</span>
+                    <span className={`font-medium ${isDeclined ? 'text-text-sub line-through' : 'text-text-main'}`}>{step.title}</span>
+                  </div>
+
+                  {/* Description */}
+                  {step.description && (
+                    <p className="text-[12px] sm:text-sm text-text-sub">{step.description}</p>
+                  )}
+
+                  {/* Comment display */}
+                  {step.comment && !isEditingComment && (
+                    <div className="pl-3 border-l-2 border-border-light">
+                      <p className="text-[12px] sm:text-sm text-text-main whitespace-pre-wrap">{step.comment}</p>
+                    </div>
+                  )}
+
+                  {/* Inline comment editor */}
+                  {isEditingComment && (
+                    <div className="flex flex-col gap-2">
+                      <Textarea
+                        value={commentDraft}
+                        onChange={(e) => setCommentDraft(e.target.value)}
+                        placeholder="Комментарий, видимый клиенту..."
+                        rows={3}
+                      />
+                      <div className="flex gap-2">
+                        <Button variant="primary" size="sm" onClick={saveEditComment} disabled={commentSaving} className="flex-1 sm:flex-none">
+                          {commentSaving ? 'Сохранение...' : 'Сохранить'}
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={cancelEditComment} disabled={commentSaving} className="flex-1 sm:flex-none">
+                          Отмена
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Declined info */}
+                  {isDeclined && (
+                    <p className="text-[12px] sm:text-sm text-text-sub">
+                      Отклонён новым мастером{step.declinedAt ? ` — ${formatDate(step.declinedAt)}` : ''}
+                    </p>
+                  )}
+
+                  {/* Actions */}
+                  {hasActions && (
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      {showStart && (
+                        <Button size="sm" variant="primary" onClick={() => handleStepStart(step.id)} className="flex-1 sm:flex-none">
+                          Начать
+                        </Button>
+                      )}
+                      {showComplete && (
+                        <Button size="sm" variant="success" onClick={() => handleStepComplete(step.id)} className="flex-1 sm:flex-none">
+                          Выполнено
+                        </Button>
+                      )}
+                      {showSkip && (
+                        <Button size="sm" variant="secondary" onClick={() => handleStepSkip(step.id)} className="flex-1 sm:flex-none">
+                          Пропустить
+                        </Button>
+                      )}
+                      {showCommentBtn && (
+                        <Button size="sm" variant="ghost" onClick={() => startEditComment(step)} className="flex-1 sm:flex-none">
+                          {step.comment ? 'Изм. комментарий' : 'Комментарий'}
+                        </Button>
+                      )}
+                      {showDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStep(step.id)}
+                          className="text-text-sub hover:text-brand-red transition-colors cursor-pointer p-2 -m-2 shrink-0"
+                          aria-label="Удалить шаг"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
 
-        {canEditSteps && <Button variant="secondary" className="w-full lg:w-fit" onClick={() => { setAddStepError(''); setAddStepTitle(''); setAddStepDescription(''); setAddStepOpen(true); }}>Добавить шаг</Button>}
-        {canEditSteps && steps.length > 0 && <Button variant="primary" className="w-full lg:w-fit" onClick={handleLockSteps} disabled={lockLoading}>{lockLoading ? 'Блокировка...' : 'Зафиксировать шаги'}</Button>}
-        {canComplete && <Button variant="primary" className="w-full lg:w-fit" onClick={() => { setCompleteError(''); setCompleteDescription(''); setCompleteFiles([]); setCompleteOpen(true); }}>Завершить работу</Button>}
+        {(canEditSteps || canComplete) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {canEditSteps && (
+              <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => { setAddStepError(''); setAddStepTitle(''); setAddStepDescription(''); setAddStepOpen(true); }}>
+                Добавить шаг
+              </Button>
+            )}
+            {canEditSteps && steps.length > 0 && (
+              <Button variant="primary" className="flex-1 sm:flex-none" onClick={handleLockSteps} disabled={lockLoading}>
+                {lockLoading ? 'Фиксация...' : 'Зафиксировать шаги'}
+              </Button>
+            )}
+            {canComplete && (
+              <Button variant="primary" className="flex-1 sm:flex-none" onClick={() => { setCompleteError(''); setCompleteDescription(''); setCompleteFiles([]); setCompleteOpen(true); }}>
+                Завершить работу
+              </Button>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Price */}

@@ -283,11 +283,23 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* Work steps */}
       {workSteps.length > 0 && (
-        <div className="flex flex-col gap-4 max-w-lg mt-2">
+        <div className="flex flex-col gap-3 sm:gap-4 max-w-lg mt-2">
           <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
+          {(() => {
+            const active = workSteps.filter(s => s.status !== 'declined');
+            const done = active.filter(s => s.status === 'completed' || s.status === 'skipped').length;
+            return active.length > 0 ? (
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-1.5 bg-surface-secondary overflow-hidden">
+                  <div className="h-full bg-success transition-all duration-300" style={{ width: `${(done / active.length) * 100}%` }} />
+                </div>
+                <span className="text-[12px] sm:text-sm text-text-sub shrink-0">{done}/{active.length}</span>
+              </div>
+            ) : null;
+          })()}
           <div className="flex flex-col gap-2">
-            {workSteps.map((step) => (
-              <WorkStepCard key={step.id} step={step} />
+            {workSteps.map((step, idx) => (
+              <WorkStepCard key={step.id} step={step} index={idx} />
             ))}
           </div>
         </div>

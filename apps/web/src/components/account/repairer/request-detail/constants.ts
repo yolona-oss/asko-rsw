@@ -9,6 +9,22 @@ export const STEP_STATUS_LABEL: Record<string, string> = {
   [WorkStepStatus.DECLINED]: 'Отклонён',
 };
 
+export const STEP_STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  [WorkStepStatus.PENDING]: 'neutral',
+  [WorkStepStatus.IN_PROGRESS]: 'warning',
+  [WorkStepStatus.COMPLETED]: 'success',
+  [WorkStepStatus.SKIPPED]: 'neutral',
+  [WorkStepStatus.DECLINED]: 'error',
+};
+
+export const STEP_BLOCK_CLASS: Record<string, string> = {
+  [WorkStepStatus.PENDING]: 'border-border-light bg-surface',
+  [WorkStepStatus.IN_PROGRESS]: 'border-warning-border bg-warning-bg',
+  [WorkStepStatus.COMPLETED]: 'border-success-border bg-success-bg/50',
+  [WorkStepStatus.SKIPPED]: 'border-border-light bg-surface-secondary',
+  [WorkStepStatus.DECLINED]: 'border-border-light bg-surface-muted opacity-60',
+};
+
 
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PENDING]: 'warning',
