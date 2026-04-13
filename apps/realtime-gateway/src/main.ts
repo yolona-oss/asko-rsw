@@ -11,7 +11,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { urlencoded } from 'express';
 import { RedisIoAdapter } from './common/adapters/redis-io.adapter';
-import { PinoLogger, MetricsService } from '@asko/observability';
+import { PinoLogger, MetricsService, createMetricsServer } from '@asko/observability';
 
 async function bootstrap() {
     const logger = new PinoLogger('realtime-gateway');
@@ -60,18 +60,9 @@ async function bootstrap() {
     await redisIoAdapter.connectToRedis();
     app.useWebSocketAdapter(redisIoAdapter);
 
-    // Prometheus metrics endpoint (bypasses NestJS guards)
+    // Prometheus metrics on dedicated port (matches prometheus.yml scrape target)
     const metricsService = app.get(MetricsService);
-    const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get('/metrics', async (_req: any, res: any) => {
-        try {
-            const metrics = await metricsService.getMetrics();
-            res.set('Content-Type', metricsService.getContentType());
-            res.end(metrics);
-        } catch {
-            res.status(500).end('Error collecting metrics');
-        }
-    });
+    createMetricsServer(metricsService, parseInt(process.env.METRICS_PORT || '9123'));
 
     app.enableShutdownHooks();
 

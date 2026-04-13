@@ -14,9 +14,9 @@ import { CertificateAppliedBadge } from '@/components/account/shared/certificate
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
 import { RepairRequestStatus } from '@asko/shared/client';
 import {
-  POLL_INTERVAL,
   TERMINAL_STATUSES,
   STEPS,
   STATUS_DESCRIPTIONS,
@@ -36,7 +36,6 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [brokenParts, setBrokenParts] = useState<any[]>([]);
   const [partImages, setPartImages] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Payment modal state
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -93,23 +92,18 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
     }
   }, [requestId]);
 
-  // Initial fetch + polling
-  useEffect(() => {
-    fetchData();
+  // Initial fetch
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-    intervalRef.current = setInterval(fetchData, POLL_INTERVAL);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [fetchData]);
-
-  // Stop polling when status is terminal
-  useEffect(() => {
-    if (request && TERMINAL_STATUSES.includes(request.status) && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, [request?.status]);
+  // Refetch on real-time notification for this request
+  useNotificationSocket(
+    useCallback((n) => {
+      if (n.targetType === 'repairRequest' && n.targetId === requestId) {
+        fetchData();
+      }
+    }, [requestId, fetchData]),
+    useCallback(() => {}, []),
+  );
 
   const handleReviewSubmit = async () => {
     if (reviewRating === 0) {
@@ -368,10 +362,10 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         </div>
       )}
 
-      {/* Auto-update indicator */}
+      {/* Real-time indicator */}
       {!isTerminal && (
         <p className="text-xs text-text-sub mt-2">
-          Статус обновляется автоматически
+          Статус обновляется в реальном времени
         </p>
       )}
     </PageContainer>

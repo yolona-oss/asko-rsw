@@ -10,7 +10,7 @@ import { GlobalExceptionFilter, corsOptions, helmetOptions } from '@asko/gateway
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { urlencoded } from 'express';
-import { PinoLogger, MetricsService } from '@asko/observability';
+import { PinoLogger, MetricsService, createMetricsServer } from '@asko/observability';
 
 async function bootstrap() {
     const logger = new PinoLogger('auth-gateway');
@@ -53,18 +53,9 @@ async function bootstrap() {
         jsonDocumentUrl: '/doc/openapi.json',
     });
 
-    // Prometheus metrics endpoint (bypasses NestJS guards)
+    // Prometheus metrics on dedicated port (matches prometheus.yml scrape target)
     const metricsService = app.get(MetricsService);
-    const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get('/metrics', async (_req: any, res: any) => {
-        try {
-            const metrics = await metricsService.getMetrics();
-            res.set('Content-Type', metricsService.getContentType());
-            res.end(metrics);
-        } catch {
-            res.status(500).end('Error collecting metrics');
-        }
-    });
+    createMetricsServer(metricsService, parseInt(process.env.METRICS_PORT || '9120'));
 
     app.enableShutdownHooks();
 
