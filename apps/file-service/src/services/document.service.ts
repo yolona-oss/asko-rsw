@@ -73,7 +73,7 @@ export class DocumentService {
                 {
                     folder: `asko/documents/${folder}`,
                     resource_type: 'raw',
-                    public_id: `${uuid()}_${file.originalname.replace(/[^\w.\-]/g, '_')}`,
+                    public_id: `${uuid()}_${file.originalname.replace(/[^\w.-]/g, '_')}`,
                     use_filename: false,
                     unique_filename: true,
                 },

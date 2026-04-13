@@ -32,7 +32,7 @@ export function DealerDashboard() {
           dealerApi.getProfile(),
           certificateApi.getDealer({ limit: 1 }),
           certificateApi.getDealer({ limit: 1, status: 'active' }),
-          certificateApi.getDealer({ limit: 1, status: 'pending' }),
+          certificateApi.getDealer({ limit: 1, status: 'pending_payment' }),
           dealerApi.getPointsHistory({ limit: 30 }),
         ]);
         setS({

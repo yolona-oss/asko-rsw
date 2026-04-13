@@ -184,7 +184,7 @@ export class UserService {
             throw AppErrors.dbEntityExists('User already exists')
         }
 
-        if (userData.email && !Boolean(userData.password)) {
+        if (userData.email && !userData.password) {
             throw AppErrors.invalidData('Password is required')
         }
 

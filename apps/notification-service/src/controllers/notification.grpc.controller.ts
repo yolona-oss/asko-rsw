@@ -70,10 +70,13 @@ export class NotificationGrpcController {
     @GrpcMethod('NotificationService', 'ListUserNotifications')
     async listUserNotifications(data: ListUserNotificationsRequest) {
         try {
+            const page = data.page ?? 1;
+            const limit = data.limit ?? 20;
+            const offset = (page - 1) * limit;
             const result = await this.notificationService.listUserNotifications(
                 data.userId,
-                data.page ?? 0,
-                data.limit ?? 20,
+                offset,
+                limit,
                 data.unreadOnly ?? false,
                 data.sortBy || undefined,
                 data.sortOrder || undefined,
@@ -81,8 +84,8 @@ export class NotificationGrpcController {
             return {
                 data: result.data.map(entityToRecord),
                 overallCount: result.overallCount,
-                page: data.page ?? 0,
-                limit: data.limit ?? 20,
+                page,
+                limit,
             };
         } catch (e) { throw toGrpcError(e); }
     }

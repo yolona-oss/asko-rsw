@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger, UnauthorizedException } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { AppError } from '@asko/shared';
 
 @Catch()
@@ -16,10 +16,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 message,
                 httpStatus,
             });
-        } else if (exception instanceof UnauthorizedException) {
-            return response.status(HttpStatus.UNAUTHORIZED).json(exception.message);
-        } else if (exception.status === 403) {
-            return response.status(HttpStatus.FORBIDDEN).json(exception.message);
+        } else if (exception instanceof HttpException) {
+            const status = exception.getStatus();
+            const body = exception.getResponse();
+            return response.status(status).json(
+                typeof body === 'string' ? { message: body, httpStatus: status } : body,
+            );
         } else {
             this.logger.error(exception.message, exception.stack);
             return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send();

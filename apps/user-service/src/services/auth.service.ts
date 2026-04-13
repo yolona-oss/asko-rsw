@@ -36,7 +36,7 @@ import {
     IRefreshToken,
     IAccessToken,
 } from 'types/auth.types';
-import { time } from 'utils';
+import { parseSleepTimeToMs } from 'utils';
 import Redis from 'ioredis';
 
 export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider' | 'username'>
@@ -550,7 +550,7 @@ export class AuthService {
         await this.userService.addToken(userId, rTknHash, {
             ...params,
             type: TokenType.REFRESH,
-            expiresAt: new Date(Date.now() + time.parseSleepTimeToMs(this.config.jwt.refresh_token.sign_options.expires_in))
+            expiresAt: new Date(Date.now() + parseSleepTimeToMs(this.config.jwt.refresh_token.sign_options.expires_in))
         });
         return {
             refresh_token
@@ -583,7 +583,7 @@ export class AuthService {
                 type: TokenType.RESET_PASSWORD,
                 deviceInfo: "",
                 ipAddress: "",
-                expiresAt: new Date(Date.now() + time.parseSleepTimeToMs(this.config.jwt.reset_token.sign_options.expires_in))
+                expiresAt: new Date(Date.now() + parseSleepTimeToMs(this.config.jwt.reset_token.sign_options.expires_in))
             })
         } catch (error: any) {
             throw AppErrors.badRequest(error.message ?? 'Failed to generate reset token')

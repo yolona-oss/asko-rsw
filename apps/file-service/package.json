@@ -11,7 +11,7 @@
         "start:debug": "cross-env NODE_ENV=dev nest start --debug --watch",
         "start:prod": "cross-env NODE_ENV=prod node dist/src/main",
         "lint": "eslint src/",
-        "test": "jest",
+        "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
         "test:cov": "jest --coverage"
     },

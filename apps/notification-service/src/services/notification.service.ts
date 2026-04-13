@@ -63,7 +63,7 @@ export class NotificationService {
     @CreateRequestContext()
     async listUserNotifications(
         userId: string,
-        page: number,
+        offset: number,
         limit: number,
         unreadOnly: boolean,
         sortBy?: string,
@@ -78,7 +78,7 @@ export class NotificationService {
 
         const [data, overallCount] = await this.em.findAndCount(NotificationEntity, where, {
             orderBy,
-            offset: ((page ?? 1) - 1) * limit,
+            offset,
             limit,
         });
 

@@ -185,7 +185,7 @@ describe('RepairerService', () => {
             ];
             mockEm.findAndCount.mockResolvedValue([repairers, 2]);
 
-            const result = await service.findAll({ offset: 1, limit: 10 });
+            const result = await service.findAll({ page: 1, limit: 10 });
 
             expect(result).toEqual({ data: repairers, total: 2 });
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
@@ -195,7 +195,7 @@ describe('RepairerService', () => {
             );
         });
 
-        it('uses default limit of 20 and offset of 1', async () => {
+        it('uses default limit of 20 and page 1', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
             await service.findAll({});
@@ -210,7 +210,7 @@ describe('RepairerService', () => {
         it('calculates offset correctly for page 3', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
-            await service.findAll({ offset: 3, limit: 10 });
+            await service.findAll({ page: 3, limit: 10 });
 
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
                 expect.anything(),
