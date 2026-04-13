@@ -165,6 +165,7 @@ describe('RepairRequestService', () => {
             deps.signatureService as any,
             deps.scheduleService as any,
             deps.schedulePatternService as any,
+            { generate: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')) } as any,
         );
         jest.clearAllMocks();
     });

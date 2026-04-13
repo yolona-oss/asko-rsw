@@ -67,6 +67,13 @@ export interface IRepairRequest {
     acceptanceSignature?: string;
     acceptanceSignedPayload?: string;
     certificateValid?: boolean;
+    avrStatus?: import('./avr.enum.js').AvrStatus;
+    avrSigningMethod?: import('./avr.enum.js').AvrSigningMethod;
+    avrDocumentId?: string;
+    avrSignedDocumentId?: string;
+    avrSignedAt?: Date;
+    avrSignedPayload?: string;
+    avrSignature?: string;
     createdAt: Date;
     updatedAt: Date;
 }

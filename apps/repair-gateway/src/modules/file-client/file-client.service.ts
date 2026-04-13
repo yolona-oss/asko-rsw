@@ -14,6 +14,7 @@ import type {
     VideoResponse,
     VideoListResponse,
     FileAccessResponse,
+    DocumentResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -219,6 +220,28 @@ export class FileClientService implements OnModuleInit {
     async findAttachedVideos(ownerType: string, ownerId: string) {
         const res = await grpcCall(this.fileService.findAttachedVideos({ ownerType, ownerId }));
         return this.parseVideoListResponse(res);
+    }
+
+    // ─── Documents ────────────────────────────────────────────────────────
+
+    async uploadDocument(pdfBuffer: Buffer, filename: string, ownerType: string, ownerId: string, creatorId?: string): Promise<DocumentResponse> {
+        return grpcCall(this.fileService.uploadDocument({
+            file: { buffer: pdfBuffer, originalname: filename, mimetype: 'application/pdf' },
+            ownerType,
+            ownerId,
+            visibility: 'role_restricted',
+            creatorId: creatorId ?? '',
+        }));
+    }
+
+    async uploadDocumentFile(file: Express.Multer.File, ownerType: string, ownerId: string, creatorId?: string): Promise<DocumentResponse> {
+        return grpcCall(this.fileService.uploadDocument({
+            file: { buffer: file.buffer, originalname: file.originalname, mimetype: file.mimetype },
+            ownerType,
+            ownerId,
+            visibility: 'role_restricted',
+            creatorId: creatorId ?? '',
+        }));
     }
 
     // ─── Access control ──────────────────────────────────────────────────

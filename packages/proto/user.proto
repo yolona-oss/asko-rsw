@@ -509,6 +509,11 @@ service UserService {
 
     // Chat
     rpc SearchUsersForChat(SearchUsersForChatRequest) returns (SearchUsersForChatResponse);
+
+    // Signing OTP (AVR digital signatures)
+    rpc SendSigningOtp(SendSigningOtpRequest) returns (SendSigningOtpResponse);
+    rpc VerifySigningOtp(VerifySigningOtpRequest) returns (VerifySigningOtpResponse);
+    rpc VerifyPasswordForSigning(VerifyPasswordForSigningRequest) returns (VerifyPasswordForSigningResponse);
 }
 
 message AuthUserResponse {
@@ -555,4 +560,38 @@ message OAuthLinkRecord {
 
 message OAuthLinksResponse {
     repeated OAuthLinkRecord links = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Signing OTP Messages (AVR digital signatures)
+// ═══════════════════════════════════════════════════════════════════════════
+
+message SendSigningOtpRequest {
+    string userId = 1;
+}
+
+message SendSigningOtpResponse {
+    string channel = 1;
+    string maskedTarget = 2;
+    int32 retryAfter = 3;
+}
+
+message VerifySigningOtpRequest {
+    string userId = 1;
+    string code = 2;
+}
+
+message VerifySigningOtpResponse {
+    bool valid = 1;
+    string signingToken = 2;
+}
+
+message VerifyPasswordForSigningRequest {
+    string userId = 1;
+    string password = 2;
+}
+
+message VerifyPasswordForSigningResponse {
+    bool valid = 1;
+    string signingToken = 2;
 }

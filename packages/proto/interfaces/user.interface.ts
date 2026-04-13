@@ -507,6 +507,43 @@ export interface UserServiceClient {
     linkOAuth(request: LinkOAuthRequest): Observable<EmptyResponse>;
     unlinkOAuth(request: UnlinkOAuthRequest): Observable<EmptyResponse>;
     getOAuthLinks(request: UserIdRequest): Observable<OAuthLinksResponse>;
+
+    // Signing OTP (AVR digital signatures)
+    sendSigningOtp(request: SendSigningOtpRequest): Observable<SendSigningOtpResponse>;
+    verifySigningOtp(request: VerifySigningOtpRequest): Observable<VerifySigningOtpResponse>;
+    verifyPasswordForSigning(request: VerifyPasswordForSigningRequest): Observable<VerifyPasswordForSigningResponse>;
+}
+
+// ─── Signing OTP ──────────────────────────────────────────────────────
+
+export interface SendSigningOtpRequest {
+    userId: string;
+}
+
+export interface SendSigningOtpResponse {
+    channel: string;
+    maskedTarget: string;
+    retryAfter: number;
+}
+
+export interface VerifySigningOtpRequest {
+    userId: string;
+    code: string;
+}
+
+export interface VerifySigningOtpResponse {
+    valid: boolean;
+    signingToken: string;
+}
+
+export interface VerifyPasswordForSigningRequest {
+    userId: string;
+    password: string;
+}
+
+export interface VerifyPasswordForSigningResponse {
+    valid: boolean;
+    signingToken: string;
 }
 
 // ─── OAuth ─────────────────────────────────────────────────────────────

@@ -18,6 +18,8 @@ interface CertificateAppliedBadgeProps {
 }
 
 export function CertificateAppliedBadge({ valid, snapshot, expiresAt, certificate }: CertificateAppliedBadgeProps) {
+  if (!snapshot && !certificate) return null;
+
   // When a snapshot exists the request is in a terminal state — `valid` is
   // frozen and authoritative; the live cert must not override it.
   const liveCertActive =

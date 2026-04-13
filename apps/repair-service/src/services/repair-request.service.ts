@@ -5,7 +5,7 @@ import { UserDevice } from 'entities/user-device.entity';
 import { Certificate } from 'entities/certificate.entity';
 import { Repairer } from 'entities/repairer.entity';
 import { Address } from 'entities/address.entity';
-import { RepairRequestStatus, PaymentTargetType } from '@asko/shared';
+import { RepairRequestStatus, PaymentTargetType, AvrStatus, AvrSigningMethod } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { assertTransition, assertActionTransition, canTransition } from 'common/repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
@@ -17,6 +17,7 @@ import { CertificateService } from './certificate.service';
 import { SignatureService } from './signature.service';
 import { WScheduleService } from './wschedule.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
+import { AvrPdfService, type AvrData } from './avr-pdf.service';
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
 
@@ -37,6 +38,7 @@ export class RepairRequestService {
         private readonly signatureService: SignatureService,
         private readonly scheduleService: WScheduleService,
         private readonly schedulePatternService: WSchedulePatternService,
+        private readonly avrPdfService: AvrPdfService,
     ) {}
 
     /** User creates a repair request */
@@ -964,5 +966,290 @@ export class RepairRequestService {
             activeRequestCount: statsMap.get(id)?.count ?? 0,
             currentRequestStatus: statsMap.get(id)?.status ?? '',
         }));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // AVR (Work Completion Act)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /** Generate AVR PDF — returns PDF buffer for the gateway to upload to file-service */
+    @CreateRequestContext()
+    async generateAvr(
+        requestId: string,
+        repairerUserId: string,
+        userData: { name: string; phone: string; email: string },
+        repairerName: string,
+        completionNote?: string,
+    ): Promise<{ pdfBuffer: Buffer; request: RepairRequest }> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, {
+            populate: ['userDevice', 'certificate', 'address'],
+        });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+
+        if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
+            throw AppErrors.badRequest('АВР можно сформировать только после выполнения шагов ремонта');
+        }
+        if (!request.totalCost) {
+            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед формированием акта');
+        }
+
+        const workSteps = await this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'ASC' } });
+        const ud = typeof request.userDevice === 'object' ? request.userDevice : null;
+        let device: any = null;
+        if (ud) {
+            await this.em.populate(ud, ['device'] as any);
+            device = (ud as any).device;
+        }
+
+        const cert = typeof request.certificate === 'object' ? request.certificate : null;
+        const addr = typeof request.address === 'object' ? request.address : null;
+
+        const addressStr = addr
+            ? [addr.city, addr.street, addr.house ? `д. ${addr.house}` : '', addr.building ? `корп. ${addr.building}` : '', addr.floor ? `эт. ${addr.floor}` : '', addr.apartment ? `кв. ${addr.apartment}` : ''].filter(Boolean).join(', ')
+            : undefined;
+
+        const avrData: AvrData = {
+            requestId: request.id,
+            documentDate: new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            userName: userData.name,
+            userPhone: userData.phone,
+            userEmail: userData.email,
+            repairerName: repairerName || 'Мастер',
+            deviceName: device?.name ?? '',
+            deviceBrand: device?.brand ?? '',
+            deviceModel: device?.model ?? '',
+            serialNumber: ud?.serialNumber ?? '',
+            description: request.description,
+            workSteps: workSteps.map(s => ({ title: s.title, description: s.description, status: s.status })),
+            totalCost: request.totalCost,
+            completionNote,
+            certificateNumber: cert?.certificateNumber,
+            address: addressStr,
+        };
+
+        const pdfBuffer = await this.avrPdfService.generate(avrData);
+
+        request.avrStatus = AvrStatus.GENERATED;
+        if (completionNote !== undefined) {
+            request.completionNote = completionNote;
+        }
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.AVR_GENERATED,
+            repairId: request.id,
+            userId: request.userId,
+            timestamp: new Date(),
+        });
+
+        return { pdfBuffer, request };
+    }
+
+    /** Reset AVR to allow re-editing (only before signing) */
+    @CreateRequestContext()
+    async resetAvr(requestId: string, repairerUserId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+
+        if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
+            throw AppErrors.badRequest('Акт уже подписан или ещё не сформирован');
+        }
+
+        request.avrStatus = AvrStatus.NONE;
+        request.avrDocumentId = undefined;
+        request.avrSignedDocumentId = undefined;
+        request.avrSigningMethod = undefined;
+        request.avrSignedAt = undefined;
+        request.avrSignedPayload = undefined;
+        request.avrSignature = undefined;
+        await this.em.flush();
+        return request;
+    }
+
+    /** Store the document ID returned by file-service after upload */
+    @CreateRequestContext()
+    async setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        request.avrDocumentId = documentId;
+        await this.em.flush();
+        return request;
+    }
+
+    /** Mark AVR as pending signature (OTP sent) */
+    @CreateRequestContext()
+    async setAvrPendingSignature(requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.avrStatus !== AvrStatus.GENERATED) {
+            throw AppErrors.badRequest('Акт должен быть сформирован перед отправкой на подпись');
+        }
+        request.avrStatus = AvrStatus.PENDING_SIGNATURE;
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.AVR_SIGNING_REQUESTED,
+            repairId: request.id,
+            userId: request.userId,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
+    /** Apply digital signature to AVR and complete the request */
+    @CreateRequestContext()
+    async signAvrDigital(requestId: string, userId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['certificate'] });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.userId !== userId) throw AppErrors.forbidden('Только заказчик может подписать акт');
+        if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
+            throw AppErrors.badRequest('Акт не готов к подписанию');
+        }
+
+        // Sign the AVR
+        const workSteps = await this.em.find(WorkStep, { repairRequest: requestId });
+        const workStepsSummary = workSteps.sort((a, b) => a.order - b.order).map(s => `${s.title}:${s.status}`).join(',');
+        const avrPayload = {
+            requestId: request.id,
+            userId,
+            totalCost: request.totalCost ?? 0,
+            completionNote: request.completionNote ?? '',
+            workStepsSummary,
+            signedAt: new Date().toISOString(),
+        };
+        request.avrSignedPayload = JSON.stringify(avrPayload, Object.keys(avrPayload).sort());
+        request.avrSignature = this.signatureService.sign(avrPayload);
+        request.avrStatus = AvrStatus.SIGNED_DIGITAL;
+        request.avrSigningMethod = AvrSigningMethod.DIGITAL;
+        request.avrSignedAt = new Date();
+
+        // Apply completion logic
+        await this.applyCompletion(request);
+
+        return request;
+    }
+
+    /** Upload offline-signed scan and complete the request */
+    @CreateRequestContext()
+    async uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['certificate'] });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.avrStatus !== AvrStatus.GENERATED) {
+            throw AppErrors.badRequest('Акт должен быть сформирован перед загрузкой подписанного скана');
+        }
+
+        request.avrSignedDocumentId = signedDocumentId;
+        request.avrStatus = AvrStatus.SIGNED_OFFLINE;
+        request.avrSigningMethod = AvrSigningMethod.OFFLINE;
+        request.avrSignedAt = new Date();
+
+        await this.applyCompletion(request);
+
+        return request;
+    }
+
+    /** Shared completion logic — called by both signAvrDigital and uploadAvrScan */
+    private async applyCompletion(request: RepairRequest): Promise<void> {
+        const oldStatus = request.status;
+        assertTransition(request.status, RepairRequestStatus.COMPLETED);
+        if (!request.totalCost) {
+            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
+        }
+
+        request.status = RepairRequestStatus.COMPLETED;
+
+        // Freeze certificate snapshot
+        const cert = typeof request.certificate === 'object' ? request.certificate : null;
+        if (cert && request.certificateValid && !request.certificateSnapshot) {
+            request.certificateSnapshot = {
+                id: cert.id,
+                certificateNumber: cert.certificateNumber,
+                status: cert.status,
+                issuedAt: cert.issuedAt.toISOString(),
+                expiresAt: cert.expiresAt.toISOString(),
+                frozenAt: new Date().toISOString(),
+                signedPayload: cert.signedPayload ?? undefined,
+                signature: cert.signature ?? undefined,
+            };
+        }
+
+        // Update repairer stats
+        const repairerId = request.repairer
+            ? (typeof request.repairer === 'object' ? request.repairer.id : String(request.repairer))
+            : undefined;
+        if (repairerId) {
+            const repairer = await this.em.findOne(Repairer, { id: repairerId });
+            if (repairer) {
+                repairer.completedRepairs += 1;
+                const addressId = request.address
+                    ? (typeof request.address === 'object' ? request.address.id : String(request.address))
+                    : undefined;
+                if (addressId) {
+                    try {
+                        const address = await this.em.findOne(Address, { id: addressId });
+                        if (address) {
+                            repairer.lastLocationUpdate = new Date();
+                        }
+                    } catch { /* non-critical */ }
+                }
+            }
+        }
+
+        // Schedule chat close
+        if (request.conversationId) {
+            request.chatCloseAt = new Date(Date.now() + 30 * 60 * 1000);
+        }
+
+        // Completion signature (system-level, in addition to AVR user signature)
+        const workSteps = await this.em.find(WorkStep, { repairRequest: request.id });
+        const workStepsSummary = workSteps.sort((a, b) => a.order - b.order).map(s => `${s.title}:${s.status}`).join(',');
+        const completionPayload = {
+            requestId: request.id,
+            repairerId: repairerId ?? '',
+            totalCost: request.totalCost ?? 0,
+            completionNote: request.completionNote ?? '',
+            workStepsSummary,
+            signedAt: new Date().toISOString(),
+        };
+        request.completionSignedPayload = JSON.stringify(completionPayload, Object.keys(completionPayload).sort());
+        request.completionSignature = this.signatureService.sign(completionPayload);
+
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.COMPLETED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.COMPLETED,
+            timestamp: new Date(),
+        });
+
+        // Auto-record overtime
+        if (repairerId) {
+            try {
+                const repairer = await this.em.findOne(Repairer, { id: repairerId });
+                if (repairer) {
+                    const now = new Date();
+                    const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, now);
+                    if (slot && slot.work) {
+                        const nowTime = now.toTimeString().slice(0, 5);
+                        if (nowTime > slot.endTime) {
+                            await this.scheduleService.recordOvertime(repairer.userId, now, slot.endTime, nowTime, request.id);
+                        }
+                    }
+                }
+            } catch { /* non-critical */ }
+        }
     }
 }

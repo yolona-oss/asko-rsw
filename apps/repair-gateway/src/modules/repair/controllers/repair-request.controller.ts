@@ -22,6 +22,8 @@ import {
     UpdateBrokenPartDto,
     UpdateBrokenPartStatusDto,
     OrderBrokenPartDto,
+    GenerateAvrDto,
+    VerifyAvrSigningDto,
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
@@ -332,25 +334,117 @@ export class RepairRequestController {
         return this.repairClient.setPrice(user.sub, id, dto.amount);
     }
 
-    @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
-    @Post(':id/complete')
-    @UseInterceptors(FilesInterceptor('files', 10))
-    async complete(
-        @Param('id') id: string,
-        @Body('description') description?: string,
-        @UploadedFiles() files?: Express.Multer.File[],
-    ) {
-        const result = await this.repairClient.complete(id, description);
+    // ── AVR (Work Completion Act) ──
 
-        // Upload completion images (gateway handles file uploads)
-        if (files && files.length > 0) {
-            for (const file of files) {
-                await this.fileService.uploadRepairRequestImage(file, id);
-            }
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/avr/generate')
+    async generateAvr(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Body() dto: GenerateAvrDto,
+    ) {
+        // Fetch request owner info from user-service
+        const { request: reqRecord } = await this.repairClient.findById(id);
+        const ownerUser = await this.userClient.findUserById({ id: reqRecord!.userId });
+        const repairerUser = await this.userClient.findUserById({ id: user.sub });
+
+        const ownerName = [ownerUser.lastName, ownerUser.firstName].filter(Boolean).join(' ') || '';
+        const repairerName = [repairerUser.lastName, repairerUser.firstName].filter(Boolean).join(' ') || '';
+
+        // Generate AVR PDF via repair-service
+        const avrResult = await this.repairClient.generateAvr(user.sub, id, {
+            completionNote: dto.completionNote,
+            userName: ownerName,
+            userPhone: ownerUser.phone ?? '',
+            userEmail: ownerUser.email ?? '',
+            repairerName,
+        });
+
+        // Upload PDF to file-service
+        const filename = `avr-${id.slice(0, 8)}.pdf`;
+        const docResult = await this.fileService.uploadDocument(
+            Buffer.from(avrResult.pdfBuffer),
+            filename,
+            'avr',
+            id,
+            reqRecord!.userId,
+        );
+
+        // Store document ID on the request
+        await this.repairClient.setAvrDocumentId(id, docResult.document!.id);
+
+        return { request: reqRecord, avrDocumentId: docResult.document!.id };
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/avr/reset')
+    async resetAvr(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.resetAvr(user.sub, id);
+    }
+
+    @ApiCreatedResponse()
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/avr/sign/initiate')
+    async initiateAvrSigning(@Param('id') id: string) {
+        const { request } = await this.repairClient.findById(id);
+        const result = await this.userClient.sendSigningOtp({ userId: request!.userId });
+        await this.repairClient.setAvrPendingSignature(id);
+        return result;
+    }
+
+    @ApiCreatedResponse()
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/avr/sign/resend')
+    async resendAvrOtp(@Param('id') id: string) {
+        const { request } = await this.repairClient.findById(id);
+        return this.userClient.sendSigningOtp({ userId: request!.userId });
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/avr/sign/verify')
+    async verifyAvrSigning(
+        @Param('id') id: string,
+        @Body() dto: VerifyAvrSigningDto,
+    ) {
+        const { request } = await this.repairClient.findById(id);
+        const userId = request!.userId;
+
+        if (dto.password) {
+            const { valid } = await this.userClient.verifyPasswordForSigning({ userId, password: dto.password });
+            if (!valid) throw new Error('Неверный пароль');
+        } else if (dto.code) {
+            const { valid } = await this.userClient.verifySigningOtp({ userId, code: dto.code });
+            if (!valid) throw new Error('Неверный код');
+        } else {
+            throw new Error('Необходимо указать код или пароль');
         }
 
-        return result;
+        return this.repairClient.signAvrDigital(id, userId);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
+    @Post(':id/avr/scan/upload')
+    @UseInterceptors(FilesInterceptor('file', 1))
+    async uploadAvrScan(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @UploadedFiles() files: Express.Multer.File[],
+    ) {
+        if (!files || files.length === 0) throw new Error('Файл обязателен');
+
+        const { request } = await this.repairClient.findById(id);
+        const docResult = await this.fileService.uploadDocumentFile(
+            files[0],
+            'avr-signed',
+            id,
+            request!.userId,
+        );
+
+        return this.repairClient.uploadAvrScan(id, user.sub, docResult.document!.id);
     }
 
     // ── Work steps ──

@@ -138,3 +138,19 @@ export class OrderBrokenPartDto {
     @IsString()
     supplier?: string;
 }
+
+export class GenerateAvrDto {
+    @IsOptional()
+    @IsString()
+    completionNote?: string;
+}
+
+export class VerifyAvrSigningDto {
+    @IsOptional()
+    @IsString()
+    code?: string;
+
+    @IsOptional()
+    @IsString()
+    password?: string;
+}

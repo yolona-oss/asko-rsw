@@ -700,6 +700,13 @@ export interface RepairRequestRecord {
     acceptanceSignedPayload?: string;
     certificateValid?: boolean;
     certificateSnapshot?: CertificateSnapshotRecord;
+    avrStatus?: string;
+    avrSigningMethod?: string;
+    avrDocumentId?: string;
+    avrSignedDocumentId?: string;
+    avrSignedAt?: string;
+    avrSignedPayload?: string;
+    avrSignature?: string;
 }
 
 export interface BrokenPartRecord {
@@ -797,6 +804,51 @@ export interface RepairCompleteRequest {
     requestId: string;
     description: string;
 }
+
+// ─── AVR Interfaces ────────────────────────────────────────────────────────
+
+export interface GenerateAvrRequest {
+    repairerUserId: string;
+    requestId: string;
+    completionNote: string;
+    userName: string;
+    userPhone: string;
+    userEmail: string;
+    repairerName: string;
+}
+
+export interface GenerateAvrResponse {
+    pdfBuffer: Uint8Array;
+    requestId: string;
+    avrStatus: string;
+}
+
+export interface ResetAvrRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
+export interface SetAvrDocumentIdRequest {
+    requestId: string;
+    documentId: string;
+}
+
+export interface SetAvrPendingSignatureRequest {
+    requestId: string;
+}
+
+export interface SignAvrDigitalRequest {
+    requestId: string;
+    userId: string;
+}
+
+export interface UploadAvrScanRequest {
+    requestId: string;
+    repairerUserId: string;
+    signedDocumentId: string;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 
 export interface RepairApproveRefundRequest {
     requestId: string;
@@ -1059,6 +1111,14 @@ export interface RepairServiceClient {
     resumeRequest(request: RepairResumeRequest): Observable<RepairRequestResponse>;
     reassignRepairer(request: RepairReassignRepairerRequest): Observable<RepairRequestResponse>;
     acceptCompletion(request: RepairAcceptCompletionRequest): Observable<RepairRequestResponse>;
+
+    // AVR (Work Completion Act)
+    generateAvr(request: GenerateAvrRequest): Observable<GenerateAvrResponse>;
+    resetAvr(request: ResetAvrRequest): Observable<RepairRequestResponse>;
+    setAvrDocumentId(request: SetAvrDocumentIdRequest): Observable<RepairRequestResponse>;
+    setAvrPendingSignature(request: SetAvrPendingSignatureRequest): Observable<RepairRequestResponse>;
+    signAvrDigital(request: SignAvrDigitalRequest): Observable<RepairRequestResponse>;
+    uploadAvrScan(request: UploadAvrScanRequest): Observable<RepairRequestResponse>;
 
     // Work steps
     addStep(request: RepairAddStepRequest): Observable<WorkStepResponse>;

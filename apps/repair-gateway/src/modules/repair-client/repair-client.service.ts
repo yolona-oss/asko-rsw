@@ -16,6 +16,7 @@ import type {
     BrokenPartResponse,
     BrokenPartListResponse,
     RepairRepairersStatsResponse,
+    GenerateAvrResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -295,5 +296,39 @@ export class RepairClientService implements OnModuleInit {
 
     getRepairersActiveRequestCounts(repairerIds: string[]): Promise<RepairRepairersStatsResponse> {
         return grpcCall(this.repairService.getRepairersActiveRequestCounts({ repairerIds }));
+    }
+
+    // ── AVR (Work Completion Act) ──
+
+    generateAvr(repairerUserId: string, requestId: string, dto: { completionNote?: string; userName: string; userPhone: string; userEmail: string; repairerName: string }): Promise<GenerateAvrResponse> {
+        return grpcCall(this.repairService.generateAvr({
+            repairerUserId,
+            requestId,
+            completionNote: dto.completionNote ?? '',
+            userName: dto.userName,
+            userPhone: dto.userPhone,
+            userEmail: dto.userEmail,
+            repairerName: dto.repairerName,
+        }));
+    }
+
+    resetAvr(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.resetAvr({ repairerUserId, requestId }));
+    }
+
+    setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.setAvrDocumentId({ requestId, documentId }));
+    }
+
+    setAvrPendingSignature(requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.setAvrPendingSignature({ requestId }));
+    }
+
+    signAvrDigital(requestId: string, userId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.signAvrDigital({ requestId, userId }));
+    }
+
+    uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.uploadAvrScan({ requestId, repairerUserId, signedDocumentId }));
     }
 }

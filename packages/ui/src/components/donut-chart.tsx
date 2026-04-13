@@ -44,30 +44,34 @@ export function DonutChart({
 
   const radius = (size - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
-  let offset = 0;
+
+  const segmentArcs: { dashLen: number; dashOffset: number }[] = [];
+  {
+    let offset = 0;
+    for (const seg of segments) {
+      const pct = seg.value / total;
+      const dashLen = pct * circumference;
+      segmentArcs.push({ dashLen, dashOffset: -offset });
+      offset += dashLen;
+    }
+  }
 
   return (
     <div className={cn('flex flex-col items-center gap-3', className)}>
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-          {segments.map((seg, i) => {
-            const pct = seg.value / total;
-            const dashLen = pct * circumference;
-            const dashOffset = -offset;
-            offset += dashLen;
-            return (
-              <circle
-                key={i}
-                cx={size / 2} cy={size / 2} r={radius}
-                fill="none"
-                stroke={seg.color}
-                strokeWidth={thickness}
-                strokeDasharray={`${dashLen} ${circumference - dashLen}`}
-                strokeDashoffset={dashOffset}
-                strokeLinecap="butt"
-              />
-            );
-          })}
+          {segments.map((seg, i) => (
+            <circle
+              key={i}
+              cx={size / 2} cy={size / 2} r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={thickness}
+              strokeDasharray={`${segmentArcs[i].dashLen} ${circumference - segmentArcs[i].dashLen}`}
+              strokeDashoffset={segmentArcs[i].dashOffset}
+              strokeLinecap="butt"
+            />
+          ))}
         </svg>
         {centerContent && (
           <div className="absolute inset-0 flex items-center justify-center">

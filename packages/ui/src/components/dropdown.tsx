@@ -52,7 +52,6 @@ export function Dropdown({
 
   const triggerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
   const setOpen = useCallback(
     (v: boolean) => {
@@ -62,15 +61,11 @@ export function Dropdown({
     [controlledOpen, onOpenChange],
   );
 
-  // Position panel relative to trigger
+  // Position panel relative to trigger (direct DOM update)
   useEffect(() => {
-    if (!open) {
-      setPos(null);
-      return;
-    }
-    const t = triggerRef.current;
     const p = panelRef.current;
-    if (!t || !p) return;
+    const t = triggerRef.current;
+    if (!open || !p || !t) return;
 
     const tR = t.getBoundingClientRect();
     const pR = p.getBoundingClientRect();
@@ -88,7 +83,8 @@ export function Dropdown({
     if (x < 8) x = 8;
     if (y < 8) y = 8;
 
-    setPos({ x, y });
+    p.style.left = `${x}px`;
+    p.style.top = `${y}px`;
   }, [open, placement]);
 
   // Close on outside click + escape
@@ -124,11 +120,7 @@ export function Dropdown({
           <div
             ref={panelRef}
             className={cn('fixed z-[9999]', contentClassName)}
-            style={
-              pos
-                ? { left: pos.x, top: pos.y }
-                : { left: -9999, top: -9999 }
-            }
+            style={{ left: -9999, top: -9999 }}
           >
             {children}
           </div>,
@@ -214,17 +206,23 @@ function MenuItemEl({
 }) {
   const [showSub, setShowSub] = useState(false);
   const subRef = useRef<HTMLDivElement>(null);
-  const [subSide, setSubSide] = useState<'right' | 'left'>('right');
   const hasChildren = item.children && item.children.length > 0;
 
-  // Check if submenu fits to the right
+  // Adjust submenu side to fit viewport (direct DOM update)
   useEffect(() => {
-    if (!showSub || !subRef.current) return;
-    const rect = subRef.current.getBoundingClientRect();
+    const el = subRef.current;
+    if (!showSub || !el) return;
+    const rect = el.getBoundingClientRect();
     if (rect.right > window.innerWidth - 8) {
-      setSubSide('left');
+      el.style.left = '';
+      el.style.right = '100%';
+      el.style.marginLeft = '';
+      el.style.marginRight = '0.25rem';
     } else {
-      setSubSide('right');
+      el.style.left = '100%';
+      el.style.right = '';
+      el.style.marginLeft = '0.25rem';
+      el.style.marginRight = '';
     }
   }, [showSub]);
 
@@ -268,10 +266,8 @@ function MenuItemEl({
       {hasChildren && showSub && (
         <div
           ref={subRef}
-          className={cn(
-            'absolute top-0 z-[1]',
-            subSide === 'right' ? 'left-full ml-1' : 'right-full mr-1',
-          )}
+          className="absolute top-0 z-[1]"
+          style={{ left: '100%', marginLeft: '0.25rem' }}
         >
           <MenuPanel items={item.children!} onSelect={onSelect} />
         </div>
@@ -344,9 +340,8 @@ export function ContextMenu({
   onClose,
 }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x, y });
 
-  // Adjust position to stay within viewport
+  // Adjust position to stay within viewport (direct DOM update)
   useEffect(() => {
     const el = menuRef.current;
     if (!el) return;
@@ -359,7 +354,8 @@ export function ContextMenu({
       ny = window.innerHeight - rect.height - 8;
     if (nx < 8) nx = 8;
     if (ny < 8) ny = 8;
-    setPos({ x: nx, y: ny });
+    el.style.left = `${nx}px`;
+    el.style.top = `${ny}px`;
   }, [x, y]);
 
   // Close on escape
@@ -384,7 +380,7 @@ export function ContextMenu({
       <div
         ref={menuRef}
         className="fixed z-[10000] flex items-start gap-1"
-        style={{ left: pos.x, top: pos.y }}
+        style={{ left: x, top: y }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <MenuPanel items={items} onSelect={handleSelect} />

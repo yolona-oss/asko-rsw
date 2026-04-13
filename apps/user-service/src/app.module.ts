@@ -12,6 +12,7 @@ import { InviteService } from 'services/invite.service';
 import { LoginThrottleService } from 'services/login-throttle.service';
 import { OtpService } from 'services/otp.service';
 import { MfaService } from 'services/mfa.service';
+import { SigningService } from 'services/signing.service';
 import { EmailEventService } from 'services/email-event.service';
 import { UserEventService } from 'services/user-event.service';
 import { TokenCleanupService } from 'services/token-cleanup.service';
@@ -33,6 +34,7 @@ import { DatabaseModule } from 'modules/database.module';
         LoginThrottleService,
         OtpService,
         MfaService,
+        SigningService,
         EmailEventService,
         UserEventService,
         TokenCleanupService,

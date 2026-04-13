@@ -17,10 +17,8 @@
     },
     "dependencies": {
         "@asko/observability": "workspace:*",
-        "@asko/shared": "workspace:*",
         "@asko/proto": "workspace:*",
-        "amqp-connection-manager": "^4.1.14",
-        "amqplib": "^0.10.4",
+        "@asko/shared": "workspace:*",
         "@grpc/grpc-js": "^1.12.6",
         "@grpc/proto-loader": "^0.7.15",
         "@mikro-orm/core": "^6.5.9",
@@ -33,17 +31,26 @@
         "@nestjs/core": "^11.1.5",
         "@nestjs/microservices": "^11.1.5",
         "@nestjs/schedule": "^5.0.1",
+        "amqp-connection-manager": "^4.1.14",
+        "amqplib": "^0.10.4",
         "cross-env": "^7.0.3",
+        "pdfkit": "^0.18.0",
         "reflect-metadata": "^0.2.2",
-        "rxjs": "^7.8.2",
         "rrule": "^2.8.1",
+        "rxjs": "^7.8.2",
         "uuid": "^13.0.0"
     },
     "jest": {
         "rootDir": "src",
-        "moduleFileExtensions": ["ts", "js", "json"],
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json"
+        ],
         "testRegex": ".*\\.spec\\.ts$",
-        "transform": { "^.+\\.ts$": "ts-jest" },
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
         "moduleNameMapper": {
             "^entities$": "<rootDir>/entities",
             "^entities/(.*)$": "<rootDir>/entities/$1",
@@ -53,14 +60,18 @@
             "^providers/(.*)$": "<rootDir>/providers/$1",
             "^services/(.*)$": "<rootDir>/services/$1"
         },
-        "transformIgnorePatterns": ["node_modules/(?!uuid)"]
+        "transformIgnorePatterns": [
+            "node_modules/(?!uuid)"
+        ]
     },
     "devDependencies": {
+        "@mikro-orm/cli": "^6.5.9",
         "@nestjs/cli": "^11.0.16",
         "@nestjs/schematics": "^11.0.5",
         "@nestjs/testing": "^11.0.16",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.1.0",
+        "@types/pdfkit": "^0.17.5",
         "@types/uuid": "^10.0.0",
         "jest": "^30.2.0",
         "rimraf": "^6.1.3",
@@ -69,7 +80,6 @@
         "ts-loader": "^9.2.1",
         "ts-node": "^10.9.2",
         "tsconfig-paths": "^4.2.0",
-        "@mikro-orm/cli": "^6.5.9",
         "typescript": "^5.8.3"
     },
     "mikro-orm": {

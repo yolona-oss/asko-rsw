@@ -28,6 +28,7 @@ export {
     BrokenPartStatus,
     PaymentStatus,
 } from './repair/repair.type.js';
+export { AvrStatus, AvrSigningMethod, SigningOtpChannel } from './repair/avr.enum.js';
 
 // Certificate
 export { CertificateStatus } from './certificate/certificate.type.js';
@@ -124,6 +125,8 @@ export type {
     RefuseRequestDto,
     AddWorkStepDto,
     UpdateWorkStepDto,
+    GenerateAvrDto,
+    VerifyAvrSigningDto,
 } from './repair/repair-request.dto.js';
 
 export type {

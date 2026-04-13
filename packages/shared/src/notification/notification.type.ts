@@ -35,6 +35,8 @@ export enum NotificationType {
     SCHEDULE_PATTERN_DELETED = 'schedule_pattern_deleted',
     SCHEDULE_PATTERN_APPROVED = 'schedule_pattern_approved',
     SCHEDULE_PATTERN_REJECTED = 'schedule_pattern_rejected',
+    AVR_SIGNING_REQUESTED = 'avr_signing_requested',
+    AVR_SIGNED = 'avr_signed',
 }
 
 export enum NotificationTargetType {

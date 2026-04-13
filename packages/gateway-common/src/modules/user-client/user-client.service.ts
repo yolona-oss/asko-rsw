@@ -71,6 +71,12 @@ import type {
     LinkOAuthRequest,
     UnlinkOAuthRequest,
     OAuthLinksResponse,
+    SendSigningOtpRequest,
+    SendSigningOtpResponse,
+    VerifySigningOtpRequest,
+    VerifySigningOtpResponse,
+    VerifyPasswordForSigningRequest,
+    VerifyPasswordForSigningResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -283,5 +289,19 @@ export class UserClientService implements OnModuleInit {
 
     getOAuthLinks(data: UserIdRequest): Promise<OAuthLinksResponse> {
         return grpcCall(this.userService.getOAuthLinks(data));
+    }
+
+    // --- Signing OTP (AVR) ---
+
+    sendSigningOtp(data: SendSigningOtpRequest): Promise<SendSigningOtpResponse> {
+        return grpcCall(this.userService.sendSigningOtp(data));
+    }
+
+    verifySigningOtp(data: VerifySigningOtpRequest): Promise<VerifySigningOtpResponse> {
+        return grpcCall(this.userService.verifySigningOtp(data));
+    }
+
+    verifyPasswordForSigning(data: VerifyPasswordForSigningRequest): Promise<VerifyPasswordForSigningResponse> {
+        return grpcCall(this.userService.verifyPasswordForSigning(data));
     }
 }

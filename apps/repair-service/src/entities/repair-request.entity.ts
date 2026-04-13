@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
-import { RepairRequestStatus, type ICertificateSnapshot } from '@asko/shared';
+import { RepairRequestStatus, AvrStatus, type ICertificateSnapshot } from '@asko/shared';
 import { UserDevice } from './user-device.entity';
 import { Repairer } from './repairer.entity';
 import { Certificate } from './certificate.entity';
@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature';
 
     @PrimaryKey()
     id: string = uuid();
@@ -80,6 +80,27 @@ export class RepairRequest {
 
     @OneToMany(() => BrokenPart, bp => bp.repairRequest)
     brokenParts = new Collection<BrokenPart>(this);
+
+    @Enum({ items: () => AvrStatus, type: 'varchar', default: AvrStatus.NONE })
+    avrStatus: AvrStatus = AvrStatus.NONE;
+
+    @Property({ type: 'varchar', length: 20, nullable: true })
+    avrSigningMethod?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    avrDocumentId?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    avrSignedDocumentId?: string;
+
+    @Property({ type: 'datetime', nullable: true })
+    avrSignedAt?: Date;
+
+    @Property({ type: 'text', nullable: true })
+    avrSignedPayload?: string;
+
+    @Property({ type: 'text', nullable: true })
+    avrSignature?: string;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

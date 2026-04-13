@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { SkeletonBlock } from './skeleton';
@@ -31,22 +31,35 @@ export function DetailSection({
   className,
 }: DetailSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const [loading, setLoading] = useState(false);
-  const [fetched, setFetched] = useState(!fetchData);
+  const needsInitialFetch = defaultOpen && !!fetchData;
+  const [loading, setLoading] = useState(needsInitialFetch);
+  const fetchedRef = useRef(!fetchData);
 
   useEffect(() => {
-    if (!open || fetched || !fetchData) return;
-    setLoading(true);
-    fetchData()
+    if (!needsInitialFetch || fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetchData!()
       .catch(() => {})
-      .finally(() => { setLoading(false); setFetched(true); });
-  }, [open, fetched, fetchData]);
+      .finally(() => setLoading(false));
+  }, [needsInitialFetch, fetchData]);
+
+  const handleToggle = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && !fetchedRef.current && fetchData) {
+      fetchedRef.current = true;
+      setLoading(true);
+      fetchData()
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  };
 
   return (
     <div className={cn('border-b border-border-light last:border-b-0', className)} style={{ marginLeft: level * 16 }}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="w-full flex items-center gap-2 py-2.5 text-left cursor-pointer hover:bg-surface-hover transition-colors"
       >
         <ChevronRight className={cn('w-4 h-4 text-text-sub transition-transform flex-shrink-0', open && 'rotate-90')} />

@@ -89,11 +89,31 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/set-price`, data);
   },
 
-  complete(requestId: string, description: string, files: File[]) {
+  // AVR (Work Completion Act)
+  generateAvr(requestId: string, data?: { completionNote?: string }) {
+    return api.post<{ request: any; avrDocumentId: string }>(`/repair-requests/${requestId}/avr/generate`, data ?? {});
+  },
+
+  resetAvr(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/reset`);
+  },
+
+  initiateAvrSigning(requestId: string) {
+    return api.post<{ channel: string; maskedTarget: string; retryAfter: number }>(`/repair-requests/${requestId}/avr/sign/initiate`);
+  },
+
+  resendAvrOtp(requestId: string) {
+    return api.post<{ channel: string; maskedTarget: string; retryAfter: number }>(`/repair-requests/${requestId}/avr/sign/resend`);
+  },
+
+  verifyAvrSigning(requestId: string, data: { code?: string; password?: string }) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/sign/verify`, data);
+  },
+
+  uploadAvrScan(requestId: string, file: File) {
     const form = new FormData();
-    form.append('description', description);
-    files.forEach((file) => form.append('files', file));
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/complete`, form, {
+    form.append('file', file);
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/scan/upload`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },

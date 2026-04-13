@@ -6,6 +6,7 @@ import { AuthService } from 'services/auth.service';
 import { UserService } from 'services/user.service';
 import { InviteService } from 'services/invite.service';
 import { MfaService } from 'services/mfa.service';
+import { SigningService } from 'services/signing.service';
 import { AppError } from 'common/error';
 
 import type {
@@ -71,6 +72,12 @@ import type {
     LinkOAuthRequest,
     UnlinkOAuthRequest,
     OAuthLinksResponse,
+    SendSigningOtpRequest,
+    SendSigningOtpResponse,
+    VerifySigningOtpRequest,
+    VerifySigningOtpResponse,
+    VerifyPasswordForSigningRequest,
+    VerifyPasswordForSigningResponse,
 } from '@asko/proto';
 
 import { Role } from '@asko/shared';
@@ -150,6 +157,7 @@ export class UserGrpcController {
         private readonly userService: UserService,
         private readonly inviteService: InviteService,
         private readonly mfaService: MfaService,
+        private readonly signingService: SigningService,
     ) {}
 
     // ─── Auth ────────────────────────────────────────────────────────────
@@ -711,6 +719,29 @@ export class UserGrpcController {
                     createdAt: l.createdAt.toISOString(),
                 })),
             };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Signing OTP (AVR digital signatures) ──────────────────────────
+
+    @GrpcMethod('UserService', 'SendSigningOtp')
+    async sendSigningOtp(data: SendSigningOtpRequest): Promise<SendSigningOtpResponse> {
+        try {
+            return await this.signingService.sendSigningOtp(data.userId);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'VerifySigningOtp')
+    async verifySigningOtp(data: VerifySigningOtpRequest): Promise<VerifySigningOtpResponse> {
+        try {
+            return await this.signingService.verifySigningOtp(data.userId, data.code);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'VerifyPasswordForSigning')
+    async verifyPasswordForSigning(data: VerifyPasswordForSigningRequest): Promise<VerifyPasswordForSigningResponse> {
+        try {
+            return await this.signingService.verifyPasswordForSigning(data.userId, data.password);
         } catch (e) { throw toGrpcError(e); }
     }
 }

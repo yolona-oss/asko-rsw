@@ -107,6 +107,14 @@ service RepairService {
     rpc ReassignRepairer(RepairReassignRepairerRequest) returns (RepairRequestResponse);
     rpc AcceptCompletion(RepairAcceptCompletionRequest) returns (RepairRequestResponse);
 
+    // AVR (Work Completion Act)
+    rpc GenerateAvr(GenerateAvrRequest) returns (GenerateAvrResponse);
+    rpc ResetAvr(ResetAvrRequest) returns (RepairRequestResponse);
+    rpc SetAvrDocumentId(SetAvrDocumentIdRequest) returns (RepairRequestResponse);
+    rpc SetAvrPendingSignature(SetAvrPendingSignatureRequest) returns (RepairRequestResponse);
+    rpc SignAvrDigital(SignAvrDigitalRequest) returns (RepairRequestResponse);
+    rpc UploadAvrScan(UploadAvrScanRequest) returns (RepairRequestResponse);
+
     // Work steps
     rpc AddStep(RepairAddStepRequest) returns (WorkStepResponse);
     rpc UpdateStep(RepairUpdateStepRequest) returns (WorkStepResponse);
@@ -761,6 +769,13 @@ message RepairRequestRecord {
     string acceptanceSignedPayload = 30;
     bool certificateValid = 31;
     CertificateSnapshotRecord certificateSnapshot = 32;
+    string avrStatus = 33;
+    string avrSigningMethod = 34;
+    string avrDocumentId = 35;
+    string avrSignedDocumentId = 36;
+    string avrSignedAt = 37;
+    string avrSignedPayload = 38;
+    string avrSignature = 39;
 }
 
 message BrokenPartRecord {
@@ -858,6 +873,51 @@ message RepairCompleteRequest {
     string requestId = 1;
     string description = 2;
 }
+
+// ─── AVR Messages ──────────────────────────────────────────────────────────
+
+message GenerateAvrRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+    string completionNote = 3;
+    string userName = 4;
+    string userPhone = 5;
+    string userEmail = 6;
+    string repairerName = 7;
+}
+
+message GenerateAvrResponse {
+    bytes pdfBuffer = 1;
+    string requestId = 2;
+    string avrStatus = 3;
+}
+
+message ResetAvrRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message SetAvrDocumentIdRequest {
+    string requestId = 1;
+    string documentId = 2;
+}
+
+message SetAvrPendingSignatureRequest {
+    string requestId = 1;
+}
+
+message SignAvrDigitalRequest {
+    string requestId = 1;
+    string userId = 2;
+}
+
+message UploadAvrScanRequest {
+    string requestId = 1;
+    string repairerUserId = 2;
+    string signedDocumentId = 3;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 
 message RepairApproveRefundRequest {
     string requestId = 1;

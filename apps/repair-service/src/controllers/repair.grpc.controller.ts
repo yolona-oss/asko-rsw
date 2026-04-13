@@ -57,6 +57,12 @@ import type {
     RepairGetBrokenPartsRequest,
     RepairOrderBrokenPartRequest,
     RepairAcceptCompletionRequest,
+    GenerateAvrRequest,
+    ResetAvrRequest,
+    SetAvrDocumentIdRequest,
+    SetAvrPendingSignatureRequest,
+    SignAvrDigitalRequest,
+    UploadAvrScanRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -211,6 +217,13 @@ function requestToRecord(entity: RepairRequest) {
             signature: entity.certificateSnapshot.signature,
         } : undefined,
         address: address ? addressToRecord(address) : undefined,
+        avrStatus: entity.avrStatus ?? 'none',
+        avrSigningMethod: entity.avrSigningMethod ?? '',
+        avrDocumentId: entity.avrDocumentId ?? '',
+        avrSignedDocumentId: entity.avrSignedDocumentId ?? '',
+        avrSignedAt: entity.avrSignedAt?.toISOString() ?? '',
+        avrSignedPayload: entity.avrSignedPayload ?? '',
+        avrSignature: entity.avrSignature ?? '',
     };
 }
 
@@ -394,6 +407,62 @@ export class RepairGrpcController {
     async acceptCompletion(data: RepairAcceptCompletionRequest) {
         try {
             const request = await this.repairRequestService.acceptCompletion(data.userId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ── AVR (Work Completion Act) ──
+
+    @GrpcMethod('RepairService', 'GenerateAvr')
+    async generateAvr(data: GenerateAvrRequest) {
+        try {
+            const { pdfBuffer, request } = await this.repairRequestService.generateAvr(
+                data.requestId,
+                data.repairerUserId,
+                { name: data.userName, phone: data.userPhone, email: data.userEmail },
+                data.repairerName,
+                data.completionNote || undefined,
+            );
+            return { pdfBuffer, requestId: request.id, avrStatus: request.avrStatus };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ResetAvr')
+    async resetAvr(data: ResetAvrRequest) {
+        try {
+            const request = await this.repairRequestService.resetAvr(data.requestId, data.repairerUserId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'SetAvrDocumentId')
+    async setAvrDocumentId(data: SetAvrDocumentIdRequest) {
+        try {
+            const request = await this.repairRequestService.setAvrDocumentId(data.requestId, data.documentId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'SetAvrPendingSignature')
+    async setAvrPendingSignature(data: SetAvrPendingSignatureRequest) {
+        try {
+            const request = await this.repairRequestService.setAvrPendingSignature(data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'SignAvrDigital')
+    async signAvrDigital(data: SignAvrDigitalRequest) {
+        try {
+            const request = await this.repairRequestService.signAvrDigital(data.requestId, data.userId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'UploadAvrScan')
+    async uploadAvrScan(data: UploadAvrScanRequest) {
+        try {
+            const request = await this.repairRequestService.uploadAvrScan(data.requestId, data.repairerUserId, data.signedDocumentId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

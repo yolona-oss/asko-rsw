@@ -314,4 +314,28 @@ export class RepairEventConsumer {
             channel.ack(msg);
         }
     }
+
+    // ── AVR Events ──
+
+    @EventPattern('repair.avr_signing_requested')
+    async handleAvrSigningRequested(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.AVR_SIGNING_REQUESTED,
+                'Акт выполненных работ',
+                'Мастер подготовил акт выполненных работ. Подпишите его в личном кабинете для завершения ремонта.',
+                NotificationTargetType.REPAIR_REQUEST,
+                data.repairId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] repair.avr_signing_requested error:', e);
+            channel.ack(msg);
+        }
+    }
 }

@@ -39,6 +39,13 @@ export class RepairRequestRecordDto {
     completionSignedPayload?: string;
     acceptanceSignature?: string;
     acceptanceSignedPayload?: string;
+    avrStatus?: string;
+    avrSigningMethod?: string;
+    avrDocumentId?: string;
+    avrSignedDocumentId?: string;
+    avrSignedAt?: string;
+    avrSignedPayload?: string;
+    avrSignature?: string;
     user?: AuthUserDto;
     userDevice?: UserDeviceRecordDto;
     repairer?: RepairerRecordDto;

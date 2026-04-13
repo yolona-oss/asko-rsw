@@ -15,7 +15,8 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
-import { RepairRequestStatus } from '@asko/shared/client';
+import { RepairRequestStatus, AvrStatus } from '@asko/shared/client';
+import { SigningOtpForm } from '@/components/account/shared/signing-otp-form';
 import {
   TERMINAL_STATUSES,
   STEPS,
@@ -36,6 +37,13 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [brokenParts, setBrokenParts] = useState<any[]>([]);
   const [partImages, setPartImages] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+
+  // AVR signing state
+  const [signingChannel, setSigningChannel] = useState('');
+  const [signingMasked, setSigningMasked] = useState('');
+  const [signingRetryAfter, setSigningRetryAfter] = useState(0);
+  const [signingInitiated, setSigningInitiated] = useState(false);
+  const [signingLoading, setSigningLoading] = useState(false);
 
   // Payment modal state
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -296,6 +304,75 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
               <WorkStepCard key={step.id} step={step} index={idx} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* AVR — Pending signature (user needs to sign) */}
+      {(request as any).avrStatus === AvrStatus.PENDING_SIGNATURE && (
+        <div className="flex flex-col gap-4 max-w-lg mt-6 p-4 sm:p-6 border border-warning-border bg-warning-bg">
+          <h3 className="text-lg font-medium text-warning-deep">Акт выполненных работ</h3>
+          <p className="text-[13px] sm:text-sm text-text-main">
+            Мастер подготовил акт выполненных работ. Подпишите его для завершения ремонта.
+          </p>
+          {(request as any).avrDocumentId && (
+            <a
+              href={`/files/document/${(request as any).avrDocumentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline self-start"
+            >
+              Скачать акт (PDF)
+            </a>
+          )}
+          {!signingInitiated ? (
+            <Button
+              variant="primary"
+              onClick={async () => {
+                setSigningLoading(true);
+                try {
+                  const { data } = await repairRequestApi.initiateAvrSigning(requestId);
+                  setSigningChannel(data.channel);
+                  setSigningMasked(data.maskedTarget);
+                  setSigningRetryAfter(data.retryAfter);
+                  setSigningInitiated(true);
+                } catch { /* */ }
+                finally { setSigningLoading(false); }
+              }}
+              disabled={signingLoading}
+            >
+              {signingLoading ? 'Отправка кода...' : 'Подписать акт'}
+            </Button>
+          ) : (
+            <SigningOtpForm
+              requestId={requestId}
+              channel={signingChannel}
+              maskedTarget={signingMasked}
+              initialRetryAfter={signingRetryAfter}
+              onSuccess={() => fetchData()}
+            />
+          )}
+        </div>
+      )}
+
+      {/* AVR — Signed (show document link) */}
+      {((request as any).avrStatus === AvrStatus.SIGNED_DIGITAL || (request as any).avrStatus === AvrStatus.SIGNED_OFFLINE) && (
+        <div className="flex flex-col gap-3 max-w-lg mt-6 p-4 sm:p-6 border border-success-border bg-success-bg/50">
+          <h3 className="text-base font-medium text-success-deep">Акт выполненных работ</h3>
+          <p className="text-[13px] sm:text-sm text-text-sub">
+            {(request as any).avrStatus === AvrStatus.SIGNED_DIGITAL
+              ? 'Подписано цифровой подписью'
+              : 'Подписано на бумаге'}
+          </p>
+          {(request as any).avrDocumentId && (
+            <a
+              href={`/files/document/${(request as any).avrDocumentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline self-start"
+            >
+              Скачать акт (PDF)
+            </a>
+          )}
         </div>
       )}
 

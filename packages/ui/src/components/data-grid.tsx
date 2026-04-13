@@ -146,20 +146,16 @@ function CellContent({
   multiline?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [autoTitle, setAutoTitle] = useState('');
 
   useEffect(() => {
-    if (tooltip != null) return;
     const el = ref.current;
     if (!el) return;
-    const text = el.textContent ?? '';
-    setAutoTitle((prev) => (prev !== text ? text : prev));
+    el.title = tooltip ?? el.textContent ?? '';
   });
 
   return (
     <div
       ref={ref}
-      title={tooltip ?? autoTitle}
       className={cn(
         'min-w-0',
         multiline ? 'break-words whitespace-normal' : 'truncate',
@@ -306,7 +302,6 @@ export function DataGrid<T>({
         ? [...autoItems, 'separator', ...userItems]
         : autoItems;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowMenuFn, onRowClick, onRowDoubleClick, suppressDetailMenuItem]);
 
   const hasRowMenu = resolvedRowMenuFn != null;

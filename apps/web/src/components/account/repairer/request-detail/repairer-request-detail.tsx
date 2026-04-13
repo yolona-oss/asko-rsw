@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
@@ -18,6 +18,7 @@ import { CertificateAppliedBadge } from '@/components/account/shared/certificate
 import { RequestChat } from '@/components/account/manager/request-detail/request-chat';
 import { Trash2 } from 'lucide-react';
 import { STEP_STATUS_LABEL, STEP_STATUS_BADGE_VARIANT, STEP_BLOCK_CLASS, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
+import { AvrModal } from './avr-modal';
 
 // ── Main Component ──
 
@@ -46,11 +47,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [refuseLoading, setRefuseLoading] = useState(false);
   const [refuseError, setRefuseError] = useState('');
 
-  const [completeOpen, setCompleteOpen] = useState(false);
-  const [completeDescription, setCompleteDescription] = useState('');
-  const [completeFiles, setCompleteFiles] = useState<File[]>([]);
-  const [completeLoading, setCompleteLoading] = useState(false);
-  const [completeError, setCompleteError] = useState('');
+  const [avrOpen, setAvrOpen] = useState(false);
 
   // Add step modal
   const [addStepOpen, setAddStepOpen] = useState(false);
@@ -71,7 +68,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [commentDraft, setCommentDraft] = useState('');
   const [commentSaving, setCommentSaving] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data fetch ──
 
@@ -164,15 +160,9 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     finally { setRefuseLoading(false); }
   };
 
-  const handleComplete = async () => {
-    if (!request || !completeDescription.trim() || completeFiles.length === 0) return;
-    setCompleteLoading(true); setCompleteError('');
-    try {
-      await repairRequestApi.complete(request.id, completeDescription, completeFiles);
-      setRequest({ ...request, status: RepairRequestStatus.COMPLETED });
-      setCompleteOpen(false);
-    } catch { setCompleteError('Не удалось завершить заявку'); }
-    finally { setCompleteLoading(false); }
+  const handleAvrCompleted = () => {
+    setRequest({ ...request!, status: RepairRequestStatus.COMPLETED });
+    setAvrOpen(false);
   };
 
   // ── Step actions ──
@@ -691,8 +681,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               </Button>
             )}
             {canComplete && (
-              <Button variant="primary" className="flex-1 sm:flex-none" onClick={() => { setCompleteError(''); setCompleteDescription(''); setCompleteFiles([]); setCompleteOpen(true); }}>
-                Завершить работу
+              <Button variant="primary" className="flex-1 sm:flex-none" onClick={() => setAvrOpen(true)}>
+                Оформить акт
               </Button>
             )}
           </div>
@@ -757,25 +747,12 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         </div>
       </Modal>
 
-      <Modal open={completeOpen} onClose={() => setCompleteOpen(false)} className="w-full max-w-md p-6">
-        <h2 className="text-base font-medium text-text-main mb-4">Подтверждение выполнения</h2>
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-text-sub">Прикрепите фото или видео и опишите выполненную работу</p>
-          <div>
-            <p className="text-sm font-medium text-text-main mb-1">Медиафайлы <span className="text-brand-red">*</span></p>
-            <input ref={fileInputRef} type="file" multiple accept="image/*,video/*" onChange={(e) => setCompleteFiles(Array.from(e.target.files ?? []))} className="hidden" />
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border border-dashed border-border-light rounded p-4 text-sm text-text-sub hover:border-brand-red transition-colors text-center cursor-pointer">
-              {completeFiles.length > 0 ? `Выбрано файлов: ${completeFiles.length}` : 'Нажмите для выбора файлов'}
-            </button>
-          </div>
-          <FormField label="Описание выполненной работы"><Textarea value={completeDescription} onChange={(e) => setCompleteDescription(e.target.value)} placeholder="Опишите выполненную работу..." rows={3} /></FormField>
-          {completeError && <p className="text-sm text-brand-red">{completeError}</p>}
-          <div className="flex gap-3">
-            <Button variant="primary" onClick={handleComplete} disabled={!completeDescription.trim() || completeFiles.length === 0 || completeLoading}>{completeLoading ? 'Отправка...' : 'Подтвердить выполнение'}</Button>
-            <Button variant="secondary" onClick={() => setCompleteOpen(false)}>Отмена</Button>
-          </div>
-        </div>
-      </Modal>
+      <AvrModal
+        open={avrOpen}
+        onClose={() => setAvrOpen(false)}
+        requestId={request.id}
+        onCompleted={handleAvrCompleted}
+      />
     </PageContainer>
   );
 }

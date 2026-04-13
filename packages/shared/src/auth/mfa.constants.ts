@@ -13,6 +13,11 @@ export const PHONE_OTP_COOLDOWN_REDIS_PREFIX = 'phone:cooldown:';
 export const PHONE_OTP_ATTEMPTS_REDIS_PREFIX = 'phone:attempts:';
 export const PHONE_OTP_PENDING_REG_PREFIX = 'phone:pending_reg:';
 
+export const SIGNING_OTP_REDIS_PREFIX = 'signing:otp:';
+export const SIGNING_OTP_COOLDOWN_REDIS_PREFIX = 'signing:cooldown:';
+export const SIGNING_OTP_ATTEMPTS_REDIS_PREFIX = 'signing:attempts:';
+export const SIGNING_TOKEN_EXPIRY = '5m';
+
 export const MFA_TRUSTED_DEVICE_COOKIE = {
     cookie: {
         name: 'trustedDevice',
