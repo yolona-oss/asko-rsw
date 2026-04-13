@@ -77,10 +77,6 @@ export class AddWorkStepDto {
 
     @IsOptional()
     @IsBoolean()
-    isFinal?: boolean;
-
-    @IsOptional()
-    @IsBoolean()
     isMandatory?: boolean;
 }
 

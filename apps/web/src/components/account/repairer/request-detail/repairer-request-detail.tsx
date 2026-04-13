@@ -56,7 +56,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [addStepOpen, setAddStepOpen] = useState(false);
   const [addStepTitle, setAddStepTitle] = useState('');
   const [addStepDescription, setAddStepDescription] = useState('');
-  const [addStepIsFinal, setAddStepIsFinal] = useState(false);
   const [addStepLoading, setAddStepLoading] = useState(false);
   const [addStepError, setAddStepError] = useState('');
   const [lockLoading, setLockLoading] = useState(false);
@@ -214,10 +213,10 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     setAddStepLoading(true); setAddStepError('');
     try {
       const { data } = await repairRequestApi.addStep(request.id, {
-        title: addStepTitle.trim(), description: addStepDescription.trim() || undefined, isFinal: addStepIsFinal || undefined,
+        title: addStepTitle.trim(), description: addStepDescription.trim() || undefined,
       });
       setSteps((prev) => [...prev, data.step]);
-      setAddStepOpen(false); setAddStepTitle(''); setAddStepDescription(''); setAddStepIsFinal(false);
+      setAddStepOpen(false); setAddStepTitle(''); setAddStepDescription('');
     } catch { setAddStepError('Не удалось добавить шаг'); }
     finally { setAddStepLoading(false); }
   };
@@ -225,8 +224,12 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const handleLockSteps = async () => {
     if (!request) return;
     setLockLoading(true);
-    try { await repairRequestApi.lockSteps(request.id); setRequest({ ...request, stepsLocked: true }); }
-    catch {} finally { setLockLoading(false); }
+    try {
+      await repairRequestApi.lockSteps(request.id);
+      setRequest({ ...request, stepsLocked: true });
+      const { data } = await repairRequestApi.getSteps(request.id);
+      setSteps(data.steps ?? []);
+    } catch {} finally { setLockLoading(false); }
   };
 
   // ── Diagnostics approve/decline (post-transfer) ──
@@ -627,7 +630,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           </div>
         )}
 
-        {canEditSteps && <Button variant="secondary" className="w-full lg:w-fit" onClick={() => { setAddStepError(''); setAddStepTitle(''); setAddStepDescription(''); setAddStepIsFinal(false); setAddStepOpen(true); }}>Добавить шаг</Button>}
+        {canEditSteps && <Button variant="secondary" className="w-full lg:w-fit" onClick={() => { setAddStepError(''); setAddStepTitle(''); setAddStepDescription(''); setAddStepOpen(true); }}>Добавить шаг</Button>}
         {canEditSteps && steps.length > 0 && <Button variant="primary" className="w-full lg:w-fit" onClick={handleLockSteps} disabled={lockLoading}>{lockLoading ? 'Блокировка...' : 'Зафиксировать шаги'}</Button>}
         {canComplete && <Button variant="primary" className="w-full lg:w-fit" onClick={() => { setCompleteError(''); setCompleteDescription(''); setCompleteFiles([]); setCompleteOpen(true); }}>Завершить работу</Button>}
       </Card>
@@ -663,7 +666,6 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         <div className="flex flex-col gap-4">
           <FormField label="Название"><Input value={addStepTitle} onChange={(e) => setAddStepTitle(e.target.value)} placeholder="Название шага..." /></FormField>
           <FormField label="Описание (необязательно)"><Textarea value={addStepDescription} onChange={(e) => setAddStepDescription(e.target.value)} placeholder="Описание шага..." rows={3} /></FormField>
-          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={addStepIsFinal} onChange={(e) => setAddStepIsFinal(e.target.checked)} className="w-4 h-4 accent-brand-red" /><span className="text-sm text-text-main">Финальный шаг</span></label>
           {addStepError && <p className="text-sm text-brand-red">{addStepError}</p>}
           <div className="flex gap-3">
             <Button variant="primary" onClick={handleAddStep} disabled={!addStepTitle.trim() || addStepLoading}>{addStepLoading ? 'Добавление...' : 'Добавить'}</Button>

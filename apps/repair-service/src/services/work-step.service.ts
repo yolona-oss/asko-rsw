@@ -26,7 +26,7 @@ export class WorkStepService {
 
     /** Repairer adds a work step to request */
     @CreateRequestContext()
-    async addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; comment?: string; order?: number; isFinal?: boolean; isMandatory?: boolean }): Promise<WorkStep> {
+    async addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; comment?: string; order?: number; isMandatory?: boolean }): Promise<WorkStep> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (request.stepsLocked) {
@@ -47,7 +47,7 @@ export class WorkStepService {
             description: dto.description,
             comment: dto.comment,
             order,
-            isFinal: dto.isFinal ?? false,
+            isFinal: false,
             isMandatory: dto.isMandatory ?? false,
         });
         await this.em.persistAndFlush(step);
@@ -193,7 +193,7 @@ export class WorkStepService {
         return [newFirst, newSecond];
     }
 
-    /** Repairer locks work steps - no more adding/editing/deleting */
+    /** Repairer locks work steps - no more adding/editing/deleting. The last step (by order) is auto-marked as final. */
     @CreateRequestContext()
     async lockSteps(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
@@ -202,10 +202,16 @@ export class WorkStepService {
             throw AppErrors.badRequest('Шаги уже заблокированы');
         }
 
-        const stepCount = await this.em.count(WorkStep, { repairRequest: requestId });
-        if (stepCount < MIN_STEPS_TO_LOCK) {
+        const steps = await this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'DESC' } });
+        if (steps.length < MIN_STEPS_TO_LOCK) {
             throw AppErrors.badRequest(`Необходимо добавить минимум ${MIN_STEPS_TO_LOCK} шаг(ов) перед блокировкой`);
         }
+
+        // Auto-mark the last step as final
+        for (const step of steps) {
+            step.isFinal = false;
+        }
+        steps[0].isFinal = true;
 
         request.stepsLocked = true;
         await this.em.flush();

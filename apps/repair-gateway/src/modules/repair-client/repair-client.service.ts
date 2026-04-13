@@ -109,7 +109,7 @@ export class RepairClientService implements OnModuleInit {
 
     // ── Work steps ──
 
-    addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; comment?: string; order?: number; isFinal?: boolean; isMandatory?: boolean }): Promise<WorkStepResponse> {
+    addStep(repairerUserId: string, requestId: string, dto: { title: string; description?: string; comment?: string; order?: number; isMandatory?: boolean }): Promise<WorkStepResponse> {
         return grpcCall(this.repairService.addStep({
             repairerUserId,
             requestId,
@@ -117,7 +117,7 @@ export class RepairClientService implements OnModuleInit {
             description: dto.description ?? '',
             comment: dto.comment ?? '',
             order: dto.order ?? 0,
-            isFinal: dto.isFinal ?? false,
+            isFinal: false,
             isMandatory: dto.isMandatory ?? false,
         }));
     }

@@ -408,7 +408,6 @@ export class RepairGrpcController {
                 description: data.description || undefined,
                 comment: data.comment || undefined,
                 order: data.order || undefined,
-                isFinal: data.isFinal || false,
                 isMandatory: data.isMandatory || false,
             });
             return { step: stepToRecord(step) };
