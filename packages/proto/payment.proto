@@ -57,6 +57,7 @@ message ProcessPayoutRequest {
     string recipientUserId = 5;
     string currency = 6;
     string provider = 7;
+    map<string, string> metadata = 8;
 }
 
 message WebhookRequest {

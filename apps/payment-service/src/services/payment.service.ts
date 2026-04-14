@@ -215,6 +215,7 @@ export class PaymentService {
         recipientUserId: string;
         currency?: string;
         provider?: string;
+        metadata?: Record<string, any>;
     }): Promise<{ paymentId: string; status: PaymentStatus }> {
         this.domainService.validateAmount(dto.amount);
 
@@ -246,6 +247,7 @@ export class PaymentService {
                 currency: dto.currency ?? CurrencyEnum.DEFAULT,
                 status: PaymentStatus.PENDING,
                 provider: providerType,
+                metadata: dto.metadata,
             });
             await this.em.persistAndFlush(paymentRecord);
 

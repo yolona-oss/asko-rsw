@@ -89,8 +89,8 @@ export class DealerClientService implements OnModuleInit {
 
     // ── Withdrawals ──
 
-    requestWithdrawal(userId: string, amount: number): Promise<WithdrawalResponse> {
-        return grpcCall(this.dealerService.requestWithdrawal({ userId, amount }));
+    requestWithdrawal(userId: string, amount: number, cardNumber: string, cardHolderName: string): Promise<WithdrawalResponse> {
+        return grpcCall(this.dealerService.requestWithdrawal({ userId, amount, cardNumber, cardHolderName }));
     }
 
     processWithdrawal(withdrawalId: string, adminUserId: string, status: string): Promise<WithdrawalResponse> {

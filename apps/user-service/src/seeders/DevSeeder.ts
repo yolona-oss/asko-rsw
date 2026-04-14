@@ -1,7 +1,7 @@
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { Seeder } from '@mikro-orm/seeder';
 import { Role, AuthProvider } from '@asko/shared';
-import { User, Session, InvitationLink, UserAddress, UserOAuthLink, UserStatusHistory } from '../entities';
+import { User, UserSettings, Session, InvitationLink, UserAddress, UserOAuthLink, UserStatusHistory } from '../entities';
 import { DEV_USER_IDS } from './dev-ids';
 import CryptoService from '../services/crypto.service';
 
@@ -38,6 +38,7 @@ export class DevSeeder extends Seeder {
         await em.nativeDelete(UserAddress, {});
         await em.nativeDelete(UserStatusHistory, {});
         await em.nativeDelete(User, {});
+        await em.nativeDelete(UserSettings, {});
 
         const passwordHash = await CryptoService.createPasswordHash(DEV_PASSWORD);
         const now = new Date();
@@ -55,6 +56,7 @@ export class DevSeeder extends Seeder {
                 isActive: true,
                 emailVerified: true,
                 phoneVerified: true,
+                settings: new UserSettings(),
                 createdAt: now,
                 updatedAt: now,
             });

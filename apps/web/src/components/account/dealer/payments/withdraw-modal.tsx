@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Modal, Button, FormField } from '@asko/ui';
-import { X } from 'lucide-react';
+import { X, CreditCard } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { requestWithdraw, resetWithdrawError } from '@/store/withdraw-slice';
 
@@ -12,14 +12,29 @@ interface WithdrawModalProps {
   maxAmount: number;
 }
 
+function formatCardInput(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 19);
+  return digits.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function maskCard(num: string): string {
+  const digits = num.replace(/\D/g, '');
+  if (digits.length < 4) return digits;
+  return `•••• ${digits.slice(-4)}`;
+}
+
 export function WithdrawModal({ open, onClose, maxAmount }: WithdrawModalProps) {
   const dispatch = useAppDispatch();
   const { requesting, error } = useAppSelector((s) => s.withdraw);
   const [amount, setAmount] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolderName, setCardHolderName] = useState('');
   const [localError, setLocalError] = useState('');
 
   const handleClose = () => {
     setAmount('');
+    setCardNumber('');
+    setCardHolderName('');
     setLocalError('');
     dispatch(resetWithdrawError());
     onClose();
@@ -36,7 +51,16 @@ export function WithdrawModal({ open, onClose, maxAmount }: WithdrawModalProps) 
       setLocalError(`Максимальная сумма: ${maxAmount.toLocaleString('ru-RU')} баллов`);
       return;
     }
-    dispatch(requestWithdraw(num)).then((result) => {
+    const digits = cardNumber.replace(/\D/g, '');
+    if (digits.length < 16 || digits.length > 19) {
+      setLocalError('Введите корректный номер карты (16–19 цифр)');
+      return;
+    }
+    if (!cardHolderName.trim()) {
+      setLocalError('Введите имя владельца карты');
+      return;
+    }
+    dispatch(requestWithdraw({ amount: num, cardNumber: digits, cardHolderName: cardHolderName.trim() })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         handleClose();
       }
@@ -69,6 +93,31 @@ export function WithdrawModal({ open, onClose, maxAmount }: WithdrawModalProps) 
             min={1}
             max={maxAmount}
             className="w-full border border-border-light px-4 py-3 text-sm text-text-main focus:outline-none focus:border-text-sub"
+          />
+        </FormField>
+
+        <FormField label="Номер карты" variant="bold">
+          <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-sub" />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={formatCardInput(cardNumber)}
+              onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
+              placeholder="0000 0000 0000 0000"
+              maxLength={23}
+              className="w-full border border-border-light pl-11 pr-4 py-3 text-sm text-text-main focus:outline-none focus:border-text-sub tracking-wider"
+            />
+          </div>
+        </FormField>
+
+        <FormField label="Имя владельца карты" variant="bold">
+          <input
+            type="text"
+            value={cardHolderName}
+            onChange={(e) => setCardHolderName(e.target.value.toUpperCase())}
+            placeholder="IVAN IVANOV"
+            className="w-full border border-border-light px-4 py-3 text-sm text-text-main focus:outline-none focus:border-text-sub uppercase tracking-wider"
           />
         </FormField>
 

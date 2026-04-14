@@ -4311,6 +4311,8 @@ export interface components {
             requestedAt: string;
             processedAt?: string;
             processedByUserId?: string;
+            cardNumber?: string;
+            cardHolderName?: string;
         };
         PaginatedWithdrawalsResponseDto: {
             data: components["schemas"]["WithdrawalRecordDto"][];

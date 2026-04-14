@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { makeDeviceCategory, makeCategoryListResponse } from './fixtures';
 
 vi.mock('server-only', () => ({}));
 
@@ -11,10 +12,14 @@ beforeEach(() => serverGetMock.mockReset());
 
 describe('fetchDeviceCategories', () => {
   it('returns categories on success', async () => {
-    const categories = [{ id: '1', name: 'washer', label: 'Стиральные машины' }];
-    serverGetMock.mockResolvedValue({ categories });
+    const categories = [
+      makeDeviceCategory({ name: 'washing_machine', label: 'Стиральная машина' }),
+      makeDeviceCategory({ id: 'cat-2', name: 'dryer', label: 'Сушильная машина', order: 1 }),
+    ];
+    serverGetMock.mockResolvedValue(makeCategoryListResponse(categories));
 
     expect(await fetchDeviceCategories()).toEqual(categories);
+    expect(serverGetMock).toHaveBeenCalledWith('/device-categories');
   });
 
   it('returns empty array when API returns null', async () => {
@@ -29,6 +34,11 @@ describe('fetchDeviceCategories', () => {
 
   it('returns empty array when categories is undefined', async () => {
     serverGetMock.mockResolvedValue({ categories: undefined });
+    expect(await fetchDeviceCategories()).toEqual([]);
+  });
+
+  it('returns empty array when response has unrelated fields only', async () => {
+    serverGetMock.mockResolvedValue({ items: [], total: 0 });
     expect(await fetchDeviceCategories()).toEqual([]);
   });
 });

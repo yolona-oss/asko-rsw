@@ -52,6 +52,12 @@ export class RequestPointsWithdrawalDto {
     @Min(1)
     @Max(1000000)
     amount!: number;
+
+    @IsString()
+    cardNumber!: string;
+
+    @IsString()
+    cardHolderName!: string;
 }
 
 export class ProcessWithdrawalDto {

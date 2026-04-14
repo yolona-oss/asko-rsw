@@ -90,6 +90,8 @@ function withdrawalToRecord(entity: PointsWithdrawal) {
         requestedAt: entity.requestedAt?.toISOString() ?? '',
         processedAt: entity.processedAt?.toISOString() ?? '',
         processedByUserId: entity.processedByUserId ?? '',
+        cardNumber: entity.cardNumber ?? '',
+        cardHolderName: entity.cardHolderName ?? '',
     };
 }
 
@@ -206,6 +208,8 @@ export class DealerGrpcController {
         try {
             const withdrawal = await this.dealerService.requestWithdrawal(data.userId, {
                 amount: data.amount,
+                cardNumber: data.cardNumber,
+                cardHolderName: data.cardHolderName,
             });
             return { withdrawal: withdrawalToRecord(withdrawal) };
         } catch (e) { throw toGrpcError(e); }
@@ -251,7 +255,12 @@ export class DealerGrpcController {
     async getWithdrawalForPayout(data: DealerFindByIdRequest) {
         try {
             const result = await this.dealerService.getWithdrawalForPayout(data.id);
-            return { amount: result.amount, dealerUserId: result.dealerUserId };
+            return {
+                amount: result.amount,
+                dealerUserId: result.dealerUserId,
+                cardNumber: result.cardNumber,
+                cardHolderName: result.cardHolderName,
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

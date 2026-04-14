@@ -1239,6 +1239,8 @@ export interface WithdrawalRecord {
     requestedAt: string;
     processedAt: string;
     processedByUserId: string;
+    cardNumber: string;
+    cardHolderName: string;
 }
 
 export interface DealerUserDeviceRecord {
@@ -1296,6 +1298,8 @@ export interface DealerPointsHistoryRequest {
 export interface RequestWithdrawalRequest {
     userId: string;
     amount: number;
+    cardNumber: string;
+    cardHolderName: string;
 }
 
 export interface ProcessWithdrawalRequest {
@@ -1365,6 +1369,8 @@ export interface PaginatedWithdrawalsResponse {
 export interface WithdrawalPayoutResponse {
     amount: number;
     dealerUserId: string;
+    cardNumber: string;
+    cardHolderName: string;
 }
 
 export interface PaginatedDealersResponse {

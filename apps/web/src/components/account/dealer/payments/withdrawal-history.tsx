@@ -8,6 +8,8 @@ interface Withdrawal {
   amount: number;
   requestedAt: Date | string;
   status: string;
+  cardNumber?: string;
+  cardHolderName?: string;
 }
 
 export function WithdrawalHistory({
@@ -24,6 +26,9 @@ export function WithdrawalHistory({
         <Card key={w.id} className="flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <span className="text-base font-medium text-text-main">{formatAmount(w.amount)} баллов</span>
+            {w.cardNumber && (
+              <span className="text-sm text-text-sub">•••• {w.cardNumber.replace(/\D/g, '').slice(-4)}</span>
+            )}
             <span className="text-sm text-text-sub">{formatDate(w.requestedAt)}</span>
           </div>
           <Badge variant={WITHDRAW_BADGE_VARIANT[w.status] ?? 'neutral'}>

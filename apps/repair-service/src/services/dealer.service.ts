@@ -206,6 +206,8 @@ export class DealerService {
             dealer,
             amount: dto.amount,
             status: WithdrawalStatus.PENDING,
+            cardNumber: dto.cardNumber,
+            cardHolderName: dto.cardHolderName,
         });
 
         // Deduct points immediately (hold)
@@ -267,7 +269,7 @@ export class DealerService {
 
     /** Get withdrawal details for payout processing via payment-service */
     @CreateRequestContext()
-    async getWithdrawalForPayout(withdrawalId: string): Promise<{ amount: number; dealerUserId: string }> {
+    async getWithdrawalForPayout(withdrawalId: string): Promise<{ amount: number; dealerUserId: string; cardNumber: string; cardHolderName: string }> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
         if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
         if (withdrawal.status !== WithdrawalStatus.APPROVED) {
@@ -276,6 +278,8 @@ export class DealerService {
         return {
             amount: withdrawal.amount,
             dealerUserId: withdrawal.dealer.userId,
+            cardNumber: withdrawal.cardNumber ?? '',
+            cardHolderName: withdrawal.cardHolderName ?? '',
         };
     }
 

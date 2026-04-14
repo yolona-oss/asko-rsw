@@ -35,8 +35,8 @@ export const getMyWithdraws = createAsyncThunk(
 
 export const requestWithdraw = createAsyncThunk(
   'withdraw/request',
-  async (amount: number) => {
-    const { data } = await dealerApi.requestWithdraw(amount);
+  async (params: { amount: number; cardNumber: string; cardHolderName: string }) => {
+    const { data } = await dealerApi.requestWithdraw(params.amount, params.cardNumber, params.cardHolderName);
     return data;
   },
 );

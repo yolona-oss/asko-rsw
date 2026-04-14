@@ -1240,6 +1240,8 @@ message WithdrawalRecord {
     string requestedAt = 5;
     string processedAt = 6;
     string processedByUserId = 7;
+    string cardNumber = 8;
+    string cardHolderName = 9;
 }
 
 message DealerUserDeviceRecord {
@@ -1297,6 +1299,8 @@ message DealerPointsHistoryRequest {
 message RequestWithdrawalRequest {
     string userId = 1;
     int32 amount = 2;
+    string cardNumber = 3;
+    string cardHolderName = 4;
 }
 
 message ProcessWithdrawalRequest {
@@ -1362,6 +1366,8 @@ message PaginatedWithdrawalsResponse {
 message WithdrawalPayoutResponse {
     int32 amount = 1;
     string dealerUserId = 2;
+    string cardNumber = 3;
+    string cardHolderName = 4;
 }
 
 message PaginatedDealersResponse {

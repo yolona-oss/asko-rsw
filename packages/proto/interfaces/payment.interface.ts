@@ -34,6 +34,7 @@ export interface ProcessPayoutRequest {
     recipientUserId: string;
     currency: string;
     provider: string;
+    metadata: Record<string, string>;
 }
 
 export interface WebhookRequest {

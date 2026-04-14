@@ -89,6 +89,8 @@ export class WithdrawalRecordDto {
     requestedAt: string;
     processedAt?: string;
     processedByUserId?: string;
+    cardNumber?: string;
+    cardHolderName?: string;
 }
 
 export class WithdrawalResponseDto {

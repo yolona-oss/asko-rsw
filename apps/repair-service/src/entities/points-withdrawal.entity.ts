@@ -5,7 +5,7 @@ import { DealerProfile } from './dealer-profile.entity';
 
 @Entity()
 export class PointsWithdrawal {
-    [OptionalProps]?: 'status' | 'requestedAt' | 'processedAt' | 'processedByUserId';
+    [OptionalProps]?: 'status' | 'requestedAt' | 'processedAt' | 'processedByUserId' | 'cardNumber' | 'cardHolderName';
 
     @PrimaryKey()
     id: string = uuid();
@@ -27,4 +27,10 @@ export class PointsWithdrawal {
 
     @Property({ type: 'varchar', length: 255, nullable: true })
     processedByUserId?: string;
+
+    @Property({ type: 'varchar', length: 20, nullable: true })
+    cardNumber?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    cardHolderName?: string;
 }

@@ -49,8 +49,8 @@ export const dealerApi = {
     return api.post<ICertificate>('/certificates/create', data);
   },
 
-  requestWithdraw(amount: number) {
-    return api.post<IPointsWithdrawal>('/dealers/withdraw', { amount } satisfies RequestPointsWithdrawalDto);
+  requestWithdraw(amount: number, cardNumber: string, cardHolderName: string) {
+    return api.post<IPointsWithdrawal>('/dealers/withdraw', { amount, cardNumber, cardHolderName } satisfies RequestPointsWithdrawalDto);
   },
 
   getMyWithdrawals() {

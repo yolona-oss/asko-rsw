@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { PaginatedDevices, IImageAttachment } from '../types';
+import { makeDevice, makePaginatedDevices, makeImageAttachment } from './fixtures';
 
 vi.mock('server-only', () => ({}));
 
@@ -11,8 +13,12 @@ vi.mock('@/lib/image-url', () => ({
   getImageUrl: (img: any) => img?.id ? `/files/image/${img.id}` : null,
 }));
 
-const { fetchDevices, fetchFeaturedDevices, fetchDeviceImages, fetchFirstDeviceImage } =
-  await import('../device.server');
+const {
+  fetchDevices, fetchFeaturedDevices,
+  fetchDevice, fetchDeviceBySlug,
+  fetchDeviceImages, fetchDeviceImagesBySlug,
+  fetchFirstDeviceImage, fetchDeviceImageUrls, fetchDeviceImageUrlsBySlug,
+} = await import('../device.server');
 
 beforeEach(() => serverGetMock.mockReset());
 
@@ -20,12 +26,19 @@ beforeEach(() => serverGetMock.mockReset());
 
 describe('fetchDevices', () => {
   it('returns paginated data on success', async () => {
-    const payload = { data: [{ id: '1', name: 'D1' }], overallCount: 1, page: 1, limit: 12 };
+    const payload = makePaginatedDevices();
     serverGetMock.mockResolvedValue(payload);
 
     const result = await fetchDevices(1, 12);
     expect(result).toEqual(payload);
     expect(serverGetMock).toHaveBeenCalledWith('/devices?page=1&limit=12');
+  });
+
+  it('passes page and limit to query string', async () => {
+    serverGetMock.mockResolvedValue(makePaginatedDevices({ page: 3, limit: 24 }));
+
+    await fetchDevices(3, 24);
+    expect(serverGetMock).toHaveBeenCalledWith('/devices?page=3&limit=24');
   });
 
   it('returns empty data when API returns null', async () => {
@@ -47,15 +60,15 @@ describe('fetchDevices', () => {
   it('returns empty data when response is empty object', async () => {
     serverGetMock.mockResolvedValue({});
 
-    const result = await fetchDevices(1, 12);
+    const result = await fetchDevices(2, 20);
     expect(result.data).toEqual([]);
     expect(result.overallCount).toBe(0);
-    expect(result.page).toBe(1);
-    expect(result.limit).toBe(12);
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(20);
   });
 
   it('returns empty data when data field is undefined', async () => {
-    serverGetMock.mockResolvedValue({ data: undefined, overallCount: 5 });
+    serverGetMock.mockResolvedValue({ data: undefined, overallCount: 5 } as Partial<PaginatedDevices>);
 
     const result = await fetchDevices(1, 12);
     expect(result.data).toEqual([]);
@@ -67,10 +80,19 @@ describe('fetchDevices', () => {
 
 describe('fetchFeaturedDevices', () => {
   it('returns devices array on success', async () => {
-    serverGetMock.mockResolvedValue({ data: [{ id: '1' }], overallCount: 1 });
+    const device = makeDevice();
+    serverGetMock.mockResolvedValue(makePaginatedDevices({ data: [device] }));
 
-    const result = await fetchFeaturedDevices();
-    expect(result).toEqual([{ id: '1' }]);
+    expect(await fetchFeaturedDevices()).toEqual([device]);
+  });
+
+  it('passes type filter when provided', async () => {
+    serverGetMock.mockResolvedValue(makePaginatedDevices());
+
+    await fetchFeaturedDevices('oven');
+    const url: string = serverGetMock.mock.calls[0][0];
+    expect(url).toContain('isFeatured=true');
+    expect(url).toContain('type=oven');
   });
 
   it('returns empty array when API returns null', async () => {
@@ -84,24 +106,89 @@ describe('fetchFeaturedDevices', () => {
   });
 });
 
+// ── fetchDevice ──
+
+describe('fetchDevice', () => {
+  it('returns device on success', async () => {
+    const device = makeDevice({ id: 'abc' });
+    serverGetMock.mockResolvedValue(device);
+
+    expect(await fetchDevice('abc')).toEqual(device);
+    expect(serverGetMock).toHaveBeenCalledWith('/devices/abc');
+  });
+
+  it('returns null when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchDevice('missing')).toBeNull();
+  });
+});
+
+// ── fetchDeviceBySlug ──
+
+describe('fetchDeviceBySlug', () => {
+  it('returns device on success', async () => {
+    const device = makeDevice({ slug: 'asko-w6098x' });
+    serverGetMock.mockResolvedValue(device);
+
+    expect(await fetchDeviceBySlug('asko-w6098x')).toEqual(device);
+    expect(serverGetMock).toHaveBeenCalledWith('/devices/slug/asko-w6098x');
+  });
+
+  it('returns null when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchDeviceBySlug('no-such-slug')).toBeNull();
+  });
+});
+
 // ── fetchDeviceImages ──
 
 describe('fetchDeviceImages', () => {
   it('returns images on success', async () => {
-    const images = [{ id: 'img1', order: 0 }];
+    const images: IImageAttachment[] = [
+      makeImageAttachment({ id: 'img-1', order: 0 }),
+      makeImageAttachment({ id: 'img-2', order: 1 }),
+    ];
     serverGetMock.mockResolvedValue({ images });
 
-    expect(await fetchDeviceImages('d1')).toEqual(images);
+    expect(await fetchDeviceImages('dev-1')).toEqual(images);
+    expect(serverGetMock).toHaveBeenCalledWith('/devices/dev-1/images');
   });
 
   it('returns empty array when API returns null', async () => {
     serverGetMock.mockResolvedValue(null);
-    expect(await fetchDeviceImages('d1')).toEqual([]);
+    expect(await fetchDeviceImages('dev-1')).toEqual([]);
   });
 
   it('returns empty array when images field is missing', async () => {
     serverGetMock.mockResolvedValue({});
-    expect(await fetchDeviceImages('d1')).toEqual([]);
+    expect(await fetchDeviceImages('dev-1')).toEqual([]);
+  });
+
+  it('returns empty array when images is undefined', async () => {
+    serverGetMock.mockResolvedValue({ images: undefined });
+    expect(await fetchDeviceImages('dev-1')).toEqual([]);
+  });
+});
+
+// ── fetchDeviceImagesBySlug ──
+
+describe('fetchDeviceImagesBySlug', () => {
+  it('returns images on success', async () => {
+    const images: IImageAttachment[] = [makeImageAttachment()];
+    serverGetMock.mockResolvedValue({ images });
+
+    expect(await fetchDeviceImagesBySlug('asko-w6098x')).toEqual(images);
+    expect(serverGetMock).toHaveBeenCalledWith('/devices/slug/asko-w6098x/images');
+  });
+
+  it('returns empty array when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchDeviceImagesBySlug('slug')).toEqual([]);
+  });
+
+  it('returns empty array when images field is missing', async () => {
+    serverGetMock.mockResolvedValue({});
+    expect(await fetchDeviceImagesBySlug('slug')).toEqual([]);
   });
 });
 
@@ -109,23 +196,101 @@ describe('fetchDeviceImages', () => {
 
 describe('fetchFirstDeviceImage', () => {
   it('returns image URL when images exist', async () => {
-    serverGetMock.mockResolvedValue({ images: [{ id: 'img1', order: 0 }] });
+    serverGetMock.mockResolvedValue({
+      images: [makeImageAttachment({ id: 'img-1', order: 0 })],
+    });
 
-    const url = await fetchFirstDeviceImage('d1');
-    expect(url).toBe('/files/image/img1');
+    expect(await fetchFirstDeviceImage('dev-1')).toBe('/files/image/img-1');
   });
 
   it('returns placeholder when no images', async () => {
-    serverGetMock.mockResolvedValue(null);
+    serverGetMock.mockResolvedValue({ images: [] });
+    expect(await fetchFirstDeviceImage('dev-1')).toBe('/placeholder/dev-1');
+  });
 
-    const url = await fetchFirstDeviceImage('d1');
-    expect(url).toBe('/placeholder/d1');
+  it('returns placeholder when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchFirstDeviceImage('dev-1')).toBe('/placeholder/dev-1');
   });
 
   it('returns placeholder when images field is missing', async () => {
     serverGetMock.mockResolvedValue({});
+    expect(await fetchFirstDeviceImage('dev-1')).toBe('/placeholder/dev-1');
+  });
 
-    const url = await fetchFirstDeviceImage('d1');
-    expect(url).toBe('/placeholder/d1');
+  it('returns placeholder when getImageUrl returns null', async () => {
+    // image with no id → getImageUrl mock returns null
+    serverGetMock.mockResolvedValue({
+      images: [{ ...makeImageAttachment(), id: '' }],
+    });
+    expect(await fetchFirstDeviceImage('dev-1')).toBe('/placeholder/dev-1');
+  });
+});
+
+// ── fetchDeviceImageUrls ──
+
+describe('fetchDeviceImageUrls', () => {
+  it('returns URL array when images exist', async () => {
+    serverGetMock.mockResolvedValue({
+      images: [
+        makeImageAttachment({ id: 'a', order: 0 }),
+        makeImageAttachment({ id: 'b', order: 1 }),
+      ],
+    });
+
+    expect(await fetchDeviceImageUrls('dev-1')).toEqual(['/files/image/a', '/files/image/b']);
+  });
+
+  it('returns placeholder array when no images', async () => {
+    serverGetMock.mockResolvedValue({ images: [] });
+    expect(await fetchDeviceImageUrls('dev-1')).toEqual(['/placeholder/dev-1']);
+  });
+
+  it('returns placeholder array when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchDeviceImageUrls('dev-1')).toEqual(['/placeholder/dev-1']);
+  });
+
+  it('returns placeholder array when images field is missing', async () => {
+    serverGetMock.mockResolvedValue({});
+    expect(await fetchDeviceImageUrls('dev-1')).toEqual(['/placeholder/dev-1']);
+  });
+
+  it('filters out images where getImageUrl returns null', async () => {
+    serverGetMock.mockResolvedValue({
+      images: [
+        makeImageAttachment({ id: 'a', order: 0 }),
+        { ...makeImageAttachment(), id: '' }, // getImageUrl → null
+      ],
+    });
+
+    expect(await fetchDeviceImageUrls('dev-1')).toEqual(['/files/image/a']);
+  });
+});
+
+// ── fetchDeviceImageUrlsBySlug ──
+
+describe('fetchDeviceImageUrlsBySlug', () => {
+  it('returns URL array when images exist', async () => {
+    serverGetMock.mockResolvedValue({
+      images: [makeImageAttachment({ id: 'c', order: 0 })],
+    });
+
+    expect(await fetchDeviceImageUrlsBySlug('asko-w6098x')).toEqual(['/files/image/c']);
+  });
+
+  it('returns placeholder array when no images', async () => {
+    serverGetMock.mockResolvedValue({ images: [] });
+    expect(await fetchDeviceImageUrlsBySlug('slug')).toEqual(['/placeholder/slug']);
+  });
+
+  it('returns placeholder array when API returns null', async () => {
+    serverGetMock.mockResolvedValue(null);
+    expect(await fetchDeviceImageUrlsBySlug('slug')).toEqual(['/placeholder/slug']);
+  });
+
+  it('returns placeholder array when images field is missing', async () => {
+    serverGetMock.mockResolvedValue({});
+    expect(await fetchDeviceImageUrlsBySlug('slug')).toEqual(['/placeholder/slug']);
   });
 });

@@ -11,6 +11,7 @@ import {
     ProcessWithdrawalDto,
     PaginationDto,
     PaymentTargetType,
+    PaymentProviderType,
     ADMIN_ROLES,
     Role,
     JwtPayload,
@@ -101,6 +102,11 @@ export class DealerController {
             targetId: id,
             amount: withdrawal.amount,
             recipientUserId: withdrawal.dealerUserId,
+            provider: PaymentProviderType.CARD,
+            metadata: {
+                cardNumber: withdrawal.cardNumber,
+                cardHolderName: withdrawal.cardHolderName,
+            },
         });
     }
 
@@ -159,7 +165,7 @@ export class DealerController {
     @RequiredRoles(Role.DEALER)
     @Post('withdraw')
     async requestWithdrawal(@JwtAuthUser() user: JwtPayload, @Body() dto: RequestPointsWithdrawalDto) {
-        return this.dealerClient.requestWithdrawal(user.sub, dto.amount);
+        return this.dealerClient.requestWithdrawal(user.sub, dto.amount, dto.cardNumber, dto.cardHolderName);
     }
 
     @ApiOkResponse({ type: WithdrawalListResponseDto })

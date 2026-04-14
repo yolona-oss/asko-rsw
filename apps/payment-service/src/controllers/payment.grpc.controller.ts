@@ -119,6 +119,7 @@ export class PaymentGrpcController {
                 recipientUserId: data.recipientUserId,
                 currency: data.currency || undefined,
                 provider: data.provider || undefined,
+                metadata: data.metadata ?? undefined,
             });
         } catch (e) { throw toGrpcError(e); }
     }

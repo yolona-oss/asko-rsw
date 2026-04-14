@@ -49,6 +49,8 @@ export interface IPointsWithdrawal {
     amount: number;
     status: WithdrawalStatus;
     dealer?: IDealerProfile;
+    cardNumber?: string;
+    cardHolderName?: string;
     requestedAt: Date;
     processedAt?: Date;
     processedBy?: string;

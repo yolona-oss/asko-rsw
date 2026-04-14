@@ -111,7 +111,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         fetchData();
       }
     }, [requestId, fetchData]),
-    useCallback(() => {}, []),
+    useCallback(() => { }, []),
   );
 
   const handleReviewSubmit = async () => {
@@ -284,140 +284,142 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         })}
       </div>
 
-      {/* Work steps */}
-      {workSteps.length > 0 && (
-        <div className="flex flex-col gap-3 sm:gap-4 max-w-lg mt-2">
-          <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
-          {(() => {
-            const active = workSteps.filter(s => s.status !== 'declined');
-            const done = active.filter(s => s.status === 'completed' || s.status === 'skipped').length;
-            return active.length > 0 ? (
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-1.5 bg-surface-secondary overflow-hidden">
-                  <div className="h-full bg-success transition-all duration-300" style={{ width: `${(done / active.length) * 100}%` }} />
+      <div className="mx-auto">
+        {/* Work steps */}
+        {workSteps.length > 0 && (
+          <div className="flex flex-col gap-3 sm:gap-4 max-w-lg mt-2">
+            <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
+            {(() => {
+              const active = workSteps.filter(s => s.status !== 'declined');
+              const done = active.filter(s => s.status === 'completed' || s.status === 'skipped').length;
+              return active.length > 0 ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-1.5 bg-surface-secondary overflow-hidden">
+                    <div className="h-full bg-success transition-all duration-300" style={{ width: `${(done / active.length) * 100}%` }} />
+                  </div>
+                  <span className="text-[12px] sm:text-sm text-text-sub shrink-0">{done}/{active.length}</span>
                 </div>
-                <span className="text-[12px] sm:text-sm text-text-sub shrink-0">{done}/{active.length}</span>
-              </div>
-            ) : null;
-          })()}
-          <div className="flex flex-col gap-2">
-            {workSteps.map((step, idx) => (
-              <WorkStepCard key={step.id} step={step} index={idx} />
-            ))}
+              ) : null;
+            })()}
+            <div className="flex flex-col gap-2">
+              {workSteps.map((step, idx) => (
+                <WorkStepCard key={step.id} step={step} index={idx} />
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* AVR status */}
+        <div className="max-w-lg mt-6">
+          <AvrStatusCard
+            avrStatus={(request as any).avrStatus}
+            avrDocumentId={(request as any).avrDocumentId}
+            avrSignedDocumentId={(request as any).avrSignedDocumentId}
+            avrSigningMethod={(request as any).avrSigningMethod}
+            avrSignedAt={(request as any).avrSignedAt}
+          />
         </div>
-      )}
 
-      {/* AVR status */}
-      <div className="max-w-lg mt-6">
-        <AvrStatusCard
-          avrStatus={(request as any).avrStatus}
-          avrDocumentId={(request as any).avrDocumentId}
-          avrSignedDocumentId={(request as any).avrSignedDocumentId}
-          avrSigningMethod={(request as any).avrSigningMethod}
-          avrSignedAt={(request as any).avrSignedAt}
-        />
-      </div>
+        {/* AVR — Pending signature (user needs to sign) */}
+        {(request as any).avrStatus === AvrStatus.PENDING_SIGNATURE && (
+          <div className="flex flex-col gap-4 max-w-lg p-4 sm:p-6 border border-warning-border bg-warning-bg">
+            <h3 className="text-base font-medium text-warning-deep">Подписание акта</h3>
+            <p className="text-[13px] sm:text-sm text-text-main">
+              Подпишите акт для завершения ремонта.
+            </p>
+            {!signingInitiated ? (
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  setSigningLoading(true);
+                  try {
+                    const { data } = await repairRequestApi.initiateAvrSigning(requestId);
+                    setSigningChannel(data.channel);
+                    setSigningMasked(data.maskedTarget);
+                    setSigningRetryAfter(data.retryAfter);
+                    setSigningInitiated(true);
+                  } catch { /* */ }
+                  finally { setSigningLoading(false); }
+                }}
+                disabled={signingLoading}
+              >
+                {signingLoading ? 'Отправка кода...' : 'Подписать акт'}
+              </Button>
+            ) : (
+              <SigningOtpForm
+                requestId={requestId}
+                channel={signingChannel}
+                maskedTarget={signingMasked}
+                initialRetryAfter={signingRetryAfter}
+                onSuccess={() => fetchData()}
+              />
+            )}
+          </div>
+        )}
 
-      {/* AVR — Pending signature (user needs to sign) */}
-      {(request as any).avrStatus === AvrStatus.PENDING_SIGNATURE && (
-        <div className="flex flex-col gap-4 max-w-lg p-4 sm:p-6 border border-warning-border bg-warning-bg">
-          <h3 className="text-base font-medium text-warning-deep">Подписание акта</h3>
-          <p className="text-[13px] sm:text-sm text-text-main">
-            Подпишите акт для завершения ремонта.
-          </p>
-          {!signingInitiated ? (
+        {/* Broken parts */}
+        {brokenParts.length > 0 && (
+          <div className="max-w-lg mt-6">
+            <BrokenPartsView parts={brokenParts} partImages={partImages} />
+          </div>
+        )}
+
+        {/* Aggregate documents (read-only) */}
+        <div className="max-w-lg mt-6">
+          <RepairRequestDocuments requestId={requestId} readOnly />
+        </div>
+
+        {/* Review form (COMPLETED status) */}
+        {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
+          <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light bg-surface">
+            <h3 className="text-lg font-medium text-text-main">Оставить отзыв</h3>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm text-text-sub">Оцените работу мастера</p>
+              <StarRating value={reviewRating} onChange={setReviewRating} />
+            </div>
+            <Textarea
+              placeholder="Расскажите о вашем опыте (необязательно)"
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              rows={3}
+            />
+            <div>
+              <input
+                ref={reviewFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(e) => setReviewFiles(Array.from(e.target.files ?? []))}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => reviewFileRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light hover:border-text-sub transition-colors cursor-pointer"
+              >
+                <Plus className="w-5 h-5" />
+                {reviewFiles.length > 0
+                  ? `Выбрано фото: ${reviewFiles.length}`
+                  : 'Добавить фото'}
+              </button>
+            </div>
+            {reviewError && <p className="text-sm text-brand-red">{reviewError}</p>}
             <Button
               variant="primary"
-              onClick={async () => {
-                setSigningLoading(true);
-                try {
-                  const { data } = await repairRequestApi.initiateAvrSigning(requestId);
-                  setSigningChannel(data.channel);
-                  setSigningMasked(data.maskedTarget);
-                  setSigningRetryAfter(data.retryAfter);
-                  setSigningInitiated(true);
-                } catch { /* */ }
-                finally { setSigningLoading(false); }
-              }}
-              disabled={signingLoading}
+              onClick={handleReviewSubmit}
+              disabled={reviewSubmitting || reviewRating === 0}
             >
-              {signingLoading ? 'Отправка кода...' : 'Подписать акт'}
+              {reviewSubmitting ? 'Отправка...' : 'Отправить отзыв'}
             </Button>
-          ) : (
-            <SigningOtpForm
-              requestId={requestId}
-              channel={signingChannel}
-              maskedTarget={signingMasked}
-              initialRetryAfter={signingRetryAfter}
-              onSuccess={() => fetchData()}
-            />
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Broken parts */}
-      {brokenParts.length > 0 && (
-        <div className="max-w-lg mt-6">
-          <BrokenPartsView parts={brokenParts} partImages={partImages} />
-        </div>
-      )}
-
-      {/* Aggregate documents (read-only) */}
-      <div className="max-w-lg mt-6">
-        <RepairRequestDocuments requestId={requestId} readOnly />
+        {reviewSubmitted && request.status === RepairRequestStatus.COMPLETED && (
+          <div className="max-w-lg mt-6 p-4 bg-success-bg border border-success-border">
+            <p className="text-sm text-success-deep font-medium">Спасибо за ваш отзыв!</p>
+          </div>
+        )}
       </div>
-
-      {/* Review form (COMPLETED status) */}
-      {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
-        <div className="flex flex-col gap-4 max-w-lg mt-6 p-6 border border-border-light bg-surface">
-          <h3 className="text-lg font-medium text-text-main">Оставить отзыв</h3>
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-text-sub">Оцените работу мастера</p>
-            <StarRating value={reviewRating} onChange={setReviewRating} />
-          </div>
-          <Textarea
-            placeholder="Расскажите о вашем опыте (необязательно)"
-            value={reviewComment}
-            onChange={(e) => setReviewComment(e.target.value)}
-            rows={3}
-          />
-          <div>
-            <input
-              ref={reviewFileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(e) => setReviewFiles(Array.from(e.target.files ?? []))}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => reviewFileRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-text-main border border-dashed border-border-light hover:border-text-sub transition-colors cursor-pointer"
-            >
-              <Plus className="w-5 h-5" />
-              {reviewFiles.length > 0
-                ? `Выбрано фото: ${reviewFiles.length}`
-                : 'Добавить фото'}
-            </button>
-          </div>
-          {reviewError && <p className="text-sm text-brand-red">{reviewError}</p>}
-          <Button
-            variant="primary"
-            onClick={handleReviewSubmit}
-            disabled={reviewSubmitting || reviewRating === 0}
-          >
-            {reviewSubmitting ? 'Отправка...' : 'Отправить отзыв'}
-          </Button>
-        </div>
-      )}
-
-      {reviewSubmitted && request.status === RepairRequestStatus.COMPLETED && (
-        <div className="max-w-lg mt-6 p-4 bg-success-bg border border-success-border">
-          <p className="text-sm text-success-deep font-medium">Спасибо за ваш отзыв!</p>
-        </div>
-      )}
 
       {/* Real-time indicator */}
       {!isTerminal && (
