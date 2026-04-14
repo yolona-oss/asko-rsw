@@ -115,6 +115,9 @@ export class PaymentService {
         if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
 
         invoice.provider = providerType;
+        if (providerType === PaymentProviderType.CASH) {
+            invoice.expiresAt = undefined;
+        }
 
         const result = await providerImpl.createPayment({
             amount: invoice.amount,
@@ -278,7 +281,7 @@ export class PaymentService {
                 currency: dto.currency ?? CurrencyEnum.DEFAULT,
                 status: PaymentStatus.PENDING,
                 provider: providerType,
-                expiresAt: this.getExpiresAt(),
+                expiresAt: providerType === PaymentProviderType.CASH ? undefined : this.getExpiresAt(),
             });
             await this.em.persistAndFlush(paymentRecord);
 
@@ -437,6 +440,58 @@ export class PaymentService {
             provider: payment.provider,
             timestamp: new Date(),
         });
+    }
+
+    /** Get a single payment by ID */
+    @CreateRequestContext()
+    async getPaymentById(id: string): Promise<PaymentEntity> {
+        const payment = await this.em.findOne(PaymentEntity, { id });
+        if (!payment) throw AppErrors.paymentNotFound();
+        return payment;
+    }
+
+    /** Manually confirm a cash payment (manager/admin/assigned-repairer action) */
+    @CreateRequestContext()
+    async confirmCashPayment(paymentId: string, confirmedByUserId: string): Promise<{ paymentId: string; status: PaymentStatus }> {
+        const payment = await this.em.findOne(PaymentEntity, { id: paymentId });
+        if (!payment) throw AppErrors.paymentNotFound();
+
+        if (payment.provider !== PaymentProviderType.CASH) {
+            throw AppErrors.badRequest('Only cash payments can be confirmed manually');
+        }
+
+        if (payment.status !== PaymentStatus.PENDING) {
+            throw AppErrors.badRequest(`Payment is not pending (current: ${payment.status})`);
+        }
+
+        this.domainService.assertTransition(payment.status, PaymentStatus.PAID);
+        await this.domainService.recordTransition(
+            payment.id,
+            PaymentStatus.PENDING,
+            PaymentStatus.PAID,
+            `cash:${confirmedByUserId}`,
+            'Cash payment confirmed manually',
+        );
+
+        payment.status = PaymentStatus.PAID;
+        payment.paidAt = new Date();
+        await this.em.flush();
+
+        const isWithdrawal = payment.targetType === PaymentTargetType.DEALER_WITHDRAWAL;
+
+        await this.eventService.emit({
+            type: isWithdrawal ? PaymentEventType.WITHDRAW_PAID : PaymentEventType.PAYMENT_PAID,
+            paymentId: payment.id,
+            userId: payment.userId,
+            targetType: payment.targetType,
+            targetId: payment.targetId,
+            amount: payment.amount,
+            currency: payment.currency,
+            provider: PaymentProviderType.CASH,
+            timestamp: new Date(),
+        });
+
+        return { paymentId: payment.id, status: PaymentStatus.PAID };
     }
 
     /** Get payments by target type and id */

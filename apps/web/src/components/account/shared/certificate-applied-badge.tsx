@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BadgeCheck } from 'lucide-react';
 
 interface CertificateSnapshotLike {
@@ -18,6 +19,8 @@ interface CertificateAppliedBadgeProps {
 }
 
 export function CertificateAppliedBadge({ valid, snapshot, expiresAt, certificate }: CertificateAppliedBadgeProps) {
+  const [now] = useState(() => Date.now());
+
   if (!snapshot && !certificate) return null;
 
   // When a snapshot exists the request is in a terminal state — `valid` is
@@ -27,11 +30,11 @@ export function CertificateAppliedBadge({ valid, snapshot, expiresAt, certificat
     !!certificate?.paid &&
     certificate.status !== 'revoked' &&
     certificate.status !== 'expired' &&
-    !(certificate.expiresAt && new Date(certificate.expiresAt).getTime() < Date.now());
+    !(certificate.expiresAt && new Date(certificate.expiresAt).getTime() < now);
   if (valid !== true && !liveCertActive) return null;
 
   const effectiveExpires = snapshot?.expiresAt ?? expiresAt ?? null;
-  const expired = !!effectiveExpires && new Date(effectiveExpires).getTime() < Date.now();
+  const expired = !!effectiveExpires && new Date(effectiveExpires).getTime() < now;
   const revoked = snapshot?.status === 'revoked';
 
   let label: string;

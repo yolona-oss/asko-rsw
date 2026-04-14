@@ -47,6 +47,15 @@ export interface RefundPaymentRequest {
     amount: number;
 }
 
+export interface ConfirmCashPaymentRequest {
+    paymentId: string;
+    confirmedByUserId: string;
+}
+
+export interface GetPaymentByIdRequest {
+    paymentId: string;
+}
+
 export interface GetPaymentsByTargetRequest {
     targetType: string;
     targetId: string;
@@ -113,6 +122,11 @@ export interface PayoutResponse {
     status: string;
 }
 
+export interface ConfirmCashPaymentResponse {
+    paymentId: string;
+    status: string;
+}
+
 export interface WebhookResponse {
     ok: boolean;
 }
@@ -150,6 +164,8 @@ export interface PaymentServiceClient {
     processPayout(request: ProcessPayoutRequest): Observable<PayoutResponse>;
     handleWebhook(request: WebhookRequest): Observable<WebhookResponse>;
     refundPayment(request: RefundPaymentRequest): Observable<EmptyPaymentResponse>;
+    confirmCashPayment(request: ConfirmCashPaymentRequest): Observable<ConfirmCashPaymentResponse>;
+    getPaymentById(request: GetPaymentByIdRequest): Observable<PaymentResponse>;
 
     getPaymentsByTarget(request: GetPaymentsByTargetRequest): Observable<PaymentListResponse>;
     listPayments(request: ListPaymentsRequest): Observable<PaginatedPaymentsResponse>;

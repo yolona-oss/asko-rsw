@@ -180,12 +180,16 @@ export function UserPayments() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-                    <Button
-                      variant="primary"
-                      onClick={() => handlePay(p)}
-                    >
-                      Оплатить
-                    </Button>
+                    {p.provider === 'cash' ? (
+                      <Badge variant="warning">Ожидает подтверждения</Badge>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        onClick={() => handlePay(p)}
+                      >
+                        Оплатить
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))}

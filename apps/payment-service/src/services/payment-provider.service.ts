@@ -5,6 +5,7 @@ import { PaymentProvider } from 'providers/payment-provider.interface';
 import { DummyProvider } from 'providers/dummy.provider';
 import { YookassaProvider } from 'providers/yookassa.provider';
 import { TbankProvider } from 'providers/tbank.provider';
+import { CashProvider } from 'providers/cash.provider';
 
 @Injectable()
 export class PaymentProviderService {
@@ -17,12 +18,14 @@ export class PaymentProviderService {
         dummyProvider: DummyProvider,
         yookassaProvider: YookassaProvider,
         tbankProvider: TbankProvider,
+        cashProvider: CashProvider,
     ) {
         this.providers = new Map<string, PaymentProvider>([
             [PaymentProviderType.DUMMY, dummyProvider],
             [PaymentProviderType.YOOKASSA, yookassaProvider],
             [PaymentProviderType.TBANK, tbankProvider],
             [PaymentProviderType.CARD, dummyProvider],
+            [PaymentProviderType.CASH, cashProvider],
         ]);
 
         this.defaultProviderType =
@@ -35,6 +38,7 @@ export class PaymentProviderService {
         if (this.appConfig.payment.tbank.terminal) {
             this.enabledProviders.push(PaymentProviderType.TBANK);
         }
+        this.enabledProviders.push(PaymentProviderType.CASH);
     }
 
     getProvider(type: string): PaymentProvider | undefined {

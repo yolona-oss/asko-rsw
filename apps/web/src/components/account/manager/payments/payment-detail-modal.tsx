@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Badge, Modal, DetailRow, DetailSection, SkeletonBlock } from '@asko/ui';
 import type { PaymentRecord } from '@/lib/api/payment';
+import { paymentApi } from '@/lib/api/payment';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, PROVIDER_LABELS, TARGET_TYPE_LABELS } from './constants';
@@ -13,13 +14,17 @@ export function PaymentDetailModal({
   payment,
   open,
   onClose,
+  onConfirm,
 }: {
   payment: PaymentRecord | null;
   open: boolean;
   onClose: () => void;
+  onConfirm?: () => void;
 }) {
   const [target, setTarget] = useState<any>(null);
   const [targetLoading, setTargetLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !payment?.targetId || !payment?.targetType) {
@@ -144,13 +149,38 @@ export function PaymentDetailModal({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="self-end px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
-        >
-          Закрыть
-        </button>
+        {confirmError && <p className="text-sm text-error">{confirmError}</p>}
+
+        <div className="flex items-center justify-end gap-3">
+          {payment.provider === 'cash' && payment.status === 'pending' && (
+            <button
+              type="button"
+              disabled={confirming}
+              onClick={async () => {
+                setConfirming(true);
+                setConfirmError(null);
+                try {
+                  await paymentApi.confirmCashPayment(payment.id);
+                  onConfirm?.();
+                } catch (e: any) {
+                  setConfirmError(e?.response?.data?.message ?? 'Ошибка подтверждения');
+                } finally {
+                  setConfirming(false);
+                }
+              }}
+              className="px-5 py-2 text-sm font-medium bg-success text-text-on-dark hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+            >
+              {confirming ? 'Подтверждение...' : 'Подтвердить получение наличных'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 text-sm font-medium border border-border-light text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+          >
+            Закрыть
+          </button>
+        </div>
       </div>
     </Modal>
   );

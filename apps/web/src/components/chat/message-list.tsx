@@ -45,7 +45,7 @@ export function MessageList({
 
   // If the initial fetch returned fewer than the limit, all messages are already loaded
   useEffect(() => {
-    if (data && data.data.length < MESSAGES_LIMIT) {
+    if (data && (data.data?.length ?? 0) < MESSAGES_LIMIT) {
       setHasMore(false);
     }
   }, [data]);
@@ -112,11 +112,12 @@ export function MessageList({
         limit: MESSAGES_LIMIT,
         beforeId: oldest.id,
       });
-      if (older.data.length < MESSAGES_LIMIT) {
+      const olderData = older.data ?? [];
+      if (olderData.length < MESSAGES_LIMIT) {
         setHasMore(false);
       }
-      if (older.data.length > 0) {
-        setOlderMessages(prev => [...older.data, ...prev]);
+      if (olderData.length > 0) {
+        setOlderMessages(prev => [...olderData, ...prev]);
         // Preserve scroll position after prepend
         requestAnimationFrame(() => {
           if (container) {

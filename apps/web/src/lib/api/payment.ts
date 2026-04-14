@@ -43,4 +43,8 @@ export const paymentApi = {
   getMyStats() {
     return api.get<PaymentStatsDto>('/payment/my/stats');
   },
+
+  confirmCashPayment(paymentId: string) {
+    return api.post<{ paymentId: string; status: string }>('/payment/confirm-cash', { paymentId });
+  },
 };

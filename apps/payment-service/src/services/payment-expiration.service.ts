@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
 import { PaymentEntity } from 'entities/payment.entity';
-import { PaymentStatus, PaymentTargetType } from '@asko/shared';
+import { PaymentStatus, PaymentTargetType, PaymentProviderType } from '@asko/shared';
 import { PaymentDomainService } from './payment-domain.service';
 import { PaymentEventService, PaymentEventType } from './payment-event.service';
 
@@ -24,6 +24,7 @@ export class PaymentExpirationService {
             status: PaymentStatus.PENDING,
             expiresAt: { $ne: null, $lt: now },
             targetType: { $ne: PaymentTargetType.DEALER_WITHDRAWAL },
+            provider: { $ne: PaymentProviderType.CASH },
         });
 
         if (expired.length === 0) return;

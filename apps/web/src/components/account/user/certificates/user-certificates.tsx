@@ -41,6 +41,8 @@ export function UserCertificates() {
   const [loading, setLoading] = useState(true);
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addFormDeviceId, setAddFormDeviceId] = useState<string | undefined>();
+  const [addFormRenewalMode, setAddFormRenewalMode] = useState<'extend' | 'new' | undefined>();
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [editDevice, setEditDevice] = useState<UserDevice | null>(null);
   const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
@@ -229,7 +231,7 @@ export function UserCertificates() {
       <DataToolbar
         search={{ value: search, onChange: setSearch, placeholder: "Поиск по номеру или устройству" }}
         actions={
-          <Button variant="primary" size="sm" onClick={() => setShowAddForm(true)}>
+          <Button variant="primary" size="sm" onClick={() => { setAddFormDeviceId(undefined); setAddFormRenewalMode(undefined); setShowAddForm(true); }}>
             Добавить сертификат
           </Button>
         }
@@ -243,6 +245,11 @@ export function UserCertificates() {
             certificates={certificates}
             loading={loadingDevices}
             onEditAddress={setEditDevice}
+            onCreateCertificate={(device, mode) => {
+              setAddFormDeviceId(device.id);
+              setAddFormRenewalMode(mode === 'extend' || mode === 'new' ? mode : undefined);
+              setShowAddForm(true);
+            }}
           />
 
           {loading ? (
@@ -347,8 +354,10 @@ export function UserCertificates() {
 
       <AddCertificateForm
         open={showAddForm}
-        onClose={() => setShowAddForm(false)}
+        onClose={() => { setShowAddForm(false); setAddFormDeviceId(undefined); setAddFormRenewalMode(undefined); }}
         certificates={certificates}
+        initialDeviceId={addFormDeviceId}
+        initialRenewalMode={addFormRenewalMode}
         onSuccess={(cert) => {
           fetchCertificates();
           if (cert.status === CertificateStatus.PENDING_PAYMENT && cert.price) {

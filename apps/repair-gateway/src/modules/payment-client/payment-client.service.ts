@@ -13,6 +13,7 @@ import type {
     PaginatedPaymentsResponse,
     PaymentStatsResponse,
     EmptyPaymentResponse,
+    ConfirmCashPaymentResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -123,6 +124,16 @@ export class PaymentClientService implements OnModuleInit {
 
     refundPayment(paymentId: string, amount?: number): Promise<EmptyPaymentResponse> {
         return grpcCall(this.paymentService.refundPayment({ paymentId, amount: amount ?? 0 }));
+    }
+
+    // ─── Cash Confirm ─────────────────────────────────────────────────────
+
+    confirmCashPayment(paymentId: string, confirmedByUserId: string): Promise<ConfirmCashPaymentResponse> {
+        return grpcCall(this.paymentService.confirmCashPayment({ paymentId, confirmedByUserId }));
+    }
+
+    getPaymentById(paymentId: string): Promise<PaymentResponse> {
+        return grpcCall(this.paymentService.getPaymentById({ paymentId }));
     }
 
     // ─── Queries ──────────────────────────────────────────────────────────

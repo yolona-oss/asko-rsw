@@ -3,6 +3,7 @@ export enum PaymentProviderType {
     YOOKASSA = 'yookassa',
     TBANK = 'tbank',
     CARD = 'card',
+    CASH = 'cash',
 }
 
 export enum PaymentTargetType {

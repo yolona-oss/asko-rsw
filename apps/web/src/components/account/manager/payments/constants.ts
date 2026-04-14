@@ -19,6 +19,7 @@ export const PROVIDER_LABELS: Record<string, string> = {
   yookassa: 'ЮKassa',
   tbank: 'Т-Банк',
   card: 'Карта',
+  cash: 'Наличные',
 };
 
 export const TARGET_TYPE_LABELS: Record<string, string> = {
@@ -50,6 +51,7 @@ export const FILTERS: FilterDefinition[] = [
       { value: 'yookassa', label: 'ЮKassa' },
       { value: 'tbank', label: 'Т-Банк' },
       { value: 'card', label: 'Карта' },
+      { value: 'cash', label: 'Наличные' },
     ],
   },
 ];

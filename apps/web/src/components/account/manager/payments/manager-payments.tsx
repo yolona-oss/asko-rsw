@@ -38,6 +38,7 @@ export function ManagerPayments() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const pageSize = 20;
 
   // Chart state
@@ -140,7 +141,7 @@ export function ManagerPayments() {
     }
     setLoading(true);
     fetchData();
-  }, [page, filterValues, search, sortBy, sortOrder]);
+  }, [page, filterValues, search, sortBy, sortOrder, refreshKey]);
 
   const totalPages = Math.ceil(total / pageSize);
   const showFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
@@ -321,6 +322,7 @@ export function ManagerPayments() {
         payment={selectedPayment}
         open={!!selectedPayment}
         onClose={() => setSelectedPayment(null)}
+        onConfirm={() => { setSelectedPayment(null); setRefreshKey((k) => k + 1); }}
       />
       <DateRangeModal
         open={dateModalOpen}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Badge, Button, FormField, Input, Modal, Select, Textarea } from '@asko/ui';
 import { Plus, X } from 'lucide-react';
 
@@ -136,18 +136,34 @@ function BrokenPartDraftModal({
   onSave,
   onDelete,
 }: BrokenPartDraftModalProps) {
-  const [devicePartId, setDevicePartId] = useState<string>('');
-  const [name, setName] = useState('');
-  const [note, setNote] = useState('');
-  const [error, setError] = useState('');
+  return (
+    <Modal open={open} onClose={onClose}>
+      {open && (
+        <BrokenPartDraftModalContent
+          onClose={onClose}
+          deviceParts={deviceParts}
+          initialPart={initialPart}
+          usedCatalogIds={usedCatalogIds}
+          onSave={onSave}
+          onDelete={onDelete}
+        />
+      )}
+    </Modal>
+  );
+}
 
-  useEffect(() => {
-    if (!open) return;
-    setDevicePartId(initialPart?.devicePartId ?? '');
-    setName(initialPart?.name ?? '');
-    setNote(initialPart?.note ?? '');
-    setError('');
-  }, [open, initialPart]);
+function BrokenPartDraftModalContent({
+  onClose,
+  deviceParts,
+  initialPart,
+  usedCatalogIds,
+  onSave,
+  onDelete,
+}: Omit<BrokenPartDraftModalProps, 'open'>) {
+  const [devicePartId, setDevicePartId] = useState<string>(initialPart?.devicePartId ?? '');
+  const [name, setName] = useState(initialPart?.name ?? '');
+  const [note, setNote] = useState(initialPart?.note ?? '');
+  const [error, setError] = useState('');
 
   const handleCatalogChange = (id: string) => {
     setDevicePartId(id);
@@ -173,7 +189,6 @@ function BrokenPartDraftModal({
   const availableCatalog = deviceParts.filter((p) => !usedCatalogIds.includes(p.id));
 
   return (
-    <Modal open={open} onClose={onClose}>
       <div className="flex flex-col gap-4 p-6 w-full sm:w-[480px]">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-medium text-text-main">
@@ -242,6 +257,5 @@ function BrokenPartDraftModal({
           </div>
         </div>
       </div>
-    </Modal>
   );
 }

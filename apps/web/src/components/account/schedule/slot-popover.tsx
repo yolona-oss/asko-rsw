@@ -2,7 +2,7 @@
 
 import { Modal, Button, FormField, Input } from '@asko/ui';
 import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { PatternSlot } from './types';
 
 interface SlotPopoverProps {
@@ -16,14 +16,25 @@ interface SlotPopoverProps {
 }
 
 export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClose, onSave }: SlotPopoverProps) {
-  const [start, setStart] = useState(defaultStart);
-  const [end, setEnd] = useState(defaultEnd);
+  return (
+    <Modal open={open} onClose={onClose} className="w-full max-w-md p-4 sm:p-6">
+      {open && (
+        <SlotPopoverContent
+          index={index}
+          slot={slot}
+          defaultStart={defaultStart}
+          defaultEnd={defaultEnd}
+          onClose={onClose}
+          onSave={onSave}
+        />
+      )}
+    </Modal>
+  );
+}
 
-  useEffect(() => {
-    if (!open) return;
-    setStart(slot?.startTime || defaultStart);
-    setEnd(slot?.endTime || defaultEnd);
-  }, [open, slot, defaultStart, defaultEnd]);
+function SlotPopoverContent({ index, slot, defaultStart, defaultEnd, onClose, onSave }: Omit<SlotPopoverProps, 'open'>) {
+  const [start, setStart] = useState(slot?.startTime || defaultStart);
+  const [end, setEnd] = useState(slot?.endTime || defaultEnd);
 
   const isWork = !!slot?.work;
 
@@ -45,7 +56,7 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
   };
 
   return (
-    <Modal open={open} onClose={onClose} className="w-full max-w-md p-4 sm:p-6">
+    <>
       <h2 className="text-base sm:text-lg font-medium text-text-main mb-4">
         День цикла №{index + 1}
       </h2>
@@ -89,6 +100,6 @@ export function SlotPopover({ open, index, slot, defaultStart, defaultEnd, onClo
           </div>
         </div>
       )}
-    </Modal>
+    </>
   );
 }

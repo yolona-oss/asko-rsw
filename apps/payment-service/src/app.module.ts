@@ -18,6 +18,7 @@ import { EventRetryService } from 'services/event-retry.service';
 import { DummyProvider } from 'providers/dummy.provider';
 import { YookassaProvider } from 'providers/yookassa.provider';
 import { TbankProvider } from 'providers/tbank.provider';
+import { CashProvider } from 'providers/cash.provider';
 import { redisProvider } from 'providers/redis.provider';
 import { PaymentGrpcController } from 'controllers/payment.grpc.controller';
 import { RepairCommandConsumer } from 'consumers/repair-command.consumer';
@@ -69,6 +70,7 @@ import { RepairCommandConsumer } from 'consumers/repair-command.consumer';
         DummyProvider,
         YookassaProvider,
         TbankProvider,
+        CashProvider,
     ],
 })
 export class AppModule {}

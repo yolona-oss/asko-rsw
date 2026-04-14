@@ -1972,7 +1972,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/repair-requests/{id}/complete": {
+    "/repair-requests/{id}/avr/generate": {
         parameters: {
             query?: never;
             header?: never;
@@ -1981,7 +1981,87 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["RepairRequestController_complete"];
+        post: operations["RepairRequestController_generateAvr"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/avr/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_resetAvr"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/avr/sign/initiate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_initiateAvrSigning"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/avr/sign/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_resendAvrOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/avr/sign/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_verifyAvrSigning"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/avr/scan/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_uploadAvrScan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3458,6 +3538,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payment/confirm-cash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PaymentController_confirmCashPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payment/list": {
         parameters: {
             query?: never;
@@ -3816,7 +3912,7 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed";
         /** @enum {string} */
         NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "system";
         NotificationRecordDto: {
@@ -4018,6 +4114,13 @@ export interface components {
             completionSignedPayload?: string;
             acceptanceSignature?: string;
             acceptanceSignedPayload?: string;
+            avrStatus?: string;
+            avrSigningMethod?: string;
+            avrDocumentId?: string;
+            avrSignedDocumentId?: string;
+            avrSignedAt?: string;
+            avrSignedPayload?: string;
+            avrSignature?: string;
             user?: components["schemas"]["AuthUserDto"];
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             repairer?: components["schemas"]["RepairerRecordDto"];
@@ -4049,7 +4152,7 @@ export interface components {
         /** @enum {string} */
         CurrencyEnum: "usd" | "eur" | "rub" | "rub";
         /** @enum {string} */
-        PaymentProviderType: "dummy" | "yookassa" | "tbank" | "card";
+        PaymentProviderType: "dummy" | "yookassa" | "tbank" | "card" | "cash";
         PaymentRecordDto: {
             targetType: components["schemas"]["PaymentTargetType"];
             currency: components["schemas"]["CurrencyEnum"];
@@ -4071,6 +4174,8 @@ export interface components {
         AssignRepairerDto: Record<string, never>;
         RefuseRequestDto: Record<string, never>;
         SetRepairPriceDto: Record<string, never>;
+        GenerateAvrDto: Record<string, never>;
+        VerifyAvrSigningDto: Record<string, never>;
         AddWorkStepDto: Record<string, never>;
         WorkStepResponseDto: {
             step: components["schemas"]["WorkStepRecordDto"];
@@ -7298,7 +7403,116 @@ export interface operations {
             };
         };
     };
-    RepairRequestController_complete: {
+    RepairRequestController_generateAvr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateAvrDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_resetAvr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_initiateAvrSigning: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RepairRequestController_resendAvrOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RepairRequestController_verifyAvrSigning: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyAvrSigningDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_uploadAvrScan: {
         parameters: {
             query?: never;
             header?: never;
@@ -9855,6 +10069,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProcessInvoiceResponseDto"];
+                };
+            };
+        };
+    };
+    PaymentController_confirmCashPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cash payment confirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

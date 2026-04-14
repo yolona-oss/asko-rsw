@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { Badge, DetailRow, DetailSection, Card } from '@asko/ui';
+import { Badge, DetailRow, DetailSection } from '@asko/ui';
 import { AvrStatusCard } from './avr-status-card';
 import type { BadgeVariant } from '@asko/ui';
 import { api } from '@/lib/api/client';
@@ -104,15 +104,13 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       </DetailSection>
 
       {/* AVR status */}
-      {item.avrStatus && item.avrStatus !== 'none' && (
-        <AvrStatusCard
-          avrStatus={item.avrStatus}
-          avrDocumentId={item.avrDocumentId}
-          avrSignedDocumentId={item.avrSignedDocumentId}
-          avrSigningMethod={item.avrSigningMethod}
-          avrSignedAt={item.avrSignedAt}
-        />
-      )}
+      <AvrStatusCard
+        avrStatus={item.avrStatus}
+        avrDocumentId={item.avrDocumentId}
+        avrSignedDocumentId={item.avrSignedDocumentId}
+        avrSigningMethod={item.avrSigningMethod}
+        avrSignedAt={item.avrSignedAt}
+      />
 
       {/* Work steps */}
       <DetailSection label="Этапы работ" summary="Загрузить..."

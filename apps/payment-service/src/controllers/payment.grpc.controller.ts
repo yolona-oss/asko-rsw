@@ -15,6 +15,8 @@ import type {
     ProcessPayoutRequest,
     WebhookRequest,
     RefundPaymentRequest,
+    ConfirmCashPaymentRequest,
+    GetPaymentByIdRequest,
     GetPaymentsByTargetRequest,
     ListPaymentsRequest,
     ListUserPaymentsRequest,
@@ -138,6 +140,24 @@ export class PaymentGrpcController {
         try {
             await this.paymentService.refundPayment(data.paymentId, data.amount || undefined);
             return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('PaymentService', 'ConfirmCashPayment')
+    async confirmCashPayment(data: ConfirmCashPaymentRequest) {
+        try {
+            return await this.paymentService.confirmCashPayment(
+                data.paymentId,
+                data.confirmedByUserId,
+            );
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('PaymentService', 'GetPaymentById')
+    async getPaymentById(data: GetPaymentByIdRequest) {
+        try {
+            const payment = await this.paymentService.getPaymentById(data.paymentId);
+            return { payment: entityToRecord(payment) };
         } catch (e) { throw toGrpcError(e); }
     }
 

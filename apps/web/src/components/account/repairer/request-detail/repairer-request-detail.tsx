@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { paymentApi } from '@/lib/api/payment';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { useAuth } from '@/lib/api/use-auth';
 import { getImageUrl } from '@/lib/file-url';
@@ -64,6 +65,11 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [declineDiagReason, setDeclineDiagReason] = useState('');
   const [declineDiagError, setDeclineDiagError] = useState('');
 
+  // Cash payment confirmation
+  const [pendingCashPayment, setPendingCashPayment] = useState<any>(null);
+  const [cashConfirming, setCashConfirming] = useState(false);
+  const [cashConfirmError, setCashConfirmError] = useState('');
+
   // Comment editor
   const [commentEditId, setCommentEditId] = useState<string | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
@@ -87,6 +93,11 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               .map((img) => getImageUrl(img.id))
               .filter(Boolean);
             setPhotos(urls);
+          }).catch(() => {}),
+          repairRequestApi.getPayments(requestId).then(({ data }) => {
+            const payments = Array.isArray(data) ? data : (data as any).payments ?? [];
+            const cashPending = payments.find((p: any) => p.provider === 'cash' && p.status === 'pending');
+            setPendingCashPayment(cashPending ?? null);
           }).catch(() => {}),
         ]);
         setSteps(stepsRes.data.steps ?? []);
@@ -708,6 +719,38 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           {priceError && <p className="text-sm text-brand-red">{priceError}</p>}
           {priceSuccess && <p className="text-sm text-success">Стоимость сохранена</p>}
           <Button variant="primary" className="w-full lg:w-fit" onClick={handleSetPrice} disabled={priceSaving || !priceValue}>{priceSaving ? 'Сохранение...' : request.totalCost ? 'Обновить стоимость' : 'Сохранить стоимость'}</Button>
+        </Card>
+      )}
+
+      {/* Cash payment confirmation */}
+      {pendingCashPayment && (
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-lg font-medium text-text-main">Оплата наличными</h2>
+          <p className="text-sm text-text-sub">
+            Клиент выбрал оплату наличными: <span className="font-medium text-text-main">{Number(pendingCashPayment.amount).toLocaleString('ru-RU')} ₽</span>
+          </p>
+          {cashConfirmError && <p className="text-sm text-error">{cashConfirmError}</p>}
+          <Button
+            variant="primary"
+            className="w-full lg:w-fit"
+            disabled={cashConfirming}
+            onClick={async () => {
+              setCashConfirming(true);
+              setCashConfirmError('');
+              try {
+                await paymentApi.confirmCashPayment(pendingCashPayment.id);
+                setPendingCashPayment(null);
+                const { data: res } = await repairRequestApi.getOne(requestId);
+                setRequest((res as any).request ?? res);
+              } catch (e: any) {
+                setCashConfirmError(e?.response?.data?.message ?? 'Ошибка подтверждения');
+              } finally {
+                setCashConfirming(false);
+              }
+            }}
+          >
+            {cashConfirming ? 'Подтверждение...' : 'Подтвердить получение наличных'}
+          </Button>
         </Card>
       )}
 

@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
@@ -8,6 +10,7 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
+    PaymentTargetType,
 } from '@asko/shared';
 import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import {
@@ -23,6 +26,8 @@ export class PaymentController {
     constructor(
         private readonly paymentService: PaymentClientService,
         private readonly userClient: UserClientService,
+        private readonly repairClient: RepairClientService,
+        private readonly repairerClient: RepairerClientService,
     ) {}
 
     private async enrichPayments(payments: any[]): Promise<void> {
@@ -47,6 +52,33 @@ export class PaymentController {
     @Post('create')
     async createPayment(@JwtAuthUser() user: JwtPayload, @Body() dto: CreatePaymentDto) {
         return this.paymentService.createPayment(user.sub, dto);
+    }
+
+    @ApiOkResponse({ description: 'Cash payment confirmed' })
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER, Role.REPAIRER)
+    @Post('confirm-cash')
+    async confirmCashPayment(
+        @JwtAuthUser() user: JwtPayload,
+        @Body() body: { paymentId: string },
+    ) {
+        const isStaff = user.roles.some((r) =>
+            r === Role.SUPER_ADMIN || r === Role.ADMIN || r === Role.MANAGER,
+        );
+
+        if (!isStaff) {
+            // Repairer: verify they are assigned to the repair
+            const { payment } = await this.paymentService.getPaymentById(body.paymentId);
+            if (payment.targetType !== PaymentTargetType.REPAIR_REQUEST) {
+                throw new ForbiddenException('Repairers can only confirm repair request cash payments');
+            }
+            const { request } = await this.repairClient.findById(payment.targetId);
+            const { repairer } = await this.repairerClient.findByUserId(user.sub);
+            if (!repairer || request.repairerId !== repairer.id) {
+                throw new ForbiddenException('You are not assigned to this repair');
+            }
+        }
+
+        return this.paymentService.confirmCashPayment(body.paymentId, user.sub);
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })

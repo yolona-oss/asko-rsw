@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Modal, SkeletonBlock } from '@asko/ui';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, FlaskConical, CreditCard, Landmark, Banknote } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
 import { PaymentTargetType } from '@asko/shared/client';
@@ -26,6 +26,15 @@ const PROVIDER_LABELS: Record<string, string> = {
   yookassa: 'ЮKassa',
   tbank: 'Т-Банк',
   card: 'Оплата картой',
+  cash: 'Наличные',
+};
+
+const PROVIDER_ICONS: Record<string, React.ReactNode> = {
+  dummy: <FlaskConical className="w-8 h-8" />,
+  yookassa: <CreditCard className="w-8 h-8" />,
+  tbank: <Landmark className="w-8 h-8" />,
+  card: <CreditCard className="w-8 h-8" />,
+  cash: <Banknote className="w-8 h-8" />,
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
@@ -33,6 +42,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   yookassa: 'bg-dark text-text-on-dark',
   tbank: 'bg-dark text-text-on-dark',
   card: 'bg-transparent border border-border-light text-text-main',
+  cash: 'bg-success text-text-on-dark',
 };
 
 export function PaymentModal({
@@ -80,11 +90,15 @@ export function PaymentModal({
       return;
     }
     if (result.status === 'pending') {
+      if (selectedProvider === 'cash') {
+        const t = setTimeout(() => onClose(), 2000);
+        return () => clearTimeout(t);
+      }
       // Dummy webhook fires at ≤4s; add a small buffer for DB + notification hop.
       const t = setTimeout(() => onClose(), 5500);
       return () => clearTimeout(t);
     }
-  }, [result, onClose]);
+  }, [result, onClose, selectedProvider]);
 
   const handlePay = () => {
     if (!selectedProvider) return;
@@ -133,10 +147,8 @@ export function PaymentModal({
                     : 'border-border-light/30 hover:border-text-sub'
                 }`}
               >
-                <div className="w-full aspect-[4/3] bg-surface-muted flex items-center justify-center">
-                  <span className="text-xs text-text-sub text-center px-1">
-                    {PROVIDER_LABELS[provider] ?? provider}
-                  </span>
+                <div className="w-full aspect-[4/3] bg-surface-muted flex items-center justify-center text-text-sub">
+                  {PROVIDER_ICONS[provider] ?? <CreditCard className="w-8 h-8" />}
                 </div>
                 <span className="text-sm font-medium text-text-main text-center">
                   {PROVIDER_LABELS[provider] ?? provider}
@@ -153,11 +165,22 @@ export function PaymentModal({
       {/* Pending confirmation state (dummy provider async webhook) */}
       {result?.status === 'pending' ? (
         <div className="mt-8 flex flex-col items-center gap-3 py-6">
-          <Loader2 className="w-8 h-8 text-brand-red animate-spin" />
-          <p className="text-sm font-medium text-text-main">Ожидание подтверждения оплаты</p>
-          <p className="text-xs text-text-sub text-center max-w-[320px]">
-            Платёжная система обрабатывает транзакцию. Окно закроется автоматически.
-          </p>
+          {selectedProvider === 'cash' ? (
+            <>
+              <p className="text-sm font-medium text-text-main">Оплата наличными зарегистрирована</p>
+              <p className="text-xs text-text-sub text-center max-w-[320px]">
+                Мастер или менеджер подтвердит получение оплаты. Статус платежа обновится автоматически.
+              </p>
+            </>
+          ) : (
+            <>
+              <Loader2 className="w-8 h-8 text-brand-red animate-spin" />
+              <p className="text-sm font-medium text-text-main">Ожидание подтверждения оплаты</p>
+              <p className="text-xs text-text-sub text-center max-w-[320px]">
+                Платёжная система обрабатывает транзакцию. Окно закроется автоматически.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <button
@@ -170,7 +193,7 @@ export function PaymentModal({
               : 'bg-border-light text-text-sub cursor-not-allowed'
           }`}
         >
-          {creating ? 'Обработка...' : 'Оплатить'}
+          {creating ? 'Обработка...' : selectedProvider === 'cash' ? 'Оплатить наличными' : 'Оплатить'}
         </button>
       )}
     </Modal>

@@ -85,12 +85,16 @@ export function AddCertificateForm({
   onSuccess,
   onOpenAddDevice,
   certificates,
+  initialDeviceId,
+  initialRenewalMode,
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: (cert: ICertificate) => void;
   onOpenAddDevice?: () => void;
   certificates: ICertificate[];
+  initialDeviceId?: string;
+  initialRenewalMode?: RenewalMode;
 }) {
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
@@ -112,7 +116,10 @@ export function AddCertificateForm({
       .getMy()
       .then(({ data }) => {
         setDevices(data);
-        if (data.length > 0 && !deviceId) setDeviceId(data[0].id);
+        const preferred = initialDeviceId && data.some((d) => d.id === initialDeviceId)
+          ? initialDeviceId
+          : data[0]?.id;
+        if (preferred) setDeviceId(preferred);
       })
       .catch(() => {})
       .finally(() => setLoadingDevices(false));
@@ -126,8 +133,8 @@ export function AddCertificateForm({
 
   // Reset renewal mode on device change
   useEffect(() => {
-    setRenewalMode('extend');
-  }, [deviceId]);
+    setRenewalMode(initialRenewalMode ?? 'extend');
+  }, [deviceId, initialRenewalMode]);
 
   // Price preview — debounced
   useEffect(() => {

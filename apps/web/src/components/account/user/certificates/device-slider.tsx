@@ -41,11 +41,13 @@ export function DeviceSlider({
   certificates,
   loading,
   onEditAddress,
+  onCreateCertificate,
 }: {
   devices: UserDevice[];
   certificates: ICertificate[];
   loading: boolean;
   onEditAddress?: (device: UserDevice) => void;
+  onCreateCertificate?: (device: UserDevice, mode?: 'create' | 'extend' | 'new') => void;
 }) {
   if (loading) return <p className="text-sm text-text-sub">Загрузка устройств...</p>;
   if (devices.length === 0) return null;
@@ -60,6 +62,7 @@ export function DeviceSlider({
             device={ud}
             certificates={certificates}
             onEditAddress={onEditAddress}
+            onCreateCertificate={onCreateCertificate}
           />
         ))}
       </div>
@@ -71,10 +74,12 @@ function DeviceSliderCard({
   device,
   certificates,
   onEditAddress,
+  onCreateCertificate,
 }: {
   device: UserDevice;
   certificates: ICertificate[];
   onEditAddress?: (device: UserDevice) => void;
+  onCreateCertificate?: (device: UserDevice, mode?: 'create' | 'extend' | 'new') => void;
 }) {
   const certKind = useMemo(
     () => resolveKind(device.id, certificates),
@@ -102,14 +107,28 @@ function DeviceSliderCard({
   const name = device.device?.name ?? 'Устройство';
   const subtitle = [device.device?.brand, device.device?.model].filter(Boolean).join(' ');
 
-  const menuItems: DropdownMenuEntry[] = onEditAddress
-    ? [{ key: 'edit-address', label: 'Изменить адрес', onClick: () => onEditAddress(device) }]
-    : [];
+  const menuItems: DropdownMenuEntry[] = [];
+  if (onCreateCertificate) {
+    menuItems.push(
+      { key: 'create-cert', label: 'Создать сертификат', disabled: certKind !== 'none', onClick: () => onCreateCertificate(device, 'create') },
+      { key: 'extend-cert', label: 'Продлить сертификат', disabled: certKind !== 'expired', onClick: () => onCreateCertificate(device, 'extend') },
+      { key: 'new-cert', label: 'Новый сертификат', disabled: certKind !== 'expired', onClick: () => onCreateCertificate(device, 'new') },
+    );
+  }
+  if (onEditAddress) {
+    if (menuItems.length > 0) menuItems.push('separator');
+    menuItems.push({ key: 'edit-address', label: 'Изменить адрес', onClick: () => onEditAddress(device) });
+  }
+
+  const handleClick = onCreateCertificate && certKind !== 'active'
+    ? () => onCreateCertificate(device, certKind === 'expired' ? 'extend' : 'create')
+    : undefined;
 
   return (
     <DataCard
       padding="sm"
       menuItems={menuItems}
+      onClick={handleClick}
       className="flex-shrink-0 w-[320px]"
     >
       <div className="flex flex-row items-center gap-4">
