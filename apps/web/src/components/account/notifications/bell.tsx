@@ -18,7 +18,7 @@ import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, getTimeAgo } from '.
 import { NotificationIcon } from './icon';
 
 const REMINDER_MS = 5 * 60 * 1000;
-const PANEL_WIDTH = 200;
+const PANEL_WIDTH = 350;
 
 /** Minimum mobile sheet height: header(52) + one item(~72) + footer(48) */
 const MOBILE_MIN_H = 172;
@@ -725,11 +725,10 @@ function NotificationList({
         return (
           <div
             key={n.id}
-            className={`group/item border-b border-border-light/50 last:border-b-0 ${
-              isRemoving
-                ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
-                : 'animate-[notification-item_300ms_ease-out_both]'
-            }`}
+            className={`group/item border-b border-border-light/50 last:border-b-0 ${isRemoving
+              ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
+              : 'animate-[notification-item_300ms_ease-out_both]'
+              }`}
             style={{ animationDelay: `${isRemoving && markingAll ? i * 50 : isRemoving ? 0 : i * 50}ms` }}
           >
             <button
@@ -753,9 +752,8 @@ function NotificationList({
               </div>
               {n.body && n.body.length > 60 && (
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${
-                    isExpanded ? 'rotate-180' : ''
-                  }`}
+                  className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
+                    }`}
                   onClick={(e) => { e.stopPropagation(); onToggleExpand(n.id); }}
                 />
               )}

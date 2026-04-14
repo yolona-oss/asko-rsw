@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Select, Textarea, FormField } from '@asko/ui';
+import { Button, ListSelect, Textarea, FormField } from '@asko/ui';
+import type { ListSelectOption } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -123,6 +124,45 @@ export function CreateRequest() {
     localCert && localCert.userDevice?.id === userDeviceId
       ? { cert: localCert, list: [localCert] }
       : computeAppliedCert(certificates, userDeviceId);
+
+  const deviceOptions: ListSelectOption[] = useMemo(
+    () =>
+      devices.map((d) => {
+        const inRepair = devicesInRepair.has(d.id);
+        const addrStatus = d.address?.validationStatus;
+        const addrInvalid = addrStatus === 'invalid' || addrStatus === 'error';
+        const addrPending = addrStatus === 'pending';
+
+        const label = d.device?.name
+          ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
+          : d.serialNumber ?? d.id;
+
+        const hasCert = certificates.some(
+          (c) => c.userDeviceId === d.id && c.status === 'active',
+        );
+
+        let statusText = '';
+        let statusClass = 'text-text-sub';
+        if (inRepair) { statusText = 'в ремонте'; statusClass = 'text-warning'; }
+        else if (addrInvalid) { statusText = 'адрес не подтверждён'; statusClass = 'text-error'; }
+        else if (addrPending) { statusText = 'проверка...'; statusClass = 'text-warning'; }
+
+        return {
+          value: d.id,
+          label,
+          disabled: inRepair || addrInvalid,
+          detail: (
+            <span className="flex items-center gap-2 flex-shrink-0 text-xs">
+              {statusText && <span className={statusClass}>{statusText}</span>}
+              <span className={hasCert ? 'text-success' : 'text-text-sub'}>
+                {hasCert ? 'Сертифицировано' : 'Без сертификата'}
+              </span>
+            </span>
+          ),
+        };
+      }),
+    [devices, certificates, devicesInRepair],
+  );
 
   // Reset broken parts + localCert when device changes
   useEffect(() => {
@@ -258,36 +298,12 @@ export function CreateRequest() {
               </Button>
             </div>
           ) : (
-            <Select
+            <ListSelect
               value={userDeviceId}
-              onChange={(e) => setUserDeviceId(e.target.value)}
-            >
-              <option value="" disabled>
-                Выберите устройство
-              </option>
-              {devices.map((d) => {
-                const inRepair = devicesInRepair.has(d.id);
-                const addrStatus = d.address?.validationStatus;
-                const addrInvalid = addrStatus === 'invalid' || addrStatus === 'error';
-                const addrPending = addrStatus === 'pending';
-                const isDisabled = inRepair || addrInvalid;
-                const label = d.device?.name
-                  ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
-                  : d.serialNumber ?? d.id;
-                const suffix = inRepair
-                  ? ' — в ремонте'
-                  : addrInvalid
-                    ? ' — адрес не подтверждён'
-                    : addrPending
-                      ? ' — проверка адреса...'
-                      : '';
-                return (
-                  <option key={d.id} value={d.id} disabled={isDisabled}>
-                    {label}{suffix}
-                  </option>
-                );
-              })}
-            </Select>
+              onChange={setUserDeviceId}
+              options={deviceOptions}
+              placeholder="Выберите устройство"
+            />
           )}
         </FormField>
 
