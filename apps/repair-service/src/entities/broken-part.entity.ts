@@ -9,6 +9,7 @@ export class BrokenPart {
     [OptionalProps]?:
         | 'status'
         | 'devicePart'
+        | 'isSuggestion'
         | 'note'
         | 'createdAt'
         | 'updatedAt'
@@ -30,6 +31,9 @@ export class BrokenPart {
 
     @Enum({ items: () => BrokenPartStatus, nativeEnumName: 'broken_part_status' })
     status: BrokenPartStatus = BrokenPartStatus.ADDED;
+
+    @Property({ type: 'boolean', default: false })
+    isSuggestion: boolean = false;
 
     @Property({ type: 'text', nullable: true })
     note?: string;

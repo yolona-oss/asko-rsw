@@ -3,6 +3,8 @@ export interface BrokenPart {
   name: string;
   note?: string;
   status: string;
+  isSuggestion?: boolean;
+  devicePartId?: string;
   externalOrderId?: string;
   supplierProvider?: string;
   orderedAt?: string | Date;

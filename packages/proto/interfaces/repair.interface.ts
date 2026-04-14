@@ -773,6 +773,7 @@ export interface BrokenPartRecord {
     externalOrderId: string;
     supplierProvider: string;
     orderedAt: string;
+    isSuggestion: boolean;
 }
 
 export interface BrokenPartInput {
@@ -993,6 +994,7 @@ export interface RepairAddBrokenPartRequest {
     devicePartId: string;
     name: string;
     note: string;
+    isSuggestion: boolean;
 }
 
 export interface RepairUpdateBrokenPartRequest {

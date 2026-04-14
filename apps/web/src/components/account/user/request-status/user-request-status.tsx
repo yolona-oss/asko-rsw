@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { CreateCertificateModal } from '@/components/account/user/create-request/create-certificate-modal';
 import { BrokenPartsView } from '@/components/account/shared/broken-parts-view';
+import { BrokenPartSuggestSection } from '@/components/account/shared/broken-part-suggest';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
@@ -363,10 +364,29 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </div>
         )}
 
-        {/* Broken parts */}
-        {brokenParts.length > 0 && (
+        {/* Broken parts (real — added by staff) */}
+        {brokenParts.filter((p: any) => !p.isSuggestion).length > 0 && (
           <div className="max-w-lg mt-6">
-            <BrokenPartsView parts={brokenParts} partImages={partImages} />
+            <BrokenPartsView parts={brokenParts.filter((p: any) => !p.isSuggestion)} partImages={partImages} />
+          </div>
+        )}
+
+        {/* User suggestions */}
+        {!isTerminal && (
+          <div className="max-w-lg mt-6">
+            <BrokenPartSuggestSection
+              requestId={requestId}
+              suggestions={brokenParts.filter((p: any) => p.isSuggestion)}
+              onSuggestionAdded={(part) => setBrokenParts((prev) => [...prev, part])}
+            />
+          </div>
+        )}
+        {isTerminal && brokenParts.filter((p: any) => p.isSuggestion).length > 0 && (
+          <div className="max-w-lg mt-6">
+            <h3 className="text-sm font-medium text-text-main mb-2">Ваши предположения</h3>
+            {brokenParts.filter((p: any) => p.isSuggestion).map((s: any) => (
+              <div key={s.id} className="text-sm text-text-sub">{s.name}{s.note ? ` — ${s.note}` : ''}</div>
+            ))}
           </div>
         )}
 

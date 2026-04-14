@@ -241,6 +241,7 @@ function brokenPartToRecord(entity: BrokenPart) {
         externalOrderId: entity.externalOrderId ?? '',
         supplierProvider: entity.supplierProvider ?? '',
         orderedAt: entity.orderedAt?.toISOString() ?? '',
+        isSuggestion: entity.isSuggestion,
     };
 }
 
@@ -554,6 +555,7 @@ export class RepairGrpcController {
                 devicePartId: data.devicePartId || undefined,
                 name: data.name || undefined,
                 note: data.note || undefined,
+                isSuggestion: data.isSuggestion || false,
             });
             return { part: brokenPartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }

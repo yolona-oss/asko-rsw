@@ -4030,6 +4030,36 @@
         ]
       }
     },
+    "/repair-requests/{id}/avr/offline/confirm": {
+      "post": {
+        "operationId": "RepairRequestController_confirmAvrOffline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/{id}/avr/scan/upload": {
       "post": {
         "operationId": "RepairRequestController_uploadAvrScan",
@@ -4410,6 +4440,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BrokenPartListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/suggest": {
+      "post": {
+        "operationId": "RepairRequestController_suggestBrokenPart",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBrokenPartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
                 }
               }
             }
@@ -5568,6 +5638,124 @@
         ]
       }
     },
+    "/parts": {
+      "get": {
+        "operationId": "PartsController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedDevicePartsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parts"
+        ]
+      },
+      "post": {
+        "operationId": "PartsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDevicePartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parts"
+        ]
+      }
+    },
+    "/parts/{partId}": {
+      "patch": {
+        "operationId": "PartsController_update",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDevicePartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parts"
+        ]
+      },
+      "delete": {
+        "operationId": "PartsController_remove",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parts"
+        ]
+      }
+    },
     "/certificates/add": {
       "post": {
         "operationId": "CertificateController_addCertificate",
@@ -6060,6 +6248,37 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Certificates"
+        ]
+      }
+    },
+    "/certificates/{id}/pdf/generate": {
+      "post": {
+        "operationId": "CertificateController_generatePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
           }
         },
         "tags": [
@@ -9280,6 +9499,9 @@
           "name": {
             "type": "string"
           },
+          "isSuggestion": {
+            "type": "boolean"
+          },
           "note": {
             "type": "string"
           },
@@ -9295,6 +9517,7 @@
           "id",
           "repairRequestId",
           "name",
+          "isSuggestion",
           "createdAt",
           "updatedAt"
         ]
@@ -9851,6 +10074,9 @@
           "avrSignature": {
             "type": "string"
           },
+          "statusTimestamps": {
+            "type": "object"
+          },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
           },
@@ -10033,6 +10259,9 @@
           },
           "providerPaymentId": {
             "type": "string"
+          },
+          "refundedAmount": {
+            "type": "number"
           },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
@@ -10217,6 +10446,18 @@
           "deviceId": {
             "type": "string"
           },
+          "deviceName": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -10238,7 +10479,6 @@
         },
         "required": [
           "id",
-          "deviceId",
           "name",
           "createdAt",
           "updatedAt"
@@ -10377,6 +10617,32 @@
       "UpdateDeviceCategoryDto": {
         "type": "object",
         "properties": {}
+      },
+      "PaginatedDevicePartsResponseDto": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevicePartRecordDto"
+            }
+          },
+          "overallCount": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "parts",
+          "overallCount",
+          "page",
+          "limit"
+        ]
       },
       "AddCertificateDto": {
         "type": "object",
@@ -10631,6 +10897,12 @@
             "type": "string"
           },
           "processedByUserId": {
+            "type": "string"
+          },
+          "cardNumber": {
+            "type": "string"
+          },
+          "cardHolderName": {
             "type": "string"
           }
         },

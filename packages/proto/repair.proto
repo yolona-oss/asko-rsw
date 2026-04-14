@@ -841,6 +841,7 @@ message BrokenPartRecord {
     string updatedAt = 8;
     string externalOrderId = 9;
     string supplierProvider = 10;
+    bool isSuggestion = 12;
     string orderedAt = 11;
 }
 
@@ -1062,6 +1063,7 @@ message RepairAddBrokenPartRequest {
     string devicePartId = 3;
     string name = 4;
     string note = 5;
+    bool isSuggestion = 6;
 }
 
 message RepairUpdateBrokenPartRequest {

@@ -2052,6 +2052,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/avr/offline/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_confirmAvrOffline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/{id}/avr/scan/upload": {
         parameters: {
             query?: never;
@@ -2190,6 +2206,22 @@ export interface paths {
         get: operations["RepairRequestController_getBrokenParts"];
         put?: never;
         post: operations["RepairRequestController_addBrokenPart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/broken-parts/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_suggestBrokenPart"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2580,6 +2612,38 @@ export interface paths {
         patch: operations["DeviceCategoryController_update"];
         trace?: never;
     };
+    "/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PartsController_getAll"];
+        put?: never;
+        post: operations["PartsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parts/{partId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PartsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["PartsController_update"];
+        trace?: never;
+    };
     "/certificates/add": {
         parameters: {
             query?: never;
@@ -2844,6 +2908,22 @@ export interface paths {
         get: operations["CertificateController_verifySignature"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}/pdf/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CertificateController_generatePdf"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3966,6 +4046,7 @@ export interface components {
             repairRequestId: string;
             devicePartId?: string;
             name: string;
+            isSuggestion: boolean;
             note?: string;
             createdAt: string;
             updatedAt: string;
@@ -4121,6 +4202,7 @@ export interface components {
             avrSignedAt?: string;
             avrSignedPayload?: string;
             avrSignature?: string;
+            statusTimestamps?: Record<string, never>;
             user?: components["schemas"]["AuthUserDto"];
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             repairer?: components["schemas"]["RepairerRecordDto"];
@@ -4163,6 +4245,7 @@ export interface components {
             targetId: string;
             amount: number;
             providerPaymentId?: string;
+            refundedAmount?: number;
             user?: components["schemas"]["AuthUserDto"];
             paidAt?: string;
             createdAt: string;
@@ -4207,7 +4290,11 @@ export interface components {
         CreateDevicePartDto: Record<string, never>;
         DevicePartRecordDto: {
             id: string;
-            deviceId: string;
+            deviceId?: string;
+            deviceName?: string;
+            categoryId?: string;
+            categoryName?: string;
+            group?: string;
             name: string;
             partNumber?: string;
             price?: number;
@@ -4247,6 +4334,12 @@ export interface components {
         };
         CreateDeviceCategoryDto: Record<string, never>;
         UpdateDeviceCategoryDto: Record<string, never>;
+        PaginatedDevicePartsResponseDto: {
+            parts: components["schemas"]["DevicePartRecordDto"][];
+            overallCount: number;
+            page: number;
+            limit: number;
+        };
         AddCertificateDto: Record<string, never>;
         CertificateResponseDto: {
             certificate: components["schemas"]["CertificateRecordDto"];
@@ -7514,6 +7607,27 @@ export interface operations {
             };
         };
     };
+    RepairRequestController_confirmAvrOffline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
     RepairRequestController_uploadAvrScan: {
         parameters: {
             query?: never;
@@ -7740,6 +7854,31 @@ export interface operations {
         };
     };
     RepairRequestController_addBrokenPart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddBrokenPartDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrokenPartResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_suggestBrokenPart: {
         parameters: {
             query?: never;
             header?: never;
@@ -8542,6 +8681,94 @@ export interface operations {
             };
         };
     };
+    PartsController_getAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDevicePartsResponseDto"];
+                };
+            };
+        };
+    };
+    PartsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDevicePartDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DevicePartResponseDto"];
+                };
+            };
+        };
+    };
+    PartsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
+            };
+        };
+    };
+    PartsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDevicePartDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DevicePartResponseDto"];
+                };
+            };
+        };
+    };
     CertificateController_addCertificate: {
         parameters: {
             query?: never;
@@ -8890,6 +9117,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["VerifySignatureResponseDto"];
                 };
+            };
+        };
+    };
+    CertificateController_generatePdf: {
+        parameters: {
+            query: {
+                force: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

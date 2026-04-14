@@ -112,6 +112,7 @@ export class BrokenPartRecordDto {
     name: string;
     @ApiProperty({ enum: BrokenPartStatus, enumName: 'BrokenPartStatus' })
     status: BrokenPartStatus;
+    isSuggestion: boolean;
     note?: string;
     createdAt: string;
     updatedAt: string;

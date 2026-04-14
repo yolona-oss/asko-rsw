@@ -22,9 +22,9 @@ export class BrokenPartService {
         private readonly supplierService: SupplierService,
     ) {}
 
-    /** Add a broken part to a repair request */
+    /** Add a broken part to a repair request (staff — requires catalog part) */
     @CreateRequestContext()
-    async addBrokenPart(requestId: string, dto: { devicePartId?: string; name?: string; note?: string }): Promise<BrokenPart> {
+    async addBrokenPart(requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
@@ -32,23 +32,34 @@ export class BrokenPartService {
             throw AppErrors.badRequest('Нельзя изменять запчасти для завершённой заявки');
         }
 
+        const isSuggestion = dto.isSuggestion ?? false;
         let partName = dto.name;
         let devicePart: DevicePart | undefined;
 
-        if (dto.devicePartId) {
+        if (isSuggestion) {
+            // User suggestion: name required, no catalog reference needed
+            if (!partName) {
+                throw AppErrors.badRequest('Необходимо указать название запчасти');
+            }
+        } else {
+            // Staff part: must reference catalog
+            if (!dto.devicePartId) {
+                throw AppErrors.badRequest('Необходимо выбрать запчасть из каталога');
+            }
             devicePart = await this.em.findOne(DevicePart, { id: dto.devicePartId }) ?? undefined;
             if (!devicePart) throw AppErrors.dbEntityNotFound('Device part not found');
             if (!partName) partName = devicePart.name;
         }
 
         if (!partName) {
-            throw AppErrors.badRequest('Необходимо указать название запчасти или выбрать из каталога');
+            throw AppErrors.badRequest('Необходимо указать название запчасти');
         }
 
         const brokenPart = this.em.create(BrokenPart, {
             repairRequest: request,
             devicePart,
             name: partName,
+            isSuggestion,
             note: dto.note,
             status: BrokenPartStatus.ADDED,
         });
@@ -56,7 +67,7 @@ export class BrokenPartService {
         return brokenPart;
     }
 
-    /** Bulk add broken parts during repair request creation */
+    /** Bulk add broken parts during repair request creation (user suggestions) */
     @CreateRequestContext()
     async addBrokenPartsOnCreate(requestId: string, parts: { devicePartId?: string; name?: string; note?: string }[]): Promise<BrokenPart[]> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
@@ -79,6 +90,7 @@ export class BrokenPartService {
                 repairRequest: request,
                 devicePart,
                 name: partName,
+                isSuggestion: true,
                 note: dto.note,
                 status: BrokenPartStatus.ADDED,
             });
@@ -148,6 +160,11 @@ export class BrokenPartService {
     @CreateRequestContext()
     async getBrokenParts(requestId: string): Promise<BrokenPart[]> {
         return this.em.find(BrokenPart, { repairRequest: requestId }, { orderBy: { createdAt: 'ASC' } });
+    }
+
+    /** Remove all suggestion broken parts for a request (called on terminal status) */
+    async cleanupSuggestions(requestId: string): Promise<number> {
+        return this.em.nativeDelete(BrokenPart, { repairRequest: requestId, isSuggestion: true });
     }
 
     /** Place a supplier order for a broken part. Transitions ADDED → ORDERED. */

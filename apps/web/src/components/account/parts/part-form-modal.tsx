@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Button, Input, FormField, Select } from '@asko/ui';
-import type { DevicePartRecord } from '@/lib/api/types';
+import type { DevicePartFull } from '@/lib/api/types';
 import type { PartFormData } from './types';
 import { EMPTY_PART_FORM } from './types';
 
@@ -13,12 +13,19 @@ interface Device {
   model: string;
 }
 
-export function PartFormModal({ open, onClose, onSubmit, editPart, devices, submitting }: {
+interface Category {
+  id: string;
+  name: string;
+  label: string;
+}
+
+export function PartFormModal({ open, onClose, onSubmit, editPart, devices, categories, submitting }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: PartFormData) => void;
-  editPart?: DevicePartRecord | null;
+  editPart?: DevicePartFull | null;
   devices: Device[];
+  categories: Category[];
   submitting: boolean;
 }) {
   const [form, setForm] = useState<PartFormData>(EMPTY_PART_FORM);
@@ -28,6 +35,8 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, subm
       if (editPart) {
         setForm({
           deviceId: editPart.deviceId ?? '',
+          categoryId: editPart.categoryId ?? '',
+          group: editPart.group ?? '',
           name: editPart.name ?? '',
           partNumber: editPart.partNumber ?? '',
           price: editPart.price != null && editPart.price > 0 ? String(editPart.price) : '',
@@ -49,6 +58,7 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, subm
   };
 
   const isEdit = !!editPart;
+  const isGeneric = !form.deviceId;
 
   return (
     <Modal open={open} onClose={submitting ? undefined : onClose} className="w-full max-w-md p-6">
@@ -60,15 +70,38 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, subm
         <FormField label="Устройство">
           <Select
             value={form.deviceId}
-            onChange={(e) => updateForm({ deviceId: e.target.value })}
+            onChange={(e) => updateForm({ deviceId: e.target.value, categoryId: e.target.value ? '' : form.categoryId })}
           >
-            <option value="">Общая запчасть (для всех устройств)</option>
+            <option value="">Общая запчасть</option>
             {devices.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.brand} {d.model} — {d.name}
               </option>
             ))}
           </Select>
+        </FormField>
+
+        {isGeneric && (
+          <FormField label="Категория устройств">
+            <Select
+              value={form.categoryId}
+              onChange={(e) => updateForm({ categoryId: e.target.value })}
+            >
+              <option value="">Для всех категорий</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </Select>
+          </FormField>
+        )}
+
+        <FormField label="Группа">
+          <Input
+            type="text"
+            placeholder="Название группы (напр. Экран, Батарея)..."
+            value={form.group}
+            onChange={(e) => updateForm({ group: e.target.value })}
+          />
         </FormField>
 
         <FormField label="Название">

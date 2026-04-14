@@ -19,6 +19,7 @@ import { scheduleApi } from '@/lib/api/schedule';
 import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { deviceApi } from '@/lib/api/device';
 import { getImageUrl } from '@/lib/file-url';
 import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
@@ -79,6 +80,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [chatAttached, setChatAttached] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [offDayConfirm, setOffDayConfirm] = useState<RepairerOption | null>(null);
+  const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -141,6 +143,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     }
     fetchData();
   }, [requestId, authUser?.id]);
+
+  // Fetch catalog parts when device is known
+  useEffect(() => {
+    const deviceId = (request as any)?.userDevice?.device?.id;
+    if (!deviceId) return;
+    deviceApi.getParts(deviceId).then(({ data }) => {
+      setCatalogParts((data.parts ?? []).map((p: any) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
+    }).catch(() => {});
+  }, [(request as any)?.userDevice?.device?.id]);
 
   const scheduleInfoByRepairer = useMemo(() => {
     const map: Record<string, RepairerScheduleInfo> = {};
@@ -415,7 +426,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           />
 
           {/* Broken parts */}
-          {!isTerminal && <BrokenPartsEditor requestId={requestId} />}
+          {!isTerminal && <BrokenPartsEditor requestId={requestId} catalogParts={catalogParts} />}
 
           {/* Aggregate documents */}
           <RepairRequestDocuments requestId={requestId} readOnly={isTerminal} />

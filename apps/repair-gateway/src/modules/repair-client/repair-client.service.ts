@@ -161,13 +161,14 @@ export class RepairClientService implements OnModuleInit {
 
     // ── Broken parts ──
 
-    addBrokenPart(userId: string, requestId: string, dto: { devicePartId?: string; name?: string; note?: string }): Promise<BrokenPartResponse> {
+    addBrokenPart(userId: string, requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPartResponse> {
         return grpcCall(this.repairService.addBrokenPart({
             userId,
             requestId,
             devicePartId: dto.devicePartId ?? '',
             name: dto.name ?? '',
             note: dto.note ?? '',
+            isSuggestion: dto.isSuggestion ?? false,
         }));
     }
 

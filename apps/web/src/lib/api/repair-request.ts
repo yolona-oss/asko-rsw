@@ -177,6 +177,10 @@ export const repairRequestApi = {
     return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts`, data);
   },
 
+  suggestBrokenPart(requestId: string, data: { name?: string; note?: string }) {
+    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/suggest`, data);
+  },
+
   updateBrokenPart(requestId: string, partId: string, data: { name?: string; note?: string }) {
     return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
   },

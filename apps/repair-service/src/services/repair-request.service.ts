@@ -207,6 +207,8 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.REFUNDED);
         await this.em.flush();
 
+        await this.brokenPartService.cleanupSuggestions(requestId);
+
         // Refund via payment-service RabbitMQ (fire-and-forget)
         await this.paymentCommandService.emitRefundTarget('repairRequest', requestId);
 
@@ -387,6 +389,8 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.REFUSED);
         await this.em.flush();
 
+        await this.brokenPartService.cleanupSuggestions(requestId);
+
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
             repairId: request.id,
@@ -557,6 +561,8 @@ export class RepairRequestService {
         request.completionSignature = this.signatureService.sign(completionPayload);
 
         await this.em.flush();
+
+        await this.brokenPartService.cleanupSuggestions(request.id);
 
         await this.repairEventService.emit({
             type: RepairEventType.COMPLETED,
@@ -745,6 +751,8 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.CANCELLED;
         this.recordStatusTimestamp(request, RepairRequestStatus.CANCELLED);
         await this.em.flush();
+
+        await this.brokenPartService.cleanupSuggestions(requestId);
 
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
@@ -1238,6 +1246,8 @@ export class RepairRequestService {
         request.completionSignature = this.signatureService.sign(completionPayload);
 
         await this.em.flush();
+
+        await this.brokenPartService.cleanupSuggestions(request.id);
 
         await this.repairEventService.emit({
             type: RepairEventType.COMPLETED,

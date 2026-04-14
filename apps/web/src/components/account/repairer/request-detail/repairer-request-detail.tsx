@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { paymentApi } from '@/lib/api/payment';
 import { fileUploadApi } from '@/lib/api/file-upload';
+import { deviceApi } from '@/lib/api/device';
 import { useAuth } from '@/lib/api/use-auth';
 import { getImageUrl } from '@/lib/file-url';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared/client';
@@ -85,6 +86,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [diagCompleteLoading, setDiagCompleteLoading] = useState(false);
   const [diagCompleteError, setDiagCompleteError] = useState('');
 
+  // Catalog parts for broken parts editor
+  const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
 
   // ── Data fetch ──
 
@@ -118,6 +121,15 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     }
     load();
   }, [requestId]);
+
+  // Fetch catalog parts when device is known
+  useEffect(() => {
+    const deviceId = request?.userDevice?.device?.id;
+    if (!deviceId) return;
+    deviceApi.getParts(deviceId).then(({ data }) => {
+      setCatalogParts((data.parts ?? []).map((p: any) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
+    }).catch(() => {});
+  }, [request?.userDevice?.device?.id]);
 
   // ── Request actions ──
 
@@ -573,7 +585,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       {/* ── Broken parts ── */}
       {!isTerminal && (
         <Card className="flex flex-col gap-4">
-          <BrokenPartsEditor requestId={requestId} />
+          <BrokenPartsEditor requestId={requestId} catalogParts={catalogParts} />
         </Card>
       )}
 

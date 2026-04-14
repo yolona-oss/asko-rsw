@@ -33,12 +33,19 @@ function getImageSrc(img: BrokenPartImage): string | undefined {
   );
 }
 
+interface CatalogPart {
+  id: string;
+  name: string;
+  partNumber?: string;
+}
+
 interface BrokenPartsEditorProps {
   requestId: string;
   title?: string;
+  catalogParts?: CatalogPart[];
 }
 
-export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: BrokenPartsEditorProps) {
+export function BrokenPartsEditor({ requestId, title = 'Запчасти', catalogParts = [] }: BrokenPartsEditorProps) {
   const [parts, setParts] = useState<BrokenPart[]>([]);
   const [partImages, setPartImages] = useState<Record<string, BrokenPartImage[]>>({});
   const [loading, setLoading] = useState(true);
@@ -138,9 +145,14 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
                 {part.note && (
                   <span className="text-xs text-text-sub line-clamp-2">{part.note}</span>
                 )}
-                <Badge variant={STATUS_VARIANT[part.status] ?? 'neutral'} className="self-start">
-                  {STATUS_LABELS[part.status] ?? part.status}
-                </Badge>
+                <div className="flex gap-1 flex-wrap">
+                  {part.isSuggestion && (
+                    <Badge variant="neutral" className="self-start">Предположение</Badge>
+                  )}
+                  <Badge variant={STATUS_VARIANT[part.status] ?? 'neutral'} className="self-start">
+                    {STATUS_LABELS[part.status] ?? part.status}
+                  </Badge>
+                </div>
               </div>
             </button>
           );
@@ -163,6 +175,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти' }: Bro
         mode={modalMode}
         requestId={requestId}
         part={editingPart}
+        catalogParts={catalogParts}
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
         onDeleted={handleDeleted}

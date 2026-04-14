@@ -47,11 +47,18 @@ function getImageSrc(img: BrokenPartImage): string | undefined {
   );
 }
 
+interface CatalogPart {
+  id: string;
+  name: string;
+  partNumber?: string;
+}
+
 export interface BrokenPartModalProps {
   open: boolean;
   mode: 'create' | 'edit';
   requestId: string;
   part?: BrokenPart | null;
+  catalogParts?: CatalogPart[];
   onClose: () => void;
   onSaved: (part: BrokenPart) => void;
   onDeleted?: (partId: string) => void;
@@ -62,10 +69,12 @@ export function BrokenPartModal({
   mode,
   requestId,
   part,
+  catalogParts = [],
   onClose,
   onSaved,
   onDeleted,
 }: BrokenPartModalProps) {
+  const [devicePartId, setDevicePartId] = useState('');
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
   const [images, setImages] = useState<BrokenPartImage[]>([]);
@@ -80,6 +89,7 @@ export function BrokenPartModal({
   useEffect(() => {
     if (!open) return;
     if (mode === 'create') {
+      setDevicePartId('');
       setName('');
       setNote('');
       setImages([]);
@@ -89,6 +99,7 @@ export function BrokenPartModal({
       return;
     }
     if (!part) return;
+    setDevicePartId(part.devicePartId ?? '');
     setName(part.name ?? '');
     setNote(part.note ?? '');
     setCurrentPart(part);
@@ -105,8 +116,20 @@ export function BrokenPartModal({
       .catch(() => setDocuments([]));
   }, [open, mode, part, requestId]);
 
+  const handleCatalogChange = useCallback((id: string) => {
+    setDevicePartId(id);
+    if (id) {
+      const picked = catalogParts.find((p) => p.id === id);
+      if (picked) setName(picked.name);
+    }
+  }, [catalogParts]);
+
   const handleSave = useCallback(async () => {
     const trimmed = name.trim();
+    if (!devicePartId && mode === 'create') {
+      setError('Необходимо выбрать запчасть из каталога');
+      return;
+    }
     if (!trimmed) {
       setError('Укажите название запчасти');
       return;
@@ -116,6 +139,7 @@ export function BrokenPartModal({
     try {
       if (mode === 'create') {
         const { data } = await repairRequestApi.addBrokenPart(requestId, {
+          devicePartId: devicePartId || undefined,
           name: trimmed,
           note: note.trim() || undefined,
         });
@@ -136,7 +160,7 @@ export function BrokenPartModal({
     } finally {
       setSaving(false);
     }
-  }, [mode, name, note, requestId, currentPart, onSaved, onClose]);
+  }, [mode, name, note, devicePartId, requestId, currentPart, onSaved, onClose]);
 
   const handleUploadImage = useCallback(
     async (file: File) => {
@@ -240,11 +264,29 @@ export function BrokenPartModal({
           </button>
         </div>
 
+        {catalogParts.length > 0 && mode === 'create' && (
+          <FormField label="Запчасть из каталога">
+            <select
+              value={devicePartId}
+              onChange={(e) => handleCatalogChange(e.target.value)}
+              className="w-full px-4 py-2.5 border border-border-light bg-surface text-text-main text-sm focus:outline-none focus:border-text-main appearance-none"
+            >
+              <option value="">— Выберите запчасть —</option>
+              {catalogParts.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.partNumber ? `${p.name} (${p.partNumber})` : p.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        )}
+
         <FormField label="Название">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Например: Термостат"
+            disabled={!!devicePartId}
           />
         </FormField>
 

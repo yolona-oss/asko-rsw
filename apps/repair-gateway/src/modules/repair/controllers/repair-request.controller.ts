@@ -544,14 +544,21 @@ export class RepairRequestController {
     // ── Broken parts ──
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/broken-parts')
     async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
-        return this.repairClient.addBrokenPart(user.sub, id, dto);
+        return this.repairClient.addBrokenPart(user.sub, id, { ...dto, isSuggestion: false });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @RequiredRoles(Role.USER, Role.DEALER)
+    @Post(':id/broken-parts/suggest')
+    async suggestBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
+        return this.repairClient.addBrokenPart(user.sub, id, { name: dto.name, note: dto.note, isSuggestion: true });
+    }
+
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
+    @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -563,7 +570,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/status')
     async updateBrokenPartStatus(
         @JwtAuthUser() user: JwtPayload,
@@ -575,7 +582,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/delete')
     async deleteBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -587,7 +594,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @RequiredRoles(...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/order')
     async orderBrokenPart(
         @JwtAuthUser() user: JwtPayload,
