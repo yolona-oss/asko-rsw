@@ -75,6 +75,13 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [commentDraft, setCommentDraft] = useState('');
   const [commentSaving, setCommentSaving] = useState(false);
 
+  // Diagnostic completion modal
+  const [diagCompleteOpen, setDiagCompleteOpen] = useState(false);
+  const [diagCompleteStepId, setDiagCompleteStepId] = useState<string | null>(null);
+  const [diagCompleteComment, setDiagCompleteComment] = useState('');
+  const [diagCompleteLoading, setDiagCompleteLoading] = useState(false);
+  const [diagCompleteError, setDiagCompleteError] = useState('');
+
 
   // ── Data fetch ──
 
@@ -204,6 +211,27 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     } catch {}
   }, [request]);
 
+  const handleDiagComplete = useCallback(async () => {
+    if (!request || !diagCompleteStepId || !diagCompleteComment.trim()) return;
+    setDiagCompleteLoading(true);
+    setDiagCompleteError('');
+    try {
+      // Save the comment first
+      await repairRequestApi.updateStep(request.id, diagCompleteStepId, { comment: diagCompleteComment.trim() });
+      // Then complete the step
+      const { data } = await repairRequestApi.completeStep(request.id, diagCompleteStepId);
+      setSteps((prev) => prev.map((s) => s.id === diagCompleteStepId ? { ...s, status: WorkStepStatus.COMPLETED, comment: diagCompleteComment.trim() } : s));
+      if (data.requestCompleted) setRequest({ ...request, status: RepairRequestStatus.AWAITING_COMPLETION });
+      setDiagCompleteOpen(false);
+      setDiagCompleteStepId(null);
+      setDiagCompleteComment('');
+    } catch {
+      setDiagCompleteError('Не удалось завершить диагностику');
+    } finally {
+      setDiagCompleteLoading(false);
+    }
+  }, [request, diagCompleteStepId, diagCompleteComment]);
+
   const handleDeleteStep = useCallback(async (stepId: string) => {
     if (!request) return;
     try {
@@ -299,7 +327,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const status = request.status as RepairRequestStatus;
   const stepsLocked = !!request.stepsLocked;
   const canEditSteps = !stepsLocked && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
-  const canControlFlow = stepsLocked && [RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.ACCEPTED].includes(status);
+  const canControlFlow = stepsLocked && status === RepairRequestStatus.IN_PROGRESS;
   const allStepsDone = steps.length > 0 && steps.every((s) => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED || s.status === WorkStepStatus.DECLINED);
   const canComplete = status === RepairRequestStatus.AWAITING_COMPLETION || (stepsLocked && allStepsDone && status === RepairRequestStatus.IN_PROGRESS);
   const isPaused = status === RepairRequestStatus.PAUSED;
@@ -575,32 +603,50 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
             {steps.map((step, idx) => {
               const isDeclined = step.status === WorkStepStatus.DECLINED;
               const isMandatory = !!step.isMandatory;
+              const isDiagnostic = isMandatory && step.title === 'Диагностика' && !isDeclined;
               const isEditingComment = commentEditId === step.id;
               const canStepComment = isMandatory && !isDeclined && !isTerminal
-                && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
+                && status === RepairRequestStatus.IN_PROGRESS;
 
-              const showFlowActions = !isDeclined && (canControlFlow || status === RepairRequestStatus.IN_PROGRESS);
+              const showFlowActions = !isDeclined && !isDiagnostic && canControlFlow;
               const showStart = showFlowActions && step.status === WorkStepStatus.PENDING;
               const showComplete = showFlowActions && step.status === WorkStepStatus.IN_PROGRESS;
               const showSkip = showComplete && !isMandatory;
-              const showCommentBtn = !isDeclined && !isEditingComment && (
-                (showFlowActions && canStepComment) || (canEditSteps && isMandatory)
+              const showCommentBtn = !isDiagnostic && !isDeclined && !isEditingComment && (
+                (canControlFlow && canStepComment) || (canEditSteps && isMandatory)
               );
               const showDelete = !isDeclined && canEditSteps && !isMandatory;
-              const hasActions = showStart || showComplete || showSkip || showCommentBtn || showDelete;
+
+              // Diagnostic step: single-click action (opens modal)
+              const showDiagAction = isDiagnostic && canControlFlow
+                && (step.status === WorkStepStatus.PENDING || step.status === WorkStepStatus.IN_PROGRESS);
+
+              const hasActions = showStart || showComplete || showSkip || showCommentBtn || showDelete || showDiagAction;
+
+              // Diagnostic step gets a unique border style
+              const blockClass = isDiagnostic && !isDeclined
+                ? step.status === WorkStepStatus.COMPLETED
+                  ? 'border-info-border bg-info-bg'
+                  : 'border-info-border bg-info-bg/50'
+                : STEP_BLOCK_CLASS[step.status] ?? 'border-border-light bg-surface';
 
               return (
                 <div
                   key={step.id}
-                  className={`p-3 sm:p-4 border flex flex-col gap-2 transition-colors ${STEP_BLOCK_CLASS[step.status] ?? 'border-border-light bg-surface'}`}
+                  className={`p-3 sm:p-4 border flex flex-col gap-2 transition-colors ${blockClass}`}
                 >
                   {/* Badges row */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant={STEP_STATUS_BADGE_VARIANT[step.status] ?? 'neutral'}>
-                      {STEP_STATUS_LABEL[step.status] ?? step.status}
+                    <Badge variant={isDiagnostic ? 'info' : (STEP_STATUS_BADGE_VARIANT[step.status] ?? 'neutral')}>
+                      {isDiagnostic ? 'Диагностика' : (STEP_STATUS_LABEL[step.status] ?? step.status)}
                     </Badge>
-                    {isMandatory && <Badge variant="neutral">Обязательный</Badge>}
+                    {!isDiagnostic && isMandatory && <Badge variant="neutral">Обязательный</Badge>}
                     {step.isFinal && <Badge variant="info">Финальный</Badge>}
+                    {isDiagnostic && step.status !== WorkStepStatus.PENDING && (
+                      <Badge variant={STEP_STATUS_BADGE_VARIANT[step.status] ?? 'neutral'}>
+                        {STEP_STATUS_LABEL[step.status] ?? step.status}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Title */}
@@ -614,15 +660,15 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
                     <p className="text-[12px] sm:text-sm text-text-sub">{step.description}</p>
                   )}
 
-                  {/* Comment display */}
+                  {/* Comment / diagnostic result display */}
                   {step.comment && !isEditingComment && (
-                    <div className="pl-3 border-l-2 border-border-light">
+                    <div className={`pl-3 border-l-2 ${isDiagnostic ? 'border-info-border' : 'border-border-light'}`}>
                       <p className="text-[12px] sm:text-sm text-text-main whitespace-pre-wrap">{step.comment}</p>
                     </div>
                   )}
 
-                  {/* Inline comment editor */}
-                  {isEditingComment && (
+                  {/* Inline comment editor (non-diagnostic steps only) */}
+                  {isEditingComment && !isDiagnostic && (
                     <div className="flex flex-col gap-2">
                       <Textarea
                         value={commentDraft}
@@ -651,6 +697,18 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
                   {/* Actions */}
                   {hasActions && (
                     <div className="flex items-center gap-2 flex-wrap pt-1">
+                      {showDiagAction && (
+                        <Button size="sm" variant="primary" onClick={() => {
+                          setDiagCompleteStepId(step.id);
+                          setDiagCompleteComment(step.comment ?? '');
+                          setDiagCompleteError('');
+                          setDiagCompleteOpen(true);
+                          // Auto-start if still pending
+                          if (step.status === WorkStepStatus.PENDING) handleStepStart(step.id);
+                        }} className="flex-1 sm:flex-none">
+                          Завершить диагностику
+                        </Button>
+                      )}
                       {showStart && (
                         <Button size="sm" variant="primary" onClick={() => handleStepStart(step.id)} className="flex-1 sm:flex-none">
                           Начать
@@ -806,6 +864,38 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         requestId={request.id}
         onCompleted={handleAvrCompleted}
       />
+
+      {/* Diagnostic completion modal */}
+      <Modal open={diagCompleteOpen} onClose={() => setDiagCompleteOpen(false)} className="w-full max-w-md p-5 sm:p-6">
+        <h2 className="text-base font-medium text-text-main mb-1">Результат диагностики</h2>
+        <p className="text-[13px] sm:text-sm text-text-sub mb-4">
+          Опишите результат диагностики. Это заключение будет видно клиенту.
+        </p>
+        <div className="flex flex-col gap-4">
+          <FormField label="Заключение диагностики" error={diagCompleteError || undefined}>
+            <Textarea
+              value={diagCompleteComment}
+              onChange={(e) => setDiagCompleteComment(e.target.value)}
+              placeholder="Выявленные неисправности, рекомендации..."
+              rows={4}
+              autoFocus
+            />
+          </FormField>
+          <div className="flex gap-3 flex-wrap">
+            <Button
+              variant="primary"
+              onClick={handleDiagComplete}
+              disabled={!diagCompleteComment.trim() || diagCompleteLoading}
+              className="flex-1 sm:flex-none"
+            >
+              {diagCompleteLoading ? 'Сохранение...' : 'Завершить диагностику'}
+            </Button>
+            <Button variant="secondary" onClick={() => setDiagCompleteOpen(false)} className="flex-1 sm:flex-none">
+              Отмена
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </PageContainer>
   );
 }

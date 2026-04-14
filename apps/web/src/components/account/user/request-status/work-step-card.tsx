@@ -12,7 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   declined: 'Отклонён',
 };
 
-const STATUS_BADGE: Record<string, 'neutral' | 'warning' | 'success' | 'error'> = {
+const STATUS_BADGE: Record<string, 'neutral' | 'warning' | 'success' | 'error' | 'info'> = {
   pending: 'neutral',
   in_progress: 'warning',
   completed: 'success',
@@ -31,15 +31,25 @@ const BLOCK_CLASS: Record<string, string> = {
 export function WorkStepCard({ step, index }: { step: WorkStep; index: number }) {
   const isDeclined = step.status === 'declined';
   const isCompleted = step.status === 'completed';
+  const isDiagnostic = !!step.isMandatory && step.title === 'Диагностика' && !isDeclined;
+
+  const blockClass = isDiagnostic
+    ? isCompleted ? 'border-info-border bg-info-bg' : 'border-info-border bg-info-bg/50'
+    : BLOCK_CLASS[step.status] ?? 'border-border-light bg-surface';
 
   return (
-    <div className={`p-3 sm:p-4 border flex flex-col gap-2 transition-colors ${BLOCK_CLASS[step.status] ?? 'border-border-light bg-surface'}`}>
+    <div className={`p-3 sm:p-4 border flex flex-col gap-2 transition-colors ${blockClass}`}>
       {/* Badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge variant={STATUS_BADGE[step.status] ?? 'neutral'}>
-          {STATUS_LABEL[step.status] ?? step.status}
+        <Badge variant={isDiagnostic ? 'info' : (STATUS_BADGE[step.status] ?? 'neutral')}>
+          {isDiagnostic ? 'Диагностика' : (STATUS_LABEL[step.status] ?? step.status)}
         </Badge>
-        {step.isMandatory && <Badge variant="neutral">Обязательный</Badge>}
+        {!isDiagnostic && step.isMandatory && <Badge variant="neutral">Обязательный</Badge>}
+        {isDiagnostic && step.status !== 'pending' && (
+          <Badge variant={STATUS_BADGE[step.status] ?? 'neutral'}>
+            {STATUS_LABEL[step.status] ?? step.status}
+          </Badge>
+        )}
       </div>
 
       {/* Title */}
@@ -55,9 +65,10 @@ export function WorkStepCard({ step, index }: { step: WorkStep; index: number })
         <p className="text-[12px] sm:text-sm text-text-sub">{step.description}</p>
       )}
 
-      {/* Comment */}
+      {/* Comment / diagnostic result */}
       {step.comment && (
-        <div className="pl-3 border-l-2 border-border-light">
+        <div className={`pl-3 border-l-2 ${isDiagnostic ? 'border-info-border' : 'border-border-light'}`}>
+          {isDiagnostic && <p className="text-[11px] sm:text-xs text-text-sub mb-0.5">Результат диагностики</p>}
           <p className="text-[12px] sm:text-sm text-text-main whitespace-pre-wrap">{step.comment}</p>
         </div>
       )}

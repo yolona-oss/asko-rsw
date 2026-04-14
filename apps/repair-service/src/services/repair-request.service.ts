@@ -335,7 +335,7 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.ACCEPTED;
 
-        // Seed mandatory diagnostics steps if none exist yet (idempotent — re-accept after transfer won't duplicate)
+        // Seed mandatory diagnostic step if none exist yet (idempotent — re-accept after transfer won't duplicate)
         const existingMandatory = await this.em.count(WorkStep, { repairRequest: requestId, isMandatory: true });
         if (existingMandatory === 0) {
             const existingCount = await this.em.count(WorkStep, { repairRequest: requestId });
@@ -343,12 +343,6 @@ export class RepairRequestService {
                 repairRequest: request,
                 title: 'Диагностика',
                 order: existingCount + 1,
-                isMandatory: true,
-            });
-            this.em.create(WorkStep, {
-                repairRequest: request,
-                title: 'Результат диагностики',
-                order: existingCount + 2,
                 isMandatory: true,
             });
         }
@@ -1054,7 +1048,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['userDevice', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
         if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
@@ -1075,7 +1069,7 @@ export class RepairRequestService {
     /** Store the document ID returned by file-service after upload */
     @CreateRequestContext()
     async setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         request.avrDocumentId = documentId;
         await this.em.flush();
@@ -1085,7 +1079,7 @@ export class RepairRequestService {
     /** Mark AVR as pending signature (OTP sent) */
     @CreateRequestContext()
     async setAvrPendingSignature(requestId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.avrStatus !== AvrStatus.GENERATED) {
             throw AppErrors.badRequest('Акт должен быть сформирован перед отправкой на подпись');

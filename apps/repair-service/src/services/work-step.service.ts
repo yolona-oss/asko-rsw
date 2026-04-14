@@ -78,6 +78,11 @@ export class WorkStepService {
     async updateStep(repairerUserId: string, requestId: string, stepId: string, dto: { title?: string; description?: string; comment?: string; status?: string }): Promise<WorkStep> {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
+        // Status changes require IN_PROGRESS
+        if (dto.status && request.status !== RepairRequestStatus.IN_PROGRESS) {
+            throw AppErrors.badRequest('Управление шагами доступно только в статусе «В работе»');
+        }
+
         const step = await this.em.findOne(WorkStep, { id: stepId, repairRequest: requestId });
         if (!step) throw AppErrors.dbEntityNotFound('Work step not found');
 
@@ -162,18 +167,12 @@ export class WorkStepService {
             this.em.remove(step);
         }
 
-        // Reseed fresh mandatory pair with orders after the declined history block
+        // Reseed fresh mandatory diagnostic step after the declined history block
         const maxOrder = allSteps.reduce((m, s) => Math.max(m, s.order), 0);
-        const newFirst = this.em.create(WorkStep, {
+        const newStep = this.em.create(WorkStep, {
             repairRequest: request,
             title: 'Диагностика',
             order: maxOrder + 1,
-            isMandatory: true,
-        });
-        const newSecond = this.em.create(WorkStep, {
-            repairRequest: request,
-            title: 'Результат диагностики',
-            order: maxOrder + 2,
             isMandatory: true,
         });
 
@@ -190,7 +189,7 @@ export class WorkStepService {
             timestamp: now,
         });
 
-        return [newFirst, newSecond];
+        return [newStep];
     }
 
     /** Repairer locks work steps - no more adding/editing/deleting. The last step (by order) is auto-marked as final. */
@@ -222,6 +221,10 @@ export class WorkStepService {
     @CreateRequestContext()
     async completeStep(repairerUserId: string, requestId: string, stepId: string): Promise<{ step: WorkStep; requestCompleted: boolean }> {
         const { repairer, request } = await this.resolveRepairerRequest(repairerUserId, requestId);
+
+        if (request.status !== RepairRequestStatus.IN_PROGRESS) {
+            throw AppErrors.badRequest('Управление шагами доступно только в статусе «В работе»');
+        }
 
         const step = await this.em.findOne(WorkStep, { id: stepId, repairRequest: requestId });
         if (!step) throw AppErrors.dbEntityNotFound('Work step not found');

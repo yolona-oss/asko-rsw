@@ -48,7 +48,7 @@ export class PaymentService {
         targetId: string,
         amount: number,
         currency?: string,
-    ): Promise<PaymentEntity> {
+    ): Promise<PaymentEntity | null> {
         this.domainService.validateAmount(amount);
 
         const lockKey = `payment:lock:${targetType}:${targetId}`;
@@ -56,38 +56,88 @@ export class PaymentService {
         if (!acquired) throw AppErrors.conflict('Payment already being processed for this target');
 
         try {
-            // Cancel any existing PENDING invoices for this target (handles price update scenario)
-            const existing = await this.em.find(PaymentEntity, {
+            const paidPayments = await this.em.find(PaymentEntity, {
+                targetType, targetId, status: PaymentStatus.PAID,
+            });
+            const totalPaid = paidPayments.reduce(
+                (sum, p) => sum + Number(p.amount) - Number(p.refundedAmount ?? 0), 0,
+            );
+
+            const pendingPayments = await this.em.find(PaymentEntity, {
                 targetType, targetId, status: PaymentStatus.PENDING,
             });
-            for (const old of existing) {
-                old.status = PaymentStatus.FAILED;
-                await this.domainService.recordTransition(old.id, PaymentStatus.PENDING, PaymentStatus.FAILED, 'system', 'Cancelled by new invoice');
+            const totalPending = pendingPayments.reduce(
+                (sum, p) => sum + Number(p.amount), 0,
+            );
+
+            const totalAccounted = totalPaid + totalPending;
+            const diff = amount - totalAccounted;
+
+            if (diff > 0) {
+                // Price increased — keep existing PENDING invoices, add one for the diff
+                const paymentRecord = this.em.create(PaymentEntity, {
+                    userId,
+                    targetType,
+                    targetId,
+                    amount: diff,
+                    currency: currency ?? CurrencyEnum.DEFAULT,
+                    status: PaymentStatus.PENDING,
+                    expiresAt: this.getExpiresAt(),
+                });
+                await this.em.persistAndFlush(paymentRecord);
+
+                await this.eventService.emit({
+                    type: PaymentEventType.PAYMENT_CREATED,
+                    paymentId: paymentRecord.id,
+                    userId,
+                    targetType,
+                    targetId,
+                    amount: diff,
+                    currency: paymentRecord.currency,
+                    timestamp: new Date(),
+                });
+
+                return paymentRecord;
             }
 
-            const paymentRecord = this.em.create(PaymentEntity, {
-                userId,
-                targetType,
-                targetId,
-                amount,
-                currency: currency ?? CurrencyEnum.DEFAULT,
-                status: PaymentStatus.PENDING,
-                expiresAt: this.getExpiresAt(),
-            });
-            await this.em.persistAndFlush(paymentRecord);
+            if (diff < 0) {
+                // Price decreased — cancel all PENDING, re-invoice for remaining balance
+                for (const old of pendingPayments) {
+                    old.status = PaymentStatus.FAILED;
+                    await this.domainService.recordTransition(old.id, PaymentStatus.PENDING, PaymentStatus.FAILED, 'system', 'Cancelled: price decreased');
+                }
+                const remaining = amount - totalPaid;
+                if (remaining <= 0) {
+                    await this.em.flush();
+                    return null;
+                }
+                const paymentRecord = this.em.create(PaymentEntity, {
+                    userId,
+                    targetType,
+                    targetId,
+                    amount: remaining,
+                    currency: currency ?? CurrencyEnum.DEFAULT,
+                    status: PaymentStatus.PENDING,
+                    expiresAt: this.getExpiresAt(),
+                });
+                await this.em.persistAndFlush(paymentRecord);
 
-            await this.eventService.emit({
-                type: PaymentEventType.PAYMENT_CREATED,
-                paymentId: paymentRecord.id,
-                userId,
-                targetType,
-                targetId,
-                amount,
-                currency: paymentRecord.currency,
-                timestamp: new Date(),
-            });
+                await this.eventService.emit({
+                    type: PaymentEventType.PAYMENT_CREATED,
+                    paymentId: paymentRecord.id,
+                    userId,
+                    targetType,
+                    targetId,
+                    amount: remaining,
+                    currency: paymentRecord.currency,
+                    timestamp: new Date(),
+                });
 
-            return paymentRecord;
+                return paymentRecord;
+            }
+
+            // diff === 0 — nothing to do
+            return null;
         } finally {
             await this.lockService.releaseLock(lockKey);
         }

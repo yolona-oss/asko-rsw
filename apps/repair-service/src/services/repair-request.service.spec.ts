@@ -492,15 +492,11 @@ describe('RepairRequestService', () => {
             const result = await service.acceptRequest('repairer-user-1', 'req-1');
 
             expect(result.status).toBe(S.ACCEPTED);
-            // Two mandatory steps: Диагностика + Результат диагностики
-            expect(mockEm.create).toHaveBeenCalledTimes(2);
+            // One mandatory step: Диагностика
+            expect(mockEm.create).toHaveBeenCalledTimes(1);
             expect(mockEm.create).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({ title: 'Диагностика', isMandatory: true }),
-            );
-            expect(mockEm.create).toHaveBeenCalledWith(
-                expect.anything(),
-                expect.objectContaining({ title: 'Результат диагностики', isMandatory: true }),
             );
         });
 

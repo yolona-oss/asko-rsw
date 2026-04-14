@@ -80,7 +80,7 @@ export class PaymentGrpcController {
                 data.amount,
                 data.currency || undefined,
             );
-            return { payment: entityToRecord(payment) };
+            return { payment: payment ? entityToRecord(payment) : null };
         } catch (e) { throw toGrpcError(e); }
     }
 
