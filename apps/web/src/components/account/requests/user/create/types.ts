@@ -4,6 +4,8 @@ export interface UserDevice {
   id: string;
   device?: { id?: string; name?: string; model?: string };
   serialNumber?: string;
+  validationStatus?: string;
+  validationError?: string;
   address?: {
     id?: string;
     city?: string;

@@ -96,6 +96,17 @@ export class RepairRequestService {
             }
         }
 
+        // Validate user device
+        if (userDevice.validationStatus === 'invalid') {
+            throw AppErrors.badRequest('Устройство не прошло проверку: ' + (userDevice.validationError || 'проверка не пройдена'));
+        }
+        if (userDevice.validationStatus === 'pending') {
+            throw AppErrors.badRequest('Устройство ещё проходит проверку. Попробуйте через несколько секунд.');
+        }
+        if (userDevice.validationStatus === 'error') {
+            throw AppErrors.badRequest('Не удалось проверить устройство. Попробуйте обновить данные устройства.');
+        }
+
         // Validate address
         const addressEntity = userDevice.address
             ? (typeof userDevice.address === 'object' ? userDevice.address : await this.em.findOne(Address, { id: String(userDevice.address) }))

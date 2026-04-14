@@ -49,6 +49,22 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
     icon: 'certificate',
     href: () => '/account/certificates',
   },
+  address_validated: {
+    icon: 'address',
+    href: () => '/account/certificates',
+  },
+  address_validation_failed: {
+    icon: 'address',
+    href: () => '/account/certificates',
+  },
+  user_device_validated: {
+    icon: 'device',
+    href: () => '/account/certificates',
+  },
+  user_device_validation_failed: {
+    icon: 'device',
+    href: () => '/account/certificates',
+  },
   chat_message: {
     icon: 'chat',
     href: (n) => n.targetId ? `/account/chat?conversation=${n.targetId}` : undefined as any,

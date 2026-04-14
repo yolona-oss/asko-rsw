@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, ListSelect, Textarea, FormField } from '@asko/ui';
 import type { ListSelectOption } from '@asko/ui';
-import { Plus } from 'lucide-react';
+import { Plus, CheckCircle2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -90,6 +90,8 @@ export function CreateRequest() {
   const [showCreateCert, setShowCreateCert] = useState(false);
   const [localCert, setLocalCert] = useState<Certificate | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [deviceConfirmed, setDeviceConfirmed] = useState(false);
 
   const fetchData = async () => {
     setLoadingDevices(true);
@@ -118,6 +120,49 @@ export function CreateRequest() {
 
   useEffect(() => { fetchData(); }, []);
 
+  // Poll for validation status when selected device or its address is pending
+  const selectedDevice = devices.find((d) => d.id === userDeviceId);
+  const addrIsPending = selectedDevice?.address?.validationStatus === 'pending';
+  const deviceIsPending = selectedDevice?.validationStatus === 'pending';
+  const hasPendingValidation = addrIsPending || deviceIsPending;
+
+  useEffect(() => {
+    if (!userDeviceId || !hasPendingValidation) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await userDeviceApi.getMy();
+        const updated = res.data as UserDevice[];
+        const dev = updated.find((d) => d.id === userDeviceId);
+        if (!dev) return;
+
+        let changed = false;
+
+        // Check address status transition
+        if (addrIsPending && dev.address?.validationStatus !== 'pending') {
+          changed = true;
+          if (dev.address?.validationStatus === 'valid') {
+            setAddressConfirmed(true);
+            setTimeout(() => setAddressConfirmed(false), 5000);
+          }
+        }
+
+        // Check device status transition
+        if (deviceIsPending && dev.validationStatus !== 'pending') {
+          changed = true;
+          if (dev.validationStatus === 'valid') {
+            setDeviceConfirmed(true);
+            setTimeout(() => setDeviceConfirmed(false), 5000);
+          }
+        }
+
+        if (changed) setDevices(updated);
+      } catch { /* ignore polling errors */ }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [userDeviceId, hasPendingValidation, addrIsPending, deviceIsPending]);
+
   // Auto-apply cert for the selected device. Prefer a just-created localCert
   // (which may still be PENDING_PAYMENT) so the user sees the cert they just made.
   const applied: AppliedCert =
@@ -132,6 +177,9 @@ export function CreateRequest() {
         const addrStatus = d.address?.validationStatus;
         const addrInvalid = addrStatus === 'invalid' || addrStatus === 'error';
         const addrPending = addrStatus === 'pending';
+        const devStatus = d.validationStatus;
+        const devInvalid = devStatus === 'invalid' || devStatus === 'error';
+        const devPending = devStatus === 'pending';
 
         const label = d.device?.name
           ? `${d.device.name}${d.serialNumber ? ` (${d.serialNumber})` : ''}`
@@ -144,13 +192,14 @@ export function CreateRequest() {
         let statusText = '';
         let statusClass = 'text-text-sub';
         if (inRepair) { statusText = 'в ремонте'; statusClass = 'text-warning'; }
+        else if (devInvalid) { statusText = 'не прошло проверку'; statusClass = 'text-error'; }
         else if (addrInvalid) { statusText = 'адрес не подтверждён'; statusClass = 'text-error'; }
-        else if (addrPending) { statusText = 'проверка...'; statusClass = 'text-warning'; }
+        else if (devPending || addrPending) { statusText = 'проверка...'; statusClass = 'text-warning'; }
 
         return {
           value: d.id,
           label,
-          disabled: inRepair || addrInvalid,
+          disabled: inRepair || addrInvalid || devInvalid,
           detail: (
             <span className="flex items-center gap-2 flex-shrink-0 text-xs">
               {statusText && <span className={statusClass}>{statusText}</span>}
@@ -164,11 +213,13 @@ export function CreateRequest() {
     [devices, certificates, devicesInRepair],
   );
 
-  // Reset broken parts + localCert when device changes
+  // Reset broken parts + localCert + address feedback when device changes
   useEffect(() => {
     setSelectedParts([]);
     setDeviceParts([]);
     setLocalCert(null);
+    setAddressConfirmed(false);
+    setDeviceConfirmed(false);
   }, [userDeviceId]);
 
   // Fetch device parts catalog when device changes
@@ -221,6 +272,17 @@ export function CreateRequest() {
     }
 
     const selectedDev = devices.find((d) => d.id === userDeviceId);
+
+    const devValidation = selectedDev?.validationStatus;
+    if (devValidation === 'pending') {
+      setError('Устройство ещё проходит проверку. Попробуйте через несколько секунд.');
+      return;
+    }
+    if (devValidation === 'invalid' || devValidation === 'error') {
+      setError('Устройство не прошло проверку. Обновите данные устройства в разделе «Сертификаты».');
+      return;
+    }
+
     const addrValidation = selectedDev?.address?.validationStatus;
     if (addrValidation === 'pending') {
       setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
@@ -307,18 +369,65 @@ export function CreateRequest() {
           )}
         </FormField>
 
-        {/* Address validation warning */}
+        {/* Device validation status */}
+        {userDeviceId && (() => {
+          const sel = devices.find((d) => d.id === userDeviceId);
+          const dvs = sel?.validationStatus;
+          if (dvs === 'pending') return (
+            <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep flex items-center gap-2">
+              <span className="inline-block w-3 h-3 border-2 border-warning-deep border-t-transparent rounded-full animate-spin flex-shrink-0" />
+              Устройство проходит проверку. Отправка заявки будет доступна после подтверждения.
+            </div>
+          );
+          if (dvs === 'invalid' || dvs === 'error') return (
+            <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep flex flex-col gap-2">
+              <span>
+                Устройство не прошло проверку{sel?.validationError ? `: ${sel.validationError}` : ''}.
+              </span>
+              <a
+                href="/account/certificates"
+                className="text-sm font-medium text-error-deep underline underline-offset-2 hover:no-underline w-fit"
+              >
+                Изменить данные устройства
+              </a>
+            </div>
+          );
+          if (deviceConfirmed) return (
+            <div className="px-4 py-3 bg-success-bg border border-success-border text-sm text-success-deep flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              Устройство подтверждено.
+            </div>
+          );
+          return null;
+        })()}
+
+        {/* Address validation status */}
         {userDeviceId && (() => {
           const sel = devices.find((d) => d.id === userDeviceId);
           const vs = sel?.address?.validationStatus;
           if (vs === 'pending') return (
-            <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep">
+            <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep flex items-center gap-2">
+              <span className="inline-block w-3 h-3 border-2 border-warning-deep border-t-transparent rounded-full animate-spin flex-shrink-0" />
               Адрес устройства проходит проверку. Отправка заявки будет доступна после подтверждения.
             </div>
           );
           if (vs === 'invalid' || vs === 'error') return (
-            <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep">
-              Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}. Обновите адрес в разделе «Сертификаты».
+            <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep flex flex-col gap-2">
+              <span>
+                Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}.
+              </span>
+              <a
+                href="/account/certificates"
+                className="text-sm font-medium text-error-deep underline underline-offset-2 hover:no-underline w-fit"
+              >
+                Обновить адрес
+              </a>
+            </div>
+          );
+          if (addressConfirmed) return (
+            <div className="px-4 py-3 bg-success-bg border border-success-border text-sm text-success-deep flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              Адрес подтверждён. Вы можете отправить заявку.
             </div>
           );
           return null;

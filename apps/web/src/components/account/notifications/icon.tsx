@@ -1,6 +1,6 @@
 'use client';
 
-import { Wrench, Banknote, FileText, MessageCircle, Calendar, Bell } from 'lucide-react';
+import { Wrench, Banknote, FileText, MessageCircle, Calendar, Bell, MapPin, Smartphone } from 'lucide-react';
 import { NOTIFICATION_TYPE_CONFIG } from './constants';
 
 export function NotificationIcon({ type }: { type: string }) {
@@ -18,6 +18,10 @@ export function NotificationIcon({ type }: { type: string }) {
       return <MessageCircle className="w-5 h-5 text-info" />;
     case 'schedule':
       return <Calendar className="w-5 h-5 text-warning" />;
+    case 'address':
+      return <MapPin className="w-5 h-5 text-info" />;
+    case 'device':
+      return <Smartphone className="w-5 h-5 text-info" />;
     default:
       return <Bell className="w-5 h-5 text-text-muted" />;
   }

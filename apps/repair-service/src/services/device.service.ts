@@ -4,6 +4,7 @@ import { Device, DeviceCategory, UserDevice, Address, DevicePart } from '../enti
 import { AppErrors } from 'common/error';
 import { slugify } from '@asko/shared';
 import { SignatureService } from './signature.service';
+import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
 
 const DEVICE_SORTABLE_FIELDS = ['createdAt', 'name', 'brand', 'model', 'isFeatured'] as const;
 
@@ -12,6 +13,7 @@ export class DeviceService {
     constructor(
         private readonly em: EntityManager,
         private readonly signatureService: SignatureService,
+        private readonly deviceValidationPublisher: UserDeviceValidationPublisher,
     ) {}
 
     // ── Device catalog (admin) ──────────────────────────────────────────
@@ -240,6 +242,15 @@ export class DeviceService {
         userDevice.registrationSignature = this.signatureService.sign(regPayload);
         await this.em.flush();
 
+        // Queue async device validation (dup check + external S/N)
+        this.deviceValidationPublisher.emit({
+            userDeviceId: userDevice.id,
+            userId,
+            deviceId: dto.deviceId,
+            serialNumber: dto.serialNumber,
+            attempt: 0,
+        });
+
         return userDevice;
     }
 
@@ -260,6 +271,7 @@ export class DeviceService {
             userDevice.address = address;
         }
 
+        const serialChanged = dto.serialNumber && dto.serialNumber !== userDevice.serialNumber;
         if (dto.serialNumber) {
             userDevice.serialNumber = dto.serialNumber;
         }
@@ -268,7 +280,25 @@ export class DeviceService {
             userDevice.notes = dto.notes;
         }
 
+        // Re-validate if serial number changed
+        if (serialChanged) {
+            userDevice.validationStatus = 'pending';
+            userDevice.validationError = undefined;
+        }
+
         await this.em.flush();
+
+        if (serialChanged) {
+            const deviceId = typeof userDevice.device === 'object' ? userDevice.device.id : String(userDevice.device);
+            this.deviceValidationPublisher.emit({
+                userDeviceId: userDevice.id,
+                userId,
+                deviceId,
+                serialNumber: userDevice.serialNumber,
+                attempt: 0,
+            });
+        }
+
         return userDevice;
     }
 

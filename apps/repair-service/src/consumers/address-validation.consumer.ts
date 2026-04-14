@@ -5,6 +5,7 @@ import { sleep } from '@asko/shared';
 import { Address } from 'entities/address.entity';
 import type { AddressValidationEvent } from 'modules/address-validation.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
+import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
 
 const MAX_RETRIES = 3;
 const RUSSIA_BOUNDS = { latMin: 41, latMax: 82, lonMin: 19, lonMax: 180 };
@@ -25,6 +26,7 @@ export class AddressValidationConsumer {
     constructor(
         private readonly em: EntityManager,
         private readonly validationPublisher: AddressValidationPublisher,
+        private readonly repairEvents: RepairEventService,
     ) {}
 
     @EventPattern('address.validate')
@@ -123,6 +125,16 @@ export class AddressValidationConsumer {
                 address.longitude = nominatimLon;
             }
             await this.em.flush();
+
+            await this.repairEvents.emitAddressEvent({
+                type: RepairEventType.ADDRESS_VALIDATED,
+                addressId,
+                userId: address.userId,
+                city: address.city,
+                street: address.street,
+                house: address.house,
+                timestamp: new Date(),
+            });
         }
 
         console.log(`[AddressValidation] Address ${addressId} validated successfully`);
@@ -135,6 +147,19 @@ export class AddressValidationConsumer {
             address.validationStatus = status;
             address.validationError = error;
             await this.em.flush();
+
+            if (status === 'invalid' || status === 'error') {
+                await this.repairEvents.emitAddressEvent({
+                    type: RepairEventType.ADDRESS_VALIDATION_FAILED,
+                    addressId,
+                    userId: address.userId,
+                    city: address.city,
+                    street: address.street,
+                    house: address.house,
+                    validationError: error,
+                    timestamp: new Date(),
+                });
+            }
         }
         console.log(`[AddressValidation] Address ${addressId}: ${status} - ${error}`);
     }

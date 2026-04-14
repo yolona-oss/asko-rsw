@@ -5,7 +5,7 @@ import { Address } from './address.entity';
 
 @Entity()
 export class UserDevice {
-    [OptionalProps]?: 'purchaseDate' | 'warrantyUntil' | 'notes' | 'createdAt' | 'registrationSignature' | 'registrationSignedPayload';
+    [OptionalProps]?: 'purchaseDate' | 'warrantyUntil' | 'notes' | 'createdAt' | 'registrationSignature' | 'registrationSignedPayload' | 'validationStatus' | 'validationError';
 
     @PrimaryKey()
     id: string = uuid();
@@ -39,4 +39,10 @@ export class UserDevice {
 
     @Property({ type: 'text', nullable: true })
     registrationSignedPayload?: string;
+
+    @Property({ type: 'varchar', length: 20, default: 'pending' })
+    validationStatus: string = 'pending';
+
+    @Property({ type: 'text', nullable: true })
+    validationError?: string;
 }

@@ -37,6 +37,10 @@ export enum NotificationType {
     SCHEDULE_PATTERN_REJECTED = 'schedule_pattern_rejected',
     AVR_SIGNING_REQUESTED = 'avr_signing_requested',
     AVR_SIGNED = 'avr_signed',
+    ADDRESS_VALIDATED = 'address_validated',
+    ADDRESS_VALIDATION_FAILED = 'address_validation_failed',
+    USER_DEVICE_VALIDATED = 'user_device_validated',
+    USER_DEVICE_VALIDATION_FAILED = 'user_device_validation_failed',
 }
 
 export enum NotificationTargetType {
@@ -45,5 +49,7 @@ export enum NotificationTargetType {
     CERTIFICATE = 'certificate',
     CONVERSATION = 'conversation',
     SCHEDULE = 'schedule',
+    ADDRESS = 'address',
+    USER_DEVICE = 'userDevice',
     SYSTEM = 'system',
 }

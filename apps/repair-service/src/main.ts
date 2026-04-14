@@ -45,6 +45,17 @@ async function bootstrap() {
         },
     });
 
+    // RabbitMQ transport for user device validation queue
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.RMQ,
+        options: {
+            urls: [config.rabbitmq.url],
+            queue: 'user_device_validation_queue',
+            queueOptions: { durable: true },
+            noAck: false,
+        },
+    });
+
     // RabbitMQ transport for schedule commands from other services
     app.connectMicroservice<MicroserviceOptions>({
         transport: Transport.RMQ,

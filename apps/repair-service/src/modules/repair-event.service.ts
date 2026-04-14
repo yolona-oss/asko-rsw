@@ -23,6 +23,31 @@ export enum RepairEventType {
     SCHEDULE_PATTERN_REJECTED = 'schedule.pattern_rejected',
     CERTIFICATE_EXPIRING_SOON = 'certificate.expiring_soon',
     CERTIFICATE_EXPIRED = 'certificate.expired',
+    ADDRESS_VALIDATED = 'address.validated',
+    ADDRESS_VALIDATION_FAILED = 'address.validation_failed',
+    USER_DEVICE_VALIDATED = 'user_device.validated',
+    USER_DEVICE_VALIDATION_FAILED = 'user_device.validation_failed',
+}
+
+export interface AddressEvent {
+    type: RepairEventType.ADDRESS_VALIDATED | RepairEventType.ADDRESS_VALIDATION_FAILED;
+    addressId: string;
+    userId: string;
+    city: string;
+    street: string;
+    house: string;
+    validationError?: string;
+    timestamp: Date;
+}
+
+export interface UserDeviceEvent {
+    type: RepairEventType.USER_DEVICE_VALIDATED | RepairEventType.USER_DEVICE_VALIDATION_FAILED;
+    userDeviceId: string;
+    userId: string;
+    serialNumber: string;
+    deviceName: string;
+    validationError?: string;
+    timestamp: Date;
 }
 
 export interface CertificateEvent {
@@ -103,6 +128,16 @@ export class RepairEventService implements OnModuleInit {
 
     async emitCertificateEvent(event: CertificateEvent): Promise<void> {
         console.log(`[CertificateEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
+    }
+
+    async emitAddressEvent(event: AddressEvent): Promise<void> {
+        console.log(`[AddressEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
+    }
+
+    async emitUserDeviceEvent(event: UserDeviceEvent): Promise<void> {
+        console.log(`[UserDeviceEvent] ${event.type}`, JSON.stringify(event));
         this.rmqClient.emit(event.type, event);
     }
 }

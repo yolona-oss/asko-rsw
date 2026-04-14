@@ -315,6 +315,112 @@ export class RepairEventConsumer {
         }
     }
 
+    // ── Address Validation Events ──
+
+    @EventPattern('address.validated')
+    async handleAddressValidated(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const addr = [data.city, data.street, data.house].filter(Boolean).join(', ');
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.ADDRESS_VALIDATED,
+                'Адрес подтверждён',
+                `Адрес ${addr} успешно прошёл проверку. Теперь вы можете создать заявку на ремонт.`,
+                NotificationTargetType.ADDRESS,
+                data.addressId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] address.validated error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('address.validation_failed')
+    async handleAddressValidationFailed(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const addr = [data.city, data.street, data.house].filter(Boolean).join(', ');
+        const reason = data.validationError ? `: ${data.validationError}` : '';
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.ADDRESS_VALIDATION_FAILED,
+                'Адрес не прошёл проверку',
+                `Адрес ${addr} не прошёл проверку${reason}. Обновите адрес устройства в разделе «Сертификаты».`,
+                NotificationTargetType.ADDRESS,
+                data.addressId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] address.validation_failed error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    // ── User Device Validation Events ──
+
+    @EventPattern('user_device.validated')
+    async handleUserDeviceValidated(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const label = data.deviceName
+            ? `${data.deviceName} (${data.serialNumber})`
+            : data.serialNumber;
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.USER_DEVICE_VALIDATED,
+                'Устройство подтверждено',
+                `Устройство ${label} успешно прошло проверку. Теперь вы можете создать заявку на ремонт.`,
+                NotificationTargetType.USER_DEVICE,
+                data.userDeviceId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] user_device.validated error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('user_device.validation_failed')
+    async handleUserDeviceValidationFailed(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const label = data.deviceName
+            ? `${data.deviceName} (${data.serialNumber})`
+            : data.serialNumber;
+        const reason = data.validationError ? `: ${data.validationError}` : '';
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.USER_DEVICE_VALIDATION_FAILED,
+                'Устройство не прошло проверку',
+                `Устройство ${label} не прошло проверку${reason}.`,
+                NotificationTargetType.USER_DEVICE,
+                data.userDeviceId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] user_device.validation_failed error:', e);
+            channel.ack(msg);
+        }
+    }
+
     // ── AVR Events ──
 
     @EventPattern('repair.avr_signing_requested')

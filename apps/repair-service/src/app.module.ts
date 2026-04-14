@@ -10,6 +10,8 @@ import { PaymentCommandService } from 'modules/payment-command.service';
 import { PaymentClientModule } from 'modules/payment-client/payment-client.module';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
+import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
+import { UserDeviceValidationConsumer } from 'consumers/user-device-validation.consumer';
 import {
     DeviceCategory,
     Device,
@@ -128,6 +130,18 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
                     },
                 }),
             },
+            {
+                name: 'USER_DEVICE_VALIDATION',
+                inject: [AppConfig],
+                useFactory: (config: AppConfig) => ({
+                    transport: Transport.RMQ,
+                    options: {
+                        urls: [config.rabbitmq.url],
+                        queue: 'user_device_validation_queue',
+                        queueOptions: { durable: true },
+                    },
+                }),
+            },
         ]),
     ],
     controllers: [
@@ -140,6 +154,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         SchedulePatternGrpcController,
         PaymentEventConsumer,
         AddressValidationConsumer,
+        UserDeviceValidationConsumer,
         ScheduleCommandConsumer,
         UserEventConsumer,
     ],
@@ -162,6 +177,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         RepairEventService,
         PaymentCommandService,
         AddressValidationPublisher,
+        UserDeviceValidationPublisher,
         WScheduleService,
         WSchedulePatternService,
         WSchedulePatternHistoryService,

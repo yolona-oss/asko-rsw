@@ -139,6 +139,8 @@ function userDeviceToRecord(entity: UserDevice) {
         createdAt: entity.createdAt?.toISOString() ?? '',
         registrationSignature: entity.registrationSignature ?? '',
         registrationSignedPayload: entity.registrationSignedPayload ?? '',
+        validationStatus: entity.validationStatus ?? 'pending',
+        validationError: entity.validationError ?? '',
         device: device ? deviceToRecord(device) : undefined,
         address: address ? addressToRecord(address) : undefined,
     };

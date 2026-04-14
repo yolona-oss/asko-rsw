@@ -90,6 +90,8 @@ export class UserDeviceRecordDto {
     createdAt: string;
     registrationSignature?: string;
     registrationSignedPayload?: string;
+    validationStatus?: string;
+    validationError?: string;
     device?: DeviceRecordDto;
     address?: AddressRecordDto;
 }

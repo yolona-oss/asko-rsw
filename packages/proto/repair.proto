@@ -460,6 +460,8 @@ message UserDeviceRecord {
     AddressRecord address = 11;
     string registrationSignature = 12;
     string registrationSignedPayload = 13;
+    string validationStatus = 14;
+    string validationError = 15;
 }
 
 message UserDeviceResponse {

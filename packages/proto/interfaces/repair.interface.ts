@@ -259,6 +259,8 @@ export interface UserDeviceRecord {
     address: AddressRecord;
     registrationSignature?: string;
     registrationSignedPayload?: string;
+    validationStatus?: string;
+    validationError?: string;
 }
 
 export interface UserDeviceResponse {
