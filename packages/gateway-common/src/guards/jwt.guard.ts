@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
-import { REQUSET_USER_KEY, JwtPayload, Role, extractToken, AppErrors } from '@asko/shared';
+import { REQUEST_USER_KEY, JwtPayload, Role, extractToken, AppErrors } from '@asko/shared';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
@@ -63,7 +63,7 @@ export class JwtGuard implements CanActivate {
             const payload: JwtPayload = this.jwtService.verify(accessToken, {
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
-            request[REQUSET_USER_KEY] = payload;
+            request[REQUEST_USER_KEY] = payload;
 
             // Block disabled users from all protected endpoints
             if (payload.isActive === false) {

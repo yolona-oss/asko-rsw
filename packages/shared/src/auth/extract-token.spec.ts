@@ -10,7 +10,7 @@ describe('extractToken', () => {
         const result = extractToken(request);
 
         expect(result).toEqual({ accessToken: 'my-access-token-123' });
-        expect(result.resetToken).toBeUndefined();
+        expect(result.refreshToken).toBeUndefined();
     });
 
     it('returns accessToken even when cookies also contain a refresh token', () => {
@@ -24,7 +24,7 @@ describe('extractToken', () => {
         expect(result).toEqual({ accessToken: 'my-token' });
     });
 
-    it('returns resetToken from cookie when no Authorization header', () => {
+    it('returns refreshToken from cookie when no Authorization header', () => {
         const request: BaseRequestWithCookies = {
             headers: {},
             cookies: { refreshTkn: 'refresh-token-value' },
@@ -32,11 +32,11 @@ describe('extractToken', () => {
 
         const result = extractToken(request);
 
-        expect(result).toEqual({ resetToken: 'refresh-token-value' });
+        expect(result).toEqual({ refreshToken: 'refresh-token-value' });
         expect(result.accessToken).toBeUndefined();
     });
 
-    it('returns resetToken from BaseCookies interface (get method)', () => {
+    it('returns refreshToken from BaseCookies interface (get method)', () => {
         const request: BaseRequestWithCookies = {
             headers: {},
             cookies: {
@@ -52,7 +52,7 @@ describe('extractToken', () => {
 
         const result = extractToken(request);
 
-        expect(result).toEqual({ resetToken: 'cookie-get-token' });
+        expect(result).toEqual({ refreshToken: 'cookie-get-token' });
     });
 
     it('returns empty tokens when neither Authorization header nor cookie present', () => {
@@ -64,10 +64,10 @@ describe('extractToken', () => {
         const result = extractToken(request);
 
         expect(result.accessToken).toBeUndefined();
-        expect(result.resetToken).toBeUndefined();
+        expect(result.refreshToken).toBeUndefined();
     });
 
-    it('returns resetToken as undefined when cookie is not found via get()', () => {
+    it('returns refreshToken as undefined when cookie is not found via get()', () => {
         const request: BaseRequestWithCookies = {
             headers: {},
             cookies: {
@@ -80,7 +80,7 @@ describe('extractToken', () => {
         const result = extractToken(request);
 
         expect(result.accessToken).toBeUndefined();
-        expect(result.resetToken).toBeUndefined();
+        expect(result.refreshToken).toBeUndefined();
     });
 
     it('handles Authorization header with case-insensitive lookup', () => {

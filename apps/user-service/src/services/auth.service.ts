@@ -486,10 +486,7 @@ export class AuthService {
 
     async validateUserCredentials(email: string, pass: string): Promise<User> {
         const user = await this.userService.findByEmail(email, ['addresses', 'sessions']);
-        if (!user!.passwordHash) {
-            throw AppErrors.unauthorized('Invalid credentials');
-        }
-        if (!user || !(await Crypto.comparePasswords(pass, user.passwordHash))) {
+        if (!user || !user.passwordHash || !(await Crypto.comparePasswords(pass, user.passwordHash))) {
             throw AppErrors.unauthorized('Invalid credentials');
         }
         return user;
@@ -533,11 +530,12 @@ export class AuthService {
         return { access_token }
     }
 
-    private async generateRefreshToken(userId: string, params: { deviceInfo: string, ipAddress: string }): Promise<IRefreshToken> {
+    private async generateRefreshToken(userId: string, authProvider: AuthProvider, params: { deviceInfo: string, ipAddress: string }): Promise<IRefreshToken> {
         const refresh_token = this.jwtService.sign(
             {
                 sub: userId.toString(),
                 id: userId.toString(),
+                authProvider,
             },
             {
                 expiresIn: this.config.jwt.refresh_token.sign_options.expires_in,
@@ -559,7 +557,7 @@ export class AuthService {
 
     private async generateTokens(userId: string, roles: string[], params: UserIdentificationData, hostInfo: { deviceInfo: string, ipAddress: string }, isActive: boolean = true): Promise<IRefreshToken & IAccessToken> {
         const { access_token } = this.generateAccessToken(userId, roles, params, isActive)
-        const { refresh_token } = await this.generateRefreshToken(userId, hostInfo)
+        const { refresh_token } = await this.generateRefreshToken(userId, params.authProvider, hostInfo)
         return {
             access_token,
             refresh_token

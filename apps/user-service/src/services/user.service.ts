@@ -468,13 +468,10 @@ export class UserService {
 
     @CreateRequestContext()
     async removeResetTokens(userId: string) {
-        const sessions = await this.em.find(Session, {
+        await this.em.nativeDelete(Session, {
             user: { id: userId },
             type: TokenType.RESET_PASSWORD,
         });
-        for (const session of sessions) {
-            await this.em.removeAndFlush(session);
-        }
     }
 
     @CreateRequestContext()

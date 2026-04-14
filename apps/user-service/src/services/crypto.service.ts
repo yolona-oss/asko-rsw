@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import * as argon2 from 'argon2'
 
 enum AlphabetOrderType {
-    LoverCase,
+    LowerCase,
     UpperCase,
     Number,
     SpecialCharacter
@@ -10,7 +10,7 @@ enum AlphabetOrderType {
 
 const alphabets = [
     {
-        type: AlphabetOrderType.LoverCase,
+        type: AlphabetOrderType.LowerCase,
         length: 26,
         alphabet: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     },

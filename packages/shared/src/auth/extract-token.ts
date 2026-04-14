@@ -25,7 +25,7 @@ const getCookieValue = (cookies: BaseRequestWithCookies['cookies'], cookieName: 
 /***
  * Extracts the bearer access token from the request headers or the refresh token from the cookie otherwise
  */
-export const extractToken = (request: BaseRequestWithCookies): { accessToken?: string, resetToken?: string } => {
+export const extractToken = (request: BaseRequestWithCookies): { accessToken?: string, refreshToken?: string } => {
     const bearer = getHeaderValue(request.headers, 'authorization')?.split(' ')[1];
 
     if (bearer) {
@@ -37,6 +37,6 @@ export const extractToken = (request: BaseRequestWithCookies): { accessToken?: s
     const cookieName = REFRESH_TOKEN.cookie.name;
     const cookieValue = getCookieValue(request.cookies, cookieName);
     return {
-        resetToken: cookieValue ?? undefined
+        refreshToken: cookieValue ?? undefined
     }
 };
