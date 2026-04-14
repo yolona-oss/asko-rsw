@@ -1,7 +1,7 @@
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { Seeder } from '@mikro-orm/seeder';
 import { Role, AuthProvider } from '@asko/shared';
-import { User, UserStatusHistory } from '../entities';
+import { User, UserSettings, UserStatusHistory } from '../entities';
 import CryptoService from '../services/crypto.service';
 
 export class ProdSeeder extends Seeder {
@@ -34,6 +34,7 @@ export class ProdSeeder extends Seeder {
             isActive: true,
             emailVerified: true,
             phoneVerified: true,
+            settings: new UserSettings(),
             createdAt: now,
             updatedAt: now,
         });
