@@ -617,12 +617,12 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               const showComplete = showFlowActions && step.status === WorkStepStatus.IN_PROGRESS;
               const showSkip = showComplete && !isMandatory && !step.isFinal;
               const showCommentBtn = !isDiagnostic && !isDeclined && !isEditingComment && (
-                (canControlFlow && canStepComment) || (canEditSteps && isMandatory)
+                canStepComment || (canEditSteps && isMandatory)
               );
               const showDelete = !isDeclined && canEditSteps && !isMandatory;
 
               // Diagnostic step: single-click action (opens modal)
-              const showDiagAction = isDiagnostic && canControlFlow
+              const showDiagAction = isDiagnostic && canStepComment
                 && (step.status === WorkStepStatus.PENDING || step.status === WorkStepStatus.IN_PROGRESS);
 
               const hasActions = showStart || showComplete || showSkip || showCommentBtn || showDelete || showDiagAction;
