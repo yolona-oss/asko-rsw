@@ -3,6 +3,7 @@
 import { Badge, Card } from '@asko/ui';
 import { AvrStatus } from '@asko/shared/client';
 import { Download, FileCheck, FileClock, FileX, FileMinus, AlertTriangle } from 'lucide-react';
+import { getDocumentUrl } from '@/lib/file-url';
 
 interface AvrStatusCardProps {
   avrStatus?: string;
@@ -63,7 +64,7 @@ export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, a
         <div className="flex items-center gap-3 flex-wrap">
           {avrDocumentId && (
             <a
-              href={`/files/document/${avrDocumentId}`}
+              href={getDocumentUrl(avrDocumentId)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-brand-red hover:underline"
@@ -74,7 +75,7 @@ export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, a
           )}
           {avrSignedDocumentId && avrSigningMethod === 'offline' && (
             <a
-              href={`/files/document/${avrSignedDocumentId}`}
+              href={getDocumentUrl(avrSignedDocumentId)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-text-sub hover:underline"

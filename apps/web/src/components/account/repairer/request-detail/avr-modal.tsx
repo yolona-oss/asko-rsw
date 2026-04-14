@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Button, Modal, Textarea, FormField } from '@asko/ui';
 import { Download } from 'lucide-react';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { getDocumentUrl } from '@/lib/file-url';
 import { SigningOtpForm } from '@/components/account/shared/signing-otp-form';
 
 type Step = 'edit' | 'generated' | 'digital' | 'offline' | 'done';
@@ -103,7 +104,7 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
   };
 
   const downloadUrl = avrDocumentId
-    ? `/files/document/${avrDocumentId}`
+    ? getDocumentUrl(avrDocumentId)
     : undefined;
 
   return (
