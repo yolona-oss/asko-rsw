@@ -3,6 +3,7 @@ import type { BadgeVariant } from '@asko/ui';
 export const STATUS_LABELS: Record<string, string> = {
   paid: 'Оплачен',
   pending: 'Ожидает оплаты',
+  partially_refunded: 'Частичный возврат',
   refunded: 'Возвращён',
   failed: 'Ошибка',
 };
@@ -10,6 +11,7 @@ export const STATUS_LABELS: Record<string, string> = {
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   paid: 'success',
   pending: 'warning',
+  partially_refunded: 'warning',
   refunded: 'error',
   failed: 'neutral',
 };

@@ -95,7 +95,7 @@ export type WithdrawalList = components['schemas']['WithdrawalListResponseDto'];
 export type PaginatedWithdrawals = components['schemas']['PaginatedWithdrawalsResponseDto'];
 
 // ── Payments ──
-export type PaymentRecord = components['schemas']['PaymentRecordDto'];
+export type PaymentRecord = components['schemas']['PaymentRecordDto'] & { refundedAmount?: number };
 export type PaymentList = components['schemas']['PaymentListResponseDto'];
 export type PaginatedPayments = components['schemas']['PaginatedPaymentsResponseDto'];
 export type ProcessInvoice = components['schemas']['ProcessInvoiceResponseDto'];

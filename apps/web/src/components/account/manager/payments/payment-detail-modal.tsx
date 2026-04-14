@@ -71,13 +71,21 @@ export function PaymentDetailModal({
             label="Сумма"
             value={
               <Badge
-                variant={payment.status === 'refunded' ? 'error' : payment.status === 'pending' ? 'warning' : 'success'}
+                variant={payment.status === 'refunded' ? 'error' : payment.status === 'partially_refunded' || payment.status === 'pending' ? 'warning' : 'success'}
                 className="text-xs"
               >
                 {formatAmount(payment.amount)} ₽
               </Badge>
             }
           />
+          {(payment as any).refundedAmount > 0 && (
+            <DetailRow
+              label="Возвращено"
+              value={
+                <span className="text-sm font-medium text-error">{formatAmount((payment as any).refundedAmount)} ₽</span>
+              }
+            />
+          )}
           <DetailRow label="Валюта" value={payment.currency?.toUpperCase() ?? 'RUB'} />
           <DetailRow label="Способ оплаты" value={PROVIDER_LABELS[payment.provider ?? ''] ?? payment.provider ?? '-'} />
           {payment.providerPaymentId && <DetailRow label="ID провайдера" value={payment.providerPaymentId} />}

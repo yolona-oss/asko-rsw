@@ -65,8 +65,9 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [declineDiagReason, setDeclineDiagReason] = useState('');
   const [declineDiagError, setDeclineDiagError] = useState('');
 
-  // Cash payment confirmation
+  // Cash payment confirmation & payment summary
   const [pendingCashPayment, setPendingCashPayment] = useState<any>(null);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
   const [cashConfirming, setCashConfirming] = useState(false);
   const [cashConfirmError, setCashConfirmError] = useState('');
 
@@ -103,6 +104,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           }).catch(() => {}),
           repairRequestApi.getPayments(requestId).then(({ data }) => {
             const payments = Array.isArray(data) ? data : (data as any).payments ?? [];
+            setAllPayments(payments);
             const cashPending = payments.find((p: any) => p.provider === 'cash' && p.status === 'pending');
             setPendingCashPayment(cashPending ?? null);
           }).catch(() => {}),
@@ -611,7 +613,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
               const showFlowActions = !isDeclined && !isDiagnostic && canControlFlow;
               const showStart = showFlowActions && step.status === WorkStepStatus.PENDING;
               const showComplete = showFlowActions && step.status === WorkStepStatus.IN_PROGRESS;
-              const showSkip = showComplete && !isMandatory;
+              const showSkip = showComplete && !isMandatory && !step.isFinal;
               const showCommentBtn = !isDiagnostic && !isDeclined && !isEditingComment && (
                 (canControlFlow && canStepComment) || (canEditSteps && isMandatory)
               );
@@ -809,6 +811,42 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           >
             {cashConfirming ? 'Подтверждение...' : 'Подтвердить получение наличных'}
           </Button>
+        </Card>
+      )}
+
+      {/* Payment summary */}
+      {allPayments.length > 0 && (
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-lg font-medium text-text-main">Платежи</h2>
+          {(() => {
+            const paid = allPayments.reduce((s: number, p: any) => s + (p.status === 'paid' || p.status === 'partially_refunded' ? Number(p.amount) : 0), 0);
+            const refunded = allPayments.reduce((s: number, p: any) => s + Number(p.refundedAmount ?? 0), 0);
+            const pending = allPayments.reduce((s: number, p: any) => s + (p.status === 'pending' ? Number(p.amount) : 0), 0);
+            const effectivePaid = paid - refunded;
+            return (
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                {effectivePaid > 0 && <span className="text-text-main">Оплачено: <span className="font-medium">{effectivePaid.toLocaleString('ru-RU')} ₽</span></span>}
+                {refunded > 0 && <span className="text-error">Возвращено: <span className="font-medium">{refunded.toLocaleString('ru-RU')} ₽</span></span>}
+                {pending > 0 && <span className="text-warning">Ожидает: <span className="font-medium">{pending.toLocaleString('ru-RU')} ₽</span></span>}
+              </div>
+            );
+          })()}
+          <div className="flex flex-col gap-1">
+            {allPayments.map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-border-light last:border-b-0">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-sm text-text-sub">{new Date(p.paidAt ?? p.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  {p.refundedAmount > 0 && <span className="text-xs text-error">возврат {Number(p.refundedAmount).toLocaleString('ru-RU')} ₽</span>}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-sm font-medium text-text-main">{Number(p.amount).toLocaleString('ru-RU')} ₽</span>
+                  <Badge variant={p.status === 'paid' ? 'success' : p.status === 'pending' ? 'warning' : p.status === 'partially_refunded' ? 'warning' : p.status === 'refunded' ? 'error' : 'neutral'}>
+                    {p.status === 'paid' ? 'Оплачен' : p.status === 'pending' ? 'Ожидает' : p.status === 'partially_refunded' ? 'Частичный возврат' : p.status === 'refunded' ? 'Возвращён' : p.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 

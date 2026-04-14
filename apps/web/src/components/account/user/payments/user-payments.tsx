@@ -274,6 +274,12 @@ export function UserPayments() {
                 </Badge>
               }
             />
+            {(item as any).refundedAmount > 0 && (
+              <DetailRow
+                label="Возвращено"
+                value={<span className="text-sm font-medium text-error">{formatAmount((item as any).refundedAmount)} ₽</span>}
+              />
+            )}
             <DetailRow label="Провайдер" value={item.provider ?? '-'} />
             <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
           </div>

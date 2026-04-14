@@ -3,6 +3,7 @@ import type { BadgeVariant, FilterDefinition } from '@asko/ui';
 export const STATUS_LABELS: Record<string, string> = {
   paid: 'Подтверждён',
   pending: 'Ожидание',
+  partially_refunded: 'Частичный возврат',
   refunded: 'Возвращён',
   failed: 'Ошибка',
 };
@@ -10,6 +11,7 @@ export const STATUS_LABELS: Record<string, string> = {
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   paid: 'success',
   pending: 'warning',
+  partially_refunded: 'warning',
   refunded: 'error',
   failed: 'neutral',
 };
@@ -37,6 +39,7 @@ export const FILTERS: FilterDefinition[] = [
       { value: '', label: 'Все' },
       { value: 'paid', label: 'Подтверждён' },
       { value: 'pending', label: 'Ожидание' },
+      { value: 'partially_refunded', label: 'Частичный возврат' },
       { value: 'refunded', label: 'Возвращён' },
       { value: 'failed', label: 'Ошибка' },
     ],

@@ -21,6 +21,7 @@ export class PaymentRecordDto {
     @ApiProperty({ enum: PaymentProviderType, enumName: 'PaymentProviderType', required: false })
     provider?: PaymentProviderType;
     providerPaymentId?: string;
+    refundedAmount?: number;
     user?: AuthUserDto;
     paidAt?: string;
     createdAt: string;

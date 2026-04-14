@@ -90,6 +90,10 @@ export class WorkStepService {
             throw AppErrors.badRequest('Нельзя менять название обязательного шага');
         }
 
+        if (step.isFinal && dto.status === WorkStepStatus.SKIPPED) {
+            throw AppErrors.badRequest('Нельзя пропустить последний шаг');
+        }
+
         if (request.stepsLocked) {
             // When locked, only status + comment changes are allowed.
             if (dto.title || dto.description) {

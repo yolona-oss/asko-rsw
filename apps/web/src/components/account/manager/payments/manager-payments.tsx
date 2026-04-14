@@ -57,7 +57,7 @@ export function ManagerPayments() {
   // Compute chart buckets
   const confirmedPayments = useMemo(
     () => chartPayments.filter((p) => {
-      if (p.status !== 'paid') return false;
+      if (p.status !== 'paid' && p.status !== 'partially_refunded') return false;
       const ts = new Date(p.paidAt ?? p.createdAt).getTime();
       return ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime();
     }),
@@ -66,7 +66,7 @@ export function ManagerPayments() {
 
   const refundedPayments = useMemo(
     () => chartPayments.filter((p) => {
-      if (p.status !== 'refunded') return false;
+      if (p.status !== 'refunded' && p.status !== 'partially_refunded') return false;
       const ts = new Date(p.paidAt ?? p.createdAt).getTime();
       return ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime();
     }),
@@ -76,8 +76,8 @@ export function ManagerPayments() {
   const confirmedBuckets = useMemo(() => bucketPayments(confirmedPayments, dateRange), [confirmedPayments, dateRange]);
   const refundedBuckets = useMemo(() => bucketPayments(refundedPayments, dateRange), [refundedPayments, dateRange]);
 
-  const confirmedTotal = confirmedPayments.reduce((s, p) => s + p.amount, 0);
-  const refundedTotal = refundedPayments.reduce((s, p) => s + p.amount, 0);
+  const confirmedTotal = confirmedPayments.reduce((s, p) => s + p.amount - (p.refundedAmount ?? 0), 0);
+  const refundedTotal = refundedPayments.reduce((s, p) => s + (p.refundedAmount ?? 0), 0);
 
   // Previous period for % change
   const prevRange = useMemo(() => {
@@ -88,22 +88,22 @@ export function ManagerPayments() {
   const prevConfirmedTotal = useMemo(
     () => chartPayments
       .filter((p) => {
-        if (p.status !== 'paid') return false;
+        if (p.status !== 'paid' && p.status !== 'partially_refunded') return false;
         const ts = new Date(p.paidAt ?? p.createdAt).getTime();
         return ts >= prevRange.start.getTime() && ts <= prevRange.end.getTime();
       })
-      .reduce((s, p) => s + p.amount, 0),
+      .reduce((s, p) => s + p.amount - (p.refundedAmount ?? 0), 0),
     [chartPayments, prevRange],
   );
 
   const prevRefundedTotal = useMemo(
     () => chartPayments
       .filter((p) => {
-        if (p.status !== 'refunded') return false;
+        if (p.status !== 'refunded' && p.status !== 'partially_refunded') return false;
         const ts = new Date(p.paidAt ?? p.createdAt).getTime();
         return ts >= prevRange.start.getTime() && ts <= prevRange.end.getTime();
       })
-      .reduce((s, p) => s + p.amount, 0),
+      .reduce((s, p) => s + (p.refundedAmount ?? 0), 0),
     [chartPayments, prevRange],
   );
 
@@ -180,10 +180,11 @@ export function ManagerPayments() {
       mobileLabel: 'Сумма:',
       render: (p) => (
         <Badge
-          variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+          variant={p.status === 'refunded' ? 'error' : p.status === 'partially_refunded' ? 'warning' : p.status === 'pending' ? 'warning' : 'success'}
           className="text-xs"
         >
           +{formatAmount(p.amount)} ₽
+          {p.refundedAmount != null && p.refundedAmount > 0 && <span className="ml-1 opacity-75">(-{formatAmount(p.refundedAmount)})</span>}
         </Badge>
       ),
     },
@@ -299,10 +300,11 @@ export function ManagerPayments() {
                 <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
                 <div className="flex items-center gap-3">
                   <Badge
-                    variant={p.status === 'refunded' ? 'error' : p.status === 'pending' ? 'warning' : 'success'}
+                    variant={p.status === 'refunded' ? 'error' : p.status === 'partially_refunded' || p.status === 'pending' ? 'warning' : 'success'}
                     className="text-xs"
                   >
                     +{formatAmount(p.amount)} ₽
+                    {p.refundedAmount != null && p.refundedAmount > 0 && <span className="ml-1 opacity-75">(-{formatAmount(p.refundedAmount)})</span>}
                   </Badge>
                   <span className="text-sm text-text-sub">
                     {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
