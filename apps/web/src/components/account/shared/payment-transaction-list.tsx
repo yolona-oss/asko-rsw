@@ -11,13 +11,16 @@ import {
 /**
  * Renders a list of payment transactions with date, amount, refund info, and status badge.
  * Optional `statusLabels` override for manager views.
+ * Optional `onPaymentClick` makes rows clickable.
  */
 export function PaymentTransactionList({
   payments,
   statusLabels,
+  onPaymentClick,
 }: {
   payments: any[];
   statusLabels?: Record<string, string>;
+  onPaymentClick?: (payment: any) => void;
 }) {
   const labels = statusLabels ?? PAYMENT_STATUS_LABELS_USER;
 
@@ -26,7 +29,10 @@ export function PaymentTransactionList({
       {payments.map((p: any) => (
         <div
           key={p.id}
-          className="flex items-center justify-between gap-2 py-1.5 border-b border-border-light last:border-b-0"
+          onClick={onPaymentClick ? () => onPaymentClick(p) : undefined}
+          className={`flex items-center justify-between gap-2 py-1.5 border-b border-border-light last:border-b-0${
+            onPaymentClick ? ' cursor-pointer hover:bg-surface-hover transition-colors' : ''
+          }`}
         >
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-sm text-text-main">

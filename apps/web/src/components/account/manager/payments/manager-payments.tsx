@@ -10,22 +10,28 @@ import {
   ViewSwitcher,
   VIEW_TABLE,
   VIEW_CARD,
-  DataGrid,
+  DataGroupedView,
   Pagination,
   ChartCard,
   DateRangeModal,
   defaultRange,
   formatRangeLabel,
-  SkeletonCard,
   filterValueToParam,
 } from '@asko/ui';
-import type { FilterValues, DataGridColumn, SortOrder, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
+import type { FilterValues, ChartStyle, DateRange, ChartBucket } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
+import { PaymentTargetGroup } from '@/components/account/shared/payment-target-group';
+import { PAYMENT_TARGET_LABELS } from '@/components/account/shared/payment-constants';
+import { PaymentSummary } from '@/components/account/shared/payment-summary';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, PROVIDER_LABELS, FILTERS } from './constants';
 import { formatDateFull, formatAmount, payerName, bucketPayments } from './utils';
 import { PaymentDetailModal } from './payment-detail-modal';
+
+function groupKey(p: PaymentRecord) {
+  return p.targetId ? `${p.targetType}:${p.targetId}` : 'unknown';
+}
 
 export function ManagerPayments() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -35,11 +41,9 @@ export function ManagerPayments() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: '', provider: '' });
   const [page, setPage] = useState(1);
   const [view, setView] = useState('table');
-  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
-  const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<{ payment: PaymentRecord; groupPayments: PaymentRecord[] } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const pageSize = 20;
+  const pageSize = 50;
 
   // Chart state
   const [dateRange, setDateRange] = useState<DateRange>(defaultRange());
@@ -128,8 +132,8 @@ export function ManagerPayments() {
           status: filterValueToParam(filterValues, 'status'),
           provider: filterValueToParam(filterValues, 'provider'),
           search: search || undefined,
-          sortBy: sortBy ?? undefined,
-          sortOrder: sortOrder ?? undefined,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
         });
         const result = res.data;
         setPayments(result.data ?? []);
@@ -141,7 +145,7 @@ export function ManagerPayments() {
     }
     setLoading(true);
     fetchData();
-  }, [page, filterValues, search, sortBy, sortOrder, refreshKey]);
+  }, [page, filterValues, search, refreshKey]);
 
   const totalPages = Math.ceil(total / pageSize);
   const showFrom = total > 0 ? (page - 1) * pageSize + 1 : 0;
@@ -157,64 +161,9 @@ export function ManagerPayments() {
     setPage(1);
   };
 
-  const paymentColumns: DataGridColumn<PaymentRecord>[] = useMemo(() => [
-    {
-      key: 'id',
-      header: 'ID',
-      sortable: false,
-      width: 80,
-      mobileLabel: 'ID:',
-      render: (p) => <span className="font-medium text-text-main text-sm">#{p.id.slice(0, 4)}</span>,
-    },
-    {
-      key: 'payer',
-      header: 'Плательщик',
-      sortable: false,
-      mobileLabel: 'Плательщик:',
-      render: (p) => <span className="text-sm text-text-main">{payerName(p.user)}</span>,
-    },
-    {
-      key: 'amount',
-      header: 'Сумма',
-      width: 110,
-      mobileLabel: 'Сумма:',
-      render: (p) => (
-        <Badge
-          variant={p.status === 'refunded' ? 'error' : p.status === 'partially_refunded' ? 'warning' : p.status === 'pending' ? 'warning' : 'success'}
-          className="text-xs"
-        >
-          +{formatAmount(p.amount)} ₽
-          {p.refundedAmount != null && p.refundedAmount > 0 && <span className="ml-1 opacity-75">(-{formatAmount(p.refundedAmount)})</span>}
-        </Badge>
-      ),
-    },
-    {
-      key: 'provider',
-      header: 'Способ',
-      width: 100,
-      mobileLabel: 'Способ:',
-      render: (p) => <span className="text-sm text-text-main">{PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Статус',
-      width: 110,
-      mobileLabel: 'Статус:',
-      render: (p) => (
-        <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
-          {STATUS_LABELS[p.status] ?? p.status}
-        </Badge>
-      ),
-    },
-    {
-      key: 'date',
-      header: 'Дата платежа',
-      sortField: 'createdAt',
-      width: 140,
-      mobileLabel: 'Дата:',
-      render: (p) => <span className="text-sm text-text-main">{formatDateFull(p.paidAt ?? p.createdAt)}</span>,
-    },
-  ], []);
+  const handlePaymentClick = (payment: PaymentRecord, groupPayments: PaymentRecord[]) => {
+    setSelectedGroup({ payment, groupPayments });
+  };
 
   return (
     <PageContainer>
@@ -257,74 +206,94 @@ export function ManagerPayments() {
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 
-      {/* Data */}
+      {/* Data — grouped in both views */}
       {view === 'table' ? (
-        <DataGrid<PaymentRecord>
-          loading={loading}
-          columns={paymentColumns}
+        <DataGroupedView<PaymentRecord>
           data={payments}
-          keyExtractor={(p) => p.id}
+          groupBy={groupKey}
+          loading={loading}
+          loadingGroups={4}
           emptyContent="Платежи не найдены"
-          sortKey={sortBy ?? undefined}
-          sortOrder={sortOrder ?? undefined}
-          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-          onRowClick={(p) => setSelectedPayment(p)}
-          suppressDetailMenuItem
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <span>Показаны платежи {showFrom}-{showTo} из {total}</span>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          }
+          renderGroup={({ key, items }) => (
+            <PaymentTargetGroup
+              groupKey={key}
+              payments={items}
+              statusLabels={STATUS_LABELS}
+              onPaymentClick={handlePaymentClick}
+            />
+          )}
         />
-      ) : loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
-        </div>
-      ) : payments.length === 0 ? (
-        <p className="text-sm text-text-sub">Платежи не найдены</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {payments.map((p) => (
-            <ContextMenuArea
-              key={p.id}
-              items={buildCardMenuItems(() => setSelectedPayment(p))}
-            >
-              <Card padding="none" className="p-5 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs text-text-sub">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
-                  <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
-                    {STATUS_LABELS[p.status] ?? p.status}
-                  </Badge>
+        <DataGroupedView<PaymentRecord>
+          data={payments}
+          groupBy={groupKey}
+          loading={loading}
+          loadingGroups={4}
+          emptyContent="Платежи не найдены"
+          renderGroup={({ key, items }) => {
+            const colonIdx = key.indexOf(':');
+            const targetType = colonIdx > 0 ? key.slice(0, colonIdx) : '';
+            const targetId = colonIdx > 0 ? key.slice(colonIdx + 1) : '';
+            const isUnknown = key === 'unknown' || !targetType;
+            const typeLabel = isUnknown ? 'Прочие платежи' : (PAYMENT_TARGET_LABELS[targetType] ?? targetType);
+
+            return (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-text-main">{typeLabel}</span>
+                  {!isUnknown && <span className="text-xs text-text-sub font-mono">#{targetId.slice(0, 8)}</span>}
+                  <Badge variant="neutral" className="text-xs">{items.length}</Badge>
                 </div>
-                <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant={p.status === 'refunded' ? 'error' : p.status === 'partially_refunded' || p.status === 'pending' ? 'warning' : 'success'}
-                    className="text-xs"
-                  >
-                    +{formatAmount(p.amount)} ₽
-                    {p.refundedAmount != null && p.refundedAmount > 0 && <span className="ml-1 opacity-75">(-{formatAmount(p.refundedAmount)})</span>}
-                  </Badge>
-                  <span className="text-sm text-text-sub">
-                    {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
-                  </span>
+                <PaymentSummary payments={items} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {items.map((p) => (
+                    <ContextMenuArea
+                      key={p.id}
+                      items={buildCardMenuItems(() => handlePaymentClick(p, items))}
+                    >
+                      <Card padding="none" className="p-5 flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs text-text-sub">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
+                          <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
+                            {STATUS_LABELS[p.status] ?? p.status}
+                          </Badge>
+                        </div>
+                        <p className="text-base font-medium text-text-main">{payerName(p.user)}</p>
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant={p.status === 'refunded' ? 'error' : p.status === 'partially_refunded' || p.status === 'pending' ? 'warning' : 'success'}
+                            className="text-xs"
+                          >
+                            +{formatAmount(p.amount)} ₽
+                            {p.refundedAmount != null && p.refundedAmount > 0 && <span className="ml-1 opacity-75">(-{formatAmount(p.refundedAmount)})</span>}
+                          </Badge>
+                          <span className="text-sm text-text-sub">
+                            {PROVIDER_LABELS[p.provider ?? ''] ?? p.provider ?? '-'}
+                          </span>
+                        </div>
+                      </Card>
+                    </ContextMenuArea>
+                  ))}
                 </div>
-              </Card>
-            </ContextMenuArea>
-          ))}
-        </div>
+              </div>
+            );
+          }}
+        />
       )}
 
       {/* Pagination */}
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-text-sub">Показаны платежи {showFrom}-{showTo} из {total}</span>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
 
       {/* Modals */}
       <PaymentDetailModal
-        payment={selectedPayment}
-        open={!!selectedPayment}
-        onClose={() => setSelectedPayment(null)}
-        onConfirm={() => { setSelectedPayment(null); setRefreshKey((k) => k + 1); }}
+        payment={selectedGroup?.payment ?? null}
+        groupPayments={selectedGroup?.groupPayments}
+        open={!!selectedGroup}
+        onClose={() => setSelectedGroup(null)}
+        onConfirm={() => { setSelectedGroup(null); setRefreshKey((k) => k + 1); }}
       />
       <DateRangeModal
         open={dateModalOpen}

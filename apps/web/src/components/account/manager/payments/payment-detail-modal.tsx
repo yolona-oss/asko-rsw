@@ -9,14 +9,18 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, PROVIDER_LABELS, TARGET_TYPE_LABELS } from './constants';
 import { formatDateFull, formatAmount, payerName } from './utils';
+import { PaymentSummary } from '@/components/account/shared/payment-summary';
+import { PaymentTransactionList } from '@/components/account/shared/payment-transaction-list';
 
 export function PaymentDetailModal({
   payment,
+  groupPayments,
   open,
   onClose,
   onConfirm,
 }: {
   payment: PaymentRecord | null;
+  groupPayments?: PaymentRecord[];
   open: boolean;
   onClose: () => void;
   onConfirm?: () => void;
@@ -156,6 +160,16 @@ export function PaymentDetailModal({
             </div>
           )}
         </div>
+
+        {groupPayments && groupPayments.length > 1 && (
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-bold text-text-main">
+              Все платежи по назначению ({groupPayments.length})
+            </h3>
+            <PaymentSummary payments={groupPayments} />
+            <PaymentTransactionList payments={groupPayments} statusLabels={STATUS_LABELS} />
+          </div>
+        )}
 
         {confirmError && <p className="text-sm text-error">{confirmError}</p>}
 

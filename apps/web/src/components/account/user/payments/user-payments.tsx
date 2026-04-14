@@ -8,7 +8,7 @@ import {
   Card,
   Button,
   DetailRow,
-  DataGrid,
+  DataGroupedView,
   DataToolbar,
   ViewSwitcher,
   VIEW_TABLE,
@@ -16,11 +16,14 @@ import {
   Pagination,
   SkeletonCard,
 } from '@asko/ui';
-import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
+import { PaymentTargetGroup } from '@/components/account/shared/payment-target-group';
+import { PaymentSummary } from '@/components/account/shared/payment-summary';
+import { PAYMENT_TARGET_LABELS } from '@/components/account/shared/payment-constants';
+import { PaymentTransactionList } from '@/components/account/shared/payment-transaction-list';
 import {
   STATUS_LABELS,
   STATUS_BADGE_VARIANT,
@@ -29,13 +32,17 @@ import {
   formatAmount,
 } from './constants';
 
+function groupKey(p: PaymentRecord) {
+  return p.targetId ? `${p.targetType}:${p.targetId}` : 'unknown';
+}
+
 export function UserPayments() {
   const detail = useEntityDetail<PaymentRecord>();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 50;
 
   // Payment modal state
   const [payModalOpen, setPayModalOpen] = useState(false);
@@ -44,16 +51,15 @@ export function UserPayments() {
   // View state
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+
+  // Group context for detail modal
+  const [selectedGroupPayments, setSelectedGroupPayments] = useState<PaymentRecord[]>([]);
 
   async function fetchPayments() {
     try {
       const { data: result } = await paymentApi.getMyPayments({
         page: page,
         limit: pageSize,
-        sortBy: sortBy ?? undefined,
-        sortOrder: sortOrder ?? undefined,
       });
       setPayments(result.data ?? []);
       setTotal(result.overallCount ?? 0);
@@ -66,7 +72,7 @@ export function UserPayments() {
   useEffect(() => {
     setLoading(true);
     fetchPayments();
-  }, [page, sortBy, sortOrder]);
+  }, [page]);
 
   const pendingPayments = payments.filter((p) => p.status === 'pending');
   const otherPayments = payments.filter((p) => p.status !== 'pending');
@@ -84,54 +90,6 @@ export function UserPayments() {
 
   const totalPages = Math.ceil(total / pageSize);
 
-  const paymentColumns: DataGridColumn<PaymentRecord>[] = [
-    {
-      key: 'id',
-      header: 'ID',
-      sortable: false,
-      width: 120,
-      mobileLabel: 'ID:',
-      render: (p) => <p className="text-sm text-text-sub font-mono truncate">{p.id.slice(0, 8)}</p>,
-    },
-    {
-      key: 'type',
-      header: 'Тип',
-      sortable: false,
-      mobileLabel: 'Тип:',
-      render: (p) => (
-        <p className="text-sm font-medium text-text-main">
-          {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
-        </p>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'Сумма',
-      width: 140,
-      mobileLabel: 'Сумма:',
-      render: (p) => <p className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</p>,
-    },
-    {
-      key: 'status',
-      header: 'Статус',
-      width: 140,
-      mobileLabel: 'Статус:',
-      render: (p) => (
-        <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-          {STATUS_LABELS[p.status] ?? p.status}
-        </Badge>
-      ),
-    },
-    {
-      key: 'date',
-      header: 'Дата',
-      sortField: 'createdAt',
-      width: 160,
-      mobileLabel: 'Дата:',
-      render: (p) => <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>,
-    },
-  ];
-
   const handlePay = (p: PaymentRecord) => {
     if (p.targetType && p.targetId) {
       setPayTarget({
@@ -147,6 +105,11 @@ export function UserPayments() {
     setPayModalOpen(false);
     setPayTarget(null);
     fetchPayments();
+  };
+
+  const handleDetailClose = () => {
+    detail.onClose();
+    setSelectedGroupPayments([]);
   };
 
   return (
@@ -208,46 +171,62 @@ export function UserPayments() {
               />
 
               {view === 'table' ? (
-                <DataGrid<PaymentRecord>
-                  loading={loading}
-                  columns={paymentColumns}
+                <DataGroupedView<PaymentRecord>
                   data={filteredHistory}
-                  keyExtractor={(p) => p.id}
+                  groupBy={groupKey}
+                  loadingGroups={3}
                   emptyContent="Нет платежей"
-                  sortKey={sortBy ?? undefined}
-                  sortOrder={sortOrder ?? undefined}
-                  onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-                  onRowClick={detail.onRowClick}
-                  footer={
-                    <div className="flex items-center justify-between w-full">
-                      <span>Показано {filteredHistory.length} из {total}</span>
-                      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                    </div>
-                  }
+                  renderGroup={({ key, items }) => (
+                    <PaymentTargetGroup
+                      groupKey={key}
+                      payments={items}
+                      onPaymentClick={(payment, groupPayments) => {
+                        setSelectedGroupPayments(groupPayments);
+                        detail.onRowClick(payment);
+                      }}
+                    />
+                  )}
                 />
               ) : (
-                <>
-                  {filteredHistory.length === 0 ? (
-                    <p className="text-sm text-text-sub text-center py-8">Нет платежей</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredHistory.map((p) => (
-                        <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-base font-medium text-text-main">
-                              {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
-                            </p>
-                            <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
-                              {STATUS_LABELS[p.status] ?? p.status}
-                            </Badge>
-                          </div>
-                          <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-                          <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </>
+                <DataGroupedView<PaymentRecord>
+                  data={filteredHistory}
+                  groupBy={groupKey}
+                  loadingGroups={3}
+                  emptyContent="Нет платежей"
+                  renderGroup={({ key, items }) => {
+                    const colonIdx = key.indexOf(':');
+                    const targetType = colonIdx > 0 ? key.slice(0, colonIdx) : '';
+                    const targetId = colonIdx > 0 ? key.slice(colonIdx + 1) : '';
+                    const isUnknown = key === 'unknown' || !targetType;
+                    const typeLabel = isUnknown ? 'Прочие платежи' : (PAYMENT_TARGET_LABELS[targetType] ?? targetType);
+
+                    return (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-text-main">{typeLabel}</span>
+                          {!isUnknown && <span className="text-xs text-text-sub font-mono">#{targetId.slice(0, 8)}</span>}
+                          <Badge variant="neutral" className="text-xs">{items.length}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {items.map((p) => (
+                            <Card key={p.id} padding="none" className="p-5 flex flex-col gap-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-base font-medium text-text-main">
+                                  {TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}
+                                </p>
+                                <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>
+                                  {STATUS_LABELS[p.status] ?? p.status}
+                                </Badge>
+                              </div>
+                              <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
+                              <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
               )}
             </div>
           )}
@@ -259,7 +238,7 @@ export function UserPayments() {
 
       <EntityDetailModal
         open={detail.open}
-        onClose={detail.onClose}
+        onClose={handleDetailClose}
         item={detail.selectedItem}
         title="Детали платежа"
         renderContent={(item) => (
@@ -282,6 +261,16 @@ export function UserPayments() {
             )}
             <DetailRow label="Провайдер" value={item.provider ?? '-'} />
             <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+
+            {selectedGroupPayments.length > 1 && (
+              <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-border-light">
+                <p className="text-sm font-bold text-text-main">
+                  Все платежи ({selectedGroupPayments.length})
+                </p>
+                <PaymentSummary payments={selectedGroupPayments} />
+                <PaymentTransactionList payments={selectedGroupPayments} />
+              </div>
+            )}
           </div>
         )}
       />
