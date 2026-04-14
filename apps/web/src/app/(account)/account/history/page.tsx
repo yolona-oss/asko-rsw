@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const RepairerHistory = lazy(() => import('@/components/account/repairer/history').then(m => ({ default: m.RepairerHistory })));
+const RepairerHistory = lazy(() => import('@/components/account/history').then(m => ({ default: m.RepairerHistory })));
 
 export default function HistoryPage() {
   const allowed = useRoleGuard(['repairer']);

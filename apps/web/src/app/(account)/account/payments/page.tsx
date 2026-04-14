@@ -5,9 +5,9 @@ import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const ManagerPayments = lazy(() => import('@/components/account/manager/payments').then(m => ({ default: m.ManagerPayments })));
-const DealerPayments = lazy(() => import('@/components/account/dealer/payments').then(m => ({ default: m.DealerPayments })));
-const UserPayments = lazy(() => import('@/components/account/user/payments').then(m => ({ default: m.UserPayments })));
+const ManagerPayments = lazy(() => import('@/components/account/payments/manager').then(m => ({ default: m.ManagerPayments })));
+const DealerPayments = lazy(() => import('@/components/account/payments/dealer').then(m => ({ default: m.DealerPayments })));
+const UserPayments = lazy(() => import('@/components/account/payments/user').then(m => ({ default: m.UserPayments })));
 
 export default function PaymentsPage() {
   const { user } = useAccount();

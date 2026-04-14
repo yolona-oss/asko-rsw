@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { FormPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const AdminArticleForm = lazy(() => import('@/components/account/admin/article-form').then(m => ({ default: m.AdminArticleForm })));
+const AdminArticleForm = lazy(() => import('@/components/account/articles/form').then(m => ({ default: m.AdminArticleForm })));
 
 export default function ArticleCreatePage() {
   const allowed = useRoleGuard(['admin']);

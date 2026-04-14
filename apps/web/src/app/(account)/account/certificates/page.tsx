@@ -6,8 +6,8 @@ import { useRoleGuard } from '@/hooks/use-role-guard';
 import { primaryRole } from '@/lib/account';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const UserCertificates = lazy(() => import('@/components/account/user/certificates').then(m => ({ default: m.UserCertificates })));
-const DealerCertificates = lazy(() => import('@/components/account/dealer/certificates').then(m => ({ default: m.DealerCertificates })));
+const UserCertificates = lazy(() => import('@/components/account/certificates/user').then(m => ({ default: m.UserCertificates })));
+const DealerCertificates = lazy(() => import('@/components/account/certificates/dealer').then(m => ({ default: m.DealerCertificates })));
 
 export default function CertificatesPage() {
   const { user } = useAccount();

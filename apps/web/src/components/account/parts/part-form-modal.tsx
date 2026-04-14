@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Button, Input, FormField, Select } from '@asko/ui';
 import type { DevicePartFull } from '@/lib/api/types';
 import type { PartFormData } from './types';
@@ -28,25 +28,44 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, cate
   categories: Category[];
   submitting: boolean;
 }) {
-  const [form, setForm] = useState<PartFormData>(EMPTY_PART_FORM);
+  return (
+    <Modal open={open} onClose={submitting ? undefined : onClose} className="w-full max-w-md p-6">
+      {open && (
+        <PartFormContent
+          editPart={editPart}
+          devices={devices}
+          categories={categories}
+          submitting={submitting}
+          onClose={onClose}
+          onSubmit={onSubmit}
+        />
+      )}
+    </Modal>
+  );
+}
 
-  useEffect(() => {
-    if (open) {
-      if (editPart) {
-        setForm({
-          deviceId: editPart.deviceId ?? '',
-          categoryId: editPart.categoryId ?? '',
-          group: editPart.group ?? '',
-          name: editPart.name ?? '',
-          partNumber: editPart.partNumber ?? '',
-          price: editPart.price != null && editPart.price > 0 ? String(editPart.price) : '',
-          description: editPart.description ?? '',
-        });
-      } else {
-        setForm(EMPTY_PART_FORM);
-      }
+function PartFormContent({ editPart, devices, categories, submitting, onClose, onSubmit }: {
+  editPart?: DevicePartFull | null;
+  devices: Device[];
+  categories: Category[];
+  submitting: boolean;
+  onClose: () => void;
+  onSubmit: (data: PartFormData) => void;
+}) {
+  const [form, setForm] = useState<PartFormData>(() => {
+    if (editPart) {
+      return {
+        deviceId: editPart.deviceId ?? '',
+        categoryId: editPart.categoryId ?? '',
+        group: editPart.group ?? '',
+        name: editPart.name ?? '',
+        partNumber: editPart.partNumber ?? '',
+        price: editPart.price != null && editPart.price > 0 ? String(editPart.price) : '',
+        description: editPart.description ?? '',
+      };
     }
-  }, [open, editPart]);
+    return EMPTY_PART_FORM;
+  });
 
   const updateForm = (partial: Partial<PartFormData>) => {
     setForm((prev) => ({ ...prev, ...partial }));
@@ -61,7 +80,7 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, cate
   const isGeneric = !form.deviceId;
 
   return (
-    <Modal open={open} onClose={submitting ? undefined : onClose} className="w-full max-w-md p-6">
+    <>
       <h2 className="text-base font-medium text-text-main mb-4">
         {isEdit ? 'Редактировать запчасть' : 'Добавить запчасть'}
       </h2>
@@ -154,6 +173,6 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, cate
           {submitting ? 'Сохранение...' : isEdit ? 'Сохранить' : 'Добавить'}
         </Button>
       </div>
-    </Modal>
+    </>
   );
 }

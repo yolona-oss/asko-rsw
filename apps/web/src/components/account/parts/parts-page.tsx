@@ -69,7 +69,7 @@ export function PartsPage() {
   // Fetch devices for filter + form
   useEffect(() => {
     deviceApi.getAll({ limit: 500 }).then(({ data }) => {
-      setDevices((data.data ?? []).map((d: any) => ({
+      setDevices((data.data ?? []).map((d: { id: string; name: string; brand: string; model: string }) => ({
         id: d.id,
         name: d.name,
         brand: d.brand,
@@ -119,7 +119,7 @@ export function PartsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterValues.device, filterValues.category]);
+  }, [page, search, filterValues]);
 
   useEffect(() => {
     fetchParts();

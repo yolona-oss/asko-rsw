@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const AdminArticles = lazy(() => import('@/components/account/admin/articles').then(m => ({ default: m.AdminArticles })));
+const AdminArticles = lazy(() => import('@/components/account/articles').then(m => ({ default: m.AdminArticles })));
 
 export default function ArticlesPage() {
   const allowed = useRoleGuard(['admin']);

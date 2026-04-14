@@ -4,7 +4,7 @@ import { lazy, Suspense, use } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const RepairerManualDetail = lazy(() => import('@/components/account/repairer/repairer-manual-detail').then(m => ({ default: m.RepairerManualDetail })));
+const RepairerManualDetail = lazy(() => import('@/components/account/manuals/repairer-manual-detail').then(m => ({ default: m.RepairerManualDetail })));
 
 export default function ManualDetailPage({ params }: { params: Promise<{ deviceId: string }> }) {
   const { deviceId } = use(params);
