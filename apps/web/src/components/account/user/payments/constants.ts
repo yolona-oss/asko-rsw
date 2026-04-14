@@ -1,34 +1,7 @@
-import type { BadgeVariant } from '@asko/ui';
-
-export const STATUS_LABELS: Record<string, string> = {
-  paid: 'Оплачен',
-  pending: 'Ожидает оплаты',
-  partially_refunded: 'Частичный возврат',
-  refunded: 'Возвращён',
-  failed: 'Ошибка',
-};
-
-export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
-  paid: 'success',
-  pending: 'warning',
-  partially_refunded: 'warning',
-  refunded: 'error',
-  failed: 'neutral',
-};
-
-export const TARGET_LABELS: Record<string, string> = {
-  repairRequest: 'Заявка на ремонт',
-  certificate: 'Сертификат',
-};
-
-export function formatDate(dateStr: Date | string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-export function formatAmount(amount: number) {
-  return amount.toLocaleString('ru-RU');
-}
+export {
+  PAYMENT_STATUS_VARIANT as STATUS_BADGE_VARIANT,
+  PAYMENT_STATUS_LABELS_USER as STATUS_LABELS,
+  PAYMENT_TARGET_LABELS as TARGET_LABELS,
+  formatPaymentDate as formatDate,
+  formatPaymentAmount as formatAmount,
+} from '@/components/account/shared/payment-constants';

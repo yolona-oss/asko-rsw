@@ -4,15 +4,15 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Badge, DetailRow, DetailSection } from '@asko/ui';
 import { AvrStatusCard } from './avr-status-card';
+import { PaymentSummary } from './payment-summary';
+import { PaymentTransactionList } from './payment-transaction-list';
+import { formatPaymentAmount } from './payment-constants';
 import type { BadgeVariant } from '@asko/ui';
 import { api } from '@/lib/api/client';
 import { reviewApi } from '@/lib/api/review';
 
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-const fmtFull = (d: string) =>
-  new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const statusVariant = (s: string): BadgeVariant => {
   switch (s) {
@@ -23,28 +23,7 @@ const statusVariant = (s: string): BadgeVariant => {
   }
 };
 
-const paymentStatusLabel = (s: string): string => {
-  switch (s) {
-    case 'paid': return 'Оплачен';
-    case 'pending': return 'Ожидает';
-    case 'partially_refunded': return 'Частичный возврат';
-    case 'refunded': return 'Возвращён';
-    case 'failed': return 'Отменён';
-    default: return s;
-  }
-};
-
-const paymentStatusVariant = (s: string): BadgeVariant => {
-  switch (s) {
-    case 'paid': return 'success';
-    case 'pending': return 'warning';
-    case 'partially_refunded': return 'warning';
-    case 'refunded': return 'error';
-    default: return 'neutral';
-  }
-};
-
-const fmtAmount = (n: number) => n.toLocaleString('ru-RU');
+const fmtAmount = (n: number) => formatPaymentAmount(n);
 
 export async function fetchRepairRequestOne(item: any): Promise<any> {
   const { data } = await api.get(`/repair-requests/${item.id}`, { _silent: true } as any);
@@ -124,37 +103,14 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       {/* Payment */}
       <DetailSection label="Платежи" summary={item.totalCost != null ? `${fmtAmount(item.totalCost)} \u20BD` : '-'}
         fetchData={async () => { try { const { data } = await api.get(`/repair-requests/${item.id}/payments`, { _silent: true } as any); setPayments(data.payments ?? data.data ?? []); } catch {} }}>
-        {payments && payments.length > 0 ? (() => {
-          const paid = payments.reduce((s: number, p: any) => s + (p.status === 'paid' || p.status === 'partially_refunded' ? Number(p.amount) : 0), 0);
-          const refunded = payments.reduce((s: number, p: any) => s + (Number(p.refundedAmount ?? 0)), 0);
-          const pending = payments.reduce((s: number, p: any) => s + (p.status === 'pending' ? Number(p.amount) : 0), 0);
-          const effectivePaid = paid - refunded;
-          return (
-            <>
-              {/* Compact summary */}
-              <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
-                {effectivePaid > 0 && <span className="text-text-main">Оплачено: <span className="font-medium">{fmtAmount(effectivePaid)} ₽</span></span>}
-                {refunded > 0 && <span className="text-error">Возвращено: <span className="font-medium">{fmtAmount(refunded)} ₽</span></span>}
-                {pending > 0 && <span className="text-warning">Ожидает: <span className="font-medium">{fmtAmount(pending)} ₽</span></span>}
-              </div>
-              {/* Extended: all transactions */}
-              <DetailSection label="Все транзакции" summary={`${payments.length}`}>
-                {payments.map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 py-1.5 border-b border-border-light last:border-b-0">
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm text-text-main">{fmtFull(p.paidAt ?? p.createdAt)}</span>
-                      {p.refundedAmount > 0 && <span className="text-xs text-error">возврат {fmtAmount(p.refundedAmount)} ₽</span>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-sm font-medium text-text-main">{fmtAmount(p.amount)} ₽</span>
-                      <Badge variant={paymentStatusVariant(p.status)}>{paymentStatusLabel(p.status)}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </DetailSection>
-            </>
-          );
-        })() : <DetailRow label="Платежи" value="Нет платежей" />}
+        {payments && payments.length > 0 ? (
+          <>
+            <PaymentSummary payments={payments} className="mb-3" />
+            <DetailSection label="Все транзакции" summary={`${payments.length}`}>
+              <PaymentTransactionList payments={payments} />
+            </DetailSection>
+          </>
+        ) : <DetailRow label="Платежи" value="Нет платежей" />}
       </DetailSection>
 
       {/* AVR status */}

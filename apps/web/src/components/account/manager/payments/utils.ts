@@ -2,18 +2,10 @@ import type { PaymentRecord } from '@/lib/api/payment';
 import type { ChartBucket, DateRange } from '@asko/ui';
 
 export { defaultRange, formatRangeLabel, toInputDate } from '@asko/ui';
-
-export function formatDateFull(dateStr: Date | string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-export function formatAmount(amount: number) {
-  return amount.toLocaleString('ru-RU');
-}
+export {
+  formatPaymentDate as formatDateFull,
+  formatPaymentAmount as formatAmount,
+} from '@/components/account/shared/payment-constants';
 
 export function payerName(user?: PaymentRecord['user']) {
   if (!user) return '-';

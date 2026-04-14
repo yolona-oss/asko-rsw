@@ -1,34 +1,17 @@
-import type { BadgeVariant, FilterDefinition } from '@asko/ui';
+import type { FilterDefinition } from '@asko/ui';
 
-export const STATUS_LABELS: Record<string, string> = {
-  paid: 'Подтверждён',
-  pending: 'Ожидание',
-  partially_refunded: 'Частичный возврат',
-  refunded: 'Возвращён',
-  failed: 'Ошибка',
-};
+export {
+  PAYMENT_STATUS_VARIANT as STATUS_BADGE_VARIANT,
+  PAYMENT_STATUS_LABELS_MANAGER as STATUS_LABELS,
+  PAYMENT_PROVIDER_LABELS as PROVIDER_LABELS,
+  PAYMENT_TARGET_LABELS as TARGET_TYPE_LABELS,
+} from '@/components/account/shared/payment-constants';
 
-export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
-  paid: 'success',
-  pending: 'warning',
-  partially_refunded: 'warning',
-  refunded: 'error',
-  failed: 'neutral',
-};
-
-export const PROVIDER_LABELS: Record<string, string> = {
-  dummy: 'Тестовая',
-  yookassa: 'ЮKassa',
-  tbank: 'Т-Банк',
-  card: 'Карта',
-  cash: 'Наличные',
-};
-
-export const TARGET_TYPE_LABELS: Record<string, string> = {
-  repairRequest: 'Заявка на ремонт',
-  certificate: 'Сертификат',
-  dealerWithdrawal: 'Вывод средств дилера',
-};
+// Re-import for use in FILTERS options below
+import {
+  PAYMENT_STATUS_LABELS_MANAGER,
+  PAYMENT_PROVIDER_LABELS,
+} from '@/components/account/shared/payment-constants';
 
 export const FILTERS: FilterDefinition[] = [
   {
@@ -37,11 +20,7 @@ export const FILTERS: FilterDefinition[] = [
     type: 'select',
     options: [
       { value: '', label: 'Все' },
-      { value: 'paid', label: 'Подтверждён' },
-      { value: 'pending', label: 'Ожидание' },
-      { value: 'partially_refunded', label: 'Частичный возврат' },
-      { value: 'refunded', label: 'Возвращён' },
-      { value: 'failed', label: 'Ошибка' },
+      ...Object.entries(PAYMENT_STATUS_LABELS_MANAGER).map(([value, label]) => ({ value, label })),
     ],
   },
   {
@@ -50,13 +29,7 @@ export const FILTERS: FilterDefinition[] = [
     type: 'select',
     options: [
       { value: '', label: 'Все' },
-      { value: 'dummy', label: 'Тестовая' },
-      { value: 'yookassa', label: 'ЮKassa' },
-      { value: 'tbank', label: 'Т-Банк' },
-      { value: 'card', label: 'Карта' },
-      { value: 'cash', label: 'Наличные' },
+      ...Object.entries(PAYMENT_PROVIDER_LABELS).map(([value, label]) => ({ value, label })),
     ],
   },
 ];
-
-// Range presets moved to @asko/ui — use DEFAULT_RANGE_PRESETS
