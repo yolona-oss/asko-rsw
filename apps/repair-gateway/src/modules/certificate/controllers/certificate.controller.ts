@@ -304,7 +304,7 @@ export class CertificateController {
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/pdf/generate')
     async generatePdf(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() _user: JwtPayload,
         @Param('id') id: string,
         @Query('force') force?: string,
     ) {
