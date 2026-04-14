@@ -37,6 +37,7 @@ _*.ts
 apps/file-service/images
 
 root.crt
+*.beget.bak
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
