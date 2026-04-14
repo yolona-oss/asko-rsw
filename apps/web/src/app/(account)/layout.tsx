@@ -3,6 +3,7 @@ import { SidebarProvider } from '@/components/account/layout/sidebar-context';
 import { AccountSidebar, MobileSidebar } from '@/components/account/layout/sidebar';
 import { AccountHeader } from '@/components/account/layout/header';
 import { AuthGuard } from '@/components/account/layout/auth-guard';
+import { NotificationDockPanel } from '@/components/account/notifications';
 
 export default function AccountLayout({
   children,
@@ -21,6 +22,7 @@ export default function AccountLayout({
                 {children}
               </main>
             </div>
+            <NotificationDockPanel />
           </div>
           <MobileSidebar />
         </SidebarProvider>

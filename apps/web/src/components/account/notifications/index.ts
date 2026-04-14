@@ -1,1 +1,1 @@
-export { NotificationBell } from './bell';
+export { NotificationBell, NotificationDockPanel } from './bell';

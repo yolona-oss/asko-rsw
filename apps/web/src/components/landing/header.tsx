@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Container } from '@asko/ui';
 import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/api/use-auth';
 import { useTheme } from '@/lib/theme';
+import { notificationApi } from '@/lib/api/notification';
 
 const navLinks = [
   { href: '/', label: 'Главная' },
@@ -26,6 +28,17 @@ export function LandingHeader() {
   const accountHref = isAuthenticated ? '/account' : '/auth';
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuHeight, setMenuHeight] = useState(400);
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['notifications-unread-count'],
+    queryFn: async () => {
+      const { data } = await notificationApi.unreadCount();
+      return data;
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 60_000,
+  });
+  const hasUnread = isAuthenticated && (unreadData?.count ?? 0) > 0;
 
   // Track menu scroll height for animation
   useEffect(() => {
@@ -125,12 +138,15 @@ export function LandingHeader() {
             ) : (
               <Link
                 href={accountHref}
-                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-surface/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
+                className="relative inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-text-main bg-surface/10 border border-border-light shadow-sm opacity-50 hover:opacity-100 transition-opacity"
               >
                 Личный кабинет
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                 </svg>
+                {hasUnread && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-brand-red animate-[badge-pop_300ms_ease-out]" />
+                )}
               </Link>
             )}
           </div>
@@ -176,10 +192,13 @@ export function LandingHeader() {
               ) : (
                 <Link
                   href={accountHref}
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-main border border-border-light"
+                  className="relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-text-main border border-border-light"
                   onClick={() => setMenuOpen(false)}
                 >
                   Личный кабинет
+                  {hasUnread && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-brand-red animate-[badge-pop_300ms_ease-out]" />
+                  )}
                 </Link>
               )}
             </nav>

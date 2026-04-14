@@ -153,6 +153,16 @@ body {
   to { opacity: 0; transform: translateY(100%); }
 }
 
+@keyframes notification-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes notification-slide-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
 @keyframes notification-item {
   from { opacity: 0; transform: translateX(-8px); }
   to { opacity: 1; transform: translateX(0); }
