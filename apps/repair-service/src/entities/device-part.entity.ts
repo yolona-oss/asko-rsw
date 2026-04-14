@@ -4,13 +4,13 @@ import { Device } from './device.entity';
 
 @Entity()
 export class DevicePart {
-    [OptionalProps]?: 'partNumber' | 'price' | 'description' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'device' | 'partNumber' | 'price' | 'description' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
 
-    @ManyToOne(() => Device)
-    device!: Device;
+    @ManyToOne(() => Device, { nullable: true })
+    device?: Device;
 
     @Property({ type: 'varchar', length: 255 })
     name!: string;

@@ -69,6 +69,10 @@ export class UpdateDeviceDto {
 }
 
 export class CreateDevicePartDto {
+    @IsOptional()
+    @IsString()
+    deviceId?: string;
+
     @IsString()
     name!: string;
 
@@ -86,6 +90,10 @@ export class CreateDevicePartDto {
 }
 
 export class UpdateDevicePartDto {
+    @IsOptional()
+    @IsString()
+    deviceId?: string;
+
     @IsOptional()
     @IsString()
     name?: string;

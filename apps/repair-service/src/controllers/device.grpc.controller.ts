@@ -30,6 +30,7 @@ import type {
     UpdateDevicePartRequest,
     DeleteDevicePartRequest,
     GetDevicePartsRequest,
+    GetAllDevicePartsRequest,
     CreateDeviceCategoryRequest,
     UpdateDeviceCategoryRequest,
     DeleteDeviceCategoryRequest,
@@ -104,15 +105,17 @@ function addressToRecord(entity: Address) {
 }
 
 function devicePartToRecord(entity: DevicePart) {
+    const device = entity.device && typeof entity.device === 'object' ? entity.device : null;
     return {
         id: entity.id,
-        deviceId: typeof entity.device === 'object' ? entity.device.id : String(entity.device),
+        deviceId: device ? device.id : (entity.device ? String(entity.device) : ''),
         name: entity.name,
         partNumber: entity.partNumber ?? '',
         price: entity.price ?? 0,
         description: entity.description ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
+        deviceName: device?.name ?? '',
     };
 }
 
@@ -324,7 +327,7 @@ export class DeviceGrpcController {
     @GrpcMethod('DeviceService', 'CreateDevicePart')
     async createDevicePart(data: CreateDevicePartRequest) {
         try {
-            const part = await this.deviceService.createDevicePart(data.deviceId, {
+            const part = await this.deviceService.createDevicePart(data.deviceId || undefined, {
                 name: data.name,
                 partNumber: data.partNumber || undefined,
                 price: data.price || undefined,
@@ -342,6 +345,7 @@ export class DeviceGrpcController {
                 partNumber: data.partNumber,
                 price: data.price,
                 description: data.description,
+                deviceId: data.deviceId,
             });
             return { part: devicePartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }
@@ -360,6 +364,25 @@ export class DeviceGrpcController {
         try {
             const parts = await this.deviceService.getDeviceParts(data.deviceId);
             return { parts: parts.map(devicePartToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'GetAllDeviceParts')
+    async getAllDeviceParts(data: GetAllDevicePartsRequest) {
+        try {
+            const { data: parts, total } = await this.deviceService.getAllDeviceParts({
+                page: data.page || 1,
+                limit: data.limit || 50,
+                search: data.search || undefined,
+                deviceId: data.deviceId || undefined,
+                genericOnly: data.genericOnly || false,
+            });
+            return {
+                parts: parts.map(devicePartToRecord),
+                overallCount: total,
+                page: data.page || 1,
+                limit: data.limit || 50,
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

@@ -102,6 +102,7 @@ export interface UpdateDevicePartRequest {
     partNumber: string;
     price: number;
     description: string;
+    deviceId: string;
 }
 
 export interface DeleteDevicePartRequest {
@@ -110,6 +111,14 @@ export interface DeleteDevicePartRequest {
 
 export interface GetDevicePartsRequest {
     deviceId: string;
+}
+
+export interface GetAllDevicePartsRequest {
+    page: number;
+    limit: number;
+    search: string;
+    deviceId: string;
+    genericOnly: boolean;
 }
 
 export interface CreateAddressRequest {
@@ -210,6 +219,7 @@ export interface DevicePartRecord {
     description: string;
     createdAt: string;
     updatedAt: string;
+    deviceName: string;
 }
 
 export interface DevicePartResponse {
@@ -218,6 +228,13 @@ export interface DevicePartResponse {
 
 export interface DevicePartListResponse {
     parts: DevicePartRecord[];
+}
+
+export interface PaginatedDevicePartsResponse {
+    parts: DevicePartRecord[];
+    overallCount: number;
+    page: number;
+    limit: number;
 }
 
 export interface UserDeviceRecord {
@@ -276,6 +293,7 @@ export interface DeviceServiceClient {
     updateDevicePart(request: UpdateDevicePartRequest): Observable<DevicePartResponse>;
     deleteDevicePart(request: DeleteDevicePartRequest): Observable<EmptyDeviceResponse>;
     getDeviceParts(request: GetDevicePartsRequest): Observable<DevicePartListResponse>;
+    getAllDeviceParts(request: GetAllDevicePartsRequest): Observable<PaginatedDevicePartsResponse>;
 
     // Address
     createAddress(request: CreateAddressRequest): Observable<AddressResponse>;

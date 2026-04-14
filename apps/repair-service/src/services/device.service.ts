@@ -299,9 +299,50 @@ export class DeviceService {
     // ── Device parts catalog ───────────────────────────────────────────
 
     @CreateRequestContext()
-    async createDevicePart(deviceId: string, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
-        const device = await this.em.findOne(Device, { id: deviceId });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+    async getAllDeviceParts(params: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        deviceId?: string;
+        genericOnly?: boolean;
+    }): Promise<{ data: DevicePart[]; total: number }> {
+        const where: Record<string, any> = {};
+
+        if (params.search) {
+            where.$or = [
+                { name: { $ilike: `%${params.search}%` } },
+                { partNumber: { $ilike: `%${params.search}%` } },
+                { description: { $ilike: `%${params.search}%` } },
+            ];
+        }
+
+        if (params.genericOnly) {
+            where.device = null;
+        } else if (params.deviceId) {
+            where.device = params.deviceId;
+        }
+
+        const limit = params.limit ?? 50;
+        const offset = ((params.page ?? 1) - 1) * limit;
+
+        const [data, total] = await this.em.findAndCount(DevicePart, where, {
+            limit,
+            offset,
+            populate: ['device'],
+            orderBy: { name: 'ASC' },
+        });
+
+        return { data, total };
+    }
+
+    @CreateRequestContext()
+    async createDevicePart(deviceId: string | undefined, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
+        let device: Device | undefined;
+        if (deviceId) {
+            const found = await this.em.findOne(Device, { id: deviceId });
+            if (!found) throw AppErrors.dbEntityNotFound('Device not found');
+            device = found;
+        }
 
         const part = this.em.create(DevicePart, {
             device,
@@ -315,7 +356,7 @@ export class DeviceService {
     }
 
     @CreateRequestContext()
-    async updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
+    async updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string; deviceId?: string }): Promise<DevicePart> {
         const part = await this.em.findOne(DevicePart, { id: partId });
         if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
 
@@ -323,6 +364,16 @@ export class DeviceService {
         if (dto.partNumber !== undefined) part.partNumber = dto.partNumber;
         if (dto.price !== undefined) part.price = dto.price;
         if (dto.description !== undefined) part.description = dto.description;
+
+        if (dto.deviceId !== undefined) {
+            if (dto.deviceId) {
+                const device = await this.em.findOne(Device, { id: dto.deviceId });
+                if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+                part.device = device;
+            } else {
+                part.device = undefined;
+            }
+        }
 
         await this.em.flush();
         return part;

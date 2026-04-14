@@ -15,6 +15,7 @@ import type {
     DeleteAllResponse,
     DevicePartResponse,
     DevicePartListResponse,
+    PaginatedDevicePartsResponse,
     DeviceCategoryResponse,
     DeviceCategoryListResponse,
     EmptyDeviceResponse,
@@ -144,9 +145,9 @@ export class DeviceClientService implements OnModuleInit {
 
     // ── Device parts ──
 
-    createDevicePart(deviceId: string, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePartResponse> {
+    createDevicePart(deviceId: string | undefined, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePartResponse> {
         return grpcCall(this.deviceService.createDevicePart({
-            deviceId,
+            deviceId: deviceId ?? '',
             name: dto.name,
             partNumber: dto.partNumber ?? '',
             price: dto.price ?? 0,
@@ -154,13 +155,14 @@ export class DeviceClientService implements OnModuleInit {
         }));
     }
 
-    updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePartResponse> {
+    updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string; deviceId?: string }): Promise<DevicePartResponse> {
         return grpcCall(this.deviceService.updateDevicePart({
             id: partId,
             name: dto.name ?? '',
             partNumber: dto.partNumber ?? '',
             price: dto.price ?? 0,
             description: dto.description ?? '',
+            deviceId: dto.deviceId ?? '',
         }));
     }
 
@@ -170,6 +172,16 @@ export class DeviceClientService implements OnModuleInit {
 
     getDeviceParts(deviceId: string): Promise<DevicePartListResponse> {
         return grpcCall(this.deviceService.getDeviceParts({ deviceId }));
+    }
+
+    getAllDeviceParts(params: { page?: number; limit?: number; search?: string; deviceId?: string; genericOnly?: boolean }): Promise<PaginatedDevicePartsResponse> {
+        return grpcCall(this.deviceService.getAllDeviceParts({
+            page: params.page ?? 1,
+            limit: params.limit ?? 50,
+            search: params.search ?? '',
+            deviceId: params.deviceId ?? '',
+            genericOnly: params.genericOnly ?? false,
+        }));
     }
 
     // ── Address ──

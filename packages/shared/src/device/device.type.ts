@@ -29,7 +29,8 @@ export interface IDevice {
 
 export interface IDevicePart {
     id: string;
-    deviceId: string;
+    deviceId?: string;
+    deviceName?: string;
     name: string;
     partNumber?: string;
     price?: number;

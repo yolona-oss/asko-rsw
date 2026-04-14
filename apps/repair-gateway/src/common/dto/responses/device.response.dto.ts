@@ -48,7 +48,8 @@ export class PaginatedDevicesResponseDto {
 
 export class DevicePartRecordDto {
     id: string;
-    deviceId: string;
+    deviceId?: string;
+    deviceName?: string;
     name: string;
     partNumber?: string;
     price?: number;
@@ -64,6 +65,14 @@ export class DevicePartResponseDto {
 export class DevicePartListResponseDto {
     @ApiProperty({ type: [DevicePartRecordDto] })
     parts: DevicePartRecordDto[];
+}
+
+export class PaginatedDevicePartsResponseDto {
+    @ApiProperty({ type: [DevicePartRecordDto] })
+    parts: DevicePartRecordDto[];
+    overallCount: number;
+    page: number;
+    limit: number;
 }
 
 export class UserDeviceRecordDto {

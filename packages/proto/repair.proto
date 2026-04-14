@@ -33,6 +33,7 @@ service DeviceService {
     rpc UpdateDevicePart(UpdateDevicePartRequest) returns (DevicePartResponse);
     rpc DeleteDevicePart(DeleteDevicePartRequest) returns (EmptyResponse);
     rpc GetDeviceParts(GetDevicePartsRequest) returns (DevicePartListResponse);
+    rpc GetAllDeviceParts(GetAllDevicePartsRequest) returns (PaginatedDevicePartsResponse);
 
     // Address
     rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
@@ -304,6 +305,7 @@ message UpdateDevicePartRequest {
     string partNumber = 3;
     double price = 4;
     string description = 5;
+    string deviceId = 6;
 }
 
 message DeleteDevicePartRequest {
@@ -312,6 +314,14 @@ message DeleteDevicePartRequest {
 
 message GetDevicePartsRequest {
     string deviceId = 1;
+}
+
+message GetAllDevicePartsRequest {
+    int32 page = 1;
+    int32 limit = 2;
+    string search = 3;
+    string deviceId = 4;
+    bool genericOnly = 5;
 }
 
 message CreateAddressRequest {
@@ -410,6 +420,7 @@ message DevicePartRecord {
     string description = 6;
     string createdAt = 7;
     string updatedAt = 8;
+    string deviceName = 9;
 }
 
 message DevicePartResponse {
@@ -418,6 +429,13 @@ message DevicePartResponse {
 
 message DevicePartListResponse {
     repeated DevicePartRecord parts = 1;
+}
+
+message PaginatedDevicePartsResponse {
+    repeated DevicePartRecord parts = 1;
+    int32 overallCount = 2;
+    int32 page = 3;
+    int32 limit = 4;
 }
 
 message UserDeviceRecord {

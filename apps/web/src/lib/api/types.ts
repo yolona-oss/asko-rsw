@@ -22,6 +22,7 @@ export type PaginatedDevices = components['schemas']['PaginatedDevicesResponseDt
 export type DevicePartRecord = components['schemas']['DevicePartRecordDto'];
 export type DevicePartResponse = components['schemas']['DevicePartResponseDto'];
 export type DevicePartList = components['schemas']['DevicePartListResponseDto'];
+export type PaginatedDeviceParts = { parts: DevicePartRecord[]; overallCount: number; page: number; limit: number };
 export type UserDeviceRecord = components['schemas']['UserDeviceRecordDto'];
 export type UserDeviceList = components['schemas']['UserDeviceListResponseDto'];
 export type ImportDevices = components['schemas']['ImportDevicesResponseDto'];
