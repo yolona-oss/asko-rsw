@@ -6,7 +6,7 @@ import { DealerProfile } from './dealer-profile.entity';
 
 @Entity()
 export class Certificate {
-    [OptionalProps]?: 'status' | 'issuedAt' | 'paid' | 'pointsAwarded' | 'createdAt' | 'dealer' | 'purchaseReceiptUrl' | 'description' | 'signature' | 'signedPayload' | 'expiryReminderSent' | 'expiryReminderDismissed' | 'replacedCertificate';
+    [OptionalProps]?: 'status' | 'issuedAt' | 'paid' | 'pointsAwarded' | 'createdAt' | 'dealer' | 'purchaseReceiptUrl' | 'description' | 'signature' | 'signedPayload' | 'expiryReminderSent' | 'expiryReminderDismissed' | 'replacedCertificate' | 'pdfDocumentId';
 
     @PrimaryKey()
     id: string = uuid();
@@ -64,4 +64,7 @@ export class Certificate {
 
     @ManyToOne(() => Certificate, { nullable: true })
     replacedCertificate?: Certificate;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    pdfDocumentId?: string;
 }

@@ -11,6 +11,7 @@ import type {
     CertValidateResponse,
     VerifySignatureResponse,
     PublicKeyResponse,
+    GenerateCertificatePdfResponse,
 } from '@asko/proto';
 
 @Injectable()
@@ -165,5 +166,30 @@ export class CertificateClientService implements OnModuleInit {
 
     getPublicKey(): Promise<PublicKeyResponse> {
         return grpcCall(this.certificateService.getPublicKey({}));
+    }
+
+    // ─── PDF ──────────────────────────────────────────────────────────────
+
+    generateCertificatePdf(certId: string, dto: {
+        deviceName: string;
+        deviceBrand: string;
+        deviceModel: string;
+        deviceDescription: string;
+        deviceImage?: Uint8Array;
+        deviceImageMimetype?: string;
+    }): Promise<GenerateCertificatePdfResponse> {
+        return grpcCall(this.certificateService.generateCertificatePdf({
+            certId,
+            deviceName: dto.deviceName,
+            deviceBrand: dto.deviceBrand,
+            deviceModel: dto.deviceModel,
+            deviceDescription: dto.deviceDescription,
+            deviceImage: dto.deviceImage ?? new Uint8Array(),
+            deviceImageMimetype: dto.deviceImageMimetype ?? '',
+        }));
+    }
+
+    setPdfDocumentId(certId: string, documentId: string): Promise<CertificateResponse> {
+        return grpcCall(this.certificateService.setCertificatePdfDocumentId({ certId, documentId }));
     }
 }

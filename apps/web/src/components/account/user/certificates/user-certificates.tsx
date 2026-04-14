@@ -22,6 +22,7 @@ import { CTABanner } from '@/components/account/layout/cta-banner';
 import { PaymentModal } from '@/components/account/user/payments/payment-modal';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
+import { downloadDocument } from '@/lib/file-url';
 import { CertificateStatus } from '@asko/shared/client';
 import type { ICertificate } from '@/lib/api/types';
 import { CertificateCard } from './certificate-card';
@@ -29,7 +30,7 @@ import { DeviceSlider } from './device-slider';
 import { AddDeviceForm } from './add-device-form';
 import { EditUserDeviceForm } from './edit-user-device-form';
 import { AddCertificateForm } from './add-certificate-form';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate, formatDateLong } from './constants';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate } from './constants';
 import type { UserDevice } from './types';
 
 const PAGE_SIZE = 20;
@@ -120,60 +121,13 @@ export function UserCertificates() {
     return sortedCertificates.slice(start, start + PAGE_SIZE);
   }, [sortedCertificates, page]);
 
-  const exportPdf = useCallback((cert: ICertificate) => {
-    const device = cert.userDevice?.device;
-    const deviceName = device?.name ?? 'Устройство';
-    const brandModel = [device?.brand, device?.model].filter(Boolean).join(' ');
-    const deviceDesc = device?.description
-      ?? 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.\nСертификат подтверждает право на обслуживание и ремонт.';
-    const isActive = cert.status === CertificateStatus.ACTIVE;
-    const durationMs = new Date(cert.expiresAt).getTime() - new Date(cert.issuedAt).getTime();
-    const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Сертификат ${cert.certificateNumber}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 40px; color: #323232; }
-          .card { border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; }
-          .title { font-size: 32px; font-weight: 400; line-height: 1.12; margin-bottom: 8px; letter-spacing: -0.01em; }
-          .title strong { font-weight: 500; }
-          .desc { font-size: 14px; color: #979797; line-height: 1.3; margin-bottom: 24px; max-width: 527px; }
-          .details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-          .details p { font-size: 18px; line-height: 1.22; letter-spacing: -0.01em; }
-          .details strong { font-weight: 500; }
-          .status-line { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 8px; }
-          .status-active { color: #108b00; font-weight: 500; }
-          .warranty { font-size: 14px; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="title">${deviceName} ${brandModel ? `<strong>${brandModel}</strong>` : ''}</div>
-          <div class="desc">${deviceDesc.replace(/\n/g, '<br>')}</div>
-          <div class="details">
-            <p>Номер сертификата: <strong>${cert.certificateNumber}</strong></p>
-            <p>Дата активации: <strong>${formatDate(cert.issuedAt)}</strong></p>
-            <p>Срок действия: <strong>${durationMonths} месяцев</strong></p>
-          </div>
-          <div class="status-line">
-            <span>Статус: <span class="${isActive ? 'status-active' : ''}">${STATUS_LABELS[cert.status] ?? cert.status}</span></span>
-            <span style="color:#979797">Действителен до ${formatDateLong(cert.expiresAt)}</span>
-          </div>
-          ${isActive ? '<div class="warranty">Расширенная гарантия активна</div>' : ''}
-        </div>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+  const exportPdf = useCallback(async (cert: ICertificate) => {
+    try {
+      const { data } = await certificateApi.generatePdf(cert.id);
+      await downloadDocument(data.documentId, `cert-${cert.certificateNumber}.pdf`);
+    } catch {
+      // TODO: error handling
+    }
   }, []);
 
   const certificateColumns: DataGridColumn<ICertificate>[] = [

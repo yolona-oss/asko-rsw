@@ -31,6 +31,8 @@ import type {
     CertValidateRequest,
     VerifySignatureRequest,
     SignatureEmptyRequest,
+    GenerateCertificatePdfRequest,
+    SetCertPdfDocIdRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -136,6 +138,7 @@ function certToRecord(entity: Certificate) {
         createdAt: entity.createdAt?.toISOString() ?? '',
         signature: entity.signature ?? '',
         signedPayload: entity.signedPayload ?? '',
+        pdfDocumentId: entity.pdfDocumentId ?? '',
         userDevice: userDevice ? userDeviceToRecord(userDevice) : undefined,
         dealer: dealer ? dealerToRecord(dealer) : undefined,
     };
@@ -360,6 +363,28 @@ export class CertificateGrpcController {
                 publicKeyPem: this.signatureService.getPublicKeyPem(),
                 algorithm: 'ECDSA-P256-SHA256',
             };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'GenerateCertificatePdf')
+    async generateCertificatePdf(data: GenerateCertificatePdfRequest) {
+        try {
+            const { pdfBuffer, certificate } = await this.certificateService.generatePdf(data.certId, {
+                deviceName: data.deviceName,
+                deviceBrand: data.deviceBrand,
+                deviceModel: data.deviceModel,
+                deviceDescription: data.deviceDescription,
+                deviceImage: data.deviceImage?.length ? Buffer.from(data.deviceImage) : undefined,
+            });
+            return { pdfBuffer, certId: certificate.id };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('CertificateService', 'SetCertificatePdfDocumentId')
+    async setCertificatePdfDocumentId(data: SetCertPdfDocIdRequest) {
+        try {
+            const cert = await this.certificateService.setPdfDocumentId(data.certId, data.documentId);
+            return { certificate: certToRecord(cert) };
         } catch (e) { throw toGrpcError(e); }
     }
 }

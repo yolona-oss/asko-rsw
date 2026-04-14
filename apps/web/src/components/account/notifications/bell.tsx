@@ -77,9 +77,9 @@ export function NotificationBell() {
 
   const hasUnread = unreadCount > 0;
   useEffect(() => {
-    if (hasUnread) scheduleReminder();
+    if (hasUnread && !soundMuted) scheduleReminder();
     else clearReminder();
-  }, [hasUnread, scheduleReminder, clearReminder]);
+  }, [hasUnread, soundMuted, scheduleReminder, clearReminder]);
 
   useEffect(() => clearReminder, [clearReminder]);
 
@@ -135,14 +135,24 @@ export function NotificationBell() {
   const [markingAll, setMarkingAll] = useState(false);
 
   const markAllRead = useCallback(() => {
+    const ids = notifications.map((n) => n.id);
+    if (ids.length === 0) return;
     setMarkingAll(true);
-    queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
-    queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-      if (!old) return old;
-      return { ...old, data: [], overallCount: 0 };
-    });
-    notificationApi.markAllAsRead().finally(() => setMarkingAll(false));
-  }, [queryClient]);
+    setRemovingIds(new Set(ids));
+
+    const totalMs = (ids.length - 1) * 50 + 400;
+    setTimeout(() => {
+      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
+      queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
+        if (!old) return old;
+        return { ...old, data: [], overallCount: 0 };
+      });
+      setRemovingIds(new Set());
+      setMarkingAll(false);
+    }, totalMs);
+
+    notificationApi.markAllAsRead();
+  }, [queryClient, notifications]);
 
   // ── Expand / Collapse notification body ──────────────────────
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -268,6 +278,7 @@ export function NotificationBell() {
     <NotificationList
       notifications={notifications}
       removingIds={removingIds}
+      markingAll={markingAll}
       expandedIds={expandedIds}
       onToggleExpand={toggleExpand}
       onMarkRead={markRead}
@@ -339,6 +350,7 @@ export function NotificationBell() {
 function NotificationList({
   notifications,
   removingIds,
+  markingAll,
   expandedIds,
   onToggleExpand,
   onMarkRead,
@@ -346,6 +358,7 @@ function NotificationList({
 }: {
   notifications: NotificationRecord[];
   removingIds: Set<string>;
+  markingAll: boolean;
   expandedIds: Set<string>;
   onToggleExpand: (id: string) => void;
   onMarkRead: (id: string) => void;
@@ -373,7 +386,7 @@ function NotificationList({
                 ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
                 : 'animate-[notification-item_300ms_ease-out_both]'
             }`}
-            style={isRemoving ? undefined : { animationDelay: `${i * 50}ms` }}
+            style={{ animationDelay: `${isRemoving && markingAll ? i * 50 : isRemoving ? 0 : i * 50}ms` }}
           >
             {/* Main area — click to expand / collapse */}
             <button

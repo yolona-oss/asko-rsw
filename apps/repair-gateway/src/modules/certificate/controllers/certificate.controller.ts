@@ -3,6 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
+import { FileClientService } from 'modules/file-client/file-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
@@ -20,6 +21,7 @@ import {
     JwtPayload,
     PaymentTargetType,
     PaymentProviderType,
+    ImageTypeEnum,
     computeExpiresAt,
 } from '@asko/shared';
 
@@ -51,6 +53,7 @@ export class CertificateController {
         private readonly userClient: UserClientService,
         private readonly paymentService: PaymentClientService,
         private readonly dealerClient: DealerClientService,
+        private readonly fileService: FileClientService,
     ) {}
 
     private async enrichCertificates(certs: any[]): Promise<void> {
@@ -293,6 +296,92 @@ export class CertificateController {
     @Get('verify/:id')
     async verifySignature(@Param('id') id: string) {
         return this.certificateClient.verifySignature('certificate', id);
+    }
+
+    // ── PDF Generation ──
+
+    @ApiCreatedResponse()
+    @RequiredRoles(...ALL_ROLES)
+    @Post(':id/pdf/generate')
+    async generatePdf(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+        @Query('force') force?: string,
+    ) {
+        // 1. Fetch certificate
+        const certData = await this.certificateClient.findById(id);
+        const cert = certData.certificate;
+
+        // 2. Check cache
+        if (cert.pdfDocumentId && force !== 'true') {
+            return { documentId: cert.pdfDocumentId };
+        }
+
+        // 3. Resolve device info
+        const device = (cert as any).userDevice?.device;
+        const deviceCatalogId = device?.id ?? '';
+
+        // 4. Fetch device image bytes
+        let deviceImage: Uint8Array | undefined;
+        let deviceImageMimetype: string | undefined;
+        if (deviceCatalogId) {
+            try {
+                const { images } = await this.fileService.findAttachedImages(
+                    ImageTypeEnum.Device, deviceCatalogId,
+                );
+                if (images.length > 0) {
+                    const sorted = [...images].sort((a, b) => a.order - b.order);
+                    const imageJson = sorted[0].imageJson;
+                    const url = imageJson?.original?.secure_url
+                        || imageJson?.medium?.secure_url
+                        || imageJson?.thumbnail?.secure_url;
+                    if (url) {
+                        const bytes = await this.fetchImageBytes(url);
+                        if (bytes) {
+                            deviceImage = bytes;
+                            deviceImageMimetype = url.includes('.png') ? 'image/png' : 'image/jpeg';
+                        }
+                    }
+                }
+            } catch { /* proceed without image */ }
+        }
+
+        // 5. Generate PDF via repair-service
+        const result = await this.certificateClient.generateCertificatePdf(id, {
+            deviceName: device?.name ?? 'Устройство',
+            deviceBrand: device?.brand ?? '',
+            deviceModel: device?.model ?? '',
+            deviceDescription: device?.description ?? '',
+            deviceImage,
+            deviceImageMimetype,
+        });
+
+        // 6. Upload PDF to file-service
+        const filename = `cert-${cert.certificateNumber}.pdf`;
+        const docResult = await this.fileService.uploadDocument(
+            Buffer.from(result.pdfBuffer),
+            filename,
+            'certificate',
+            id,
+            cert.userId,
+        );
+
+        // 7. Store document ID on certificate
+        await this.certificateClient.setPdfDocumentId(id, docResult.document!.id);
+
+        return { documentId: docResult.document!.id };
+    }
+
+    private async fetchImageBytes(url: string): Promise<Uint8Array | undefined> {
+        if (!url) return undefined;
+        try {
+            if (url.startsWith('http')) {
+                const res = await fetch(url);
+                if (!res.ok) return undefined;
+                return new Uint8Array(await res.arrayBuffer());
+            }
+        } catch { /* ignore */ }
+        return undefined;
     }
 
     @ApiOkResponse({ type: CertificateResponseDto })

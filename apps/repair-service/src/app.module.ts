@@ -54,6 +54,7 @@ import { DealerService } from 'services/dealer.service';
 import { BrokenPartService } from 'services/broken-part.service';
 import { SignatureService } from 'services/signature.service';
 import { AvrPdfService } from 'services/avr-pdf.service';
+import { CertificatePdfService } from 'services/certificate-pdf.service';
 import { DeviceCategoryService } from 'services/device-category.service';
 import { WScheduleService } from 'services/wschedule.service';
 import { WSchedulePatternService } from 'services/wschedule-pattern.service';
@@ -157,6 +158,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         DealerService,
         SignatureService,
         AvrPdfService,
+        CertificatePdfService,
         RepairEventService,
         PaymentCommandService,
         AddressValidationPublisher,

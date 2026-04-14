@@ -64,6 +64,8 @@ service CertificateService {
     rpc ValidateCertificate(CertValidateRequest) returns (CertValidateResponse);
     rpc VerifySignature(VerifySignatureRequest) returns (VerifySignatureResponse);
     rpc GetPublicKey(SignatureEmptyRequest) returns (PublicKeyResponse);
+    rpc GenerateCertificatePdf(GenerateCertificatePdfRequest) returns (GenerateCertificatePdfResponse);
+    rpc SetCertificatePdfDocumentId(SetCertPdfDocIdRequest) returns (CertificateResponse);
 }
 
 service RepairerService {
@@ -466,6 +468,7 @@ message CertificateRecord {
     DealerProfileRecord dealer = 15;
     string signature = 16;
     string signedPayload = 17;
+    string pdfDocumentId = 18;
 }
 
 // Frozen copy of a certificate's state at the moment a repair request was
@@ -594,6 +597,28 @@ message CertPriceResponse {
 message CertValidateResponse {
     bool valid = 1;
     CertificateRecord certificate = 2;
+}
+
+// ─── Certificate PDF ───────────────────────────────────────────────────────
+
+message GenerateCertificatePdfRequest {
+    string certId = 1;
+    string deviceName = 2;
+    string deviceBrand = 3;
+    string deviceModel = 4;
+    string deviceDescription = 5;
+    bytes deviceImage = 6;
+    string deviceImageMimetype = 7;
+}
+
+message GenerateCertificatePdfResponse {
+    bytes pdfBuffer = 1;
+    string certId = 2;
+}
+
+message SetCertPdfDocIdRequest {
+    string certId = 1;
+    string documentId = 2;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -62,4 +62,10 @@ export const certificateApi = {
   dummyPay(certId: string) {
     return api.post<ProcessInvoiceResult>(`/certificates/${certId}/dummy-pay`);
   },
+
+  generatePdf(certId: string, force?: boolean) {
+    return api.post<{ documentId: string }>(`/certificates/${certId}/pdf/generate`, null, {
+      params: force ? { force: 'true' } : undefined,
+    });
+  },
 };

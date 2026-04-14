@@ -351,6 +351,7 @@ export interface CertificateRecord {
     createdAt: string;
     signature?: string;
     signedPayload?: string;
+    pdfDocumentId?: string;
 }
 
 export interface CertificateSnapshotRecord {
@@ -480,6 +481,28 @@ export interface CertValidateResponse {
     certificate: CertificateRecord;
 }
 
+// ─── Certificate PDF ────────────────────────────────────────────────────
+
+export interface GenerateCertificatePdfRequest {
+    certId: string;
+    deviceName: string;
+    deviceBrand: string;
+    deviceModel: string;
+    deviceDescription: string;
+    deviceImage: Uint8Array;
+    deviceImageMimetype: string;
+}
+
+export interface GenerateCertificatePdfResponse {
+    pdfBuffer: Uint8Array;
+    certId: string;
+}
+
+export interface SetCertPdfDocIdRequest {
+    certId: string;
+    documentId: string;
+}
+
 // ─── Certificate gRPC Service Interface ─────────────────────────────────
 
 export interface CertificateServiceClient {
@@ -499,6 +522,8 @@ export interface CertificateServiceClient {
     validateCertificate(request: CertValidateRequest): Observable<CertValidateResponse>;
     verifySignature(request: VerifySignatureRequest): Observable<VerifySignatureResponse>;
     getPublicKey(request: SignatureEmptyRequest): Observable<PublicKeyResponse>;
+    generateCertificatePdf(request: GenerateCertificatePdfRequest): Observable<GenerateCertificatePdfResponse>;
+    setCertificatePdfDocumentId(request: SetCertPdfDocIdRequest): Observable<CertificateResponse>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

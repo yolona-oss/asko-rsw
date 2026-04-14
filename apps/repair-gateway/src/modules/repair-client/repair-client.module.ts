@@ -21,6 +21,8 @@ import { ScheduleClientService } from './schedule-client.service';
                         package: 'repair',
                         protoPath: join(process.cwd(), '../../packages/proto/repair.proto'),
                         url: config.repairServiceUrl,
+                        maxReceiveMessageLength: 20 * 1024 * 1024,
+                        maxSendMessageLength: 20 * 1024 * 1024,
                     },
                 }),
             },

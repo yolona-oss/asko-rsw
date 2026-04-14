@@ -18,6 +18,15 @@ import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { SignatureService } from './signature.service';
+import { CertificatePdfService } from './certificate-pdf.service';
+
+const STATUS_LABELS: Record<string, string> = {
+    pending_payment: 'Ожидает оплаты',
+    active: 'Активен',
+    expired: 'Истек',
+    revoked: 'Отозван',
+    validation_error: 'Ошибка валидации',
+};
 
 const CERT_SORTABLE_FIELDS = ['createdAt', 'issuedAt', 'expiresAt', 'status', 'certificateNumber'] as const;
 
@@ -34,6 +43,7 @@ export class CertificateService {
         private readonly paymentCommandService: PaymentCommandService,
         private readonly paymentClient: PaymentClientService,
         private readonly signatureService: SignatureService,
+        private readonly certificatePdfService: CertificatePdfService,
     ) {}
 
     /** User adds an existing certificate (e.g. received with product) */
@@ -210,6 +220,7 @@ export class CertificateService {
 
         cert.status = CertificateStatus.ACTIVE;
         cert.paid = true;
+        cert.pdfDocumentId = undefined;
 
         if (cert.replacedCertificate && typeof cert.replacedCertificate === 'object') {
             const prior = cert.replacedCertificate;
@@ -398,6 +409,7 @@ export class CertificateService {
         }
 
         cert.status = CertificateStatus.REVOKED;
+        cert.pdfDocumentId = undefined;
         await this.em.flush();
         return cert;
     }
@@ -417,6 +429,7 @@ export class CertificateService {
         if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
 
         cert.userDevice = userDevice;
+        cert.pdfDocumentId = undefined;
         await this.em.flush();
         return cert;
     }
@@ -602,6 +615,53 @@ export class CertificateService {
         }
 
         return { ok: true };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PDF Generation
+    // ═══════════════════════════════════════════════════════════════════════
+
+    @CreateRequestContext()
+    async generatePdf(certId: string, deviceData: {
+        deviceName: string;
+        deviceBrand: string;
+        deviceModel: string;
+        deviceDescription: string;
+        deviceImage?: Buffer;
+    }): Promise<{ pdfBuffer: Buffer; certificate: Certificate }> {
+        const cert = await this.em.findOne(Certificate, { id: certId }, {
+            populate: ['userDevice', 'userDevice.device'],
+        });
+        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+
+        const durationMs = cert.expiresAt.getTime() - cert.issuedAt.getTime();
+        const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
+
+        const pdfBuffer = await this.certificatePdfService.generate({
+            certificateNumber: cert.certificateNumber,
+            deviceName: deviceData.deviceName,
+            deviceBrand: deviceData.deviceBrand,
+            deviceModel: deviceData.deviceModel,
+            deviceDescription: deviceData.deviceDescription || 'Устройство зарегистрировано и защищено расширенной гарантией ASKO.\nСертификат подтверждает право на обслуживание и ремонт.',
+            issuedAt: cert.issuedAt.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            expiresAt: cert.expiresAt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }),
+            durationMonths,
+            status: cert.status,
+            statusLabel: STATUS_LABELS[cert.status] ?? cert.status,
+            isActive: cert.status === CertificateStatus.ACTIVE,
+            deviceImage: deviceData.deviceImage,
+        });
+
+        return { pdfBuffer, certificate: cert };
+    }
+
+    @CreateRequestContext()
+    async setPdfDocumentId(certId: string, documentId: string): Promise<Certificate> {
+        const cert = await this.em.findOne(Certificate, { id: certId });
+        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        cert.pdfDocumentId = documentId;
+        await this.em.flush();
+        return cert;
     }
 }
 
