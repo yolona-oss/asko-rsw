@@ -31,6 +31,9 @@ export interface IDevicePart {
     id: string;
     deviceId?: string;
     deviceName?: string;
+    categoryId?: string;
+    categoryName?: string;
+    group?: string;
     name: string;
     partNumber?: string;
     price?: number;

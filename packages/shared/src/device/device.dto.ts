@@ -73,6 +73,14 @@ export class CreateDevicePartDto {
     @IsString()
     deviceId?: string;
 
+    @IsOptional()
+    @IsString()
+    categoryId?: string;
+
+    @IsOptional()
+    @IsString()
+    group?: string;
+
     @IsString()
     name!: string;
 
@@ -93,6 +101,14 @@ export class UpdateDevicePartDto {
     @IsOptional()
     @IsString()
     deviceId?: string;
+
+    @IsOptional()
+    @IsString()
+    categoryId?: string;
+
+    @IsOptional()
+    @IsString()
+    group?: string;
 
     @IsOptional()
     @IsString()

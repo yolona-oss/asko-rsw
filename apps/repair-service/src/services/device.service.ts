@@ -304,6 +304,7 @@ export class DeviceService {
         limit?: number;
         search?: string;
         deviceId?: string;
+        categoryId?: string;
         genericOnly?: boolean;
     }): Promise<{ data: DevicePart[]; total: number }> {
         const where: Record<string, any> = {};
@@ -313,6 +314,7 @@ export class DeviceService {
                 { name: { $ilike: `%${params.search}%` } },
                 { partNumber: { $ilike: `%${params.search}%` } },
                 { description: { $ilike: `%${params.search}%` } },
+                { group: { $ilike: `%${params.search}%` } },
             ];
         }
 
@@ -322,21 +324,32 @@ export class DeviceService {
             where.device = params.deviceId;
         }
 
+        if (params.categoryId) {
+            where.category = params.categoryId;
+        }
+
         const limit = params.limit ?? 50;
         const offset = ((params.page ?? 1) - 1) * limit;
 
         const [data, total] = await this.em.findAndCount(DevicePart, where, {
             limit,
             offset,
-            populate: ['device'],
-            orderBy: { name: 'ASC' },
+            populate: ['device', 'category'],
+            orderBy: { group: 'ASC', name: 'ASC' },
         });
 
         return { data, total };
     }
 
     @CreateRequestContext()
-    async createDevicePart(deviceId: string | undefined, dto: { name: string; partNumber?: string; price?: number; description?: string }): Promise<DevicePart> {
+    async createDevicePart(deviceId: string | undefined, dto: {
+        name: string;
+        partNumber?: string;
+        price?: number;
+        description?: string;
+        group?: string;
+        categoryId?: string;
+    }): Promise<DevicePart> {
         let device: Device | undefined;
         if (deviceId) {
             const found = await this.em.findOne(Device, { id: deviceId });
@@ -344,8 +357,17 @@ export class DeviceService {
             device = found;
         }
 
+        let category: DeviceCategory | undefined;
+        if (dto.categoryId) {
+            const found = await this.em.findOne(DeviceCategory, { id: dto.categoryId });
+            if (!found) throw AppErrors.dbEntityNotFound('Device category not found');
+            category = found;
+        }
+
         const part = this.em.create(DevicePart, {
             device,
+            category,
+            group: dto.group,
             name: dto.name,
             partNumber: dto.partNumber,
             price: dto.price,
@@ -356,7 +378,15 @@ export class DeviceService {
     }
 
     @CreateRequestContext()
-    async updateDevicePart(partId: string, dto: { name?: string; partNumber?: string; price?: number; description?: string; deviceId?: string }): Promise<DevicePart> {
+    async updateDevicePart(partId: string, dto: {
+        name?: string;
+        partNumber?: string;
+        price?: number;
+        description?: string;
+        deviceId?: string;
+        group?: string;
+        categoryId?: string;
+    }): Promise<DevicePart> {
         const part = await this.em.findOne(DevicePart, { id: partId });
         if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
 
@@ -364,6 +394,7 @@ export class DeviceService {
         if (dto.partNumber !== undefined) part.partNumber = dto.partNumber;
         if (dto.price !== undefined) part.price = dto.price;
         if (dto.description !== undefined) part.description = dto.description;
+        if (dto.group !== undefined) part.group = dto.group || undefined;
 
         if (dto.deviceId !== undefined) {
             if (dto.deviceId) {
@@ -372,6 +403,16 @@ export class DeviceService {
                 part.device = device;
             } else {
                 part.device = undefined;
+            }
+        }
+
+        if (dto.categoryId !== undefined) {
+            if (dto.categoryId) {
+                const category = await this.em.findOne(DeviceCategory, { id: dto.categoryId });
+                if (!category) throw AppErrors.dbEntityNotFound('Device category not found');
+                part.category = category;
+            } else {
+                part.category = undefined;
             }
         }
 

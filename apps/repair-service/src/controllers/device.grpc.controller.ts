@@ -106,6 +106,7 @@ function addressToRecord(entity: Address) {
 
 function devicePartToRecord(entity: DevicePart) {
     const device = entity.device && typeof entity.device === 'object' ? entity.device : null;
+    const category = entity.category && typeof entity.category === 'object' ? entity.category : null;
     return {
         id: entity.id,
         deviceId: device ? device.id : (entity.device ? String(entity.device) : ''),
@@ -116,6 +117,9 @@ function devicePartToRecord(entity: DevicePart) {
         createdAt: entity.createdAt?.toISOString() ?? '',
         updatedAt: entity.updatedAt?.toISOString() ?? '',
         deviceName: device?.name ?? '',
+        group: entity.group ?? '',
+        categoryId: category ? category.id : (entity.category ? String(entity.category) : ''),
+        categoryName: category?.label ?? '',
     };
 }
 
@@ -332,6 +336,8 @@ export class DeviceGrpcController {
                 partNumber: data.partNumber || undefined,
                 price: data.price || undefined,
                 description: data.description || undefined,
+                group: data.group || undefined,
+                categoryId: data.categoryId || undefined,
             });
             return { part: devicePartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }
@@ -346,6 +352,8 @@ export class DeviceGrpcController {
                 price: data.price,
                 description: data.description,
                 deviceId: data.deviceId,
+                group: data.group,
+                categoryId: data.categoryId,
             });
             return { part: devicePartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }
@@ -376,6 +384,7 @@ export class DeviceGrpcController {
                 search: data.search || undefined,
                 deviceId: data.deviceId || undefined,
                 genericOnly: data.genericOnly || false,
+                categoryId: data.categoryId || undefined,
             });
             return {
                 parts: parts.map(devicePartToRecord),

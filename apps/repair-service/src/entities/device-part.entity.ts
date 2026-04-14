@@ -1,16 +1,23 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 import { Device } from './device.entity';
+import { DeviceCategory } from './device-category.entity';
 
 @Entity()
 export class DevicePart {
-    [OptionalProps]?: 'device' | 'partNumber' | 'price' | 'description' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'device' | 'category' | 'group' | 'partNumber' | 'price' | 'description' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
 
     @ManyToOne(() => Device, { nullable: true })
     device?: Device;
+
+    @ManyToOne(() => DeviceCategory, { nullable: true })
+    category?: DeviceCategory;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
+    group?: string;
 
     @Property({ type: 'varchar', length: 255 })
     name!: string;

@@ -297,6 +297,8 @@ message CreateDevicePartRequest {
     string partNumber = 3;
     double price = 4;
     string description = 5;
+    string group = 6;
+    string categoryId = 7;
 }
 
 message UpdateDevicePartRequest {
@@ -306,6 +308,8 @@ message UpdateDevicePartRequest {
     double price = 4;
     string description = 5;
     string deviceId = 6;
+    string group = 7;
+    string categoryId = 8;
 }
 
 message DeleteDevicePartRequest {
@@ -322,6 +326,7 @@ message GetAllDevicePartsRequest {
     string search = 3;
     string deviceId = 4;
     bool genericOnly = 5;
+    string categoryId = 6;
 }
 
 message CreateAddressRequest {
@@ -421,6 +426,9 @@ message DevicePartRecord {
     string createdAt = 7;
     string updatedAt = 8;
     string deviceName = 9;
+    string group = 10;
+    string categoryId = 11;
+    string categoryName = 12;
 }
 
 message DevicePartResponse {

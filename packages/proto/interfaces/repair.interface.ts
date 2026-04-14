@@ -94,6 +94,8 @@ export interface CreateDevicePartRequest {
     partNumber: string;
     price: number;
     description: string;
+    group: string;
+    categoryId: string;
 }
 
 export interface UpdateDevicePartRequest {
@@ -103,6 +105,8 @@ export interface UpdateDevicePartRequest {
     price: number;
     description: string;
     deviceId: string;
+    group: string;
+    categoryId: string;
 }
 
 export interface DeleteDevicePartRequest {
@@ -119,6 +123,7 @@ export interface GetAllDevicePartsRequest {
     search: string;
     deviceId: string;
     genericOnly: boolean;
+    categoryId: string;
 }
 
 export interface CreateAddressRequest {
@@ -220,6 +225,9 @@ export interface DevicePartRecord {
     createdAt: string;
     updatedAt: string;
     deviceName: string;
+    group: string;
+    categoryId: string;
+    categoryName: string;
 }
 
 export interface DevicePartResponse {

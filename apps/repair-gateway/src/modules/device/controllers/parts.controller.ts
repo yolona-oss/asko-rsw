@@ -25,6 +25,10 @@ class PartsQueryDto extends PaginationDto {
     deviceId?: string;
 
     @IsOptional()
+    @IsString()
+    categoryId?: string;
+
+    @IsOptional()
     @IsBoolean()
     @Transform(({ value }) => value === 'true' || value === true)
     genericOnly?: boolean;
@@ -46,6 +50,7 @@ export class PartsController {
             limit: query.limit,
             search: query.search,
             deviceId: query.deviceId,
+            categoryId: query.categoryId,
             genericOnly: query.genericOnly,
         });
     }
@@ -59,6 +64,8 @@ export class PartsController {
             partNumber: dto.partNumber,
             price: dto.price,
             description: dto.description,
+            group: dto.group,
+            categoryId: dto.categoryId,
         });
     }
 
@@ -72,6 +79,8 @@ export class PartsController {
             price: dto.price,
             description: dto.description,
             deviceId: dto.deviceId,
+            group: dto.group,
+            categoryId: dto.categoryId,
         });
     }
 
