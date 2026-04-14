@@ -57,7 +57,7 @@ export class PaymentService {
 
         try {
             const paidPayments = await this.em.find(PaymentEntity, {
-                targetType, targetId, status: PaymentStatus.PAID,
+                targetType, targetId, status: { $in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] },
             });
             const totalPaid = paidPayments.reduce(
                 (sum, p) => sum + Number(p.amount) - Number(p.refundedAmount ?? 0), 0,
@@ -107,7 +107,47 @@ export class PaymentService {
                     await this.domainService.recordTransition(old.id, PaymentStatus.PENDING, PaymentStatus.FAILED, 'system', 'Cancelled: price decreased');
                 }
                 const remaining = amount - totalPaid;
-                if (remaining <= 0) {
+                if (remaining < 0) {
+                    // User overpaid — refund the excess from paid payments
+                    let toRefund = Math.abs(remaining);
+                    for (const paid of paidPayments) {
+                        if (toRefund <= 0) break;
+                        const refundable = Number(paid.amount) - Number(paid.refundedAmount ?? 0);
+                        if (refundable <= 0) continue;
+                        const refundAmount = Math.min(toRefund, refundable);
+
+                        if (paid.provider && paid.providerPaymentId) {
+                            const provider = this.providerService.getProvider(paid.provider);
+                            if (provider) {
+                                await provider.refund(paid.providerPaymentId, refundAmount);
+                            }
+                        }
+
+                        const isFullRefund = refundAmount >= refundable;
+                        const newStatus = isFullRefund ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED;
+                        this.domainService.assertTransition(paid.status as PaymentStatus, newStatus);
+                        await this.domainService.recordTransition(paid.id, paid.status, newStatus, 'system', `Price decreased refund ${refundAmount}`);
+                        paid.status = newStatus;
+                        paid.refundedAmount = Number(paid.refundedAmount ?? 0) + refundAmount;
+
+                        await this.eventService.emit({
+                            type: PaymentEventType.PAYMENT_REFUNDED,
+                            paymentId: paid.id,
+                            userId: paid.userId,
+                            targetType: paid.targetType,
+                            targetId: paid.targetId,
+                            amount: refundAmount,
+                            currency: paid.currency,
+                            provider: paid.provider,
+                            timestamp: new Date(),
+                        });
+
+                        toRefund -= refundAmount;
+                    }
+                    await this.em.flush();
+                    return null;
+                }
+                if (remaining === 0) {
                     await this.em.flush();
                     return null;
                 }

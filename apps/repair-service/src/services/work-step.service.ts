@@ -91,14 +91,14 @@ export class WorkStepService {
         }
 
         if (request.stepsLocked) {
-            // When locked, only status + comment changes are allowed. Mandatory steps always accept comment updates.
-            if (dto.title || dto.description !== undefined) {
+            // When locked, only status + comment changes are allowed.
+            if (dto.title || dto.description) {
                 throw AppErrors.badRequest('Шаги заблокированы - можно менять только статус');
             }
         }
 
         if (dto.title) step.title = dto.title;
-        if (dto.description !== undefined) step.description = dto.description;
+        if (dto.description) step.description = dto.description;
         if (dto.comment !== undefined) step.comment = dto.comment;
         if (dto.status) step.status = dto.status as WorkStepStatus;
 
