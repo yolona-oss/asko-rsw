@@ -29,6 +29,8 @@ export function PaymentDetailModal({
   const [targetLoading, setTargetLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [cashCode, setCashCode] = useState('');
+  const [cashAmount, setCashAmount] = useState('');
 
   useEffect(() => {
     if (!open || !payment?.targetId || !payment?.targetType) {
@@ -171,18 +173,50 @@ export function PaymentDetailModal({
           </div>
         )}
 
+        {payment.provider === 'cash' && payment.status === 'pending' && (
+          <div className="flex flex-col gap-3 border-t border-border-divider pt-4">
+            <h3 className="text-sm font-bold text-text-main">Подтверждение наличных</h3>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-text-sub">Код подтверждения от клиента</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={cashCode}
+                onChange={(e) => setCashCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-значный код"
+                className="w-full px-3 py-2 text-sm border border-border-light bg-surface text-text-main placeholder:text-text-sub focus:outline-none focus:border-brand-red"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-text-sub">Полученная сумма (₽)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={cashAmount}
+                onChange={(e) => setCashAmount(e.target.value)}
+                placeholder="Введите сумму"
+                className="w-full px-3 py-2 text-sm border border-border-light bg-surface text-text-main placeholder:text-text-sub focus:outline-none focus:border-brand-red"
+              />
+            </div>
+          </div>
+        )}
+
         {confirmError && <p className="text-sm text-error">{confirmError}</p>}
 
         <div className="flex items-center justify-end gap-3">
           {payment.provider === 'cash' && payment.status === 'pending' && (
             <button
               type="button"
-              disabled={confirming}
+              disabled={confirming || cashCode.length !== 6 || !cashAmount}
               onClick={async () => {
                 setConfirming(true);
                 setConfirmError(null);
                 try {
-                  await paymentApi.confirmCashPayment(payment.id);
+                  await paymentApi.confirmCashPayment(payment.id, cashCode, Number(cashAmount));
+                  setCashCode('');
+                  setCashAmount('');
                   onConfirm?.();
                 } catch (e: any) {
                   setConfirmError(e?.response?.data?.message ?? 'Ошибка подтверждения');

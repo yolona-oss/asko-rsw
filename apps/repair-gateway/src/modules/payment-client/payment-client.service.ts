@@ -130,8 +130,8 @@ export class PaymentClientService implements OnModuleInit {
 
     // ─── Cash Confirm ─────────────────────────────────────────────────────
 
-    confirmCashPayment(paymentId: string, confirmedByUserId: string): Promise<ConfirmCashPaymentResponse> {
-        return grpcCall(this.paymentService.confirmCashPayment({ paymentId, confirmedByUserId }));
+    confirmCashPayment(paymentId: string, confirmedByUserId: string, confirmCode: string, amount: number): Promise<ConfirmCashPaymentResponse> {
+        return grpcCall(this.paymentService.confirmCashPayment({ paymentId, confirmedByUserId, confirmCode, amount }));
     }
 
     getPaymentById(paymentId: string): Promise<PaymentResponse> {

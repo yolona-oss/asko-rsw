@@ -73,6 +73,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [cashConfirming, setCashConfirming] = useState(false);
   const [cashConfirmError, setCashConfirmError] = useState('');
+  const [cashConfirmCode, setCashConfirmCode] = useState('');
+  const [cashConfirmAmount, setCashConfirmAmount] = useState('');
 
   // Comment editor
   const [commentEditId, setCommentEditId] = useState<string | null>(null);
@@ -823,17 +825,39 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           <p className="text-sm text-text-sub">
             Клиент выбрал оплату наличными: <span className="font-medium text-text-main">{Number(pendingCashPayment.amount).toLocaleString('ru-RU')} ₽</span>
           </p>
+          <FormField label="Код подтверждения от клиента">
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={cashConfirmCode}
+              onChange={(e) => setCashConfirmCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="6-значный код"
+            />
+          </FormField>
+          <FormField label="Полученная сумма (₽)">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={cashConfirmAmount}
+              onChange={(e) => setCashConfirmAmount(e.target.value)}
+              placeholder="Введите сумму"
+            />
+          </FormField>
           {cashConfirmError && <p className="text-sm text-error">{cashConfirmError}</p>}
           <Button
             variant="primary"
             className="w-full lg:w-fit"
-            disabled={cashConfirming}
+            disabled={cashConfirming || cashConfirmCode.length !== 6 || !cashConfirmAmount}
             onClick={async () => {
               setCashConfirming(true);
               setCashConfirmError('');
               try {
-                await paymentApi.confirmCashPayment(pendingCashPayment.id);
+                await paymentApi.confirmCashPayment(pendingCashPayment.id, cashConfirmCode, Number(cashConfirmAmount));
                 setPendingCashPayment(null);
+                setCashConfirmCode('');
+                setCashConfirmAmount('');
                 const { data: res } = await repairRequestApi.getOne(requestId);
                 setRequest((res as any).request ?? res);
               } catch (e: any) {

@@ -74,6 +74,8 @@ message RefundPaymentRequest {
 message ConfirmCashPaymentRequest {
     string paymentId = 1;
     string confirmedByUserId = 2;
+    string confirmCode = 3;
+    double amount = 4;
 }
 
 message GetPaymentByIdRequest {
@@ -141,6 +143,7 @@ message ProcessInvoiceResponse {
     string paymentId = 1;
     string status = 2;
     string redirectUrl = 3;
+    string cashConfirmCode = 4;
 }
 
 message PayoutResponse {

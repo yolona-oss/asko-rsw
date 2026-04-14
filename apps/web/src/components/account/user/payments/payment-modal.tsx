@@ -91,8 +91,8 @@ export function PaymentModal({
     }
     if (result.status === 'pending') {
       if (selectedProvider === 'cash') {
-        const t = setTimeout(() => onClose(), 2000);
-        return () => clearTimeout(t);
+        // Don't auto-close — user needs to see and remember the confirmation code
+        return;
       }
       // Dummy webhook fires at ≤4s; add a small buffer for DB + notification hop.
       const t = setTimeout(() => onClose(), 5500);
@@ -134,7 +134,9 @@ export function PaymentModal({
         <div className="flex flex-col gap-3 mt-6">{Array.from({ length: 3 }).map((_, i) => <SkeletonBlock key={i} className="h-12" />)}</div>
       ) : options ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-          {options.providers.map((provider) => {
+          {options.providers
+          .filter((p) => !(targetType === 'certificate' && p === 'cash'))
+          .map((provider) => {
             const isSelected = provider === selectedProvider;
             return (
               <button
@@ -168,6 +170,13 @@ export function PaymentModal({
           {selectedProvider === 'cash' ? (
             <>
               <p className="text-sm font-medium text-text-main">Оплата наличными зарегистрирована</p>
+              {result.cashConfirmCode && (
+                <div className="flex flex-col items-center gap-2 py-3 px-6 bg-surface-secondary border border-border">
+                  <p className="text-xs text-text-sub">Код подтверждения для сотрудника:</p>
+                  <p className="text-3xl font-bold text-text-main tracking-[0.3em] select-all">{result.cashConfirmCode}</p>
+                  <p className="text-xs text-text-sub text-center">Назовите этот код мастеру или менеджеру при передаче наличных</p>
+                </div>
+              )}
               <p className="text-xs text-text-sub text-center max-w-[320px]">
                 Мастер или менеджер подтвердит получение оплаты. Статус платежа обновится автоматически.
               </p>

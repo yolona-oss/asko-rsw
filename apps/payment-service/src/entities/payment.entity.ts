@@ -4,7 +4,7 @@ import { PaymentStatus, CurrencyEnum } from '@asko/shared';
 
 @Entity({ tableName: 'payment' })
 export class PaymentEntity {
-    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'updatedAt' | 'targetType' | 'targetId' | 'userId' | 'metadata' | 'expiresAt' | 'refundedAmount';
+    [OptionalProps]?: 'currency' | 'status' | 'provider' | 'providerPaymentId' | 'paidAt' | 'createdAt' | 'updatedAt' | 'targetType' | 'targetId' | 'userId' | 'metadata' | 'expiresAt' | 'refundedAmount' | 'cashConfirmCode' | 'cashConfirmAttempts';
 
     @PrimaryKey()
     id: string = uuid();
@@ -41,6 +41,12 @@ export class PaymentEntity {
 
     @Property({ type: 'datetime', nullable: true })
     paidAt?: Date;
+
+    @Property({ type: 'varchar', length: 10, nullable: true })
+    cashConfirmCode?: string;
+
+    @Property({ type: 'int', default: 0 })
+    cashConfirmAttempts: number = 0;
 
     @Property({ type: 'datetime', nullable: true })
     expiresAt?: Date;

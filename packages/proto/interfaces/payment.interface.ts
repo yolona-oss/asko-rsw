@@ -51,6 +51,8 @@ export interface RefundPaymentRequest {
 export interface ConfirmCashPaymentRequest {
     paymentId: string;
     confirmedByUserId: string;
+    confirmCode: string;
+    amount: number;
 }
 
 export interface GetPaymentByIdRequest {
@@ -116,6 +118,7 @@ export interface ProcessInvoiceResponse {
     paymentId: string;
     status: string;
     redirectUrl: string;
+    cashConfirmCode: string;
 }
 
 export interface PayoutResponse {

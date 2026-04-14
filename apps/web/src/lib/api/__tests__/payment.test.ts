@@ -92,8 +92,8 @@ describe('getMyStats', () => {
 // ── confirmCashPayment ──
 
 describe('confirmCashPayment', () => {
-  it('sends POST to /payment/confirm-cash with paymentId in body', async () => {
-    await paymentApi.confirmCashPayment('pay-123');
-    expect(mockApi.post).toHaveBeenCalledWith('/payment/confirm-cash', { paymentId: 'pay-123' });
+  it('sends POST to /payment/confirm-cash with paymentId, confirmCode, and amount', async () => {
+    await paymentApi.confirmCashPayment('pay-123', '456789', 1500);
+    expect(mockApi.post).toHaveBeenCalledWith('/payment/confirm-cash', { paymentId: 'pay-123', confirmCode: '456789', amount: 1500 });
   });
 });

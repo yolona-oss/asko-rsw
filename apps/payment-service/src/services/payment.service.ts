@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/postgresql';
+import { randomInt } from 'crypto';
 import { PaymentEntity } from 'entities/payment.entity';
 import {
     CreatePaymentDto,
@@ -18,7 +19,12 @@ import { PaymentEventService, PaymentEventType } from './payment-event.service';
 import { PaymentLockService } from './payment-lock.service';
 
 const LOCK_TTL_MS = 30_000;
+const MAX_CASH_CONFIRM_ATTEMPTS = 5;
 const PAYMENT_SORTABLE_FIELDS = ['createdAt', 'amount', 'status', 'provider'] as const;
+
+function generateCashConfirmCode(): string {
+    return String(randomInt(100_000, 1_000_000));
+}
 
 @Injectable()
 export class PaymentService {
@@ -201,12 +207,19 @@ export class PaymentService {
         }
 
         const providerType = provider ?? this.providerService.getDefaultProvider();
+
+        if (providerType === PaymentProviderType.CASH && targetType === PaymentTargetType.CERTIFICATE) {
+            throw AppErrors.badRequest('Cash payments are not allowed for certificates. Use online payment.');
+        }
+
         const providerImpl = this.providerService.getProvider(providerType);
         if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
 
         invoice.provider = providerType;
         if (providerType === PaymentProviderType.CASH) {
             invoice.expiresAt = undefined;
+            invoice.cashConfirmCode = generateCashConfirmCode();
+            invoice.cashConfirmAttempts = 0;
         }
 
         const result = await providerImpl.createPayment({
@@ -243,6 +256,7 @@ export class PaymentService {
             paymentId: invoice.id,
             status: result.paid ? PaymentStatus.PAID : PaymentStatus.PENDING,
             redirectUrl: result.redirectUrl,
+            cashConfirmCode: providerType === PaymentProviderType.CASH ? invoice.cashConfirmCode : '',
         };
     }
 
@@ -362,9 +376,15 @@ export class PaymentService {
             }
 
             const providerType = dto.provider ?? this.providerService.getDefaultProvider();
+
+            if (providerType === PaymentProviderType.CASH && dto.targetType === PaymentTargetType.CERTIFICATE) {
+                throw AppErrors.badRequest('Cash payments are not allowed for certificates. Use online payment.');
+            }
+
             const providerImpl = this.providerService.getProvider(providerType);
             if (!providerImpl) throw AppErrors.badRequest(`Unknown payment provider: ${providerType}`);
 
+            const isCash = providerType === PaymentProviderType.CASH;
             const paymentRecord = this.em.create(PaymentEntity, {
                 userId,
                 targetType: dto.targetType,
@@ -373,7 +393,9 @@ export class PaymentService {
                 currency: dto.currency ?? CurrencyEnum.DEFAULT,
                 status: PaymentStatus.PENDING,
                 provider: providerType,
-                expiresAt: providerType === PaymentProviderType.CASH ? undefined : this.getExpiresAt(),
+                expiresAt: isCash ? undefined : this.getExpiresAt(),
+                cashConfirmCode: isCash ? generateCashConfirmCode() : undefined,
+                cashConfirmAttempts: 0,
             });
             await this.em.persistAndFlush(paymentRecord);
 
@@ -423,6 +445,7 @@ export class PaymentService {
                 paymentId: paymentRecord.id,
                 status: result.paid ? PaymentStatus.PAID : PaymentStatus.PENDING,
                 redirectUrl: result.redirectUrl,
+                cashConfirmCode: isCash ? paymentRecord.cashConfirmCode : '',
             };
         } finally {
             await this.lockService.releaseLock(lockKey);
@@ -544,46 +567,106 @@ export class PaymentService {
 
     /** Manually confirm a cash payment (manager/admin/assigned-repairer action) */
     @CreateRequestContext()
-    async confirmCashPayment(paymentId: string, confirmedByUserId: string): Promise<{ paymentId: string; status: PaymentStatus }> {
-        const payment = await this.em.findOne(PaymentEntity, { id: paymentId });
-        if (!payment) throw AppErrors.paymentNotFound();
+    async confirmCashPayment(
+        paymentId: string,
+        confirmedByUserId: string,
+        confirmCode: string,
+        amount: number,
+    ): Promise<{ paymentId: string; status: PaymentStatus }> {
+        const lockKey = `payment:cash-confirm:${paymentId}`;
+        const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
+        if (!acquired) throw AppErrors.conflict('Cash confirmation already being processed');
 
-        if (payment.provider !== PaymentProviderType.CASH) {
-            throw AppErrors.badRequest('Only cash payments can be confirmed manually');
+        try {
+            const payment = await this.em.findOne(PaymentEntity, { id: paymentId });
+            if (!payment) throw AppErrors.paymentNotFound();
+
+            if (payment.provider !== PaymentProviderType.CASH) {
+                throw AppErrors.badRequest('Only cash payments can be confirmed manually');
+            }
+
+            if (payment.targetType === PaymentTargetType.CERTIFICATE) {
+                throw AppErrors.badRequest('Cash payments are not allowed for certificates');
+            }
+
+            if (payment.status !== PaymentStatus.PENDING) {
+                throw AppErrors.badRequest(`Payment is not pending (current: ${payment.status})`);
+            }
+
+            // Attempt limiting — lock after too many failed tries
+            if (payment.cashConfirmAttempts >= MAX_CASH_CONFIRM_ATTEMPTS) {
+                await this.domainService.recordTransition(
+                    payment.id, payment.status, payment.status,
+                    `cash:${confirmedByUserId}`,
+                    `Blocked: max confirm attempts exceeded (${payment.cashConfirmAttempts})`,
+                );
+                throw AppErrors.badRequest(
+                    'Подтверждение заблокировано: превышено количество попыток. Обратитесь к администратору.',
+                );
+            }
+
+            // Verify confirmation code
+            if (!confirmCode || payment.cashConfirmCode !== confirmCode) {
+                payment.cashConfirmAttempts += 1;
+                await this.em.flush();
+                const remaining = MAX_CASH_CONFIRM_ATTEMPTS - payment.cashConfirmAttempts;
+                await this.domainService.recordTransition(
+                    payment.id, payment.status, payment.status,
+                    `cash:${confirmedByUserId}`,
+                    `Failed confirm: invalid code (attempt ${payment.cashConfirmAttempts}, ${remaining} remaining)`,
+                );
+                if (remaining <= 0) {
+                    throw AppErrors.badRequest(
+                        'Подтверждение заблокировано: превышено количество попыток. Обратитесь к администратору.',
+                    );
+                }
+                throw AppErrors.badRequest(
+                    `Неверный код подтверждения. Осталось попыток: ${remaining}`,
+                );
+            }
+
+            // Verify amount matches
+            if (Number(amount) !== Number(payment.amount)) {
+                await this.domainService.recordTransition(
+                    payment.id, payment.status, payment.status,
+                    `cash:${confirmedByUserId}`,
+                    `Failed confirm: amount mismatch (provided ${amount}, expected ${payment.amount})`,
+                );
+                throw AppErrors.badRequest('Указанная сумма не совпадает с суммой платежа');
+            }
+
+            this.domainService.assertTransition(payment.status, PaymentStatus.PAID);
+            await this.domainService.recordTransition(
+                payment.id,
+                PaymentStatus.PENDING,
+                PaymentStatus.PAID,
+                `cash:${confirmedByUserId}`,
+                'Cash payment confirmed with code verification',
+            );
+
+            payment.status = PaymentStatus.PAID;
+            payment.paidAt = new Date();
+            payment.cashConfirmCode = undefined;
+            await this.em.flush();
+
+            const isWithdrawal = payment.targetType === PaymentTargetType.DEALER_WITHDRAWAL;
+
+            await this.eventService.emit({
+                type: isWithdrawal ? PaymentEventType.WITHDRAW_PAID : PaymentEventType.PAYMENT_PAID,
+                paymentId: payment.id,
+                userId: payment.userId,
+                targetType: payment.targetType,
+                targetId: payment.targetId,
+                amount: payment.amount,
+                currency: payment.currency,
+                provider: PaymentProviderType.CASH,
+                timestamp: new Date(),
+            });
+
+            return { paymentId: payment.id, status: PaymentStatus.PAID };
+        } finally {
+            await this.lockService.releaseLock(lockKey);
         }
-
-        if (payment.status !== PaymentStatus.PENDING) {
-            throw AppErrors.badRequest(`Payment is not pending (current: ${payment.status})`);
-        }
-
-        this.domainService.assertTransition(payment.status, PaymentStatus.PAID);
-        await this.domainService.recordTransition(
-            payment.id,
-            PaymentStatus.PENDING,
-            PaymentStatus.PAID,
-            `cash:${confirmedByUserId}`,
-            'Cash payment confirmed manually',
-        );
-
-        payment.status = PaymentStatus.PAID;
-        payment.paidAt = new Date();
-        await this.em.flush();
-
-        const isWithdrawal = payment.targetType === PaymentTargetType.DEALER_WITHDRAWAL;
-
-        await this.eventService.emit({
-            type: isWithdrawal ? PaymentEventType.WITHDRAW_PAID : PaymentEventType.PAYMENT_PAID,
-            paymentId: payment.id,
-            userId: payment.userId,
-            targetType: payment.targetType,
-            targetId: payment.targetId,
-            amount: payment.amount,
-            currency: payment.currency,
-            provider: PaymentProviderType.CASH,
-            timestamp: new Date(),
-        });
-
-        return { paymentId: payment.id, status: PaymentStatus.PAID };
     }
 
     /** Get payments by target type and id */

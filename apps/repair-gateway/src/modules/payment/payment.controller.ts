@@ -59,8 +59,15 @@ export class PaymentController {
     @Post('confirm-cash')
     async confirmCashPayment(
         @JwtAuthUser() user: JwtPayload,
-        @Body() body: { paymentId: string },
+        @Body() body: { paymentId: string; confirmCode: string; amount: number },
     ) {
+        if (!body.confirmCode || typeof body.confirmCode !== 'string') {
+            throw new ForbiddenException('Confirmation code is required');
+        }
+        if (!body.amount || typeof body.amount !== 'number' || body.amount <= 0) {
+            throw new ForbiddenException('Amount verification is required');
+        }
+
         const isStaff = user.roles.some((r) =>
             r === Role.SUPER_ADMIN || r === Role.ADMIN || r === Role.MANAGER,
         );
@@ -78,7 +85,7 @@ export class PaymentController {
             }
         }
 
-        return this.paymentService.confirmCashPayment(body.paymentId, user.sub);
+        return this.paymentService.confirmCashPayment(body.paymentId, user.sub, body.confirmCode, body.amount);
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })

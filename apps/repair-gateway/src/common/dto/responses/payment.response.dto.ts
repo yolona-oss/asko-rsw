@@ -46,6 +46,7 @@ export class ProcessInvoiceResponseDto {
     @ApiProperty({ enum: PaymentStatus, enumName: 'PaymentStatus' })
     status: PaymentStatus;
     redirectUrl?: string;
+    cashConfirmCode?: string;
 }
 
 export class PayoutResponseDto {

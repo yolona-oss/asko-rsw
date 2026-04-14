@@ -150,6 +150,8 @@ export class PaymentGrpcController {
             return await this.paymentService.confirmCashPayment(
                 data.paymentId,
                 data.confirmedByUserId,
+                data.confirmCode,
+                data.amount,
             );
         } catch (e) { throw toGrpcError(e); }
     }
