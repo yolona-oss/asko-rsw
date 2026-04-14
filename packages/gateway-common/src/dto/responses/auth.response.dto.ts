@@ -12,6 +12,9 @@ export class AuthUserDto {
     lastName?: string;
 
     @ApiPropertyOptional()
+    middleName?: string;
+
+    @ApiPropertyOptional()
     email?: string;
 
     @ApiPropertyOptional()
@@ -25,6 +28,9 @@ export class AuthUserDto {
 
     @ApiProperty({ enum: Role, enumName: 'Role', isArray: true })
     roles!: Role[];
+
+    @ApiProperty()
+    isActive!: boolean;
 
     @ApiProperty()
     createdAt!: string;

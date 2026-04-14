@@ -1940,6 +1940,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/confirm-presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_confirmSchedulePresence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/{id}/start": {
         parameters: {
             query?: never;
@@ -3727,11 +3743,13 @@ export interface components {
             id: string;
             firstName?: string;
             lastName?: string;
+            middleName?: string;
             email?: string;
             phone?: string;
             googleId?: string;
             providers: components["schemas"]["AuthProvider"][];
             roles: components["schemas"]["Role"][];
+            isActive: boolean;
             createdAt: string;
             updatedAt: string;
         };
@@ -3858,11 +3876,13 @@ export interface components {
             id: string;
             firstName?: string;
             lastName?: string;
+            middleName?: string;
             email?: string;
             phone?: string;
             googleId?: string;
             providers: components["schemas"]["AuthProvider"][];
             roles: components["schemas"]["Role"][];
+            isActive: boolean;
             createdAt: string;
             updatedAt: string;
             emailVerified?: boolean;
@@ -3992,9 +4012,9 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed" | "repair_schedule_ending" | "repair_schedule_auto_paused" | "address_validated" | "address_validation_failed" | "user_device_validated" | "user_device_validation_failed";
         /** @enum {string} */
-        NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "system";
+        NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "address" | "userDevice" | "system";
         NotificationRecordDto: {
             type: components["schemas"]["NotificationType"];
             targetType?: components["schemas"]["NotificationTargetType"];
@@ -4099,6 +4119,8 @@ export interface components {
             createdAt: string;
             registrationSignature?: string;
             registrationSignedPayload?: string;
+            validationStatus?: string;
+            validationError?: string;
             device?: components["schemas"]["DeviceRecordDto"];
             address?: components["schemas"]["AddressRecordDto"];
         };
@@ -4203,6 +4225,8 @@ export interface components {
             avrSignedPayload?: string;
             avrSignature?: string;
             statusTimestamps?: Record<string, never>;
+            scheduleEndNotifiedAt?: string;
+            scheduleEndConfirmedAt?: string;
             user?: components["schemas"]["AuthUserDto"];
             userDevice?: components["schemas"]["UserDeviceRecordDto"];
             repairer?: components["schemas"]["RepairerRecordDto"];
@@ -4228,6 +4252,7 @@ export interface components {
             status: components["schemas"]["PaymentStatus"];
             paymentId: string;
             redirectUrl?: string;
+            cashConfirmCode?: string;
         };
         /** @enum {string} */
         PaymentTargetType: "repairRequest" | "certificate" | "dealerWithdrawal";
@@ -7432,6 +7457,27 @@ export interface operations {
         };
     };
     RepairRequestController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_confirmSchedulePresence: {
         parameters: {
             query?: never;
             header?: never;

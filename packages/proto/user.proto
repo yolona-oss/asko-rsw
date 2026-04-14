@@ -91,6 +91,13 @@ message ConfirmEmailChangeResponse {
 
 message RefreshTokenRequest {
     string refresh_token = 1;
+    string device_info = 2;
+    string ip_address = 3;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
 }
 
 message LogoutRequest {
@@ -449,7 +456,7 @@ service UserService {
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc ConfirmEmail(ConfirmEmailRequest) returns (ConfirmEmailResponse);
     rpc ResendConfirmation(ResendConfirmationRequest) returns (ResendConfirmationResponse);
-    rpc RefreshAccessToken(RefreshTokenRequest) returns (AccessTokenResponse);
+    rpc RefreshAccessToken(RefreshTokenRequest) returns (RefreshTokenResponse);
     rpc Logout(LogoutRequest) returns (EmptyResponse);
     rpc DevSwitchAccount(DevSwitchRequest) returns (AuthSessionResponse);
     rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);

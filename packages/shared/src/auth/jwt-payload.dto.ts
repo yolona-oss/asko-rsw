@@ -10,7 +10,6 @@ export interface JwtPayload {
     phone?: string;
     googleId?: string;
     authProvider: AuthProvider;
-    username?: string;
     roles: string[];
     isActive: boolean;
 }

@@ -21,6 +21,19 @@ export class TokenCleanupService {
         }
     }
 
+    /** Every minute — remove rotated sessions past their grace period */
+    @Cron('* * * * *')
+    @CreateRequestContext()
+    async cleanRotatedSessions(): Promise<void> {
+        const graceCutoff = new Date(Date.now() - 60_000);
+        const count = await this.em.nativeDelete(Session, {
+            rotatedAt: { $ne: null, $lt: graceCutoff },
+        });
+        if (count > 0) {
+            this.logger.log(`Cleaned ${count} rotated sessions`);
+        }
+    }
+
     /** Every day at 3 AM — remove expired and used invitation links */
     @Cron('0 3 * * *')
     @CreateRequestContext()

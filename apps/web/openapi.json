@@ -3804,6 +3804,36 @@
         ]
       }
     },
+    "/repair-requests/{id}/confirm-presence": {
+      "post": {
+        "operationId": "RepairRequestController_confirmSchedulePresence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/{id}/start": {
       "post": {
         "operationId": "RepairRequestController_start",
@@ -8171,6 +8201,9 @@
           "lastName": {
             "type": "string"
           },
+          "middleName": {
+            "type": "string"
+          },
           "email": {
             "type": "string"
           },
@@ -8192,6 +8225,9 @@
               "$ref": "#/components/schemas/Role"
             }
           },
+          "isActive": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -8203,6 +8239,7 @@
           "id",
           "providers",
           "roles",
+          "isActive",
           "createdAt",
           "updatedAt"
         ]
@@ -8684,6 +8721,9 @@
           "lastName": {
             "type": "string"
           },
+          "middleName": {
+            "type": "string"
+          },
           "email": {
             "type": "string"
           },
@@ -8705,6 +8745,9 @@
               "$ref": "#/components/schemas/Role"
             }
           },
+          "isActive": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -8722,6 +8765,7 @@
           "id",
           "providers",
           "roles",
+          "isActive",
           "createdAt",
           "updatedAt"
         ]
@@ -9269,7 +9313,13 @@
           "schedule_pattern_approved",
           "schedule_pattern_rejected",
           "avr_signing_requested",
-          "avr_signed"
+          "avr_signed",
+          "repair_schedule_ending",
+          "repair_schedule_auto_paused",
+          "address_validated",
+          "address_validation_failed",
+          "user_device_validated",
+          "user_device_validation_failed"
         ]
       },
       "NotificationTargetType": {
@@ -9280,6 +9330,8 @@
           "certificate",
           "conversation",
           "schedule",
+          "address",
+          "userDevice",
           "system"
         ]
       },
@@ -9693,6 +9745,12 @@
           "registrationSignedPayload": {
             "type": "string"
           },
+          "validationStatus": {
+            "type": "string"
+          },
+          "validationError": {
+            "type": "string"
+          },
           "device": {
             "$ref": "#/components/schemas/DeviceRecordDto"
           },
@@ -10077,6 +10135,12 @@
           "statusTimestamps": {
             "type": "object"
           },
+          "scheduleEndNotifiedAt": {
+            "type": "string"
+          },
+          "scheduleEndConfirmedAt": {
+            "type": "string"
+          },
           "user": {
             "$ref": "#/components/schemas/AuthUserDto"
           },
@@ -10179,6 +10243,9 @@
             "type": "string"
           },
           "redirectUrl": {
+            "type": "string"
+          },
+          "cashConfirmCode": {
             "type": "string"
           }
         },

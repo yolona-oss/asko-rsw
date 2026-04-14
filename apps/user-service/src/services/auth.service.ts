@@ -39,7 +39,7 @@ import {
 import { parseSleepTimeToMs } from 'utils';
 import Redis from 'ioredis';
 
-export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider' | 'username'>
+export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider'>
 
 interface LoginParams extends LoginCredentials {
     deviceInfo: string;
@@ -442,10 +442,10 @@ export class AuthService {
         await this.userService.removeToken(rTknHash)
     }
 
-    async refreshAccessToken(refreshToken: string): Promise<IAccessToken> {
+    async refreshAccessToken(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<IAccessToken & Partial<IRefreshToken>> {
         try {
             if (!refreshToken) {
-                throw new UnauthorizedException('Refresh token not found')
+                throw AppErrors.unauthorized('Refresh token not found')
             }
 
             const rTknPayload = this.jwtService.verify<JwtRefreshPayload>(
@@ -454,16 +454,18 @@ export class AuthService {
             );
             const rTknHash = Crypto.createTokenHash(refreshToken)
 
-            // Check if refresh token is valid and contains valid user id
-            const user = await this.userService.findByAssignedToken(rTknHash);
-            if (!user) {
-                throw new AppError(AppErrorTypeEnum.DB_ENTITY_NOT_FOUND, { message: 'User not found' })
+            const result = await this.userService.findSessionAndUser(rTknHash);
+            if (!result) {
+                throw AppErrors.unauthorized('Invalid refresh token')
             }
+
+            const { user, alreadyRotated } = result;
 
             if (!user.isActive) {
                 throw AppErrors.forbidden('Account is disabled');
             }
 
+            // Generate new access token
             const newATkn = this.generateAccessToken(
                 user.id,
                 <Role[]>user.roles,
@@ -471,14 +473,39 @@ export class AuthService {
                 user.isActive,
             );
 
+            // If this token was already rotated (grace-period hit from concurrent tab),
+            // return only the new access token — no second rotation
+            if (alreadyRotated) {
+                return { access_token: newATkn.access_token };
+            }
+
+            // Rotate: generate new refresh token, mark old session as rotated
+            const newRTkn = this.jwtService.sign(
+                { sub: user.id, id: user.id, authProvider: rTknPayload.authProvider },
+                {
+                    expiresIn: this.config.jwt.refresh_token.sign_options.expires_in,
+                    privateKey: Buffer.from(this.config.jwt.refresh_token.private_key, 'base64').toString('utf-8'),
+                },
+            );
+            const newRTknHash = Crypto.createTokenHash(newRTkn);
+
+            await this.userService.rotateSession(rTknHash, newRTknHash, {
+                deviceInfo,
+                ipAddress,
+                expiresAt: new Date(Date.now() + parseSleepTimeToMs(this.config.jwt.refresh_token.sign_options.expires_in)),
+            });
+
             return {
                 access_token: newATkn.access_token,
+                refresh_token: newRTkn,
             };
         } catch (error) {
             if (error instanceof AppError) {
                 throw error
             }
-            throw new AppError()
+            throw new AppError(AppErrorTypeEnum.INTERNAL_ERROR, {
+                message: error instanceof Error ? error.message : 'Unknown error during token refresh',
+            });
         }
     }
 
@@ -654,7 +681,7 @@ export class AuthService {
         this.userService.checkPasswordStrength(newPassword);
 
         const passwordHash = await Crypto.createPasswordHash(newPassword);
-        await this.userService.resetPasswordByToken(user.id, resetTokenHash, passwordHash);
+        await this.userService.resetPasswordByToken(user.id, passwordHash);
 
         return { message: 'Пароль успешно изменён' };
     }

@@ -28,4 +28,7 @@ export class Session {
 
     @Property()
     createdAt: Date = new Date();
+
+    @Property({ type: 'timestamptz', nullable: true })
+    rotatedAt: Date | null = null;
 }

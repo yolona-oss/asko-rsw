@@ -7,7 +7,7 @@ import type {
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
-    AccessTokenResponse,
+    RefreshTokenResponse,
     ConfirmEmailRequest,
     ConfirmEmailResponse,
     ResendConfirmationRequest,
@@ -109,7 +109,7 @@ export class UserClientService implements OnModuleInit {
         return grpcCall(this.userService.resendConfirmation(data));
     }
 
-    refreshAccessToken(data: RefreshTokenRequest): Promise<AccessTokenResponse> {
+    refreshAccessToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
         return grpcCall(this.userService.refreshAccessToken(data));
     }
 

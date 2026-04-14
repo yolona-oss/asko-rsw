@@ -14,7 +14,7 @@ import type {
     RegisterRequest,
     RegisterResponse,
     AuthSessionResponse,
-    AccessTokenResponse,
+    RefreshTokenResponse,
     ConfirmEmailRequest,
     ConfirmEmailResponse,
     ResendConfirmationRequest,
@@ -243,10 +243,17 @@ export class UserGrpcController {
     }
 
     @GrpcMethod('UserService', 'RefreshAccessToken')
-    async refreshAccessToken(data: RefreshTokenRequest): Promise<AccessTokenResponse> {
+    async refreshAccessToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
         try {
-            const result = await this.authService.refreshAccessToken(data.refreshToken);
-            return { accessToken: result.access_token };
+            const result = await this.authService.refreshAccessToken(
+                data.refreshToken,
+                data.deviceInfo || 'unknown',
+                data.ipAddress || 'unknown',
+            );
+            return {
+                accessToken: result.access_token,
+                refreshToken: result.refresh_token ?? '',
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

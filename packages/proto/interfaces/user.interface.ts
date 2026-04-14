@@ -89,6 +89,13 @@ export interface ConfirmEmailChangeResponse {
 
 export interface RefreshTokenRequest {
     refreshToken: string;
+    deviceInfo: string;
+    ipAddress: string;
+}
+
+export interface RefreshTokenResponse {
+    accessToken: string;
+    refreshToken: string;
 }
 
 export interface LogoutRequest {
@@ -452,7 +459,7 @@ export interface UserServiceClient {
     register(request: RegisterRequest): Observable<RegisterResponse>;
     confirmEmail(request: ConfirmEmailRequest): Observable<ConfirmEmailResponse>;
     resendConfirmation(request: ResendConfirmationRequest): Observable<ResendConfirmationResponse>;
-    refreshAccessToken(request: RefreshTokenRequest): Observable<AccessTokenResponse>;
+    refreshAccessToken(request: RefreshTokenRequest): Observable<RefreshTokenResponse>;
     logout(request: LogoutRequest): Observable<EmptyResponse>;
     devSwitchAccount(request: DevSwitchRequest): Observable<AuthSessionResponse>;
     findUserByAccessToken(request: FindByTokenRequest): Observable<AuthUserResponse>;

@@ -165,14 +165,23 @@ export class AuthController {
         @Res() response: Response,
     ) {
         const refreshToken = request.cookies[REFRESH_TOKEN.cookie.name];
-        const token = await this.userClient.refreshAccessToken({ refreshToken: refreshToken ?? '' });
+        const result = await this.userClient.refreshAccessToken({
+            refreshToken: refreshToken ?? '',
+            deviceInfo: request.headers['user-agent'] ?? 'unknown',
+            ipAddress: request.ip ?? 'unknown',
+        });
+
+        // Set the rotated refresh token cookie (if rotation occurred)
+        if (result.refreshToken) {
+            this.setRefreshTokenCookie(request, response, result.refreshToken);
+        }
 
         return response
             .status(201)
             .set({
                 "Cache-Control": "no-store",
                 Pragma: "no-cache"
-            }).json({ access_token: token.accessToken });
+            }).json({ access_token: result.accessToken });
     }
 
     @RequiredRoles(...ALL_ROLES)

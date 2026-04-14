@@ -107,12 +107,33 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async findByAssignedToken(tokenHash: string, relations?: Populate<User, UserPopulateHints>): Promise<User | null> {
+    async findSessionAndUser(tokenHash: string): Promise<{ user: User; alreadyRotated: boolean } | null> {
         const session = await this.em.findOne(Session, { token: tokenHash })
         if (!session) {
             return null
         }
-        return await this.findById(session.user.id, relations)
+
+        // Defense-in-depth: reject expired sessions even if cron hasn't cleaned yet
+        if (session.expiresAt < new Date()) {
+            await this.em.removeAndFlush(session)
+            return null
+        }
+
+        // If this session was already rotated, check the grace window
+        if (session.rotatedAt) {
+            const graceCutoff = new Date(session.rotatedAt.getTime() + 30_000); // 30s grace
+            if (new Date() > graceCutoff) {
+                // Grace period expired — potential token theft, nuke all user sessions
+                await this.em.nativeDelete(Session, { user: { id: session.user.id } });
+                return null
+            }
+            // Within grace period — allow but signal no rotation needed
+            const user = await this.findById(session.user.id)
+            return user ? { user, alreadyRotated: true } : null
+        }
+
+        const user = await this.findById(session.user.id)
+        return user ? { user, alreadyRotated: false } : null
     }
 
     @CreateRequestContext()
@@ -156,9 +177,8 @@ export class UserService {
     async removeToken(token: string) {
         const session = await this.em.findOne(Session, { token })
         if (!session) {
-            throw AppErrors.dbEntityNotFound('Session not found')
+            return; // Idempotent: already removed (cron cleanup, double-click logout)
         }
-
         await this.em.removeAndFlush(session)
     }
 
@@ -170,6 +190,34 @@ export class UserService {
         }
         user.sessions.removeAll()
         await this.em.persistAndFlush(user)
+    }
+
+    @CreateRequestContext()
+    async rotateSession(oldTokenHash: string, newTokenHash: string, options: {
+        deviceInfo: string;
+        ipAddress: string;
+        expiresAt: Date;
+    }): Promise<void> {
+        const oldSession = await this.em.findOne(Session, { token: oldTokenHash })
+        if (!oldSession) {
+            throw AppErrors.dbEntityNotFound('Session not found')
+        }
+
+        // Mark old session as rotated (enters 30s grace period)
+        oldSession.rotatedAt = new Date()
+
+        // Create new session for the same user
+        const newSession = this.em.create(Session, {
+            token: newTokenHash,
+            user: oldSession.user,
+            type: TokenType.REFRESH,
+            deviceInfo: options.deviceInfo,
+            ipAddress: options.ipAddress,
+            expiresAt: options.expiresAt,
+            createdAt: new Date(),
+        })
+
+        await this.em.persistAndFlush([oldSession, newSession])
     }
 
     async create(userData: CreateUserDto): Promise<User> {
@@ -322,6 +370,14 @@ export class UserService {
 
         await this.em.persistAndFlush(user)
 
+        // Password changed — invalidate all refresh sessions
+        if (newUserInfo.password) {
+            await this.em.nativeDelete(Session, {
+                user: { id: user.id },
+                type: TokenType.REFRESH,
+            });
+        }
+
         return user
     }
 
@@ -397,6 +453,14 @@ export class UserService {
         user.isActive = isActive
         await this.em.persistAndFlush(user)
         this.userEvents.emitStatusChanged(user.id, isActive, changedBy);
+
+        // When deactivating, drop all refresh sessions so no refresh is possible
+        if (!isActive) {
+            await this.em.nativeDelete(Session, {
+                user: { id: user.id },
+                type: TokenType.REFRESH,
+            });
+        }
     }
 
     @CreateRequestContext()
@@ -489,7 +553,7 @@ export class UserService {
     }
 
     @CreateRequestContext()
-    async resetPasswordByToken(userId: string, tokenHash: string, passwordHash: string) {
+    async resetPasswordByToken(userId: string, passwordHash: string) {
         const user = await this.findById(userId);
         if (!user) {
             throw AppErrors.dbEntityNotFound('User not found');
@@ -497,11 +561,11 @@ export class UserService {
         user.passwordHash = passwordHash;
         await this.em.persistAndFlush(user);
 
-        // Remove the used reset token
-        const session = await this.em.findOne(Session, { token: tokenHash });
-        if (session) {
-            await this.em.removeAndFlush(session);
-        }
+        // Remove the used reset token + all refresh sessions (password was reset)
+        await this.em.nativeDelete(Session, {
+            user: { id: userId },
+            type: { $in: [TokenType.RESET_PASSWORD, TokenType.REFRESH] },
+        });
     }
 
     @CreateRequestContext()
