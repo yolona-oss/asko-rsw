@@ -374,13 +374,30 @@ export class CertificateController {
 
     private async fetchImageBytes(url: string): Promise<Uint8Array | undefined> {
         if (!url) return undefined;
-        try {
-            if (url.startsWith('http')) {
+
+        // Local storage URL (contains /images/) — read from shared filesystem
+        const isLocal = url.includes('/images/');
+        if (isLocal) {
+            try {
+                const fs = await import('fs/promises');
+                const path = await import('path');
+                const staticPath = process.env.STATIC_PATH || 'images';
+                const relativePath = url.split('/images/').pop() || '';
+                if (!relativePath) return undefined;
+                const filePath = path.join(process.cwd(), staticPath, relativePath);
+                return await fs.readFile(filePath);
+            } catch { return undefined; }
+        }
+
+        // Remote URL (Cloudinary, etc.) — fetch via HTTP
+        if (url.startsWith('http')) {
+            try {
                 const res = await fetch(url);
                 if (!res.ok) return undefined;
                 return new Uint8Array(await res.arrayBuffer());
-            }
-        } catch { /* ignore */ }
+            } catch { return undefined; }
+        }
+
         return undefined;
     }
 

@@ -38,7 +38,7 @@ export class CertificatePdfService {
             const pageWidth = doc.page.width - 100; // minus margins
             const imageWidth = 180;
             const imageHeight = 180;
-            const hasImage = !!data.deviceImage;
+            const hasImage = !!data.deviceImage && data.deviceImage.length > 0;
             const textWidth = hasImage ? pageWidth - imageWidth - 20 : pageWidth;
 
             // ── Header ──
