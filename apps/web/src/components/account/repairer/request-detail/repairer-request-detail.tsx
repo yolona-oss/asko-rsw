@@ -13,6 +13,7 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
+import { AvrStatusCard } from '@/components/account/shared/avr-status-card';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { RequestChat } from '@/components/account/manager/request-detail/request-chat';
@@ -496,6 +497,15 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           )}
         </Card>
       )}
+
+      {/* ── AVR status ── */}
+      <AvrStatusCard
+        avrStatus={request.avrStatus}
+        avrDocumentId={request.avrDocumentId}
+        avrSignedDocumentId={request.avrSignedDocumentId}
+        avrSigningMethod={request.avrSigningMethod}
+        avrSignedAt={request.avrSignedAt}
+      />
 
       {/* ── Broken parts ── */}
       {!isTerminal && (

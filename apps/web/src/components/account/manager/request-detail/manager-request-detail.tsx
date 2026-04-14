@@ -8,6 +8,7 @@ import { ClipboardCopy, ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/shared/broken-parts-editor';
 import { RepairRequestDocuments } from '@/components/account/shared/repair-request-documents';
+import { AvrStatusCard } from '@/components/account/shared/avr-status-card';
 import { CertificateWarningBadge } from '@/components/account/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/shared/certificate-applied-badge';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -399,6 +400,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               )}
             </div>
           )}
+
+          {/* AVR status */}
+          <AvrStatusCard
+            avrStatus={(request as any).avrStatus}
+            avrDocumentId={(request as any).avrDocumentId}
+            avrSignedDocumentId={(request as any).avrSignedDocumentId}
+            avrSigningMethod={(request as any).avrSigningMethod}
+            avrSignedAt={(request as any).avrSignedAt}
+          />
 
           {/* Broken parts */}
           {!isTerminal && <BrokenPartsEditor requestId={requestId} />}

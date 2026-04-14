@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, type ReactNode } from 'react';
+import { useRef, useEffect, type ReactNode } from 'react';
 import { Eye, ExternalLink } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { SkeletonCard } from './skeleton';
@@ -188,14 +188,11 @@ export interface DataCardFieldProps {
 
 export function DataCardField({ label, tooltip, multiline, className, children }: DataCardFieldProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [autoTitle, setAutoTitle] = useState('');
 
   useEffect(() => {
-    if (tooltip != null) return;
     const el = ref.current;
     if (!el) return;
-    const text = el.textContent ?? '';
-    setAutoTitle((prev) => (prev !== text ? text : prev));
+    el.title = tooltip ?? el.textContent ?? '';
   });
 
   return (
@@ -203,7 +200,6 @@ export function DataCardField({ label, tooltip, multiline, className, children }
       <p className="text-xs text-text-sub">{label}</p>
       <div
         ref={ref}
-        title={tooltip ?? autoTitle}
         className={cn(
           'text-sm text-text-main',
           multiline ? 'break-words' : 'truncate',

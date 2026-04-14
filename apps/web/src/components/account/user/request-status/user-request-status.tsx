@@ -17,6 +17,7 @@ import { fileUploadApi } from '@/lib/api/file-upload';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
 import { RepairRequestStatus, AvrStatus } from '@asko/shared/client';
 import { SigningOtpForm } from '@/components/account/shared/signing-otp-form';
+import { AvrStatusCard } from '@/components/account/shared/avr-status-card';
 import {
   TERMINAL_STATUSES,
   STEPS,
@@ -356,23 +357,14 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* AVR — Signed (show document link) */}
       {((request as any).avrStatus === AvrStatus.SIGNED_DIGITAL || (request as any).avrStatus === AvrStatus.SIGNED_OFFLINE) && (
-        <div className="flex flex-col gap-3 max-w-lg mt-6 p-4 sm:p-6 border border-success-border bg-success-bg/50">
-          <h3 className="text-base font-medium text-success-deep">Акт выполненных работ</h3>
-          <p className="text-[13px] sm:text-sm text-text-sub">
-            {(request as any).avrStatus === AvrStatus.SIGNED_DIGITAL
-              ? 'Подписано цифровой подписью'
-              : 'Подписано на бумаге'}
-          </p>
-          {(request as any).avrDocumentId && (
-            <a
-              href={`/files/document/${(request as any).avrDocumentId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline self-start"
-            >
-              Скачать акт (PDF)
-            </a>
-          )}
+        <div className="max-w-lg mt-6">
+          <AvrStatusCard
+            avrStatus={(request as any).avrStatus}
+            avrDocumentId={(request as any).avrDocumentId}
+            avrSignedDocumentId={(request as any).avrSignedDocumentId}
+            avrSigningMethod={(request as any).avrSigningMethod}
+            avrSignedAt={(request as any).avrSignedAt}
+          />
         </div>
       )}
 
