@@ -352,7 +352,7 @@ export function DataGrid<T>({
         const diff = ev.clientX - resizeRef.current.startX;
         const minW = col.minWidth ?? 60;
         const newW = Math.max(minW, resizeRef.current.startWidth + diff);
-        setWidths((prev) => ({ ...prev, [resizeRef.current!.key]: newW }));
+        setWidths((prev) => ({ ...prev, [col.key]: newW }));
       };
 
       const onUp = () => {

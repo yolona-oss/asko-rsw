@@ -3,8 +3,13 @@ import { serverGet } from './server-fetch';
 import { getImageUrl } from '@/lib/image-url';
 
 export async function fetchArticles(page: number, limit: number): Promise<PaginatedArticles> {
-  const data = await serverGet<PaginatedArticles>(`/articles?page=${page}&limit=${limit}`);
-  return data ?? { data: [] as IArticle[], overallCount: 0, page: 1, limit };
+  const res = await serverGet<PaginatedArticles>(`/articles?page=${page}&limit=${limit}`);
+  return {
+    data: res?.data ?? [],
+    overallCount: res?.overallCount ?? 0,
+    page: res?.page ?? page,
+    limit: res?.limit ?? limit,
+  };
 }
 
 export async function fetchArticle(slug: string): Promise<IArticle | null> {

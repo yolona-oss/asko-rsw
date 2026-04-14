@@ -4,8 +4,13 @@ import { getPlaceholderSrc } from '@/lib/placeholders';
 import { getImageUrl } from '@/lib/image-url';
 
 export async function fetchDevices(page: number, limit: number): Promise<PaginatedDevices> {
-  const data = await serverGet<PaginatedDevices>(`/devices?page=${page}&limit=${limit}`);
-  return data ?? { data: [] as IDevice[], overallCount: 0, page: 1, limit };
+  const res = await serverGet<PaginatedDevices>(`/devices?page=${page}&limit=${limit}`);
+  return {
+    data: res?.data ?? [],
+    overallCount: res?.overallCount ?? 0,
+    page: res?.page ?? page,
+    limit: res?.limit ?? limit,
+  };
 }
 
 export async function fetchFeaturedDevices(type?: string): Promise<IDevice[]> {

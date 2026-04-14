@@ -3,7 +3,6 @@
         "module": "commonjs",
         "target": "es2021",
         "outDir": "./dist",
-        "rootDir": "./src",
         "baseUrl": "./src",
         "useDefineForClassFields": false,
         "skipLibCheck": true,
