@@ -328,7 +328,7 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.signAvrDigital({ requestId, userId }));
     }
 
-    uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId: string): Promise<RepairRequestResponse> {
-        return grpcCall(this.repairService.uploadAvrScan({ requestId, repairerUserId, signedDocumentId }));
+    uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId?: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.uploadAvrScan({ requestId, repairerUserId, signedDocumentId: signedDocumentId ?? '' }));
     }
 }

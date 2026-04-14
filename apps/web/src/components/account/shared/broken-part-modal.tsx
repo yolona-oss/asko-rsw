@@ -12,7 +12,7 @@ import {
 } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { FileText, Image as ImageIcon, Plus, Trash2, X } from 'lucide-react';
-import { getImageUrl as getFileImageUrl, getDocumentUrl } from '@/lib/file-url';
+import { getImageUrl as getFileImageUrl, openDocument } from '@/lib/file-url';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import type { BrokenPart, BrokenPartImage, BrokenPartDocument } from './broken-part-types';
@@ -339,14 +339,13 @@ export function BrokenPartModal({
                       ) : (
                         <FileText className="w-4 h-4 text-text-sub flex-shrink-0" />
                       )}
-                      <a
-                        href={getDocumentUrl(doc.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-text-main truncate flex-1 hover:underline"
+                      <button
+                        type="button"
+                        onClick={() => openDocument(doc.id)}
+                        className="text-sm text-text-main truncate flex-1 hover:underline cursor-pointer text-left"
                       >
                         {doc.filename ?? doc.id}
-                      </a>
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteDocument(doc.id)}

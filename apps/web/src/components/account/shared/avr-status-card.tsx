@@ -3,7 +3,7 @@
 import { Badge, Card } from '@asko/ui';
 import { AvrStatus } from '@asko/shared/client';
 import { Download, FileCheck, FileClock, FileX, FileMinus, AlertTriangle } from 'lucide-react';
-import { getDocumentUrl } from '@/lib/file-url';
+import { openDocument } from '@/lib/file-url';
 
 interface AvrStatusCardProps {
   avrStatus?: string;
@@ -63,26 +63,24 @@ export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, a
       {!isNone && (
         <div className="flex items-center gap-3 flex-wrap">
           {avrDocumentId && (
-            <a
-              href={getDocumentUrl(avrDocumentId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-brand-red hover:underline"
+            <button
+              type="button"
+              onClick={() => openDocument(avrDocumentId)}
+              className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-brand-red hover:underline cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               Скачать акт
-            </a>
+            </button>
           )}
           {avrSignedDocumentId && avrSigningMethod === 'offline' && (
-            <a
-              href={getDocumentUrl(avrSignedDocumentId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-text-sub hover:underline"
+            <button
+              type="button"
+              onClick={() => openDocument(avrSignedDocumentId)}
+              className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-text-sub hover:underline cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               Подписанный скан
-            </a>
+            </button>
           )}
           {!avrDocumentId && (
             <span className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-error">

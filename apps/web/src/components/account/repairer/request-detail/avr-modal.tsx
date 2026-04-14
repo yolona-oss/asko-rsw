@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button, Modal, Textarea, FormField } from '@asko/ui';
 import { Download } from 'lucide-react';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { getDocumentUrl } from '@/lib/file-url';
+import { openDocument } from '@/lib/file-url';
 import { SigningOtpForm } from '@/components/account/shared/signing-otp-form';
 
 type Step = 'edit' | 'generated' | 'digital' | 'offline' | 'done';
@@ -30,9 +30,7 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
   const [otpSending, setOtpSending] = useState(false);
 
   // Offline state
-  const [scanFile, setScanFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -80,16 +78,15 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
     }
   };
 
-  const handleUploadScan = async () => {
-    if (!scanFile) return;
+  const handleConfirmOffline = async () => {
     setUploading(true);
     setError('');
     try {
-      await repairRequestApi.uploadAvrScan(requestId, scanFile);
+      await repairRequestApi.confirmAvrOffline(requestId);
       setStep('done');
       onCompleted();
     } catch {
-      setError('Не удалось загрузить подписанный акт');
+      setError('Не удалось подтвердить подписание');
     } finally {
       setUploading(false);
     }
@@ -102,10 +99,6 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
     }
     onClose();
   };
-
-  const downloadUrl = avrDocumentId
-    ? getDocumentUrl(avrDocumentId)
-    : undefined;
 
   return (
     <Modal open={open} onClose={handleClose} className="w-full max-w-lg p-5 sm:p-6">
@@ -139,16 +132,15 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
           <p className="text-[13px] sm:text-sm text-text-sub">
             Акт выполненных работ готов. Выберите способ подписания.
           </p>
-          {downloadUrl && (
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline"
+          {avrDocumentId && (
+            <button
+              type="button"
+              onClick={() => openDocument(avrDocumentId)}
+              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline cursor-pointer"
             >
               <Download className="w-4 h-4" />
               Скачать PDF
-            </a>
+            </button>
           )}
           {error && <p className="text-sm text-brand-red">{error}</p>}
           <div className="flex flex-col gap-2">
@@ -186,39 +178,22 @@ export function AvrModal({ open, onClose, requestId, onCompleted }: AvrModalProp
         <div className="flex flex-col gap-4">
           <h2 className="text-base font-medium text-text-main">Подписание на бумаге</h2>
           <p className="text-[13px] sm:text-sm text-text-sub">
-            Скачайте и распечатайте акт. После подписания клиентом загрузите фото или скан подписанного документа.
+            Распечатайте акт, получите подпись клиента и подтвердите подписание.
           </p>
-          {downloadUrl && (
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline"
+          {avrDocumentId && (
+            <button
+              type="button"
+              onClick={() => openDocument(avrDocumentId)}
+              className="inline-flex items-center gap-2 text-sm text-brand-red hover:underline cursor-pointer"
             >
               <Download className="w-4 h-4" />
               Скачать PDF для печати
-            </a>
-          )}
-          <div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={e => setScanFile(e.target.files?.[0] ?? null)}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="w-full border border-dashed border-border-light p-4 text-sm text-text-sub hover:border-brand-red transition-colors text-center cursor-pointer"
-            >
-              {scanFile ? scanFile.name : 'Нажмите для выбора файла'}
             </button>
-          </div>
+          )}
           {error && <p className="text-sm text-brand-red">{error}</p>}
           <div className="flex gap-3 flex-wrap">
-            <Button variant="primary" onClick={handleUploadScan} disabled={!scanFile || uploading} className="flex-1 sm:flex-none">
-              {uploading ? 'Загрузка...' : 'Загрузить подписанный акт'}
+            <Button variant="primary" onClick={handleConfirmOffline} disabled={uploading} className="flex-1 sm:flex-none">
+              {uploading ? 'Сохранение...' : 'Подтвердить подписание'}
             </Button>
             <Button variant="ghost" onClick={() => setStep('generated')} className="flex-1 sm:flex-none">
               Назад

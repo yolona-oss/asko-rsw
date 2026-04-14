@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Badge } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
 import { FileText, Image as ImageIcon } from 'lucide-react';
-import { getImageUrl as getFileImageUrl, getDocumentUrl } from '@/lib/file-url';
+import { getImageUrl as getFileImageUrl, openDocument } from '@/lib/file-url';
 import type { BrokenPart, BrokenPartImage, BrokenPartDocument } from './broken-part-types';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -88,14 +88,13 @@ export function BrokenPartsView({
                       ) : (
                         <FileText className="w-3.5 h-3.5 text-text-sub flex-shrink-0" />
                       )}
-                      <a
-                        href={getDocumentUrl(doc.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-text-main truncate hover:underline"
+                      <button
+                        type="button"
+                        onClick={() => openDocument(doc.id)}
+                        className="text-xs text-text-main truncate hover:underline cursor-pointer"
                       >
                         {doc.filename ?? doc.id}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>

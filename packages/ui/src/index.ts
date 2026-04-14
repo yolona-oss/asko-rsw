@@ -38,6 +38,9 @@ export type { TextareaProps } from './components/textarea';
 export { Select } from './components/select';
 export type { SelectProps } from './components/select';
 
+export { ListSelect } from './components/list-select';
+export type { ListSelectProps, ListSelectOption } from './components/list-select';
+
 export { FormField } from './components/form-field';
 export type { FormFieldProps } from './components/form-field';
 

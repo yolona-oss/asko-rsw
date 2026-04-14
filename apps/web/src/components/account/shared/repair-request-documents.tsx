@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
-import { getDocumentUrl } from '@/lib/file-url';
+import { openDocument } from '@/lib/file-url';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import type { RepairRequestDocument } from './broken-part-types';
 
@@ -85,14 +85,13 @@ export function RepairRequestDocuments({
               ) : (
                 <FileText className="w-4 h-4 text-text-sub flex-shrink-0" />
               )}
-              <a
-                href={getDocumentUrl(doc.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-text-main truncate flex-1 hover:underline"
+              <button
+                type="button"
+                onClick={() => openDocument(doc.id)}
+                className="text-sm text-text-main truncate flex-1 hover:underline cursor-pointer text-left"
               >
                 {doc.filename ?? doc.id}
-              </a>
+              </button>
               {!readOnly && (
                 <button
                   type="button"

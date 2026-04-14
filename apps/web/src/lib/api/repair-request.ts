@@ -110,6 +110,10 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/sign/verify`, data);
   },
 
+  confirmAvrOffline(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/offline/confirm`);
+  },
+
   uploadAvrScan(requestId: string, file: File) {
     const form = new FormData();
     form.append('file', file);

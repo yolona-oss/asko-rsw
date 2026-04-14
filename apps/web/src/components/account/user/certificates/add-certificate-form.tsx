@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
   FormField,
   Select,
+  ListSelect,
   Modal,
   SkeletonBlock,
 } from '@asko/ui';
-import { ChevronDown } from 'lucide-react';
+import type { ListSelectOption } from '@asko/ui';
 import {
   CERTIFICATE_DURATION_OPTIONS,
   CERTIFICATE_DURATION_LABELS,
@@ -109,23 +110,36 @@ export function AddCertificateForm({
   const [price, setPrice] = useState<number | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
 
-  // Device picker dropdown
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (!pickerRef.current?.contains(e.target as Node)) setPickerOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [pickerOpen]);
-
   // Devices eligible for certificate creation (exclude active/pending certs)
   const selectableDevices = useMemo(
     () => devices.filter((d) => resolveDeviceCertState(d.id, certificates).kind !== 'active'),
     [devices, certificates],
+  );
+
+  const deviceOptions: ListSelectOption[] = useMemo(
+    () =>
+      selectableDevices.map((d) => {
+        const state = resolveDeviceCertState(d.id, certificates);
+        const name = `${d.device?.name ?? ''} ${d.device?.brand ?? ''} ${d.device?.model ?? ''}`.trim() || d.id;
+        const vs = d.address?.validationStatus;
+        const blocked = vs === 'invalid' || vs === 'error';
+
+        let statusText = '';
+        let statusClass = 'text-text-sub';
+        if (blocked) { statusText = 'адрес не подтверждён'; statusClass = 'text-error'; }
+        else if (vs === 'pending') { statusText = 'проверка...'; statusClass = 'text-warning'; }
+        else if (state.kind === 'expired') { statusText = 'сертификат истёк'; }
+
+        return {
+          value: d.id,
+          label: name,
+          disabled: blocked,
+          detail: statusText
+            ? <span className={`text-xs flex-shrink-0 ${statusClass}`}>{statusText}</span>
+            : undefined,
+        };
+      }),
+    [selectableDevices, certificates],
   );
 
   useEffect(() => {
@@ -264,53 +278,12 @@ export function AddCertificateForm({
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <div ref={pickerRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setPickerOpen(!pickerOpen)}
-                  className="w-full flex items-center justify-between border border-border-light px-3 py-2.5 text-sm cursor-pointer hover:border-text-sub transition-colors bg-surface"
-                >
-                  <span className="truncate text-text-main">
-                    {selectedDevice
-                      ? `${selectedDevice.device?.name ?? ''} ${selectedDevice.device?.brand ?? ''} ${selectedDevice.device?.model ?? ''}`.trim()
-                      : 'Выберите устройство'}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-text-sub flex-shrink-0 ml-2 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {pickerOpen && (
-                  <div className="absolute top-full left-0 right-0 z-10 border border-border-light bg-surface shadow-lg max-h-60 overflow-y-auto mt-0.5">
-                    {selectableDevices.map((d) => {
-                      const state = resolveDeviceCertState(d.id, certificates);
-                      const name = `${d.device?.name ?? ''} ${d.device?.brand ?? ''} ${d.device?.model ?? ''}`.trim() || d.id;
-                      const vs = d.address?.validationStatus;
-                      const blocked = vs === 'invalid' || vs === 'error';
-
-                      let statusLabel = '';
-                      let statusClass = 'text-text-sub';
-                      if (blocked) { statusLabel = 'адрес не подтверждён'; statusClass = 'text-error'; }
-                      else if (vs === 'pending') { statusLabel = 'проверка...'; statusClass = 'text-warning'; }
-                      else if (state.kind === 'expired') { statusLabel = 'сертификат истёк'; statusClass = 'text-text-sub'; }
-
-                      return (
-                        <button
-                          key={d.id}
-                          type="button"
-                          disabled={blocked}
-                          onClick={() => { setDeviceId(d.id); setPickerOpen(false); }}
-                          className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors ${
-                            blocked ? 'opacity-50 cursor-default' : 'hover:bg-surface-hover cursor-pointer'
-                          } ${d.id === deviceId ? 'bg-primary-50' : ''}`}
-                        >
-                          <span className="truncate text-text-main">{name}</span>
-                          {statusLabel && (
-                            <span className={`text-xs flex-shrink-0 ml-3 ${statusClass}`}>{statusLabel}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <ListSelect
+                value={deviceId}
+                onChange={setDeviceId}
+                options={deviceOptions}
+                placeholder="Выберите устройство"
+              />
               {onOpenAddDevice && (
                 <button
                   type="button"

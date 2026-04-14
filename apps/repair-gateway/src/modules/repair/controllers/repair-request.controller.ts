@@ -427,24 +427,36 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
+    @Post(':id/avr/offline/confirm')
+    async confirmAvrOffline(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') id: string,
+    ) {
+        return this.repairClient.uploadAvrScan(id, user.sub);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
     @Post(':id/avr/scan/upload')
     @UseInterceptors(FilesInterceptor('file', 1))
     async uploadAvrScan(
         @JwtAuthUser() user: JwtPayload,
         @Param('id') id: string,
-        @UploadedFiles() files: Express.Multer.File[],
+        @UploadedFiles() files?: Express.Multer.File[],
     ) {
-        if (!files || files.length === 0) throw new Error('Файл обязателен');
+        let signedDocumentId: string | undefined;
+        if (files && files.length > 0) {
+            const { request } = await this.repairClient.findById(id);
+            const docResult = await this.fileService.uploadDocumentFile(
+                files[0],
+                'avr-signed',
+                id,
+                request!.userId,
+            );
+            signedDocumentId = docResult.document!.id;
+        }
 
-        const { request } = await this.repairClient.findById(id);
-        const docResult = await this.fileService.uploadDocumentFile(
-            files[0],
-            'avr-signed',
-            id,
-            request!.userId,
-        );
-
-        return this.repairClient.uploadAvrScan(id, user.sub, docResult.document!.id);
+        return this.repairClient.uploadAvrScan(id, user.sub, signedDocumentId);
     }
 
     // ── Work steps ──

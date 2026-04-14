@@ -1138,7 +1138,7 @@ export class RepairRequestService {
 
     /** Upload offline-signed scan and complete the request */
     @CreateRequestContext()
-    async uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId: string): Promise<RepairRequest> {
+    async uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId?: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
@@ -1148,7 +1148,7 @@ export class RepairRequestService {
             throw AppErrors.badRequest('Акт должен быть сформирован перед загрузкой подписанного скана');
         }
 
-        request.avrSignedDocumentId = signedDocumentId;
+        if (signedDocumentId) request.avrSignedDocumentId = signedDocumentId;
         request.avrStatus = AvrStatus.SIGNED_OFFLINE;
         request.avrSigningMethod = AvrSigningMethod.OFFLINE;
         request.avrSignedAt = new Date();
