@@ -51,6 +51,12 @@ import {
     ImageListResponseDto,
 } from 'common/dto/responses';
 
+function parseRepairTimestamps(record: any): void {
+    if (typeof record?.statusTimestamps === 'string' && record.statusTimestamps) {
+        try { record.statusTimestamps = JSON.parse(record.statusTimestamps); } catch { /* keep string */ }
+    }
+}
+
 class RepairQueryDto extends PaginationDto {
     @IsOptional()
     @IsString()
@@ -93,7 +99,9 @@ export class RepairRequestController {
     @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
-        return this.repairClient.findByUser(user.sub, query);
+        const result = await this.repairClient.findByUser(user.sub, query);
+        for (const req of result.data ?? []) parseRepairTimestamps(req);
+        return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -169,6 +177,7 @@ export class RepairRequestController {
             }
         }
         await Promise.all(enrichments);
+        for (const req of result.data) parseRepairTimestamps(req);
         return result;
     }
 
@@ -257,7 +266,9 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Get('paused')
     async findPaused(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
-        return this.repairClient.findPausedByRepairer(user.sub, pagination);
+        const result = await this.repairClient.findPausedByRepairer(user.sub, pagination);
+        for (const req of result.data ?? []) parseRepairTimestamps(req);
+        return result;
     }
 
     @ApiOkResponse({ type: RepairRequestRecordDto })
@@ -265,7 +276,9 @@ export class RepairRequestController {
     @Get('active')
     async findActive(@JwtAuthUser() user: JwtPayload) {
         try {
-            return await this.repairClient.findActiveByRepairer(user.sub);
+            const result = await this.repairClient.findActiveByRepairer(user.sub);
+            if (result?.request) parseRepairTimestamps(result.request);
+            return result;
         } catch {
             return null;
         }
@@ -275,7 +288,9 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
-        return this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
+        const result = await this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
+        for (const req of result.data ?? []) parseRepairTimestamps(req);
+        return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
@@ -634,6 +649,7 @@ export class RepairRequestController {
             );
         }
         await Promise.all(enrichments);
+        parseRepairTimestamps(req);
         return result;
     }
 }

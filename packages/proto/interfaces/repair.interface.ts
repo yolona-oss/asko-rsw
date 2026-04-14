@@ -732,6 +732,7 @@ export interface RepairRequestRecord {
     avrSignedAt?: string;
     avrSignedPayload?: string;
     avrSignature?: string;
+    statusTimestamps?: string;
 }
 
 export interface BrokenPartRecord {

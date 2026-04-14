@@ -801,6 +801,7 @@ message RepairRequestRecord {
     string avrSignedAt = 37;
     string avrSignedPayload = 38;
     string avrSignature = 39;
+    string statusTimestamps = 40;
 }
 
 message BrokenPartRecord {

@@ -41,6 +41,10 @@ export class RepairRequestService {
         private readonly avrPdfService: AvrPdfService,
     ) {}
 
+    private recordStatusTimestamp(request: RepairRequest, status: RepairRequestStatus): void {
+        request.statusTimestamps = { ...request.statusTimestamps, [status]: new Date().toISOString() };
+    }
+
     /** User creates a repair request */
     @CreateRequestContext()
     async create(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string; brokenParts?: { devicePartId?: string; name?: string; note?: string }[] }): Promise<RepairRequest> {
@@ -122,6 +126,7 @@ export class RepairRequestService {
             preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
             address: addressRef,
             status: RepairRequestStatus.PENDING,
+            statusTimestamps: { [RepairRequestStatus.PENDING]: new Date().toISOString() },
         });
         await this.em.persistAndFlush(request);
 
@@ -149,6 +154,7 @@ export class RepairRequestService {
 
         const oldStatus = request.status;
         request.status = RepairRequestStatus.PAID;
+        this.recordStatusTimestamp(request, RepairRequestStatus.PAID);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -175,6 +181,7 @@ export class RepairRequestService {
         request.refundRequested = true;
         request.refundReason = reason;
         request.status = RepairRequestStatus.REFUND_REQUESTED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.REFUND_REQUESTED);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -197,6 +204,7 @@ export class RepairRequestService {
         assertTransition(request.status, RepairRequestStatus.REFUNDED);
 
         request.status = RepairRequestStatus.REFUNDED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.REFUNDED);
         await this.em.flush();
 
         // Refund via payment-service RabbitMQ (fire-and-forget)
@@ -223,6 +231,7 @@ export class RepairRequestService {
 
         request.refundRequested = false;
         request.status = RepairRequestStatus.PAID; // revert to paid
+        this.recordStatusTimestamp(request, RepairRequestStatus.PAID);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -259,6 +268,7 @@ export class RepairRequestService {
         request.repairer = this.em.getReference(Repairer, repairerId);
         request.managerId = managerId;
         request.status = RepairRequestStatus.ASSIGNED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
         await this.ensureExtraDayIfOff(repairer.userId, request.id);
@@ -334,6 +344,7 @@ export class RepairRequestService {
         assertTransition(request.status, RepairRequestStatus.ACCEPTED);
 
         request.status = RepairRequestStatus.ACCEPTED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.ACCEPTED);
 
         // Seed mandatory diagnostic step if none exist yet (idempotent — re-accept after transfer won't duplicate)
         const existingMandatory = await this.em.count(WorkStep, { repairRequest: requestId, isMandatory: true });
@@ -373,6 +384,7 @@ export class RepairRequestService {
 
         request.status = RepairRequestStatus.REFUSED;
         request.refuseReason = reason;
+        this.recordStatusTimestamp(request, RepairRequestStatus.REFUSED);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -398,6 +410,7 @@ export class RepairRequestService {
         assertTransition(request.status, RepairRequestStatus.IN_PROGRESS);
 
         request.status = RepairRequestStatus.IN_PROGRESS;
+        this.recordStatusTimestamp(request, RepairRequestStatus.IN_PROGRESS);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -448,6 +461,7 @@ export class RepairRequestService {
         if (!canTransition(request.status, RepairRequestStatus.AWAITING_COMPLETION)) return;
         const oldStatus = request.status;
         request.status = RepairRequestStatus.AWAITING_COMPLETION;
+        this.recordStatusTimestamp(request, RepairRequestStatus.AWAITING_COMPLETION);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -472,6 +486,7 @@ export class RepairRequestService {
         }
 
         request.status = RepairRequestStatus.COMPLETED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.COMPLETED);
         if (description) {
             request.completionNote = description;
         }
@@ -617,6 +632,7 @@ export class RepairRequestService {
         const oldStatus = request.status;
         request.statusBeforePause = request.status;
         request.status = RepairRequestStatus.PAUSED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.PAUSED);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -645,6 +661,7 @@ export class RepairRequestService {
         const resumeTo = (request.statusBeforePause as RepairRequestStatus) ?? RepairRequestStatus.IN_PROGRESS;
         request.status = resumeTo;
         request.statusBeforePause = undefined;
+        this.recordStatusTimestamp(request, resumeTo);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -687,6 +704,7 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.ASSIGNED;
         request.statusBeforePause = undefined;
         request.refuseReason = undefined;
+        this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
         await this.ensureExtraDayIfOff(newRepairer.userId, request.id);
@@ -725,6 +743,7 @@ export class RepairRequestService {
         assertTransition(request.status, RepairRequestStatus.CANCELLED);
         const oldStatus = request.status;
         request.status = RepairRequestStatus.CANCELLED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.CANCELLED);
         await this.em.flush();
 
         await this.repairEventService.emit({

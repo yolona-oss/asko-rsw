@@ -74,6 +74,7 @@ export interface IRepairRequest {
     avrSignedAt?: Date;
     avrSignedPayload?: string;
     avrSignature?: string;
+    statusTimestamps?: Record<string, string>;
     createdAt: Date;
     updatedAt: Date;
 }

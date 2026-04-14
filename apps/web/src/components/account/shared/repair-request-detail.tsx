@@ -25,6 +25,21 @@ const statusVariant = (s: string): BadgeVariant => {
 
 const fmtAmount = (n: number) => formatPaymentAmount(n);
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Заявка создана',
+  paid: 'Оплата получена',
+  assigned: 'Назначение мастера',
+  accepted: 'Мастер в пути',
+  in_progress: 'Ремонт в процессе',
+  paused: 'Ремонт приостановлен',
+  awaiting_completion: 'Ожидает завершения',
+  completed: 'Ремонт завершён',
+  cancelled: 'Заявка отменена',
+  refused: 'Мастер отказался',
+  refund_requested: 'Запрос возврата',
+  refunded: 'Средства возвращены',
+};
+
 export async function fetchRepairRequestOne(item: any): Promise<any> {
   const { data } = await api.get(`/repair-requests/${item.id}`, { _silent: true } as any);
   return (data as any)?.request ?? data;
@@ -53,6 +68,17 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       <DetailRow label="Описание" value={loading ? '...' : (item.description ? (item.description.length > 120 ? item.description.slice(0, 120) + '...' : item.description) : '-')} />
       <DetailRow label="Стоимость" value={item.totalCost != null ? `${item.totalCost} \u20BD` : '-'} />
       <DetailRow label="Дата создания" value={item.createdAt ? fmt(item.createdAt) : '-'} />
+
+      {/* Status history */}
+      {item.statusTimestamps && Object.keys(item.statusTimestamps).length > 0 && (
+        <DetailSection label="История статусов" summary={`${Object.keys(item.statusTimestamps).length}`}>
+          {Object.entries(item.statusTimestamps as Record<string, string>)
+            .sort(([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime())
+            .map(([status, timestamp]) => (
+              <DetailRow key={status} label={STATUS_LABEL[status] ?? status} value={fmt(timestamp)} />
+            ))}
+        </DetailSection>
+      )}
 
       {/* Device → Category */}
       <DetailSection label="Устройство" summary={loading ? '...' : (deviceName ?? '-')}

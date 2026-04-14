@@ -19,6 +19,7 @@ export interface RepairRequest {
   id: string;
   status: RepairRequestStatus;
   description: string;
+  statusTimestamps?: Record<string, string>;
   createdAt: Date | string;
   updatedAt: Date | string;
   totalCost?: number;

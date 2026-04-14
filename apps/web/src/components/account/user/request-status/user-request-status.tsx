@@ -29,6 +29,7 @@ import {
 import type { RepairRequest, WorkStep } from './types';
 import { StepCircle } from './step-circle';
 import { StepLine } from './step-line';
+import { StatusTimeline } from './status-timeline';
 import { StarRating } from './star-rating';
 import { WorkStepCard } from './work-step-card';
 
@@ -179,7 +180,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <h2 className="text-2xl lg:text-[28px] font-medium tracking-[-0.01em] text-text-main">
           {statusTitle}
         </h2>
-        <span className="text-sm text-text-sub">{formatDate(request.updatedAt)}</span>
+        <span className="text-sm text-text-sub">{formatDate(request.statusTimestamps?.[request.status] ?? request.updatedAt)}</span>
         {request.certificateValid === false && !(!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active') && (
           <div className="flex flex-col gap-1 mt-2">
             <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
@@ -253,6 +254,11 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             fetchData();
           }}
         />
+      )}
+
+      {/* Status timeline */}
+      {request.statusTimestamps && Object.keys(request.statusTimestamps).length > 1 && (
+        <StatusTimeline statusTimestamps={request.statusTimestamps} currentStatus={request.status} />
       )}
 
       {/* Progress steps */}

@@ -224,6 +224,7 @@ function requestToRecord(entity: RepairRequest) {
         avrSignedAt: entity.avrSignedAt?.toISOString() ?? '',
         avrSignedPayload: entity.avrSignedPayload ?? '',
         avrSignature: entity.avrSignature ?? '',
+        statusTimestamps: JSON.stringify(entity.statusTimestamps ?? {}),
     };
 }
 
