@@ -62,6 +62,7 @@ import { WScheduleService } from 'services/wschedule.service';
 import { WSchedulePatternService } from 'services/wschedule-pattern.service';
 import { WSchedulePatternHistoryService } from 'services/wschedule-pattern-history.service';
 import { WScheduleReportService } from 'services/wschedule-report.service';
+import { ScheduleEndSweepService } from 'services/schedule-end-sweep.service';
 import { SupplierService } from 'providers/supplier/supplier.service';
 import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provider';
 
@@ -182,6 +183,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         WSchedulePatternService,
         WSchedulePatternHistoryService,
         WScheduleReportService,
+        ScheduleEndSweepService,
         DummySupplierProvider,
         SupplierService,
     ],

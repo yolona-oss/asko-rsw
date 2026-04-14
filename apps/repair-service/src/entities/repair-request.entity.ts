@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps' | 'scheduleEndNotifiedAt' | 'scheduleEndConfirmedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -122,4 +122,10 @@ export class RepairRequest {
 
     @Property({ type: 'text', nullable: true })
     acceptanceSignedPayload?: string;
+
+    @Property({ type: 'datetime', nullable: true })
+    scheduleEndNotifiedAt?: Date;
+
+    @Property({ type: 'datetime', nullable: true })
+    scheduleEndConfirmedAt?: Date;
 }

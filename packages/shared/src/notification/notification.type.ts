@@ -37,6 +37,8 @@ export enum NotificationType {
     SCHEDULE_PATTERN_REJECTED = 'schedule_pattern_rejected',
     AVR_SIGNING_REQUESTED = 'avr_signing_requested',
     AVR_SIGNED = 'avr_signed',
+    REPAIR_SCHEDULE_ENDING = 'repair_schedule_ending',
+    REPAIR_SCHEDULE_AUTO_PAUSED = 'repair_schedule_auto_paused',
     ADDRESS_VALIDATED = 'address_validated',
     ADDRESS_VALIDATION_FAILED = 'address_validation_failed',
     USER_DEVICE_VALIDATED = 'user_device_validated',

@@ -337,6 +337,13 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
+    @Post(':id/confirm-presence')
+    async confirmSchedulePresence(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.confirmSchedulePresence(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
     @Post(':id/start')
     async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.startWork(user.sub, id);

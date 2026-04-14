@@ -693,6 +693,51 @@ export class RepairRequestService {
         return request;
     }
 
+    /** Repairer confirms they're still working past schedule end — allows overtime */
+    @CreateRequestContext()
+    async confirmSchedulePresence(repairerUserId: string, requestId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (request.status !== RepairRequestStatus.ACCEPTED && request.status !== RepairRequestStatus.IN_PROGRESS) {
+            throw AppErrors.badRequest('Заявка должна быть в статусе «Принята» или «В работе»');
+        }
+
+        request.scheduleEndConfirmedAt = new Date();
+        await this.em.flush();
+        return request;
+    }
+
+    /** Auto-pause a repair because the repairer didn't confirm presence after schedule end */
+    @CreateRequestContext()
+    async autoPauseForScheduleEnd(requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!canTransition(request.status, RepairRequestStatus.PAUSED)) return request;
+
+        const oldStatus = request.status;
+        request.statusBeforePause = request.status;
+        request.status = RepairRequestStatus.PAUSED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.PAUSED);
+        await this.em.flush();
+
+        const repairerEntity = typeof request.repairer === 'object' ? request.repairer : null;
+
+        await this.repairEventService.emit({
+            type: RepairEventType.SCHEDULE_AUTO_PAUSED,
+            repairId: request.id,
+            userId: request.userId,
+            repairerUserId: repairerEntity?.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.PAUSED,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
     /** Manager transfers request from current repairer to a new one (any non-terminal state with a repairer) */
     @CreateRequestContext()
     async reassign(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequest> {

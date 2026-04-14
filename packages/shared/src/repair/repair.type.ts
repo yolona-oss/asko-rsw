@@ -75,6 +75,8 @@ export interface IRepairRequest {
     avrSignedPayload?: string;
     avrSignature?: string;
     statusTimestamps?: Record<string, string>;
+    scheduleEndNotifiedAt?: Date;
+    scheduleEndConfirmedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

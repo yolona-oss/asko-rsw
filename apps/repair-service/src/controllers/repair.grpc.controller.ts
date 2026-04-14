@@ -45,6 +45,7 @@ import type {
     RepairCheckActiveForDeviceRequest,
     RepairPauseRequest,
     RepairResumeRequest,
+    RepairConfirmSchedulePresenceRequest,
     RepairReassignRepairerRequest,
     RepairFindPausedByRepairerRequest,
     RepairSetConversationIdRequest,
@@ -225,6 +226,8 @@ function requestToRecord(entity: RepairRequest) {
         avrSignedPayload: entity.avrSignedPayload ?? '',
         avrSignature: entity.avrSignature ?? '',
         statusTimestamps: JSON.stringify(entity.statusTimestamps ?? {}),
+        scheduleEndNotifiedAt: entity.scheduleEndNotifiedAt?.toISOString() ?? '',
+        scheduleEndConfirmedAt: entity.scheduleEndConfirmedAt?.toISOString() ?? '',
     };
 }
 
@@ -393,6 +396,14 @@ export class RepairGrpcController {
     async resumeRequest(data: RepairResumeRequest) {
         try {
             const request = await this.repairRequestService.resume(data.repairerUserId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'ConfirmSchedulePresence')
+    async confirmSchedulePresence(data: RepairConfirmSchedulePresenceRequest) {
+        try {
+            const request = await this.repairRequestService.confirmSchedulePresence(data.repairerUserId, data.requestId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

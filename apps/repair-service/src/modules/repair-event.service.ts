@@ -11,6 +11,8 @@ export enum RepairEventType {
     AVR_GENERATED = 'repair.avr_generated',
     AVR_SIGNING_REQUESTED = 'repair.avr_signing_requested',
     AVR_SIGNED = 'repair.avr_signed',
+    SCHEDULE_ENDING = 'repair.schedule_ending',
+    SCHEDULE_AUTO_PAUSED = 'repair.schedule_auto_paused',
     SCHEDULE_CREATED = 'schedule.created',
     SCHEDULE_UPDATED = 'schedule.updated',
     SCHEDULE_DELETED = 'schedule.deleted',

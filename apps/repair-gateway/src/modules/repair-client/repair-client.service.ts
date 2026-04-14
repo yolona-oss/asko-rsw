@@ -100,6 +100,10 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.resumeRequest({ repairerUserId, requestId }));
     }
 
+    confirmSchedulePresence(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.confirmSchedulePresence({ repairerUserId, requestId }));
+    }
+
     reassignRepairer(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.reassignRepairer({ managerId, requestId, newRepairerId }));
     }

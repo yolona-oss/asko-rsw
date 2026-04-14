@@ -421,6 +421,81 @@ export class RepairEventConsumer {
         }
     }
 
+    // ── Schedule End Events ──
+
+    @EventPattern('repair.schedule_ending')
+    async handleRepairScheduleEnding(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const shortId = String(data.repairId ?? '').slice(0, 8);
+
+        try {
+            if (data.repairerUserId) {
+                await this.notificationService.createNotification(
+                    data.repairerUserId,
+                    NotificationType.REPAIR_SCHEDULE_ENDING,
+                    'Рабочий день заканчивается',
+                    `Ваша смена подходит к концу. Если вы продолжаете работу по заявке №${shortId}, подтвердите присутствие. Без подтверждения заявка будет приостановлена через 30 минут.`,
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    data,
+                );
+            }
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] repair.schedule_ending error:', e);
+            channel.ack(msg);
+        }
+    }
+
+    @EventPattern('repair.schedule_auto_paused')
+    async handleRepairScheduleAutoPaused(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const shortId = String(data.repairId ?? '').slice(0, 8);
+
+        try {
+            if (data.repairerUserId) {
+                await this.notificationService.createNotification(
+                    data.repairerUserId,
+                    NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
+                    'Заявка приостановлена',
+                    `Заявка №${shortId} автоматически приостановлена — подтверждение присутствия не получено. Возобновите работу, когда будете готовы.`,
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    data,
+                );
+            }
+
+            if (data.userId) {
+                await this.notificationService.createNotification(
+                    data.userId,
+                    NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
+                    'Ремонт приостановлен',
+                    `Заявка №${shortId} приостановлена — рабочий день мастера завершён.`,
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    data,
+                );
+            }
+
+            // Cancel any in-progress-stuck reminders since we're pausing
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.REPAIR_REQUEST,
+                data.repairId,
+                'schedule_auto_paused',
+                ['repair_in_progress_stuck'],
+            );
+
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] repair.schedule_auto_paused error:', e);
+            channel.ack(msg);
+        }
+    }
+
     // ── AVR Events ──
 
     @EventPattern('repair.avr_signing_requested')

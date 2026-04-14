@@ -107,6 +107,7 @@ service RepairService {
     rpc DenyRefund(RepairDenyRefundRequest) returns (RepairRequestResponse);
     rpc PauseRequest(RepairPauseRequest) returns (RepairRequestResponse);
     rpc ResumeRequest(RepairResumeRequest) returns (RepairRequestResponse);
+    rpc ConfirmSchedulePresence(RepairConfirmSchedulePresenceRequest) returns (RepairRequestResponse);
     rpc ReassignRepairer(RepairReassignRepairerRequest) returns (RepairRequestResponse);
     rpc AcceptCompletion(RepairAcceptCompletionRequest) returns (RepairRequestResponse);
 
@@ -830,6 +831,8 @@ message RepairRequestRecord {
     string avrSignedPayload = 38;
     string avrSignature = 39;
     string statusTimestamps = 40;
+    string scheduleEndNotifiedAt = 41;
+    string scheduleEndConfirmedAt = 42;
 }
 
 message BrokenPartRecord {
@@ -988,6 +991,11 @@ message RepairPauseRequest {
 }
 
 message RepairResumeRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairConfirmSchedulePresenceRequest {
     string repairerUserId = 1;
     string requestId = 2;
 }

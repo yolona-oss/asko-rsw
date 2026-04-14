@@ -47,6 +47,8 @@ export class RepairRequestRecordDto {
     avrSignedPayload?: string;
     avrSignature?: string;
     statusTimestamps?: Record<string, string>;
+    scheduleEndNotifiedAt?: string;
+    scheduleEndConfirmedAt?: string;
     user?: AuthUserDto;
     userDevice?: UserDeviceRecordDto;
     repairer?: RepairerRecordDto;

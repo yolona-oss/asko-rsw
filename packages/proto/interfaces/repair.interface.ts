@@ -761,6 +761,8 @@ export interface RepairRequestRecord {
     avrSignedPayload?: string;
     avrSignature?: string;
     statusTimestamps?: string;
+    scheduleEndNotifiedAt?: string;
+    scheduleEndConfirmedAt?: string;
 }
 
 export interface BrokenPartRecord {
@@ -919,6 +921,11 @@ export interface RepairPauseRequest {
 }
 
 export interface RepairResumeRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
+export interface RepairConfirmSchedulePresenceRequest {
     repairerUserId: string;
     requestId: string;
 }
@@ -1165,6 +1172,7 @@ export interface RepairServiceClient {
     denyRefund(request: RepairDenyRefundRequest): Observable<RepairRequestResponse>;
     pauseRequest(request: RepairPauseRequest): Observable<RepairRequestResponse>;
     resumeRequest(request: RepairResumeRequest): Observable<RepairRequestResponse>;
+    confirmSchedulePresence(request: RepairConfirmSchedulePresenceRequest): Observable<RepairRequestResponse>;
     reassignRepairer(request: RepairReassignRepairerRequest): Observable<RepairRequestResponse>;
     acceptCompletion(request: RepairAcceptCompletionRequest): Observable<RepairRequestResponse>;
 
