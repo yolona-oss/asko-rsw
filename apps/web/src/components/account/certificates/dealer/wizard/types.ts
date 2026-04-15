@@ -11,13 +11,12 @@ export interface FormData {
   clientUserId: string;
   deviceId: string;
   serialNumber: string;
-  country: string;
   city: string;
   street: string;
   house: string;
   building: string;
   floor: string;
-  room: string;
+  apartment: string;
   durationMonths: string;
   purchaseReceiptUrl: string;
   description: string;

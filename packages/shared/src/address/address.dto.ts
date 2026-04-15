@@ -1,33 +1,42 @@
-import { IsString, IsInt, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateAddressDto {
     @IsString()
-    country!: string;
-
-    @IsString()
     city!: string;
+
+    @IsOptional()
+    @IsString()
+    district?: string;
 
     @IsString()
     street!: string;
 
-    @IsInt()
-    house!: number;
-
-    @IsOptional()
-    @IsInt()
-    building?: number;
-
-    @IsOptional()
-    @IsInt()
-    floor?: number;
-
-    @IsOptional()
-    @IsInt()
-    room?: number;
+    @IsString()
+    house!: string;
 
     @IsOptional()
     @IsString()
-    postalCode?: string;
+    building?: string;
+
+    @IsOptional()
+    @IsString()
+    apartment?: string;
+
+    @IsOptional()
+    @IsString()
+    entrance?: string;
+
+    @IsOptional()
+    @IsString()
+    floor?: string;
+
+    @IsOptional()
+    @IsString()
+    intercom?: string;
+
+    @IsOptional()
+    @IsString()
+    comment?: string;
 
     @IsOptional()
     @IsNumber()
@@ -41,35 +50,43 @@ export class CreateAddressDto {
 export class UpdateAddressDto {
     @IsOptional()
     @IsString()
-    country?: string;
+    city?: string;
 
     @IsOptional()
     @IsString()
-    city?: string;
+    district?: string;
 
     @IsOptional()
     @IsString()
     street?: string;
 
     @IsOptional()
-    @IsInt()
-    house?: number;
-
-    @IsOptional()
-    @IsInt()
-    building?: number;
-
-    @IsOptional()
-    @IsInt()
-    floor?: number;
-
-    @IsOptional()
-    @IsInt()
-    room?: number;
+    @IsString()
+    house?: string;
 
     @IsOptional()
     @IsString()
-    postalCode?: string;
+    building?: string;
+
+    @IsOptional()
+    @IsString()
+    apartment?: string;
+
+    @IsOptional()
+    @IsString()
+    entrance?: string;
+
+    @IsOptional()
+    @IsString()
+    floor?: string;
+
+    @IsOptional()
+    @IsString()
+    intercom?: string;
+
+    @IsOptional()
+    @IsString()
+    comment?: string;
 
     @IsOptional()
     @IsNumber()

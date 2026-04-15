@@ -54,13 +54,12 @@ export function AddDeviceForm({
     setError('');
     try {
       const { data: address } = await addressApi.create({
-        country: addressValue.country,
         city: addressValue.city,
         street: addressValue.street,
         house: addressValue.house,
         ...(addressValue.building ? { building: addressValue.building } : {}),
         ...(addressValue.floor ? { floor: addressValue.floor } : {}),
-        ...(addressValue.room ? { room: addressValue.room } : {}),
+        ...(addressValue.apartment ? { apartment: addressValue.apartment } : {}),
         ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
         ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
       });

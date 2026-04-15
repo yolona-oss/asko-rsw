@@ -106,7 +106,8 @@ export type { ChangePasswordDto } from './user/user-actions.dto.js';
 export type { LoginCredentials } from './auth/login-credentials.dto.js';
 export type { CreateInvitationLinkDto } from './auth/invitation-link.dto.js';
 
-export type { CreateAddressDto } from './address/address.dto.js';
+export type { CreateAddressDto, UpdateAddressDto } from './address/address.dto.js';
+export type { IAddressBook } from './address/address-book.type.js';
 
 export type { CreateArticleDto, UpdateArticleDto } from './article/article.dto.js';
 

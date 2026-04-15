@@ -2379,6 +2379,20 @@
         ]
       }
     },
+    "/file-upload/document/upload": {
+      "post": {
+        "operationId": "DocumentUploadController_uploadGeneric",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File Upload"
+        ]
+      }
+    },
     "/file-upload/document/upload/broken-part/{ownerId}": {
       "post": {
         "operationId": "DocumentUploadController_uploadBrokenPartDocument",
@@ -3187,6 +3201,44 @@
         ]
       }
     },
+    "/repair-requests/metrics/completion": {
+      "get": {
+        "operationId": "RepairRequestController_getCompletionMetrics",
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests": {
       "post": {
         "operationId": "RepairRequestController_create",
@@ -3714,6 +3766,36 @@
     "/repair-requests/{id}/accept": {
       "post": {
         "operationId": "RepairRequestController_accept",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/depart": {
+      "post": {
+        "operationId": "RepairRequestController_depart",
         "parameters": [
           {
             "name": "id",
@@ -5745,6 +5827,40 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DevicePartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Parts"
+        ]
+      }
+    },
+    "/parts/import": {
+      "post": {
+        "operationId": "PartsController_importParts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }
@@ -7878,6 +7994,65 @@
       }
     },
     "/address/{id}": {
+      "put": {
+        "operationId": "AddressController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      },
+      "delete": {
+        "operationId": "AddressController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      },
       "get": {
         "operationId": "AddressController_findOne",
         "parameters": [
@@ -7897,6 +8072,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AddressRecordDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      }
+    },
+    "/address/{id}/primary": {
+      "patch": {
+        "operationId": "AddressController_setPrimary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressResponseDto"
                 }
               }
             }
@@ -8042,6 +8247,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8064,7 +8285,24 @@
     "/payment/my/stats": {
       "get": {
         "operationId": "PaymentController_getMyStats",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -8147,7 +8385,24 @@
     "/payment/stats": {
       "get": {
         "operationId": "PaymentController_getStats",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -9016,6 +9271,7 @@
           "text",
           "image",
           "video",
+          "document",
           "system"
         ]
       },
@@ -9248,7 +9504,8 @@
           "idle",
           "typing",
           "uploading_image",
-          "uploading_video"
+          "uploading_video",
+          "uploading_document"
         ]
       },
       "PresenceRecordDto": {
@@ -9475,6 +9732,7 @@
           "paid",
           "assigned",
           "accepted",
+          "en_route",
           "in_progress",
           "awaiting_completion",
           "completed",
@@ -9701,9 +9959,6 @@
           "id": {
             "type": "string"
           },
-          "country": {
-            "type": "string"
-          },
           "city": {
             "type": "string"
           },
@@ -9711,18 +9966,24 @@
             "type": "string"
           },
           "house": {
-            "type": "number"
+            "type": "string"
           },
           "building": {
-            "type": "number"
+            "type": "string"
+          },
+          "apartment": {
+            "type": "string"
+          },
+          "entrance": {
+            "type": "string"
           },
           "floor": {
-            "type": "number"
+            "type": "string"
           },
-          "room": {
-            "type": "number"
+          "intercom": {
+            "type": "string"
           },
-          "postalCode": {
+          "comment": {
             "type": "string"
           },
           "latitude": {
@@ -9736,14 +9997,17 @@
           },
           "validationError": {
             "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
           }
         },
         "required": [
           "id",
-          "country",
           "city",
           "street",
-          "house"
+          "house",
+          "isPrimary"
         ]
       },
       "UserDeviceRecordDto": {
@@ -10170,7 +10434,22 @@
             "type": "string"
           },
           "statusTimestamps": {
-            "type": "object"
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "timestamp"
+              ]
+            }
           },
           "scheduleEndNotifiedAt": {
             "type": "string"
@@ -11620,6 +11899,10 @@
         "required": [
           "address"
         ]
+      },
+      "UpdateAddressDto": {
+        "type": "object",
+        "properties": {}
       },
       "AddressListResponseDto": {
         "type": "object",

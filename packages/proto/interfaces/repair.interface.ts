@@ -131,16 +131,50 @@ export interface GetAllDevicePartsRequest {
 }
 
 export interface CreateAddressRequest {
-    country: string;
+    userId: string;
     city: string;
+    district: string;
     street: string;
-    house: number;
-    building: number;
-    floor: number;
-    room: number;
-    postalCode: string;
+    house: string;
+    building: string;
+    apartment: string;
+    entrance: string;
+    floor: string;
+    intercom: string;
+    comment: string;
     latitude: number;
     longitude: number;
+}
+
+export interface UpdateAddressRequest {
+    userId: string;
+    id: string;
+    city: string;
+    district: string;
+    street: string;
+    house: string;
+    building: string;
+    apartment: string;
+    entrance: string;
+    floor: string;
+    intercom: string;
+    comment: string;
+    latitude: number;
+    longitude: number;
+}
+
+export interface DeleteAddressRequest {
+    userId: string;
+    id: string;
+}
+
+export interface SetPrimaryAddressRequest {
+    userId: string;
+    id: string;
+}
+
+export interface FindUserAddressesRequest {
+    userId: string;
 }
 
 // ─── Device Responses ───────────────────────────────────────────────────
@@ -202,18 +236,21 @@ export interface PaginatedDevicesResponse {
 
 export interface AddressRecord {
     id: string;
-    country: string;
     city: string;
+    district: string;
     street: string;
-    house: number;
-    building: number;
-    floor: number;
-    room: number;
-    postalCode: string;
+    house: string;
+    building: string;
+    apartment: string;
+    entrance: string;
+    floor: string;
+    intercom: string;
+    comment: string;
     latitude: number;
     longitude: number;
     validationStatus: string;
     validationError: string;
+    isPrimary: boolean;
 }
 
 export interface AddressResponse {
@@ -317,8 +354,11 @@ export interface DeviceServiceClient {
 
     // Address
     createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
+    updateAddress(request: UpdateAddressRequest): Observable<AddressResponse>;
+    deleteAddress(request: DeleteAddressRequest): Observable<EmptyDeviceResponse>;
+    setPrimaryAddress(request: SetPrimaryAddressRequest): Observable<AddressResponse>;
     findAddressById(request: FindByIdRequest): Observable<AddressResponse>;
-    findAllAddresses(request: EmptyDeviceRequest): Observable<AddressListResponse>;
+    findUserAddresses(request: FindUserAddressesRequest): Observable<AddressListResponse>;
 
     // Device categories
     findAllDeviceCategories(request: EmptyDeviceRequest): Observable<DeviceCategoryListResponse>;

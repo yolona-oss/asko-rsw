@@ -105,18 +105,21 @@ function deviceToRecord(entity: Device) {
 function addressToRecord(entity: Address) {
     return {
         id: entity.id,
-        country: '',
         city: entity.city,
+        district: entity.district ?? '',
         street: entity.street,
-        house: parseInt(entity.house) || 0,
-        building: parseInt(entity.building ?? '') || 0,
-        floor: parseInt(entity.floor ?? '') || 0,
-        room: parseInt(entity.apartment ?? '') || 0,
-        postalCode: '',
+        house: entity.house,
+        building: entity.building ?? '',
+        apartment: entity.apartment ?? '',
+        entrance: entity.entrance ?? '',
+        floor: entity.floor ?? '',
+        intercom: entity.intercom ?? '',
+        comment: entity.comment ?? '',
         latitude: entity.latitude ?? 0,
         longitude: entity.longitude ?? 0,
         validationStatus: entity.validationStatus ?? 'pending',
         validationError: entity.validationError ?? '',
+        isPrimary: entity.isPrimary ?? false,
     };
 }
 

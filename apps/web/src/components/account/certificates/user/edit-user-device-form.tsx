@@ -14,13 +14,12 @@ import type { UserDevice } from './types';
 function toAddressValue(address: UserDevice['address']): AddressValue | null {
   if (!address || !address.city || !address.street || address.house == null) return null;
   return {
-    country: address.country ?? 'Россия',
     city: address.city,
     street: address.street,
     house: address.house,
     building: address.building,
     floor: address.floor,
-    room: address.room,
+    apartment: address.apartment,
     latitude: address.latitude,
     longitude: address.longitude,
   };
@@ -55,13 +54,12 @@ export function EditUserDeviceForm({
     setError('');
     try {
       const { data: address } = await addressApi.create({
-        country: addressValue.country,
         city: addressValue.city,
         street: addressValue.street,
         house: addressValue.house,
         ...(addressValue.building ? { building: addressValue.building } : {}),
         ...(addressValue.floor ? { floor: addressValue.floor } : {}),
-        ...(addressValue.room ? { room: addressValue.room } : {}),
+        ...(addressValue.apartment ? { apartment: addressValue.apartment } : {}),
         ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
         ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
       });

@@ -1,11 +1,18 @@
 export interface IAddressBook {
-    id: string
-    country: string;
+    id: string;
     city: string;
+    district?: string;
     street: string;
-    house: number
-    building?: number;
-    floor?: number;
-    room?: number;
-    postalCode?: string;
+    house: string;
+    building?: string;
+    apartment?: string;
+    entrance?: string;
+    floor?: string;
+    intercom?: string;
+    comment?: string;
+    latitude?: number;
+    longitude?: number;
+    validationStatus?: string;
+    validationError?: string;
+    isPrimary: boolean;
 }

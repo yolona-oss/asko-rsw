@@ -1284,6 +1284,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/file-upload/document/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentUploadController_uploadGeneric"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/file-upload/document/upload/broken-part/{ownerId}": {
         parameters: {
             query?: never;
@@ -1636,6 +1652,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/metrics/completion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RepairRequestController_getCompletionMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests": {
         parameters: {
             query?: never;
@@ -1918,6 +1950,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["RepairRequestController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/depart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_depart"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2670,6 +2718,22 @@ export interface paths {
         get: operations["PartsController_getAll"];
         put?: never;
         post: operations["PartsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parts/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PartsController_importParts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3626,12 +3690,28 @@ export interface paths {
             cookie?: never;
         };
         get: operations["AddressController_findOne"];
+        put: operations["AddressController_update"];
+        post?: never;
+        delete: operations["AddressController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/address/{id}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["AddressController_setPrimary"];
         trace?: never;
     };
     "/payment/options": {
@@ -3973,7 +4053,7 @@ export interface components {
             joinedAt: string;
         };
         /** @enum {string} */
-        MessageType: "text" | "image" | "video" | "system";
+        MessageType: "text" | "image" | "video" | "document" | "system";
         /** @enum {string} */
         MessageStatus: "sending" | "delivered" | "seen";
         ChatMessageRecordDto: {
@@ -4029,7 +4109,7 @@ export interface components {
         /** @enum {string} */
         PresenceStatus: "online" | "offline";
         /** @enum {string} */
-        UserActivity: "idle" | "typing" | "uploading_image" | "uploading_video";
+        UserActivity: "idle" | "typing" | "uploading_image" | "uploading_video" | "uploading_document";
         PresenceRecordDto: {
             status: components["schemas"]["PresenceStatus"];
             activity: components["schemas"]["UserActivity"];
@@ -4071,7 +4151,7 @@ export interface components {
         };
         CreateRepairRequestDto: Record<string, never>;
         /** @enum {string} */
-        RepairRequestStatus: "pending" | "paid" | "assigned" | "accepted" | "in_progress" | "awaiting_completion" | "completed" | "refused" | "cancelled" | "paused" | "refund_requested" | "refunded";
+        RepairRequestStatus: "pending" | "paid" | "assigned" | "accepted" | "en_route" | "in_progress" | "awaiting_completion" | "completed" | "refused" | "cancelled" | "paused" | "refund_requested" | "refunded";
         /** @enum {string} */
         WorkStepStatus: "pending" | "in_progress" | "completed" | "skipped" | "declined";
         WorkStepRecordDto: {
@@ -4126,18 +4206,20 @@ export interface components {
         };
         AddressRecordDto: {
             id: string;
-            country: string;
             city: string;
             street: string;
-            house: number;
-            building?: number;
-            floor?: number;
-            room?: number;
-            postalCode?: string;
+            house: string;
+            building?: string;
+            apartment?: string;
+            entrance?: string;
+            floor?: string;
+            intercom?: string;
+            comment?: string;
             latitude?: number;
             longitude?: number;
             validationStatus?: string;
             validationError?: string;
+            isPrimary: boolean;
         };
         UserDeviceRecordDto: {
             id: string;
@@ -4256,7 +4338,10 @@ export interface components {
             avrSignedAt?: string;
             avrSignedPayload?: string;
             avrSignature?: string;
-            statusTimestamps?: Record<string, never>;
+            statusTimestamps?: {
+                status: string;
+                timestamp: string;
+            }[];
             scheduleEndNotifiedAt?: string;
             scheduleEndConfirmedAt?: string;
             user?: components["schemas"]["AuthUserDto"];
@@ -4609,6 +4694,7 @@ export interface components {
         AddressResponseDto: {
             address: components["schemas"]["AddressRecordDto"];
         };
+        UpdateAddressDto: Record<string, never>;
         AddressListResponseDto: {
             addresses: components["schemas"]["AddressRecordDto"][];
         };
@@ -6498,6 +6584,23 @@ export interface operations {
             };
         };
     };
+    DocumentUploadController_uploadGeneric: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     DocumentUploadController_uploadBrokenPartDocument: {
         parameters: {
             query?: never;
@@ -7075,6 +7178,28 @@ export interface operations {
             };
         };
     };
+    RepairRequestController_getCompletionMetrics: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
     RepairRequestController_findAll: {
         parameters: {
             query?: never;
@@ -7458,6 +7583,27 @@ export interface operations {
         };
     };
     RepairRequestController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_depart: {
         parameters: {
             query?: never;
             header?: never;
@@ -8833,6 +8979,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DevicePartResponseDto"];
+                };
+            };
+        };
+    };
+    PartsController_importParts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };
@@ -10395,6 +10564,71 @@ export interface operations {
             };
         };
     };
+    AddressController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAddressDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressResponseDto"];
+                };
+            };
+        };
+    };
+    AddressController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AddressController_setPrimary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressResponseDto"];
+                };
+            };
+        };
+    };
     PaymentController_getOptions: {
         parameters: {
             query?: never;
@@ -10473,6 +10707,8 @@ export interface operations {
                 search: string;
                 sortBy: string;
                 sortOrder: string;
+                dateFrom: string;
+                dateTo: string;
             };
             header?: never;
             path?: never;
@@ -10492,7 +10728,10 @@ export interface operations {
     };
     PaymentController_getMyStats: {
         parameters: {
-            query?: never;
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -10536,7 +10775,10 @@ export interface operations {
     };
     PaymentController_getStats: {
         parameters: {
-            query?: never;
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

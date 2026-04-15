@@ -100,15 +100,15 @@ export class CertificateController {
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
 
         // Create address via device-service
-        const addressRes = await this.deviceClient.createAddress({
-            country: dto.country,
+        const addressRes = await this.deviceClient.createAddress(dto.clientUserId, {
             city: dto.city,
             street: dto.street,
             house: dto.house,
             building: dto.building,
+            apartment: dto.apartment,
+            entrance: dto.entrance,
             floor: dto.floor,
-            room: dto.room,
-            postalCode: dto.postalCode,
+            intercom: dto.intercom,
         });
 
         // Create UserDevice for the client via device-service

@@ -25,32 +25,33 @@ export class CreateCertificateDto {
     serialNumber!: string;
 
     @IsString()
-    country!: string;
-
-    @IsString()
     city!: string;
 
     @IsString()
     street!: string;
 
-    @IsInt()
-    house!: number;
-
-    @IsOptional()
-    @IsInt()
-    building?: number;
-
-    @IsOptional()
-    @IsInt()
-    floor?: number;
-
-    @IsOptional()
-    @IsInt()
-    room?: number;
+    @IsString()
+    house!: string;
 
     @IsOptional()
     @IsString()
-    postalCode?: string;
+    building?: string;
+
+    @IsOptional()
+    @IsString()
+    apartment?: string;
+
+    @IsOptional()
+    @IsString()
+    entrance?: string;
+
+    @IsOptional()
+    @IsString()
+    floor?: string;
+
+    @IsOptional()
+    @IsString()
+    intercom?: string;
 
     @IsInt()
     @IsIn(CERTIFICATE_DURATION_OPTIONS as unknown as number[])

@@ -38,8 +38,11 @@ service DeviceService {
 
     // Address
     rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
+    rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
+    rpc DeleteAddress(DeleteAddressRequest) returns (EmptyResponse);
+    rpc SetPrimaryAddress(SetPrimaryAddressRequest) returns (AddressResponse);
     rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
-    rpc FindAllAddresses(EmptyRequest) returns (AddressListResponse);
+    rpc FindUserAddresses(FindUserAddressesRequest) returns (AddressListResponse);
 
     // Device categories
     rpc FindAllDeviceCategories(EmptyRequest) returns (DeviceCategoryListResponse);
@@ -338,16 +341,50 @@ message GetAllDevicePartsRequest {
 }
 
 message CreateAddressRequest {
-    string country = 1;
+    string userId = 1;
     string city = 2;
-    string street = 3;
-    int32 house = 4;
-    int32 building = 5;
-    int32 floor = 6;
-    int32 room = 7;
-    string postalCode = 8;
-    double latitude = 9;
-    double longitude = 10;
+    string district = 3;
+    string street = 4;
+    string house = 5;
+    string building = 6;
+    string apartment = 7;
+    string entrance = 8;
+    string floor = 9;
+    string intercom = 10;
+    string comment = 11;
+    double latitude = 12;
+    double longitude = 13;
+}
+
+message UpdateAddressRequest {
+    string userId = 1;
+    string id = 2;
+    string city = 3;
+    string district = 4;
+    string street = 5;
+    string house = 6;
+    string building = 7;
+    string apartment = 8;
+    string entrance = 9;
+    string floor = 10;
+    string intercom = 11;
+    string comment = 12;
+    double latitude = 13;
+    double longitude = 14;
+}
+
+message DeleteAddressRequest {
+    string userId = 1;
+    string id = 2;
+}
+
+message SetPrimaryAddressRequest {
+    string userId = 1;
+    string id = 2;
+}
+
+message FindUserAddressesRequest {
+    string userId = 1;
 }
 
 // ─── Device Responses ──────────────────────────────────────────────────────
@@ -407,18 +444,21 @@ message PaginatedDevicesResponse {
 
 message AddressRecord {
     string id = 1;
-    string country = 2;
-    string city = 3;
+    string city = 2;
+    string district = 3;
     string street = 4;
-    int32 house = 5;
-    int32 building = 6;
-    int32 floor = 7;
-    int32 room = 8;
-    string postalCode = 9;
-    double latitude = 10;
-    double longitude = 11;
-    string validationStatus = 12;
-    string validationError = 13;
+    string house = 5;
+    string building = 6;
+    string apartment = 7;
+    string entrance = 8;
+    string floor = 9;
+    string intercom = 10;
+    string comment = 11;
+    double latitude = 12;
+    double longitude = 13;
+    string validationStatus = 14;
+    string validationError = 15;
+    bool isPrimary = 16;
 }
 
 message AddressResponse {

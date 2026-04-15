@@ -10,7 +10,7 @@ beforeEach(() => Object.values(mockApi).forEach(fn => fn.mockClear()));
 
 describe('addressApi', () => {
   it('create calls POST /address with body', () => {
-    const data = { country: 'RU', city: 'Москва', street: 'Ленина', house: 1 };
+    const data = { city: 'Москва', street: 'Ленина', house: '1' };
     addressApi.create(data as any);
     expect(mockApi.post).toHaveBeenCalledWith('/address', data);
   });

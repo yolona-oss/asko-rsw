@@ -4,16 +4,40 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Navigation, Map as MapIcon, X } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
+import { Tooltip } from './tooltip';
 import { cn } from '../utils/cn';
 
+function FieldLabel({ text, required }: { text: string; required?: boolean }) {
+  return (
+    <Tooltip
+      content={required ? 'Обязательное поле' : 'Необязательное поле'}
+      placement="top"
+      delay={300}
+    >
+      <label className="text-xs text-text-sub mb-1 flex items-center gap-1.5 cursor-default">
+        {text}
+        <span
+          className={cn(
+            'inline-block w-1.5 h-1.5 rounded-full flex-shrink-0',
+            required ? 'bg-brand-red' : 'bg-text-sub/30',
+          )}
+        />
+      </label>
+    </Tooltip>
+  );
+}
+
 export interface AddressValue {
-  country: string;
   city: string;
+  district?: string;
   street: string;
-  house: number;
-  building?: number;
-  floor?: number;
-  room?: number;
+  house: string;
+  building?: string;
+  apartment?: string;
+  entrance?: string;
+  floor?: string;
+  intercom?: string;
+  comment?: string;
   latitude?: number;
   longitude?: number;
 }
@@ -115,14 +139,6 @@ async function forwardSearch(q: string, signal?: AbortSignal): Promise<Nominatim
   } catch {
     return [];
   }
-}
-
-// Extract the first positive integer from a string (backend stores `house` as int).
-function parsePositiveInt(s: string): number | undefined {
-  const m = s.match(/\d+/);
-  if (!m) return undefined;
-  const n = Number(m[0]);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
 // ── Map picker modal ─────────────────────────────────────────────────
@@ -268,11 +284,14 @@ export function AddressInput({
   className,
 }: AddressInputProps) {
   const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
   const [street, setStreet] = useState('');
   const [house, setHouse] = useState('');
   const [building, setBuilding] = useState('');
+  const [apartment, setApartment] = useState('');
+  const [entrance, setEntrance] = useState('');
   const [floor, setFloor] = useState('');
-  const [room, setRoom] = useState('');
+  const [intercom, setIntercom] = useState('');
   const [lat, setLat] = useState<number | undefined>();
   const [lon, setLon] = useState<number | undefined>();
 
@@ -294,11 +313,14 @@ export function AddressInput({
   useEffect(() => {
     if (value && !mountedRef.current) {
       setCity(value.city ?? '');
+      setDistrict(value.district ?? '');
       setStreet(value.street ?? '');
-      setHouse(value.house != null ? String(value.house) : '');
-      setBuilding(value.building != null ? String(value.building) : '');
-      setFloor(value.floor != null ? String(value.floor) : '');
-      setRoom(value.room != null ? String(value.room) : '');
+      setHouse(value.house ?? '');
+      setBuilding(value.building ?? '');
+      setApartment(value.apartment ?? '');
+      setEntrance(value.entrance ?? '');
+      setFloor(value.floor ?? '');
+      setIntercom(value.intercom ?? '');
       setLat(value.latitude);
       setLon(value.longitude);
     }
@@ -310,25 +332,24 @@ export function AddressInput({
   useEffect(() => {
     const cityTrim = city.trim();
     const streetTrim = street.trim();
-    const houseNum = parsePositiveInt(house);
-    if (!cityTrim || !streetTrim || houseNum == null) {
+    const houseTrim = house.trim();
+    if (!cityTrim || !streetTrim || !houseTrim) {
       if (lastEmittedRef.current !== 'null') {
         lastEmittedRef.current = 'null';
         onChange(null);
       }
       return;
     }
-    const buildingNum = parsePositiveInt(building);
-    const floorNum = parsePositiveInt(floor);
-    const roomNum = parsePositiveInt(room);
     const next: AddressValue = {
-      country: 'Россия',
       city: cityTrim,
+      ...(district.trim() ? { district: district.trim() } : {}),
       street: streetTrim,
-      house: houseNum,
-      ...(buildingNum != null ? { building: buildingNum } : {}),
-      ...(floorNum != null ? { floor: floorNum } : {}),
-      ...(roomNum != null ? { room: roomNum } : {}),
+      house: houseTrim,
+      ...(building.trim() ? { building: building.trim() } : {}),
+      ...(apartment.trim() ? { apartment: apartment.trim() } : {}),
+      ...(entrance.trim() ? { entrance: entrance.trim() } : {}),
+      ...(floor.trim() ? { floor: floor.trim() } : {}),
+      ...(intercom.trim() ? { intercom: intercom.trim() } : {}),
       ...(lat != null && lon != null ? { latitude: lat, longitude: lon } : {}),
     };
     const key = JSON.stringify(next);
@@ -336,7 +357,7 @@ export function AddressInput({
     lastEmittedRef.current = key;
     onChange(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city, street, house, building, floor, room, lat, lon]);
+  }, [city, district, street, house, building, apartment, entrance, floor, intercom, lat, lon]);
 
   // ── Autocomplete: city ──
   const debouncedCity = useDebounce(city, 350);
@@ -532,7 +553,7 @@ export function AddressInput({
 
       {/* City */}
       <div ref={cityWrapRef} className="relative w-full">
-        <label className="text-xs text-text-sub mb-1 block">Город</label>
+        <FieldLabel text="Город" required />
         <Input
           placeholder="Москва"
           value={city}
@@ -575,9 +596,20 @@ export function AddressInput({
         )}
       </div>
 
+      {/* District */}
+      <div className="w-full">
+        <FieldLabel text="Район" />
+        <Input
+          placeholder="Центральный"
+          value={district}
+          onChange={(e) => setDistrict(e.target.value)}
+          autoComplete="off"
+        />
+      </div>
+
       {/* Street */}
       <div ref={streetWrapRef} className="relative w-full">
-        <label className="text-xs text-text-sub mb-1 block">Улица</label>
+        <FieldLabel text="Улица" required />
         <Input
           placeholder="Ленина"
           value={street}
@@ -620,13 +652,12 @@ export function AddressInput({
         )}
       </div>
 
-      {/* House / Building / Floor / Room */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* House / Building / Entrance / Floor / Apartment / Intercom */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-text-sub mb-1 block">Дом *</label>
+          <FieldLabel text="Дом" required />
           <Input
             placeholder="4"
-            inputMode="numeric"
             value={house}
             onChange={(e) => setHouse(e.target.value)}
             error={inputError}
@@ -634,32 +665,47 @@ export function AddressInput({
           />
         </div>
         <div>
-          <label className="text-xs text-text-sub mb-1 block">Корпус</label>
+          <FieldLabel text="Корпус" />
           <Input
             placeholder="2"
-            inputMode="numeric"
             value={building}
             onChange={(e) => setBuilding(e.target.value)}
             autoComplete="off"
           />
         </div>
         <div>
-          <label className="text-xs text-text-sub mb-1 block">Этаж</label>
+          <FieldLabel text="Подъезд" />
+          <Input
+            placeholder="1"
+            value={entrance}
+            onChange={(e) => setEntrance(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <FieldLabel text="Этаж" />
           <Input
             placeholder="5"
-            inputMode="numeric"
             value={floor}
             onChange={(e) => setFloor(e.target.value)}
             autoComplete="off"
           />
         </div>
         <div>
-          <label className="text-xs text-text-sub mb-1 block">Квартира</label>
+          <FieldLabel text="Квартира" />
           <Input
             placeholder="59"
-            inputMode="numeric"
-            value={room}
-            onChange={(e) => setRoom(e.target.value)}
+            value={apartment}
+            onChange={(e) => setApartment(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <FieldLabel text="Домофон" />
+          <Input
+            placeholder="59"
+            value={intercom}
+            onChange={(e) => setIntercom(e.target.value)}
             autoComplete="off"
           />
         </div>

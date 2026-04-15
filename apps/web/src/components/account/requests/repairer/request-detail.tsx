@@ -529,7 +529,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
             <Card className="flex flex-col gap-3">
               <h2 className="text-lg font-medium text-text-main">Адрес</h2>
               <p className="text-sm text-text-main">
-                {[request.address.city, request.address.street, request.address.house ? `д. ${request.address.house}` : '', request.address.building ? `корп. ${request.address.building}` : '', request.address.floor ? `этаж ${request.address.floor}` : '', request.address.room ? `кв. ${request.address.room}` : ''].filter(Boolean).join(', ')}
+                {[request.address.city, request.address.street, request.address.house ? `д. ${request.address.house}` : '', request.address.building ? `корп. ${request.address.building}` : '', request.address.floor ? `этаж ${request.address.floor}` : '', request.address.apartment ? `кв. ${request.address.apartment}` : ''].filter(Boolean).join(', ')}
               </p>
             </Card>
           )}

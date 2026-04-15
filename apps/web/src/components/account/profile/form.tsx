@@ -19,6 +19,7 @@ import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 import { SessionsSection } from './sessions-section';
 import { SoundSettingsSection } from './sound-settings-section';
+import { AddressesSection } from './addresses-section';
 
 import {
   RUSSIAN_NAMES,
@@ -302,6 +303,10 @@ export function ProfileForm() {
             </FormField>
           </div>
         </div>
+
+        {/* Addresses */}
+        <div className="h-px bg-border-light" />
+        <AddressesSection />
 
         {/* Login methods */}
         <div className="h-px bg-border-light" />

@@ -26,6 +26,10 @@ import type {
     GetUserDeviceRequest,
     RemoveUserDeviceRequest,
     CreateAddressRequest,
+    UpdateAddressRequest,
+    DeleteAddressRequest,
+    SetPrimaryAddressRequest,
+    FindUserAddressesRequest,
     CreateDevicePartRequest,
     UpdateDevicePartRequest,
     DeleteDevicePartRequest,
@@ -90,18 +94,21 @@ function categoryToRecord(entity: DeviceCategory) {
 function addressToRecord(entity: Address) {
     return {
         id: entity.id,
-        country: '',
         city: entity.city,
+        district: entity.district ?? '',
         street: entity.street,
-        house: parseInt(entity.house) || 0,
-        building: parseInt(entity.building ?? '') || 0,
-        floor: parseInt(entity.floor ?? '') || 0,
-        room: parseInt(entity.apartment ?? '') || 0,
-        postalCode: '',
+        house: entity.house,
+        building: entity.building ?? '',
+        apartment: entity.apartment ?? '',
+        entrance: entity.entrance ?? '',
+        floor: entity.floor ?? '',
+        intercom: entity.intercom ?? '',
+        comment: entity.comment ?? '',
         latitude: entity.latitude ?? 0,
         longitude: entity.longitude ?? 0,
         validationStatus: entity.validationStatus ?? 'pending',
         validationError: entity.validationError ?? '',
+        isPrimary: entity.isPrimary ?? false,
     };
 }
 
@@ -415,17 +422,57 @@ export class DeviceGrpcController {
     @GrpcMethod('DeviceService', 'CreateAddress')
     async createAddress(data: CreateAddressRequest) {
         try {
-            // Map proto CreateAddressRequest to AddressService.create
-            const address = await this.addressService.create('', {
+            const address = await this.addressService.create(data.userId, {
                 city: data.city,
+                district: data.district || undefined,
                 street: data.street,
-                house: String(data.house),
-                building: data.building ? String(data.building) : undefined,
-                floor: data.floor ? String(data.floor) : undefined,
-                apartment: data.room ? String(data.room) : undefined,
+                house: data.house,
+                building: data.building || undefined,
+                apartment: data.apartment || undefined,
+                entrance: data.entrance || undefined,
+                floor: data.floor || undefined,
+                intercom: data.intercom || undefined,
+                comment: data.comment || undefined,
                 latitude: data.latitude || undefined,
                 longitude: data.longitude || undefined,
             });
+            return { address: addressToRecord(address) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'UpdateAddress')
+    async updateAddress(data: UpdateAddressRequest) {
+        try {
+            const address = await this.addressService.update(data.userId, data.id, {
+                city: data.city || undefined,
+                district: data.district,
+                street: data.street || undefined,
+                house: data.house || undefined,
+                building: data.building,
+                apartment: data.apartment,
+                entrance: data.entrance,
+                floor: data.floor,
+                intercom: data.intercom,
+                comment: data.comment,
+                latitude: data.latitude || undefined,
+                longitude: data.longitude || undefined,
+            });
+            return { address: addressToRecord(address) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'DeleteAddress')
+    async deleteAddress(data: DeleteAddressRequest) {
+        try {
+            await this.addressService.delete(data.userId, data.id);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'SetPrimaryAddress')
+    async setPrimaryAddress(data: SetPrimaryAddressRequest) {
+        try {
+            const address = await this.addressService.setPrimary(data.userId, data.id);
             return { address: addressToRecord(address) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -438,10 +485,10 @@ export class DeviceGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    @GrpcMethod('DeviceService', 'FindAllAddresses')
-    async findAllAddresses() {
+    @GrpcMethod('DeviceService', 'FindUserAddresses')
+    async findUserAddresses(data: FindUserAddressesRequest) {
         try {
-            const addresses = await this.addressService.findAll('');
+            const addresses = await this.addressService.findAll(data.userId);
             return { addresses: addresses.map(addressToRecord) };
         } catch (e) { throw toGrpcError(e); }
     }

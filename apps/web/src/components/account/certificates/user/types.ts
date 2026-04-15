@@ -4,13 +4,15 @@ export interface UserDevice {
   device?: { id?: string; name?: string; brand?: string; model?: string };
   address?: {
     id?: string;
-    country?: string;
     city?: string;
     street?: string;
-    house?: number;
-    building?: number;
-    floor?: number;
-    room?: number;
+    house?: string;
+    building?: string;
+    floor?: string;
+    apartment?: string;
+    entrance?: string;
+    intercom?: string;
+    comment?: string;
     latitude?: number;
     longitude?: number;
     validationStatus?: string;

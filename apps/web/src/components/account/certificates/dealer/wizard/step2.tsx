@@ -49,29 +49,27 @@ export function Step2({
         value={
           data.city && data.street && data.house
             ? {
-                country: data.country || 'Россия',
                 city: data.city,
                 street: data.street,
-                house: Number(data.house),
-                ...(data.building ? { building: Number(data.building) } : {}),
-                ...(data.floor ? { floor: Number(data.floor) } : {}),
-                ...(data.room ? { room: Number(data.room) } : {}),
+                house: data.house,
+                ...(data.building ? { building: data.building } : {}),
+                ...(data.floor ? { floor: data.floor } : {}),
+                ...(data.apartment ? { apartment: data.apartment } : {}),
               }
             : null
         }
         onChange={(val: AddressValue | null) => {
           if (val) {
             onChange({
-              country: val.country,
               city: val.city,
               street: val.street,
-              house: String(val.house),
-              building: val.building ? String(val.building) : '',
-              floor: val.floor ? String(val.floor) : '',
-              room: val.room ? String(val.room) : '',
+              house: val.house,
+              building: val.building ?? '',
+              floor: val.floor ?? '',
+              apartment: val.apartment ?? '',
             });
           } else {
-            onChange({ city: '', street: '', house: '', building: '', floor: '', room: '' });
+            onChange({ city: '', street: '', house: '', building: '', floor: '', apartment: '' });
           }
         }}
         label="Адрес установки"

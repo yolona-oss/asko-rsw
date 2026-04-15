@@ -3,13 +3,15 @@ import { cn } from '../utils/cn';
 export interface AddressViewProps {
   address:
     | {
-        country?: string;
         city?: string;
+        district?: string;
         street?: string;
-        house?: number;
-        building?: number;
-        floor?: number;
-        room?: number;
+        house?: string;
+        building?: string;
+        apartment?: string;
+        entrance?: string;
+        floor?: string;
+        intercom?: string;
       }
     | null
     | undefined;
@@ -31,13 +33,15 @@ export function AddressView({
   const parts: string[] = [];
 
   if (address.city) parts.push(address.city);
+  if (address.district) parts.push(address.district);
   if (address.street) parts.push(address.street);
   if (address.house) parts.push(`д. ${address.house}`);
 
   if (variant === 'normal') {
     if (address.building) parts.push(`корп. ${address.building}`);
+    if (address.entrance) parts.push(`подъезд ${address.entrance}`);
     if (address.floor) parts.push(`этаж ${address.floor}`);
-    if (address.room) parts.push(`кв. ${address.room}`);
+    if (address.apartment) parts.push(`кв. ${address.apartment}`);
   }
 
   return (
