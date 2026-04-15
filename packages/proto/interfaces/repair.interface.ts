@@ -1235,6 +1235,7 @@ export interface RepairServiceClient {
 
     // Stats
     getRepairersActiveRequestCounts(request: RepairGetRepairersStatsRequest): Observable<RepairRepairersStatsResponse>;
+    getCompletionMetrics(request: RepairCompletionMetricsRequest): Observable<RepairCompletionMetricsResponse>;
 }
 
 export interface RepairGetRepairersStatsRequest {
@@ -1249,6 +1250,27 @@ export interface RepairerStatsRecord {
 
 export interface RepairRepairersStatsResponse {
     stats: RepairerStatsRecord[];
+}
+
+export interface RepairCompletionMetricsRequest {
+    dateFrom: string;
+    dateTo: string;
+}
+
+export interface RepairCompletionMetricsResponse {
+    dateFrom: string;
+    dateTo: string;
+    totalTerminal: number;
+    completedCount: number;
+    cancelledCount: number;
+    refusedCount: number;
+    refundedCount: number;
+    avgTotalMinutes: number;
+    avgActiveWorkMinutes: number;
+    avgAssignmentMinutes: number;
+    avgResponseMinutes: number;
+    avgTravelMinutes: number;
+    avgRepairMinutes: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

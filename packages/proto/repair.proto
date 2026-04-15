@@ -156,6 +156,7 @@ service RepairService {
 
     // Stats
     rpc GetRepairersActiveRequestCounts(RepairGetRepairersStatsRequest) returns (RepairRepairersStatsResponse);
+    rpc GetCompletionMetrics(RepairCompletionMetricsRequest) returns (RepairCompletionMetricsResponse);
 }
 
 service ScheduleService {
@@ -1209,6 +1210,27 @@ message RepairerStatsRecord {
 
 message RepairRepairersStatsResponse {
     repeated RepairerStatsRecord stats = 1;
+}
+
+message RepairCompletionMetricsRequest {
+    string dateFrom = 1;
+    string dateTo = 2;
+}
+
+message RepairCompletionMetricsResponse {
+    string dateFrom = 1;
+    string dateTo = 2;
+    int32 totalTerminal = 3;
+    int32 completedCount = 4;
+    int32 cancelledCount = 5;
+    int32 refusedCount = 6;
+    int32 refundedCount = 7;
+    int32 avgTotalMinutes = 8;
+    int32 avgActiveWorkMinutes = 9;
+    int32 avgAssignmentMinutes = 10;
+    int32 avgResponseMinutes = 11;
+    int32 avgTravelMinutes = 12;
+    int32 avgRepairMinutes = 13;
 }
 
 // ─── Repair Responses ──────────────────────────────────────────────────────

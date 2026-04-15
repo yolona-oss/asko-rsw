@@ -781,4 +781,14 @@ export class RepairGrpcController {
             return { stats };
         } catch (e) { throw toGrpcError(e); }
     }
+
+    @GrpcMethod('RepairService', 'GetCompletionMetrics')
+    async getCompletionMetrics(data: { dateFrom: string; dateTo: string }) {
+        try {
+            return await this.repairRequestService.getCompletionMetrics(
+                new Date(data.dateFrom),
+                new Date(data.dateTo),
+            );
+        } catch (e) { throw toGrpcError(e); }
+    }
 }

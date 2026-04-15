@@ -16,6 +16,7 @@ import type {
     BrokenPartResponse,
     BrokenPartListResponse,
     RepairRepairersStatsResponse,
+    RepairCompletionMetricsResponse,
     GenerateAvrResponse,
 } from '@asko/proto';
 
@@ -305,6 +306,10 @@ export class RepairClientService implements OnModuleInit {
 
     getRepairersActiveRequestCounts(repairerIds: string[]): Promise<RepairRepairersStatsResponse> {
         return grpcCall(this.repairService.getRepairersActiveRequestCounts({ repairerIds }));
+    }
+
+    getCompletionMetrics(dateFrom: string, dateTo: string): Promise<RepairCompletionMetricsResponse> {
+        return grpcCall(this.repairService.getCompletionMetrics({ dateFrom, dateTo }));
     }
 
     // ── AVR (Work Completion Act) ──

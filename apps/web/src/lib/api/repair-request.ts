@@ -204,4 +204,25 @@ export const repairRequestApi = {
   orderBrokenPart(requestId: string, partId: string, data?: { supplier?: string }) {
     return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/order`, data ?? {});
   },
+
+  // Stats
+  getCompletionMetrics(dateFrom: string, dateTo: string) {
+    return api.get<CompletionMetrics>('/repair-requests/metrics/completion', { params: { dateFrom, dateTo } });
+  },
 };
+
+export interface CompletionMetrics {
+  dateFrom: string;
+  dateTo: string;
+  totalTerminal: number;
+  completedCount: number;
+  cancelledCount: number;
+  refusedCount: number;
+  refundedCount: number;
+  avgTotalMinutes: number;
+  avgActiveWorkMinutes: number;
+  avgAssignmentMinutes: number;
+  avgResponseMinutes: number;
+  avgTravelMinutes: number;
+  avgRepairMinutes: number;
+}

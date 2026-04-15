@@ -75,6 +75,17 @@ export class RepairRequestController {
         private readonly fileService: FileClientService,
     ) { }
 
+    // ── Stats ──
+
+    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Get('metrics/completion')
+    async getCompletionMetrics(
+        @Query('dateFrom') dateFrom: string,
+        @Query('dateTo') dateTo: string,
+    ) {
+        return this.repairClient.getCompletionMetrics(dateFrom, dateTo);
+    }
+
     // ── User endpoints ──
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })

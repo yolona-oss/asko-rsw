@@ -1420,4 +1420,137 @@ export class RepairRequestService {
             } catch { /* non-critical */ }
         }
     }
+
+    // ── Completion metrics ──
+
+    private static readonly TERMINAL_STATUSES = [
+        RepairRequestStatus.COMPLETED,
+        RepairRequestStatus.CANCELLED,
+        RepairRequestStatus.REFUSED,
+        RepairRequestStatus.REFUNDED,
+    ];
+
+    private computeStatusMinutes(entries: { status: string; timestamp: string }[], targetStatus: string): number {
+        let totalMs = 0;
+        let start: number | null = null;
+        for (const e of entries) {
+            const ts = new Date(e.timestamp).getTime();
+            if (e.status === targetStatus && start === null) {
+                start = ts;
+            } else if (e.status !== targetStatus && start !== null) {
+                totalMs += ts - start;
+                start = null;
+            }
+        }
+        return Math.round(totalMs / 60_000);
+    }
+
+    private computeFirstTransitionMinutes(
+        entries: { status: string; timestamp: string }[],
+        fromStatus: string,
+        toStatus: string,
+    ): number | null {
+        let fromTs: number | null = null;
+        for (const e of entries) {
+            if (e.status === fromStatus && fromTs === null) {
+                fromTs = new Date(e.timestamp).getTime();
+            }
+            if (e.status === toStatus && fromTs !== null) {
+                return Math.round((new Date(e.timestamp).getTime() - fromTs) / 60_000);
+            }
+        }
+        return null;
+    }
+
+    @CreateRequestContext()
+    async getCompletionMetrics(dateFrom: Date, dateTo: Date) {
+        const requests = await this.em.find(RepairRequest, {
+            status: { $in: RepairRequestService.TERMINAL_STATUSES },
+            updatedAt: { $gte: dateFrom, $lte: dateTo },
+        });
+
+        let completedCount = 0;
+        let cancelledCount = 0;
+        let refusedCount = 0;
+        let refundedCount = 0;
+
+        let totalMinutesSum = 0;
+        let totalMinutesCount = 0;
+        let activeWorkSum = 0;
+        let activeWorkCount = 0;
+        let assignmentSum = 0;
+        let assignmentCount = 0;
+        let responseSum = 0;
+        let responseCount = 0;
+        let travelSum = 0;
+        let travelCount = 0;
+        let repairSum = 0;
+        let repairCount = 0;
+
+        for (const req of requests) {
+            switch (req.status) {
+                case RepairRequestStatus.COMPLETED: completedCount++; break;
+                case RepairRequestStatus.CANCELLED: cancelledCount++; break;
+                case RepairRequestStatus.REFUSED: refusedCount++; break;
+                case RepairRequestStatus.REFUNDED: refundedCount++; break;
+            }
+
+            const entries = req.statusTimestamps;
+            if (!entries.length) continue;
+
+            // Total wall-clock time (first entry to last entry)
+            const firstTs = new Date(entries[0].timestamp).getTime();
+            const lastTs = new Date(entries[entries.length - 1].timestamp).getTime();
+            if (lastTs > firstTs) {
+                totalMinutesSum += Math.round((lastTs - firstTs) / 60_000);
+                totalMinutesCount++;
+            }
+
+            // Active work minutes (EN_ROUTE + IN_PROGRESS)
+            const active = this.computeActiveWorkMinutes(req);
+            if (active !== null) {
+                activeWorkSum += active;
+                activeWorkCount++;
+            }
+
+            // Time to assignment (PENDING/PAID → ASSIGNED)
+            const toAssign = this.computeFirstTransitionMinutes(entries, RepairRequestStatus.PENDING, RepairRequestStatus.ASSIGNED)
+                ?? this.computeFirstTransitionMinutes(entries, RepairRequestStatus.PAID, RepairRequestStatus.ASSIGNED);
+            if (toAssign !== null) {
+                assignmentSum += toAssign;
+                assignmentCount++;
+            }
+
+            // Response time (ASSIGNED → ACCEPTED)
+            const toAccept = this.computeFirstTransitionMinutes(entries, RepairRequestStatus.ASSIGNED, RepairRequestStatus.ACCEPTED);
+            if (toAccept !== null) {
+                responseSum += toAccept;
+                responseCount++;
+            }
+
+            // Travel time (total in EN_ROUTE)
+            const travel = this.computeStatusMinutes(entries, RepairRequestStatus.EN_ROUTE);
+            if (travel > 0) { travelSum += travel; travelCount++; }
+
+            // Repair time (total in IN_PROGRESS)
+            const repair = this.computeStatusMinutes(entries, RepairRequestStatus.IN_PROGRESS);
+            if (repair > 0) { repairSum += repair; repairCount++; }
+        }
+
+        return {
+            dateFrom: dateFrom.toISOString().slice(0, 10),
+            dateTo: dateTo.toISOString().slice(0, 10),
+            totalTerminal: requests.length,
+            completedCount,
+            cancelledCount,
+            refusedCount,
+            refundedCount,
+            avgTotalMinutes: totalMinutesCount > 0 ? Math.round(totalMinutesSum / totalMinutesCount) : 0,
+            avgActiveWorkMinutes: activeWorkCount > 0 ? Math.round(activeWorkSum / activeWorkCount) : 0,
+            avgAssignmentMinutes: assignmentCount > 0 ? Math.round(assignmentSum / assignmentCount) : 0,
+            avgResponseMinutes: responseCount > 0 ? Math.round(responseSum / responseCount) : 0,
+            avgTravelMinutes: travelCount > 0 ? Math.round(travelSum / travelCount) : 0,
+            avgRepairMinutes: repairCount > 0 ? Math.round(repairSum / repairCount) : 0,
+        };
+    }
 }
