@@ -10,6 +10,7 @@ import {
   AddressInput,
   SkeletonBlock,
   type AddressValue,
+  type SavedAddress,
 } from '@asko/ui';
 import { userDeviceApi } from '@/lib/api/user-device';
 import { addressApi } from '@/lib/api/address';
@@ -30,6 +31,7 @@ export function AddDeviceForm({
   const [deviceId, setDeviceId] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
   const [addressValue, setAddressValue] = useState<AddressValue | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,7 +47,31 @@ export function AddDeviceForm({
       })
       .catch(() => { })
       .finally(() => setLoadingCatalog(false));
+
+    addressApi.list().then(({ data }) => {
+      setSavedAddresses(data.map((a) => ({
+        id: a.id,
+        city: a.city,
+        district: a.district,
+        street: a.street,
+        house: a.house,
+        building: a.building,
+        apartment: a.apartment,
+        entrance: a.entrance,
+        floor: a.floor,
+        intercom: a.intercom,
+        comment: a.comment,
+        isPrimary: a.isPrimary,
+      })));
+    }).catch(() => { });
   }, [open]);
+
+  const handleSetPrimary = async (id: string) => {
+    try {
+      await addressApi.setPrimary(id);
+      setSavedAddresses((prev) => prev.map((a) => ({ ...a, isPrimary: a.id === id })));
+    } catch { /* silent */ }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,20 +79,26 @@ export function AddDeviceForm({
     setSubmitting(true);
     setError('');
     try {
-      const { data: address } = await addressApi.create({
-        city: addressValue.city,
-        street: addressValue.street,
-        house: addressValue.house,
-        ...(addressValue.building ? { building: addressValue.building } : {}),
-        ...(addressValue.floor ? { floor: addressValue.floor } : {}),
-        ...(addressValue.apartment ? { apartment: addressValue.apartment } : {}),
-        ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
-        ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
-      });
+      // If selected from saved, reuse the ID; otherwise create new
+      let addressId = addressValue.id;
+      if (!addressId) {
+        const { data: address } = await addressApi.create({
+          city: addressValue.city,
+          street: addressValue.street,
+          house: addressValue.house,
+          ...(addressValue.district ? { district: addressValue.district } : {}),
+          ...(addressValue.building ? { building: addressValue.building } : {}),
+          ...(addressValue.floor ? { floor: addressValue.floor } : {}),
+          ...(addressValue.apartment ? { apartment: addressValue.apartment } : {}),
+          ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
+          ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
+        });
+        addressId = address.id;
+      }
       await userDeviceApi.register({
         deviceId,
         serialNumber: serialNumber.trim(),
-        addressId: address.id,
+        addressId,
       });
       setSerialNumber('');
       setAddressValue(null);
@@ -114,6 +146,8 @@ export function AddDeviceForm({
           onChange={setAddressValue}
           showGeolocation
           label="Адрес установки"
+          savedAddresses={savedAddresses}
+          onSetPrimary={handleSetPrimary}
         />
 
         {error && <p className="text-sm text-brand-red">{error}</p>}

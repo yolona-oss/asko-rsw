@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { ALL_ROLES, CreateAddressDto, UpdateAddressDto, JwtPayload } from '@asko/shared';
+import { ALL_ROLES, STAFF_ROLES, CreateAddressDto, UpdateAddressDto, JwtPayload, Role } from '@asko/shared';
 import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
 import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'common/dto/responses';
 
@@ -47,6 +47,14 @@ export class AddressController {
     @Get()
     async findAll(@JwtAuthUser() user: JwtPayload) {
         const result = await this.deviceClient.findUserAddresses(user.sub);
+        return result.addresses;
+    }
+
+    @ApiOkResponse({ type: AddressListResponseDto })
+    @RequiredRoles(...STAFF_ROLES, Role.DEALER)
+    @Get('user/:userId')
+    async findByUser(@Param('userId') userId: string) {
+        const result = await this.deviceClient.findUserAddresses(userId);
         return result.addresses;
     }
 

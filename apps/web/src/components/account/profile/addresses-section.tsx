@@ -345,7 +345,7 @@ export function AddressesSection() {
           </div>
           <FormField label="Комментарий">
             <Input
-              placeholder="Доп. информация для курьера"
+              placeholder="Доп. информация"
               value={form.comment}
               onChange={updateField('comment')}
               autoComplete="off"

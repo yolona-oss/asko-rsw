@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Navigation, Map as MapIcon, X } from 'lucide-react';
+import { Navigation, Map as MapIcon, X, Star, BookOpen, PenLine } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
 import { Tooltip } from './tooltip';
@@ -28,6 +28,8 @@ function FieldLabel({ text, required }: { text: string; required?: boolean }) {
 }
 
 export interface AddressValue {
+  /** Set when an existing saved address is selected */
+  id?: string;
   city: string;
   district?: string;
   street: string;
@@ -42,6 +44,21 @@ export interface AddressValue {
   longitude?: number;
 }
 
+export interface SavedAddress {
+  id: string;
+  city: string;
+  district?: string;
+  street: string;
+  house: string;
+  building?: string;
+  apartment?: string;
+  entrance?: string;
+  floor?: string;
+  intercom?: string;
+  comment?: string;
+  isPrimary: boolean;
+}
+
 export interface AddressInputProps {
   value: AddressValue | null;
   onChange: (value: AddressValue | null) => void;
@@ -49,6 +66,10 @@ export interface AddressInputProps {
   showGeolocation?: boolean;
   label?: string;
   className?: string;
+  /** Saved addresses to show in address-book mode */
+  savedAddresses?: SavedAddress[];
+  /** Called when user clicks the star to set an address as primary */
+  onSetPrimary?: (id: string) => void;
 }
 
 interface NominatimResult {
@@ -275,6 +296,35 @@ function MapPickerModal({ initialLat, initialLon, onConfirm, onClose }: MapPicke
 
 // ── Address Input ────────────────────────────────────────────────────
 
+function formatSavedAddress(a: SavedAddress): string {
+  const parts: string[] = [];
+  if (a.city) parts.push(a.city);
+  if (a.district) parts.push(a.district);
+  if (a.street) parts.push(a.street);
+  if (a.house) parts.push(`д. ${a.house}`);
+  if (a.building) parts.push(`корп. ${a.building}`);
+  if (a.entrance) parts.push(`подъезд ${a.entrance}`);
+  if (a.floor) parts.push(`этаж ${a.floor}`);
+  if (a.apartment) parts.push(`кв. ${a.apartment}`);
+  return parts.join(', ');
+}
+
+function savedToValue(a: SavedAddress): AddressValue {
+  return {
+    id: a.id,
+    city: a.city,
+    district: a.district,
+    street: a.street,
+    house: a.house,
+    building: a.building,
+    apartment: a.apartment,
+    entrance: a.entrance,
+    floor: a.floor,
+    intercom: a.intercom,
+    comment: a.comment,
+  };
+}
+
 export function AddressInput({
   value,
   onChange,
@@ -282,7 +332,17 @@ export function AddressInput({
   showGeolocation = false,
   label = 'Адрес',
   className,
+  savedAddresses,
+  onSetPrimary,
 }: AddressInputProps) {
+  const hasSaved = savedAddresses != null && savedAddresses.length > 0;
+  const [mode, setMode] = useState<'saved' | 'manual'>(hasSaved ? 'saved' : 'manual');
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
+
+  // Sync mode when savedAddresses availability changes
+  useEffect(() => {
+    if (!hasSaved && mode === 'saved') setMode('manual');
+  }, [hasSaved, mode]);
   const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
   const [street, setStreet] = useState('');
@@ -521,10 +581,124 @@ export function AddressInput({
 
   const inputError = !!error;
 
+  const handleSelectSaved = (addr: SavedAddress) => {
+    setSelectedSavedId(addr.id);
+    onChange(savedToValue(addr));
+  };
+
+  const handleSwitchToManual = () => {
+    setMode('manual');
+    setSelectedSavedId(null);
+    // Don't clear value — keep current fields
+  };
+
+  const handleSwitchToSaved = () => {
+    setMode('saved');
+    // If there was a previously selected saved address, keep it
+  };
+
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <p className="text-sm font-bold text-text-main">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold text-text-main">{label}</p>
 
+        {/* Mode switcher — only show when saved addresses available */}
+        {hasSaved && (
+          <div className="flex items-center border border-border-light">
+            <button
+              type="button"
+              onClick={handleSwitchToSaved}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 text-xs transition-colors cursor-pointer',
+                mode === 'saved'
+                  ? 'bg-surface-secondary text-text-main font-medium'
+                  : 'text-text-sub hover:text-text-main',
+              )}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Из книги
+            </button>
+            <button
+              type="button"
+              onClick={handleSwitchToManual}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 text-xs transition-colors cursor-pointer',
+                mode === 'manual'
+                  ? 'bg-surface-secondary text-text-main font-medium'
+                  : 'text-text-sub hover:text-text-main',
+              )}
+            >
+              <PenLine className="w-3.5 h-3.5" />
+              Вручную
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Saved addresses mode */}
+      {mode === 'saved' && hasSaved && (
+        <div className="flex flex-col gap-1.5">
+          {savedAddresses!.map((addr) => {
+            const isSelected = selectedSavedId === addr.id;
+            return (
+              <div
+                key={addr.id}
+                onClick={() => handleSelectSaved(addr)}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 border cursor-pointer transition-colors',
+                  isSelected
+                    ? 'border-primary-500 bg-primary-50/50'
+                    : 'border-border-light hover:bg-surface-hover',
+                )}
+              >
+                {/* Radio indicator */}
+                <span
+                  className={cn(
+                    'flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                    isSelected ? 'border-primary-500' : 'border-border',
+                  )}
+                >
+                  {isSelected && <span className="w-2 h-2 rounded-full bg-primary-500" />}
+                </span>
+
+                {/* Address text */}
+                <span className="flex-1 min-w-0 text-sm text-text-main truncate">
+                  {formatSavedAddress(addr)}
+                </span>
+
+                {/* Primary star */}
+                {onSetPrimary && (
+                  <Tooltip
+                    content={addr.isPrimary ? 'Основной адрес' : 'Сделать основным'}
+                    placement="top"
+                    delay={300}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!addr.isPrimary) onSetPrimary(addr.id);
+                      }}
+                      className={cn(
+                        'flex-shrink-0 p-1 transition-colors cursor-pointer',
+                        addr.isPrimary
+                          ? 'text-warning'
+                          : 'text-text-sub/30 hover:text-warning',
+                      )}
+                    >
+                      <Star className={cn('w-4 h-4', addr.isPrimary && 'fill-current')} />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Manual input mode */}
+      {mode === 'manual' && (
+        <>
       {showGeolocation && (
         <div className="flex items-center gap-2 flex-wrap">
           <Button
@@ -717,7 +891,6 @@ export function AddressInput({
         </p>
       )}
 
-      {error && <p className="text-sm text-brand-red">{error}</p>}
       {geoError && <p className="text-sm text-brand-red">{geoError}</p>}
 
       {mapOpen && (
@@ -728,6 +901,10 @@ export function AddressInput({
           onClose={() => setMapOpen(false)}
         />
       )}
+        </>
+      )}
+
+      {error && <p className="text-sm text-brand-red">{error}</p>}
     </div>
   );
 }

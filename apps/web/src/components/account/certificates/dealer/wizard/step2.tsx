@@ -1,6 +1,8 @@
 'use client';
 
-import { FormField, Select, SerialNumberInput, AddressInput, SkeletonBlock, type AddressValue } from '@asko/ui';
+import { useState, useEffect } from 'react';
+import { FormField, Select, SerialNumberInput, AddressInput, SkeletonBlock, type AddressValue, type SavedAddress } from '@asko/ui';
+import { addressApi } from '@/lib/api/address';
 import type { FormData, CatalogDevice } from './types';
 
 export function Step2({
@@ -14,6 +16,32 @@ export function Step2({
   catalog: CatalogDevice[];
   loadingCatalog: boolean;
 }) {
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+
+  // Fetch the client user's addresses when clientUserId is set
+  useEffect(() => {
+    if (!data.clientUserId) {
+      setSavedAddresses([]);
+      return;
+    }
+    addressApi.listForUser(data.clientUserId).then(({ data: addrs }) => {
+      setSavedAddresses(addrs.map((a) => ({
+        id: a.id,
+        city: a.city,
+        district: a.district,
+        street: a.street,
+        house: a.house,
+        building: a.building,
+        apartment: a.apartment,
+        entrance: a.entrance,
+        floor: a.floor,
+        intercom: a.intercom,
+        comment: a.comment,
+        isPrimary: a.isPrimary,
+      })));
+    }).catch(() => { });
+  }, [data.clientUserId]);
+
   return (
     <div className="flex flex-col gap-6">
       <FormField label="Устройство из каталога" variant="bold">
@@ -74,6 +102,7 @@ export function Step2({
         }}
         label="Адрес установки"
         className="max-w-[500px]"
+        savedAddresses={savedAddresses}
       />
     </div>
   );

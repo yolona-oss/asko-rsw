@@ -23,6 +23,10 @@ export const addressApi = {
     return api.get<IAddressBook[]>('/address');
   },
 
+  listForUser(userId: string) {
+    return api.get<IAddressBook[]>(`/address/user/${userId}`);
+  },
+
   get(id: string) {
     return api.get<IAddressBook>(`/address/${id}`);
   },
