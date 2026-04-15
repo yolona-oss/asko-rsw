@@ -104,6 +104,24 @@ message LogoutRequest {
     string refresh_token = 1;
 }
 
+message SessionRecord {
+    string id = 1;
+    string device_info = 2;
+    string ip_address = 3;
+    string created_at = 4;
+    string expires_at = 5;
+    bool is_current = 6;
+}
+
+message ListSessionsResponse {
+    repeated SessionRecord sessions = 1;
+}
+
+message RevokeSessionRequest {
+    string user_id = 1;
+    string session_id = 2;
+}
+
 message DevSwitchRequest {
     string refresh_token = 1;
     string device_info = 2;
@@ -458,6 +476,9 @@ service UserService {
     rpc ResendConfirmation(ResendConfirmationRequest) returns (ResendConfirmationResponse);
     rpc RefreshAccessToken(RefreshTokenRequest) returns (RefreshTokenResponse);
     rpc Logout(LogoutRequest) returns (EmptyResponse);
+    rpc MasterLogout(UserIdRequest) returns (EmptyResponse);
+    rpc ListSessions(UserIdRequest) returns (ListSessionsResponse);
+    rpc RevokeSession(RevokeSessionRequest) returns (EmptyResponse);
     rpc DevSwitchAccount(DevSwitchRequest) returns (AuthSessionResponse);
     rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
     rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);

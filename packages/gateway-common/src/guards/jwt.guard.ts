@@ -63,13 +63,14 @@ export class JwtGuard implements CanActivate {
             const payload: JwtPayload = this.jwtService.verify(accessToken, {
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
-            request[REQUEST_USER_KEY] = payload;
 
-            // Block disabled users from all protected endpoints
+            // Block disabled users — don't attach their context
             if (payload.isActive === false) {
-                if (isOptionalAuth) return true;
+                if (isOptionalAuth) return true; // proceed as anonymous
                 throw AppErrors.forbidden('Account is disabled');
             }
+
+            request[REQUEST_USER_KEY] = payload;
 
             // No specific roles required - any authenticated user is allowed
             if (!requiredRoles) {

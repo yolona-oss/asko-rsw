@@ -14,6 +14,8 @@ import type {
     ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
+    ListSessionsResponse,
+    RevokeSessionRequest,
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
@@ -115,6 +117,18 @@ export class UserClientService implements OnModuleInit {
 
     logout(data: LogoutRequest): Promise<EmptyResponse> {
         return grpcCall(this.userService.logout(data));
+    }
+
+    masterLogout(data: UserIdRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.masterLogout(data));
+    }
+
+    listSessions(data: UserIdRequest): Promise<ListSessionsResponse> {
+        return grpcCall(this.userService.listSessions(data));
+    }
+
+    revokeSession(data: RevokeSessionRequest): Promise<EmptyResponse> {
+        return grpcCall(this.userService.revokeSession(data));
     }
 
     findUserByAccessToken(data: FindByTokenRequest): Promise<AuthUserResponse> {

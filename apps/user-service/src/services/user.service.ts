@@ -193,6 +193,30 @@ export class UserService {
     }
 
     @CreateRequestContext()
+    async listActiveSessions(userId: string, currentTokenHash?: string): Promise<Session[]> {
+        const sessions = await this.em.find(Session, {
+            user: { id: userId },
+            type: TokenType.REFRESH,
+            rotatedAt: null,
+            expiresAt: { $gt: new Date() },
+        }, { orderBy: { createdAt: 'DESC' } })
+        return sessions
+    }
+
+    @CreateRequestContext()
+    async revokeSession(userId: string, sessionId: string): Promise<void> {
+        const session = await this.em.findOne(Session, {
+            id: sessionId,
+            user: { id: userId },
+            type: TokenType.REFRESH,
+        })
+        if (!session) {
+            throw AppErrors.dbEntityNotFound('Сессия не найдена')
+        }
+        await this.em.removeAndFlush(session)
+    }
+
+    @CreateRequestContext()
     async rotateSession(oldTokenHash: string, newTokenHash: string, options: {
         deviceInfo: string;
         ipAddress: string;

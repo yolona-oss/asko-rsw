@@ -102,6 +102,24 @@ export interface LogoutRequest {
     refreshToken: string;
 }
 
+export interface SessionRecord {
+    id: string;
+    deviceInfo: string;
+    ipAddress: string;
+    createdAt: string;
+    expiresAt: string;
+    isCurrent: boolean;
+}
+
+export interface ListSessionsResponse {
+    sessions: SessionRecord[];
+}
+
+export interface RevokeSessionRequest {
+    userId: string;
+    sessionId: string;
+}
+
 export interface DevSwitchRequest {
     refreshToken: string;
     deviceInfo: string;
@@ -461,6 +479,9 @@ export interface UserServiceClient {
     resendConfirmation(request: ResendConfirmationRequest): Observable<ResendConfirmationResponse>;
     refreshAccessToken(request: RefreshTokenRequest): Observable<RefreshTokenResponse>;
     logout(request: LogoutRequest): Observable<EmptyResponse>;
+    masterLogout(request: UserIdRequest): Observable<EmptyResponse>;
+    listSessions(request: UserIdRequest): Observable<ListSessionsResponse>;
+    revokeSession(request: RevokeSessionRequest): Observable<EmptyResponse>;
     devSwitchAccount(request: DevSwitchRequest): Observable<AuthSessionResponse>;
     findUserByAccessToken(request: FindByTokenRequest): Observable<AuthUserResponse>;
     forgotPassword(request: ForgotPasswordRequest): Observable<ForgotPasswordResponse>;

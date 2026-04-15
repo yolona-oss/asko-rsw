@@ -1,5 +1,6 @@
-import { Res, Body, Controller, Post, NotImplementedException, Req, Get, Query } from '@nestjs/common';
+import { Res, Body, Controller, Post, Req, Get, Query, Delete, Param } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express'
 
 import {
@@ -53,6 +54,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 10 } })
     @ApiResponse({ status: 201, type: AuthSessionResponseDto })
     @Post('/login')
     async login(
@@ -92,6 +94,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 5 } })
     @ApiResponse({ status: 201, type: AuthSessionResponseDto })
     @Post('/signup')
     async signup(
@@ -147,6 +150,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 3 } })
     @ApiResponse({ status: 200, type: MessageResponseDto })
     @Post('/resend-confirmation')
     async resendConfirmation(
@@ -208,11 +212,45 @@ export class AuthController {
 
     @RequiredRoles(...ALL_ROLES)
     @Post('/master-logout')
-    async logoutAll() {
-        throw new NotImplementedException()
+    async logoutAll(
+        @JwtAuthUser() user: JwtPayload,
+        @Res() response: Response,
+    ) {
+        await this.userClient.masterLogout({ id: user.id });
+
+        const expireCookieOptions = Object.assign(
+            {},
+            REFRESH_TOKEN.cookie.options,
+            { expires: new Date(1) }
+        );
+
+        return response
+            .cookie(REFRESH_TOKEN.cookie.name, "", expireCookieOptions)
+            .status(205)
+            .json({});
+    }
+
+    // ─── Sessions ─────────────────────────────────────────────────────────
+
+    @RequiredRoles(...ALL_ROLES)
+    @Get('/sessions')
+    async listSessions(@JwtAuthUser() user: JwtPayload) {
+        const result = await this.userClient.listSessions({ id: user.id });
+        return { sessions: result.sessions };
+    }
+
+    @RequiredRoles(...ALL_ROLES)
+    @Delete('/sessions/:id')
+    async revokeSession(
+        @JwtAuthUser() user: JwtPayload,
+        @Param('id') sessionId: string,
+    ) {
+        await this.userClient.revokeSession({ userId: user.id, sessionId });
+        return { message: 'Сессия завершена' };
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 10 } })
     @Get('/check-email')
     async checkEmail(@Query('email') email: string) {
         if (!email) return { available: false };
@@ -225,6 +263,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 3 } })
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/forgot-password')
     async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -281,6 +320,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 3 } })
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/resend')
     async resendMfaOtp(@Body() dto: ResendMfaOtpDto) {
@@ -363,6 +403,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle({ default: { ttl: 60_000, limit: 3 } })
     @Post('/phone-register/resend')
     async resendPhoneRegisterOtp(
         @Body() dto: ResendPhoneRegisterOtpDto,

@@ -21,6 +21,8 @@ import type {
     ResendConfirmationResponse,
     RefreshTokenRequest,
     LogoutRequest,
+    ListSessionsResponse,
+    RevokeSessionRequest,
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
@@ -261,6 +263,39 @@ export class UserGrpcController {
     async logout(data: LogoutRequest): Promise<EmptyResponse> {
         try {
             await this.authService.logout(data.refreshToken);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'MasterLogout')
+    async masterLogout(data: UserIdRequest): Promise<EmptyResponse> {
+        try {
+            await this.userService.dropTokens(data.id);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'ListSessions')
+    async listSessions(data: UserIdRequest): Promise<ListSessionsResponse> {
+        try {
+            const sessions = await this.userService.listActiveSessions(data.id);
+            return {
+                sessions: sessions.map(s => ({
+                    id: s.id,
+                    deviceInfo: s.deviceInfo,
+                    ipAddress: s.ipAddress,
+                    createdAt: s.createdAt.toISOString(),
+                    expiresAt: s.expiresAt.toISOString(),
+                    isCurrent: false,
+                })),
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'RevokeSession')
+    async revokeSession(data: RevokeSessionRequest): Promise<EmptyResponse> {
+        try {
+            await this.userService.revokeSession(data.userId, data.sessionId);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

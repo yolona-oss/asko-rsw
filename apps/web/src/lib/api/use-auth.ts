@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
 import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
+import { broadcastLogout } from './client';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 import type { IAuthSession } from './types';
 
@@ -114,6 +115,7 @@ export function useLogout() {
     mutationFn: () => authApi.logout(),
     onSettled: () => {
       dispatch(logoutAction());
+      broadcastLogout();
       queryClient.clear();
       router.push('/login');
     },
