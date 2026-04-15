@@ -6,6 +6,7 @@ import { Address } from 'entities/address.entity';
 import type { AddressValidationEvent } from 'modules/address-validation.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { resolveTimezoneFromCoords } from 'common/timezone-lookup';
 
 const MAX_RETRIES = 3;
 const RUSSIA_BOUNDS = { latMin: 41, latMax: 82, lonMin: 19, lonMax: 180 };
@@ -123,6 +124,11 @@ export class AddressValidationConsumer {
             }
             if ((address.longitude == null || address.longitude === 0) && Number.isFinite(nominatimLon)) {
                 address.longitude = nominatimLon;
+            }
+            // Refine timezone from validated coordinates
+            const effectiveLon = address.longitude ?? nominatimLon;
+            if (Number.isFinite(effectiveLon)) {
+                address.timezone = resolveTimezoneFromCoords(0, effectiveLon);
             }
             await this.em.flush();
 

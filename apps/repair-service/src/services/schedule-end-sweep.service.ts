@@ -8,6 +8,7 @@ import { Repairer } from 'entities/repairer.entity';
 import { RepairRequestService } from './repair-request.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
 import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
 
 const CONFIRMATION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -25,9 +26,6 @@ export class ScheduleEndSweepService {
     @Cron('* * * * *')
     @CreateRequestContext()
     async sweep(): Promise<void> {
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
         const activeRequests = await this.em.find(
             RepairRequest,
             {
@@ -52,8 +50,11 @@ export class ScheduleEndSweepService {
             group.requests.push(req);
         }
 
-        for (const [repairerUserId, { requests }] of byRepairer) {
+        for (const [repairerUserId, { repairer, requests }] of byRepairer) {
             try {
+                const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+                const now = new Date();
+                const { todayStart } = getLocalNow(tz);
                 await this.processRepairer(repairerUserId, requests, now, todayStart);
             } catch (e) {
                 this.logger.error(

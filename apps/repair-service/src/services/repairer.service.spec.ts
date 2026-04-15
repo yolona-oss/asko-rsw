@@ -72,6 +72,7 @@ describe('RepairerService', () => {
                 userId: 'user-1',
                 city: 'Moscow',
                 specializations: ['screens'],
+                timezone: expect.any(String),
             });
             expect(mockEm.persistAndFlush).toHaveBeenCalledWith(newRepairer);
             expect(result).toBe(newRepairer);

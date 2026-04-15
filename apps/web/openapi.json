@@ -8112,6 +8112,36 @@
         ]
       }
     },
+    "/address/user/{userId}": {
+      "get": {
+        "operationId": "AddressController_findByUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Addresses"
+        ]
+      }
+    },
     "/payment/options": {
       "get": {
         "operationId": "PaymentController_getOptions",
@@ -9960,6 +9990,9 @@
             "type": "string"
           },
           "city": {
+            "type": "string"
+          },
+          "district": {
             "type": "string"
           },
           "street": {

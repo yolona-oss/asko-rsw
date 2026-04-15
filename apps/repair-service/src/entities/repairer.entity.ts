@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 @Entity()
 export class Repairer {
-    [OptionalProps]?: 'specializations' | 'isActive' | 'completedRepairs' | 'latitude' | 'longitude' | 'lastLocationUpdate' | 'createdAt' | 'updatedAt';
+    [OptionalProps]?: 'specializations' | 'isActive' | 'completedRepairs' | 'latitude' | 'longitude' | 'timezone' | 'lastLocationUpdate' | 'createdAt' | 'updatedAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -16,6 +16,9 @@ export class Repairer {
 
     @Property({ type: 'varchar', length: 255 })
     city!: string;
+
+    @Property({ type: 'varchar', length: 50, nullable: true })
+    timezone?: string;
 
     @Property({ type: 'boolean', default: true })
     isActive: boolean = true;

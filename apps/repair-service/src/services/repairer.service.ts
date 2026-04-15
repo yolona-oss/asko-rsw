@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Repairer } from 'entities/repairer.entity';
 import { AppErrors } from 'common/error';
+import { resolveTimezone } from 'common/timezone-lookup';
 
 const REPAIRER_SORTABLE_FIELDS = ['createdAt', 'city', 'completedRepairs', 'isActive'] as const;
 
@@ -18,6 +19,7 @@ export class RepairerService {
             userId,
             city,
             specializations,
+            timezone: resolveTimezone(city),
         });
         await this.em.persistAndFlush(repairer);
         return repairer;
@@ -32,7 +34,10 @@ export class RepairerService {
         const repairer = await this.em.findOne(Repairer, { id });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
 
-        if (dto.city) repairer.city = dto.city;
+        if (dto.city) {
+            repairer.city = dto.city;
+            repairer.timezone = resolveTimezone(dto.city);
+        }
         if (dto.specializations !== undefined) repairer.specializations = dto.specializations;
         if (dto.isActive !== undefined) repairer.isActive = dto.isActive;
 
@@ -47,6 +52,7 @@ export class RepairerService {
 
         repairer.latitude = latitude;
         repairer.longitude = longitude;
+        repairer.timezone = resolveTimezone(repairer.city, longitude);
         repairer.lastLocationUpdate = new Date();
 
         await this.em.flush();

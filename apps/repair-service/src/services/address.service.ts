@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Address } from 'entities/address.entity';
 import { AppErrors } from 'common/error';
+import { resolveTimezone } from 'common/timezone-lookup';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 
 @Injectable()
@@ -42,6 +43,7 @@ export class AddressService {
             comment: dto.comment,
             latitude: dto.latitude,
             longitude: dto.longitude,
+            timezone: resolveTimezone(dto.city, dto.longitude),
             isPrimary: existing === 0,
         });
         await this.em.persistAndFlush(address);
@@ -98,8 +100,9 @@ export class AddressService {
 
         await this.em.flush();
 
-        // Re-validate if location fields changed
+        // Re-resolve timezone if location changed
         if (locationChanged) {
+            address.timezone = resolveTimezone(address.city, address.longitude);
             address.validationStatus = 'pending';
             address.validationError = undefined;
             await this.em.flush();

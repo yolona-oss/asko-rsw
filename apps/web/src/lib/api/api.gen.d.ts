@@ -3714,6 +3714,22 @@ export interface paths {
         patch: operations["AddressController_setPrimary"];
         trace?: never;
     };
+    "/address/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AddressController_findByUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payment/options": {
         parameters: {
             query?: never;
@@ -4207,6 +4223,7 @@ export interface components {
         AddressRecordDto: {
             id: string;
             city: string;
+            district?: string;
             street: string;
             house: string;
             building?: string;
@@ -10625,6 +10642,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AddressResponseDto"];
+                };
+            };
+        };
+    };
+    AddressController_findByUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressListResponseDto"];
                 };
             };
         };

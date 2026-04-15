@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 @Entity()
 export class Address {
-    [OptionalProps]?: 'district' | 'building' | 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'latitude' | 'longitude' | 'validationStatus' | 'validationError' | 'isPrimary' | 'createdAt';
+    [OptionalProps]?: 'district' | 'building' | 'apartment' | 'entrance' | 'floor' | 'intercom' | 'comment' | 'latitude' | 'longitude' | 'timezone' | 'validationStatus' | 'validationError' | 'isPrimary' | 'createdAt';
 
     @PrimaryKey()
     id: string = uuid();
@@ -46,6 +46,9 @@ export class Address {
 
     @Property({ type: 'float', nullable: true })
     longitude?: number;
+
+    @Property({ type: 'varchar', length: 50, nullable: true })
+    timezone?: string;
 
     @Property({ type: 'boolean', default: false })
     isPrimary: boolean = false;
