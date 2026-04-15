@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, ListSelect, Textarea, FormField } from '@asko/ui';
 import type { ListSelectOption } from '@asko/ui';
-import { Plus, CheckCircle2 } from 'lucide-react';
+import { Plus, CheckCircle2, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -85,6 +85,7 @@ export function CreateRequest() {
   const [selectedParts, setSelectedParts] = useState<DraftBrokenPart[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [showCreateCert, setShowCreateCert] = useState(false);
@@ -317,12 +318,14 @@ export function CreateRequest() {
 
       // 2. Upload images directly to repair request
       for (const img of images) {
+        setUploadingImageId(img.id);
         try {
           await fileUploadApi.uploadRepairRequestImage(img.file, request.id);
         } catch {
           // continue even if single image fails
         }
       }
+      setUploadingImageId(null);
 
       // 3. Redirect to the request status page (user pays from there)
       router.push(`/account/requests/${request.id}`);
@@ -534,6 +537,11 @@ export function CreateRequest() {
                     alt=""
                     className="w-full h-full object-cover"
                   />
+                  {uploadingImageId === img.id && (
+                    <div className="absolute inset-0 bg-dark-deep/40 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(img.id)}

@@ -11,7 +11,7 @@ import {
   Textarea,
 } from '@asko/ui';
 import type { BadgeVariant } from '@asko/ui';
-import { FileText, Image as ImageIcon, Plus, Trash2, X } from 'lucide-react';
+import { FileText, Image as ImageIcon, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { getImageUrl as getFileImageUrl, openDocument } from '@/lib/file-url';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
@@ -81,6 +81,7 @@ export function BrokenPartModal({
   const [documents, setDocuments] = useState<BrokenPartDocument[]>([]);
   const [currentPart, setCurrentPart] = useState<BrokenPart | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [error, setError] = useState('');
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -165,24 +166,32 @@ export function BrokenPartModal({
   const handleUploadImage = useCallback(
     async (file: File) => {
       if (!currentPart) return;
+      setUploadingImage(true);
       try {
         const { data } = await fileUploadApi.uploadBrokenPartImage(file, currentPart.id);
         setImages((prev) => [...prev, { id: data.image.id }]);
       } catch {
         setError('Не удалось загрузить изображение');
+      } finally {
+        setUploadingImage(false);
       }
     },
     [currentPart],
   );
 
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
   const handleUploadDocument = useCallback(
     async (file: File) => {
       if (!currentPart) return;
+      setUploadingDoc(true);
       try {
         const { data } = await fileUploadApi.uploadBrokenPartDocument(file, currentPart.id);
         setDocuments((prev) => [...prev, data.document]);
       } catch {
         setError('Не удалось загрузить документ');
+      } finally {
+        setUploadingDoc(false);
       }
     },
     [currentPart],
@@ -342,6 +351,11 @@ export function BrokenPartModal({
                     </div>
                   );
                 })}
+                {uploadingImage && (
+                  <div className="w-16 h-16 border border-border-light flex items-center justify-center bg-surface-secondary">
+                    <Loader2 className="w-5 h-5 text-text-sub animate-spin" />
+                  </div>
+                )}
                 <input
                   ref={imageInputRef}
                   type="file"
@@ -369,7 +383,7 @@ export function BrokenPartModal({
               {documents.length === 0 && (
                 <p className="text-xs text-text-sub">Нет документов</p>
               )}
-              {documents.length > 0 && (
+              {(documents.length > 0 || uploadingDoc) && (
                 <ul className="flex flex-col gap-1">
                   {documents.map((doc) => (
                     <li
@@ -398,6 +412,12 @@ export function BrokenPartModal({
                       </button>
                     </li>
                   ))}
+                  {uploadingDoc && (
+                    <li className="flex items-center gap-2 px-2 py-1.5 border border-border-light bg-surface-secondary">
+                      <Loader2 className="w-4 h-4 text-text-sub animate-spin flex-shrink-0" />
+                      <span className="text-sm text-text-sub">Загрузка...</span>
+                    </li>
+                  )}
                 </ul>
               )}
               <input
@@ -414,7 +434,8 @@ export function BrokenPartModal({
               <button
                 type="button"
                 onClick={() => docInputRef.current?.click()}
-                className="text-sm text-brand-red hover:underline cursor-pointer text-left"
+                disabled={uploadingDoc}
+                className="text-sm text-brand-red hover:underline cursor-pointer text-left disabled:opacity-50"
               >
                 + Загрузить документ (PDF или изображение)
               </button>

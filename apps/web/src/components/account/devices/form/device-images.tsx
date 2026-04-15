@@ -4,6 +4,7 @@ import { getImageUrl } from '@/lib/image-url';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { Loader2 } from 'lucide-react';
 import { Button, CropModal } from '@asko/ui';
 import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
@@ -145,6 +146,11 @@ export function DeviceImages({ deviceId }: { deviceId: string }) {
               </button>
             </div>
           ))}
+          {uploading && (
+            <div className="border border-border-light overflow-hidden flex items-center justify-center aspect-square bg-surface-secondary">
+              <Loader2 className="w-6 h-6 text-text-sub animate-spin" />
+            </div>
+          )}
         </div>
       )}
 

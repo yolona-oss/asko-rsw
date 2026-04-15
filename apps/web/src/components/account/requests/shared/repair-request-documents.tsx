@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { FileText, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { openDocument } from '@/lib/file-url';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import type { RepairRequestDocument } from './broken-parts/types';
@@ -73,7 +73,7 @@ export function RepairRequestDocuments({
       {documents.length === 0 && !readOnly && (
         <p className="text-sm text-text-sub">Нет документов</p>
       )}
-      {documents.length > 0 && (
+      {(documents.length > 0 || uploading) && (
         <ul className="flex flex-col gap-1">
           {documents.map((doc) => (
             <li
@@ -104,6 +104,12 @@ export function RepairRequestDocuments({
               )}
             </li>
           ))}
+          {uploading && (
+            <li className="flex items-center gap-2 px-3 py-2 border border-border-light bg-surface-secondary">
+              <Loader2 className="w-4 h-4 text-text-sub animate-spin flex-shrink-0" />
+              <span className="text-sm text-text-sub">Загрузка...</span>
+            </li>
+          )}
         </ul>
       )}
       {!readOnly && (

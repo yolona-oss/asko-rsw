@@ -184,14 +184,21 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
                 </div>
               </div>
             )}
+            {sending && (
+              <div className="absolute inset-0 bg-dark-deep/40 flex items-center justify-center rounded-lg">
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
             {/* Remove button */}
-            <button
-              type="button"
-              onClick={clearAttachment}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-dark text-text-on-dark text-xs cursor-pointer hover:bg-brand-red transition-colors"
-            >
-              &times;
-            </button>
+            {!sending && (
+              <button
+                type="button"
+                onClick={clearAttachment}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-dark text-text-on-dark text-xs cursor-pointer hover:bg-brand-red transition-colors"
+              >
+                &times;
+              </button>
+            )}
           </div>
         </div>
       )}
