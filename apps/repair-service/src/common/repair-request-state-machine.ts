@@ -15,7 +15,7 @@ export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
     [S.EN_ROUTE]: { from: [S.ACCEPTED] },
     [S.IN_PROGRESS]: { from: [S.EN_ROUTE] },
     [S.PAUSED]: { from: [S.ACCEPTED, S.EN_ROUTE, S.IN_PROGRESS] },
-    [S.AWAITING_COMPLETION]: { from: [S.IN_PROGRESS, S.EN_ROUTE] },
+    [S.AWAITING_COMPLETION]: { from: [S.IN_PROGRESS] },
     [S.COMPLETED]: { from: [S.IN_PROGRESS, S.AWAITING_COMPLETION] },
     [S.REFUND_REQUESTED]: { notFrom: [S.COMPLETED, S.REFUNDED] },
     [S.REFUNDED]: { from: [S.REFUND_REQUESTED] },

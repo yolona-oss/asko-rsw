@@ -103,12 +103,12 @@ describe('repair-request-state-machine', () => {
         });
 
         // --- AWAITING_COMPLETION ---
-        it.each([S.IN_PROGRESS, S.EN_ROUTE] as RepairRequestStatus[])('allows %s -> AWAITING_COMPLETION', (from) => {
-            expect(canTransition(from, S.AWAITING_COMPLETION)).toBe(true);
+        it('allows IN_PROGRESS -> AWAITING_COMPLETION', () => {
+            expect(canTransition(S.IN_PROGRESS, S.AWAITING_COMPLETION)).toBe(true);
         });
 
         it.each(
-            ALL_STATUSES.filter(s => s !== S.IN_PROGRESS && s !== S.EN_ROUTE),
+            ALL_STATUSES.filter(s => s !== S.IN_PROGRESS),
         )('rejects %s -> AWAITING_COMPLETION', (from) => {
             expect(canTransition(from, S.AWAITING_COMPLETION)).toBe(false);
         });
