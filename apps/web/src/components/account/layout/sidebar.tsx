@@ -30,7 +30,7 @@ export function AccountSidebar() {
   const { collapsed, toggleCollapsed } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
-  const { items: menu, parent: submenuParent } = useResolvedMenu(fullMenu, pathname);
+  const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
@@ -71,7 +71,7 @@ export function AccountSidebar() {
           <>
             {submenuParent && (
               <GuardedLink
-                href={submenuParent.href}
+                href={backHref}
                 title={collapsed ? submenuParent.label : undefined}
                 className={`flex items-center gap-3 py-2 text-sm tracking-[-0.01em] text-text-sub hover:text-text-main transition-colors mb-1 ${
                   collapsed ? 'justify-center px-0' : 'px-2'
@@ -200,7 +200,7 @@ export function MobileSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
-  const { items: menu, parent: submenuParent } = useResolvedMenu(fullMenu, pathname);
+  const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
@@ -349,7 +349,7 @@ export function MobileSidebar() {
         <nav className="flex flex-col gap-1 px-4">
           {submenuParent && (
             <GuardedLink
-              href={submenuParent.href}
+              href={backHref}
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 px-2 py-3 text-base tracking-[-0.01em] text-text-sub mb-1"
             >

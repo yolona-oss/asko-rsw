@@ -144,7 +144,6 @@ export function AddDeviceForm({
         <AddressInput
           value={addressValue}
           onChange={setAddressValue}
-          showGeolocation
           label="Адрес установки"
           savedAddresses={savedAddresses}
           onSetPrimary={handleSetPrimary}

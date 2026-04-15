@@ -63,7 +63,6 @@ export interface AddressInputProps {
   value: AddressValue | null;
   onChange: (value: AddressValue | null) => void;
   error?: string;
-  showGeolocation?: boolean;
   label?: string;
   className?: string;
   /** Saved addresses to show in address-book mode */
@@ -329,7 +328,6 @@ export function AddressInput({
   value,
   onChange,
   error,
-  showGeolocation = false,
   label = 'Адрес',
   className,
   savedAddresses,
@@ -699,31 +697,29 @@ export function AddressInput({
       {/* Manual input mode */}
       {mode === 'manual' && (
         <>
-      {showGeolocation && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={detectAddress}
-            disabled={detecting}
-            className="inline-flex items-center gap-1.5"
-          >
-            <Navigation className="w-4 h-4" />
-            {detecting ? 'Определение...' : 'Авто'}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={() => setMapOpen(true)}
-            className="inline-flex items-center gap-1.5"
-          >
-            <MapIcon className="w-4 h-4" />
-            На карте
-          </Button>
-        </div>
-      )}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
+          onClick={detectAddress}
+          disabled={detecting}
+          className="inline-flex items-center gap-1.5"
+        >
+          <Navigation className="w-4 h-4" />
+          {detecting ? 'Определение...' : 'Авто'}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
+          onClick={() => setMapOpen(true)}
+          className="inline-flex items-center gap-1.5"
+        >
+          <MapIcon className="w-4 h-4" />
+          На карте
+        </Button>
+      </div>
 
       {/* City */}
       <div ref={cityWrapRef} className="relative w-full">

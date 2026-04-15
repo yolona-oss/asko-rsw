@@ -126,7 +126,6 @@ export function EditUserDeviceForm({
           key={device?.id}
           value={addressValue}
           onChange={setAddressValue}
-          showGeolocation
           label="Адрес установки"
           savedAddresses={savedAddresses}
           onSetPrimary={handleSetPrimary}
