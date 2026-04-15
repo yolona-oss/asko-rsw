@@ -8,6 +8,7 @@ import { Dialog } from '@asko/ui';
 import { ArrowLeft, LogOut, PanelLeftClose, PanelLeft, Sun, Moon } from 'lucide-react';
 import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
+import { GuardedLink } from './guarded-link';
 import { useTheme } from '@/lib/theme';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
@@ -66,7 +67,7 @@ export function AccountSidebar() {
           menu.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link
+              <GuardedLink
                 key={item.href}
                 href={item.href}
                 title={collapsed ? item.label : undefined}
@@ -83,7 +84,7 @@ export function AccountSidebar() {
                   <SkeletonCircle className="w-5 h-5" />
                 )}
                 {!collapsed && <span className="truncate">{item.label}</span>}
-              </Link>
+              </GuardedLink>
             );
           })
         )}
@@ -324,7 +325,7 @@ export function MobileSidebar() {
           {menu.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link
+              <GuardedLink
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
@@ -334,7 +335,7 @@ export function MobileSidebar() {
               >
                 <MenuIcon icon={item.icon} active={isActive} />
                 {item.label}
-              </Link>
+              </GuardedLink>
             );
           })}
         </nav>

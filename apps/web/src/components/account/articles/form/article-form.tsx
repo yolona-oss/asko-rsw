@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, FormField, SkeletonCard } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
+import { useFormGuard } from '@/hooks/use-form-guard';
+import { EditedMark } from '@/components/shared/edited-mark';
 import { articleApi } from '@/lib/api/article';
 import type { ArticleFormProps } from './types';
 import { RichTextEditor, plainTextToLexicalState, type RichTextEditorHandle } from './rich-text-editor';
@@ -29,6 +31,15 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   const editorRef = useRef<RichTextEditorHandle>(null);
   const contentReady = useRef(false);
 
+  // --- Form guard ---
+  type FormSnapshot = { title: string; slug: string; description: string; content: Record<string, any> | undefined; tagsInput: string };
+  const formState = useMemo<FormSnapshot>(
+    () => ({ title, slug, description, content, tagsInput }),
+    [title, slug, description, content, tagsInput],
+  );
+  const initialStateRef = useRef<FormSnapshot | undefined>(undefined);
+  const [initialState, setInitialState] = useState<FormSnapshot | undefined>(undefined);
+
   useEffect(() => {
     if (!initialArticleId) return;
     (async () => {
@@ -39,12 +50,24 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         setDescription(article.description ?? '');
         setTagsInput((article.tags ?? []).join(', '));
 
-        // Load rich content or convert legacy plain text
+        let loadedContent: Record<string, any> | undefined;
         if (article.content) {
+          loadedContent = article.content;
           setContent(article.content);
         } else if (article.text) {
-          setContent(plainTextToLexicalState(article.text));
+          loadedContent = plainTextToLexicalState(article.text);
+          setContent(loadedContent);
         }
+
+        const snap: FormSnapshot = {
+          title: article.title ?? '',
+          slug: article.slug ?? '',
+          description: article.description ?? '',
+          content: loadedContent,
+          tagsInput: (article.tags ?? []).join(', '),
+        };
+        initialStateRef.current = snap;
+        setInitialState(snap);
       } catch {
         setError('Не удалось загрузить статью');
       } finally {
@@ -52,6 +75,45 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
       }
     })();
   }, [initialArticleId]);
+
+  // For new articles, set initial state immediately
+  useEffect(() => {
+    if (!initialArticleId && !initialStateRef.current) {
+      const snap: FormSnapshot = { title: '', slug: '', description: '', content: undefined, tagsInput: '' };
+      initialStateRef.current = snap;
+      setInitialState(snap);
+    }
+  }, [initialArticleId]);
+
+  const handleApplyDraft = useCallback((data: FormSnapshot) => {
+    setTitle(data.title);
+    setSlug(data.slug);
+    setDescription(data.description);
+    setContent(data.content);
+    setTagsInput(data.tagsInput);
+  }, []);
+
+  // Pure save — no navigation, used by both guard dialog and save button
+  const saveArticle = useCallback(async () => {
+    setError('');
+    const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean);
+    const payload = currentArticleId
+      ? { title, slug: slug || undefined, content, tags, description: description || undefined }
+      : { title, content, tags, description: description || undefined };
+    if (currentArticleId) {
+      await articleApi.update(currentArticleId, payload);
+    } else {
+      await articleApi.create(payload);
+    }
+  }, [title, slug, description, content, tagsInput, currentArticleId]);
+
+  const guard = useFormGuard<FormSnapshot>({
+    storageKey: `article-${currentArticleId || 'new'}`,
+    currentState: formState,
+    initialState,
+    onSave: saveArticle,
+    onApplyDraft: handleApplyDraft,
+  });
 
   const handleContentChange = (json: Record<string, any>) => {
     contentReady.current = true;
@@ -76,22 +138,10 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   };
 
   const handleSave = async () => {
-    setError('');
     setSaving(true);
     try {
-      const tags = tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-      const data = currentArticleId
-        ? { title, slug: slug || undefined, content, tags, description: description || undefined }
-        : { title, content, tags, description: description || undefined };
-
-      if (currentArticleId) {
-        await articleApi.update(currentArticleId, data);
-      } else {
-        await articleApi.create(data);
-      }
+      await saveArticle();
+      guard.markSaved();
       router.push('/account/articles');
     } catch {
       setError(isEdit ? 'Ошибка при обновлении статьи' : 'Ошибка при создании статьи');
@@ -111,7 +161,10 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
   return (
     <PageContainer>
       <PageHeader>
-        {isEdit ? 'Редактирование статьи' : 'Новая статья'}
+        <span className="flex items-center gap-3">
+          {isEdit ? 'Редактирование статьи' : 'Новая статья'}
+          <EditedMark visible={guard.dirty} />
+        </span>
       </PageHeader>
 
       <div className="max-w-[900px] flex flex-col gap-6">
@@ -183,7 +236,7 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
         <div className="flex items-center gap-4 mt-2">
-          <Button variant="secondary" onClick={() => router.push('/account/articles')}>
+          <Button variant="secondary" onClick={() => guard.guardedNavigate('/account/articles')}>
             Отмена
           </Button>
           <Button
@@ -198,6 +251,9 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
           </Button>
         </div>
       </div>
+
+      {guard.guardDialog}
+      {guard.draftDialog}
     </PageContainer>
   );
 }

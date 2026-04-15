@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Modal, Button, Input, FormField, Select } from '@asko/ui';
+import { useFormGuard } from '@/hooks/use-form-guard';
+import { EditedMark } from '@/components/shared/edited-mark';
 import type { DevicePartFull } from '@/lib/api/types';
 import type { PartFormData } from './types';
 import { EMPTY_PART_FORM } from './types';
@@ -22,7 +24,7 @@ interface Category {
 export function PartFormModal({ open, onClose, onSubmit, editPart, devices, categories, submitting }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: PartFormData) => void;
+  onSubmit: (data: PartFormData) => Promise<void>;
   editPart?: DevicePartFull | null;
   devices: Device[];
   categories: Category[];
@@ -50,7 +52,7 @@ function PartFormContent({ editPart, devices, categories, submitting, onClose, o
   categories: Category[];
   submitting: boolean;
   onClose: () => void;
-  onSubmit: (data: PartFormData) => void;
+  onSubmit: (data: PartFormData) => Promise<void>;
 }) {
   const [form, setForm] = useState<PartFormData>(() => {
     if (editPart) {
@@ -67,22 +69,57 @@ function PartFormContent({ editPart, devices, categories, submitting, onClose, o
     return EMPTY_PART_FORM;
   });
 
+  const initialState = useMemo<PartFormData>(() => {
+    if (editPart) {
+      return {
+        deviceId: editPart.deviceId ?? '',
+        categoryId: editPart.categoryId ?? '',
+        group: editPart.group ?? '',
+        name: editPart.name ?? '',
+        partNumber: editPart.partNumber ?? '',
+        price: editPart.price != null && editPart.price > 0 ? String(editPart.price) : '',
+        description: editPart.description ?? '',
+      };
+    }
+    return EMPTY_PART_FORM;
+  }, [editPart]);
+
+  const handleApplyDraft = useCallback((data: PartFormData) => {
+    setForm(data);
+  }, []);
+
+  const savePart = useCallback(async () => {
+    if (!form.name.trim()) return;
+    await onSubmit(form);
+  }, [form, onSubmit]);
+
+  const guard = useFormGuard<PartFormData>({
+    storageKey: `part-${editPart?.id || 'new'}`,
+    currentState: form,
+    initialState,
+    onSave: savePart,
+    onApplyDraft: handleApplyDraft,
+  });
+
   const updateForm = (partial: Partial<PartFormData>) => {
     setForm((prev) => ({ ...prev, ...partial }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return;
-    onSubmit(form);
+    await onSubmit(form);
+    guard.markSaved();
   };
 
   const isEdit = !!editPart;
   const isGeneric = !form.deviceId;
+  const guardedOnClose = guard.guardedClose(onClose);
 
   return (
     <>
-      <h2 className="text-base font-medium text-text-main mb-4">
+      <h2 className="text-base font-medium text-text-main mb-4 flex items-center gap-3">
         {isEdit ? 'Редактировать запчасть' : 'Добавить запчасть'}
+        <EditedMark visible={guard.dirty} />
       </h2>
 
       <div className="flex flex-col gap-3">
@@ -161,7 +198,7 @@ function PartFormContent({ editPart, devices, categories, submitting, onClose, o
       </div>
 
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
+        <Button variant="secondary" size="sm" onClick={guardedOnClose} disabled={submitting}>
           Отмена
         </Button>
         <Button
@@ -173,6 +210,9 @@ function PartFormContent({ editPart, devices, categories, submitting, onClose, o
           {submitting ? 'Сохранение...' : isEdit ? 'Сохранить' : 'Добавить'}
         </Button>
       </div>
+
+      {guard.guardDialog}
+      {guard.draftDialog}
     </>
   );
 }

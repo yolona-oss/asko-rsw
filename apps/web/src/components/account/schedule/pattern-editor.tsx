@@ -5,6 +5,7 @@ import { Reorder } from 'framer-motion';
 import { Button, Input, FormField, Select, SkeletonCard } from '@asko/ui';
 import { todayISO, formatIsoDate } from '@asko/shared/client';
 import { scheduleApi } from '@/lib/api/schedule';
+import { useFormGuard } from '@/hooks/use-form-guard';
 import type { PatternRecord, PatternSlot } from './types';
 import { PRESETS } from './constants';
 import { SlotBlock, type SlotEntry } from './slot-block';
@@ -89,6 +90,27 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
 
   const [patternStatus, setPatternStatus] = useState<string | null>(null);
   const [hasPendingEdit, setHasPendingEdit] = useState(false);
+
+  type PatternSnapshot = { entries: SlotEntry[]; defaultStart: string; defaultEnd: string; anchorDate: string };
+  const patternState = useMemo<PatternSnapshot>(
+    () => ({ entries, defaultStart, defaultEnd, anchorDate }),
+    [entries, defaultStart, defaultEnd, anchorDate],
+  );
+
+  const guard = useFormGuard<PatternSnapshot>({
+    storageKey: `pattern-${userId}`,
+    currentState: patternState,
+    initialState: initialSnapshot ?? undefined,
+    externalDirty: dirty,
+    onSave: async () => { await apply(); },
+    onApplyDraft: (data) => {
+      setEntries(data.entries);
+      setDefaultStart(data.defaultStart);
+      setDefaultEnd(data.defaultEnd);
+      setAnchorDate(data.anchorDate);
+      setDirty(true);
+    },
+  });
 
   const applySnapshot = useCallback(
     (pattern: PatternRecord | null) => {
@@ -213,6 +235,7 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         slots,
       });
       await load();
+      guard.markSaved();
       onChanged?.();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Ошибка сохранения');
@@ -351,6 +374,9 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
         onClose={() => setPopoverIndex(null)}
         onSave={(slot) => popoverIndex !== null && handleSlotSave(popoverIndex, slot)}
       />
+
+      {guard.guardDialog}
+      {guard.draftDialog}
     </div>
   );
 }

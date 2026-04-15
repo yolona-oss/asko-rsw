@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Modal, Button, FormField, Input, Select, Textarea } from '@asko/ui';
 import { todayISO, combineDateTimeMs } from '@asko/shared/client';
 import { scheduleApi } from '@/lib/api/schedule';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
+import { useFormGuard } from '@/hooks/use-form-guard';
+import { EditedMark } from '@/components/shared/edited-mark';
 import { TYPE_LABELS } from './constants';
 
 interface ScheduleFormModalProps {
@@ -24,6 +26,8 @@ function isSameDay(a: string, b: string): boolean {
   return a.slice(0, 10) === b.slice(0, 10);
 }
 
+type ScheduleSnapshot = { type: string; dateFrom: string; dateTo: string; startTime: string; endTime: string; note: string };
+
 export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUserId, defaultType, lockType }: ScheduleFormModalProps) {
   const { user } = useAccount();
   const role = user ? primaryRole(user) : 'user';
@@ -38,33 +42,54 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const [initialState, setInitialState] = useState<ScheduleSnapshot | undefined>(undefined);
+
   useEffect(() => {
     if (open && editItem) {
-      setType(editItem.type ?? 'vacation');
-      setDateFrom((editItem.dateFrom ?? '').slice(0, 10));
-      setDateTo((editItem.dateTo ?? '').slice(0, 10));
-      setStartTime(editItem.startTime ?? '09:00');
-      setEndTime(editItem.endTime ?? '18:00');
-      setNote(editItem.note ?? '');
+      const snap: ScheduleSnapshot = {
+        type: editItem.type ?? 'vacation',
+        dateFrom: (editItem.dateFrom ?? '').slice(0, 10),
+        dateTo: (editItem.dateTo ?? '').slice(0, 10),
+        startTime: editItem.startTime ?? '09:00',
+        endTime: editItem.endTime ?? '18:00',
+        note: editItem.note ?? '',
+      };
+      setType(snap.type);
+      setDateFrom(snap.dateFrom);
+      setDateTo(snap.dateTo);
+      setStartTime(snap.startTime);
+      setEndTime(snap.endTime);
+      setNote(snap.note);
+      setInitialState(snap);
     } else if (open) {
       const today = todayISO();
-      setType(defaultType ?? 'vacation');
-      setDateFrom(today);
-      setDateTo(today);
-      setStartTime('09:00');
-      setEndTime('18:00');
-      setNote('');
+      const snap: ScheduleSnapshot = {
+        type: defaultType ?? 'vacation',
+        dateFrom: today,
+        dateTo: today,
+        startTime: '09:00',
+        endTime: '18:00',
+        note: '',
+      };
+      setType(snap.type);
+      setDateFrom(snap.dateFrom);
+      setDateTo(snap.dateTo);
+      setStartTime(snap.startTime);
+      setEndTime(snap.endTime);
+      setNote(snap.note);
+      setInitialState(snap);
     }
     setError('');
   }, [open, editItem, defaultType]);
 
+  const formState = useMemo<ScheduleSnapshot>(
+    () => ({ type, dateFrom, dateTo, startTime, endTime, note }),
+    [type, dateFrom, dateTo, startTime, endTime, note],
+  );
+
   const isRange = type === 'vacation' || type === 'sick_leave';
   const needsTimes = type === 'overtime' || type === 'extra_day';
 
-  // Permission checks:
-  // - Non-admins can only edit VACATION before its start.
-  // - EXTRA_DAY can only be edited on its own calendar day (even by admins).
-  // - Non-admins cannot create non-vacation types here.
   const editBlockedReason = useMemo<string | null>(() => {
     if (!isEdit || !editItem) return null;
     const itemType = editItem.type as string;
@@ -90,83 +115,87 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
     return null;
   }, [isEdit]);
 
-  const handleSubmit = async () => {
+  const handleApplyDraft = useCallback((data: ScheduleSnapshot) => {
+    setType(data.type);
+    setDateFrom(data.dateFrom);
+    setDateTo(data.dateTo);
+    setStartTime(data.startTime);
+    setEndTime(data.endTime);
+    setNote(data.note);
+  }, []);
+
+  const saveSchedule = useCallback(async () => {
     setError('');
-    if (editBlockedReason) {
-      setError(editBlockedReason);
-      return;
-    }
-    if (createBlockedReason) {
-      setError(createBlockedReason);
-      return;
-    }
-    if (!dateFrom) {
-      setError('Укажите дату');
-      return;
-    }
+    if (editBlockedReason) throw new Error(editBlockedReason);
+    if (createBlockedReason) throw new Error(createBlockedReason);
+    if (!dateFrom) throw new Error('Укажите дату');
+
     const effectiveTo = isRange ? (dateTo || dateFrom) : dateFrom;
-    if (new Date(effectiveTo) < new Date(dateFrom)) {
-      setError('Дата окончания раньше даты начала');
-      return;
-    }
+    if (new Date(effectiveTo) < new Date(dateFrom)) throw new Error('Дата окончания раньше даты начала');
+
     const effectiveStart = needsTimes ? startTime : '00:00';
     if (type === 'extra_day') {
-      if (dateFrom !== todayISO()) {
-        setError('Дополнительный день можно создать только на сегодня');
-        return;
-      }
+      if (dateFrom !== todayISO()) throw new Error('Дополнительный день можно создать только на сегодня');
     } else if (type === 'overtime') {
-      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00')) {
-        setError('Нельзя создавать запись за прошедший день');
-        return;
-      }
+      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00'))
+        throw new Error('Нельзя создавать запись за прошедший день');
     } else if (type === 'sick_leave') {
-      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00')) {
-        setError('Нельзя создавать запись за прошедший день');
-        return;
-      }
+      if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00'))
+        throw new Error('Нельзя создавать запись за прошедший день');
       const diffDays = (new Date(effectiveTo).getTime() - new Date(dateFrom).getTime()) / 86_400_000;
-      if (diffDays > 30) {
-        setError('Максимальная длительность больничного — 30 дней');
-        return;
-      }
+      if (diffDays > 30) throw new Error('Максимальная длительность больничного — 30 дней');
     } else if (combineDateTimeMs(dateFrom, effectiveStart) < Date.now()) {
-      setError('Нельзя создавать запись в прошлом');
-      return;
+      throw new Error('Нельзя создавать запись в прошлом');
     }
+
+    if (isEdit) {
+      await scheduleApi.update(editItem.id, {
+        type,
+        dateFrom,
+        dateTo: effectiveTo,
+        startTime: needsTimes ? startTime : '00:00',
+        endTime: needsTimes ? endTime : '23:59',
+        note: note || null,
+      });
+    } else if (type === 'vacation') {
+      await scheduleApi.createVacation({
+        userId: editItem?.userId ?? defaultUserId ?? '',
+        dateFrom,
+        dateTo: effectiveTo,
+        note: note || undefined,
+      });
+    } else {
+      await scheduleApi.create({
+        userId: editItem?.userId ?? defaultUserId ?? '',
+        type,
+        dateFrom,
+        dateTo: effectiveTo,
+        startTime: needsTimes ? startTime : '00:00',
+        endTime: needsTimes ? endTime : '23:59',
+        note: note || undefined,
+      });
+    }
+  }, [type, dateFrom, dateTo, startTime, endTime, note, isEdit, editItem, defaultUserId, isRange, needsTimes, editBlockedReason, createBlockedReason]);
+
+  const guard = useFormGuard<ScheduleSnapshot>({
+    storageKey: `schedule-${editItem?.id || 'new'}`,
+    currentState: formState,
+    initialState,
+    onSave: saveSchedule,
+    onApplyDraft: handleApplyDraft,
+  });
+
+  const guardedOnClose = guard.guardedClose(onClose);
+
+  const handleSubmit = async () => {
     setSaving(true);
     try {
-      if (isEdit) {
-        await scheduleApi.update(editItem.id, {
-          type,
-          dateFrom,
-          dateTo: effectiveTo,
-          startTime: needsTimes ? startTime : '00:00',
-          endTime: needsTimes ? endTime : '23:59',
-          note: note || null,
-        });
-      } else if (type === 'vacation') {
-        await scheduleApi.createVacation({
-          userId: editItem?.userId ?? defaultUserId ?? '',
-          dateFrom,
-          dateTo: effectiveTo,
-          note: note || undefined,
-        });
-      } else {
-        await scheduleApi.create({
-          userId: editItem?.userId ?? defaultUserId ?? '',
-          type,
-          dateFrom,
-          dateTo: effectiveTo,
-          startTime: needsTimes ? startTime : '00:00',
-          endTime: needsTimes ? endTime : '23:59',
-          note: note || undefined,
-        });
-      }
+      await saveSchedule();
+      guard.markSaved();
       onSaved();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Ошибка сохранения');
+      setError(err?.response?.data?.message ?? err?.message ?? 'Ошибка сохранения');
     } finally {
       setSaving(false);
     }
@@ -177,9 +206,10 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
   const submitDisabled = saving || !!editBlockedReason || !!createBlockedReason;
 
   return (
-    <Modal open={open} onClose={onClose} className="w-full max-w-md p-4 sm:p-6">
-      <h2 className="text-base sm:text-lg font-medium text-text-main mb-4">
+    <Modal open={open} onClose={guardedOnClose} className="w-full max-w-md p-4 sm:p-6">
+      <h2 className="text-base sm:text-lg font-medium text-text-main mb-4 flex items-center gap-3">
         {isEdit ? 'Редактировать запись' : 'Создать запись'}
+        <EditedMark visible={guard.dirty} />
       </h2>
       <div className="flex flex-col gap-3 sm:gap-4">
         {editBlockedReason && (
@@ -250,11 +280,14 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
           <Button variant="primary" onClick={handleSubmit} disabled={submitDisabled} className="flex-1 sm:flex-none">
             {saving ? 'Сохранение...' : isEdit ? 'Сохранить' : 'Создать'}
           </Button>
-          <Button variant="secondary" onClick={onClose} className="flex-1 sm:flex-none">
+          <Button variant="secondary" onClick={guardedOnClose} className="flex-1 sm:flex-none">
             Отмена
           </Button>
         </div>
       </div>
+
+      {guard.guardDialog}
+      {guard.draftDialog}
     </Modal>
   );
 }

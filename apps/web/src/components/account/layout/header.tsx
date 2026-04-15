@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Dialog, DropdownMenu, SkeletonCircle } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
+import { useFormGuardContext } from './form-guard-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
 import { User, LogOut, Monitor, Sun, Moon } from 'lucide-react';
@@ -16,18 +17,33 @@ import { SessionsDialog } from './sessions-dialog';
 export function AccountHeader() {
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const { getGuard } = useFormGuardContext();
   const { theme, toggle: toggleTheme } = useTheme();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);
   const router = useRouter();
   const logout = useLogout();
 
+  const guardedPush = useCallback(
+    (href: string) => {
+      const guard = getGuard();
+      if (guard?.dirty) {
+        guard.confirmLeave().then((confirmed) => {
+          if (confirmed) router.push(href);
+        });
+      } else {
+        router.push(href);
+      }
+    },
+    [getGuard, router],
+  );
+
   const avatarDropdownItems: DropdownMenuEntry[] = [
     {
       key: 'profile',
       label: 'Профиль',
       icon: <User className="w-4 h-4" />,
-      onClick: () => router.push('/account/profile'),
+      onClick: () => guardedPush('/account/profile'),
     },
     {
       key: 'devices',

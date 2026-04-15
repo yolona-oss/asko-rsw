@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from '../layout/provider';
 import { useAuth } from '@/lib/api/use-auth';
@@ -8,6 +8,8 @@ import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
+import { useFormGuard } from '@/hooks/use-form-guard';
+import { EditedMark } from '@/components/shared/edited-mark';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from '@/components/skeleton';
 import { AvatarSection } from './avatar-section';
@@ -54,6 +56,14 @@ export function ProfileForm() {
   const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
   const [chatSearchable, setChatSearchable] = useState(false);
 
+  // Form guard
+  type ProfileSnapshot = { fullName: string; email: string; phone: string; chatAcceptConversations: boolean; chatSearchable: boolean };
+  const formState = useMemo<ProfileSnapshot>(
+    () => ({ fullName, email, phone, chatAcceptConversations, chatSearchable }),
+    [fullName, email, phone, chatAcceptConversations, chatSearchable],
+  );
+  const [initialState, setInitialState] = useState<ProfileSnapshot | undefined>(undefined);
+
   // Avatar state
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
@@ -81,16 +91,41 @@ export function ProfileForm() {
         originalPhoneVerified.current = data.phoneVerified ?? false;
         // Load chat preferences from structured settings
         const settings = (data as any).settings;
+        const chatAccept = settings?.chatAcceptConversations ?? false;
+        const chatSearch = settings?.chatSearchable ?? false;
         if (settings) {
-          setChatAcceptConversations(settings.chatAcceptConversations ?? false);
-          setChatSearchable(settings.chatSearchable ?? false);
+          setChatAcceptConversations(chatAccept);
+          setChatSearchable(chatSearch);
         }
+        setInitialState({
+          fullName: [data.lastName, data.firstName, (data as any).middleName].filter(Boolean).join(' '),
+          email: data.email ?? '',
+          phone: data.phone ?? '',
+          chatAcceptConversations: chatAccept,
+          chatSearchable: chatSearch,
+        });
       }),
       usersApi.getAvatarUrl(authUser.id).then((url) => {
         if (url) setAvatarPreview(url);
       }),
     ]).finally(() => setLoaded(true));
   }
+
+  const handleApplyDraft = useCallback((data: ProfileSnapshot) => {
+    setFullName(data.fullName);
+    setEmail(data.email);
+    setPhone(data.phone);
+    setChatAcceptConversations(data.chatAcceptConversations);
+    setChatSearchable(data.chatSearchable);
+  }, []);
+
+  const guard = useFormGuard<ProfileSnapshot>({
+    storageKey: 'profile',
+    currentState: formState,
+    initialState,
+    onSave: async () => { await handleSave(); },
+    onApplyDraft: handleApplyDraft,
+  });
 
   // ---- Avatar handling ----
 
@@ -189,6 +224,8 @@ export function ProfileForm() {
         type: 'success',
         text: messages.length > 0 ? messages.join('. ') : 'Профиль сохранён',
       });
+      guard.markSaved();
+      setInitialState({ fullName, email, phone, chatAcceptConversations, chatSearchable });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
@@ -331,6 +368,7 @@ export function ProfileForm() {
           <Button onClick={handleSave} disabled={saving} size="lg">
             {saving ? 'Сохранение...' : 'Сохранить'}
           </Button>
+          <EditedMark visible={guard.dirty} />
           {message && (
             <p className={`text-sm ${message.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
               {message.text}
@@ -338,6 +376,9 @@ export function ProfileForm() {
           )}
         </div>
       </div>
+
+      {guard.guardDialog}
+      {guard.draftDialog}
 
       {/* Crop modal */}
       {cropImageSrc && (
