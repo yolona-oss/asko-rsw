@@ -95,6 +95,8 @@ message ListPaymentsRequest {
     string search = 5;
     string sort_by = 6;
     string sort_order = 7;
+    string date_from = 8;
+    string date_to = 9;
 }
 
 message ListUserPaymentsRequest {
@@ -108,6 +110,8 @@ message ListUserPaymentsRequest {
 
 message GetPaymentStatsRequest {
     string userId = 1;
+    string dateFrom = 2;
+    string dateTo = 3;
 }
 
 // ─── Responses ──────────────────────────────────────────────────────────

@@ -315,7 +315,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           >
             <ClipboardCopy className="w-4 h-4" />
           </button>
-          {request.statusTimestamps && request.statusTimestamps.length > 1 && (
+          {Array.isArray(request.statusTimestamps) && request.statusTimestamps.length > 1 && (
             <>
               <span className="text-border-light">|</span>
               <button

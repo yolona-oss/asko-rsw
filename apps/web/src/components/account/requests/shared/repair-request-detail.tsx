@@ -58,7 +58,7 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       <DetailRow label="Дата создания" value={item.createdAt ? fmt(item.createdAt) : '-'} />
 
       {/* Status history */}
-      {item.statusTimestamps && (item.statusTimestamps as { status: string; timestamp: string }[]).length > 0 && (
+      {Array.isArray(item.statusTimestamps) && item.statusTimestamps.length > 0 && (
         <>
           <DetailRow
             label="История статусов"

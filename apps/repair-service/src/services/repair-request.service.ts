@@ -918,13 +918,18 @@ export class RepairRequestService {
     // ── Queries ──
 
     @CreateRequestContext()
-    async findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByUser(userId: string, pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = { userId };
         if (pagination.status) where.status = pagination.status.includes(",") ? { $in: pagination.status.split(",") } : pagination.status;
         if (pagination.search) {
             where.$or = [
                 { description: { $ilike: `%${pagination.search}%` } },
             ];
+        }
+        if (pagination.dateFrom || pagination.dateTo) {
+            where.createdAt = {};
+            if (pagination.dateFrom) where.createdAt.$gte = new Date(pagination.dateFrom);
+            if (pagination.dateTo) where.createdAt.$lte = new Date(pagination.dateTo);
         }
 
         const [data, total] = await this.em.findAndCount(
@@ -982,7 +987,7 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
+    async findByRepairerFiltered(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }, status?: string, search?: string): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) return { data: [], total: 0 };
 
@@ -992,6 +997,11 @@ export class RepairRequestService {
             where.$or = [
                 { description: { $ilike: `%${search}%` } },
             ];
+        }
+        if (pagination.dateFrom || pagination.dateTo) {
+            where.createdAt = {};
+            if (pagination.dateFrom) where.createdAt.$gte = new Date(pagination.dateFrom);
+            if (pagination.dateTo) where.createdAt.$lte = new Date(pagination.dateTo);
         }
 
         const [data, total] = await this.em.findAndCount(
@@ -1026,13 +1036,18 @@ export class RepairRequestService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const where: Record<string, any> = {};
         if (pagination.status) where.status = pagination.status.includes(",") ? { $in: pagination.status.split(",") } : pagination.status;
         if (pagination.search) {
             where.$or = [
                 { description: { $ilike: `%${pagination.search}%` } },
             ];
+        }
+        if (pagination.dateFrom || pagination.dateTo) {
+            where.createdAt = {};
+            if (pagination.dateFrom) where.createdAt.$gte = new Date(pagination.dateFrom);
+            if (pagination.dateTo) where.createdAt.$lte = new Date(pagination.dateTo);
         }
 
         const [data, total] = await this.em.findAndCount(

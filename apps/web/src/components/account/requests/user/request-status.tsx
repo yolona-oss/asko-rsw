@@ -182,7 +182,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <h2 className="text-2xl lg:text-[28px] font-medium tracking-[-0.01em] text-text-main">
           {statusTitle}
         </h2>
-        <span className="text-sm text-text-sub">{formatDate(request.statusTimestamps?.slice().reverse().find(e => e.status === request.status)?.timestamp ?? request.updatedAt)}</span>
+        <span className="text-sm text-text-sub">{formatDate((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find(e => e.status === request.status)?.timestamp ?? request.updatedAt)}</span>
         {request.certificateValid === false && !(!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active') && (
           <div className="flex flex-col gap-1 mt-2">
             <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
@@ -259,7 +259,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       )}
 
       {/* Status timeline (inline, collapsible) */}
-      {request.statusTimestamps && request.statusTimestamps.length > 1 && (
+      {Array.isArray(request.statusTimestamps) && request.statusTimestamps.length > 1 && (
         <div className="max-w-lg mt-4">
           <StatusHistoryInline
             statusTimestamps={request.statusTimestamps}

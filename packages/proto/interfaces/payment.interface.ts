@@ -72,6 +72,8 @@ export interface ListPaymentsRequest {
     search: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface ListUserPaymentsRequest {
@@ -85,6 +87,8 @@ export interface ListUserPaymentsRequest {
 
 export interface GetPaymentStatsRequest {
     userId: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 // ─── Responses ──────────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ export const paymentApi = {
     return api.post<ProcessInvoiceResult>('/payment/create', data);
   },
 
-  listPayments(params?: { page?: number; limit?: number; status?: string; provider?: string; search?: string; sortBy?: string; sortOrder?: string }) {
+  listPayments(params?: { page?: number; limit?: number; status?: string; provider?: string; search?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedPayments>('/payment/list', { params });
   },
 
@@ -36,12 +36,12 @@ export const paymentApi = {
     return api.get<PaginatedPayments>('/payment/my', { params });
   },
 
-  getStats() {
-    return api.get<PaymentStatsDto>('/payment/stats');
+  getStats(params?: { dateFrom?: string; dateTo?: string }) {
+    return api.get<PaymentStatsDto>('/payment/stats', { params });
   },
 
-  getMyStats() {
-    return api.get<PaymentStatsDto>('/payment/my/stats');
+  getMyStats(params?: { dateFrom?: string; dateTo?: string }) {
+    return api.get<PaymentStatsDto>('/payment/my/stats', { params });
   },
 
   confirmCashPayment(paymentId: string, confirmCode: string, amount: number) {

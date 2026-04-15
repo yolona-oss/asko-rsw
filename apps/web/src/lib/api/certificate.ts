@@ -12,7 +12,7 @@ import type {
 import { api } from './client';
 
 export const certificateApi = {
-  getAll(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedCertificates>('/certificates', { params });
   },
 
@@ -21,7 +21,7 @@ export const certificateApi = {
     return { data: (data?.certificates ?? []) as ICertificate[] };
   },
 
-  getDealer(params?: { page?: number; limit?: number; search?: string; status?: string }) {
+  getDealer(params?: { page?: number; limit?: number; search?: string; status?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedCertificates>('/certificates/dealer', { params });
   },
 

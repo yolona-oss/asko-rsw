@@ -126,6 +126,8 @@ export class CertificateClientService implements OnModuleInit {
         search?: string;
         sortBy?: string;
         sortOrder?: string;
+        dateFrom?: string;
+        dateTo?: string;
     }, status?: string): Promise<PaginatedCertificatesResponse> {
         return grpcCall(this.certificateService.findByDealer({
             dealerId,
@@ -135,6 +137,8 @@ export class CertificateClientService implements OnModuleInit {
             status: status ?? '',
             sortBy: pagination.sortBy ?? '',
             sortOrder: pagination.sortOrder ?? '',
+            dateFrom: pagination.dateFrom ?? '',
+            dateTo: pagination.dateTo ?? '',
         }));
     }
 
@@ -145,6 +149,8 @@ export class CertificateClientService implements OnModuleInit {
         status?: string;
         sortBy?: string;
         sortOrder?: string;
+        dateFrom?: string;
+        dateTo?: string;
     }): Promise<PaginatedCertificatesResponse> {
         return grpcCall(this.certificateService.findAll({
             page: pagination.page ?? 1,
@@ -153,6 +159,8 @@ export class CertificateClientService implements OnModuleInit {
             status: pagination.status ?? '',
             sortBy: pagination.sortBy ?? '',
             sortOrder: pagination.sortOrder ?? '',
+            dateFrom: pagination.dateFrom ?? '',
+            dateTo: pagination.dateTo ?? '',
         }));
     }
 

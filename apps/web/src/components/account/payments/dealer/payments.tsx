@@ -327,7 +327,7 @@ export function DealerPayments() {
       />
 
       <WithdrawModal open={withdrawOpen} onClose={() => { setWithdrawOpen(false); fetchData(); dispatch(getMyWithdraws()); }} maxAmount={pointsBalance} />
-      <DateRangeModal open={dateModalOpen} onClose={() => setDateModalOpen(false)} range={dateRange} onApply={setDateRange} />
+      <DateRangeModal open={dateModalOpen} onClose={() => setDateModalOpen(false)} range={dateRange} onApply={(r) => { if (r) setDateRange(r); }} showAllTime={false} />
     </PageContainer>
   );
 }

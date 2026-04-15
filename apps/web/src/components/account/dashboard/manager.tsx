@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAccount } from '@/components/account/layout/provider';
 import { getGreeting, displayName } from '@/lib/account';
-import { StatCard, DonutChart, MetricComparison, ProgressBar } from '@asko/ui';
+import { StatCard, DonutChart, MetricComparison, ProgressBar, DateRangeModal, formatRangeLabel } from '@asko/ui';
+import type { DateRange } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
@@ -12,45 +13,73 @@ import { paymentApi } from '@/lib/api/payment';
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
+const DASHBOARD_PRESETS = [
+  { key: '7d', label: '7д', ms: 7 * 24 * 60 * 60 * 1000 },
+  { key: '1m', label: '1м', ms: 30 * 24 * 60 * 60 * 1000 },
+  { key: '3m', label: '3м', ms: 90 * 24 * 60 * 60 * 1000 },
+  { key: '1y', label: '1г', ms: 365 * 24 * 60 * 60 * 1000 },
+];
+
+function toDateParams(range: DateRange | null) {
+  if (!range) return {};
+  return { dateFrom: range.start.toISOString(), dateTo: range.end.toISOString() };
+}
+
 export function ManagerDashboard() {
   const { user } = useAccount();
   const greeting = getGreeting();
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<DateRange | null>(null);
+  const [rangeOpen, setRangeOpen] = useState(false);
   const [s, setS] = useState({
     reqPending: 0, reqAssigned: 0, reqInProgress: 0, reqCompleted: 0, reqTotal: 0,
     confirmedTotal: 0, refundedTotal: 0, confirmedCount: 0, refundedCount: 0,
     pendingPayments: 0,
   });
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [rp, ras, ri, rc, ra, pay, pp] = await Promise.all([
-          repairRequestApi.getAll({ limit: 1, status: 'pending' }),
-          repairRequestApi.getAll({ limit: 1, status: 'assigned' }),
-          repairRequestApi.getAll({ limit: 1, status: 'in_progress' }),
-          repairRequestApi.getAll({ limit: 1, status: 'completed' }),
-          repairRequestApi.getAll({ limit: 1 }),
-          paymentApi.getStats(),
-          paymentApi.listPayments({ limit: 1, status: 'pending' }),
-        ]);
-        setS({
-          reqPending: rp.data?.overallCount ?? 0, reqAssigned: ras.data?.overallCount ?? 0,
-          reqInProgress: ri.data?.overallCount ?? 0, reqCompleted: rc.data?.overallCount ?? 0,
-          reqTotal: ra.data?.overallCount ?? 0,
-          confirmedTotal: pay.data?.confirmedTotal ?? 0, refundedTotal: pay.data?.refundedTotal ?? 0,
-          confirmedCount: pay.data?.confirmedCount ?? 0, refundedCount: pay.data?.refundedCount ?? 0,
-          pendingPayments: pp.data?.overallCount ?? 0,
-        });
-      } catch {} finally { setLoading(false); }
-    })();
+  const fetchData = useCallback(async (r: DateRange | null) => {
+    setLoading(true);
+    try {
+      const dp = toDateParams(r);
+      const [rp, ras, ri, rc, ra, pay, pp] = await Promise.all([
+        repairRequestApi.getAll({ limit: 1, status: 'pending', ...dp }),
+        repairRequestApi.getAll({ limit: 1, status: 'assigned', ...dp }),
+        repairRequestApi.getAll({ limit: 1, status: 'in_progress', ...dp }),
+        repairRequestApi.getAll({ limit: 1, status: 'completed', ...dp }),
+        repairRequestApi.getAll({ limit: 1, ...dp }),
+        paymentApi.getStats(dp),
+        paymentApi.listPayments({ limit: 1, status: 'pending', ...dp }),
+      ]);
+      setS({
+        reqPending: rp.data?.overallCount ?? 0, reqAssigned: ras.data?.overallCount ?? 0,
+        reqInProgress: ri.data?.overallCount ?? 0, reqCompleted: rc.data?.overallCount ?? 0,
+        reqTotal: ra.data?.overallCount ?? 0,
+        confirmedTotal: pay.data?.confirmedTotal ?? 0, refundedTotal: pay.data?.refundedTotal ?? 0,
+        confirmedCount: pay.data?.confirmedCount ?? 0, refundedCount: pay.data?.refundedCount ?? 0,
+        pendingPayments: pp.data?.overallCount ?? 0,
+      });
+    } catch {} finally { setLoading(false); }
   }, []);
+
+  useEffect(() => { fetchData(range); }, [fetchData, range]);
+
+  const handleRangeApply = (r: DateRange | null) => setRange(r);
 
   const d = (v: number) => loading ? '-' : v;
 
   return (
     <PageContainer>
       <PageHeader size="large">{greeting},<br />{user && displayName(user)}!</PageHeader>
+
+      {/* Date range selector */}
+      <button
+        type="button"
+        onClick={() => setRangeOpen(true)}
+        className="text-text-sub text-sm hover:text-text-main transition-colors cursor-pointer text-left"
+      >
+        {formatRangeLabel(range)}
+      </button>
+      <DateRangeModal open={rangeOpen} onClose={() => setRangeOpen(false)} range={range} onApply={handleRangeApply} presets={DASHBOARD_PRESETS} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/account/requests"><StatCard size="compact" title="Всего заявок" value={d(s.reqTotal)} className="hover:border-text-main transition-colors h-full" /></Link>

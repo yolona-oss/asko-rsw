@@ -476,6 +476,8 @@ export interface CertFindByDealerRequest {
     status: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface CertFindAllRequest {
@@ -485,6 +487,8 @@ export interface CertFindAllRequest {
     status: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface CertValidateRequest {
@@ -1065,6 +1069,8 @@ export interface RepairFindByUserRequest {
     status: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface RepairFindByRepairerRequest {
@@ -1083,6 +1089,8 @@ export interface RepairFindByRepairerFilteredRequest {
     search: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface RepairFindActiveByRepairerRequest {
@@ -1096,6 +1104,8 @@ export interface RepairFindAllRequest {
     status: string;
     sortBy: string;
     sortOrder: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 export interface RepairCheckActiveForDeviceRequest {

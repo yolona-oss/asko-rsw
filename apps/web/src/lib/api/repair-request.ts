@@ -20,15 +20,15 @@ import { api } from './client';
 
 export const repairRequestApi = {
   // List / Get
-  getAll(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) {
+  getAll(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests', { params });
   },
 
-  getMy(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string }) {
+  getMy(params?: { page?: number; limit?: number; search?: string; status?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests/my', { params });
   },
 
-  getAssigned(params?: { page?: number; limit?: number; status?: string; search?: string; sortBy?: string; sortOrder?: string }) {
+  getAssigned(params?: { page?: number; limit?: number; status?: string; search?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
     return api.get<PaginatedRepairRequests>('/repair-requests/assigned', { params });
   },
 

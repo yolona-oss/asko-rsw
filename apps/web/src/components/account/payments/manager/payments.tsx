@@ -299,7 +299,8 @@ export function ManagerPayments() {
         open={dateModalOpen}
         onClose={() => setDateModalOpen(false)}
         range={dateRange}
-        onApply={setDateRange}
+        onApply={(r) => { if (r) setDateRange(r); }}
+        showAllTime={false}
       />
     </PageContainer>
   );

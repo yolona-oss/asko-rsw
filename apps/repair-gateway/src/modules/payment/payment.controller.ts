@@ -99,9 +99,11 @@ export class PaymentController {
         @Query('search') search?: string,
         @Query('sortBy') sortBy?: string,
         @Query('sortOrder') sortOrder?: string,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
     ) {
         const result = await this.paymentService.listPayments(
-            { status, provider },
+            { status, provider, dateFrom, dateTo },
             { page, limit, search, sortBy, sortOrder },
         );
         result.data = result.data ?? [];
@@ -112,8 +114,12 @@ export class PaymentController {
     @ApiOkResponse({ type: PaymentStatsResponseDto })
     @RequiredRoles(...ALL_ROLES)
     @Get('my/stats')
-    async getMyStats(@JwtAuthUser() user: JwtPayload) {
-        return this.paymentService.getPaymentStats(user.sub);
+    async getMyStats(
+        @JwtAuthUser() user: JwtPayload,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
+    ) {
+        return this.paymentService.getPaymentStats(user.sub, dateFrom, dateTo);
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
@@ -137,7 +143,10 @@ export class PaymentController {
     @ApiOkResponse({ type: PaymentStatsResponseDto })
     @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
     @Get('stats')
-    async getStats() {
-        return this.paymentService.getPaymentStats();
+    async getStats(
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
+    ) {
+        return this.paymentService.getPaymentStats(undefined, dateFrom, dateTo);
     }
 }

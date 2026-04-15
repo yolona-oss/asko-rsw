@@ -467,13 +467,18 @@ export class CertificateService {
     }
 
     @CreateRequestContext()
-    async findByDealer(dealerId: string, pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
+    async findByDealer(dealerId: string, pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = { dealer: dealerId };
         if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
         if (pagination.search) {
             where.$or = [
                 { certificateNumber: { $ilike: `%${pagination.search}%` } },
             ];
+        }
+        if (pagination.dateFrom || pagination.dateTo) {
+            where.createdAt = {};
+            if (pagination.dateFrom) where.createdAt.$gte = new Date(pagination.dateFrom);
+            if (pagination.dateTo) where.createdAt.$lte = new Date(pagination.dateTo);
         }
 
         const limit = pagination.limit ?? 20;
@@ -493,13 +498,18 @@ export class CertificateService {
     }
 
     @CreateRequestContext()
-    async findAll(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
+    async findAll(pagination: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }, status?: string): Promise<{ data: Certificate[]; total: number }> {
         const where: Record<string, any> = {};
         if (status) where.status = status.includes(",") ? { $in: status.split(",") } : status;
         if (pagination.search) {
             where.$or = [
                 { certificateNumber: { $ilike: `%${pagination.search}%` } },
             ];
+        }
+        if (pagination.dateFrom || pagination.dateTo) {
+            where.createdAt = {};
+            if (pagination.dateFrom) where.createdAt.$gte = new Date(pagination.dateFrom);
+            if (pagination.dateTo) where.createdAt.$lte = new Date(pagination.dateTo);
         }
 
         const limit = pagination.limit ?? 20;

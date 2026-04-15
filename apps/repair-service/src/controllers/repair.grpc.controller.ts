@@ -651,6 +651,8 @@ export class RepairGrpcController {
                 limit: data.limit,
                 search: data.search || undefined,
                 status: data.status || undefined,
+                dateFrom: data.dateFrom || undefined,
+                dateTo: data.dateTo || undefined,
             });
             return {
                 data: result.data.map(requestToRecord),
@@ -682,7 +684,7 @@ export class RepairGrpcController {
         try {
             const result = await this.repairRequestService.findByRepairerFiltered(
                 data.repairerUserId,
-                { page: data.page, limit: data.limit },
+                { page: data.page, limit: data.limit, dateFrom: data.dateFrom || undefined, dateTo: data.dateTo || undefined },
                 data.status || undefined,
                 data.search || undefined,
             );
@@ -727,6 +729,8 @@ export class RepairGrpcController {
                 limit: data.limit,
                 search: data.search || undefined,
                 status: data.status || undefined,
+                dateFrom: data.dateFrom || undefined,
+                dateTo: data.dateTo || undefined,
             });
             return {
                 data: result.data.map(requestToRecord),

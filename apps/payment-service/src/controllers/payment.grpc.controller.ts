@@ -176,7 +176,7 @@ export class PaymentGrpcController {
     async listPayments(data: ListPaymentsRequest) {
         try {
             const result = await this.paymentService.listPayments(
-                { status: data.status || undefined, provider: data.provider || undefined },
+                { status: data.status || undefined, provider: data.provider || undefined, dateFrom: data.dateFrom || undefined, dateTo: data.dateTo || undefined },
                 { page: data.page, limit: data.limit, search: data.search || undefined, sortBy: data.sortBy || undefined, sortOrder: (data.sortOrder || undefined) as 'asc' | 'desc' | undefined },
             );
             return {
@@ -208,7 +208,7 @@ export class PaymentGrpcController {
     @GrpcMethod('PaymentService', 'GetPaymentStats')
     async getPaymentStats(data: GetPaymentStatsRequest) {
         try {
-            return await this.paymentService.getPaymentStats(data.userId || undefined);
+            return await this.paymentService.getPaymentStats(data.userId || undefined, data.dateFrom || undefined, data.dateTo || undefined);
         } catch (e) { throw toGrpcError(e); }
     }
 }

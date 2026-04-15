@@ -20,6 +20,14 @@ export class PaginationDto {
     @IsOptional()
     @IsIn(['asc', 'desc'])
     sortOrder?: 'asc' | 'desc';
+
+    @IsOptional()
+    @IsString()
+    dateFrom?: string;
+
+    @IsOptional()
+    @IsString()
+    dateTo?: string;
 }
 
 export class PaginatedResponseDto<T> {

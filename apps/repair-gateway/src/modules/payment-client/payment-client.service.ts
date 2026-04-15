@@ -147,6 +147,8 @@ export class PaymentClientService implements OnModuleInit {
     listPayments(params: {
         status?: string;
         provider?: string;
+        dateFrom?: string;
+        dateTo?: string;
     }, pagination: {
         page?: number;
         limit?: number;
@@ -162,6 +164,8 @@ export class PaymentClientService implements OnModuleInit {
             search: pagination.search ?? '',
             sortBy: pagination.sortBy ?? '',
             sortOrder: pagination.sortOrder ?? '',
+            dateFrom: params.dateFrom ?? '',
+            dateTo: params.dateTo ?? '',
         }));
     }
 
@@ -183,9 +187,11 @@ export class PaymentClientService implements OnModuleInit {
         }));
     }
 
-    getPaymentStats(userId?: string): Promise<PaymentStatsResponse> {
+    getPaymentStats(userId?: string, dateFrom?: string, dateTo?: string): Promise<PaymentStatsResponse> {
         return grpcCall(this.paymentService.getPaymentStats({
             userId: userId ?? '',
+            dateFrom: dateFrom ?? '',
+            dateTo: dateTo ?? '',
         }));
     }
 }

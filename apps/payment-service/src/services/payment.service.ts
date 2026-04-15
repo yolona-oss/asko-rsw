@@ -680,10 +680,17 @@ export class PaymentService {
     async listPayments(params: {
         status?: string;
         provider?: string;
+        dateFrom?: string;
+        dateTo?: string;
     }, pagination: PaginationDto & { sortBy?: string; sortOrder?: string }): Promise<PaginatedResponseDto<PaymentEntity>> {
         const where: FilterQuery<PaymentEntity> = {};
         if (params.status) where.status = params.status.includes(",") ? { $in: params.status.split(",") } as any : params.status as PaymentStatus;
         if (params.provider) where.provider = params.provider;
+        if (params.dateFrom || params.dateTo) {
+            where.createdAt = {} as any;
+            if (params.dateFrom) (where.createdAt as any).$gte = new Date(params.dateFrom);
+            if (params.dateTo) (where.createdAt as any).$lte = new Date(params.dateTo);
+        }
 
         const orderBy: Record<string, 'ASC' | 'DESC'> = pagination.sortBy && (PAYMENT_SORTABLE_FIELDS as readonly string[]).includes(pagination.sortBy)
             ? { [pagination.sortBy]: pagination.sortOrder === 'asc' ? 'ASC' : 'DESC' }
@@ -727,7 +734,7 @@ export class PaymentService {
 
     /** Get payment statistics */
     @CreateRequestContext()
-    async getPaymentStats(userId?: string) {
+    async getPaymentStats(userId?: string, dateFrom?: string, dateTo?: string) {
         const knex = this.em.getKnex();
         const qb = knex('payment')
             .select(
@@ -738,6 +745,8 @@ export class PaymentService {
             );
 
         if (userId) qb.where('user_id', userId);
+        if (dateFrom) qb.where('created_at', '>=', new Date(dateFrom));
+        if (dateTo) qb.where('created_at', '<=', new Date(dateTo));
 
         const row = await qb.first();
         return {

@@ -10,12 +10,16 @@ import { DEFAULT_RANGE_PRESETS, toInputDate } from './utils';
 export interface DateRangeModalProps {
   open: boolean;
   onClose: () => void;
-  range: DateRange;
-  onApply: (range: DateRange) => void;
+  /** Current range, or null for "all time" */
+  range: DateRange | null;
+  /** Called with a DateRange or null (all time) */
+  onApply: (range: DateRange | null) => void;
   /** Override default presets */
   presets?: RangePreset[];
   /** Modal title (default: "Период") */
   title?: string;
+  /** Show "Все время" button (default: true) */
+  showAllTime?: boolean;
 }
 
 export function DateRangeModal({
@@ -25,6 +29,7 @@ export function DateRangeModal({
   onApply,
   presets = DEFAULT_RANGE_PRESETS,
   title = 'Период',
+  showAllTime = true,
 }: DateRangeModalProps) {
   return (
     <Modal open={open} onClose={onClose}>
@@ -35,6 +40,7 @@ export function DateRangeModal({
           onClose={onClose}
           presets={presets}
           title={title}
+          showAllTime={showAllTime}
         />
       )}
     </Modal>
@@ -47,16 +53,18 @@ function DateRangeForm({
   onClose,
   presets,
   title,
+  showAllTime,
 }: {
-  range: DateRange;
-  onApply: (range: DateRange) => void;
+  range: DateRange | null;
+  onApply: (range: DateRange | null) => void;
   onClose: () => void;
   presets: RangePreset[];
   title: string;
+  showAllTime: boolean;
 }) {
-  const [startStr, setStartStr] = useState(() => toInputDate(range.start));
-  const [endStr, setEndStr] = useState(() => toInputDate(range.end));
-  const [activePreset, setActivePreset] = useState<string | null>('1m');
+  const [startStr, setStartStr] = useState(() => range ? toInputDate(range.start) : '');
+  const [endStr, setEndStr] = useState(() => range ? toInputDate(range.end) : '');
+  const [activePreset, setActivePreset] = useState<string | null>(range ? null : 'all');
 
   const handlePreset = (preset: RangePreset) => {
     const end = new Date();
@@ -66,7 +74,18 @@ function DateRangeForm({
     setActivePreset(preset.key);
   };
 
+  const handleAllTime = () => {
+    setStartStr('');
+    setEndStr('');
+    setActivePreset('all');
+  };
+
   const handleApply = () => {
+    if (activePreset === 'all') {
+      onApply(null);
+      onClose();
+      return;
+    }
     const start = new Date(startStr);
     const end = new Date(endStr);
     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end) {
@@ -87,6 +106,19 @@ function DateRangeForm({
 
       {/* Presets */}
       <div className="flex flex-wrap gap-2">
+        {showAllTime && (
+          <button
+            type="button"
+            onClick={handleAllTime}
+            className={`px-3 py-1.5 text-sm border transition-colors cursor-pointer ${
+              activePreset === 'all'
+                ? 'border-brand-red bg-brand-red/5 text-brand-red font-medium'
+                : 'border-border-light text-text-main hover:border-text-sub'
+            }`}
+          >
+            Все
+          </button>
+        )}
         {presets.map((p) => (
           <button
             key={p.key}

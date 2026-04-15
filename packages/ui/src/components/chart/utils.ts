@@ -6,7 +6,8 @@ export function defaultRange(daysBack: number = 30): DateRange {
   return { start, end };
 }
 
-export function formatRangeLabel(range: DateRange): string {
+export function formatRangeLabel(range: DateRange | null): string {
+  if (!range) return 'Все время';
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
   const startStr = range.start.toLocaleDateString('ru-RU', opts);
   const endStr = range.end.toLocaleDateString('ru-RU', { ...opts, year: 'numeric' });
