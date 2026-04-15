@@ -53,6 +53,10 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/accept`);
   },
 
+  depart(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/depart`);
+  },
+
   start(requestId: string) {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/start`);
   },

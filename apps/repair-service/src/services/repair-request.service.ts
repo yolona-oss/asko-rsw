@@ -52,42 +52,56 @@ export class RepairRequestService {
         return undefined;
     }
 
-    private deriveWorkPeriod(request: RepairRequest): { workStart: Date; workEnd: Date } | null {
-        const ts = request.statusTimestamps;
-        const startIso = this.lastTimestampFor(ts, RepairRequestStatus.IN_PROGRESS);
-        if (!startIso) return null;
+    private static readonly ACTIVE_WORK_STATUSES = new Set<string>([
+        RepairRequestStatus.EN_ROUTE,
+        RepairRequestStatus.IN_PROGRESS,
+    ]);
 
-        const endIso = this.lastTimestampFor(ts, RepairRequestStatus.COMPLETED)
-            || this.lastTimestampFor(ts, RepairRequestStatus.PAUSED)
-            || this.lastTimestampFor(ts, RepairRequestStatus.AWAITING_COMPLETION);
-        if (!endIso) return null;
+    /**
+     * Walk the full statusTimestamps array and sum up all active work time
+     * (EN_ROUTE + IN_PROGRESS periods, excluding PAUSED and everything else).
+     * Returns total active minutes, or null if no active work was done.
+     */
+    private computeActiveWorkMinutes(request: RepairRequest): number | null {
+        const entries = request.statusTimestamps;
+        if (!entries.length) return null;
 
-        const workStart = new Date(startIso);
-        const workEnd = new Date(endIso);
-        if (workEnd <= workStart) return null;
-        return { workStart, workEnd };
+        let totalMs = 0;
+        let activeStart: Date | null = null;
+
+        for (const entry of entries) {
+            const isActive = RepairRequestService.ACTIVE_WORK_STATUSES.has(entry.status);
+            const ts = new Date(entry.timestamp);
+
+            if (isActive && !activeStart) {
+                activeStart = ts;
+            } else if (!isActive && activeStart) {
+                totalMs += ts.getTime() - activeStart.getTime();
+                activeStart = null;
+            }
+        }
+
+        const totalMinutes = Math.round(totalMs / 60_000);
+        return totalMinutes > 0 ? totalMinutes : null;
     }
 
+    /**
+     * Record overtime as total active work time on this request.
+     * Called once at any terminal status (completed, refused, cancelled, refunded).
+     */
     private async recordScheduleEntries(repairerUserId: string, request: RepairRequest): Promise<void> {
-        const period = this.deriveWorkPeriod(request);
-        if (!period) return;
+        const totalMinutes = this.computeActiveWorkMinutes(request);
+        if (!totalMinutes) return;
+        const startTime = '00:00';
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        const endTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-        const { workStart, workEnd } = period;
-        const workDate = new Date(workEnd.getFullYear(), workEnd.getMonth(), workEnd.getDate());
+        const terminalIso = this.lastTimestampFor(request.statusTimestamps, request.status);
+        const workDate = terminalIso ? new Date(terminalIso) : new Date();
+        const dateOnly = new Date(workDate.getFullYear(), workDate.getMonth(), workDate.getDate());
 
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, workEnd);
-        if (!slot) return;
-
-        if (slot.work) {
-            const endTime = workEnd.toTimeString().slice(0, 5);
-            if (endTime > slot.endTime) {
-                await this.scheduleService.recordOvertime(repairerUserId, workDate, slot.endTime, endTime, request.id);
-            }
-        } else {
-            const startTime = workStart.toTimeString().slice(0, 5);
-            const endTime = workEnd.toTimeString().slice(0, 5);
-            await this.scheduleService.recordExtraDay(repairerUserId, workDate, startTime, endTime, request.id);
-        }
+        await this.scheduleService.recordOvertime(repairerUserId, dateOnly, startTime, endTime, request.id);
     }
 
     /** User creates a repair request */
@@ -255,7 +269,7 @@ export class RepairRequestService {
     /** Manager approves refund */
     @CreateRequestContext()
     async approveRefund(requestId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertTransition(request.status, RepairRequestStatus.REFUNDED);
 
@@ -267,6 +281,13 @@ export class RepairRequestService {
 
         // Refund via payment-service RabbitMQ (fire-and-forget)
         await this.paymentCommandService.emitRefundTarget('repairRequest', requestId);
+
+        const repairerEntity = typeof request.repairer === 'object' ? request.repairer : null;
+        if (repairerEntity) {
+            try {
+                await this.recordScheduleEntries(repairerEntity.userId, request);
+            } catch { /* non-critical */ }
+        }
 
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
@@ -448,12 +469,45 @@ export class RepairRequestService {
 
         await this.brokenPartService.cleanupSuggestions(requestId);
 
+        try {
+            await this.recordScheduleEntries(repairer.userId, request);
+        } catch { /* non-critical */ }
+
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
             repairId: request.id,
             userId: request.userId,
             oldStatus: RepairRequestStatus.ASSIGNED,
             newStatus: RepairRequestStatus.REFUSED,
+            timestamp: new Date(),
+        });
+
+        return request;
+    }
+
+    /** Repairer departs to the client address */
+    @CreateRequestContext()
+    async depart(repairerUserId: string, requestId: string): Promise<RepairRequest> {
+        const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
+        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        assertTransition(request.status, RepairRequestStatus.EN_ROUTE);
+
+        const oldStatus = request.status;
+        request.status = RepairRequestStatus.EN_ROUTE;
+        this.recordStatusTimestamp(request, RepairRequestStatus.EN_ROUTE);
+        await this.em.flush();
+
+        await this.repairEventService.emit({
+            type: RepairEventType.STATUS_CHANGED,
+            repairId: request.id,
+            userId: request.userId,
+            oldStatus,
+            newStatus: RepairRequestStatus.EN_ROUTE,
+            repairerUserId: repairer.userId,
+            managerId: request.managerId,
             timestamp: new Date(),
         });
 
@@ -470,6 +524,7 @@ export class RepairRequestService {
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertTransition(request.status, RepairRequestStatus.IN_PROGRESS);
 
+        const oldStatus = request.status;
         request.status = RepairRequestStatus.IN_PROGRESS;
         this.recordStatusTimestamp(request, RepairRequestStatus.IN_PROGRESS);
         await this.em.flush();
@@ -478,7 +533,7 @@ export class RepairRequestService {
             type: RepairEventType.STATUS_CHANGED,
             repairId: request.id,
             userId: request.userId,
-            oldStatus: RepairRequestStatus.ACCEPTED,
+            oldStatus,
             newStatus: RepairRequestStatus.IN_PROGRESS,
             repairerUserId: repairer.userId,
             managerId: request.managerId,
@@ -683,10 +738,6 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.PAUSED);
         await this.em.flush();
 
-        try {
-            await this.recordScheduleEntries(repairer.userId, request);
-        } catch { /* non-critical */ }
-
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
             repairId: request.id,
@@ -736,8 +787,8 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.status !== RepairRequestStatus.ACCEPTED && request.status !== RepairRequestStatus.IN_PROGRESS) {
-            throw AppErrors.badRequest('Заявка должна быть в статусе «Принята» или «В работе»');
+        if (![RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
+            throw AppErrors.badRequest('Заявка должна быть в статусе «Принята», «В пути» или «В работе»');
         }
 
         request.scheduleEndConfirmedAt = new Date();
@@ -759,12 +810,6 @@ export class RepairRequestService {
         await this.em.flush();
 
         const repairerEntity = typeof request.repairer === 'object' ? request.repairer : null;
-
-        if (repairerEntity) {
-            try {
-                await this.recordScheduleEntries(repairerEntity.userId, request);
-            } catch { /* non-critical */ }
-        }
 
         await this.repairEventService.emit({
             type: RepairEventType.SCHEDULE_AUTO_PAUSED,
@@ -841,7 +886,7 @@ export class RepairRequestService {
     /** User cancels request */
     @CreateRequestContext()
     async cancel(userId: string, requestId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
+        const request = await this.em.findOne(RepairRequest, { id: requestId, userId }, { populate: ['repairer'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertTransition(request.status, RepairRequestStatus.CANCELLED);
         const oldStatus = request.status;
@@ -850,6 +895,13 @@ export class RepairRequestService {
         await this.em.flush();
 
         await this.brokenPartService.cleanupSuggestions(requestId);
+
+        const repairerEntity = typeof request.repairer === 'object' ? request.repairer : null;
+        if (repairerEntity) {
+            try {
+                await this.recordScheduleEntries(repairerEntity.userId, request);
+            } catch { /* non-critical */ }
+        }
 
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
@@ -901,6 +953,7 @@ export class RepairRequestService {
                     $in: [
                         RepairRequestStatus.ASSIGNED,
                         RepairRequestStatus.ACCEPTED,
+                        RepairRequestStatus.EN_ROUTE,
                         RepairRequestStatus.IN_PROGRESS,
                         RepairRequestStatus.AWAITING_COMPLETION,
                     ],
@@ -1059,6 +1112,7 @@ export class RepairRequestService {
         const activeStatuses = [
             RepairRequestStatus.ASSIGNED,
             RepairRequestStatus.ACCEPTED,
+            RepairRequestStatus.EN_ROUTE,
             RepairRequestStatus.IN_PROGRESS,
             RepairRequestStatus.AWAITING_COMPLETION,
         ];

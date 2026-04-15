@@ -99,6 +99,7 @@ service RepairService {
     rpc RequestRefund(RepairRequestRefundRequest) returns (RepairRequestResponse);
     rpc AssignRepairer(RepairAssignRepairerRequest) returns (RepairRequestResponse);
     rpc AcceptRequest(RepairAcceptRequest) returns (RepairRequestResponse);
+    rpc Depart(RepairDepartRequest) returns (RepairRequestResponse);
     rpc RefuseRequest(RepairRefuseRequest) returns (RepairRequestResponse);
     rpc StartWork(RepairStartWorkRequest) returns (RepairRequestResponse);
     rpc SetPrice(RepairSetPriceRequest) returns (RepairRequestResponse);
@@ -912,6 +913,11 @@ message RepairAssignRepairerRequest {
 }
 
 message RepairAcceptRequest {
+    string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RepairDepartRequest {
     string repairerUserId = 1;
     string requestId = 2;
 }

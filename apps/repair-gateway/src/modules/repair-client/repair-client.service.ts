@@ -64,6 +64,10 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.acceptRequest({ repairerUserId, requestId }));
     }
 
+    depart(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.depart({ repairerUserId, requestId }));
+    }
+
     refuseRequest(repairerUserId: string, requestId: string, reason: string): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.refuseRequest({ repairerUserId, requestId, reason }));
     }

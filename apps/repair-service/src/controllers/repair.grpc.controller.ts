@@ -21,6 +21,7 @@ import type {
     RepairRequestRefundRequest,
     RepairAssignRepairerRequest,
     RepairAcceptRequest,
+    RepairDepartRequest,
     RepairRefuseRequest,
     RepairStartWorkRequest,
     RepairSetPriceRequest,
@@ -324,6 +325,14 @@ export class RepairGrpcController {
     async acceptRequest(data: RepairAcceptRequest) {
         try {
             const request = await this.repairRequestService.acceptRequest(data.repairerUserId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'Depart')
+    async depart(data: RepairDepartRequest) {
+        try {
+            const request = await this.repairRequestService.depart(data.repairerUserId, data.requestId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

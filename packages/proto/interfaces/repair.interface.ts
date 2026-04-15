@@ -846,6 +846,11 @@ export interface RepairAcceptRequest {
     requestId: string;
 }
 
+export interface RepairDepartRequest {
+    repairerUserId: string;
+    requestId: string;
+}
+
 export interface RepairRefuseRequest {
     repairerUserId: string;
     requestId: string;
@@ -1173,6 +1178,7 @@ export interface RepairServiceClient {
     requestRefund(request: RepairRequestRefundRequest): Observable<RepairRequestResponse>;
     assignRepairer(request: RepairAssignRepairerRequest): Observable<RepairRequestResponse>;
     acceptRequest(request: RepairAcceptRequest): Observable<RepairRequestResponse>;
+    depart(request: RepairDepartRequest): Observable<RepairRequestResponse>;
     refuseRequest(request: RepairRefuseRequest): Observable<RepairRequestResponse>;
     startWork(request: RepairStartWorkRequest): Observable<RepairRequestResponse>;
     setPrice(request: RepairSetPriceRequest): Observable<RepairRequestResponse>;

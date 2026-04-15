@@ -309,6 +309,13 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.REPAIRER)
+    @Post(':id/depart')
+    async depart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        return this.repairClient.depart(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.REPAIRER)
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
         const result = await this.repairClient.refuseRequest(user.sub, id, dto.reason);

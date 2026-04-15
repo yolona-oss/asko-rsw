@@ -6,6 +6,7 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PAID]: 'success',
   [RepairRequestStatus.ASSIGNED]: 'warning',
   [RepairRequestStatus.ACCEPTED]: 'warning',
+  [RepairRequestStatus.EN_ROUTE]: 'info',
   [RepairRequestStatus.IN_PROGRESS]: 'info',
   [RepairRequestStatus.PAUSED]: 'warning',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'info',
@@ -21,6 +22,7 @@ export const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.EN_ROUTE]: 'В пути',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
   [RepairRequestStatus.PAUSED]: 'Приостановлена',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
@@ -34,6 +36,7 @@ export const STATUS_LABELS: Record<string, string> = {
 export const REPAIRER_REQUEST_STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.EN_ROUTE]: 'В пути',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
 };

@@ -134,6 +134,7 @@ function makeRequest(overrides: Record<string, any> = {}) {
         acceptanceSignature: undefined,
         acceptanceSignedPayload: undefined,
         description: 'Broken screen',
+        statusTimestamps: [],
         ...overrides,
     };
 }
@@ -561,10 +562,34 @@ describe('RepairRequestService', () => {
 
     // ── startWork ──
 
-    describe('startWork', () => {
-        it('transitions ACCEPTED -> IN_PROGRESS', async () => {
+    describe('depart', () => {
+        it('transitions ACCEPTED -> EN_ROUTE', async () => {
             const repairer = makeRepairer();
             const request = makeRequest({ status: S.ACCEPTED, repairer: 'rep-1' });
+            mockEm.findOne
+                .mockResolvedValueOnce(repairer)
+                .mockResolvedValueOnce(request);
+
+            const result = await service.depart('repairer-user-1', 'req-1');
+
+            expect(result.status).toBe(S.EN_ROUTE);
+        });
+
+        it('throws from non-ACCEPTED status', async () => {
+            const repairer = makeRepairer();
+            const request = makeRequest({ status: S.ASSIGNED, repairer: 'rep-1' });
+            mockEm.findOne
+                .mockResolvedValueOnce(repairer)
+                .mockResolvedValueOnce(request);
+
+            await expect(service.depart('repairer-user-1', 'req-1')).rejects.toThrow();
+        });
+    });
+
+    describe('startWork', () => {
+        it('transitions EN_ROUTE -> IN_PROGRESS', async () => {
+            const repairer = makeRepairer();
+            const request = makeRequest({ status: S.EN_ROUTE, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
                 .mockResolvedValueOnce(request);
@@ -574,9 +599,9 @@ describe('RepairRequestService', () => {
             expect(result.status).toBe(S.IN_PROGRESS);
         });
 
-        it('throws from non-ACCEPTED status', async () => {
+        it('throws from non-EN_ROUTE status', async () => {
             const repairer = makeRepairer();
-            const request = makeRequest({ status: S.ASSIGNED, repairer: 'rep-1' });
+            const request = makeRequest({ status: S.ACCEPTED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
                 .mockResolvedValueOnce(request);
@@ -1165,7 +1190,7 @@ describe('RepairRequestService', () => {
     // ── Full lifecycle integration test ──
 
     describe('lifecycle: happy path', () => {
-        it('PENDING -> PAID -> ASSIGNED -> ACCEPTED -> IN_PROGRESS -> COMPLETED', async () => {
+        it('PENDING -> PAID -> ASSIGNED -> ACCEPTED -> EN_ROUTE -> IN_PROGRESS -> COMPLETED', async () => {
             const repairer = makeRepairer();
             const request = makeRequest();
 
@@ -1193,6 +1218,14 @@ describe('RepairRequestService', () => {
             mockEm.count.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
             await service.acceptRequest('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.ACCEPTED);
+
+            // depart
+            jest.clearAllMocks();
+            mockEm.findOne
+                .mockResolvedValueOnce(repairer)
+                .mockResolvedValueOnce(request);
+            await service.depart('repairer-user-1', 'req-1');
+            expect(request.status).toBe(S.EN_ROUTE);
 
             // startWork
             jest.clearAllMocks();
@@ -1243,6 +1276,28 @@ describe('RepairRequestService', () => {
                 .mockResolvedValueOnce(request);
             await service.resume('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.IN_PROGRESS);
+            expect(request.statusBeforePause).toBeUndefined();
+        });
+
+        it('EN_ROUTE -> PAUSED -> EN_ROUTE', async () => {
+            const repairer = makeRepairer();
+            const request = makeRequest({ status: S.EN_ROUTE, repairer: 'rep-1' });
+
+            // pause
+            mockEm.findOne
+                .mockResolvedValueOnce(repairer)
+                .mockResolvedValueOnce(request);
+            await service.pause('repairer-user-1', 'req-1');
+            expect(request.status).toBe(S.PAUSED);
+            expect(request.statusBeforePause).toBe(S.EN_ROUTE);
+
+            // resume
+            jest.clearAllMocks();
+            mockEm.findOne
+                .mockResolvedValueOnce(repairer)
+                .mockResolvedValueOnce(request);
+            await service.resume('repairer-user-1', 'req-1');
+            expect(request.status).toBe(S.EN_ROUTE);
             expect(request.statusBeforePause).toBeUndefined();
         });
     });

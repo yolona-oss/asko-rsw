@@ -171,6 +171,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const description = STATUS_DESCRIPTIONS[request.status] ?? '';
   const isTerminal = TERMINAL_STATUSES.includes(request.status);
   const statusTitle = STATUS_TITLES[request.status] ?? request.status;
+  const isPaused = request.status === RepairRequestStatus.PAUSED;
 
   return (
     <PageContainer>
@@ -278,6 +279,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
                 isActive={isActive}
                 isCompleted={isCompleted}
                 isFuture={isFuture}
+                isPaused={isActive && isPaused}
                 className={mobileVisible ? '' : 'hidden lg:flex'}
               />
               {idx < STEPS.length - 1 && (

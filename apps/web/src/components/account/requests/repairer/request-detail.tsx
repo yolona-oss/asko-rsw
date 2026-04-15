@@ -146,6 +146,15 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     } catch {} finally { setActionLoading(false); }
   };
 
+  const handleDepart = async () => {
+    if (!request) return;
+    setActionLoading(true);
+    try {
+      await repairRequestApi.depart(request.id);
+      setRequest({ ...request, status: RepairRequestStatus.EN_ROUTE });
+    } catch {} finally { setActionLoading(false); }
+  };
+
   const handleStartWork = async () => {
     if (!request) return;
     setActionLoading(true);
@@ -344,7 +353,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
   const status = request.status as RepairRequestStatus;
   const stepsLocked = !!request.stepsLocked;
-  const canEditSteps = !stepsLocked && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
+  const canEditSteps = !stepsLocked && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS].includes(status);
   const canControlFlow = stepsLocked && status === RepairRequestStatus.IN_PROGRESS;
   const allStepsDone = steps.length > 0 && steps.every((s) => s.status === WorkStepStatus.COMPLETED || s.status === WorkStepStatus.SKIPPED || s.status === WorkStepStatus.DECLINED);
   const canComplete = status === RepairRequestStatus.AWAITING_COMPLETION || (stepsLocked && allStepsDone && status === RepairRequestStatus.IN_PROGRESS);
@@ -360,7 +369,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     && s.completedByRepairerId !== currentRepairerId,
   );
   const canReviewDiagnostics = !isTerminal && hasUnownedMandatoryStep
-    && [RepairRequestStatus.ASSIGNED, RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(status);
+    && [RepairRequestStatus.ASSIGNED, RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS].includes(status);
 
   return (
     <PageContainer>
@@ -416,7 +425,21 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
       {status === RepairRequestStatus.ACCEPTED && (
         <Card className="flex flex-col gap-3">
-          <p className="text-sm text-text-sub">Вы приняли заявку. Начните работу, когда будете на месте.</p>
+          <p className="text-sm text-text-sub">Вы приняли заявку. Нажмите «Выехать», когда отправитесь к клиенту.</p>
+          <div className="flex gap-3">
+            <Button variant="primary" onClick={handleDepart} disabled={actionLoading}>
+              {actionLoading ? 'Подготовка...' : 'Выехать'}
+            </Button>
+            <Button variant="secondary" onClick={handlePause} disabled={actionLoading}>
+              Приостановить
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {status === RepairRequestStatus.EN_ROUTE && (
+        <Card className="flex flex-col gap-3">
+          <p className="text-sm text-text-sub">Вы в пути к клиенту. Начните работу, когда будете на месте.</p>
           <div className="flex gap-3">
             <Button variant="primary" onClick={handleStartWork} disabled={actionLoading}>
               {actionLoading ? 'Запуск...' : 'Начать работу'}

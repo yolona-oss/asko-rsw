@@ -69,35 +69,46 @@ describe('repair-request-state-machine', () => {
             expect(canTransition(from, S.ACCEPTED)).toBe(false);
         });
 
-        // --- IN_PROGRESS ---
-        it('allows ACCEPTED -> IN_PROGRESS', () => {
-            expect(canTransition(S.ACCEPTED, S.IN_PROGRESS)).toBe(true);
+        // --- EN_ROUTE ---
+        it('allows ACCEPTED -> EN_ROUTE', () => {
+            expect(canTransition(S.ACCEPTED, S.EN_ROUTE)).toBe(true);
         });
 
         it.each(
             ALL_STATUSES.filter(s => s !== S.ACCEPTED),
+        )('rejects %s -> EN_ROUTE', (from) => {
+            expect(canTransition(from, S.EN_ROUTE)).toBe(false);
+        });
+
+        // --- IN_PROGRESS ---
+        it('allows EN_ROUTE -> IN_PROGRESS', () => {
+            expect(canTransition(S.EN_ROUTE, S.IN_PROGRESS)).toBe(true);
+        });
+
+        it.each(
+            ALL_STATUSES.filter(s => s !== S.EN_ROUTE),
         )('rejects %s -> IN_PROGRESS', (from) => {
             expect(canTransition(from, S.IN_PROGRESS)).toBe(false);
         });
 
         // --- PAUSED ---
-        it.each([S.ACCEPTED, S.IN_PROGRESS] as RepairRequestStatus[])('allows %s -> PAUSED', (from) => {
+        it.each([S.ACCEPTED, S.EN_ROUTE, S.IN_PROGRESS] as RepairRequestStatus[])('allows %s -> PAUSED', (from) => {
             expect(canTransition(from, S.PAUSED)).toBe(true);
         });
 
         it.each(
-            ALL_STATUSES.filter(s => s !== S.ACCEPTED && s !== S.IN_PROGRESS),
+            ALL_STATUSES.filter(s => s !== S.ACCEPTED && s !== S.EN_ROUTE && s !== S.IN_PROGRESS),
         )('rejects %s -> PAUSED', (from) => {
             expect(canTransition(from, S.PAUSED)).toBe(false);
         });
 
         // --- AWAITING_COMPLETION ---
-        it.each([S.IN_PROGRESS, S.ACCEPTED] as RepairRequestStatus[])('allows %s -> AWAITING_COMPLETION', (from) => {
+        it.each([S.IN_PROGRESS, S.EN_ROUTE] as RepairRequestStatus[])('allows %s -> AWAITING_COMPLETION', (from) => {
             expect(canTransition(from, S.AWAITING_COMPLETION)).toBe(true);
         });
 
         it.each(
-            ALL_STATUSES.filter(s => s !== S.IN_PROGRESS && s !== S.ACCEPTED),
+            ALL_STATUSES.filter(s => s !== S.IN_PROGRESS && s !== S.EN_ROUTE),
         )('rejects %s -> AWAITING_COMPLETION', (from) => {
             expect(canTransition(from, S.AWAITING_COMPLETION)).toBe(false);
         });
@@ -137,12 +148,12 @@ describe('repair-request-state-machine', () => {
 
         // --- CANCELLED (notFrom rule) ---
         it.each(
-            ALL_STATUSES.filter(s => s !== S.COMPLETED && s !== S.IN_PROGRESS && s !== S.AWAITING_COMPLETION),
+            ALL_STATUSES.filter(s => s !== S.COMPLETED && s !== S.EN_ROUTE && s !== S.IN_PROGRESS && s !== S.AWAITING_COMPLETION),
         )('allows %s -> CANCELLED', (from) => {
             expect(canTransition(from, S.CANCELLED)).toBe(true);
         });
 
-        it.each([S.COMPLETED, S.IN_PROGRESS, S.AWAITING_COMPLETION] as RepairRequestStatus[])('rejects %s -> CANCELLED', (from) => {
+        it.each([S.COMPLETED, S.EN_ROUTE, S.IN_PROGRESS, S.AWAITING_COMPLETION] as RepairRequestStatus[])('rejects %s -> CANCELLED', (from) => {
             expect(canTransition(from, S.CANCELLED)).toBe(false);
         });
 
@@ -208,7 +219,7 @@ describe('repair-request-state-machine', () => {
 
         // --- reassign (notFrom rule) ---
         it.each([
-            S.ASSIGNED, S.ACCEPTED, S.IN_PROGRESS,
+            S.ASSIGNED, S.ACCEPTED, S.EN_ROUTE, S.IN_PROGRESS,
             S.AWAITING_COMPLETION, S.PAUSED, S.REFUSED,
         ] as RepairRequestStatus[])('allows reassign from %s', (from) => {
             expect(() => assertActionTransition('reassign', from)).not.toThrow();
