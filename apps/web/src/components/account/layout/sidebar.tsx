@@ -12,6 +12,7 @@ import { GuardedLink } from './guarded-link';
 import { useTheme } from '@/lib/theme';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
+import { useMenuBadges } from '@/lib/hooks/use-menu-badges';
 import { MenuIcon } from './menu-icon';
 import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 
@@ -28,6 +29,7 @@ export function AccountSidebar() {
   const { collapsed, toggleCollapsed } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
   const menu = user ? menuByRole[primaryRole(user)] : [];
+  const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
 
@@ -66,6 +68,7 @@ export function AccountSidebar() {
         ) : (
           menu.map((item) => {
             const isActive = pathname === item.href;
+            const hasBadge = badgeHrefs.has(item.href);
             return (
               <GuardedLink
                 key={item.href}
@@ -78,11 +81,16 @@ export function AccountSidebar() {
                   : 'text-text-main hover:text-brand-red'
                 }`}
               >
-                {user ? (
-                  <MenuIcon icon={item.icon} active={isActive} />
-                ) : (
-                  <SkeletonCircle className="w-5 h-5" />
-                )}
+                <span className="relative flex-shrink-0">
+                  {user ? (
+                    <MenuIcon icon={item.icon} active={isActive} />
+                  ) : (
+                    <SkeletonCircle className="w-5 h-5" />
+                  )}
+                  {hasBadge && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand-red" />
+                  )}
+                </span>
                 {!collapsed && <span className="truncate">{item.label}</span>}
               </GuardedLink>
             );
@@ -177,6 +185,7 @@ export function MobileSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
   const menu = user ? menuByRole[primaryRole(user)] : [];
+  const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
 
@@ -324,6 +333,7 @@ export function MobileSidebar() {
         <nav className="flex flex-col gap-1 px-4">
           {menu.map((item) => {
             const isActive = pathname === item.href;
+            const hasBadge = badgeHrefs.has(item.href);
             return (
               <GuardedLink
                 key={item.href}
@@ -333,7 +343,12 @@ export function MobileSidebar() {
                   isActive ? 'text-brand-red font-medium' : 'text-text-main'
                 }`}
               >
-                <MenuIcon icon={item.icon} active={isActive} />
+                <span className="relative flex-shrink-0">
+                  <MenuIcon icon={item.icon} active={isActive} />
+                  {hasBadge && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand-red" />
+                  )}
+                </span>
                 {item.label}
               </GuardedLink>
             );
