@@ -45,16 +45,25 @@ function parseAttachment(raw?: string): Attachment | null {
   }
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Суперадмин',
+  admin: 'Администратор',
+  manager: 'Менеджер',
+  dealer: 'Дилер',
+  repairer: 'Мастер',
+};
+
 interface MessageBubbleProps {
   message: ChatMessage;
   isOwn: boolean;
   showSender?: boolean;
   senderName?: string;
+  senderRole?: string;
   /** All image URLs from the conversation, for lightbox prev/next navigation */
   conversationImages?: string[];
 }
 
-export function MessageBubble({ message, isOwn, showSender, senderName, conversationImages }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, showSender, senderName, senderRole, conversationImages }: MessageBubbleProps) {
   const attachment = useMemo(() => parseAttachment(message.attachmentJson), [message.attachmentJson]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -100,7 +109,12 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
         }`}
       >
         {showSender && senderName && !isOwn && (
-          <p className="text-xs font-medium text-brand-red px-3 pt-2 mb-0.5">{senderName}</p>
+          <div className="flex items-center gap-1.5 px-3 pt-2 mb-0.5">
+            <span className="text-xs font-medium text-brand-red">{senderName}</span>
+            {senderRole && ROLE_LABELS[senderRole] && (
+              <span className="text-[10px] font-medium text-text-sub bg-surface-secondary px-1 py-px">{ROLE_LABELS[senderRole]}</span>
+            )}
+          </div>
         )}
 
         {/* Image attachment — no horizontal padding, only bottom padding for timestamp */}

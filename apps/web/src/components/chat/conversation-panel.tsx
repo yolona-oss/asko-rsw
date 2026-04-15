@@ -20,6 +20,14 @@ import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
 
 const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Суперадмин',
+  admin: 'Администратор',
+  manager: 'Менеджер',
+  dealer: 'Дилер',
+  repairer: 'Мастер',
+};
+
 interface ConversationPanelProps {
   conversation: ChatConversation;
   currentUserId: string;
@@ -30,6 +38,7 @@ interface ConversationPanelProps {
   realtimeMessages: ChatMessage[];
   onBack?: () => void;
   participantNames: Record<string, string>;
+  participantRoles: Record<string, string>;
 }
 
 export function ConversationPanel({
@@ -42,6 +51,7 @@ export function ConversationPanel({
   realtimeMessages,
   onBack,
   participantNames,
+  participantRoles,
 }: ConversationPanelProps) {
   const queryClient = useQueryClient();
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
@@ -113,6 +123,8 @@ export function ConversationPanel({
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';
+  const otherRole = otherParticipant ? participantRoles[otherParticipant.userId] : undefined;
+  const otherRoleLabel = otherRole ? ROLE_LABELS[otherRole] : undefined;
   const isDirect = conversation.type === 'direct';
   const isGroup = conversation.type === 'group';
 
@@ -199,7 +211,12 @@ export function ConversationPanel({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-text-main truncate">{displayName}</p>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="text-sm font-medium text-text-main truncate">{displayName}</p>
+              {isDirect && otherRoleLabel && (
+                <span className="flex-shrink-0 text-[10px] font-medium text-text-sub bg-surface-secondary px-1.5 py-0.5">{otherRoleLabel}</span>
+              )}
+            </div>
             {isDirect && (
               <p className="text-xs text-text-sub">{isOnline ? 'В сети' : 'Не в сети'}</p>
             )}
@@ -222,6 +239,8 @@ export function ConversationPanel({
                 const name = isMe ? 'Вы' : (participantNames[p.userId] || p.userId.slice(0, 8));
                 const online = presenceMap[p.userId] ?? false;
                 const src = avatarMap[p.userId] ?? undefined;
+                const roleKey = participantRoles[p.userId];
+                const roleLabel = roleKey ? ROLE_LABELS[roleKey] : undefined;
                 return (
                   <div key={p.userId} className="flex items-center gap-2.5">
                     <div className="relative flex-shrink-0">
@@ -229,7 +248,12 @@ export function ConversationPanel({
                       <PresenceDot online={online} className="absolute -bottom-0.5 -right-0.5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-text-main truncate">{name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm text-text-main truncate">{name}</p>
+                        {roleLabel && (
+                          <span className="flex-shrink-0 text-[10px] font-medium text-text-sub bg-surface-secondary px-1.5 py-0.5">{roleLabel}</span>
+                        )}
+                      </div>
                       <p className="text-xs text-text-sub">{online ? 'В сети' : 'Не в сети'}</p>
                     </div>
                   </div>
@@ -247,6 +271,7 @@ export function ConversationPanel({
         isGroup={isGroup}
         realtimeMessages={conversationRealtimeMessages}
         participantNames={participantNames}
+        participantRoles={participantRoles}
       />
 
       {/* Activity indicators */}

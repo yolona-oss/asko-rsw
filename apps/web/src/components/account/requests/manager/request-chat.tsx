@@ -64,6 +64,7 @@ export function RequestChat({ conversationId, currentUserId }: { conversationId:
         isGroup
         realtimeMessages={realtimeMessages}
         participantNames={{}}
+        participantRoles={{}}
       />
       <TypingIndicator userNames={typingNames} />
       <MessageInput

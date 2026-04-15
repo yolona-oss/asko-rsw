@@ -13,6 +13,7 @@ interface MessageListProps {
   isGroup: boolean;
   realtimeMessages: ChatMessage[];
   participantNames: Record<string, string>;
+  participantRoles: Record<string, string>;
 }
 
 export function MessageList({
@@ -21,6 +22,7 @@ export function MessageList({
   isGroup,
   realtimeMessages,
   participantNames,
+  participantRoles,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -205,6 +207,7 @@ export function MessageList({
             isOwn={msg.senderId === currentUserId}
             showSender={isGroup}
             senderName={participantNames[msg.senderId] ?? 'Пользователь'}
+            senderRole={participantRoles[msg.senderId]}
           />
         </div>
       ))}
