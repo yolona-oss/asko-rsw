@@ -1,26 +1,32 @@
 # syntax=docker/dockerfile:1
+
 FROM node:20-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
+# ---------- prune ----------
 FROM base AS prune
 COPY . .
 RUN pnpm dlx turbo prune @asko/content-gateway --docker
 
+# ---------- deps ----------
 FROM base AS deps
-COPY --from=prune /app/out/full/ .
+COPY --from=prune /app/out/json/ .
 COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY .npmrc .npmrc
-COPY tsconfig.json tsconfig.json
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm config set store-dir /root/.local/share/pnpm/store && \
     pnpm install --frozen-lockfile
 
-FROM base AS builder
-COPY --from=deps /app ./
-RUN pnpm turbo run build --filter=@asko/content-gateway...
+# ---------- builder ----------
+FROM deps AS builder
+COPY --from=prune /app/out/full/ .
+COPY tsconfig.json tsconfig.json
+RUN --mount=type=cache,id=turbo,target=/app/.turbo \
+    pnpm turbo run build --filter=@asko/content-gateway...
 
+# ---------- runner ----------
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

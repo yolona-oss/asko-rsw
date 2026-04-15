@@ -97,6 +97,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.user-service
+    image: asko-user-service:${IMAGE_TAG:-latest}
     container_name: asko-user-service
     restart: unless-stopped
     network_mode: host
@@ -124,6 +125,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.payment-service
+    image: asko-payment-service:${IMAGE_TAG:-latest}
     container_name: asko-payment-service
     restart: unless-stopped
     network_mode: host
@@ -145,6 +147,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.file-service
+    image: asko-file-service:${IMAGE_TAG:-latest}
     container_name: asko-file-service
     restart: unless-stopped
     network_mode: host
@@ -168,6 +171,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.repair-service
+    image: asko-repair-service:${IMAGE_TAG:-latest}
     container_name: asko-repair-service
     restart: unless-stopped
     network_mode: host
@@ -189,6 +193,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.notification-service
+    image: asko-notification-service:${IMAGE_TAG:-latest}
     container_name: asko-notification-service
     restart: unless-stopped
     network_mode: host
@@ -211,6 +216,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.chat-service
+    image: asko-chat-service:${IMAGE_TAG:-latest}
     container_name: asko-chat-service
     restart: unless-stopped
     network_mode: host
@@ -232,6 +238,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.content-service
+    image: asko-content-service:${IMAGE_TAG:-latest}
     container_name: asko-content-service
     restart: unless-stopped
     network_mode: host
@@ -250,6 +257,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.auth-gateway
+    image: asko-auth-gateway:${IMAGE_TAG:-latest}
     container_name: asko-auth-gateway
     restart: unless-stopped
     network_mode: host
@@ -283,6 +291,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.repair-gateway
+    image: asko-repair-gateway:${IMAGE_TAG:-latest}
     container_name: asko-repair-gateway
     restart: unless-stopped
     network_mode: host
@@ -322,6 +331,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.media-gateway
+    image: asko-media-gateway:${IMAGE_TAG:-latest}
     container_name: asko-media-gateway
     restart: unless-stopped
     network_mode: host
@@ -352,6 +362,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.realtime-gateway
+    image: asko-realtime-gateway:${IMAGE_TAG:-latest}
     container_name: asko-realtime-gateway
     restart: unless-stopped
     network_mode: host
@@ -384,6 +395,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.content-gateway
+    image: asko-content-gateway:${IMAGE_TAG:-latest}
     container_name: asko-content-gateway
     restart: unless-stopped
     network_mode: host
@@ -447,6 +459,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile.web
+    image: asko-web:${IMAGE_TAG:-latest}
     container_name: asko-web
     restart: unless-stopped
     network_mode: host

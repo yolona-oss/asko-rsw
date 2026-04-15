@@ -11,19 +11,20 @@ RUN pnpm dlx turbo prune @asko/auth-gateway --docker
 
 # ---------- deps ----------
 FROM base AS deps
-COPY --from=prune /app/out/full/ .
+COPY --from=prune /app/out/json/ .
 COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prune /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY .npmrc .npmrc
-COPY tsconfig.json tsconfig.json
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm config set store-dir /root/.local/share/pnpm/store && \
     pnpm install --frozen-lockfile
 
 # ---------- builder ----------
-FROM base AS builder
-COPY --from=deps /app ./
-RUN pnpm turbo run build --filter=@asko/auth-gateway...
+FROM deps AS builder
+COPY --from=prune /app/out/full/ .
+COPY tsconfig.json tsconfig.json
+RUN --mount=type=cache,id=turbo,target=/app/.turbo \
+    pnpm turbo run build --filter=@asko/auth-gateway...
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner
