@@ -53,7 +53,7 @@ export function bucketPayments(
   }
 
   for (const p of payments) {
-    const ts = new Date(p.paidAt ?? p.createdAt).getTime();
+    const ts = new Date(p.paidAt || p.createdAt).getTime();
     if (ts < range.start.getTime() || ts > range.end.getTime()) continue;
     const idx = Math.min(
       Math.floor((ts - range.start.getTime()) / bucketMs),

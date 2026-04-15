@@ -36,7 +36,7 @@ export function PaymentTransactionList({
         >
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-sm text-text-main">
-              {formatPaymentDate(p.paidAt ?? p.createdAt)}
+              {formatPaymentDate(p.paidAt || p.createdAt)}
             </span>
             {p.refundedAmount > 0 && (
               <span className="text-xs text-error">

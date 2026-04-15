@@ -22,7 +22,7 @@ export function PaymentCards({
             </Badge>
           </div>
           <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-          <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+          <p className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</p>
         </Card>
       ))}
     </div>

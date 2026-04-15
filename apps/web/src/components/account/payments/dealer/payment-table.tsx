@@ -49,7 +49,7 @@ const columns: DataGridColumn<PaymentRecord>[] = [
     width: 160,
     mobileLabel: 'Дата:',
     render: (p) => (
-      <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+      <p className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</p>
     ),
   },
 ];
@@ -104,7 +104,7 @@ export function PaymentTable({
                 </Badge>
               }
             />
-            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+            <DetailRow label="Дата" value={formatDate(item.paidAt || item.createdAt)} />
           </div>
         )}
       />

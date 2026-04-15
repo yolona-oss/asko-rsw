@@ -62,7 +62,7 @@ export function ManagerPayments() {
   const confirmedPayments = useMemo(
     () => chartPayments.filter((p) => {
       if (p.status !== 'paid' && p.status !== 'partially_refunded') return false;
-      const ts = new Date(p.paidAt ?? p.createdAt).getTime();
+      const ts = new Date(p.paidAt || p.createdAt).getTime();
       return ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime();
     }),
     [chartPayments, dateRange],
@@ -71,7 +71,7 @@ export function ManagerPayments() {
   const refundedPayments = useMemo(
     () => chartPayments.filter((p) => {
       if (p.status !== 'refunded' && p.status !== 'partially_refunded') return false;
-      const ts = new Date(p.paidAt ?? p.createdAt).getTime();
+      const ts = new Date(p.paidAt || p.createdAt).getTime();
       return ts >= dateRange.start.getTime() && ts <= dateRange.end.getTime();
     }),
     [chartPayments, dateRange],
@@ -93,7 +93,7 @@ export function ManagerPayments() {
     () => chartPayments
       .filter((p) => {
         if (p.status !== 'paid' && p.status !== 'partially_refunded') return false;
-        const ts = new Date(p.paidAt ?? p.createdAt).getTime();
+        const ts = new Date(p.paidAt || p.createdAt).getTime();
         return ts >= prevRange.start.getTime() && ts <= prevRange.end.getTime();
       })
       .reduce((s, p) => s + p.amount - (p.refundedAmount ?? 0), 0),
@@ -104,7 +104,7 @@ export function ManagerPayments() {
     () => chartPayments
       .filter((p) => {
         if (p.status !== 'refunded' && p.status !== 'partially_refunded') return false;
-        const ts = new Date(p.paidAt ?? p.createdAt).getTime();
+        const ts = new Date(p.paidAt || p.createdAt).getTime();
         return ts >= prevRange.start.getTime() && ts <= prevRange.end.getTime();
       })
       .reduce((s, p) => s + (p.refundedAmount ?? 0), 0),
@@ -253,7 +253,7 @@ export function ManagerPayments() {
                     >
                       <Card padding="none" className="p-5 flex flex-col gap-3">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-xs text-text-sub">{formatDateFull(p.paidAt ?? p.createdAt)}</span>
+                          <span className="text-xs text-text-sub">{formatDateFull(p.paidAt || p.createdAt)}</span>
                           <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'} className="text-xs">
                             {STATUS_LABELS[p.status] ?? p.status}
                           </Badge>

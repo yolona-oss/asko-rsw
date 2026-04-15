@@ -102,7 +102,7 @@ const paymentColumns: DataGridColumn<PaymentRecord>[] = [
   { key: 'type', header: 'Тип', sortable: false, mobileLabel: 'Тип:', render: (p) => <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span> },
   { key: 'amount', header: 'Сумма', width: 140, mobileLabel: 'Сумма:', render: (p) => <span className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</span> },
   { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (p) => <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge> },
-  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span> },
+  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</span> },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export function DealerPayments() {
                 <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge>
               </div>
               <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-              <span className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</span>
+              <span className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</span>
             </Card>
           ))}
         </div>
@@ -321,7 +321,7 @@ export function DealerPayments() {
             <DetailRow label="Тип" value={TARGET_LABELS[item.targetType ?? ''] ?? 'Платёж'} />
             <DetailRow label="Сумма" value={`${formatAmount(item.amount)} ₽`} />
             <DetailRow label="Статус" value={<Badge variant={STATUS_BADGE_VARIANT[item.status] ?? 'neutral'}>{STATUS_LABELS[item.status] ?? item.status}</Badge>} />
-            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+            <DetailRow label="Дата" value={formatDate(item.paidAt || item.createdAt)} />
           </div>
         )}
       />

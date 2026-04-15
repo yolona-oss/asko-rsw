@@ -219,7 +219,7 @@ export function UserPayments() {
                                 </Badge>
                               </div>
                               <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-                              <p className="text-sm text-text-sub">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                              <p className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</p>
                             </Card>
                           ))}
                         </div>
@@ -260,7 +260,7 @@ export function UserPayments() {
               />
             )}
             <DetailRow label="Провайдер" value={item.provider ?? '-'} />
-            <DetailRow label="Дата" value={formatDate(item.paidAt ?? item.createdAt)} />
+            <DetailRow label="Дата" value={formatDate(item.paidAt || item.createdAt)} />
 
             {selectedGroupPayments.length > 1 && (
               <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-border-light">
