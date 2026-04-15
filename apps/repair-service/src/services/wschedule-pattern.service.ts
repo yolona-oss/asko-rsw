@@ -3,6 +3,8 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedulePattern, PatternSlotData, PatternPendingData } from 'entities/wschedule-pattern.entity';
 import { PatternChangeType } from 'entities/wschedule-pattern-history.entity';
 import { ScheduleStatus } from 'entities/wschedule.entity';
+import { RepairRequest } from 'entities/repair-request.entity';
+import { RepairRequestStatus } from '@asko/shared';
 import { WSchedulePatternHistoryService } from './wschedule-pattern-history.service';
 import type { UpsertPatternRequest } from '@asko/proto';
 
@@ -132,6 +134,18 @@ export class WSchedulePatternService {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
         if (!pattern) throw new Error('Pattern not found');
 
+        // If the new pattern would turn today into a rest day and there are active requests, block
+        if (await this.hasActiveRepairRequests(userId)) {
+            const tempPattern = { ...pattern } as WSchedulePattern;
+            if (pattern.pendingData) {
+                this.applyProposedToLive(tempPattern, pattern.pendingData);
+            }
+            const todaySlot = this.resolveFromPattern(tempPattern, new Date());
+            if (todaySlot && !todaySlot.work) {
+                throw new Error('Нельзя утвердить расписание: сегодня станет выходным, но у мастера есть активные заявки');
+            }
+        }
+
         await this.historyService.snapshot(this.em, pattern, PatternChangeType.APPROVED, approvedBy);
         if (pattern.pendingData) {
             this.applyProposedToLive(pattern, pattern.pendingData);
@@ -167,10 +181,30 @@ export class WSchedulePatternService {
         return pattern;
     }
 
+    private async hasActiveRepairRequests(userId: string): Promise<boolean> {
+        const activeStatuses = [
+            RepairRequestStatus.ASSIGNED,
+            RepairRequestStatus.ACCEPTED,
+            RepairRequestStatus.EN_ROUTE,
+            RepairRequestStatus.IN_PROGRESS,
+            RepairRequestStatus.AWAITING_COMPLETION,
+        ];
+        const count = await this.em.count(RepairRequest, {
+            repairer: { userId },
+            status: { $in: activeStatuses },
+        });
+        return count > 0;
+    }
+
     @CreateRequestContext()
     async delete(userId: string): Promise<{ id: string; userId: string } | null> {
         const pattern = await this.em.findOne(WSchedulePattern, { userId });
         if (!pattern) return null;
+
+        if (await this.hasActiveRepairRequests(userId)) {
+            throw new Error('Нельзя удалить расписание: у мастера есть активные заявки');
+        }
+
         await this.historyService.snapshot(this.em, pattern, PatternChangeType.DELETED, null);
         await this.em.flush();
         const result = { id: pattern.id, userId: pattern.userId };
