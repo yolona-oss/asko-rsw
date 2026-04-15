@@ -1,1 +1,1 @@
-export { DealerCertificates } from './dealer-certificates';
+export { DealerCertificates } from './certificates';

@@ -1,1 +1,1 @@
-export { DealerPayments } from './dealer-payments';
+export { DealerPayments } from './payments';

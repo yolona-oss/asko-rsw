@@ -6,9 +6,9 @@ import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const UserRequestStatus = lazy(() => import('@/components/account/requests/user/detail').then(m => ({ default: m.UserRequestStatus })));
-const ManagerRequestDetail = lazy(() => import('@/components/account/requests/manager/detail').then(m => ({ default: m.ManagerRequestDetail })));
-const RepairerRequestDetail = lazy(() => import('@/components/account/requests/repairer/detail').then(m => ({ default: m.RepairerRequestDetail })));
+const UserRequestStatus = lazy(() => import('@/components/account/requests/user').then(m => ({ default: m.UserRequestStatus })));
+const ManagerRequestDetail = lazy(() => import('@/components/account/requests/manager').then(m => ({ default: m.ManagerRequestDetail })));
+const RepairerRequestDetail = lazy(() => import('@/components/account/requests/repairer').then(m => ({ default: m.RepairerRequestDetail })));
 
 export default function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();

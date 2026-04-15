@@ -1,2 +1,2 @@
-export { RepairerManuals } from './repairer-manuals';
-export { RepairerManualDetail } from './repairer-manual-detail';
+export { RepairerManuals } from './manuals';
+export { RepairerManualDetail } from './manual-detail';

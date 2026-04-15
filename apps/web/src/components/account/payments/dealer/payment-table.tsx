@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
-import { EntityDetailModal } from '@/components/account/layout/entity-detail-modal';
+import { EntityDetailModal } from '@/components/account/_shared/entity-detail-modal';
 import {
   Badge,
   DetailRow,

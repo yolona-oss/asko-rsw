@@ -1,1 +1,1 @@
-export { RepairerHistory } from './repairer-history';
+export { RepairerHistory } from './history';

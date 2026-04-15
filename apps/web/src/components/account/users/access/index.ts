@@ -1,1 +1,1 @@
-export { ManagerAccess } from './manager-access';
+export { ManagerAccess } from './access';

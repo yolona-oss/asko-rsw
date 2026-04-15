@@ -1,1 +1,1 @@
-export { AdminInvitations } from './admin-invitations';
+export { AdminInvitations } from './invitations';

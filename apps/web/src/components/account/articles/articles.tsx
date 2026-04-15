@@ -1,0 +1,244 @@
+'use client';
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEntityDetail } from '@/hooks/use-entity-detail';
+import { EntityDetailModal } from '@/components/account/_shared/entity-detail-modal';
+import { ArticleDetail, fetchArticleOne } from './article-detail';
+import {
+  Button,
+  Modal,
+  DataGrid,
+  DataToolbar,
+  ViewSwitcher,
+  VIEW_TABLE,
+  VIEW_CARD,
+  Pagination,
+  SkeletonCard,
+} from '@asko/ui';
+import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
+import { articleApi } from '@/lib/api/article';
+import type { IArticle } from '@/lib/api/types';
+import { ArticleCard } from './article-card';
+
+const PAGE_SIZE = 20;
+
+export function AdminArticles() {
+  const router = useRouter();
+  const detail = useEntityDetail<IArticle>();
+  const [articles, setArticles] = useState<IArticle[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [view, setView] = useState('table');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+
+  const fetchArticles = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await articleApi.getAll({ page: page, limit: PAGE_SIZE, sortBy: sortBy ?? undefined, sortOrder: sortOrder ?? undefined });
+      setArticles(data.data ?? []);
+      setTotal(data.overallCount ?? 0);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, [page, sortBy, sortOrder]);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await articleApi.delete(id);
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      await articleApi.deleteAll();
+      setArticles([]);
+    } catch {
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAll(false);
+    }
+  };
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const filteredArticles = useMemo(() => {
+    if (!search) return articles;
+    const q = search.toLowerCase();
+    return articles.filter((a) =>
+      a.title.toLowerCase().includes(q)
+      || a.slug.toLowerCase().includes(q)
+      || a.tags?.some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [articles, search]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const columns: DataGridColumn<IArticle>[] = useMemo(() => [
+    {
+      key: 'title',
+      header: 'Название',
+      mobileLabel: 'Название:',
+      render: (article) => <p className="text-sm font-medium text-text-main">{article.title}</p>,
+    },
+    {
+      key: 'slug',
+      header: 'Slug',
+      sortable: false,
+      width: 192,
+      mobileLabel: 'Slug:',
+      render: (article) => <p className="text-sm text-text-sub">{article.slug}</p>,
+    },
+    {
+      key: 'tags',
+      header: 'Теги',
+      sortable: false,
+      width: 192,
+      multiline: true,
+      mobileLabel: 'Теги:',
+      render: (article) => (
+        <div className="flex flex-wrap gap-1">
+          {article.tags?.map((tag) => (
+            <span key={tag} className="px-2 py-0.5 text-xs bg-surface-secondary text-text-sub">
+              {tag}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+  ], []);
+
+  const rowMenu = (article: IArticle): DropdownMenuEntry[] => [
+    { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(article.id) },
+  ];
+
+  return (
+    <PageContainer>
+      <PageHeader>Статьи</PageHeader>
+
+      {/* Toolbar */}
+      <DataToolbar
+        search={{ value: search, onChange: setSearch, placeholder: "Поиск" }}
+        actions={<>
+          <Link href="/account/articles/graph">
+            <Button variant="secondary" size="sm">Граф связей</Button>
+          </Link>
+          <Link href="/account/articles/create">
+            <Button size="sm">Добавить статью</Button>
+          </Link>
+          {articles.length > 0 && (
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteAll(true)}>
+              Удалить все
+            </Button>
+          )}
+        </>}
+        viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
+      />
+
+      <Modal
+        open={showDeleteAll}
+        onClose={deletingAll ? undefined : () => setShowDeleteAll(false)}
+        className="w-full max-w-sm p-6"
+      >
+        <h2 className="text-base font-medium text-text-main mb-2">
+          Удалить все статьи?
+        </h2>
+        <p className="text-sm text-text-sub mb-6">
+          Это действие удалит все {articles.length} статей. Отменить будет
+          невозможно.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowDeleteAll(false)}
+            disabled={deletingAll}
+          >
+            Отмена
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteAll}
+            disabled={deletingAll}
+          >
+            {deletingAll ? 'Удаление...' : 'Удалить все'}
+          </Button>
+        </div>
+      </Modal>
+
+      {view === 'table' ? (
+        <DataGrid
+          loading={loading}
+          columns={columns}
+          data={filteredArticles}
+          keyExtractor={(article) => article.id}
+          emptyContent="Нет статей"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(article) => router.push(`/account/articles/${article.id}`)}
+          rowMenu={rowMenu}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {filteredArticles.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          }
+        />
+      ) : loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}
+        </div>
+      ) : (
+        <>
+          {filteredArticles.length === 0 ? (
+            <p className="text-sm text-text-sub text-center py-8">Нет статей</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredArticles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  onDelete={handleDelete}
+                  onClick={() => detail.onRowClick(article)}
+                  onDoubleClick={() => router.push(`/account/articles/${article.id}`)}
+                />
+              ))}
+            </div>
+          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
+        </>
+      )}
+      <EntityDetailModal
+        open={detail.open}
+        onClose={detail.onClose}
+        item={detail.selectedItem}
+        title="Детали статьи"
+        fetchOne={fetchArticleOne}
+        renderContent={(item, loading) => <ArticleDetail item={item} loading={loading} />}
+        onEdit={(item) => router.push(`/account/articles/${item.id}`)}
+      />
+    </PageContainer>
+  );
+}

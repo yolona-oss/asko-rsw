@@ -1,1 +1,1 @@
-export { AdminCertificates } from './admin-certificates';
+export { AdminCertificates } from './certificates';

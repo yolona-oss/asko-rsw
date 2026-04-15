@@ -1,1 +1,1 @@
-export { AdminArticles } from './admin-articles';
+export { AdminArticles } from './articles';

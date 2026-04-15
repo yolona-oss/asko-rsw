@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@asko/ui';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { WorkStepCard } from '@/components/account/requests/user/detail/work-step-card';
+import { WorkStepCard } from '@/components/account/requests/user/work-step-card';
 
 interface WorkStepsViewProps {
   requestId: string;

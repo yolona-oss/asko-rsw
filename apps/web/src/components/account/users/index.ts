@@ -1,1 +1,1 @@
-export { AdminUsers } from './admin-users';
+export { AdminUsers } from './users';

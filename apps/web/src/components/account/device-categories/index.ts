@@ -1,1 +1,1 @@
-export { AdminDeviceCategories } from './admin-device-categories';
+export { AdminDeviceCategories } from './device-categories';

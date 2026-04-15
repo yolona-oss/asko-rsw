@@ -1,1 +1,1 @@
-export { AdminArticleForm } from './admin-article-form';
+export { AdminArticleForm } from './article-form';

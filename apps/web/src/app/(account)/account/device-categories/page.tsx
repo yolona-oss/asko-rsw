@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { useRoleGuard } from '@/hooks/use-role-guard';
 import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
 
-const AdminDeviceCategories = lazy(() => import('@/components/account/device-categories/admin-device-categories').then(m => ({ default: m.AdminDeviceCategories })));
+const AdminDeviceCategories = lazy(() => import('@/components/account/device-categories/device-categories').then(m => ({ default: m.AdminDeviceCategories })));
 
 export default function DeviceCategoriesPage() {
   const allowed = useRoleGuard(['admin']);

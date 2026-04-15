@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { openDocument } from '@/lib/file-url';
 import { fileUploadApi } from '@/lib/api/file-upload';
-import type { RepairRequestDocument } from './broken-part-types';
+import type { RepairRequestDocument } from './broken-parts/types';
 
 interface RepairRequestDocumentsProps {
   requestId: string;

@@ -1,5 +1,5 @@
-export { UserDashboard } from './user-dashboard';
-export { AdminDashboard } from './admin-dashboard';
-export { DealerDashboard } from './dealer-dashboard';
-export { ManagerDashboard } from './manager-dashboard';
-export { RepairerDashboard } from './repairer-dashboard';
+export { UserDashboard } from './user';
+export { AdminDashboard } from './admin';
+export { DealerDashboard } from './dealer';
+export { ManagerDashboard } from './manager';
+export { RepairerDashboard } from './repairer';

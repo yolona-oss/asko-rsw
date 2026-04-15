@@ -1,1 +1,1 @@
-export { ManagerPayments } from './manager-payments';
+export { ManagerPayments } from './payments';

@@ -1,1 +1,1 @@
-export { UserCertificates } from './user-certificates';
+export { UserCertificates } from './certificates';

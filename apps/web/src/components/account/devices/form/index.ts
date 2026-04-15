@@ -1,1 +1,1 @@
-export { AdminDeviceForm } from './admin-device-form';
+export { AdminDeviceForm } from './device-form';
