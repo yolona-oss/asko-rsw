@@ -20,7 +20,7 @@ describe('PaymentDomainService', () => {
     let service: PaymentDomainService;
 
     beforeEach(() => {
-        service = new PaymentDomainService();
+        service = new PaymentDomainService(null as any);
     });
 
     describe('canTransition', () => {

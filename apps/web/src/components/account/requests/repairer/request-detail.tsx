@@ -382,7 +382,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'neutral'} className="px-4 py-1.5 text-sm">
           {STATUS_LABELS[status] ?? status}
         </Badge>
-        <span className="text-sm text-text-sub">{formatDate((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find(e => e.status === status)?.timestamp ?? request.createdAt)}</span>
+        <span className="text-sm text-text-sub">{formatDate((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find((e: any) => e.status === status)?.timestamp ?? request.createdAt)}</span>
         <Link href="/account/requests" className="ml-auto text-sm text-text-sub hover:text-brand-red transition-colors flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" />
           Назад
