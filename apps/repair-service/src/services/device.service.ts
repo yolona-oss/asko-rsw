@@ -107,6 +107,49 @@ export class DeviceService {
     }
 
     @CreateRequestContext()
+    async importDeviceParts(parts: Record<string, any>[]): Promise<{ imported: number; skipped: number }> {
+        let imported = 0;
+        let skipped = 0;
+
+        for (const entry of parts) {
+            try {
+                // Resolve device by slug
+                let device: Device | undefined;
+                if (entry.deviceModel || entry.deviceBrand || entry.deviceName) {
+                    const slug = slugify(`${entry.deviceBrand ?? ''}-${entry.deviceModel ?? ''}-${entry.deviceName ?? ''}`);
+                    const found = await this.em.findOne(Device, { slug });
+                    if (!found) { skipped++; continue; }
+                    device = found;
+                }
+
+                // Resolve category by name
+                let category: DeviceCategory | undefined;
+                if (entry.categoryName) {
+                    const found = await this.em.findOne(DeviceCategory, { name: entry.categoryName });
+                    if (found) category = found;
+                }
+
+                const part = this.em.create(DevicePart, {
+                    device,
+                    category,
+                    name: entry.name ?? '',
+                    partNumber: entry.partNumber ?? undefined,
+                    price: entry.price ?? undefined,
+                    description: entry.description ?? undefined,
+                    group: entry.group ?? undefined,
+                });
+                this.em.persist(part);
+                imported++;
+            } catch {
+                skipped++;
+            }
+        }
+
+        await this.em.flush();
+        return { imported, skipped };
+    }
+
+    @CreateRequestContext()
     async updateDevice(id: string, dto: {
         name?: string;
         type?: string;

@@ -38,6 +38,10 @@ export interface ImportDevicesRequest {
     productsJson: string;
 }
 
+export interface ImportDevicePartsRequest {
+    partsJson: string;
+}
+
 export interface FindAllDevicesRequest {
     page: number;
     limit: number;
@@ -153,6 +157,11 @@ export interface ImportDevicesResponse {
 export interface ImportedDeviceInfo {
     id: string;
     imageUrls: string[];
+}
+
+export interface ImportDevicePartsResponse {
+    importedCount: number;
+    skippedCount: number;
 }
 
 export interface DeviceRecord {
@@ -304,6 +313,7 @@ export interface DeviceServiceClient {
     deleteDevicePart(request: DeleteDevicePartRequest): Observable<EmptyDeviceResponse>;
     getDeviceParts(request: GetDevicePartsRequest): Observable<DevicePartListResponse>;
     getAllDeviceParts(request: GetAllDevicePartsRequest): Observable<PaginatedDevicePartsResponse>;
+    importDeviceParts(request: ImportDevicePartsRequest): Observable<ImportDevicePartsResponse>;
 
     // Address
     createAddress(request: CreateAddressRequest): Observable<AddressResponse>;

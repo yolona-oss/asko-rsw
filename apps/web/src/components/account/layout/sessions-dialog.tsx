@@ -95,7 +95,7 @@ export function SessionsDialog({ open, onClose }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} className="max-w-lg w-full">
+    <Modal open={open} onClose={onClose} className="max-w-lg w-full p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-medium text-text-main">Активные устройства</h2>
         <button type="button" onClick={onClose} className="p-1 text-text-sub hover:text-text-main cursor-pointer">

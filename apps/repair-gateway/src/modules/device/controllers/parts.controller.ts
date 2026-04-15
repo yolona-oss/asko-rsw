@@ -55,6 +55,12 @@ export class PartsController {
         });
     }
 
+    @Post('import')
+    @RequiredRoles(...ADMIN_ROLES)
+    async importParts(@Body() parts: Record<string, any>[]) {
+        return this.deviceClient.importDeviceParts(parts);
+    }
+
     @Post()
     @RequiredRoles(...ADMIN_ROLES)
     @ApiCreatedResponse({ type: DevicePartResponseDto })

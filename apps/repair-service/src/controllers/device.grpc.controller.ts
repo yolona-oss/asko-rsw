@@ -34,6 +34,7 @@ import type {
     CreateDeviceCategoryRequest,
     UpdateDeviceCategoryRequest,
     DeleteDeviceCategoryRequest,
+    ImportDevicePartsRequest,
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
@@ -374,6 +375,18 @@ export class DeviceGrpcController {
         try {
             const parts = await this.deviceService.getDeviceParts(data.deviceId);
             return { parts: parts.map(devicePartToRecord) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('DeviceService', 'ImportDeviceParts')
+    async importDeviceParts(data: ImportDevicePartsRequest) {
+        try {
+            const parts = JSON.parse(data.partsJson);
+            const result = await this.deviceService.importDeviceParts(parts);
+            return {
+                importedCount: result.imported,
+                skippedCount: result.skipped,
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 

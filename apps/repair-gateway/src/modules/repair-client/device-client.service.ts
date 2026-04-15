@@ -12,6 +12,7 @@ import type {
     PaginatedDevicesResponse,
     DevicePriceResponse,
     ImportDevicesResponse,
+    ImportDevicePartsResponse,
     DeleteAllResponse,
     DevicePartResponse,
     DevicePartListResponse,
@@ -176,6 +177,12 @@ export class DeviceClientService implements OnModuleInit {
 
     getDeviceParts(deviceId: string): Promise<DevicePartListResponse> {
         return grpcCall(this.deviceService.getDeviceParts({ deviceId }));
+    }
+
+    importDeviceParts(parts: Record<string, any>[]): Promise<ImportDevicePartsResponse> {
+        return grpcCall(this.deviceService.importDeviceParts({
+            partsJson: JSON.stringify(parts),
+        }));
     }
 
     getAllDeviceParts(params: { page?: number; limit?: number; search?: string; deviceId?: string; genericOnly?: boolean; categoryId?: string }): Promise<PaginatedDevicePartsResponse> {

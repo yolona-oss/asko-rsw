@@ -34,6 +34,7 @@ service DeviceService {
     rpc DeleteDevicePart(DeleteDevicePartRequest) returns (EmptyResponse);
     rpc GetDeviceParts(GetDevicePartsRequest) returns (DevicePartListResponse);
     rpc GetAllDeviceParts(GetAllDevicePartsRequest) returns (PaginatedDevicePartsResponse);
+    rpc ImportDeviceParts(ImportDevicePartsRequest) returns (ImportDevicePartsResponse);
 
     // Address
     rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
@@ -246,6 +247,10 @@ message ImportDevicesRequest {
     string productsJson = 1;
 }
 
+message ImportDevicePartsRequest {
+    string partsJson = 1;
+}
+
 message FindAllDevicesRequest {
     int32 page = 1;
     int32 limit = 2;
@@ -357,6 +362,11 @@ message ImportDevicesResponse {
 message ImportedDeviceInfo {
     string id = 1;
     repeated string imageUrls = 2;
+}
+
+message ImportDevicePartsResponse {
+    int32 importedCount = 1;
+    int32 skippedCount = 2;
 }
 
 message DeviceRecord {
