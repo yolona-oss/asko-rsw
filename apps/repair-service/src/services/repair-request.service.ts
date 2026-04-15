@@ -413,11 +413,52 @@ export class RepairRequestService {
         return override ? null : blocking;
     }
 
+    /**
+     * Check if current time is past the repairer's scheduled work end.
+     * Returns true if schedule has ended (repairer should not start/resume work).
+     */
+    private async isScheduleEnded(repairerUserId: string): Promise<boolean> {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Check vacation/sick leave first
+        const blocking = await this.findBlockingScheduleToday(repairerUserId);
+        if (blocking) return true;
+
+        // Resolve pattern slot for today
+        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, now);
+        if (!slot) return false; // no pattern — don't block
+        if (!slot.work) return true; // rest day
+
+        // Check if current time > schedule end time
+        const nowTime = now.toTimeString().slice(0, 5);
+        if (nowTime <= slot.endTime) return false;
+
+        // Past schedule end — check for approved overtime/extra_day that extends the end
+        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+        const overrides = await this.em.find(WSchedule, {
+            userId: repairerUserId,
+            status: ScheduleStatus.APPROVED,
+            type: { $in: [ScheduleEntryType.OVERTIME, ScheduleEntryType.EXTRA_DAY] },
+            dateFrom: { $lte: todayEnd },
+            dateTo: { $gte: todayStart },
+        });
+        for (const entry of overrides) {
+            if (entry.endTime && nowTime <= entry.endTime) return false;
+        }
+
+        return true;
+    }
+
     /** Repairer accepts assigned request */
     @CreateRequestContext()
     async acceptRequest(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        if (await this.isScheduleEnded(repairer.userId)) {
+            throw AppErrors.badRequest('Рабочий день завершён. Принять заявку невозможно');
+        }
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -491,6 +532,10 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
+        if (await this.isScheduleEnded(repairer.userId)) {
+            throw AppErrors.badRequest('Рабочий день завершён. Выезд к клиенту невозможен');
+        }
+
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertTransition(request.status, RepairRequestStatus.EN_ROUTE);
@@ -519,6 +564,10 @@ export class RepairRequestService {
     async startWork(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        if (await this.isScheduleEnded(repairer.userId)) {
+            throw AppErrors.badRequest('Рабочий день завершён. Начать работу невозможно');
+        }
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -755,6 +804,10 @@ export class RepairRequestService {
     async resume(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+
+        if (await this.isScheduleEnded(repairer.userId)) {
+            throw AppErrors.badRequest('Рабочий день завершён. Возобновление заявки невозможно');
+        }
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
