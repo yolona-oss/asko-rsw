@@ -91,6 +91,7 @@ export function EditUserDeviceForm({
         )}
 
         <AddressInput
+          key={device?.id}
           value={addressValue}
           onChange={setAddressValue}
           showGeolocation

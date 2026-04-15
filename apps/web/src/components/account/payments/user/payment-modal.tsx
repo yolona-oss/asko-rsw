@@ -133,7 +133,7 @@ export function PaymentModal({
       {optionsLoading ? (
         <div className="flex flex-col gap-3 mt-6">{Array.from({ length: 3 }).map((_, i) => <SkeletonBlock key={i} className="h-12" />)}</div>
       ) : options ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           {options.providers
           .filter((p) => !(targetType === 'certificate' && p === 'cash'))
           .map((provider) => {
