@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import { articleApi } from '@/lib/api/article';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 const MIN_READ_TIME_MS = 5000;
 
 function getSessionId(): string {
-    const key = 'sid';
-    let id = localStorage.getItem(key);
+    let id = storage.get(STORAGE_KEYS.sessionId);
     if (!id) {
         id = crypto.randomUUID();
-        localStorage.setItem(key, id);
+        storage.set(STORAGE_KEYS.sessionId, id);
     }
     return id;
 }

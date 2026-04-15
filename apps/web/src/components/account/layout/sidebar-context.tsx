@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 export type NotifPanelMode = 'overlay' | 'dock';
 
@@ -28,27 +29,25 @@ const SidebarContext = createContext<SidebarState>({
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('sidebar-collapsed') === 'true';
+    return storage.get(STORAGE_KEYS.sidebarCollapsed) === 'true';
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifMode, setNotifModeRaw] = useState<NotifPanelMode>(() => {
-    if (typeof window === 'undefined') return 'overlay';
-    return (localStorage.getItem('notif-panel-mode') as NotifPanelMode) || 'overlay';
+    return (storage.get(STORAGE_KEYS.notifPanelMode) as NotifPanelMode) || 'overlay';
   });
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed(prev => {
       const next = !prev;
-      localStorage.setItem('sidebar-collapsed', String(next));
+      storage.set(STORAGE_KEYS.sidebarCollapsed, String(next));
       return next;
     });
   }, []);
 
   const setNotifMode = useCallback((mode: NotifPanelMode) => {
     setNotifModeRaw(mode);
-    localStorage.setItem('notif-panel-mode', mode);
+    storage.set(STORAGE_KEYS.notifPanelMode, mode);
   }, []);
 
   return (

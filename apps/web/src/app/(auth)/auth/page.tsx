@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LandingHeader } from '@/components/landing/header';
 import { EmailInput } from '@asko/ui';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ export default function AuthPage() {
 
   // Returning users → login page
   useEffect(() => {
-    if (localStorage.getItem('has_account')) {
+    if (storage.get(STORAGE_KEYS.hasAccount)) {
       router.replace('/login');
     }
   }, [router]);

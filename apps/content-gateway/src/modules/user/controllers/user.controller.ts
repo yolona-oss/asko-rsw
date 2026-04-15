@@ -128,7 +128,7 @@ export class UsersController {
         const results = await Promise.all(
             ids.map((id: string) =>
                 this.userClient.findUserById({ id })
-                    .then((u: any) => u ? { id: u.id, firstName: u.firstName ?? '', lastName: u.lastName ?? '' } : null)
+                    .then((u: any) => u ? { id: u.id, firstName: u.firstName ?? '', lastName: u.lastName ?? '', roles: u.roles ?? [] } : null)
                     .catch(() => null),
             ),
         );

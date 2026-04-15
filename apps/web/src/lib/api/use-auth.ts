@@ -11,8 +11,10 @@ import { broadcastLogout } from './client';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 import type { IAuthSession } from './types';
 
+import { storage, STORAGE_KEYS } from '@/lib/storage';
+
 function markHasAccount() {
-  try { localStorage.setItem('has_account', '1'); } catch {}
+  storage.set(STORAGE_KEYS.hasAccount, '1');
 }
 
 export function useAuth() {

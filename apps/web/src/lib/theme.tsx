@@ -1,14 +1,14 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { storage, STORAGE_KEYS } from './storage';
 
 type Theme = 'light' | 'dark';
 
 function getStoredTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  const stored = localStorage.getItem('theme') as Theme | null;
+  const stored = storage.get(STORAGE_KEYS.theme) as Theme | null;
   if (stored === 'dark' || stored === 'light') return stored;
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
   return 'light';
 }
 
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Apply class + persist
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
+    storage.set(STORAGE_KEYS.theme, theme);
   }, [theme]);
 
   const toggle = useCallback(() => {

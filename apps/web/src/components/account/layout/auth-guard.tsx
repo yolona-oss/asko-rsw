@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/api/use-auth';
 import { authApi } from '@/lib/api/auth';
 import { useAppDispatch } from '@/store';
 import { setAccessToken, logout } from '@/store/auth-slice';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 /**
  * Client-side auth guard for /account routes.
@@ -34,7 +35,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         dispatch(logout());
-        const hasAccount = localStorage.getItem('has_account');
+        const hasAccount = storage.get(STORAGE_KEYS.hasAccount);
         router.replace(hasAccount ? '/login' : '/auth');
       });
   }, [isAuthenticated, dispatch, router]);

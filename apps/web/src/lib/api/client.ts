@@ -82,15 +82,15 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 // Cross-tab logout sync via localStorage event
-const LOGOUT_KEY = 'asko_logout';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 export function broadcastLogout() {
-  try { localStorage.setItem(LOGOUT_KEY, Date.now().toString()); } catch {}
+  storage.set(STORAGE_KEYS.logout, Date.now().toString());
 }
 
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === LOGOUT_KEY && e.newValue) {
+    if (e.key === STORAGE_KEYS.logout && e.newValue) {
       store.dispatch(logout());
     }
   });

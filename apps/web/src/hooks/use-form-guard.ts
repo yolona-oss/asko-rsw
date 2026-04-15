@@ -11,11 +11,11 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { deepEqual } from '@/lib/deep-equal';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { useFormGuardContext } from '@/components/account/layout/form-guard-context';
 import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import { DraftResumeDialog } from '@/components/shared/draft-resume-dialog';
 
-const DRAFT_PREFIX = 'asko:draft:';
 const DRAFT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 interface DraftEntry<T> {
@@ -87,45 +87,31 @@ export function useFormGuard<T>(
   onApplyDraftRef.current = onApplyDraft;
 
   // --- localStorage draft ---
-  const fullKey = DRAFT_PREFIX + storageKey;
+  const fullKey = STORAGE_KEYS.draft(storageKey);
 
   const [draft, setDraft] = useState<DraftEntry<T> | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = localStorage.getItem(fullKey);
-      if (!raw) return null;
-      const entry = JSON.parse(raw) as DraftEntry<T>;
-      if (Date.now() - entry.savedAt > DRAFT_TTL) {
-        localStorage.removeItem(fullKey);
-        return null;
-      }
-      return entry;
-    } catch {
+    const entry = storage.getJSON<DraftEntry<T>>(fullKey);
+    if (!entry) return null;
+    if (Date.now() - entry.savedAt > DRAFT_TTL) {
+      storage.remove(fullKey);
       return null;
     }
+    return entry;
   });
 
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
   const saveDraft = useCallback(() => {
-    try {
-      const entry: DraftEntry<T> = {
-        data: currentStateRef.current,
-        savedAt: Date.now(),
-      };
-      localStorage.setItem(fullKey, JSON.stringify(entry));
-    } catch {
-      // localStorage full or unavailable
-    }
+    const entry: DraftEntry<T> = {
+      data: currentStateRef.current,
+      savedAt: Date.now(),
+    };
+    storage.setJSON(fullKey, entry);
   }, [fullKey]);
 
   const removeDraft = useCallback(() => {
-    try {
-      localStorage.removeItem(fullKey);
-    } catch {
-      // ignore
-    }
+    storage.remove(fullKey);
     setDraft(null);
   }, [fullKey]);
 

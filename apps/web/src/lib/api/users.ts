@@ -41,10 +41,10 @@ export const usersApi = {
     return api.put<void>('/users/password', data);
   },
 
-  async getBatch(ids: string[]): Promise<{ id: string; firstName: string; lastName: string }[]> {
+  async getBatch(ids: string[]): Promise<{ id: string; firstName: string; lastName: string; roles: string[] }[]> {
     if (ids.length === 0) return [];
     try {
-      const { data } = await api.post<{ users: { id: string; firstName: string; lastName: string }[] }>(
+      const { data } = await api.post<{ users: { id: string; firstName: string; lastName: string; roles: string[] }[] }>(
         '/users/batch', { ids }, { _silent: true } as any,
       );
       return data.users ?? [];

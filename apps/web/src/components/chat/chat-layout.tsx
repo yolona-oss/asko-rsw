@@ -30,8 +30,9 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   const uploadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const initialConversationHandled = useRef(false);
 
-  // Participant name cache (userId → display name)
+  // Participant name + role cache (userId → display name / primary role)
   const [participantNames, setParticipantNames] = useState<Record<string, string>>({});
+  const [participantRoles, setParticipantRoles] = useState<Record<string, string>>({});
   const fetchedProfilesRef = useRef<Set<string>>(new Set());
 
   const registerParticipantIds = useCallback((ids: string[]) => {
@@ -43,6 +44,14 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
         const next = { ...prev };
         for (const u of users) {
           next[u.id] = [u.lastName, u.firstName].filter(Boolean).join(' ') || u.id.slice(0, 8);
+        }
+        return next;
+      });
+      setParticipantRoles(prev => {
+        const next = { ...prev };
+        for (const u of users) {
+          // Use the most specific role (first non-'user' role, or 'user')
+          next[u.id] = u.roles.find(r => r !== 'user') ?? u.roles[0] ?? '';
         }
         return next;
       });
@@ -207,6 +216,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
               realtimeMessages={realtimeMessages}
               onBack={handleBack}
               participantNames={participantNames}
+              participantRoles={participantRoles}
             />
           ) : (
             <ChatEmptyState />

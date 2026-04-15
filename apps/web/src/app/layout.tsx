@@ -43,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
+        {/* Key 'theme' must match STORAGE_KEYS.theme in lib/storage.ts */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} />
       </head>
       <body className="min-h-screen flex flex-col">

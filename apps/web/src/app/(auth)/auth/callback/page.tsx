@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/auth-slice';
 import { authApi } from '@/lib/api/auth';
+import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();
@@ -33,7 +34,7 @@ function CallbackHandler() {
 
     dispatch(setCredentials({ accessToken: token, user: null as any }));
     authApi.getSession().then(({ data }) => {
-      try { localStorage.setItem('has_account', '1'); } catch {}
+      storage.set(STORAGE_KEYS.hasAccount, '1');
       dispatch(setCredentials({ accessToken: token, user: data }));
       router.replace('/account');
     }).catch(() => {
