@@ -7,10 +7,11 @@ export interface AccountUser extends IAuthUser {
   avatar?: string;
 }
 
-interface MenuItem {
-  href: string;
+export interface MenuItem {
+  href: string;    // route path OR '#anchor-id' for in-page navigation
   label: string;
-  icon: string; // icon key
+  icon: string;    // icon key
+  children?: MenuItem[];
 }
 
 const ROLE_MAP: Partial<Record<Role, UserRole>> = {
@@ -38,18 +39,31 @@ export function displayName(user: AccountUser): string {
 export const menuByRole: Record<UserRole, MenuItem[]> = {
   admin: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/devices', label: 'Устройства', icon: 'devices' },
+    { href: '/account/devices', label: 'Устройства', icon: 'devices', children: [
+      { href: '/account/devices', label: 'Все устройства', icon: 'devices' },
+      { href: '/account/devices/create', label: 'Добавить', icon: 'devices' },
+    ]},
     { href: '/account/parts', label: 'Запчасти', icon: 'wrench' },
-    { href: '/account/articles', label: 'Статьи', icon: 'manual' },
+    { href: '/account/articles', label: 'Статьи', icon: 'manual', children: [
+      { href: '/account/articles', label: 'Все статьи', icon: 'manual' },
+      { href: '/account/articles/create', label: 'Создать', icon: 'manual' },
+      { href: '/account/articles/graph', label: 'Граф связей', icon: 'manual' },
+    ]},
     { href: '/account/users', label: 'Пользователи', icon: 'clients' },
     { href: '/account/manage-certificates', label: 'Сертификаты', icon: 'certificate' },
-    { href: '/account/schedule', label: 'Расписание', icon: 'schedule' },
+    { href: '/account/schedule', label: 'Расписание', icon: 'schedule', children: [
+      { href: '/account/schedule', label: 'Все расписания', icon: 'schedule' },
+      { href: '/account/schedule/my', label: 'Моё расписание', icon: 'schedule' },
+    ]},
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   user: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/requests', label: 'Заявки', icon: 'orders' },
+    { href: '/account/requests', label: 'Заявки', icon: 'orders', children: [
+      { href: '/account/requests', label: 'Все заявки', icon: 'orders' },
+      { href: '/account/requests/create', label: 'Новая заявка', icon: 'orders' },
+    ]},
     { href: '/account/certificates', label: 'Сертификат', icon: 'certificate' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
@@ -57,28 +71,42 @@ export const menuByRole: Record<UserRole, MenuItem[]> = {
   ],
   dealer: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/certificates', label: 'Сертификаты', icon: 'certificate' },
-    { href: '/account/certificates/create', label: 'Новый Сертификат', icon: 'certificate' },
+    { href: '/account/certificates', label: 'Сертификаты', icon: 'certificate', children: [
+      { href: '/account/certificates', label: 'Сертификаты', icon: 'certificate' },
+      { href: '/account/certificates/create', label: 'Новый сертификат', icon: 'certificate' },
+    ]},
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   manager: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/requests', label: 'Заявки', icon: 'orders' },
+    { href: '/account/requests', label: 'Заявки', icon: 'orders', children: [
+      { href: '/account/requests', label: 'Все заявки', icon: 'orders' },
+      { href: '/account/requests/create', label: 'Новая заявка', icon: 'orders' },
+    ]},
     { href: '/account/users', label: 'Доступы', icon: 'clients' },
     { href: '/account/payments', label: 'Платежи', icon: 'payments' },
-    { href: '/account/schedule', label: 'Расписание', icon: 'schedule' },
+    { href: '/account/schedule', label: 'Расписание', icon: 'schedule', children: [
+      { href: '/account/schedule', label: 'Все расписания', icon: 'schedule' },
+      { href: '/account/schedule/my', label: 'Моё расписание', icon: 'schedule' },
+    ]},
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],
   repairer: [
     { href: '/account', label: 'Главная', icon: 'home' },
-    { href: '/account/requests', label: 'Заявка', icon: 'wrench' },
+    { href: '/account/requests', label: 'Заявка', icon: 'wrench', children: [
+      { href: '/account/requests', label: 'Все заявки', icon: 'wrench' },
+      { href: '/account/requests/create', label: 'Новая заявка', icon: 'wrench' },
+    ]},
     { href: '/account/history', label: 'История', icon: 'history' },
     { href: '/account/man', label: 'Мануалы', icon: 'manual' },
     { href: '/account/parts', label: 'Запчасти', icon: 'wrench' },
-    { href: '/account/schedule', label: 'Расписание', icon: 'schedule' },
+    { href: '/account/schedule', label: 'Расписание', icon: 'schedule', children: [
+      { href: '/account/schedule', label: 'Все расписания', icon: 'schedule' },
+      { href: '/account/schedule/my', label: 'Моё расписание', icon: 'schedule' },
+    ]},
     { href: '/account/chat', label: 'Чат', icon: 'chat' },
     { href: '/account/profile', label: 'Профиль', icon: 'profile' },
   ],

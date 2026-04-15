@@ -13,6 +13,7 @@ import { useTheme } from '@/lib/theme';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { useMenuBadges } from '@/lib/hooks/use-menu-badges';
+import { useResolvedMenu } from '@/lib/hooks/use-resolved-menu';
 import { MenuIcon } from './menu-icon';
 import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 
@@ -28,7 +29,8 @@ export function AccountSidebar() {
   const { user } = useAccount();
   const { collapsed, toggleCollapsed } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
-  const menu = user ? menuByRole[primaryRole(user)] : [];
+  const fullMenu = user ? menuByRole[primaryRole(user)] : [];
+  const { items: menu, parent: submenuParent } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
@@ -66,35 +68,48 @@ export function AccountSidebar() {
             </div>
           ))
         ) : (
-          menu.map((item) => {
-            const isActive = pathname === item.href;
-            const hasBadge = badgeHrefs.has(item.href);
-            return (
+          <>
+            {submenuParent && (
               <GuardedLink
-                key={item.href}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                className={`flex items-center gap-3 py-2 text-sm tracking-[-0.01em] transition-colors ${
+                href={submenuParent.href}
+                title={collapsed ? submenuParent.label : undefined}
+                className={`flex items-center gap-3 py-2 text-sm tracking-[-0.01em] text-text-sub hover:text-text-main transition-colors mb-1 ${
                   collapsed ? 'justify-center px-0' : 'px-2'
-                } ${isActive
-                  ? 'text-brand-red font-medium'
-                  : 'text-text-main hover:text-brand-red'
                 }`}
               >
-                <span className="relative flex-shrink-0">
-                  {user ? (
-                    <MenuIcon icon={item.icon} active={isActive} />
-                  ) : (
-                    <SkeletonCircle className="w-5 h-5" />
-                  )}
-                  {hasBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand-red" />
-                  )}
-                </span>
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                <ArrowLeft className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="truncate">{submenuParent.label}</span>}
               </GuardedLink>
-            );
-          })
+            )}
+            {menu.map((item) => {
+              const isHash = item.href.startsWith('#');
+              const isActive = isHash
+                ? typeof window !== 'undefined' && window.location.hash === item.href
+                : pathname === item.href;
+              const hasBadge = !isHash && badgeHrefs.has(item.href);
+              return (
+                <GuardedLink
+                  key={item.href}
+                  href={item.href}
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center gap-3 py-2 text-sm tracking-[-0.01em] transition-colors ${
+                    collapsed ? 'justify-center px-0' : 'px-2'
+                  } ${isActive
+                    ? 'text-brand-red font-medium'
+                    : 'text-text-main hover:text-brand-red'
+                  }`}
+                >
+                  <span className="relative flex-shrink-0">
+                    <MenuIcon icon={item.icon} active={isActive} />
+                    {hasBadge && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand-red" />
+                    )}
+                  </span>
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </GuardedLink>
+              );
+            })}
+          </>
         )}
       </nav>
 
@@ -184,7 +199,8 @@ export function MobileSidebar() {
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
-  const menu = user ? menuByRole[primaryRole(user)] : [];
+  const fullMenu = user ? menuByRole[primaryRole(user)] : [];
+  const { items: menu, parent: submenuParent } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
@@ -331,9 +347,22 @@ export function MobileSidebar() {
 
         {/* Menu */}
         <nav className="flex flex-col gap-1 px-4">
+          {submenuParent && (
+            <GuardedLink
+              href={submenuParent.href}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-2 py-3 text-base tracking-[-0.01em] text-text-sub mb-1"
+            >
+              <ArrowLeft className="w-5 h-5 flex-shrink-0" />
+              {submenuParent.label}
+            </GuardedLink>
+          )}
           {menu.map((item) => {
-            const isActive = pathname === item.href;
-            const hasBadge = badgeHrefs.has(item.href);
+            const isHash = item.href.startsWith('#');
+            const isActive = isHash
+              ? typeof window !== 'undefined' && window.location.hash === item.href
+              : pathname === item.href;
+            const hasBadge = !isHash && badgeHrefs.has(item.href);
             return (
               <GuardedLink
                 key={item.href}

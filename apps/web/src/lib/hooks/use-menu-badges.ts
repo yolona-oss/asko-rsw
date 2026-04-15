@@ -26,8 +26,10 @@ export function useMenuBadges(): Set<string> {
       const config = NOTIFICATION_TYPE_CONFIG[n.type];
       const href = config?.href?.(n);
       if (href) {
-        const base = href.split('?')[0].split('/').slice(0, 3).join('/');
+        const clean = href.split('?')[0];
+        const base = clean.split('/').slice(0, 3).join('/');
         hrefs.add(base);
+        if (clean !== base) hrefs.add(clean);
       }
     }
     return hrefs;
