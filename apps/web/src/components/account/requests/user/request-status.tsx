@@ -30,7 +30,7 @@ import {
 import type { RepairRequest, WorkStep } from './detail-types';
 import { StepCircle } from './step-circle';
 import { StepLine } from './step-line';
-import { StatusTimeline } from './status-timeline';
+import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
 import { StarRating } from './star-rating';
 import { WorkStepCard } from './work-step-card';
 
@@ -47,6 +47,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [signingRetryAfter, setSigningRetryAfter] = useState(0);
   const [signingInitiated, setSigningInitiated] = useState(false);
   const [signingLoading, setSigningLoading] = useState(false);
+
+  // Status history modal
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Payment modal state
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -260,7 +263,20 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       {/* Status timeline */}
       {request.statusTimestamps && request.statusTimestamps.length > 1 && (
-        <StatusTimeline statusTimestamps={request.statusTimestamps} currentStatus={request.status} />
+        <>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="text-sm text-brand-main hover:underline transition-colors mt-4"
+          >
+            История статусов ({request.statusTimestamps.length})
+          </button>
+          <StatusHistoryModal
+            open={historyOpen}
+            onClose={() => setHistoryOpen(false)}
+            statusTimestamps={request.statusTimestamps}
+            currentStatus={request.status}
+          />
+        </>
       )}
 
       {/* Progress steps */}

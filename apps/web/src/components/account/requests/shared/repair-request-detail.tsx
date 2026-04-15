@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Badge, DetailRow, DetailSection } from '@asko/ui';
 import { AvrStatusCard } from './avr-status-card';
+import { StatusHistoryModal } from './status-history-modal';
 import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
 import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
 import { formatPaymentAmount } from '@/components/account/payments/shared/payment-constants';
@@ -25,21 +26,6 @@ const statusVariant = (s: string): BadgeVariant => {
 
 const fmtAmount = (n: number) => formatPaymentAmount(n);
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Заявка создана',
-  paid: 'Оплата получена',
-  assigned: 'Назначение мастера',
-  accepted: 'Мастер принял заявку',
-  en_route: 'Мастер в пути',
-  in_progress: 'Ремонт в процессе',
-  paused: 'Ремонт приостановлен',
-  awaiting_completion: 'Ожидает завершения',
-  completed: 'Ремонт завершён',
-  cancelled: 'Заявка отменена',
-  refused: 'Мастер отказался',
-  refund_requested: 'Запрос возврата',
-  refunded: 'Средства возвращены',
-};
 
 export async function fetchRepairRequestOne(item: any): Promise<any> {
   const { data } = await api.get(`/repair-requests/${item.id}`, { _silent: true } as any);
@@ -54,6 +40,7 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
   const [schedule, setSchedule] = useState<any[] | null>(null);
   const [review, setReview] = useState<any>(null);
   const [reviewFetched, setReviewFetched] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const userName = [item.user?.lastName, item.user?.firstName].filter(Boolean).join(' ') || null;
   const deviceName = item.userDevice?.device?.name ?? item.device?.name;
@@ -72,13 +59,22 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
 
       {/* Status history */}
       {item.statusTimestamps && (item.statusTimestamps as { status: string; timestamp: string }[]).length > 0 && (
-        <DetailSection label="История статусов" summary={`${(item.statusTimestamps as { status: string; timestamp: string }[]).length}`}>
-          {[...(item.statusTimestamps as { status: string; timestamp: string }[])]
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-            .map((entry, idx) => (
-              <DetailRow key={idx} label={STATUS_LABEL[entry.status] ?? entry.status} value={fmt(entry.timestamp)} />
-            ))}
-        </DetailSection>
+        <>
+          <DetailRow
+            label="История статусов"
+            value={
+              <button onClick={() => setHistoryOpen(true)} className="text-sm text-brand-main hover:underline">
+                Показать ({(item.statusTimestamps as { status: string; timestamp: string }[]).length})
+              </button>
+            }
+          />
+          <StatusHistoryModal
+            open={historyOpen}
+            onClose={() => setHistoryOpen(false)}
+            statusTimestamps={item.statusTimestamps as { status: string; timestamp: string }[]}
+            currentStatus={item.status}
+          />
+        </>
       )}
 
       {/* Device → Category */}

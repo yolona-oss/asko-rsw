@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/requests/shared/broken-parts/editor';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
+import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
 import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
 import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
@@ -47,6 +48,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [priceSuccess, setPriceSuccess] = useState(false);
 
   // Modals
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [refuseOpen, setRefuseOpen] = useState(false);
   const [refuseReason, setRefuseReason] = useState('');
   const [refuseLoading, setRefuseLoading] = useState(false);
@@ -389,22 +391,20 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
       {/* Status history */}
       {request.statusTimestamps && request.statusTimestamps.length > 1 && (
-        <details className="group">
-          <summary className="text-sm text-text-sub cursor-pointer hover:text-text-main transition-colors select-none">
+        <>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="text-sm text-brand-main hover:underline transition-colors"
+          >
             История статусов ({request.statusTimestamps.length})
-          </summary>
-          <div className="flex flex-col gap-1.5 mt-2 pl-1">
-            {[...request.statusTimestamps]
-              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-              .map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm">
-                  <span className="w-2 h-2 shrink-0 bg-success" />
-                  <span className="text-text-sub">{STATUS_LABELS[entry.status] ?? entry.status}</span>
-                  <span className="text-text-sub ml-auto">{formatDate(entry.timestamp)}</span>
-                </div>
-              ))}
-          </div>
-        </details>
+          </button>
+          <StatusHistoryModal
+            open={historyOpen}
+            onClose={() => setHistoryOpen(false)}
+            statusTimestamps={request.statusTimestamps}
+            currentStatus={request.status}
+          />
+        </>
       )}
 
       {/* ── Flow control cards ── */}

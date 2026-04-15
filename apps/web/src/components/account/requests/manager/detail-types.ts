@@ -1,4 +1,5 @@
 import { RepairRequestStatus, ScheduleEntryType } from '@asko/shared/client';
+import type { IStatusTimestampEntry } from '@asko/shared/client';
 
 export interface RepairRequestDetail {
   id: string;
@@ -20,6 +21,7 @@ export interface RepairRequestDetail {
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
   address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number };
+  statusTimestamps?: IStatusTimestampEntry[];
   repairer?: {
     id: string;
     city: string;

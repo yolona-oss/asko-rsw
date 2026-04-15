@@ -9,6 +9,7 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/requests/shared/broken-parts/editor';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
+import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
 import { WorkStepsView } from '@/components/account/requests/shared/work-steps-view';
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/certificates/shared/certificate-applied-badge';
@@ -76,6 +77,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [assignSuccess, setAssignSuccess] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatAttached, setChatAttached] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
@@ -313,6 +315,23 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           >
             <ClipboardCopy className="w-4 h-4" />
           </button>
+          {request.statusTimestamps && request.statusTimestamps.length > 1 && (
+            <>
+              <span className="text-border-light">|</span>
+              <button
+                onClick={() => setHistoryOpen(true)}
+                className="text-brand-main hover:underline transition-colors"
+              >
+                История ({request.statusTimestamps.length})
+              </button>
+              <StatusHistoryModal
+                open={historyOpen}
+                onClose={() => setHistoryOpen(false)}
+                statusTimestamps={request.statusTimestamps}
+                currentStatus={request.status}
+              />
+            </>
+          )}
         </div>
       </div>
 
