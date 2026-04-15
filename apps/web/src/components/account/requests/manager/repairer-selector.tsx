@@ -123,7 +123,7 @@ export function RepairerSelector({
     && requestAddress.latitude !== 0 && requestAddress.longitude !== 0;
 
   return (
-    <div ref={wrapperRef} className="relative max-w-[500px] w-full">
+    <div ref={wrapperRef} className="relative w-full">
       {/* Trigger button */}
       <button
         type="button"

@@ -624,34 +624,35 @@ function AssignSection({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25 }}
+            className="flex flex-col gap-3"
           >
-            <p className="text-sm font-bold text-text-main mb-2">
-              {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
-            </p>
-            {isAssigned && (
-              <p className="text-xs text-text-sub mb-2">
-                При смене исполнителя заявка перейдёт в статус «Назначена».
+            <div>
+              <p className="text-sm font-bold text-text-main">
+                {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
               </p>
-            )}
-            <div className="flex items-center gap-2">
-              <RepairerSelector
-                repairers={repairers}
-                scheduleInfo={scheduleInfo}
-                selectedId={selectedRepairer}
-                onSelect={onSelectRepairer}
-                requestAddress={requestAddress}
-                currentRepairerId={currentRepairerId}
-                placeholder="Выбрать доступного мастера"
-              />
-              <button
-                type="button"
-                onClick={onAssign}
-                disabled={!selectedRepairer}
-                className="px-4 py-2 text-sm font-medium text-text-on-brand bg-brand-red disabled:opacity-50 cursor-pointer"
-              >
-                {isAssigned ? 'Переназначить' : 'Назначить'}
-              </button>
+              {isAssigned && (
+                <p className="text-xs text-text-sub mt-1">
+                  При смене исполнителя заявка перейдёт в статус «Назначена».
+                </p>
+              )}
             </div>
+            <RepairerSelector
+              repairers={repairers}
+              scheduleInfo={scheduleInfo}
+              selectedId={selectedRepairer}
+              onSelect={onSelectRepairer}
+              requestAddress={requestAddress}
+              currentRepairerId={currentRepairerId}
+              placeholder="Выбрать доступного мастера"
+            />
+            <button
+              type="button"
+              onClick={onAssign}
+              disabled={!selectedRepairer}
+              className="w-full lg:w-auto lg:self-end px-5 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red disabled:opacity-50 cursor-pointer transition-colors"
+            >
+              {isAssigned ? 'Переназначить' : 'Назначить'}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
