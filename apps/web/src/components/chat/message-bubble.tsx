@@ -1,13 +1,22 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { FileText, Download } from 'lucide-react';
 import { LightboxModal } from '@asko/ui';
 import type { ChatMessage } from '@/lib/chat-types';
 import { getImageUrl, getVideoUrl } from '@/lib/file-url';
+import { openDocument, downloadDocument } from '@/lib/file-url';
 import { MessageStatusIcon } from './message-status-icon';
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
 interface Attachment {
@@ -21,6 +30,10 @@ interface Attachment {
   format?: string;
   duration?: number;
   originalFilename?: string;
+  documentId?: string;
+  filename?: string;
+  mimeType?: string;
+  sizeBytes?: number;
 }
 
 function parseAttachment(raw?: string): Attachment | null {
@@ -45,6 +58,19 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
   const attachment = useMemo(() => parseAttachment(message.attachmentJson), [message.attachmentJson]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const handleOpenDocument = useCallback(() => {
+    if (attachment?.documentId) {
+      openDocument(attachment.documentId);
+    }
+  }, [attachment?.documentId]);
+
+  const handleDownloadDocument = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (attachment?.documentId) {
+      downloadDocument(attachment.documentId, attachment.filename);
+    }
+  }, [attachment?.documentId, attachment?.filename]);
+
   if (message.type === 'system') {
     return (
       <div className="flex justify-center py-1">
@@ -56,6 +82,7 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
   }
 
   const isMedia = message.type === 'image' || message.type === 'video';
+  const isDocument = message.type === 'document';
   const imageSrc = (attachment?.imageId ? getImageUrl(attachment.imageId) : null)
     ?? (attachment?.url ?? attachment?.originalUrl ?? '');
   const videoSrc = (attachment?.videoId ? getVideoUrl(attachment.videoId) : null)
@@ -104,6 +131,43 @@ export function MessageBubble({ message, isOwn, showSender, senderName, conversa
               Видео не поддерживается
             </video>
           </div>
+        )}
+
+        {/* Document attachment */}
+        {isDocument && attachment?.documentId && (
+          <button
+            type="button"
+            onClick={handleOpenDocument}
+            className={`flex items-center gap-3 px-3 pt-2.5 pb-0.5 w-full min-w-[200px] max-w-[320px] text-left cursor-pointer group`}
+          >
+            <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${
+              isOwn ? 'bg-white/10' : 'bg-surface-secondary'
+            }`}>
+              <FileText className={`w-5 h-5 ${isOwn ? 'text-text-on-dark/80' : 'text-text-sub'}`} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-sm font-medium truncate ${
+                isOwn ? 'text-text-on-dark group-hover:underline' : 'text-text-main group-hover:underline'
+              }`}>
+                {attachment.filename || 'Документ'}
+              </p>
+              <p className={`text-[11px] ${isOwn ? 'text-text-on-dark/50' : 'text-text-sub/60'}`}>
+                {formatFileSize(attachment.sizeBytes)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadDocument}
+              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isOwn
+                  ? 'text-text-on-dark/60 hover:text-text-on-dark hover:bg-white/10'
+                  : 'text-text-sub hover:text-text-main hover:bg-surface-secondary'
+              }`}
+              title="Скачать"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          </button>
         )}
 
         {/* Text content + timestamp area */}

@@ -7,6 +7,7 @@ export enum MessageType {
     TEXT = 'text',
     IMAGE = 'image',
     VIDEO = 'video',
+    DOCUMENT = 'document',
     SYSTEM = 'system',
 }
 
@@ -26,6 +27,7 @@ export enum UserActivity {
     TYPING = 'typing',
     UPLOADING_IMAGE = 'uploading_image',
     UPLOADING_VIDEO = 'uploading_video',
+    UPLOADING_DOCUMENT = 'uploading_document',
 }
 
 export enum ParticipantRole {

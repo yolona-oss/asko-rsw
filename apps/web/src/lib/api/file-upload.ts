@@ -55,6 +55,10 @@ export const fileUploadApi = {
     return api.post<VideoResponse>('/file-upload/video/upload', toForm(file), MULTIPART);
   },
 
+  uploadDocument(file: File) {
+    return api.post<DocumentResponse>('/file-upload/document/upload', toForm(file), MULTIPART);
+  },
+
   // ── Image uploads by target ───────────────────────────────────────────
 
   uploadAvatar(file: File | Blob, userId: string) {

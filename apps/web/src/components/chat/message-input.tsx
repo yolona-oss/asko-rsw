@@ -1,19 +1,45 @@
 'use client';
 
 import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from 'react';
+import { FileText } from 'lucide-react';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/jpg';
 const VIDEO_ACCEPT = 'video/mp4,video/webm,video/mov,video/quicktime';
+const DOCUMENT_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv';
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_DOCUMENT_SIZE = 20 * 1024 * 1024; // 20MB
+
+const DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'text/csv',
+]);
+
+function isDocumentFile(file: File): boolean {
+  if (DOCUMENT_MIME_TYPES.has(file.type)) return true;
+  // Fallback to extension check for browsers that report empty mime
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  return ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'].includes(ext ?? '');
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
 
 interface AttachedFile {
   file: File;
   preview: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'document';
 }
 
 interface MessageInputProps {
@@ -60,9 +86,10 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
 
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
+    const isDocument = isDocumentFile(file);
 
-    if (!isImage && !isVideo) {
-      setUploadError('Поддерживаются только изображения и видео');
+    if (!isImage && !isVideo && !isDocument) {
+      setUploadError('Неподдерживаемый формат файла');
       return;
     }
 
@@ -76,15 +103,22 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
       return;
     }
 
+    if (isDocument && !isImage && file.size > MAX_DOCUMENT_SIZE) {
+      setUploadError('Документ не должен превышать 20 МБ');
+      return;
+    }
+
     // Clean up previous preview
     if (attachment) {
       URL.revokeObjectURL(attachment.preview);
     }
 
+    const fileType = isImage ? 'image' as const : isVideo ? 'video' as const : 'document' as const;
+
     setAttachment({
       file,
-      preview: URL.createObjectURL(file),
-      type: isImage ? 'image' : 'video',
+      preview: isImage ? URL.createObjectURL(file) : '',
+      type: fileType,
     });
   }, [attachment]);
 
@@ -102,7 +136,6 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
 
     try {
       if (attachment) {
-        // Upload file first, then send as image/video message
         if (attachment.type === 'image') {
           const { data: uploaded } = await fileUploadApi.uploadImage(attachment.file);
           const img = uploaded.image;
@@ -118,7 +151,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
               height: img.imageJson?.original?.height,
             },
           });
-        } else {
+        } else if (attachment.type === 'video') {
           const { data: uploaded } = await fileUploadApi.uploadVideo(attachment.file);
           const vid = uploaded.video;
           await chatApi.sendMessage(conversationId, {
@@ -130,6 +163,19 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
               format: vid.videoJson?.format,
               duration: vid.videoJson?.duration,
               originalFilename: vid.videoJson?.original_filename,
+            },
+          });
+        } else {
+          const { data: uploaded } = await fileUploadApi.uploadDocument(attachment.file);
+          const doc = uploaded.document;
+          await chatApi.sendMessage(conversationId, {
+            type: 'document',
+            text: trimmed || undefined,
+            attachment: {
+              documentId: doc.id,
+              filename: doc.filename || attachment.file.name,
+              mimeType: doc.mimeType || attachment.file.type,
+              sizeBytes: doc.sizeBytes || attachment.file.size,
             },
           });
         }
@@ -172,7 +218,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
                 alt="Прикрепленное изображение"
                 className="h-20 max-w-[160px] object-cover rounded-lg border border-border-light"
               />
-            ) : (
+            ) : attachment.type === 'video' ? (
               <div className="h-20 w-[160px] flex items-center justify-center bg-surface-secondary rounded-lg border border-border-light">
                 <div className="text-center">
                   <svg className="w-6 h-6 mx-auto text-text-sub" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -181,6 +227,14 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
                   <p className="text-[10px] text-text-sub mt-0.5 truncate max-w-[140px] px-1">
                     {attachment.file.name}
                   </p>
+                </div>
+              </div>
+            ) : (
+              <div className="h-20 w-[200px] flex items-center gap-2.5 px-3 bg-surface-secondary rounded-lg border border-border-light">
+                <FileText className="w-8 h-8 flex-shrink-0 text-text-sub" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-text-main truncate">{attachment.file.name}</p>
+                  <p className="text-[10px] text-text-sub mt-0.5">{formatFileSize(attachment.file.size)}</p>
                 </div>
               </div>
             )}
@@ -221,7 +275,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
         <input
           ref={fileInputRef}
           type="file"
-          accept={`${IMAGE_ACCEPT},${VIDEO_ACCEPT}`}
+          accept={`${IMAGE_ACCEPT},${VIDEO_ACCEPT},${DOCUMENT_ACCEPT}`}
           onChange={handleFileSelect}
           className="hidden"
         />
