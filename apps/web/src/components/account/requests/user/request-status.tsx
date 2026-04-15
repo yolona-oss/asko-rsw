@@ -181,7 +181,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <h2 className="text-2xl lg:text-[28px] font-medium tracking-[-0.01em] text-text-main">
           {statusTitle}
         </h2>
-        <span className="text-sm text-text-sub">{formatDate(request.statusTimestamps?.[request.status] ?? request.updatedAt)}</span>
+        <span className="text-sm text-text-sub">{formatDate(request.statusTimestamps?.slice().reverse().find(e => e.status === request.status)?.timestamp ?? request.updatedAt)}</span>
         {request.certificateValid === false && !(!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active') && (
           <div className="flex flex-col gap-1 mt-2">
             <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />
@@ -258,7 +258,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       )}
 
       {/* Status timeline */}
-      {request.statusTimestamps && Object.keys(request.statusTimestamps).length > 1 && (
+      {request.statusTimestamps && request.statusTimestamps.length > 1 && (
         <StatusTimeline statusTimestamps={request.statusTimestamps} currentStatus={request.status} />
       )}
 

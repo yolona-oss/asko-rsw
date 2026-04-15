@@ -1,30 +1,36 @@
 'use client';
 
 import { Clock } from 'lucide-react';
-import type { RepairRequestStatus } from '@asko/shared/client';
+import type { RepairRequestStatus, IStatusTimestampEntry } from '@asko/shared/client';
 import { STATUS_TITLES, formatDate } from './detail-constants';
 
 interface StatusTimelineProps {
-  statusTimestamps: Record<string, string>;
+  statusTimestamps: IStatusTimestampEntry[];
   currentStatus: RepairRequestStatus;
 }
 
 export function StatusTimeline({ statusTimestamps, currentStatus }: StatusTimelineProps) {
-  const entries = Object.entries(statusTimestamps)
-    .sort(([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime());
+  const entries = [...statusTimestamps].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  );
 
   if (entries.length === 0) return null;
+
+  let lastCurrentIdx = -1;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    if (entries[i].status === currentStatus) { lastCurrentIdx = i; break; }
+  }
 
   return (
     <div className="flex flex-col gap-0 max-w-lg mt-6">
       <h3 className="text-base font-medium text-text-main mb-3">История статусов</h3>
       <div className="relative">
-        {entries.map(([status, timestamp], idx) => {
-          const isCurrent = status === currentStatus;
+        {entries.map((entry, idx) => {
+          const isCurrent = entry.status === currentStatus && idx === lastCurrentIdx;
           const isLast = idx === entries.length - 1;
 
           return (
-            <div key={status} className="flex gap-3 relative">
+            <div key={idx} className="flex gap-3 relative">
               {/* Vertical line */}
               {!isLast && (
                 <div className="absolute left-[11px] top-[24px] bottom-0 w-px bg-border-light" />
@@ -46,9 +52,9 @@ export function StatusTimeline({ statusTimestamps, currentStatus }: StatusTimeli
               {/* Content */}
               <div className={`flex flex-col pb-4 ${isLast ? 'pb-0' : ''}`}>
                 <span className={`text-sm font-medium ${isCurrent ? 'text-text-main' : 'text-text-sub'}`}>
-                  {STATUS_TITLES[status] ?? status}
+                  {STATUS_TITLES[entry.status] ?? entry.status}
                 </span>
-                <span className="text-xs text-text-sub">{formatDate(timestamp)}</span>
+                <span className="text-xs text-text-sub">{formatDate(entry.timestamp)}</span>
               </div>
             </div>
           );

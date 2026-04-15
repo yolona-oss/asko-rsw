@@ -28,6 +28,7 @@ export {
     BrokenPartStatus,
     PaymentStatus,
 } from './repair/repair.type.js';
+export type { IStatusTimestampEntry } from './repair/repair.type.js';
 export { AvrStatus, AvrSigningMethod, SigningOtpChannel } from './repair/avr.enum.js';
 
 // Certificate

@@ -42,7 +42,52 @@ export class RepairRequestService {
     ) {}
 
     private recordStatusTimestamp(request: RepairRequest, status: RepairRequestStatus): void {
-        request.statusTimestamps = { ...request.statusTimestamps, [status]: new Date().toISOString() };
+        request.statusTimestamps = [...request.statusTimestamps, { status, timestamp: new Date().toISOString() }];
+    }
+
+    private lastTimestampFor(entries: { status: string; timestamp: string }[], status: RepairRequestStatus): string | undefined {
+        for (let i = entries.length - 1; i >= 0; i--) {
+            if (entries[i].status === status) return entries[i].timestamp;
+        }
+        return undefined;
+    }
+
+    private deriveWorkPeriod(request: RepairRequest): { workStart: Date; workEnd: Date } | null {
+        const ts = request.statusTimestamps;
+        const startIso = this.lastTimestampFor(ts, RepairRequestStatus.IN_PROGRESS);
+        if (!startIso) return null;
+
+        const endIso = this.lastTimestampFor(ts, RepairRequestStatus.COMPLETED)
+            || this.lastTimestampFor(ts, RepairRequestStatus.PAUSED)
+            || this.lastTimestampFor(ts, RepairRequestStatus.AWAITING_COMPLETION);
+        if (!endIso) return null;
+
+        const workStart = new Date(startIso);
+        const workEnd = new Date(endIso);
+        if (workEnd <= workStart) return null;
+        return { workStart, workEnd };
+    }
+
+    private async recordScheduleEntries(repairerUserId: string, request: RepairRequest): Promise<void> {
+        const period = this.deriveWorkPeriod(request);
+        if (!period) return;
+
+        const { workStart, workEnd } = period;
+        const workDate = new Date(workEnd.getFullYear(), workEnd.getMonth(), workEnd.getDate());
+
+        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, workEnd);
+        if (!slot) return;
+
+        if (slot.work) {
+            const endTime = workEnd.toTimeString().slice(0, 5);
+            if (endTime > slot.endTime) {
+                await this.scheduleService.recordOvertime(repairerUserId, workDate, slot.endTime, endTime, request.id);
+            }
+        } else {
+            const startTime = workStart.toTimeString().slice(0, 5);
+            const endTime = workEnd.toTimeString().slice(0, 5);
+            await this.scheduleService.recordExtraDay(repairerUserId, workDate, startTime, endTime, request.id);
+        }
     }
 
     /** User creates a repair request */
@@ -137,7 +182,7 @@ export class RepairRequestService {
             preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
             address: addressRef,
             status: RepairRequestStatus.PENDING,
-            statusTimestamps: { [RepairRequestStatus.PENDING]: new Date().toISOString() },
+            statusTimestamps: [{ status: RepairRequestStatus.PENDING, timestamp: new Date().toISOString() }],
         });
         await this.em.persistAndFlush(request);
 
@@ -284,7 +329,7 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
-        await this.ensureExtraDayIfOff(repairer.userId, request.id);
+        await this.ensureExtraDayIfOff(repairer.userId, request);
 
         await this.repairEventService.emit({
             type: RepairEventType.ASSIGNED,
@@ -306,17 +351,18 @@ export class RepairRequestService {
      * treat as "off" since nothing is planned), log an EXTRA_DAY entry so the repairer gets
      * credit for working an unscheduled day. Idempotent per (user, date).
      */
-    private async ensureExtraDayIfOff(repairerUserId: string, requestId: string): Promise<void> {
-        const now = new Date();
+    private async ensureExtraDayIfOff(repairerUserId: string, request: RepairRequest): Promise<void> {
+        const assignedIso = this.lastTimestampFor(request.statusTimestamps, RepairRequestStatus.ASSIGNED);
+        const date = assignedIso ? new Date(assignedIso) : new Date();
         // Vacation / sick leave already blocks assignRepairer; if we ever get here despite
         // that (e.g. another caller), skip logging an EXTRA_DAY since blocked time isn't bonus work.
         const blocking = await this.findBlockingScheduleToday(repairerUserId);
         if (blocking) return;
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, now);
+        const slot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, date);
         if (slot && slot.work) return;
         const start = slot?.startTime || '09:00';
         const end = slot?.endTime || '18:00';
-        await this.scheduleService.recordExtraDay(repairerUserId, now, start, end, requestId);
+        await this.scheduleService.recordExtraDay(repairerUserId, date, start, end, request.id);
     }
 
     /**
@@ -584,29 +630,14 @@ export class RepairRequestService {
             timestamp: new Date(),
         });
 
-        // Auto-record overtime if work extended past schedule
+        // Auto-record overtime/extra day based on actual work timestamps
         if (repairerId) {
             try {
                 const repairer = await this.em.findOne(Repairer, { id: repairerId });
                 if (repairer) {
-                    const now = new Date();
-                    const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, now);
-                    if (slot && slot.work) {
-                        const nowTime = now.toTimeString().slice(0, 5);
-                        if (nowTime > slot.endTime) {
-                            await this.scheduleService.recordOvertime(
-                                repairer.userId,
-                                now,
-                                slot.endTime,
-                                nowTime,
-                                request.id,
-                            );
-                        }
-                    }
+                    await this.recordScheduleEntries(repairer.userId, request);
                 }
-            } catch {
-                // Non-critical: don't fail completion if overtime recording fails
-            }
+            } catch { /* non-critical */ }
         }
 
         return request;
@@ -651,6 +682,10 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.PAUSED;
         this.recordStatusTimestamp(request, RepairRequestStatus.PAUSED);
         await this.em.flush();
+
+        try {
+            await this.recordScheduleEntries(repairer.userId, request);
+        } catch { /* non-critical */ }
 
         await this.repairEventService.emit({
             type: RepairEventType.STATUS_CHANGED,
@@ -725,6 +760,12 @@ export class RepairRequestService {
 
         const repairerEntity = typeof request.repairer === 'object' ? request.repairer : null;
 
+        if (repairerEntity) {
+            try {
+                await this.recordScheduleEntries(repairerEntity.userId, request);
+            } catch { /* non-critical */ }
+        }
+
         await this.repairEventService.emit({
             type: RepairEventType.SCHEDULE_AUTO_PAUSED,
             repairId: request.id,
@@ -769,7 +810,7 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
-        await this.ensureExtraDayIfOff(newRepairer.userId, request.id);
+        await this.ensureExtraDayIfOff(newRepairer.userId, request);
 
         await this.repairEventService.emit({
             type: RepairEventType.TRANSFERRED,
@@ -1244,6 +1285,7 @@ export class RepairRequestService {
         }
 
         request.status = RepairRequestStatus.COMPLETED;
+        this.recordStatusTimestamp(request, RepairRequestStatus.COMPLETED);
 
         // Freeze certificate snapshot
         const cert = typeof request.certificate === 'object' ? request.certificate : null;
@@ -1314,19 +1356,12 @@ export class RepairRequestService {
             timestamp: new Date(),
         });
 
-        // Auto-record overtime
+        // Auto-record overtime/extra day based on actual work timestamps
         if (repairerId) {
             try {
                 const repairer = await this.em.findOne(Repairer, { id: repairerId });
                 if (repairer) {
-                    const now = new Date();
-                    const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, now);
-                    if (slot && slot.work) {
-                        const nowTime = now.toTimeString().slice(0, 5);
-                        if (nowTime > slot.endTime) {
-                            await this.scheduleService.recordOvertime(repairer.userId, now, slot.endTime, nowTime, request.id);
-                        }
-                    }
+                    await this.recordScheduleEntries(repairer.userId, request);
                 }
             } catch { /* non-critical */ }
         }

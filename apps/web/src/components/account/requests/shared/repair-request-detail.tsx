@@ -70,12 +70,12 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       <DetailRow label="Дата создания" value={item.createdAt ? fmt(item.createdAt) : '-'} />
 
       {/* Status history */}
-      {item.statusTimestamps && Object.keys(item.statusTimestamps).length > 0 && (
-        <DetailSection label="История статусов" summary={`${Object.keys(item.statusTimestamps).length}`}>
-          {Object.entries(item.statusTimestamps as Record<string, string>)
-            .sort(([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime())
-            .map(([status, timestamp]) => (
-              <DetailRow key={status} label={STATUS_LABEL[status] ?? status} value={fmt(timestamp)} />
+      {item.statusTimestamps && (item.statusTimestamps as { status: string; timestamp: string }[]).length > 0 && (
+        <DetailSection label="История статусов" summary={`${(item.statusTimestamps as { status: string; timestamp: string }[]).length}`}>
+          {[...(item.statusTimestamps as { status: string; timestamp: string }[])]
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+            .map((entry, idx) => (
+              <DetailRow key={idx} label={STATUS_LABEL[entry.status] ?? entry.status} value={fmt(entry.timestamp)} />
             ))}
         </DetailSection>
       )}

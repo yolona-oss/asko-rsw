@@ -371,7 +371,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'neutral'} className="px-4 py-1.5 text-sm">
           {STATUS_LABELS[status] ?? status}
         </Badge>
-        <span className="text-sm text-text-sub">{formatDate(request.statusTimestamps?.[status] ?? request.createdAt)}</span>
+        <span className="text-sm text-text-sub">{formatDate((request.statusTimestamps as { status: string; timestamp: string }[] | undefined)?.slice().reverse().find(e => e.status === status)?.timestamp ?? request.createdAt)}</span>
         <Link href="/account/requests" className="ml-auto text-sm text-text-sub hover:text-brand-red transition-colors flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" />
           Назад
@@ -379,19 +379,19 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       </div>
 
       {/* Status history */}
-      {request.statusTimestamps && Object.keys(request.statusTimestamps).length > 1 && (
+      {request.statusTimestamps && request.statusTimestamps.length > 1 && (
         <details className="group">
           <summary className="text-sm text-text-sub cursor-pointer hover:text-text-main transition-colors select-none">
-            История статусов ({Object.keys(request.statusTimestamps).length})
+            История статусов ({request.statusTimestamps.length})
           </summary>
           <div className="flex flex-col gap-1.5 mt-2 pl-1">
-            {Object.entries(request.statusTimestamps as Record<string, string>)
-              .sort(([, a], [, b]) => new Date(a).getTime() - new Date(b).getTime())
-              .map(([s, ts]) => (
-                <div key={s} className="flex items-center gap-2 text-sm">
+            {[...request.statusTimestamps]
+              .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+              .map((entry, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-sm">
                   <span className="w-2 h-2 shrink-0 bg-success" />
-                  <span className="text-text-sub">{STATUS_LABELS[s] ?? s}</span>
-                  <span className="text-text-sub ml-auto">{formatDate(ts)}</span>
+                  <span className="text-text-sub">{STATUS_LABELS[entry.status] ?? entry.status}</span>
+                  <span className="text-text-sub ml-auto">{formatDate(entry.timestamp)}</span>
                 </div>
               ))}
           </div>

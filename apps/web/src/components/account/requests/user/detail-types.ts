@@ -1,4 +1,4 @@
-import type { RepairRequestStatus } from '@asko/shared/client';
+import type { RepairRequestStatus, IStatusTimestampEntry } from '@asko/shared/client';
 
 export interface WorkStep {
   id: string;
@@ -19,7 +19,7 @@ export interface RepairRequest {
   id: string;
   status: RepairRequestStatus;
   description: string;
-  statusTimestamps?: Record<string, string>;
+  statusTimestamps?: IStatusTimestampEntry[];
   createdAt: Date | string;
   updatedAt: Date | string;
   totalCost?: number;

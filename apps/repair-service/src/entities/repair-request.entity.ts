@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
-import { RepairRequestStatus, AvrStatus, type ICertificateSnapshot } from '@asko/shared';
+import { RepairRequestStatus, AvrStatus, type ICertificateSnapshot, type IStatusTimestampEntry } from '@asko/shared';
 import { UserDevice } from './user-device.entity';
 import { Repairer } from './repairer.entity';
 import { Certificate } from './certificate.entity';
@@ -102,8 +102,8 @@ export class RepairRequest {
     @Property({ type: 'text', nullable: true })
     avrSignature?: string;
 
-    @Property({ type: 'jsonb', default: '{}' })
-    statusTimestamps: Record<string, string> = {};
+    @Property({ type: 'jsonb', default: '[]' })
+    statusTimestamps: IStatusTimestampEntry[] = [];
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

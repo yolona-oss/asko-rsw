@@ -36,6 +36,11 @@ export enum PaymentStatus {
     FAILED = 'failed',
 }
 
+export interface IStatusTimestampEntry {
+    status: string;
+    timestamp: string;
+}
+
 export interface IRepairRequest {
     id: string;
     userId: string;
@@ -74,7 +79,7 @@ export interface IRepairRequest {
     avrSignedAt?: Date;
     avrSignedPayload?: string;
     avrSignature?: string;
-    statusTimestamps?: Record<string, string>;
+    statusTimestamps?: IStatusTimestampEntry[];
     scheduleEndNotifiedAt?: Date;
     scheduleEndConfirmedAt?: Date;
     createdAt: Date;
