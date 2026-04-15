@@ -11,4 +11,8 @@ export interface ImportStatus {
   total: number;
   done: number;
   errors: string[];
+  fileName: string;
+  startedAt: number;
+  batch: number;
+  totalBatches: number;
 }

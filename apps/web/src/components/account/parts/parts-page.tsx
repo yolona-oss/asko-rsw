@@ -22,9 +22,28 @@ import { partsApi } from '@/lib/api/parts';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories } from '@/hooks/use-device-categories';
 import type { DevicePartFull } from '@/lib/api/types';
+import { Loader2, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
 import { PartCard } from './part-card';
 import { PartFormModal } from './part-form-modal';
 import type { PartFormData } from './types';
+
+function formatElapsed(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s} сек`;
+  const m = Math.floor(s / 60);
+  return `${m} мин ${s % 60} сек`;
+}
+
+interface ImportStatus {
+  total: number;
+  done: number;
+  skipped: number;
+  errors: string[];
+  fileName: string;
+  startedAt: number;
+  batch: number;
+  totalBatches: number;
+}
 
 const PAGE_SIZE = 50;
 
@@ -68,7 +87,7 @@ export function PartsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // Import state
-  const [importStatus, setImportStatus] = useState<{ total: number; done: number; skipped: number } | null>(null);
+  const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -221,17 +240,24 @@ export function PartsPage() {
       }
 
       const CHUNK = 50;
-      const status = { total: entries.length, done: 0, skipped: 0 };
+      const totalBatches = Math.ceil(entries.length / CHUNK);
+      const status: ImportStatus = {
+        total: entries.length, done: 0, skipped: 0, errors: [],
+        fileName: file.name, startedAt: Date.now(), batch: 0, totalBatches,
+      };
       setImportStatus({ ...status });
       setImporting(true);
 
       for (let i = 0; i < entries.length; i += CHUNK) {
+        status.batch = Math.floor(i / CHUNK) + 1;
         const batch = entries.slice(i, i + CHUNK);
         try {
           const { data } = await partsApi.importParts(batch);
           status.done += data.importedCount;
           status.skipped += data.skippedCount;
-        } catch {
+        } catch (err: any) {
+          const msg = err?.response?.data?.message ?? 'Ошибка сети';
+          status.errors.push(`Пакет ${status.batch}: ${msg} (${batch.length} шт.)`);
           status.skipped += batch.length;
         }
         setImportStatus({ ...status });
@@ -241,7 +267,10 @@ export function PartsPage() {
       await fetchParts();
     } catch {
       setImporting(false);
-      setImportStatus({ total: 0, done: 0, skipped: 0 });
+      setImportStatus({
+        total: 0, done: 0, skipped: 0, errors: ['Ошибка чтения файла'],
+        fileName: file.name, startedAt: Date.now(), batch: 0, totalBatches: 0,
+      });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -449,38 +478,98 @@ export function PartsPage() {
         onClose={importing ? undefined : () => setImportStatus(null)}
         className="w-full max-w-md p-6"
       >
-        {importStatus && (
-          <>
-            <h2 className="text-base font-medium text-text-main mb-4">Импорт запчастей</h2>
+        {importStatus && (() => {
+          const processed = importStatus.done + importStatus.skipped;
+          const pct = importStatus.total > 0 ? Math.round((processed / importStatus.total) * 100) : 0;
+          const elapsed = Date.now() - importStatus.startedAt;
+          const hasErrors = importStatus.errors.length > 0;
+          const hasSkipped = importStatus.skipped > 0;
 
-            <div className="mb-1 flex justify-between text-sm text-text-sub">
-              <span>{importing ? 'Импортируется...' : 'Завершено'}</span>
-              <span>{importStatus.done + importStatus.skipped} / {importStatus.total}</span>
-            </div>
-
-            <div className="w-full h-2 bg-border-light overflow-hidden mb-4">
-              <div
-                className="h-full bg-brand-red transition-all duration-300"
-                style={{
-                  width: `${importStatus.total > 0 ? ((importStatus.done + importStatus.skipped) / importStatus.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-
-            <div className="flex gap-4 text-sm mb-4">
-              <span className="text-success">Импортировано: {importStatus.done}</span>
-              <span className="text-text-sub">Пропущено: {importStatus.skipped}</span>
-            </div>
-
-            {!importing && (
-              <div className="flex justify-end">
-                <Button variant="secondary" size="sm" onClick={() => setImportStatus(null)}>
-                  Закрыть
-                </Button>
+          return (
+            <>
+              <div className="flex items-center gap-3 mb-5">
+                {importing ? (
+                  <Loader2 size={20} className="text-brand-red animate-spin shrink-0" />
+                ) : hasErrors ? (
+                  <AlertTriangle size={20} className="text-error shrink-0" />
+                ) : hasSkipped ? (
+                  <AlertTriangle size={20} className="text-warning shrink-0" />
+                ) : (
+                  <CheckCircle2 size={20} className="text-success shrink-0" />
+                )}
+                <h2 className="text-base font-medium text-text-main">
+                  {importing
+                    ? 'Импорт запчастей'
+                    : hasErrors
+                      ? 'Импорт завершён с ошибками'
+                      : hasSkipped
+                        ? 'Импорт завершён (есть пропуски)'
+                        : 'Импорт завершён'}
+                </h2>
               </div>
-            )}
-          </>
-        )}
+
+              <div className="flex items-center gap-2 text-xs text-text-sub mb-4 bg-surface-secondary px-3 py-2">
+                <FileText size={14} className="shrink-0" />
+                <span className="truncate">{importStatus.fileName}</span>
+                <span className="ml-auto shrink-0">{importStatus.total.toLocaleString()} шт.</span>
+              </div>
+
+              <div className="mb-1 flex justify-between text-sm text-text-sub">
+                <span>
+                  {importing
+                    ? `Пакет ${importStatus.batch} / ${importStatus.totalBatches}`
+                    : formatElapsed(elapsed)}
+                </span>
+                <span>{pct}%</span>
+              </div>
+
+              <div className="w-full h-2 bg-border-light overflow-hidden mb-4">
+                <div
+                  className={`h-full transition-all duration-300 ${hasErrors && !importing ? 'bg-error' : hasSkipped && !importing ? 'bg-warning' : 'bg-brand-red'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="bg-success-bg border border-success-border px-3 py-2">
+                  <p className="text-xs text-text-sub">Импортировано</p>
+                  <p className="text-lg font-semibold text-success-deep">{importStatus.done.toLocaleString()}</p>
+                </div>
+                <div className={`px-3 py-2 ${hasSkipped ? 'bg-warning-bg border border-warning-border' : 'bg-surface-secondary border border-border-light'}`}>
+                  <p className="text-xs text-text-sub">Пропущено</p>
+                  <p className={`text-lg font-semibold ${hasSkipped ? 'text-warning-deep' : 'text-text-sub'}`}>{importStatus.skipped.toLocaleString()}</p>
+                </div>
+                <div className="bg-surface-secondary border border-border-light px-3 py-2">
+                  <p className="text-xs text-text-sub">Обработано</p>
+                  <p className="text-lg font-semibold text-text-main">{processed.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {hasErrors && (
+                <details className="mb-4">
+                  <summary className="text-xs text-error cursor-pointer select-none">
+                    Показать ошибки ({importStatus.errors.length})
+                  </summary>
+                  <div className="max-h-48 overflow-y-auto border border-error-border bg-error-bg p-3 mt-2">
+                    <ul className="space-y-1">
+                      {importStatus.errors.map((err, i) => (
+                        <li key={i} className="text-xs text-error-deep">{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </details>
+              )}
+
+              {!importing && (
+                <div className="flex justify-end">
+                  <Button variant="secondary" size="sm" onClick={() => setImportStatus(null)}>
+                    Закрыть
+                  </Button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </Modal>
 
       {isAdmin && (
