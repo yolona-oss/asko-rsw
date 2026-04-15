@@ -15,6 +15,7 @@ import { ChatPreferencesSection } from './chat-preferences-section';
 import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
+import { SessionsSection } from './sessions-section';
 import { SoundSettingsSection } from './sound-settings-section';
 
 import {
@@ -320,6 +321,10 @@ export function ProfileForm() {
         {/* Change password */}
         <div className="h-px bg-border-light" />
         <PasswordSection />
+
+        {/* Active sessions */}
+        <div className="h-px bg-border-light" />
+        <SessionsSection />
 
         {/* Message + Save */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

@@ -106,6 +106,19 @@ export const authApi = {
     return api.post<{ message: string }>('/auth/phone/confirm-change', { code });
   },
 
+  // Sessions
+  listSessions() {
+    return api.get<{ sessions: { id: string; deviceInfo: string; ipAddress: string; createdAt: string; expiresAt: string; isCurrent: boolean }[] }>('/auth/sessions');
+  },
+
+  revokeSession(sessionId: string) {
+    return api.delete<{ message: string }>(`/auth/sessions/${sessionId}`);
+  },
+
+  masterLogout() {
+    return api.post('/auth/master-logout');
+  },
+
   // OAuth
   getOAuthLinks() {
     return api.get<{ links: { id: string; provider: string; providerId: string; email?: string; avatarUrl?: string; createdAt: string }[] }>('/auth/oauth/links');

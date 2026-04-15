@@ -8,15 +8,17 @@ import { useAccount } from './provider';
 import { useSidebar } from './sidebar-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
-import { User, LogOut, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Monitor, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { NotificationBell } from '../notifications';
+import { SessionsDialog } from './sessions-dialog';
 
 export function AccountHeader() {
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { theme, toggle: toggleTheme } = useTheme();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);
   const router = useRouter();
   const logout = useLogout();
 
@@ -26,6 +28,12 @@ export function AccountHeader() {
       label: 'Профиль',
       icon: <User className="w-4 h-4" />,
       onClick: () => router.push('/account/profile'),
+    },
+    {
+      key: 'devices',
+      label: 'Устройства',
+      icon: <Monitor className="w-4 h-4" />,
+      onClick: () => setSessionsDialogOpen(true),
     },
     'separator',
     {
@@ -126,6 +134,11 @@ export function AccountHeader() {
         loading={logout.isPending}
         onConfirm={() => logout.mutate()}
         onCancel={() => setLogoutDialogOpen(false)}
+      />
+
+      <SessionsDialog
+        open={sessionsDialogOpen}
+        onClose={() => setSessionsDialogOpen(false)}
       />
     </>
   );
