@@ -24,8 +24,10 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   const [showNewChat, setShowNewChat] = useState(false);
   const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
+  const [uploadingUsers, setUploadingUsers] = useState<Map<string, { conversationId: string; type: string }>>(new Map());
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const uploadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const initialConversationHandled = useRef(false);
 
   // Participant name cache (userId → display name)
@@ -111,10 +113,40 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
         clearTimeout(existing);
         typingTimers.current.delete(userId);
       }
+      // Also clear uploading state
+      setUploadingUsers(prev => {
+        const next = new Map(prev);
+        next.delete(userId);
+        return next;
+      });
+      const uploadTimer = uploadingTimers.current.get(userId);
+      if (uploadTimer) {
+        clearTimeout(uploadTimer);
+        uploadingTimers.current.delete(userId);
+      }
     }, []),
 
     onUserPresence: useCallback(({ userId, status }: { userId: string; status: string }) => {
       setPresenceMap(prev => ({ ...prev, [userId]: status === 'online' }));
+    }, []),
+
+    onUserUploading: useCallback(({ userId, conversationId, type }: { userId: string; conversationId: string; type: 'image' | 'video' | 'document' }) => {
+      setUploadingUsers(prev => {
+        const next = new Map(prev);
+        next.set(userId, { conversationId, type });
+        return next;
+      });
+      // Auto-expire after 15 seconds (uploads take longer than typing)
+      const existing = uploadingTimers.current.get(userId);
+      if (existing) clearTimeout(existing);
+      uploadingTimers.current.set(userId, setTimeout(() => {
+        setUploadingUsers(prev => {
+          const next = new Map(prev);
+          next.delete(userId);
+          return next;
+        });
+        uploadingTimers.current.delete(userId);
+      }, 15000));
     }, []),
 
     onMessageRead: useCallback(() => {
@@ -171,6 +203,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
               presenceMap={presenceMap}
               socketActions={socketActions}
               typingUsers={typingUsers}
+              uploadingUsers={uploadingUsers}
               realtimeMessages={realtimeMessages}
               onBack={handleBack}
               participantNames={participantNames}

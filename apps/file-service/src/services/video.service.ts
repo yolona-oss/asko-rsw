@@ -1,18 +1,34 @@
 import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Queue } from "bullmq";
 import { VideoTypeEnum, FileVisibility } from "@asko/shared";
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { AppErrors } from "common/error";
 import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
+import { VIDEO_COMPRESS_QUEUE } from "modules/video-compress-queue.module";
+import type { VideoCompressJobData } from "./video-compress.processor";
 import 'multer';
+
+const COMPRESS_JOB_OPTS = {
+    attempts: 3,
+    backoff: { type: 'exponential' as const, delay: 5000 },
+    removeOnComplete: { count: 1000 },
+    removeOnFail: { count: 5000 },
+};
 
 @Injectable()
 export class VideoService {
     constructor(
         private readonly em: EntityManager,
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+        @InjectQueue(VIDEO_COMPRESS_QUEUE) private readonly compressQueue: Queue<VideoCompressJobData>,
     ) { }
+
+    private async enqueueCompress(videoId: string): Promise<void> {
+        await this.compressQueue.add('compress', { videoId }, COMPRESS_JOB_OPTS);
+    }
 
     @CreateRequestContext()
     async findOne(id: string): Promise<Video> {
@@ -36,6 +52,7 @@ export class VideoService {
         video.video = result;
         video.order = 0;
         await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
 
         if (creatorId || visibility || conversationId) {
             const access = new FileAccess();
@@ -60,6 +77,7 @@ export class VideoService {
         video.ownerId = String(ownerId);
         video.order = await this.countAttached(ownerId, VideoTypeEnum.RepairRequest);
         await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
         return video;
     }
 
@@ -72,6 +90,7 @@ export class VideoService {
         video.ownerId = String(ownerId);
         video.order = await this.countAttached(ownerId, VideoTypeEnum.Review);
         await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
         return video;
     }
 
@@ -84,6 +103,7 @@ export class VideoService {
         video.ownerId = String(ownerId);
         video.order = await this.countAttached(ownerId, VideoTypeEnum.Device);
         await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
         return video;
     }
 
@@ -96,6 +116,7 @@ export class VideoService {
         video.ownerId = String(ownerId);
         video.order = await this.countAttached(ownerId, VideoTypeEnum.Article);
         await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
         return video;
     }
 

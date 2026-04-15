@@ -5,6 +5,7 @@ import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { ImageResizeQueueModule } from 'modules/image-resize-queue.module';
+import { VideoCompressQueueModule } from 'modules/video-compress-queue.module';
 import { Image } from 'entities/image.entity';
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
@@ -26,6 +27,7 @@ import { FileGrpcController } from 'controllers/file.grpc.controller';
         DatabaseModule,
         MikroOrmModule.forFeature([Image, Video, FileAccess, Document]),
         ImageResizeQueueModule,
+        VideoCompressQueueModule,
     ],
     controllers: [FileGrpcController],
     providers: [

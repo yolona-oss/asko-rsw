@@ -86,6 +86,32 @@ export class ImageResizeService {
         return results;
     }
 
+    async compressOriginal(originalPublicId: string): Promise<{ width: number; height: number; size: number }> {
+        const inputPath = path.join(this.staticPath, originalPublicId);
+        const parsed = path.parse(inputPath);
+        const tempPath = path.join(parsed.dir, `${parsed.name}_compressing${parsed.ext}`);
+
+        const format = parsed.ext.replace('.', '').toLowerCase();
+        let pipeline = sharp(inputPath)
+            .rotate() // auto-orient + strip EXIF
+            .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true });
+
+        if (format === 'jpg' || format === 'jpeg') {
+            pipeline = pipeline.jpeg({ quality: 80, mozjpeg: true });
+        } else if (format === 'webp') {
+            pipeline = pipeline.webp({ quality: 80 });
+        } else if (format === 'png') {
+            pipeline = pipeline.png({ effort: 8 });
+        }
+
+        await pipeline.toFile(tempPath);
+        const meta = await sharp(tempPath).metadata();
+        const stat = await fs.stat(tempPath);
+        await fs.rename(tempPath, inputPath);
+
+        return { width: meta.width ?? 0, height: meta.height ?? 0, size: stat.size };
+    }
+
     async deleteResizedFiles(originalPublicId: string): Promise<void> {
         const inputPath = path.join(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);

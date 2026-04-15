@@ -9,6 +9,8 @@ import { PresenceDot } from './presence-dot';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import { TypingIndicator } from './typing-indicator';
+import { UploadingIndicator } from './uploading-indicator';
+import type { UploadingEntry } from './uploading-indicator';
 import { notificationApi } from '@/lib/api/notification';
 import { setActiveConversation } from '@/lib/active-conversation';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
@@ -24,6 +26,7 @@ interface ConversationPanelProps {
   presenceMap: Record<string, boolean>;
   socketActions: ChatSocketActions;
   typingUsers: Map<string, string>;
+  uploadingUsers: Map<string, { conversationId: string; type: string }>;
   realtimeMessages: ChatMessage[];
   onBack?: () => void;
   participantNames: Record<string, string>;
@@ -35,6 +38,7 @@ export function ConversationPanel({
   presenceMap,
   socketActions,
   typingUsers,
+  uploadingUsers,
   realtimeMessages,
   onBack,
   participantNames,
@@ -129,6 +133,17 @@ export function ConversationPanel({
     }
   });
 
+  // Uploading indicator entries for this conversation
+  const uploadingEntries: UploadingEntry[] = [];
+  uploadingUsers.forEach(({ conversationId: convId, type }, userId) => {
+    if (convId === conversation.id && userId !== currentUserId) {
+      uploadingEntries.push({
+        name: participantNames[userId] ?? 'Пользователь',
+        type,
+      });
+    }
+  });
+
   const handleMessageSent = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['chat-messages', conversation.id] });
     queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
@@ -140,6 +155,18 @@ export function ConversationPanel({
 
   const handleStopTyping = useCallback(() => {
     socketActions.emitStopTyping(conversation.id);
+  }, [socketActions, conversation.id]);
+
+  const handleUploadingStart = useCallback((type: 'image' | 'video' | 'document') => {
+    switch (type) {
+      case 'image': socketActions.emitUploadingImage(conversation.id); break;
+      case 'video': socketActions.emitUploadingVideo(conversation.id); break;
+      case 'document': socketActions.emitUploadingDocument(conversation.id); break;
+    }
+  }, [socketActions, conversation.id]);
+
+  const handleUploadingStop = useCallback(() => {
+    socketActions.emitStopUploading(conversation.id);
   }, [socketActions, conversation.id]);
 
   const conversationRealtimeMessages = realtimeMessages.filter(
@@ -222,8 +249,9 @@ export function ConversationPanel({
         participantNames={participantNames}
       />
 
-      {/* Typing indicator */}
+      {/* Activity indicators */}
       <TypingIndicator userNames={typingNames} />
+      <UploadingIndicator entries={uploadingEntries} />
 
       {/* Input */}
       <MessageInput
@@ -231,6 +259,8 @@ export function ConversationPanel({
         onMessageSent={handleMessageSent}
         onTyping={handleTyping}
         onStopTyping={handleStopTyping}
+        onUploadingStart={handleUploadingStart}
+        onUploadingStop={handleUploadingStop}
       />
     </div>
   );

@@ -47,9 +47,11 @@ interface MessageInputProps {
   onMessageSent: () => void;
   onTyping: () => void;
   onStopTyping: () => void;
+  onUploadingStart?: (type: 'image' | 'video' | 'document') => void;
+  onUploadingStop?: () => void;
 }
 
-export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTyping }: MessageInputProps) {
+export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTyping, onUploadingStart, onUploadingStop }: MessageInputProps) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState<AttachedFile | null>(null);
@@ -76,8 +78,9 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
     }
     setAttachment(null);
     setUploadError(null);
+    onUploadingStop?.();
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [attachment]);
+  }, [attachment, onUploadingStop]);
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,6 +139,7 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
 
     try {
       if (attachment) {
+        onUploadingStart?.(attachment.type);
         if (attachment.type === 'image') {
           const { data: uploaded } = await fileUploadApi.uploadImage(attachment.file);
           const img = uploaded.image;
@@ -184,9 +188,11 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
         await chatApi.sendMessage(conversationId, { type: 'text', text: trimmed });
       }
       setText('');
+      onUploadingStop?.();
       onMessageSent();
     } catch {
       setUploadError('Ошибка отправки');
+      onUploadingStop?.();
     } finally {
       setSending(false);
     }

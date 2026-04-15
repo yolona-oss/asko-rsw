@@ -19,6 +19,7 @@
         "@asko/observability": "workspace:*",
         "@asko/proto": "workspace:*",
         "@asko/shared": "workspace:*",
+        "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@grpc/grpc-js": "^1.12.6",
         "@grpc/proto-loader": "^0.7.15",
         "@mikro-orm/core": "^6.5.9",
@@ -31,12 +32,13 @@
         "@nestjs/core": "^11.1.5",
         "@nestjs/microservices": "^11.1.5",
         "@nestjs/schedule": "^5.0.1",
-        "bullmq": "^5.52.2",
-        "ioredis": "^5.6.1",
         "amqp-connection-manager": "^4.1.14",
         "amqplib": "^0.10.4",
+        "bullmq": "^5.52.2",
         "cloudinary": "^2.6.1",
         "cross-env": "^7.0.3",
+        "fluent-ffmpeg": "^2.1.3",
+        "ioredis": "^5.6.1",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "sharp": "^0.34.5",
@@ -44,9 +46,15 @@
     },
     "jest": {
         "rootDir": "src",
-        "moduleFileExtensions": ["ts", "js", "json"],
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json"
+        ],
         "testRegex": ".*\\.spec\\.ts$",
-        "transform": { "^.+\\.ts$": "ts-jest" },
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
         "moduleNameMapper": {
             "^entities$": "<rootDir>/entities",
             "^entities/(.*)$": "<rootDir>/entities/$1",
@@ -58,13 +66,16 @@
             "^controllers/(.*)$": "<rootDir>/controllers/$1",
             "^utils/(.*)$": "<rootDir>/utils/$1"
         },
-        "transformIgnorePatterns": ["node_modules/(?!uuid)"]
+        "transformIgnorePatterns": [
+            "node_modules/(?!uuid)"
+        ]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.5.9",
         "@nestjs/cli": "^11.0.16",
         "@nestjs/schematics": "^11.0.5",
         "@nestjs/testing": "^11.0.16",
+        "@types/fluent-ffmpeg": "^2.1.28",
         "@types/jest": "^30.0.0",
         "@types/multer": "^1.4.12",
         "@types/node": "^24.1.0",

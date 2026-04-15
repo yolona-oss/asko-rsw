@@ -24,6 +24,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@ffmpeg-installer/linux-x64",
       "@nestjs/core",
       "protobufjs",
       "sharp",

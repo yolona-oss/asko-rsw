@@ -57,6 +57,14 @@ export class ImageResizeProcessor extends WorkerHost {
                 image.image[size.name] = result;
             }
         }
+
+        // Compress original in-place for bandwidth savings
+        const compressed = await this.resizeService.compressOriginal(original.public_id);
+        image.image.original = {
+            ...original,
+            width: compressed.width,
+            height: compressed.height,
+        };
     }
 
     private processCloudinary(image: Image, original: CloudinaryUploadResult, sizes: ResizeSizeConfig[]): void {

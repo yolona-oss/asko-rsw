@@ -26,6 +26,7 @@ export interface ChatSocketCallbacks {
   onUserPresence?: (data: { userId: string; status: string; activity: string }) => void;
   onMessageRead?: (data: { userId: string; conversationId: string; messageId: string }) => void;
   onConversationNew?: (conversation: ChatConversation) => void;
+  onUserUploading?: (data: { userId: string; conversationId: string; type: 'image' | 'video' | 'document' }) => void;
 }
 
 export interface ChatSocketActions {
@@ -34,6 +35,10 @@ export interface ChatSocketActions {
   emitTyping: (conversationId: string) => void;
   emitStopTyping: (conversationId: string) => void;
   emitMarkAsRead: (conversationId: string, messageId: string) => void;
+  emitUploadingImage: (conversationId: string) => void;
+  emitUploadingVideo: (conversationId: string) => void;
+  emitUploadingDocument: (conversationId: string) => void;
+  emitStopUploading: (conversationId: string) => void;
 }
 
 export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions {
@@ -88,6 +93,18 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
       cbRef.current.onConversationNew?.(data);
     });
 
+    socket.on('user:uploadingImage', (data: { userId: string; conversationId: string }) => {
+      cbRef.current.onUserUploading?.({ ...data, type: 'image' });
+    });
+
+    socket.on('user:uploadingVideo', (data: { userId: string; conversationId: string }) => {
+      cbRef.current.onUserUploading?.({ ...data, type: 'video' });
+    });
+
+    socket.on('user:uploadingDocument', (data: { userId: string; conversationId: string }) => {
+      cbRef.current.onUserUploading?.({ ...data, type: 'document' });
+    });
+
     return () => {
       socket.disconnect();
       socket.removeAllListeners();
@@ -115,5 +132,25 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
     socketRef.current?.emit('markAsRead', { conversationId, messageId });
   }, []);
 
-  return { joinConversation, leaveConversation, emitTyping, emitStopTyping, emitMarkAsRead };
+  const emitUploadingImage = useCallback((conversationId: string) => {
+    socketRef.current?.emit('uploadingImage', { conversationId });
+  }, []);
+
+  const emitUploadingVideo = useCallback((conversationId: string) => {
+    socketRef.current?.emit('uploadingVideo', { conversationId });
+  }, []);
+
+  const emitUploadingDocument = useCallback((conversationId: string) => {
+    socketRef.current?.emit('uploadingDocument', { conversationId });
+  }, []);
+
+  const emitStopUploading = useCallback((conversationId: string) => {
+    socketRef.current?.emit('stopTyping', { conversationId });
+  }, []);
+
+  return {
+    joinConversation, leaveConversation,
+    emitTyping, emitStopTyping, emitMarkAsRead,
+    emitUploadingImage, emitUploadingVideo, emitUploadingDocument, emitStopUploading,
+  };
 }

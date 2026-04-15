@@ -154,6 +154,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
     }
 
+    @SubscribeMessage('uploadingDocument')
+    async onUploadingDocument(
+        @MessageBody() body: { conversationId: string },
+        @ConnectedSocket() client: Socket,
+    ) {
+        const userId = client.data.userId;
+        if (!userId) return;
+
+        await this.chatClient.updatePresence(userId, 'online', 'uploading_document', body.conversationId);
+        this.server.to(`conversation:${body.conversationId}`).except(client.id).emit('user:uploadingDocument', {
+            userId,
+            conversationId: body.conversationId,
+        });
+    }
+
     @SubscribeMessage('markAsRead')
     async onMarkAsRead(
         @MessageBody() body: { conversationId: string; messageId: string },

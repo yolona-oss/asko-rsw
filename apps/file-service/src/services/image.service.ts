@@ -86,6 +86,7 @@ export class ImageService {
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
+        await this.enqueueResize(image.id);
         if (access) await this.createFileAccess(image.id, access);
         return image;
     }
@@ -99,6 +100,7 @@ export class ImageService {
         image.alt = alt;
         image.order = 0;
         await this.em.persistAndFlush(image);
+        await this.enqueueResize(image.id);
         if (access) await this.createFileAccess(image.id, access);
         return image;
     }
