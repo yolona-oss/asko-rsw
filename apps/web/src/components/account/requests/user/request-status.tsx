@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Textarea, SkeletonCard } from '@asko/ui';
+import { Badge, Button, Textarea, SkeletonCard } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -295,7 +295,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
       <div className="mx-auto">
         {/* Work steps */}
-        {workSteps.length > 0 && (
+        {workSteps.length > 0 ? (
           <div className="flex flex-col gap-3 sm:gap-4 max-w-lg mt-2">
             <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
             {(() => {
@@ -314,6 +314,19 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
               {workSteps.map((step, idx) => (
                 <WorkStepCard key={step.id} step={step} index={idx} />
               ))}
+            </div>
+          </div>
+        ) : !isTerminal && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.PAUSED, RepairRequestStatus.AWAITING_COMPLETION].includes(request.status) && (
+          <div className="flex flex-col gap-3 max-w-lg mt-2">
+            <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
+            <div className="p-3 sm:p-4 border border-info-border bg-info-bg/50 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="info">Диагностика</Badge>
+                <Badge variant="neutral">Ожидает</Badge>
+              </div>
+              <p className="text-[12px] sm:text-sm text-text-sub">
+                Мастер проведёт диагностику устройства и определит план работ.
+              </p>
             </div>
           </div>
         )}
