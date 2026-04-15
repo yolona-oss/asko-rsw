@@ -17,4 +17,8 @@ export const partsApi = {
   delete(partId: string) {
     return api.delete<void>(`/parts/${partId}`);
   },
+
+  importParts(parts: Record<string, any>[]) {
+    return api.post<{ importedCount: number; skippedCount: number }>('/parts/import', parts);
+  },
 };

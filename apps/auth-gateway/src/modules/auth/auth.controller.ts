@@ -450,7 +450,7 @@ export class AuthController {
     }
 
     @ApiOkResponse({ type: AuthUserDto })
-    @Get('session')
+    @Get('/session')
     async findSessionUser(@Req() request: Request) {
         try {
             const { accessToken } = extractToken(request);

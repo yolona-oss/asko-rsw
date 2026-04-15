@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Button,
+  Modal,
   DataGrid,
   DataToolbar,
   ViewSwitcher,
@@ -65,6 +66,11 @@ export function PartsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editPart, setEditPart] = useState<DevicePartFull | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Import state
+  const [importStatus, setImportStatus] = useState<{ total: number; done: number; skipped: number } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch devices for filter + form
   useEffect(() => {
@@ -201,6 +207,46 @@ export function PartsPage() {
   }, [parts]);
 
   // CRUD handlers
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const entries = JSON.parse(text);
+
+      if (!Array.isArray(entries)) {
+        alert('JSON должен содержать массив запчастей');
+        return;
+      }
+
+      const CHUNK = 50;
+      const status = { total: entries.length, done: 0, skipped: 0 };
+      setImportStatus({ ...status });
+      setImporting(true);
+
+      for (let i = 0; i < entries.length; i += CHUNK) {
+        const batch = entries.slice(i, i + CHUNK);
+        try {
+          const { data } = await partsApi.importParts(batch);
+          status.done += data.importedCount;
+          status.skipped += data.skippedCount;
+        } catch {
+          status.skipped += batch.length;
+        }
+        setImportStatus({ ...status });
+      }
+
+      setImporting(false);
+      await fetchParts();
+    } catch {
+      setImporting(false);
+      setImportStatus({ total: 0, done: 0, skipped: 0 });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleCreate = () => {
     setEditPart(null);
     setModalOpen(true);
@@ -312,9 +358,24 @@ export function PartsPage() {
         filters={filters}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
-        actions={isAdmin ? (
+        actions={isAdmin ? (<>
           <Button size="sm" onClick={handleCreate}>Добавить запчасть</Button>
-        ) : undefined}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            Импорт JSON
+          </Button>
+        </>) : undefined}
         viewSwitcher={<ViewSwitcher views={[VIEW_CARD, VIEW_TABLE]} activeView={view} onViewChange={setView} />}
       />
 
@@ -382,6 +443,45 @@ export function PartsPage() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
         </>
       )}
+
+      <Modal
+        open={importStatus !== null}
+        onClose={importing ? undefined : () => setImportStatus(null)}
+        className="w-full max-w-md p-6"
+      >
+        {importStatus && (
+          <>
+            <h2 className="text-base font-medium text-text-main mb-4">Импорт запчастей</h2>
+
+            <div className="mb-1 flex justify-between text-sm text-text-sub">
+              <span>{importing ? 'Импортируется...' : 'Завершено'}</span>
+              <span>{importStatus.done + importStatus.skipped} / {importStatus.total}</span>
+            </div>
+
+            <div className="w-full h-2 bg-border-light overflow-hidden mb-4">
+              <div
+                className="h-full bg-brand-red transition-all duration-300"
+                style={{
+                  width: `${importStatus.total > 0 ? ((importStatus.done + importStatus.skipped) / importStatus.total) * 100 : 0}%`,
+                }}
+              />
+            </div>
+
+            <div className="flex gap-4 text-sm mb-4">
+              <span className="text-success">Импортировано: {importStatus.done}</span>
+              <span className="text-text-sub">Пропущено: {importStatus.skipped}</span>
+            </div>
+
+            {!importing && (
+              <div className="flex justify-end">
+                <Button variant="secondary" size="sm" onClick={() => setImportStatus(null)}>
+                  Закрыть
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
 
       {isAdmin && (
         <PartFormModal

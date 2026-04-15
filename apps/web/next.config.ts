@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
       { source: '/api/schedule/:path*', destination: 'http://localhost:4002/schedule/:path*' },
       { source: '/api/address/:path*', destination: 'http://localhost:4002/address/:path*' },
       { source: '/api/payment/:path*', destination: 'http://localhost:4002/payment/:path*' },
+      { source: '/api/parts/:path*', destination: 'http://localhost:4002/parts/:path*' },
       // Media Gateway (:4003)
       { source: '/api/file-upload/:path*', destination: 'http://localhost:4003/file-upload/:path*' },
       { source: '/api/files/:path*', destination: 'http://localhost:4003/files/:path*' },
