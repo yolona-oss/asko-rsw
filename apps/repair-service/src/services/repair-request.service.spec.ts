@@ -62,7 +62,7 @@ jest.mock('modules/repair-event.service', () => ({
     },
 }));
 
-import { RepairRequestStatus, PaymentTargetType } from '@asko/shared';
+import { RepairRequestStatus, PaymentTargetType, AvrStatus } from '@asko/shared';
 import { RepairRequestService } from './repair-request.service';
 
 const S = RepairRequestStatus;
@@ -136,6 +136,7 @@ function makeRequest(overrides: Record<string, any> = {}) {
         acceptanceSignedPayload: undefined,
         description: 'Broken screen',
         statusTimestamps: [],
+        avrStatus: AvrStatus.NONE,
         ...overrides,
     };
 }

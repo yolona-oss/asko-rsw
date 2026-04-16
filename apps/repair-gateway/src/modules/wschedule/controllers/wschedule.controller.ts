@@ -303,7 +303,7 @@ export class WScheduleController {
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post(':id/approve')
     async approve(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        if (!isStaff(user)) await this.assertOwnPendingExtraDay(user, id);
+        await this.assertCanApproveOrReject(user, id);
         const result = await this.scheduleClient.approve(id, user.sub);
         return result.schedule;
     }
@@ -312,16 +312,11 @@ export class WScheduleController {
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post(':id/reject')
     async reject(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        if (!isStaff(user)) await this.assertOwnPendingExtraDay(user, id);
+        await this.assertCanApproveOrReject(user, id);
         const result = await this.scheduleClient.reject(id, user.sub);
         return result.schedule;
     }
 
-    /**
-     * Non-staff callers can only act on their own pending EXTRA_DAY entries —
-     * the flow where a manager proposes an extra work day during the repairer's
-     * vacation and the repairer accepts or declines it.
-     */
     private async assertNoActiveEntry(userId: string, type: ScheduleEntryType, label: string, excludeId?: string): Promise<void> {
         const today = new Date().toISOString().slice(0, 10);
         const result = await this.scheduleClient.findAll({
@@ -337,18 +332,49 @@ export class WScheduleController {
         }
     }
 
-    private async assertOwnPendingExtraDay(user: JwtPayload, scheduleId: string): Promise<void> {
+    /**
+     * Approval rule: the approver must differ from the creator.
+     * - If the target user (entry.userId) created the request → only staff can approve/reject.
+     * - If staff created the request for a target user → only the target user can approve/reject.
+     * - Self-approval is always blocked.
+     * - Auto-generated entries (createdBy is empty) are already APPROVED, so they never reach this guard.
+     */
+    private async assertCanApproveOrReject(user: JwtPayload, scheduleId: string): Promise<void> {
         const result = await this.scheduleClient.findById(scheduleId);
         const entry = result.schedule;
         if (!entry || !entry.id) throw new NotFoundException('Запись расписания не найдена');
-        if (entry.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
-        }
-        if (entry.type !== ScheduleEntryType.EXTRA_DAY) {
-            throw new ForbiddenException('Только дополнительные дни можно подтверждать самостоятельно');
-        }
         if (entry.status !== ScheduleStatus.PENDING) {
             throw new BadRequestException('Можно подтверждать только ожидающие записи');
+        }
+
+        const userIsStaff = isStaff(user);
+        const userIsTarget = entry.userId === user.sub;
+        const createdBy = entry.createdBy || '';
+
+        // Block self-approval explicitly (creator cannot approve their own entry)
+        if (createdBy && createdBy === user.sub) {
+            throw new ForbiddenException('Нельзя подтвердить собственный запрос — требуется второе лицо');
+        }
+
+        // Determine who created the entry. If unknown (legacy/auto-generated), allow staff approval (current behavior).
+        const createdBySelf = createdBy && createdBy === entry.userId;
+        const createdByStaff = createdBy && createdBy !== entry.userId;
+
+        if (createdBySelf) {
+            // Target user created the entry → must be approved by staff
+            if (!userIsStaff) {
+                throw new ForbiddenException('Запись должна быть подтверждена сотрудником');
+            }
+        } else if (createdByStaff) {
+            // Staff created the entry for the target user → must be approved by target user
+            if (!userIsTarget) {
+                throw new ForbiddenException('Запись должна быть подтверждена адресатом');
+            }
+        } else {
+            // Legacy (unknown creator): preserve existing behavior — staff or target user can act
+            if (!userIsStaff && !userIsTarget) {
+                throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+            }
         }
     }
 }

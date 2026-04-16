@@ -22,6 +22,7 @@ export class WScheduleService {
         entry.endTime = data.endTime;
         entry.note = data.note || null;
         entry.status = ScheduleStatus.PENDING;
+        entry.createdBy = data.actorId || null;
         await this.em.persistAndFlush(entry);
         return entry;
     }

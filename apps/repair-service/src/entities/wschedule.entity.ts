@@ -41,6 +41,9 @@ export class WSchedule {
     status: ScheduleStatus = ScheduleStatus.PENDING;
 
     @Property({ type: 'varchar', length: 255, nullable: true })
+    createdBy?: string | null;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
     approvedBy?: string | null;
 
     @Property({ type: 'text', nullable: true })
