@@ -1,30 +1,31 @@
 import { Observable } from 'rxjs';
 
-// ─── Common ────────────────────────────────────────────────────────────
+// ─── Streaming upload payload ──────────────────────────────────────────
 
-export interface FileData {
-    buffer: Uint8Array;
+/**
+ * Sent once as the first chunk of every streaming upload RPC.
+ * Carries the metadata the server needs before file bytes arrive.
+ */
+export interface UploadStart {
     originalname: string;
     mimetype: string;
-}
-
-// ─── Requests ──────────────────────────────────────────────────────────
-
-export interface UploadFileRequest {
-    file: FileData;
-    alt: string;
-    visibility?: string;
-    creatorId?: string;
-    conversationId?: string;
-}
-
-export interface UploadWithOwnerRequest {
-    file: FileData;
     ownerId: string;
     visibility?: string;
     creatorId?: string;
     conversationId?: string;
+    alt?: string;
 }
+
+/**
+ * Client-streaming payload for all file upload RPCs. First message
+ * carries `start`; subsequent messages carry `data`.
+ */
+export interface UploadChunk {
+    start?: UploadStart;
+    data?: Uint8Array;
+}
+
+// ─── Requests ──────────────────────────────────────────────────────────
 
 export interface CreateFromUrlRequest {
     url: string;
@@ -102,13 +103,6 @@ export interface CountResponse {
 
 // ─── Video Requests ───────────────────────────────────────────────────
 
-export interface UploadVideoRequest {
-    file: FileData;
-    visibility?: string;
-    creatorId?: string;
-    conversationId?: string;
-}
-
 export interface VideoIdRequest {
     id: string;
 }
@@ -160,15 +154,6 @@ export interface FileAccessResponse {
 
 // ─── Documents ────────────────────────────────────────────────────────
 
-export interface UploadDocumentRequest {
-    file: FileData;
-    ownerType: string;
-    ownerId: string;
-    visibility?: string;
-    creatorId?: string;
-    conversationId?: string;
-}
-
 export interface DocumentIdRequest {
     id: string;
 }
@@ -196,16 +181,14 @@ export interface DocumentListResponse {
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface FileServiceClient {
-    upload(request: UploadFileRequest): Observable<ImageResponse>;
-    streamUpload(request: UploadFileRequest): Observable<ImageResponse>;
-    uploadUserAvatar(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadDeviceCatalogImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadDeviceImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadArticleImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadRepairRequestImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadReviewImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadDevicePartImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
-    uploadBrokenPartImage(request: UploadWithOwnerRequest): Observable<ImageResponse>;
+    upload(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadUserAvatar(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadDeviceImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadArticleImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadRepairRequestImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadReviewImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadDevicePartImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    uploadBrokenPartImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
     createFromUrl(request: CreateFromUrlRequest): Observable<ImageResponse>;
 
     remove(request: ImageIdRequest): Observable<EmptyFileResponse>;
@@ -219,20 +202,20 @@ export interface FileServiceClient {
     reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;
 
     // Video operations
-    uploadVideo(request: UploadVideoRequest): Observable<VideoResponse>;
-    uploadRepairRequestVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
-    uploadReviewVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
-    uploadDeviceVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
-    uploadArticleVideo(request: UploadWithOwnerRequest): Observable<VideoResponse>;
+    uploadVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
+    uploadRepairRequestVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
+    uploadReviewVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
+    uploadDeviceVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
+    uploadArticleVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
     removeVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
     findAttachedVideos(request: FindAttachedRequest): Observable<VideoListResponse>;
     attachVideo(request: AttachVideoRequest): Observable<VideoResponse>;
     unattachVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
 
     // Document operations
-    uploadBrokenPartDocument(request: UploadWithOwnerRequest): Observable<DocumentResponse>;
-    uploadRepairRequestDocument(request: UploadWithOwnerRequest): Observable<DocumentResponse>;
-    uploadDocument(request: UploadDocumentRequest): Observable<DocumentResponse>;
+    uploadBrokenPartDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
+    uploadRepairRequestDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
+    uploadDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
     getDocument(request: DocumentIdRequest): Observable<DocumentResponse>;
     getDocumentsByOwner(request: FindAttachedRequest): Observable<DocumentListResponse>;
     deleteDocument(request: DocumentIdRequest): Observable<EmptyFileResponse>;

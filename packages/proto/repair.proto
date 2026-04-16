@@ -141,6 +141,7 @@ service RepairService {
     rpc UpdateBrokenPartStatus(RepairUpdateBrokenPartStatusRequest) returns (BrokenPartResponse);
     rpc DeleteBrokenPart(RepairDeleteBrokenPartRequest) returns (RepairEmptyResponse);
     rpc GetBrokenParts(RepairGetBrokenPartsRequest) returns (BrokenPartListResponse);
+    rpc GetBrokenPartById(RepairGetBrokenPartByIdRequest) returns (BrokenPartResponse);
     rpc OrderBrokenPart(RepairOrderBrokenPartRequest) returns (BrokenPartResponse);
 
     // Queries
@@ -1141,6 +1142,7 @@ message RepairAddBrokenPartRequest {
     string name = 4;
     string note = 5;
     bool isSuggestion = 6;
+    repeated string requesterRoles = 7;
 }
 
 message RepairUpdateBrokenPartRequest {
@@ -1149,6 +1151,7 @@ message RepairUpdateBrokenPartRequest {
     string partId = 3;
     string name = 4;
     string note = 5;
+    repeated string requesterRoles = 6;
 }
 
 message RepairUpdateBrokenPartStatusRequest {
@@ -1156,16 +1159,22 @@ message RepairUpdateBrokenPartStatusRequest {
     string requestId = 2;
     string partId = 3;
     string status = 4;
+    repeated string requesterRoles = 5;
 }
 
 message RepairDeleteBrokenPartRequest {
     string userId = 1;
     string requestId = 2;
     string partId = 3;
+    repeated string requesterRoles = 4;
 }
 
 message RepairGetBrokenPartsRequest {
     string requestId = 1;
+}
+
+message RepairGetBrokenPartByIdRequest {
+    string partId = 1;
 }
 
 message RepairOrderBrokenPartRequest {
@@ -1173,6 +1182,7 @@ message RepairOrderBrokenPartRequest {
     string requestId = 2;
     string partId = 3;
     string supplier = 4;
+    repeated string requesterRoles = 5;
 }
 
 message RepairFindByIdRequest {

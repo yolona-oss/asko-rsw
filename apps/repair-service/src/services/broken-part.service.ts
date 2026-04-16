@@ -3,7 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { BrokenPart } from 'entities/broken-part.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import { DevicePart } from 'entities/device-part.entity';
-import { BrokenPartStatus, RepairRequestStatus } from '@asko/shared';
+import { BrokenPartStatus, RepairRequestStatus, Role, ADMIN_ROLES } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { SupplierService } from 'providers/supplier/supplier.service';
 
@@ -22,9 +22,36 @@ export class BrokenPartService {
         private readonly supplierService: SupplierService,
     ) {}
 
+    /**
+     * Assert the JWT user has a relationship with the repair request that permits the intended action.
+     * - Admins bypass.
+     * - Suggestion path (USER only): user must be the request creator.
+     * - Staff path (REPAIRER/MANAGER): user must be the assigned repairer or manager.
+     */
+    private async assertCanMutate(
+        userId: string,
+        roles: string[],
+        request: RepairRequest,
+        forSuggestion: boolean,
+    ): Promise<void> {
+        if (roles.some(r => (ADMIN_ROLES as readonly string[]).includes(r))) return;
+
+        if (forSuggestion) {
+            if (roles.includes(Role.USER) && request.userId === userId) return;
+        } else {
+            if (roles.includes(Role.MANAGER) && request.managerId === userId) return;
+            if (roles.includes(Role.REPAIRER)) {
+                await this.em.populate(request, ['repairer']);
+                if (request.repairer?.userId === userId) return;
+            }
+        }
+
+        throw AppErrors.forbidden('Нет прав на изменение запчастей этой заявки');
+    }
+
     /** Add a broken part to a repair request (staff — requires catalog part) */
     @CreateRequestContext()
-    async addBrokenPart(requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPart> {
+    async addBrokenPart(userId: string, roles: string[], requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
@@ -33,6 +60,7 @@ export class BrokenPartService {
         }
 
         const isSuggestion = dto.isSuggestion ?? false;
+        await this.assertCanMutate(userId, roles, request, isSuggestion);
         let partName = dto.name;
         let devicePart: DevicePart | undefined;
 
@@ -104,7 +132,7 @@ export class BrokenPartService {
 
     /** Update broken part name/note */
     @CreateRequestContext()
-    async updateBrokenPart(requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPart> {
+    async updateBrokenPart(userId: string, roles: string[], requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
@@ -114,6 +142,8 @@ export class BrokenPartService {
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
         if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+
+        await this.assertCanMutate(userId, roles, request, part.isSuggestion);
 
         if (dto.name) part.name = dto.name;
         if (dto.note !== undefined) part.note = dto.note;
@@ -124,7 +154,7 @@ export class BrokenPartService {
 
     /** Update broken part status */
     @CreateRequestContext()
-    async updateBrokenPartStatus(requestId: string, partId: string, status: BrokenPartStatus): Promise<BrokenPart> {
+    async updateBrokenPartStatus(userId: string, roles: string[], requestId: string, partId: string, status: BrokenPartStatus): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
@@ -134,6 +164,9 @@ export class BrokenPartService {
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
         if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+
+        // Status transitions are staff-only regardless of part origin
+        await this.assertCanMutate(userId, roles, request, false);
 
         part.status = status;
         await this.em.flush();
@@ -142,7 +175,7 @@ export class BrokenPartService {
 
     /** Delete a broken part */
     @CreateRequestContext()
-    async deleteBrokenPart(requestId: string, partId: string): Promise<void> {
+    async deleteBrokenPart(userId: string, roles: string[], requestId: string, partId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
@@ -152,6 +185,8 @@ export class BrokenPartService {
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
         if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+
+        await this.assertCanMutate(userId, roles, request, part.isSuggestion);
 
         await this.em.removeAndFlush(part);
     }
@@ -162,6 +197,14 @@ export class BrokenPartService {
         return this.em.find(BrokenPart, { repairRequest: requestId }, { orderBy: { createdAt: 'ASC' } });
     }
 
+    /** Look up a single broken part by id (with its repair request populated) */
+    @CreateRequestContext()
+    async findById(partId: string): Promise<BrokenPart> {
+        const part = await this.em.findOne(BrokenPart, { id: partId }, { populate: ['repairRequest'] });
+        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        return part;
+    }
+
     /** Remove all suggestion broken parts for a request (called on terminal status) */
     async cleanupSuggestions(requestId: string): Promise<number> {
         return this.em.nativeDelete(BrokenPart, { repairRequest: requestId, isSuggestion: true });
@@ -170,7 +213,8 @@ export class BrokenPartService {
     /** Place a supplier order for a broken part. Transitions ADDED → ORDERED. */
     @CreateRequestContext()
     async orderFromSupplier(
-        _userId: string,
+        userId: string,
+        roles: string[],
         requestId: string,
         partId: string,
         supplierName?: string,
@@ -181,6 +225,8 @@ export class BrokenPartService {
         if (TERMINAL_STATUSES.includes(request.status)) {
             throw AppErrors.badRequest('Нельзя заказывать запчасти для завершённой заявки');
         }
+
+        await this.assertCanMutate(userId, roles, request, false);
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
         if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');

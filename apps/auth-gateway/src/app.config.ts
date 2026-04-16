@@ -31,6 +31,10 @@ export class AppConfig {
         return this.configService.get<string>('USER_SERVICE_ADDR') ?? 'localhost:5000';
     }
 
+    get fileServiceUrl(): string {
+        return this.configService.get<string>('FILE_SERVICE_ADDR') ?? 'localhost:5002';
+    }
+
     get oauth() {
         return {
             google: {

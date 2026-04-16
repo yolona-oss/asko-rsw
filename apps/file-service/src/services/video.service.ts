@@ -6,7 +6,7 @@ import { VideoTypeEnum, FileVisibility } from "@asko/shared";
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { AppErrors } from "common/error";
-import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
+import { STORAGE_PROVIDER, StorageProvider, StreamUploadMeta } from "storage/storage-provider.interface";
 import { VIDEO_COMPRESS_QUEUE } from "modules/video-compress-queue.module";
 import type { VideoCompressJobData } from "./video-compress.processor";
 import 'multer';
@@ -118,6 +118,71 @@ export class VideoService {
         await this.em.persistAndFlush(video);
         await this.enqueueCompress(video.id);
         return video;
+    }
+
+    private async uploadOwnedVideoStream(
+        stream: NodeJS.ReadableStream,
+        meta: StreamUploadMeta,
+        ownerType: VideoTypeEnum,
+        ownerId: string,
+        folder: string,
+    ): Promise<Video> {
+        const result = await this.storage.uploadVideoStream(stream, meta, folder);
+        const video = new Video();
+        video.video = result;
+        video.ownerType = ownerType;
+        video.ownerId = String(ownerId);
+        video.order = await this.countAttached(ownerId, ownerType);
+        await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
+        return video;
+    }
+
+    @CreateRequestContext()
+    async uploadStreamGeneric(
+        stream: NodeJS.ReadableStream,
+        meta: StreamUploadMeta,
+    ): Promise<Video> {
+        const result = await this.storage.uploadVideoStream(stream, meta);
+        const video = new Video();
+        video.video = result;
+        video.order = 0;
+        await this.em.persistAndFlush(video);
+        await this.enqueueCompress(video.id);
+
+        const { creatorId, visibility, conversationId } = meta;
+        if (creatorId || visibility || conversationId) {
+            const access = new FileAccess();
+            access.fileId = video.id;
+            access.fileType = 'video';
+            if (visibility) access.visibility = visibility as FileVisibility;
+            if (creatorId) access.creatorId = creatorId;
+            if (conversationId) access.conversationId = conversationId;
+            this.em.persist(access);
+            await this.em.flush();
+        }
+
+        return video;
+    }
+
+    @CreateRequestContext()
+    async uploadRepairRequestVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.RepairRequest, ownerId, 'repair-request-videos');
+    }
+
+    @CreateRequestContext()
+    async uploadReviewVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Review, ownerId, 'review-videos');
+    }
+
+    @CreateRequestContext()
+    async uploadDeviceVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Device, ownerId, 'device-videos');
+    }
+
+    @CreateRequestContext()
+    async uploadArticleVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Article, ownerId, 'article-videos');
     }
 
     @CreateRequestContext()

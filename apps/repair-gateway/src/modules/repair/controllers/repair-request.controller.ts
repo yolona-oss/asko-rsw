@@ -596,14 +596,14 @@ export class RepairRequestController {
     @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts')
     async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
-        return this.repairClient.addBrokenPart(user.sub, id, { ...dto, isSuggestion: false });
+        return this.repairClient.addBrokenPart(user.sub, user.roles, id, { ...dto, isSuggestion: false });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.USER, Role.DEALER)
+    @RequiredRoles(Role.USER)
     @Post(':id/broken-parts/suggest')
     async suggestBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
-        return this.repairClient.addBrokenPart(user.sub, id, { name: dto.name, note: dto.note, isSuggestion: true });
+        return this.repairClient.addBrokenPart(user.sub, user.roles, id, { name: dto.name, note: dto.note, isSuggestion: true });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
@@ -615,7 +615,7 @@ export class RepairRequestController {
         @Param('partId') partId: string,
         @Body() dto: UpdateBrokenPartDto,
     ) {
-        return this.repairClient.updateBrokenPart(user.sub, id, partId, dto);
+        return this.repairClient.updateBrokenPart(user.sub, user.roles, id, partId, dto);
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
@@ -627,7 +627,7 @@ export class RepairRequestController {
         @Param('partId') partId: string,
         @Body() dto: UpdateBrokenPartStatusDto,
     ) {
-        return this.repairClient.updateBrokenPartStatus(user.sub, id, partId, dto.status);
+        return this.repairClient.updateBrokenPartStatus(user.sub, user.roles, id, partId, dto.status);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
@@ -638,7 +638,7 @@ export class RepairRequestController {
         @Param('id') id: string,
         @Param('partId') partId: string,
     ) {
-        await this.repairClient.deleteBrokenPart(user.sub, id, partId);
+        await this.repairClient.deleteBrokenPart(user.sub, user.roles, id, partId);
         return {};
     }
 
@@ -651,7 +651,7 @@ export class RepairRequestController {
         @Param('partId') partId: string,
         @Body() dto: OrderBrokenPartDto,
     ) {
-        return this.repairClient.orderBrokenPart(user.sub, id, partId, dto.supplier);
+        return this.repairClient.orderBrokenPart(user.sub, user.roles, id, partId, dto.supplier);
     }
 
     @ApiOkResponse({ type: BrokenPartListResponseDto })

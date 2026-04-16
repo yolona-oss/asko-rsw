@@ -57,6 +57,7 @@ import type {
     RepairUpdateBrokenPartStatusRequest,
     RepairDeleteBrokenPartRequest,
     RepairGetBrokenPartsRequest,
+    RepairGetBrokenPartByIdRequest,
     RepairOrderBrokenPartRequest,
     RepairAcceptCompletionRequest,
     GenerateAvrRequest,
@@ -583,7 +584,7 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'AddBrokenPart')
     async addBrokenPart(data: RepairAddBrokenPartRequest) {
         try {
-            const part = await this.brokenPartService.addBrokenPart(data.requestId, {
+            const part = await this.brokenPartService.addBrokenPart(data.userId, data.requesterRoles ?? [], data.requestId, {
                 devicePartId: data.devicePartId || undefined,
                 name: data.name || undefined,
                 note: data.note || undefined,
@@ -596,7 +597,7 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'UpdateBrokenPart')
     async updateBrokenPart(data: RepairUpdateBrokenPartRequest) {
         try {
-            const part = await this.brokenPartService.updateBrokenPart(data.requestId, data.partId, {
+            const part = await this.brokenPartService.updateBrokenPart(data.userId, data.requesterRoles ?? [], data.requestId, data.partId, {
                 name: data.name || undefined,
                 note: data.note,
             });
@@ -608,6 +609,8 @@ export class RepairGrpcController {
     async updateBrokenPartStatus(data: RepairUpdateBrokenPartStatusRequest) {
         try {
             const part = await this.brokenPartService.updateBrokenPartStatus(
+                data.userId,
+                data.requesterRoles ?? [],
                 data.requestId,
                 data.partId,
                 data.status as any,
@@ -619,7 +622,7 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'DeleteBrokenPart')
     async deleteBrokenPart(data: RepairDeleteBrokenPartRequest) {
         try {
-            await this.brokenPartService.deleteBrokenPart(data.requestId, data.partId);
+            await this.brokenPartService.deleteBrokenPart(data.userId, data.requesterRoles ?? [], data.requestId, data.partId);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }
@@ -632,11 +635,20 @@ export class RepairGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
+    @GrpcMethod('RepairService', 'GetBrokenPartById')
+    async getBrokenPartById(data: RepairGetBrokenPartByIdRequest) {
+        try {
+            const part = await this.brokenPartService.findById(data.partId);
+            return { part: brokenPartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
     @GrpcMethod('RepairService', 'OrderBrokenPart')
     async orderBrokenPart(data: RepairOrderBrokenPartRequest) {
         try {
             const part = await this.brokenPartService.orderFromSupplier(
                 data.userId,
+                data.requesterRoles ?? [],
                 data.requestId,
                 data.partId,
                 data.supplier || undefined,

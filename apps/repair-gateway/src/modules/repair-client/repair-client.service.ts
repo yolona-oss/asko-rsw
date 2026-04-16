@@ -170,9 +170,10 @@ export class RepairClientService implements OnModuleInit {
 
     // ── Broken parts ──
 
-    addBrokenPart(userId: string, requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPartResponse> {
+    addBrokenPart(userId: string, requesterRoles: string[], requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPartResponse> {
         return grpcCall(this.repairService.addBrokenPart({
             userId,
+            requesterRoles,
             requestId,
             devicePartId: dto.devicePartId ?? '',
             name: dto.name ?? '',
@@ -181,9 +182,10 @@ export class RepairClientService implements OnModuleInit {
         }));
     }
 
-    updateBrokenPart(userId: string, requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPartResponse> {
+    updateBrokenPart(userId: string, requesterRoles: string[], requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPartResponse> {
         return grpcCall(this.repairService.updateBrokenPart({
             userId,
+            requesterRoles,
             requestId,
             partId,
             name: dto.name ?? '',
@@ -191,18 +193,20 @@ export class RepairClientService implements OnModuleInit {
         }));
     }
 
-    updateBrokenPartStatus(userId: string, requestId: string, partId: string, status: string): Promise<BrokenPartResponse> {
+    updateBrokenPartStatus(userId: string, requesterRoles: string[], requestId: string, partId: string, status: string): Promise<BrokenPartResponse> {
         return grpcCall(this.repairService.updateBrokenPartStatus({
             userId,
+            requesterRoles,
             requestId,
             partId,
             status,
         }));
     }
 
-    deleteBrokenPart(userId: string, requestId: string, partId: string): Promise<RepairEmptyResponse> {
+    deleteBrokenPart(userId: string, requesterRoles: string[], requestId: string, partId: string): Promise<RepairEmptyResponse> {
         return grpcCall(this.repairService.deleteBrokenPart({
             userId,
+            requesterRoles,
             requestId,
             partId,
         }));
@@ -212,9 +216,14 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.getBrokenParts({ requestId }));
     }
 
-    orderBrokenPart(userId: string, requestId: string, partId: string, supplier?: string): Promise<BrokenPartResponse> {
+    findBrokenPartById(partId: string): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.getBrokenPartById({ partId }));
+    }
+
+    orderBrokenPart(userId: string, requesterRoles: string[], requestId: string, partId: string, supplier?: string): Promise<BrokenPartResponse> {
         return grpcCall(this.repairService.orderBrokenPart({
             userId,
+            requesterRoles,
             requestId,
             partId,
             supplier: supplier ?? '',

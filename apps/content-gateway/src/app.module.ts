@@ -8,6 +8,7 @@ import { AppConfig, AppConfigModule } from './app.config';
 
 import { ArticlesModule } from 'modules/articles/articles.module';
 import { UserModule } from 'modules/user/user.module';
+import { FileUploadModule } from 'modules/file-upload/file-upload.module';
 import { HealthModule } from 'modules/health/health.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { HealthModule } from 'modules/health/health.module';
 
         ArticlesModule,
         UserModule,
+        FileUploadModule,
         HealthModule,
     ],
     providers: [

@@ -16,6 +16,7 @@ import { WScheduleModule } from 'modules/wschedule/wschedule.module';
 import { AddressModule } from 'modules/address/address.module';
 import { PaymentModule } from 'modules/payment/payment.module';
 import { TaskScheduleModule } from 'modules/task-schedule/task.module';
+import { FileUploadModule } from 'modules/file-upload/file-upload.module';
 import { HealthModule } from 'modules/health/health.module';
 
 @Module({
@@ -39,6 +40,7 @@ import { HealthModule } from 'modules/health/health.module';
         AddressModule,
         PaymentModule,
         TaskScheduleModule,
+        FileUploadModule,
         HealthModule,
     ],
     providers: [

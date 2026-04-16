@@ -4,16 +4,14 @@ package file;
 
 service FileService {
     // Upload operations
-    rpc Upload(UploadFileRequest) returns (ImageResponse);
-    rpc StreamUpload(UploadFileRequest) returns (ImageResponse);
-    rpc UploadUserAvatar(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadDeviceCatalogImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadDeviceImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadArticleImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadRepairRequestImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadReviewImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadDevicePartImage(UploadWithOwnerRequest) returns (ImageResponse);
-    rpc UploadBrokenPartImage(UploadWithOwnerRequest) returns (ImageResponse);
+    rpc Upload(stream UploadChunk) returns (ImageResponse);
+    rpc UploadUserAvatar(stream UploadChunk) returns (ImageResponse);
+    rpc UploadDeviceImage(stream UploadChunk) returns (ImageResponse);
+    rpc UploadArticleImage(stream UploadChunk) returns (ImageResponse);
+    rpc UploadRepairRequestImage(stream UploadChunk) returns (ImageResponse);
+    rpc UploadReviewImage(stream UploadChunk) returns (ImageResponse);
+    rpc UploadDevicePartImage(stream UploadChunk) returns (ImageResponse);
+    rpc UploadBrokenPartImage(stream UploadChunk) returns (ImageResponse);
 
     // URL operations
     rpc CreateFromUrl(CreateFromUrlRequest) returns (ImageResponse);
@@ -33,11 +31,11 @@ service FileService {
     rpc ReorderByIds(ReorderByIdsRequest) returns (ImageListResponse);
 
     // Video upload operations
-    rpc UploadVideo(UploadVideoRequest) returns (VideoResponse);
-    rpc UploadRepairRequestVideo(UploadWithOwnerRequest) returns (VideoResponse);
-    rpc UploadReviewVideo(UploadWithOwnerRequest) returns (VideoResponse);
-    rpc UploadDeviceVideo(UploadWithOwnerRequest) returns (VideoResponse);
-    rpc UploadArticleVideo(UploadWithOwnerRequest) returns (VideoResponse);
+    rpc UploadVideo(stream UploadChunk) returns (VideoResponse);
+    rpc UploadRepairRequestVideo(stream UploadChunk) returns (VideoResponse);
+    rpc UploadReviewVideo(stream UploadChunk) returns (VideoResponse);
+    rpc UploadDeviceVideo(stream UploadChunk) returns (VideoResponse);
+    rpc UploadArticleVideo(stream UploadChunk) returns (VideoResponse);
 
     // Video management operations
     rpc RemoveVideo(VideoIdRequest) returns (EmptyResponse);
@@ -46,9 +44,9 @@ service FileService {
     rpc UnattachVideo(VideoIdRequest) returns (EmptyResponse);
 
     // Document operations
-    rpc UploadBrokenPartDocument(UploadWithOwnerRequest) returns (DocumentResponse);
-    rpc UploadRepairRequestDocument(UploadWithOwnerRequest) returns (DocumentResponse);
-    rpc UploadDocument(UploadDocumentRequest) returns (DocumentResponse);
+    rpc UploadBrokenPartDocument(stream UploadChunk) returns (DocumentResponse);
+    rpc UploadRepairRequestDocument(stream UploadChunk) returns (DocumentResponse);
+    rpc UploadDocument(stream UploadChunk) returns (DocumentResponse);
     rpc GetDocument(DocumentIdRequest) returns (DocumentResponse);
     rpc GetDocumentsByOwner(FindAttachedRequest) returns (DocumentListResponse);
     rpc DeleteDocument(DocumentIdRequest) returns (EmptyResponse);
@@ -59,29 +57,30 @@ service FileService {
 
 // ─── Common ────────────────────────────────────────────────────────────
 
-message FileData {
-    bytes buffer = 1;
-    string originalname = 2;
-    string mimetype = 3;
+// ─── Streaming upload payload ──────────────────────────────────────────
+
+// Sent once as the first chunk of every streaming upload RPC.
+// Carries all the metadata the server needs before file bytes arrive.
+message UploadStart {
+    string originalname   = 1;
+    string mimetype       = 2;
+    string ownerId        = 3;
+    string visibility     = 4;  // documents only; ignored otherwise
+    string creatorId      = 5;  // documents only
+    string conversationId = 6;  // documents only
+    string alt            = 7;  // generic image upload only; ignored otherwise
+}
+
+// Client-streaming payload for all file upload RPCs.
+// First message carries `start`; subsequent messages carry `data`.
+message UploadChunk {
+    oneof payload {
+        UploadStart start = 1;
+        bytes       data  = 2;
+    }
 }
 
 // ─── Requests ──────────────────────────────────────────────────────────
-
-message UploadFileRequest {
-    FileData file = 1;
-    string alt = 2;
-    string visibility = 3;
-    string creatorId = 4;
-    string conversationId = 5;
-}
-
-message UploadWithOwnerRequest {
-    FileData file = 1;
-    string ownerId = 2;
-    string visibility = 3;
-    string creatorId = 4;
-    string conversationId = 5;
-}
 
 message CreateFromUrlRequest {
     string url = 1;
@@ -159,13 +158,6 @@ message CountResponse {
 
 // ─── Video ────────────────────────────────────────────────────────────
 
-message UploadVideoRequest {
-    FileData file = 1;
-    string visibility = 2;
-    string creatorId = 3;
-    string conversationId = 4;
-}
-
 message VideoIdRequest {
     string id = 1;
 }
@@ -215,14 +207,6 @@ message FileAccessResponse {
 
 // ─── Documents ────────────────────────────────────────────────────────
 
-message UploadDocumentRequest {
-    FileData file = 1;
-    string ownerType = 2;
-    string ownerId = 3;
-    string visibility = 4;
-    string creatorId = 5;
-    string conversationId = 6;
-}
 
 message DocumentIdRequest {
     string id = 1;

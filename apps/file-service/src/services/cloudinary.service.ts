@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { Readable } from 'stream';
-import { StorageProvider, VideoUploadResult } from 'storage/storage-provider.interface';
+import { StorageProvider, StreamUploadMeta, VideoUploadResult } from 'storage/storage-provider.interface';
 
 export interface CloudinaryUploadResult {
     public_id: string;
@@ -181,6 +181,56 @@ export class CloudinaryService implements StorageProvider {
             );
 
             Readable.from(file.buffer).pipe(uploadStream);
+        });
+    }
+
+    async uploadImageStream(
+        stream: NodeJS.ReadableStream,
+        meta: StreamUploadMeta,
+        folder: string = 'default',
+    ): Promise<CloudinaryUploadResult> {
+        return new Promise((resolve, reject) => {
+            const upload = cloudinary.uploader.upload_stream(
+                {
+                    folder: `${this.config.app_name}/${folder}`,
+                    resource_type: 'image',
+                    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+                },
+                (err, result) => (err ? reject(err) : resolve(result as CloudinaryUploadResult)),
+            );
+            stream.pipe(upload);
+            // `meta` intentionally unused for images — Cloudinary derives format from bytes.
+            void meta;
+        });
+    }
+
+    async uploadVideoStream(
+        stream: NodeJS.ReadableStream,
+        meta: StreamUploadMeta,
+        folder: string = 'default',
+    ): Promise<VideoUploadResult> {
+        return new Promise((resolve, reject) => {
+            const upload = cloudinary.uploader.upload_stream(
+                {
+                    folder: `${this.config.app_name}/${folder}`,
+                    resource_type: 'video',
+                },
+                (err, result) => {
+                    if (err) return reject(err);
+                    const r = result as UploadApiResponse;
+                    resolve({
+                        public_id: r.public_id,
+                        format: r.format,
+                        resource_type: r.resource_type,
+                        url: r.url,
+                        secure_url: r.secure_url,
+                        original_filename: r.original_filename ?? meta.originalname,
+                        duration: r.duration,
+                        size: r.bytes,
+                    });
+                },
+            );
+            stream.pipe(upload);
         });
     }
 

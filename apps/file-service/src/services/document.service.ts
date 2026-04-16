@@ -1,7 +1,9 @@
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
 import { FileVisibility } from '@asko/shared';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs/promises';
@@ -161,6 +163,107 @@ export class DocumentService {
         access?: AccessParams,
     ): Promise<Document> {
         return this.upload(file, 'repair-request', ownerId, access);
+    }
+
+    private async uploadStreamToLocal(
+        stream: NodeJS.ReadableStream,
+        mimetype: string,
+        originalname: string,
+        folder: string,
+    ): Promise<{ url: string; publicId: string; sizeBytes: number }> {
+        const ext = this.extFromMime(mimetype, originalname);
+        const filename = `${uuid()}.${ext}`;
+        const relative = `documents/${folder}/${filename}`;
+        const dir = path.join(this.staticPath, 'documents', folder);
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, filename);
+        await pipeline(stream, createWriteStream(filePath));
+        const stat = await fs.stat(filePath).catch(() => undefined);
+        return {
+            url: `${this.publicUrl}/documents/${folder}/${filename}`,
+            publicId: relative,
+            sizeBytes: stat?.size ?? 0,
+        };
+    }
+
+    private async uploadStreamToCloudinary(
+        stream: NodeJS.ReadableStream,
+        originalname: string,
+        folder: string,
+    ): Promise<{ url: string; publicId: string; sizeBytes: number }> {
+        // Cloudinary does not stream back byte counts — tee the stream so we
+        // can count locally without buffering.
+        let bytes = 0;
+        const counter = new PassThrough();
+        counter.on('data', (chunk: Buffer) => { bytes += chunk.length; });
+        stream.pipe(counter);
+
+        return new Promise((resolve, reject) => {
+            const upload = cloudinary.uploader.upload_stream(
+                {
+                    folder: `asko/documents/${folder}`,
+                    resource_type: 'raw',
+                    public_id: `${uuid()}_${originalname.replace(/[^\w.-]/g, '_')}`,
+                    use_filename: false,
+                    unique_filename: true,
+                },
+                (err, result) => {
+                    if (err || !result) return reject(err ?? new Error('Cloudinary returned no result'));
+                    const r = result as UploadApiResponse;
+                    resolve({ url: r.secure_url ?? r.url, publicId: r.public_id, sizeBytes: bytes });
+                },
+            );
+            counter.pipe(upload);
+        });
+    }
+
+    @CreateRequestContext()
+    async uploadStreamDocument(
+        stream: NodeJS.ReadableStream,
+        meta: { originalname: string; mimetype: string },
+        ownerType: string,
+        ownerId: string,
+        access?: AccessParams,
+    ): Promise<Document> {
+        this.assertMime(meta.mimetype);
+
+        const uploaded =
+            this.config.fileStorageMode === 'local'
+                ? await this.uploadStreamToLocal(stream, meta.mimetype, meta.originalname, ownerType)
+                : await this.uploadStreamToCloudinary(stream, meta.originalname, ownerType);
+
+        const doc = new Document();
+        doc.ownerType = ownerType;
+        doc.ownerId = String(ownerId);
+        doc.storageUrl = uploaded.url;
+        doc.publicId = uploaded.publicId;
+        doc.mimeType = meta.mimetype;
+        doc.filename = meta.originalname;
+        doc.sizeBytes = uploaded.sizeBytes;
+        await this.em.persistAndFlush(doc);
+
+        await this.persistAccess(doc.id, access);
+        return doc;
+    }
+
+    @CreateRequestContext()
+    async uploadBrokenPartDocumentStream(
+        stream: NodeJS.ReadableStream,
+        meta: { originalname: string; mimetype: string },
+        ownerId: string,
+        access?: AccessParams,
+    ): Promise<Document> {
+        return this.uploadStreamDocument(stream, meta, 'broken-part', ownerId, access);
+    }
+
+    @CreateRequestContext()
+    async uploadRepairRequestDocumentStream(
+        stream: NodeJS.ReadableStream,
+        meta: { originalname: string; mimetype: string },
+        ownerId: string,
+        access?: AccessParams,
+    ): Promise<Document> {
+        return this.uploadStreamDocument(stream, meta, 'repair-request', ownerId, access);
     }
 
     @CreateRequestContext()

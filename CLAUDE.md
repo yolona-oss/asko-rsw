@@ -61,15 +61,15 @@ pnpm install && turbo run build          # Install + build all
 
 Five gateways, all sharing JWT public key for local token validation. Host nginx (VPS) routes by URL prefix — frontend sees one domain.
 
-**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations. Talks to user-service only.
+**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations. Also hosts `POST /auth/users/:userId/avatar` (avatar upload, self-or-admin). Talks to user-service, file-service.
 
-**Repair Gateway** (:4002) — `/repair-requests/*`, `/devices/*`, `/user-devices/*`, `/device-categories/*`, `/certificates/*`, `/repairers/*`, `/dealers/*`, `/reviews/*`, `/schedule/*`, `/address/*`, `/payment/*`. Talks to repair-service, payment-service, file-service, user-service.
+**Repair Gateway** (:4002) — `/repair-requests/*`, `/devices/*`, `/user-devices/*`, `/device-categories/*`, `/certificates/*`, `/repairers/*`, `/dealers/*`, `/reviews/*`, `/schedule/*`, `/address/*`, `/payment/*`, `/parts/*`. Also hosts per-domain file uploads: `POST /repair-requests/:id/{images,videos,documents}`, `POST /reviews/:id/{images,videos}`, `POST /devices/:id/{images,videos}`, `POST /parts/:id/images`, `POST /repair-requests/broken-parts/:partId/{images,documents}`, and `DELETE /repair-requests/documents/:documentId`. Ownership enforced via `RepairAccessService` (`assertRepairRequestParticipant`, `assertReviewOwner`, `assertBrokenPartAccess`). Talks to repair-service, payment-service, file-service, user-service.
 
-**Media Gateway** (:4003) — `/file-upload/*`, `/files/*`. Image/video upload with target-specific routes (`upload/device/:ownerId`, `upload/article/:ownerId`, etc.). Access-controlled file serving via FileAccess visibility checks. Local files served from shared Docker volume; Cloudinary URLs redirected. Nginx caches `/images/*` and `/videos/*` with 7d expiry.
+**Media Gateway** (:4003) — `/file-upload/*`, `/files/*`. Only generic admin image/video/document uploads (`POST /file-upload/{image,video,document}/upload`), admin-only image/video attach/unattach/delete/from-url, `GET /file-upload/{image,video,document}/attached` lookups, and access-controlled file serving via FileAccess visibility checks. **Per-domain file uploads live on their owning gateways** (auth/repair/content) so media-gateway has no dependency on repair-service or content-service. Local files served from shared Docker volume; Cloudinary URLs redirected. Nginx caches `/images/*` and `/videos/*` with 7d expiry.
 
 **Realtime Gateway** (:4004) — `/chat/*`, `/notifications/*`, `/socket.io/*`. WebSocket with sticky sessions. Talks to chat-service, notification-service, user-service. Redis adapter for cross-pod WebSocket.
 
-**Content Gateway** (:4005) — `/articles/*`, `/users/*`. Public article and user profile endpoints. Talks to content-service, file-service.
+**Content Gateway** (:4005) — `/articles/*`, `/users/*`. Public article and user profile endpoints. Also hosts `POST /articles/:id/{images,videos}` (admin-only article media uploads). Talks to content-service, file-service.
 
 ## Packages
 

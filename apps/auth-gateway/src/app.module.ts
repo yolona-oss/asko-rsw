@@ -10,6 +10,7 @@ import { AppConfig, AppConfigModule } from './app.config';
 import { AuthModule } from 'modules/auth/auth.module';
 import { OAuthModule } from 'modules/oauth/oauth.module';
 import { InviteModule } from 'modules/invite/invite.module';
+import { UserModule } from 'modules/user/user.module';
 import { HealthModule } from 'modules/health/health.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { HealthModule } from 'modules/health/health.module';
         AuthModule,
         OAuthModule,
         InviteModule,
+        UserModule,
         HealthModule,
     ],
     providers: [

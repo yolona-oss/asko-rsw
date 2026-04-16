@@ -16,8 +16,8 @@ async function bootstrap() {
             package: 'file',
             protoPath: join(process.cwd(), '../../packages/proto/file.proto'),
             url: `0.0.0.0:${process.env.GRPC_PORT || 5002}`,
-            maxReceiveMessageLength: 100 * 1024 * 1024,
-            maxSendMessageLength: 100 * 1024 * 1024,
+            maxReceiveMessageLength: 8 * 1024 * 1024,
+            maxSendMessageLength: 8 * 1024 * 1024,
         },
     });
 

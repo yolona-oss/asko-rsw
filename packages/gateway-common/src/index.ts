@@ -14,7 +14,12 @@ export type { IGatewayConfig } from './guards';
 export { GlobalExceptionFilter } from './filters';
 
 // gRPC utilities
-export { fromGrpcError, grpcCall } from './grpc';
+export { fromGrpcError, grpcCall, grpcStreamUpload } from './grpc';
+export type { StreamUploadOptions } from './grpc';
+
+// Streaming upload helpers
+export { StreamingUploadInterceptor, StreamingFile, assertMime } from './upload';
+export type { StreamingUploadPayload } from './upload';
 
 // Auth utilities
 export { isStaff, isAdmin, isSuperAdmin, isSelf, assertSelfOrStaff } from './auth';

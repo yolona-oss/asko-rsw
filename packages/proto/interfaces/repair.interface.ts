@@ -1068,6 +1068,7 @@ export interface RepairAddBrokenPartRequest {
     name: string;
     note: string;
     isSuggestion: boolean;
+    requesterRoles: string[];
 }
 
 export interface RepairUpdateBrokenPartRequest {
@@ -1076,6 +1077,7 @@ export interface RepairUpdateBrokenPartRequest {
     partId: string;
     name: string;
     note: string;
+    requesterRoles: string[];
 }
 
 export interface RepairUpdateBrokenPartStatusRequest {
@@ -1083,16 +1085,22 @@ export interface RepairUpdateBrokenPartStatusRequest {
     requestId: string;
     partId: string;
     status: string;
+    requesterRoles: string[];
 }
 
 export interface RepairDeleteBrokenPartRequest {
     userId: string;
     requestId: string;
     partId: string;
+    requesterRoles: string[];
 }
 
 export interface RepairGetBrokenPartsRequest {
     requestId: string;
+}
+
+export interface RepairGetBrokenPartByIdRequest {
+    partId: string;
 }
 
 export interface RepairOrderBrokenPartRequest {
@@ -1100,6 +1108,7 @@ export interface RepairOrderBrokenPartRequest {
     requestId: string;
     partId: string;
     supplier: string;
+    requesterRoles: string[];
 }
 
 export interface RepairFindByIdRequest {
@@ -1272,6 +1281,7 @@ export interface RepairServiceClient {
     updateBrokenPartStatus(request: RepairUpdateBrokenPartStatusRequest): Observable<BrokenPartResponse>;
     deleteBrokenPart(request: RepairDeleteBrokenPartRequest): Observable<RepairEmptyResponse>;
     getBrokenParts(request: RepairGetBrokenPartsRequest): Observable<BrokenPartListResponse>;
+    getBrokenPartById(request: RepairGetBrokenPartByIdRequest): Observable<BrokenPartResponse>;
     orderBrokenPart(request: RepairOrderBrokenPartRequest): Observable<BrokenPartResponse>;
 
     // Queries

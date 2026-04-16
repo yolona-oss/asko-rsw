@@ -8,7 +8,7 @@ import { FileAccess } from 'entities/file-access.entity';
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
 import { IMAGE_RESIZE_QUEUE } from "modules/image-resize-queue.module";
-import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
+import { STORAGE_PROVIDER, StorageProvider, StreamUploadMeta } from "storage/storage-provider.interface";
 import type { ImageResizeJobData } from "./image-resize.processor";
 import 'multer';
 
@@ -57,6 +57,26 @@ export class ImageService {
         access?: AccessParams,
     ): Promise<Image> {
         const original = await this.storage.uploadImage(file, folder);
+        const image = new Image();
+        image.image = { original };
+        image.ownerType = ownerType;
+        image.ownerId = String(ownerId);
+        image.order = await this.countAttached(ownerId, ownerType);
+        await this.em.persistAndFlush(image);
+        await this.enqueueResize(image.id);
+        if (access) await this.createFileAccess(image.id, access);
+        return image;
+    }
+
+    private async uploadOwnedStream(
+        stream: NodeJS.ReadableStream,
+        meta: StreamUploadMeta,
+        ownerType: ImageTypeEnum,
+        ownerId: string,
+        folder: string,
+        access?: AccessParams,
+    ): Promise<Image> {
+        const original = await this.storage.uploadImageStream(stream, meta, folder);
         const image = new Image();
         image.image = { original };
         image.ownerType = ownerType;
@@ -129,8 +149,20 @@ export class ImageService {
     }
 
     @CreateRequestContext()
+    async uploadUserAvatarStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        const existing = await this.em.find(Image, { ownerType: ImageTypeEnum.User, ownerId: String(ownerId) });
+        for (const old of existing) this.remove(old.id);
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.User, ownerId, 'avatars', access);
+    }
+
+    @CreateRequestContext()
     async uploadDeviceImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
         return this.uploadOwned(file, ImageTypeEnum.Device, ownerId, 'devices', access);
+    }
+
+    @CreateRequestContext()
+    async uploadDeviceImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.Device, ownerId, 'devices', access);
     }
 
     @CreateRequestContext()
@@ -139,8 +171,18 @@ export class ImageService {
     }
 
     @CreateRequestContext()
+    async uploadArticleImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.Article, ownerId, 'articles', access);
+    }
+
+    @CreateRequestContext()
     async uploadRepairRequestImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
         return this.uploadOwned(file, ImageTypeEnum.RepairRequest, ownerId, 'repairs', access);
+    }
+
+    @CreateRequestContext()
+    async uploadRepairRequestImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.RepairRequest, ownerId, 'repairs', access);
     }
 
     @CreateRequestContext()
@@ -149,13 +191,41 @@ export class ImageService {
     }
 
     @CreateRequestContext()
+    async uploadReviewImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.Review, ownerId, 'reviews', access);
+    }
+
+    @CreateRequestContext()
     async uploadDevicePartImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
         return this.uploadOwned(file, ImageTypeEnum.DevicePart, ownerId, 'device-parts', access);
     }
 
     @CreateRequestContext()
+    async uploadDevicePartImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.DevicePart, ownerId, 'device-parts', access);
+    }
+
+    @CreateRequestContext()
     async uploadBrokenPartImage(file: Express.Multer.File, ownerId: string, access?: AccessParams) {
         return this.uploadOwned(file, ImageTypeEnum.BrokenPart, ownerId, 'broken-parts', access);
+    }
+
+    @CreateRequestContext()
+    async uploadBrokenPartImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams) {
+        return this.uploadOwnedStream(stream, meta, ImageTypeEnum.BrokenPart, ownerId, 'broken-parts', access);
+    }
+
+    @CreateRequestContext()
+    async uploadStreamGeneric(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, access?: AccessParams) {
+        const original = await this.storage.uploadImageStream(stream, meta);
+        const image = new Image();
+        image.image = { original };
+        image.alt = meta.alt;
+        image.order = 0;
+        await this.em.persistAndFlush(image);
+        await this.enqueueResize(image.id);
+        if (access) await this.createFileAccess(image.id, access);
+        return image;
     }
 
     @CreateRequestContext()

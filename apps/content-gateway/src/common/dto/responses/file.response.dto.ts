@@ -43,3 +43,16 @@ export class ImageListResponseDto {
 export class CountResponseDto {
     count: number;
 }
+
+export class VideoRecordDto {
+    id: string;
+    videoJson: any;
+    ownerType?: string;
+    ownerId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export class VideoResponseDto {
+    video: VideoRecordDto;
+}

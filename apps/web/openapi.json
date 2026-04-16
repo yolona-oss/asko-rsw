@@ -1721,216 +1721,6 @@
         ]
       }
     },
-    "/file-upload/image/upload/avatar/{userId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadUserAvatar",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/device/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadDeviceImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/article/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadArticleImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/repair-request/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadRepairRequestImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/review/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadReviewImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/device-part/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadDevicePartImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/image/upload/broken-part/{ownerId}": {
-      "post": {
-        "operationId": "ImageUploadController_uploadBrokenPartImage",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
     "/file-upload/image/delete/{imageId}": {
       "delete": {
         "operationId": "ImageUploadController_remove",
@@ -2121,126 +1911,6 @@
         ]
       }
     },
-    "/file-upload/video/upload/repair-request/{ownerId}": {
-      "post": {
-        "operationId": "VideoUploadController_uploadRepairRequestVideo",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VideoResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Video Upload"
-        ]
-      }
-    },
-    "/file-upload/video/upload/review/{ownerId}": {
-      "post": {
-        "operationId": "VideoUploadController_uploadReviewVideo",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VideoResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Video Upload"
-        ]
-      }
-    },
-    "/file-upload/video/upload/device/{ownerId}": {
-      "post": {
-        "operationId": "VideoUploadController_uploadDeviceVideo",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VideoResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Video Upload"
-        ]
-      }
-    },
-    "/file-upload/video/upload/article/{ownerId}": {
-      "post": {
-        "operationId": "VideoUploadController_uploadArticleVideo",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VideoResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Video Upload"
-        ]
-      }
-    },
     "/file-upload/video/delete/{videoId}": {
       "delete": {
         "operationId": "VideoUploadController_remove",
@@ -2393,52 +2063,6 @@
         ]
       }
     },
-    "/file-upload/document/upload/broken-part/{ownerId}": {
-      "post": {
-        "operationId": "DocumentUploadController_uploadBrokenPartDocument",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/document/upload/repair-request/{ownerId}": {
-      "post": {
-        "operationId": "DocumentUploadController_uploadRepairRequestDocument",
-        "parameters": [
-          {
-            "name": "ownerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
     "/file-upload/document/attached": {
       "get": {
         "operationId": "DocumentUploadController_listAttached",
@@ -2463,36 +2087,6 @@
         "responses": {
           "200": {
             "description": ""
-          }
-        },
-        "tags": [
-          "File Upload"
-        ]
-      }
-    },
-    "/file-upload/document/delete/{documentId}": {
-      "delete": {
-        "operationId": "DocumentUploadController_remove",
-        "parameters": [
-          {
-            "name": "documentId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponseDto"
-                }
-              }
-            }
           }
         },
         "tags": [
@@ -5523,6 +5117,34 @@
         "tags": [
           "Devices"
         ]
+      },
+      "post": {
+        "operationId": "RepairImageUploadController_uploadDeviceImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
       }
     },
     "/user-devices": {
@@ -7302,6 +6924,34 @@
         "tags": [
           "Reviews"
         ]
+      },
+      "post": {
+        "operationId": "RepairImageUploadController_uploadReviewImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
       }
     },
     "/reviews/rating/my": {
@@ -8510,6 +8160,262 @@
         },
         "tags": [
           "Webhooks"
+        ]
+      }
+    },
+    "/repair-requests/{id}/images": {
+      "post": {
+        "operationId": "RepairImageUploadController_uploadRepairRequestImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/repair-requests/broken-parts/{partId}/images": {
+      "post": {
+        "operationId": "RepairImageUploadController_uploadBrokenPartImage",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/parts/{id}/images": {
+      "post": {
+        "operationId": "RepairImageUploadController_uploadDevicePartImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/repair-requests/{id}/videos": {
+      "post": {
+        "operationId": "RepairVideoUploadController_uploadRepairRequestVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/reviews/{id}/videos": {
+      "post": {
+        "operationId": "RepairVideoUploadController_uploadReviewVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/devices/{id}/videos": {
+      "post": {
+        "operationId": "RepairVideoUploadController_uploadDeviceVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/repair-requests/{id}/documents": {
+      "post": {
+        "operationId": "RepairDocumentUploadController_uploadRepairRequestDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/repair-requests/broken-parts/{partId}/documents": {
+      "post": {
+        "operationId": "RepairDocumentUploadController_uploadBrokenPartDocument",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Repair uploads"
+        ]
+      }
+    },
+    "/repair-requests/documents/{documentId}": {
+      "delete": {
+        "operationId": "RepairDocumentUploadController_deleteDocument",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair uploads"
         ]
       }
     }
