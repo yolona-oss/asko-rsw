@@ -126,6 +126,7 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 * Gateways are pure proxies — no database, no domain logic. Delegate via gRPC.
 * Each microservice owns its DB and entities. No cross-service table access.
 * Microservices communicate via gRPC or RabbitMQ only.
+* RMQ events are HMAC-signed per group via `@SignedEvent`/`SignedEventPublisher` in `@asko/observability/event-bus`. Routing-key → group policy resolved from `EVENT_SIGNING_GROUPS` env (JSON). Groups can be enforced independently (e.g. payment enforced, default soft) to roll out cutover safely.
 * Email: publish `email.send` to RMQ → notification-service delivers via BullMQ.
 * File access: media-gateway serves local files directly (detects `/images/` or `/videos/` in storageUrl). Only Cloudinary URLs get redirected. FileAccess table for visibility control.
 * AppError base in `@asko/shared`, domain-specific error extensions in each service's local `common/error/`.

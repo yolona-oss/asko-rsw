@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { EntityManager } from '@mikro-orm/postgresql';
+import { SignedEventPublisher } from '@asko/observability';
 import { lastValueFrom } from 'rxjs';
 import { FailedEventEntity } from 'entities/failed-event.entity';
 
@@ -33,6 +34,7 @@ export class PaymentEventService implements OnModuleInit {
         private readonly em: EntityManager,
         @Inject('EVENTS_SERVICE') private readonly notificationClient: ClientProxy,
         @Inject('REPAIR_EVENTS_SERVICE') private readonly repairClient: ClientProxy,
+        private readonly publisher: SignedEventPublisher,
     ) {}
 
     async onModuleInit() {
@@ -53,7 +55,7 @@ export class PaymentEventService implements OnModuleInit {
 
         const emitToClient = async (client: ClientProxy, name: string) => {
             try {
-                await lastValueFrom(client.emit(event.type, event));
+                await lastValueFrom(this.publisher.emit(client, event.type, event));
             } catch (e) {
                 this.logger.error(`Failed to emit ${event.type} to ${name}: ${e}`);
                 try {

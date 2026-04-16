@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MetricsModule } from '@asko/observability';
+import { EventBusModule, MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { RepairEventService } from 'modules/repair-event.service';
@@ -71,6 +71,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'repair-service' }),
+        EventBusModule.forRoot(),
         ScheduleModule.forRoot(),
         DatabaseModule,
         MikroOrmModule.forFeature([

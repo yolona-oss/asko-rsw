@@ -5,3 +5,6 @@ export { MetricsModule } from './metrics.module';
 export { HttpMetricsInterceptor } from './http-metrics.interceptor';
 export { GrpcMetricsInterceptor } from './grpc-metrics.interceptor';
 export { createMetricsServer } from './metrics-server';
+
+// Event-bus (HMAC-signed cross-service events)
+export * from './event-bus';

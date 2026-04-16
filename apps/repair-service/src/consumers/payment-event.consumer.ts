@@ -1,5 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import { Ctx, Payload, RmqContext } from '@nestjs/microservices';
+import { SignedEvent } from '@asko/observability';
 import { PaymentTargetType } from '@asko/shared';
 import { CertificateService } from 'services/certificate.service';
 import { RepairRequestService } from 'services/repair-request.service';
@@ -17,7 +18,7 @@ export class PaymentEventConsumer {
         private readonly paidPayments: PaidPaymentService,
     ) {}
 
-    @EventPattern('payment.paid')
+    @SignedEvent('payment.paid')
     async handlePaymentPaid(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -54,7 +55,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('withdraw.paid')
+    @SignedEvent('withdraw.paid')
     async handleWithdrawPaid(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -72,7 +73,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('payment.failed')
+    @SignedEvent('payment.failed')
     async handlePaymentFailed(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -90,7 +91,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('payment.refunded')
+    @SignedEvent('payment.refunded')
     async handlePaymentRefunded(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -99,6 +100,13 @@ export class PaymentEventConsumer {
             if (data.targetType === PaymentTargetType.CERTIFICATE && data.targetId) {
                 await this.certificateService.revokeCertificate(data.targetId);
                 this.logger.log(`Certificate ${data.targetId} revoked after refund`);
+            }
+
+            // Drop the local PaidPayment cache row so downstream integrity
+            // checks don't see the reversed transaction as still-paid.
+            // Idempotent — no-op if the paymentId wasn't cached.
+            if (data.paymentId) {
+                await this.paidPayments.deleteByPaymentId(data.paymentId);
             }
 
             channel.ack(msg);

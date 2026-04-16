@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MetricsModule } from '@asko/observability';
+import { EventBusModule, MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { PaymentEntity } from 'entities/payment.entity';
@@ -28,6 +28,7 @@ import { RepairCommandConsumer } from 'consumers/repair-command.consumer';
         AppConfigModule,
         ScheduleModule.forRoot(),
         MetricsModule.register({ serviceName: 'payment-service' }),
+        EventBusModule.forRoot(),
         DatabaseModule,
         MikroOrmModule.forFeature([PaymentEntity, PaymentAuditEntity, FailedEventEntity]),
         ClientsModule.registerAsync([

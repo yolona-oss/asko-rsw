@@ -34,3 +34,6 @@ export type { SmsSendOptions, SmsRuResponse } from './external/sms_ru/index.js';
 
 // Error system
 export * from './error/index.js';
+
+// Cross-service event signing (HMAC envelopes)
+export * from './event-signing/index.js';

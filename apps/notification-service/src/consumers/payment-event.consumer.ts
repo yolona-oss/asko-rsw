@@ -1,5 +1,6 @@
 import { Controller } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import { Ctx, Payload, RmqContext } from '@nestjs/microservices';
+import { SignedEvent } from '@asko/observability';
 import { NotificationService } from 'services/notification.service';
 import { ReminderService } from 'services/reminder.service';
 import { AppConfig } from '../app.config';
@@ -13,7 +14,7 @@ export class PaymentEventConsumer {
         private readonly config: AppConfig,
     ) {}
 
-    @EventPattern('payment.created')
+    @SignedEvent('payment.created')
     async handleInvoiceCreated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -55,7 +56,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('payment.paid')
+    @SignedEvent('payment.paid')
     async handlePaymentPaid(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -83,7 +84,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('payment.failed')
+    @SignedEvent('payment.failed')
     async handlePaymentFailed(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();
@@ -111,7 +112,7 @@ export class PaymentEventConsumer {
         }
     }
 
-    @EventPattern('payment.refunded')
+    @SignedEvent('payment.refunded')
     async handlePaymentRefunded(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const msg = context.getMessage();

@@ -65,4 +65,15 @@ export class PaidPaymentService {
         const count = await this.em.count(PaidPayment, { targetType, targetId });
         return count > 0;
     }
+
+    /**
+     * Remove the cache row for a given payment — called from the
+     * `payment.refunded` consumer so `hasPaid` no longer returns true
+     * for a reversed transaction. Idempotent: deleting an unknown
+     * paymentId is a no-op.
+     */
+    @CreateRequestContext()
+    async deleteByPaymentId(paymentId: string): Promise<void> {
+        await this.em.nativeDelete(PaidPayment, { paymentId });
+    }
 }
