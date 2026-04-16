@@ -4093,6 +4093,36 @@
         ]
       }
     },
+    "/repair-requests/{id}/avr/remove": {
+      "post": {
+        "operationId": "RepairRequestController_removeAvrByManager",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/{id}/avr/sign/initiate": {
       "post": {
         "operationId": "RepairRequestController_initiateAvrSigning",

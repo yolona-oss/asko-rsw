@@ -190,7 +190,8 @@
             "text",
             "image",
             "video",
-            "system"
+            "system",
+            "document"
           ]
         },
         "participant_role": {
@@ -392,7 +393,8 @@
             "text",
             "image",
             "video",
-            "system"
+            "system",
+            "document"
           ]
         },
         "participant_role": {
@@ -492,7 +494,8 @@
             "text",
             "image",
             "video",
-            "system"
+            "system",
+            "document"
           ],
           "mappedType": "unknown",
           "nativeEnumName": "message_type"
@@ -696,7 +699,8 @@
             "text",
             "image",
             "video",
-            "system"
+            "system",
+            "document"
           ]
         },
         "participant_role": {
@@ -873,7 +877,8 @@
             "text",
             "image",
             "video",
-            "system"
+            "system",
+            "document"
           ]
         },
         "participant_role": {
@@ -932,7 +937,8 @@
         "text",
         "image",
         "video",
-        "system"
+        "system",
+        "document"
       ]
     },
     "participant_role": {

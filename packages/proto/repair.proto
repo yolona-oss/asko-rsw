@@ -119,6 +119,7 @@ service RepairService {
     // AVR (Work Completion Act)
     rpc GenerateAvr(GenerateAvrRequest) returns (GenerateAvrResponse);
     rpc ResetAvr(ResetAvrRequest) returns (RepairRequestResponse);
+    rpc RemoveAvrByManager(RemoveAvrByManagerRequest) returns (RepairRequestResponse);
     rpc SetAvrDocumentId(SetAvrDocumentIdRequest) returns (RepairRequestResponse);
     rpc SetAvrPendingSignature(SetAvrPendingSignatureRequest) returns (RepairRequestResponse);
     rpc SignAvrDigital(SignAvrDigitalRequest) returns (RepairRequestResponse);
@@ -1013,6 +1014,11 @@ message GenerateAvrResponse {
 
 message ResetAvrRequest {
     string repairerUserId = 1;
+    string requestId = 2;
+}
+
+message RemoveAvrByManagerRequest {
+    string managerId = 1;
     string requestId = 2;
 }
 

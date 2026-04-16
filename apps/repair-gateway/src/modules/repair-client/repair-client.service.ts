@@ -336,6 +336,10 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.resetAvr({ repairerUserId, requestId }));
     }
 
+    removeAvrByManager(managerId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.removeAvrByManager({ managerId, requestId }));
+    }
+
     setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.setAvrDocumentId({ requestId, documentId }));
     }

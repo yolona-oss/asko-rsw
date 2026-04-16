@@ -2100,6 +2100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/avr/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_removeAvrByManager"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/{id}/avr/sign/initiate": {
         parameters: {
             query?: never;
@@ -7801,6 +7817,27 @@ export interface operations {
         };
     };
     RepairRequestController_resetAvr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_removeAvrByManager: {
         parameters: {
             query?: never;
             header?: never;

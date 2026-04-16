@@ -58,6 +58,12 @@ export class RepairRequestService {
         RepairRequestStatus.IN_PROGRESS,
     ]);
 
+    private assertAvrMutable(request: RepairRequest): void {
+        if (RepairRequestService.TERMINAL_STATUSES.includes(request.status)) {
+            throw AppErrors.badRequest('Акт заблокирован: заявка в финальном статусе');
+        }
+    }
+
     /**
      * Walk the statusTimestamps array (scoped to the current repairer's session) and sum
      * active work time (EN_ROUTE + IN_PROGRESS periods). The session starts at the LAST
@@ -1001,6 +1007,10 @@ export class RepairRequestService {
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertActionTransition('reassign', request.status);
 
+        if (request.avrStatus !== AvrStatus.NONE) {
+            throw AppErrors.badRequest('Нельзя переназначить мастера: акт выполненных работ сформирован. Сначала удалите акт.');
+        }
+
         const oldRepairer = request.repairer
             ? (typeof request.repairer === 'object' ? request.repairer : await this.em.findOne(Repairer, { id: String(request.repairer) }))
             : undefined;
@@ -1356,6 +1366,7 @@ export class RepairRequestService {
         });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
+        this.assertAvrMutable(request);
         if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
             throw AppErrors.badRequest('АВР можно сформировать только после выполнения шагов ремонта');
         }
@@ -1424,10 +1435,36 @@ export class RepairRequestService {
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['userDevice', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
 
+        this.assertAvrMutable(request);
+
         if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
             throw AppErrors.badRequest('Акт уже подписан или ещё не сформирован');
         }
 
+        this.clearAvrFields(request);
+        await this.em.flush();
+        return request;
+    }
+
+    /** Manager removes AVR regardless of signing state (blocked only in terminal statuses) */
+    @CreateRequestContext()
+    async removeAvrByManager(requestId: string, managerId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+
+        this.assertAvrMutable(request);
+
+        if (request.avrStatus === AvrStatus.NONE) {
+            throw AppErrors.badRequest('Акт не сформирован');
+        }
+
+        this.clearAvrFields(request);
+        request.managerId = managerId;
+        await this.em.flush();
+        return request;
+    }
+
+    private clearAvrFields(request: RepairRequest): void {
         request.avrStatus = AvrStatus.NONE;
         request.avrDocumentId = undefined;
         request.avrSignedDocumentId = undefined;
@@ -1435,8 +1472,6 @@ export class RepairRequestService {
         request.avrSignedAt = undefined;
         request.avrSignedPayload = undefined;
         request.avrSignature = undefined;
-        await this.em.flush();
-        return request;
     }
 
     /** Store the document ID returned by file-service after upload */
@@ -1444,6 +1479,7 @@ export class RepairRequestService {
     async setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        this.assertAvrMutable(request);
         request.avrDocumentId = documentId;
         await this.em.flush();
         return request;
@@ -1454,6 +1490,7 @@ export class RepairRequestService {
     async setAvrPendingSignature(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        this.assertAvrMutable(request);
         if (request.avrStatus !== AvrStatus.GENERATED) {
             throw AppErrors.badRequest('Акт должен быть сформирован перед отправкой на подпись');
         }
@@ -1476,6 +1513,7 @@ export class RepairRequestService {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['certificate'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         if (request.userId !== userId) throw AppErrors.forbidden('Только заказчик может подписать акт');
+        this.assertAvrMutable(request);
         if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
             throw AppErrors.badRequest('Акт не готов к подписанию');
         }
@@ -1511,6 +1549,7 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['certificate'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        this.assertAvrMutable(request);
         if (request.avrStatus !== AvrStatus.GENERATED) {
             throw AppErrors.badRequest('Акт должен быть сформирован перед загрузкой подписанного скана');
         }

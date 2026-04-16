@@ -944,6 +944,11 @@ export interface ResetAvrRequest {
     requestId: string;
 }
 
+export interface RemoveAvrByManagerRequest {
+    managerId: string;
+    requestId: string;
+}
+
 export interface SetAvrDocumentIdRequest {
     requestId: string;
     documentId: string;
@@ -1245,6 +1250,7 @@ export interface RepairServiceClient {
     // AVR (Work Completion Act)
     generateAvr(request: GenerateAvrRequest): Observable<GenerateAvrResponse>;
     resetAvr(request: ResetAvrRequest): Observable<RepairRequestResponse>;
+    removeAvrByManager(request: RemoveAvrByManagerRequest): Observable<RepairRequestResponse>;
     setAvrDocumentId(request: SetAvrDocumentIdRequest): Observable<RepairRequestResponse>;
     setAvrPendingSignature(request: SetAvrPendingSignatureRequest): Observable<RepairRequestResponse>;
     signAvrDigital(request: SignAvrDigitalRequest): Observable<RepairRequestResponse>;

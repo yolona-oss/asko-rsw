@@ -61,6 +61,7 @@ import type {
     RepairAcceptCompletionRequest,
     GenerateAvrRequest,
     ResetAvrRequest,
+    RemoveAvrByManagerRequest,
     SetAvrDocumentIdRequest,
     SetAvrPendingSignatureRequest,
     SignAvrDigitalRequest,
@@ -456,6 +457,14 @@ export class RepairGrpcController {
     async resetAvr(data: ResetAvrRequest) {
         try {
             const request = await this.repairRequestService.resetAvr(data.requestId, data.repairerUserId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'RemoveAvrByManager')
+    async removeAvrByManager(data: RemoveAvrByManagerRequest) {
+        try {
+            const request = await this.repairRequestService.removeAvrByManager(data.requestId, data.managerId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

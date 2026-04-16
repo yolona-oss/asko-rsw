@@ -32,9 +32,10 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
+    AppErrors,
 } from '@asko/shared';
 import { IsOptional, IsString } from 'class-validator';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { RequiredRoles, JwtAuthUser, isAdmin } from '@asko/gateway-common';
 
 import {
     RepairRequestResponseDto,
@@ -74,6 +75,15 @@ export class RepairRequestController {
         private readonly paymentService: PaymentClientService,
         private readonly fileService: FileClientService,
     ) { }
+
+    /** Only the attached manager (or admins) may mutate this repair request. */
+    private async assertManagerOwnership(user: JwtPayload, requestId: string): Promise<void> {
+        if (isAdmin(user)) return;
+        const { request } = await this.repairClient.findById(requestId);
+        if (request?.managerId && request.managerId !== user.sub) {
+            throw AppErrors.forbidden('Этой заявкой управляет другой менеджер');
+        }
+    }
 
     // ── Stats ──
 
@@ -196,6 +206,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
+        await this.assertManagerOwnership(user, id);
         const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
         // Add repairer to conversation
         if (result.request.conversationId) {
@@ -212,14 +223,16 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
-    async approveRefund(@Param('id') id: string) {
+    async approveRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        await this.assertManagerOwnership(user, id);
         return this.repairClient.approveRefund(id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
-    async denyRefund(@Param('id') id: string) {
+    async denyRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        await this.assertManagerOwnership(user, id);
         return this.repairClient.denyRefund(id);
     }
 
@@ -227,6 +240,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/accept')
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        await this.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub, true);
@@ -238,6 +252,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/detach')
     async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        await this.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.removeParticipant(request.conversationId, user.sub, user.sub);
@@ -249,6 +264,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
+        await this.assertManagerOwnership(user, id);
         // Get old repairer before reassign
         const before = await this.repairClient.findById(id);
         const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
@@ -424,6 +440,14 @@ export class RepairRequestController {
         return this.repairClient.resetAvr(user.sub, id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Post(':id/avr/remove')
+    async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        await this.assertManagerOwnership(user, id);
+        return this.repairClient.removeAvrByManager(user.sub, id);
+    }
+
     @ApiCreatedResponse()
     @RequiredRoles(...ALL_ROLES)
     @Post(':id/avr/sign/initiate')
@@ -569,7 +593,7 @@ export class RepairRequestController {
     // ── Broken parts ──
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts')
     async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, id, { ...dto, isSuggestion: false });
@@ -583,7 +607,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -595,7 +619,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/status')
     async updateBrokenPartStatus(
         @JwtAuthUser() user: JwtPayload,
@@ -607,7 +631,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/delete')
     async deleteBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -619,7 +643,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/broken-parts/:partId/order')
     async orderBrokenPart(
         @JwtAuthUser() user: JwtPayload,
