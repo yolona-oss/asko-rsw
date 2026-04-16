@@ -532,6 +532,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/users/{userId}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UserController_uploadAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -916,7 +932,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/file-upload/image/upload/stream": {
+    "/articles/{id}/images": {
         parameters: {
             query?: never;
             header?: never;
@@ -925,7 +941,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["ImageUploadController_uploadStream"];
+        post: operations["ArticleImageUploadController_uploadArticleImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ArticleVideoUploadController_uploadArticleVideo"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3963,19 +3995,6 @@ export interface components {
         ImageResponseDto: {
             image: components["schemas"]["ImageRecordDto"];
         };
-        UploadImageDto: Record<string, never>;
-        AttachImageDto: Record<string, never>;
-        CreateImageFromUrlDto: Record<string, never>;
-        VideoMetadataDto: {
-            public_id: string;
-            format: string;
-            resource_type: string;
-            url: string;
-            secure_url: string;
-            original_filename: string;
-            duration?: number;
-            size?: number;
-        };
         VideoRecordDto: {
             id: string;
             videoJson: components["schemas"]["VideoMetadataDto"];
@@ -3987,6 +4006,18 @@ export interface components {
         };
         VideoResponseDto: {
             video: components["schemas"]["VideoRecordDto"];
+        };
+        AttachImageDto: Record<string, never>;
+        CreateImageFromUrlDto: Record<string, never>;
+        VideoMetadataDto: {
+            public_id: string;
+            format: string;
+            resource_type: string;
+            url: string;
+            secure_url: string;
+            original_filename: string;
+            duration?: number;
+            size?: number;
         };
         AttachVideoDto: Record<string, never>;
         VideoListResponseDto: {
@@ -5458,6 +5489,25 @@ export interface operations {
             };
         };
     };
+    UserController_uploadAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     HealthController_check: {
         parameters: {
             query?: never;
@@ -6044,11 +6094,13 @@ export interface operations {
             };
         };
     };
-    ImageUploadController_uploadStream: {
+    ArticleImageUploadController_uploadArticleImage: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -6063,6 +6115,27 @@ export interface operations {
             };
         };
     };
+    ArticleVideoUploadController_uploadArticleVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
     ImageUploadController_upload: {
         parameters: {
             query?: never;
@@ -6070,11 +6143,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UploadImageDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {

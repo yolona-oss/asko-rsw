@@ -909,6 +909,29 @@
         ]
       }
     },
+    "/auth/users/{userId}/avatar": {
+      "post": {
+        "operationId": "UserController_uploadAvatar",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -1669,10 +1692,19 @@
         ]
       }
     },
-    "/file-upload/image/upload/stream": {
+    "/articles/{id}/images": {
       "post": {
-        "operationId": "ImageUploadController_uploadStream",
-        "parameters": [],
+        "operationId": "ArticleImageUploadController_uploadArticleImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "",
@@ -1686,7 +1718,37 @@
           }
         },
         "tags": [
-          "File Upload"
+          "Article uploads"
+        ]
+      }
+    },
+    "/articles/{id}/videos": {
+      "post": {
+        "operationId": "ArticleVideoUploadController_uploadArticleVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Article uploads"
         ]
       }
     },
@@ -1694,16 +1756,6 @@
       "post": {
         "operationId": "ImageUploadController_upload",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UploadImageDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": "",
@@ -9073,9 +9125,47 @@
           "image"
         ]
       },
-      "UploadImageDto": {
+      "VideoRecordDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "videoJson": {
+            "$ref": "#/components/schemas/VideoMetadataDto"
+          },
+          "order": {
+            "type": "number"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "videoJson",
+          "order"
+        ]
+      },
+      "VideoResponseDto": {
+        "type": "object",
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/VideoRecordDto"
+          }
+        },
+        "required": [
+          "video"
+        ]
       },
       "AttachImageDto": {
         "type": "object",
@@ -9120,48 +9210,6 @@
           "url",
           "secure_url",
           "original_filename"
-        ]
-      },
-      "VideoRecordDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "videoJson": {
-            "$ref": "#/components/schemas/VideoMetadataDto"
-          },
-          "order": {
-            "type": "number"
-          },
-          "ownerType": {
-            "type": "string"
-          },
-          "ownerId": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "videoJson",
-          "order"
-        ]
-      },
-      "VideoResponseDto": {
-        "type": "object",
-        "properties": {
-          "video": {
-            "$ref": "#/components/schemas/VideoRecordDto"
-          }
-        },
-        "required": [
-          "video"
         ]
       },
       "AttachVideoDto": {
