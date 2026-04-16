@@ -4,7 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { WSchedulePatternService } from 'services/wschedule-pattern.service';
 import { WSchedulePatternHistoryService } from 'services/wschedule-pattern-history.service';
 import { WScheduleReportService } from 'services/wschedule-report.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { ScheduleEventService, ScheduleEventType } from 'services/schedule-event.service';
 import type { WSchedulePattern } from 'entities/wschedule-pattern.entity';
 import type { WSchedulePatternHistory } from 'entities/wschedule-pattern-history.entity';
 import type {
@@ -121,7 +121,7 @@ export class SchedulePatternGrpcController {
         private readonly patternService: WSchedulePatternService,
         private readonly historyService: WSchedulePatternHistoryService,
         private readonly reportService: WScheduleReportService,
-        private readonly repairEventService: RepairEventService,
+        private readonly scheduleEventService: ScheduleEventService,
     ) {}
 
     @GrpcMethod('SchedulePatternService', 'GetPattern')
@@ -139,10 +139,10 @@ export class SchedulePatternGrpcController {
         try {
             const result = await this.patternService.upsert(data);
             if (result.event) {
-                await this.repairEventService.emitSchedulePatternEvent({
+                await this.scheduleEventService.emitPattern({
                     type: result.event.isFirstSubmission
-                        ? RepairEventType.SCHEDULE_PATTERN_CREATED
-                        : RepairEventType.SCHEDULE_PATTERN_UPDATED,
+                        ? ScheduleEventType.SCHEDULE_PATTERN_CREATED
+                        : ScheduleEventType.SCHEDULE_PATTERN_UPDATED,
                     patternId: result.pattern.id,
                     userId: result.pattern.userId,
                     actorId: result.event.actorId,
@@ -165,8 +165,8 @@ export class SchedulePatternGrpcController {
         try {
             const deleted = await this.patternService.delete(data.userId);
             if (deleted) {
-                await this.repairEventService.emitSchedulePatternEvent({
-                    type: RepairEventType.SCHEDULE_PATTERN_DELETED,
+                await this.scheduleEventService.emitPattern({
+                    type: ScheduleEventType.SCHEDULE_PATTERN_DELETED,
                     patternId: deleted.id,
                     userId: deleted.userId,
                     actorId: data.actorId || null,
@@ -195,8 +195,8 @@ export class SchedulePatternGrpcController {
     async approvePattern(data: PatternApproveRequest): Promise<PatternResponse> {
         try {
             const pattern = await this.patternService.approve(data.userId, data.approvedBy);
-            await this.repairEventService.emitSchedulePatternEvent({
-                type: RepairEventType.SCHEDULE_PATTERN_APPROVED,
+            await this.scheduleEventService.emitPattern({
+                type: ScheduleEventType.SCHEDULE_PATTERN_APPROVED,
                 patternId: pattern.id,
                 userId: pattern.userId,
                 actorId: data.approvedBy,
@@ -214,8 +214,8 @@ export class SchedulePatternGrpcController {
     async rejectPattern(data: PatternApproveRequest): Promise<PatternResponse> {
         try {
             const pattern = await this.patternService.reject(data.userId, data.approvedBy);
-            await this.repairEventService.emitSchedulePatternEvent({
-                type: RepairEventType.SCHEDULE_PATTERN_REJECTED,
+            await this.scheduleEventService.emitPattern({
+                type: ScheduleEventType.SCHEDULE_PATTERN_REJECTED,
                 patternId: pattern.id,
                 userId: pattern.userId,
                 actorId: data.approvedBy,

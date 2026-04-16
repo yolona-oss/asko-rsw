@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
 import { CertificateStatus } from '@asko/shared';
 import { Certificate } from 'entities/certificate.entity';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 
 const REMINDER_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;

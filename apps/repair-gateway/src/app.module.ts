@@ -6,7 +6,7 @@ import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@a
 
 import { AppConfig, AppConfigModule } from './app.config';
 
-import { RepairFileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
 import { RepairModule } from 'modules/repair/repair.module';
 import { DeviceModule } from 'modules/device/device.module';
 import { CertificateModule } from 'modules/certificate/certificate.module';
@@ -17,7 +17,6 @@ import { WScheduleModule } from 'modules/wschedule/wschedule.module';
 import { AddressModule } from 'modules/address/address.module';
 import { PaymentModule } from 'modules/payment/payment.module';
 import { TaskScheduleModule } from 'modules/task-schedule/task.module';
-import { FileUploadModule } from 'modules/file-upload/file-upload.module';
 import { HealthModule } from 'modules/health/health.module';
 
 @Module({
@@ -47,7 +46,6 @@ import { HealthModule } from 'modules/health/health.module';
         AddressModule,
         PaymentModule,
         TaskScheduleModule,
-        FileUploadModule,
         HealthModule,
     ],
     providers: [

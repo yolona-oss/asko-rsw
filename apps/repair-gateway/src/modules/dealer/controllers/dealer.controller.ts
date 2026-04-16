@@ -24,13 +24,13 @@ import {
     PaginatedDealersResponseDto,
     PaginatedWithdrawalsResponseDto,
     WithdrawalResponseDto,
-    PayoutResponseDto,
     DealerClientListResponseDto,
     DealerUserDeviceListResponseDto,
     DealerClientResponseDto,
     PaginatedPointsResponseDto,
     WithdrawalListResponseDto,
-} from 'common/dto/responses';
+} from '../dto/dealer.response.dto';
+import { PayoutResponseDto } from 'modules/payment/dto/payment.response.dto';
 
 @ApiTags('Dealers')
 @Controller('dealers')

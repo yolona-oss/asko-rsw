@@ -3,11 +3,11 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto, ADMIN_ROLES } from '@asko/shared';
 import { RequiredRoles, Public } from '@asko/gateway-common';
+import { MessageResponseDto } from 'common/dto/responses';
 import {
     DeviceCategoryRecordDto,
     DeviceCategoryListResponseDto,
-    MessageResponseDto,
-} from 'common/dto/responses';
+} from '../dto/device.response.dto';
 
 @ApiTags('Device Categories')
 @Controller('device-categories')

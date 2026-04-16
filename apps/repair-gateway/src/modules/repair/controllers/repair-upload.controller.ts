@@ -15,20 +15,58 @@ import {
     assertMime,
     isAdmin,
 } from '@asko/gateway-common';
-import { RepairFileClientService } from 'modules/file-client/file-client.service';
-import { RepairAccessService } from 'modules/repair-client/repair-access.service';
-import { EmptyResponseDto } from 'common/dto/responses';
+import { RepairFileClientService } from '../services/repair-file-client.service';
+import { RepairAccessService } from '../services/repair-access.service';
+import { EmptyResponseDto, ImageResponseDto, VideoResponseDto } from 'common/dto/responses';
 
+const IMAGE_MAX_SIZE = 10 * 1024 * 1024;
+const IMAGE_MIME = /(jpg|jpeg|png|webp)$/;
+const VIDEO_MAX_SIZE = 100 * 1024 * 1024;
+const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
 const DOCUMENT_MIME_REGEX = /(pdf|jpeg|jpg|png|webp|msword|wordprocessingml\.document|ms-excel|spreadsheetml\.sheet|plain|csv)$/i;
 const DOCUMENT_MAX_SIZE = 20 * 1024 * 1024;
 
 @ApiTags('Repair uploads')
 @Controller()
-export class RepairDocumentUploadController {
+export class RepairUploadController {
     constructor(
         private readonly fileService: RepairFileClientService,
         private readonly repairAccess: RepairAccessService,
     ) {}
+
+    // ── Repair-request images / videos / documents ──
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('repair-requests/:id/images')
+    @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
+    async uploadRepairRequestImage(
+        @JwtAuthUser() user: JwtPayload,
+        @StreamingFile() upload: StreamingUploadPayload,
+        @Param('id') id: string,
+    ) {
+        await this.repairAccess.assertRepairRequestParticipant(user, id);
+        assertMime(upload.mimeType, IMAGE_MIME);
+        return this.fileService.uploadRepairRequestImage(
+            upload.stream, upload.filename, upload.mimeType, id,
+            { maxBytes: IMAGE_MAX_SIZE },
+        );
+    }
+
+    @ApiCreatedResponse({ type: VideoResponseDto })
+    @Post('repair-requests/:id/videos')
+    @UseInterceptors(new StreamingUploadInterceptor(VIDEO_MAX_SIZE))
+    async uploadRepairRequestVideo(
+        @JwtAuthUser() user: JwtPayload,
+        @StreamingFile() upload: StreamingUploadPayload,
+        @Param('id') id: string,
+    ) {
+        await this.repairAccess.assertRepairRequestParticipant(user, id);
+        assertMime(upload.mimeType, VIDEO_MIME);
+        return this.fileService.uploadRepairRequestVideo(
+            upload.stream, upload.filename, upload.mimeType, id,
+            { maxBytes: VIDEO_MAX_SIZE },
+        );
+    }
 
     @ApiCreatedResponse()
     @Post('repair-requests/:id/documents')
@@ -43,6 +81,24 @@ export class RepairDocumentUploadController {
         return this.fileService.uploadRepairRequestDocument(
             upload.stream, upload.filename, upload.mimeType, id,
             { maxBytes: DOCUMENT_MAX_SIZE }, user.sub,
+        );
+    }
+
+    // ── Broken-part images / documents ──
+
+    @ApiCreatedResponse({ type: ImageResponseDto })
+    @Post('repair-requests/broken-parts/:partId/images')
+    @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
+    async uploadBrokenPartImage(
+        @JwtAuthUser() user: JwtPayload,
+        @StreamingFile() upload: StreamingUploadPayload,
+        @Param('partId') partId: string,
+    ) {
+        await this.repairAccess.assertBrokenPartAccess(user, partId);
+        assertMime(upload.mimeType, IMAGE_MIME);
+        return this.fileService.uploadBrokenPartImage(
+            upload.stream, upload.filename, upload.mimeType, partId,
+            { maxBytes: IMAGE_MAX_SIZE },
         );
     }
 

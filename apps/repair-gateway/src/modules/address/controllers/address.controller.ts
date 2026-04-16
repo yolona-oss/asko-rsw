@@ -3,7 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { ALL_ROLES, STAFF_ROLES, CreateAddressDto, UpdateAddressDto, JwtPayload, Role } from '@asko/shared';
 import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
-import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'common/dto/responses';
+import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'modules/device/dto/device.response.dto';
 
 @ApiTags('Addresses')
 @Controller('address')

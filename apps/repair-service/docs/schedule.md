@@ -874,7 +874,7 @@ Type-specific behavior:
 | gRPC controller (entries) | `apps/repair-service/src/controllers/schedule.grpc.controller.ts` |
 | gRPC controller (patterns) | `apps/repair-service/src/controllers/schedule-pattern.grpc.controller.ts` |
 | Command consumer | `apps/repair-service/src/consumers/schedule-command.consumer.ts` |
-| Event service | `apps/repair-service/src/modules/repair-event.service.ts` |
+| Event service | `apps/repair-service/src/services/schedule-event.service.ts` |
 | **Gateway** | |
 | REST controller | `apps/repair-gateway/src/modules/wschedule/controllers/wschedule.controller.ts` |
 | Schedule gRPC client | `apps/repair-gateway/src/modules/repair-client/schedule-client.service.ts` |

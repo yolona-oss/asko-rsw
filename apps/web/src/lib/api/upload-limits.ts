@@ -6,7 +6,7 @@
  *
  * Keep in sync with:
  *   - apps/auth-gateway/src/modules/user/user.controller.ts (avatar)
- *   - apps/repair-gateway/src/modules/file-upload/controllers/*.ts
+ *   - apps/repair-gateway/src/modules/{repair,review,device}/controllers/*-upload.controller.ts
  *   - apps/content-gateway/src/modules/file-upload/controllers/*.ts
  *   - apps/media-gateway/src/modules/file-upload/controllers/*.ts
  */

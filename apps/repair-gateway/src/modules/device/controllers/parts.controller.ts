@@ -13,11 +13,11 @@ import {
 } from '@asko/shared';
 import { RequiredRoles } from '@asko/gateway-common';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
+import { MessageResponseDto } from 'common/dto/responses';
 import {
     PaginatedDevicePartsResponseDto,
     DevicePartResponseDto,
-    MessageResponseDto,
-} from 'common/dto/responses';
+} from '../dto/device.response.dto';
 
 class PartsQueryDto extends PaginationDto {
     @IsOptional()

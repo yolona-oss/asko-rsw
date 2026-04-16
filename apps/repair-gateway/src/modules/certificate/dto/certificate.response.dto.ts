@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
 import { CertificateStatus } from '@asko/shared';
-import { UserDeviceRecordDto } from './device.response.dto';
-import { DealerProfileRecordDto } from './dealer.response.dto';
+import { UserDeviceRecordDto } from 'modules/device/dto/device.response.dto';
+import { DealerProfileRecordDto } from 'modules/dealer/dto/dealer.response.dto';
 
 export class CertificateRecordDto {
     id: string;

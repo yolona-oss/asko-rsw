@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthUserDto } from '@asko/gateway-common';
 import { BrokenPartStatus, RepairRequestStatus, WorkStepStatus } from '@asko/shared';
-import { UserDeviceRecordDto, AddressRecordDto } from './device.response.dto';
-import { CertificateRecordDto } from './certificate.response.dto';
-import { RepairerRecordDto } from './repairer.response.dto';
+import { UserDeviceRecordDto, AddressRecordDto } from 'modules/device/dto/device.response.dto';
+import { CertificateRecordDto } from 'modules/certificate/dto/certificate.response.dto';
+import { RepairerRecordDto } from 'modules/repairer/dto/repairer.response.dto';
 
 export class CertificateSnapshotRecordDto {
     id: string;

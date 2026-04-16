@@ -7,7 +7,7 @@ import { WSchedule, ScheduleEntryType, ScheduleStatus } from 'entities/wschedule
 import { Repairer } from 'entities/repairer.entity';
 import { RepairRequestService } from './repair-request.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
 
 const CONFIRMATION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes

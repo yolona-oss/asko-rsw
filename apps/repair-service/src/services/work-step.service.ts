@@ -6,7 +6,7 @@ import { Repairer } from 'entities/repairer.entity';
 import { WorkStepStatus, RepairRequestStatus } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { RepairRequestService } from './repair-request.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 
 const MIN_STEPS_TO_LOCK = 1;
 

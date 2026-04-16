@@ -6,7 +6,7 @@ import { UserDevice } from 'entities/user-device.entity';
 import type { UserDeviceValidationEvent } from 'modules/user-device-validation.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
 import { ExternalCertValidationService } from 'services/external-cert-validation.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 
 const MAX_RETRIES = 3;
 

@@ -5,7 +5,7 @@ import { sleep } from '@asko/shared';
 import { Address } from 'entities/address.entity';
 import type { AddressValidationEvent } from 'modules/address-validation.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 import { resolveTimezoneFromCoords } from 'common/timezone-lookup';
 
 const MAX_RETRIES = 3;

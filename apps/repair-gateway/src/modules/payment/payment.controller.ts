@@ -18,7 +18,7 @@ import {
     ProcessInvoiceResponseDto,
     PaginatedPaymentsResponseDto,
     PaymentStatsResponseDto,
-} from 'common/dto/responses';
+} from './dto/payment.response.dto';
 
 @ApiTags('Payments')
 @Controller('payment')

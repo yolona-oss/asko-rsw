@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { RepairFileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
 import { IsOptional, IsString, IsBoolean } from 'class-validator';
 import {
     CreateDeviceDto,
@@ -30,6 +30,7 @@ class DeviceQueryDto extends PaginationDto {
     isFeatured?: boolean;
 }
 import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
+import { DeleteCountResponseDto, MessageResponseDto, EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
     DeviceRecordDto,
     PaginatedDevicesResponseDto,
@@ -38,11 +39,7 @@ import {
     DevicePartListResponseDto,
     UserDeviceRecordDto,
     UserDeviceListResponseDto,
-    DeleteCountResponseDto,
-    MessageResponseDto,
-    EmptyResponseDto,
-    ImageListResponseDto,
-} from 'common/dto/responses';
+} from '../dto/device.response.dto';
 
 @ApiTags('Devices')
 @Controller('devices')

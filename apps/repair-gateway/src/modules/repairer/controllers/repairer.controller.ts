@@ -17,7 +17,7 @@ import {
     RepairerResponseDto,
     PaginatedRepairersResponseDto,
     RepairerListResponseDto,
-} from 'common/dto/responses';
+} from '../dto/repairer.response.dto';
 
 function mapUser(userData: any) {
     return {

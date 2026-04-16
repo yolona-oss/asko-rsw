@@ -7,9 +7,6 @@ import { DeviceClientService } from './device-client.service';
 import { CertificateClientService } from './certificate-client.service';
 import { RepairerClientService } from './repairer-client.service';
 import { DealerClientService } from './dealer-client.service';
-import { ScheduleClientService } from './schedule-client.service';
-import { RepairAccessService } from './repair-access.service';
-
 @Module({
     imports: [
         ClientsModule.registerAsync([
@@ -35,17 +32,14 @@ import { RepairAccessService } from './repair-access.service';
         CertificateClientService,
         RepairerClientService,
         DealerClientService,
-        ScheduleClientService,
-        RepairAccessService,
     ],
     exports: [
+        ClientsModule,
         RepairClientService,
         DeviceClientService,
         CertificateClientService,
         RepairerClientService,
         DealerClientService,
-        ScheduleClientService,
-        RepairAccessService,
     ],
 })
 export class RepairClientModule {}

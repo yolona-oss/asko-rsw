@@ -19,14 +19,14 @@ import {
     assertDateIsToday,
     assertMaxDuration,
 } from '@asko/shared';
-import { ScheduleClientService } from 'modules/repair-client/schedule-client.service';
+import { ScheduleClientService } from '../services/schedule-client.service';
 import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
 import {
     WScheduleRecordDto,
     PaginatedScheduleResponseDto,
     SchedulePatternRecordDto,
     SchedulePatternListResponseDto,
-} from 'common/dto/responses/wschedule.response.dto';
+} from '../dto/wschedule.response.dto';
 
 @ApiTags('Schedule')
 @Controller('schedule')

@@ -21,8 +21,8 @@ jest.mock('common/error', () => {
     };
 });
 
-jest.mock('common/repair-request-state-machine', () => {
-    const actual = jest.requireActual('common/repair-request-state-machine');
+jest.mock('services/repair-request-state-machine', () => {
+    const actual = jest.requireActual('services/repair-request-state-machine');
     return {
         ...actual,
         assertTransition: jest.fn(actual.assertTransition),
@@ -52,7 +52,7 @@ jest.mock('./signature.service', () => ({ SignatureService: jest.fn() }));
 jest.mock('./wschedule.service', () => ({ WScheduleService: jest.fn() }));
 jest.mock('./wschedule-pattern.service', () => ({ WSchedulePatternService: jest.fn() }));
 jest.mock('modules/payment-command.service', () => ({ PaymentCommandService: jest.fn() }));
-jest.mock('modules/repair-event.service', () => ({
+jest.mock('services/repair-event.service', () => ({
     RepairEventService: jest.fn(),
     RepairEventType: {
         STATUS_CHANGED: 'repair.status_changed',
@@ -104,9 +104,12 @@ function createMockDeps() {
         scheduleService: {
             recordExtraDay: jest.fn(),
             recordOvertime: jest.fn(),
-        },
-        schedulePatternService: {
-            resolveSlotForDate: jest.fn(),
+            findBlockingToday: jest.fn().mockResolvedValue(null),
+            getTodayOvertimeMinutes: jest.fn().mockResolvedValue(0),
+            assertScheduleAllows: jest.fn(),
+            assertEnoughScheduleTime: jest.fn(),
+            ensureExtraDayIfOff: jest.fn(),
+            assertPresenceAllowed: jest.fn(),
         },
     };
 }
@@ -167,15 +170,13 @@ describe('RepairRequestService', () => {
             deps.certificateService as any,
             deps.signatureService as any,
             deps.scheduleService as any,
-            deps.schedulePatternService as any,
             { generate: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')) } as any,
         );
         jest.clearAllMocks();
 
-        // Default mocks: schedule checks pass (full-day work slot, no overtime, no concurrent)
+        // Default mocks: schedule checks pass (no blocks, no overtime cap hit, no concurrent cap hit)
         mockEm.find.mockResolvedValue([]);
         mockEm.count.mockResolvedValue(0);
-        deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
     });
 
     // ── create ──
@@ -423,8 +424,6 @@ describe('RepairRequestService', () => {
             mockEm.findOne
                 .mockResolvedValueOnce(request)    // request
                 .mockResolvedValueOnce(repairer)    // repairer
-                .mockResolvedValueOnce(null)         // assertScheduleAllows → findBlockingScheduleToday
-                .mockResolvedValueOnce(null);        // ensureExtraDayIfOff → findBlockingScheduleToday
 
             const result = await service.assignRepairer('manager-1', 'req-1', 'rep-1');
 
@@ -466,9 +465,8 @@ describe('RepairRequestService', () => {
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)
-                .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce({ type: 'vacation' }) // blocking schedule
-                .mockResolvedValueOnce(null);                 // no extra day override
+                .mockResolvedValueOnce(repairer);
+            deps.scheduleService.assertScheduleAllows.mockRejectedValueOnce(new Error('Мастер на отпуске'));
 
             await expect(service.assignRepairer('manager-1', 'req-1', 'rep-1'))
                 .rejects.toThrow('отпуске');
@@ -488,7 +486,6 @@ describe('RepairRequestService', () => {
             mockEm.findOne
                 .mockResolvedValueOnce(request)
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null);  // no blocking
             mockEm.count.mockResolvedValueOnce(3); // at concurrent limit
 
             await expect(service.assignRepairer('manager-1', 'req-1', 'rep-1'))
@@ -500,9 +497,8 @@ describe('RepairRequestService', () => {
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)
-                .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null);  // no blocking
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: false, startTime: '09:00', endTime: '18:00' });
+                .mockResolvedValueOnce(repairer);
+            deps.scheduleService.assertScheduleAllows.mockRejectedValueOnce(new Error('Сегодня выходной день мастера'));
 
             await expect(service.assignRepairer('manager-1', 'req-1', 'rep-1'))
                 .rejects.toThrow('выходной');
@@ -517,7 +513,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.ASSIGNED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)   // repairer lookup
-                .mockResolvedValueOnce(null)        // assertScheduleAllows → findBlockingScheduleToday
                 .mockResolvedValueOnce(request);    // request lookup
             mockEm.count
                 .mockResolvedValueOnce(0)  // concurrent check
@@ -539,7 +534,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.ASSIGNED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             mockEm.count
                 .mockResolvedValueOnce(0)  // concurrent check
@@ -604,7 +598,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.ACCEPTED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             const result = await service.depart('repairer-user-1', 'req-1');
@@ -617,7 +610,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.ASSIGNED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             await expect(service.depart('repairer-user-1', 'req-1')).rejects.toThrow();
@@ -630,7 +622,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.EN_ROUTE, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             const result = await service.startWork('repairer-user-1', 'req-1');
@@ -643,7 +634,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.ACCEPTED, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             await expect(service.startWork('repairer-user-1', 'req-1')).rejects.toThrow();
@@ -723,12 +713,10 @@ describe('RepairRequestService', () => {
             mockEm.findOne
                 .mockResolvedValueOnce(request)     // main request lookup
                 .mockResolvedValueOnce(repairer)     // repairer stats update
-                .mockResolvedValueOnce(repairer);    // overtime check
             mockEm.find.mockResolvedValue([
                 { title: 'Диагностика', status: 'completed', order: 1 },
                 { title: 'Результат', status: 'completed', order: 2 },
             ]);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue(null);
 
             const result = await service.complete('req-1', 'All done');
 
@@ -768,7 +756,6 @@ describe('RepairRequestService', () => {
                 .mockResolvedValueOnce(repairer)
                 .mockResolvedValueOnce(repairer);
             mockEm.find.mockResolvedValue([]);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue(null);
 
             const before = Date.now();
             await service.complete('req-1');
@@ -803,7 +790,6 @@ describe('RepairRequestService', () => {
                 .mockResolvedValueOnce(repairer)
                 .mockResolvedValueOnce(repairer);
             mockEm.find.mockResolvedValue([]);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue(null);
 
             await service.complete('req-1');
 
@@ -900,7 +886,6 @@ describe('RepairRequestService', () => {
             });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             const result = await service.resume('repairer-user-1', 'req-1');
@@ -918,7 +903,6 @@ describe('RepairRequestService', () => {
             });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             const result = await service.resume('repairer-user-1', 'req-1');
@@ -931,7 +915,6 @@ describe('RepairRequestService', () => {
             const request = makeRequest({ status: S.IN_PROGRESS, repairer: 'rep-1' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
 
             await expect(service.resume('repairer-user-1', 'req-1')).rejects.toThrow();
@@ -939,10 +922,8 @@ describe('RepairRequestService', () => {
 
         it('throws if schedule has ended (rest day)', async () => {
             const repairer = makeRepairer();
-            mockEm.findOne
-                .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null);  // no blocking
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValueOnce({ work: false, startTime: '09:00', endTime: '18:00' });
+            mockEm.findOne.mockResolvedValueOnce(repairer);
+            deps.scheduleService.assertScheduleAllows.mockRejectedValueOnce(new Error('Сегодня выходной день мастера'));
 
             await expect(service.resume('repairer-user-1', 'req-1'))
                 .rejects.toThrow('выходной');
@@ -950,10 +931,8 @@ describe('RepairRequestService', () => {
 
         it('throws if repairer is on vacation', async () => {
             const repairer = makeRepairer();
-            mockEm.findOne
-                .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce({ type: 'vacation' }) // blocking
-                .mockResolvedValueOnce(null);                 // no extra_day override
+            mockEm.findOne.mockResolvedValueOnce(repairer);
+            deps.scheduleService.assertScheduleAllows.mockRejectedValueOnce(new Error('Мастер на отпуске'));
 
             await expect(service.resume('repairer-user-1', 'req-1'))
                 .rejects.toThrow('отпуске');
@@ -973,8 +952,6 @@ describe('RepairRequestService', () => {
             mockEm.findOne
                 .mockResolvedValueOnce(request)       // request lookup
                 .mockResolvedValueOnce(newRepairer)    // new repairer lookup
-                .mockResolvedValueOnce(null)           // assertScheduleAllows → no blocking
-                .mockResolvedValueOnce(null);          // ensureExtraDayIfOff → no blocking
 
             const result = await service.reassign('manager-1', 'req-1', 'rep-new');
 
@@ -1267,12 +1244,9 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(request)
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)  // assertScheduleAllows → no blocking
-                .mockResolvedValueOnce(null); // ensureExtraDayIfOff → no blocking
             await service.assignRepairer('mgr-1', 'req-1', 'rep-1');
             expect(request.status).toBe(S.ASSIGNED);
 
@@ -1280,10 +1254,8 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             mockEm.count
                 .mockResolvedValueOnce(0)  // concurrent check
@@ -1296,10 +1268,8 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             await service.depart('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.EN_ROUTE);
@@ -1308,10 +1278,8 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             await service.startWork('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.IN_PROGRESS);
@@ -1331,7 +1299,6 @@ describe('RepairRequestService', () => {
                 .mockResolvedValueOnce(repairer)
                 .mockResolvedValueOnce(repairer);
             mockEm.find.mockResolvedValue([]);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue(null);
             await service.complete('req-1');
             expect(request.status).toBe(S.COMPLETED);
         });
@@ -1354,10 +1321,8 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             await service.resume('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.IN_PROGRESS);
@@ -1380,10 +1345,8 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             mockEm.findOne
                 .mockResolvedValueOnce(repairer)
-                .mockResolvedValueOnce(null)     // assertScheduleAllows → no blocking
                 .mockResolvedValueOnce(request);
             await service.resume('repairer-user-1', 'req-1');
             expect(request.status).toBe(S.EN_ROUTE);
@@ -1441,13 +1404,10 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.find.mockResolvedValue([]);
             mockEm.count.mockResolvedValue(0);
-            deps.schedulePatternService.resolveSlotForDate.mockResolvedValue({ work: true, startTime: '00:00', endTime: '23:59' });
             request.repairer = oldRepairer as any;
             mockEm.findOne
                 .mockResolvedValueOnce(request)
                 .mockResolvedValueOnce(newRepairer)
-                .mockResolvedValueOnce(null)   // assertScheduleAllows → no blocking
-                .mockResolvedValueOnce(null);  // ensureExtraDayIfOff → no blocking
             await service.reassign('mgr-1', 'req-1', 'rep-new');
             expect(request.status).toBe(S.ASSIGNED);
         });

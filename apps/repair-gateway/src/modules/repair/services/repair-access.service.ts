@@ -2,8 +2,8 @@ import { Injectable, Optional } from '@nestjs/common';
 import { AppErrors, JwtPayload, Role } from '@asko/shared';
 import { isAdmin } from '@asko/gateway-common';
 import { MetricsService } from '@asko/observability';
-import { RepairClientService } from './repair-client.service';
-import { RepairerClientService } from './repairer-client.service';
+import { RepairClientService } from 'modules/repair-client/repair-client.service';
+import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 
 /**
  * Ownership/participation assertions for repair-domain resources.

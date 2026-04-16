@@ -3,7 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
-import { RepairFileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
@@ -38,11 +38,10 @@ import {
     CertPriceResponseDto,
     CertificateListResponseDto,
     PaginatedCertificatesResponseDto,
-    ProcessInvoiceResponseDto,
-    PaymentListResponseDto,
     VerifySignatureResponseDto,
     PublicKeyResponseDto,
-} from 'common/dto/responses';
+} from '../dto/certificate.response.dto';
+import { ProcessInvoiceResponseDto, PaymentListResponseDto } from 'modules/payment/dto/payment.response.dto';
 
 @ApiTags('Certificates')
 @Controller('certificates')

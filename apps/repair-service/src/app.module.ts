@@ -5,7 +5,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventBusModule, MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
-import { RepairEventService } from 'modules/repair-event.service';
+import { RepairEventService } from 'services/repair-event.service';
+import { ScheduleEventService } from 'services/schedule-event.service';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
@@ -178,6 +179,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         AvrPdfService,
         CertificatePdfService,
         RepairEventService,
+        ScheduleEventService,
         PaymentCommandService,
         AddressValidationPublisher,
         UserDeviceValidationPublisher,

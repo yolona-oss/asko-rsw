@@ -4,12 +4,12 @@ import {
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
-import { RepairAccessService } from 'modules/repair-client/repair-access.service';
+import { RepairAccessService } from '../services/repair-access.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
-import { RepairFileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from '../services/repair-file-client.service';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -38,6 +38,7 @@ import {
 import { IsOptional, IsString } from 'class-validator';
 import { RequiredRoles, JwtAuthUser, isAdmin } from '@asko/gateway-common';
 
+import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
     RepairRequestResponseDto,
     RepairRequestRecordDto,
@@ -47,11 +48,8 @@ import {
     CompleteStepResponseDto,
     BrokenPartResponseDto,
     BrokenPartListResponseDto,
-    EmptyResponseDto,
-    ProcessInvoiceResponseDto,
-    PaymentListResponseDto,
-    ImageListResponseDto,
-} from 'common/dto/responses';
+} from '../dto/repair.response.dto';
+import { ProcessInvoiceResponseDto, PaymentListResponseDto } from 'modules/payment/dto/payment.response.dto';
 
 function parseRepairTimestamps(record: any): void {
     if (typeof record?.statusTimestamps === 'string' && record.statusTimestamps) {

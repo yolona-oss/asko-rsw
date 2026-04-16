@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RepairRequestController } from './controllers/repair-request.controller';
+import { RepairUploadController } from './controllers/repair-upload.controller';
+import { RepairAccessService } from './services/repair-access.service';
 import { RepairClientModule } from '../repair-client/repair-client.module';
 import { UserClientModule } from '@asko/gateway-common';
 import { AppConfig } from 'app.config';
@@ -16,6 +18,8 @@ import { PaymentClientModule } from '../payment-client/payment-client.module';
         ChatClientModule,
         PaymentClientModule,
     ],
-    controllers: [RepairRequestController],
+    controllers: [RepairRequestController, RepairUploadController],
+    providers: [RepairAccessService],
+    exports: [RepairAccessService],
 })
 export class RepairModule {}

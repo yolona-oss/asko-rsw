@@ -7,17 +7,14 @@ import { Repairer } from 'entities/repairer.entity';
 import { Address } from 'entities/address.entity';
 import { RepairRequestStatus, PaymentTargetType, AvrStatus, AvrSigningMethod } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { getLocalNow, getLocalDateAsUtc, DEFAULT_TIMEZONE } from 'common/timezone';
-import { assertTransition, assertActionTransition, canTransition } from 'common/repair-request-state-machine';
+import { assertTransition, assertActionTransition, canTransition } from 'services/repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 import { WorkStep } from 'entities/work-step.entity';
-import { WSchedule, ScheduleEntryType, ScheduleStatus } from 'entities/wschedule.entity';
 import { BrokenPartService } from './broken-part.service';
 import { CertificateService } from './certificate.service';
 import { SignatureService } from './signature.service';
 import { WScheduleService } from './wschedule.service';
-import { WSchedulePatternService } from './wschedule-pattern.service';
 import { AvrPdfService, type AvrData } from './avr-pdf.service';
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
@@ -38,7 +35,6 @@ export class RepairRequestService {
         private readonly certificateService: CertificateService,
         private readonly signatureService: SignatureService,
         private readonly scheduleService: WScheduleService,
-        private readonly schedulePatternService: WSchedulePatternService,
         private readonly avrPdfService: AvrPdfService,
     ) {}
 
@@ -365,8 +361,9 @@ export class RepairRequestService {
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
-        await this.assertScheduleAllows(repairer, 'Назначить мастера');
-        await this.assertEnoughScheduleTime(repairer);
+        await this.scheduleService.assertScheduleAllows(repairer, 'Назначить мастера');
+        await this.scheduleService.assertEnoughScheduleTime(repairer);
+        await this.assertNoConcurrentCap(repairer.id, 'Назначить мастера');
 
         const oldStatus = request.status;
         request.repairer = this.em.getReference(Repairer, repairerId);
@@ -375,7 +372,9 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
-        await this.ensureExtraDayIfOff(repairer, request);
+        const assignedIso = this.lastTimestampFor(request.statusTimestamps, RepairRequestStatus.ASSIGNED);
+        const assignedAt = assignedIso ? new Date(assignedIso) : undefined;
+        await this.scheduleService.ensureExtraDayIfOff(repairer, request.id, assignedAt);
 
         await this.repairEventService.emit({
             type: RepairEventType.ASSIGNED,
@@ -393,157 +392,25 @@ export class RepairRequestService {
     }
 
     /**
-     * If the repairer has a pattern and today is a rest day (or there's no pattern at all —
-     * treat as "off" since nothing is planned), log an EXTRA_DAY entry so the repairer gets
-     * credit for working an unscheduled day. Idempotent per (user, date).
+     * Max concurrent active repair requests a single repairer can hold. Lives here
+     * (not in the schedule service) because it counts RepairRequest rows, not
+     * schedule entries.
      */
-    private async ensureExtraDayIfOff(repairerEntity: { userId: string; timezone?: string }, request: RepairRequest): Promise<void> {
-        const tz = repairerEntity.timezone ?? DEFAULT_TIMEZONE;
-        const assignedIso = this.lastTimestampFor(request.statusTimestamps, RepairRequestStatus.ASSIGNED);
-        const date = assignedIso ? new Date(assignedIso) : new Date();
-        const dateForPattern = getLocalDateAsUtc(tz);
-        // Vacation / sick leave already blocks assignRepairer; if we ever get here despite
-        // that (e.g. another caller), skip logging an EXTRA_DAY since blocked time isn't bonus work.
-        const blocking = await this.findBlockingScheduleToday(repairerEntity.userId, tz);
-        if (blocking) return;
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairerEntity.userId, dateForPattern);
-        if (slot && slot.work) return;
-        const start = slot?.startTime || '09:00';
-        const end = slot?.endTime || '18:00';
-        await this.scheduleService.recordExtraDay(repairerEntity.userId, date, start, end, request.id);
-    }
-
-    /**
-     * Returns the first APPROVED vacation/sick-leave entry covering today, or null.
-     * An APPROVED EXTRA_DAY covering today overrides the block — managers can propose
-     * an extra work day during a repairer's vacation, and once the repairer accepts,
-     * the repairer can be assigned to requests for that specific day.
-     */
-    private async findBlockingScheduleToday(userId: string, timezone?: string): Promise<WSchedule | null> {
-        const { todayStart: today } = getLocalNow(timezone ?? DEFAULT_TIMEZONE);
-        const blocking = await this.em.findOne(WSchedule, {
-            userId,
-            status: ScheduleStatus.APPROVED,
-            type: { $in: [ScheduleEntryType.VACATION, ScheduleEntryType.SICK_LEAVE] },
-            dateFrom: { $lte: today },
-            dateTo: { $gte: today },
-        });
-        if (!blocking) return null;
-        const override = await this.em.findOne(WSchedule, {
-            userId,
-            status: ScheduleStatus.APPROVED,
-            type: ScheduleEntryType.EXTRA_DAY,
-            dateFrom: { $lte: today },
-            dateTo: { $gte: today },
-        });
-        return override ? null : blocking;
-    }
-
-    // ── Schedule validation constants ──
-    private static readonly MAX_OVERTIME_MINUTES_PER_DAY = 4 * 60;   // 4 hours
     private static readonly MAX_CONCURRENT_ACTIVE_REQUESTS = 3;
-    private static readonly MIN_REMAINING_SCHEDULE_MINUTES = 30;
 
-    /**
-     * Comprehensive schedule guard — throws if repairer cannot work right now.
-     * Checks: vacation/sick, rest day, before start, after end, overtime cap, concurrent limit.
-     */
-    private async assertScheduleAllows(repairer: { userId: string; id: string; timezone?: string }, action: string): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
-        const { nowTime, todayStart, todayEnd } = getLocalNow(tz);
-        const dateForPattern = getLocalDateAsUtc(tz);
-
-        // 1. Vacation / sick leave
-        const blocking = await this.findBlockingScheduleToday(repairer.userId, tz);
-        if (blocking) {
-            const label = blocking.type === ScheduleEntryType.VACATION ? 'отпуске' : 'больничном';
-            throw AppErrors.badRequest(`Мастер на ${label}. ${action} невозможно`);
-        }
-
-        // 2. Resolve pattern
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, dateForPattern);
-
-        if (slot) {
-            if (!slot.work) {
-                throw AppErrors.badRequest(`Сегодня выходной день мастера. ${action} невозможно`);
-            }
-
-            // 3. Before schedule start
-            if (nowTime < slot.startTime) {
-                throw AppErrors.badRequest(`Рабочий день ещё не начался (начало в ${slot.startTime}). ${action} невозможно`);
-            }
-
-            // 4. After schedule end (check overrides)
-            if (nowTime > slot.endTime) {
-                const overrides = await this.em.find(WSchedule, {
-                    userId: repairer.userId,
-                    status: ScheduleStatus.APPROVED,
-                    type: { $in: [ScheduleEntryType.OVERTIME, ScheduleEntryType.EXTRA_DAY] },
-                    dateFrom: { $lte: todayEnd },
-                    dateTo: { $gte: todayStart },
-                });
-                const extended = overrides.some(e => e.endTime && nowTime <= e.endTime);
-                if (!extended) {
-                    throw AppErrors.badRequest(`Рабочий день завершён (окончание в ${slot.endTime}). ${action} невозможно`);
-                }
-            }
-        }
-
-        // 5. Daily overtime cap
-        const todayOvertime = await this.em.find(WSchedule, {
-            userId: repairer.userId,
-            status: ScheduleStatus.APPROVED,
-            type: ScheduleEntryType.OVERTIME,
-            dateFrom: { $lte: todayEnd },
-            dateTo: { $gte: todayStart },
+    private async assertNoConcurrentCap(repairerId: string, action: string): Promise<void> {
+        const activeCount = await this.em.count(RepairRequest, {
+            repairer: repairerId,
+            status: { $in: [
+                RepairRequestStatus.ASSIGNED,
+                RepairRequestStatus.ACCEPTED,
+                RepairRequestStatus.EN_ROUTE,
+                RepairRequestStatus.IN_PROGRESS,
+                RepairRequestStatus.AWAITING_COMPLETION,
+            ]},
         });
-        let overtimeMinutesToday = 0;
-        for (const entry of todayOvertime) {
-            const [sh, sm] = entry.startTime.split(':').map(Number);
-            const [eh, em] = entry.endTime.split(':').map(Number);
-            overtimeMinutesToday += Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
-        }
-        if (overtimeMinutesToday >= RepairRequestService.MAX_OVERTIME_MINUTES_PER_DAY) {
-            throw AppErrors.badRequest(`Превышен лимит переработки (${RepairRequestService.MAX_OVERTIME_MINUTES_PER_DAY / 60}ч/день). ${action} невозможно`);
-        }
-
-        // 6. Max concurrent active requests
-        {
-            const activeCount = await this.em.count(RepairRequest, {
-                repairer: repairer.id,
-                status: { $in: [
-                    RepairRequestStatus.ASSIGNED,
-                    RepairRequestStatus.ACCEPTED,
-                    RepairRequestStatus.EN_ROUTE,
-                    RepairRequestStatus.IN_PROGRESS,
-                    RepairRequestStatus.AWAITING_COMPLETION,
-                ]},
-            });
-            if (activeCount >= RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS) {
-                throw AppErrors.badRequest(`У мастера ${activeCount} активных заявок (лимит: ${RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS}). ${action} невозможно`);
-            }
-        }
-    }
-
-    /**
-     * Check remaining schedule time — warns if less than MIN_REMAINING_SCHEDULE_MINUTES left.
-     * Used for assignment to avoid assigning work that can't be started.
-     */
-    private async assertEnoughScheduleTime(repairer: { userId: string; timezone?: string }): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
-        const { nowTime } = getLocalNow(tz);
-        const dateForPattern = getLocalDateAsUtc(tz);
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, dateForPattern);
-        if (!slot || !slot.work) return;
-
-        const [nh, nm] = nowTime.split(':').map(Number);
-        const [eh, em] = slot.endTime.split(':').map(Number);
-        const remainingMinutes = (eh * 60 + em) - (nh * 60 + nm);
-
-        if (remainingMinutes > 0 && remainingMinutes < RepairRequestService.MIN_REMAINING_SCHEDULE_MINUTES) {
-            throw AppErrors.badRequest(
-                `До конца рабочего дня осталось менее ${RepairRequestService.MIN_REMAINING_SCHEDULE_MINUTES} мин. Назначение невозможно`,
-            );
+        if (activeCount >= RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS) {
+            throw AppErrors.badRequest(`У мастера ${activeCount} активных заявок (лимит: ${RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS}). ${action} невозможно`);
         }
     }
 
@@ -553,7 +420,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.assertScheduleAllows(repairer, 'Принять заявку');
+        await this.scheduleService.assertScheduleAllows(repairer, 'Принять заявку');
+        await this.assertNoConcurrentCap(repairer.id, 'Принять заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -627,7 +495,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.assertScheduleAllows(repairer, 'Выезд к клиенту');
+        await this.scheduleService.assertScheduleAllows(repairer, 'Выезд к клиенту');
+        await this.assertNoConcurrentCap(repairer.id, 'Выезд к клиенту');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -658,7 +527,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.assertScheduleAllows(repairer, 'Начать работу');
+        await this.scheduleService.assertScheduleAllows(repairer, 'Начать работу');
+        await this.assertNoConcurrentCap(repairer.id, 'Начать работу');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -896,7 +766,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.assertScheduleAllows(repairer, 'Возобновить заявку');
+        await this.scheduleService.assertScheduleAllows(repairer, 'Возобновить заявку');
+        await this.assertNoConcurrentCap(repairer.id, 'Возобновить заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -927,39 +798,7 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        // Block confirmation on vacation/sick leave/rest day
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
-        const blocking = await this.findBlockingScheduleToday(repairer.userId, tz);
-        if (blocking) {
-            const label = blocking.type === ScheduleEntryType.VACATION ? 'отпуске' : 'больничном';
-            throw AppErrors.badRequest(`Мастер на ${label}. Подтверждение невозможно`);
-        }
-        const dateForPattern = getLocalDateAsUtc(tz);
-        const slot = await this.schedulePatternService.resolveSlotForDate(repairer.userId, dateForPattern);
-        if (slot && !slot.work) {
-            throw AppErrors.badRequest('Сегодня выходной день. Подтверждение невозможно');
-        }
-
-        // Check daily overtime cap
-        const { todayStart, todayEnd } = getLocalNow(tz);
-        const todayOvertime = await this.em.find(WSchedule, {
-            userId: repairer.userId,
-            status: ScheduleStatus.APPROVED,
-            type: ScheduleEntryType.OVERTIME,
-            dateFrom: { $lte: todayEnd },
-            dateTo: { $gte: todayStart },
-        });
-        let overtimeMinutes = 0;
-        for (const entry of todayOvertime) {
-            const [sh, sm] = entry.startTime.split(':').map(Number);
-            const [eh, em] = entry.endTime.split(':').map(Number);
-            overtimeMinutes += Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
-        }
-        if (overtimeMinutes >= RepairRequestService.MAX_OVERTIME_MINUTES_PER_DAY) {
-            throw AppErrors.badRequest(
-                `Превышен лимит переработки (${RepairRequestService.MAX_OVERTIME_MINUTES_PER_DAY / 60}ч/день). Подтверждение невозможно`,
-            );
-        }
+        await this.scheduleService.assertPresenceAllowed(repairer, 'Подтверждение');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -1026,8 +865,9 @@ export class RepairRequestService {
         if (!newRepairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!newRepairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
-        await this.assertScheduleAllows(newRepairer, 'Переназначить мастера');
-        await this.assertEnoughScheduleTime(newRepairer);
+        await this.scheduleService.assertScheduleAllows(newRepairer, 'Переназначить мастера');
+        await this.scheduleService.assertEnoughScheduleTime(newRepairer);
+        await this.assertNoConcurrentCap(newRepairer.id, 'Переназначить мастера');
 
         // Close out old repairer's active work time before transferring.
         // Passes `new Date()` so any still-open EN_ROUTE/IN_PROGRESS period is counted up to now.
@@ -1045,7 +885,9 @@ export class RepairRequestService {
         this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
-        await this.ensureExtraDayIfOff(newRepairer, request);
+        const newAssignedIso = this.lastTimestampFor(request.statusTimestamps, RepairRequestStatus.ASSIGNED);
+        const newAssignedAt = newAssignedIso ? new Date(newAssignedIso) : undefined;
+        await this.scheduleService.ensureExtraDayIfOff(newRepairer, request.id, newAssignedAt);
 
         await this.repairEventService.emit({
             type: RepairEventType.TRANSFERRED,

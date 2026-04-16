@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { WScheduleService } from 'services/wschedule.service';
-import { RepairEventService, RepairEventType } from 'modules/repair-event.service';
+import { ScheduleEventService, ScheduleEventType } from 'services/schedule-event.service';
 import type { WSchedule } from 'entities/wschedule.entity';
 import type {
     CreateScheduleRequest,
@@ -44,15 +44,15 @@ function toRecord(entry: WSchedule): ScheduleRecord {
 export class ScheduleGrpcController {
     constructor(
         private readonly scheduleService: WScheduleService,
-        private readonly repairEventService: RepairEventService,
+        private readonly scheduleEventService: ScheduleEventService,
     ) {}
 
     @GrpcMethod('ScheduleService', 'CreateSchedule')
     async createSchedule(data: CreateScheduleRequest): Promise<ScheduleResponse> {
         try {
             const entry = await this.scheduleService.create(data);
-            await this.repairEventService.emitScheduleEvent({
-                type: RepairEventType.SCHEDULE_CREATED,
+            await this.scheduleEventService.emit({
+                type: ScheduleEventType.SCHEDULE_CREATED,
                 scheduleId: entry.id,
                 userId: entry.userId,
                 actorId: data.actorId || undefined,
@@ -69,8 +69,8 @@ export class ScheduleGrpcController {
     async updateSchedule(data: UpdateScheduleRequest): Promise<ScheduleResponse> {
         try {
             const entry = await this.scheduleService.update(data.id, data);
-            await this.repairEventService.emitScheduleEvent({
-                type: RepairEventType.SCHEDULE_UPDATED,
+            await this.scheduleEventService.emit({
+                type: ScheduleEventType.SCHEDULE_UPDATED,
                 scheduleId: entry.id,
                 userId: entry.userId,
                 actorId: data.actorId || undefined,
@@ -114,8 +114,8 @@ export class ScheduleGrpcController {
     async deleteSchedule(data: ScheduleDeleteRequest): Promise<ScheduleEmptyResponse> {
         try {
             const deleted = await this.scheduleService.delete(data.id);
-            await this.repairEventService.emitScheduleEvent({
-                type: RepairEventType.SCHEDULE_DELETED,
+            await this.scheduleEventService.emit({
+                type: ScheduleEventType.SCHEDULE_DELETED,
                 scheduleId: deleted.id,
                 userId: deleted.userId,
                 actorId: data.actorId || undefined,
@@ -132,8 +132,8 @@ export class ScheduleGrpcController {
     async approveSchedule(data: ScheduleApproveRequest): Promise<ScheduleResponse> {
         try {
             const entry = await this.scheduleService.approve(data.id, data.approvedBy);
-            await this.repairEventService.emitScheduleEvent({
-                type: RepairEventType.SCHEDULE_APPROVED,
+            await this.scheduleEventService.emit({
+                type: ScheduleEventType.SCHEDULE_APPROVED,
                 scheduleId: entry.id,
                 userId: entry.userId,
                 actorId: data.approvedBy,
@@ -151,8 +151,8 @@ export class ScheduleGrpcController {
     async rejectSchedule(data: ScheduleApproveRequest): Promise<ScheduleResponse> {
         try {
             const entry = await this.scheduleService.reject(data.id, data.approvedBy);
-            await this.repairEventService.emitScheduleEvent({
-                type: RepairEventType.SCHEDULE_REJECTED,
+            await this.scheduleEventService.emit({
+                type: ScheduleEventType.SCHEDULE_REJECTED,
                 scheduleId: entry.id,
                 userId: entry.userId,
                 actorId: data.approvedBy,
