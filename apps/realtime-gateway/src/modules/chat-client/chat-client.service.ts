@@ -46,16 +46,17 @@ export class ChatClientService implements OnModuleInit {
         return grpcCall(this.chatService.getConversation({ conversationId, userId }));
     }
 
-    listUserConversations(
+    async listUserConversations(
         userId: string,
         page?: number,
         limit?: number,
         sortBy?: string,
         sortOrder?: string,
     ): Promise<PaginatedConversationsResponse> {
-        return grpcCall(this.chatService.listUserConversations({
+        const res = await grpcCall(this.chatService.listUserConversations({
             userId, page: page ?? 0, limit: limit ?? 20, sortBy: sortBy ?? '', sortOrder: sortOrder ?? '',
         }));
+        return { ...res, data: res.data ?? [] };
     }
 
     deleteConversation(conversationId: string, userId: string): Promise<EmptyChatResponse> {
@@ -76,8 +77,9 @@ export class ChatClientService implements OnModuleInit {
         return grpcCall(this.chatService.removeParticipant({ conversationId, userId, removedBy }));
     }
 
-    listParticipants(conversationId: string): Promise<ParticipantListResponse> {
-        return grpcCall(this.chatService.listParticipants({ conversationId }));
+    async listParticipants(conversationId: string): Promise<ParticipantListResponse> {
+        const res = await grpcCall(this.chatService.listParticipants({ conversationId }));
+        return { ...res, participants: res.participants ?? [] };
     }
 
     // ─── Messages ─────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ export class ChatClientService implements OnModuleInit {
         }));
     }
 
-    listMessages(
+    async listMessages(
         conversationId: string,
         userId: string,
         page?: number,
@@ -107,7 +109,7 @@ export class ChatClientService implements OnModuleInit {
         sortBy?: string,
         sortOrder?: string,
     ): Promise<PaginatedMessagesResponse> {
-        return grpcCall(this.chatService.listMessages({
+        const res = await grpcCall(this.chatService.listMessages({
             conversationId,
             userId,
             page: page ?? 0,
@@ -116,6 +118,7 @@ export class ChatClientService implements OnModuleInit {
             sortBy: sortBy ?? '',
             sortOrder: sortOrder ?? '',
         }));
+        return { ...res, data: res.data ?? [] };
     }
 
     updateMessage(messageId: string, userId: string, text: string): Promise<MessageResponse> {

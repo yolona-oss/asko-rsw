@@ -99,7 +99,7 @@ export function ConversationPanel({
     const cache = queryClient.getQueryData<ListCache>(['notifications-unread-list']);
     if (!cache) return;
 
-    const toMark = cache.data.filter(
+    const toMark = (cache.data ?? []).filter(
       (n) => CHAT_NOTIFICATION_TYPES.has(n.type) && n.targetId === conversation.id,
     );
     if (toMark.length === 0) return;
@@ -110,7 +110,7 @@ export function ConversationPanel({
       if (!old) return old;
       return {
         ...old,
-        data: old.data.filter((n) => !ids.has(n.id)),
+        data: (old.data ?? []).filter((n) => !ids.has(n.id)),
         overallCount: Math.max(0, old.overallCount - toMark.length),
       };
     });
