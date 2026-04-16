@@ -2,10 +2,11 @@ import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
-import { VideoTypeEnum, FileVisibility } from "@asko/shared";
+import { VideoTypeEnum } from "@asko/shared";
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { AppErrors } from "common/error";
+import { AccessParams, persistFileAccess, toAccessParams } from "common/file-access.helper";
 import { STORAGE_PROVIDER, StorageProvider, StreamUploadMeta } from "storage/storage-provider.interface";
 import { VIDEO_COMPRESS_QUEUE } from "modules/video-compress-queue.module";
 import type { VideoCompressJobData } from "./video-compress.processor";
@@ -54,16 +55,12 @@ export class VideoService {
         await this.em.persistAndFlush(video);
         await this.enqueueCompress(video.id);
 
-        if (creatorId || visibility || conversationId) {
-            const access = new FileAccess();
-            access.fileId = video.id;
-            access.fileType = 'video';
-            if (visibility) access.visibility = visibility as FileVisibility;
-            if (creatorId) access.creatorId = creatorId;
-            if (conversationId) access.conversationId = conversationId;
-            this.em.persist(access);
-            await this.em.flush();
-        }
+        await persistFileAccess(
+            this.em,
+            video.id,
+            'video',
+            toAccessParams({ creatorId, visibility, conversationId }),
+        );
 
         return video;
     }
@@ -126,6 +123,7 @@ export class VideoService {
         ownerType: VideoTypeEnum,
         ownerId: string,
         folder: string,
+        access?: AccessParams,
     ): Promise<Video> {
         const result = await this.storage.uploadVideoStream(stream, meta, folder);
         const video = new Video();
@@ -135,6 +133,7 @@ export class VideoService {
         video.order = await this.countAttached(ownerId, ownerType);
         await this.em.persistAndFlush(video);
         await this.enqueueCompress(video.id);
+        await persistFileAccess(this.em, video.id, 'video', access);
         return video;
     }
 
@@ -142,6 +141,7 @@ export class VideoService {
     async uploadStreamGeneric(
         stream: NodeJS.ReadableStream,
         meta: StreamUploadMeta,
+        access?: AccessParams,
     ): Promise<Video> {
         const result = await this.storage.uploadVideoStream(stream, meta);
         const video = new Video();
@@ -150,39 +150,37 @@ export class VideoService {
         await this.em.persistAndFlush(video);
         await this.enqueueCompress(video.id);
 
-        const { creatorId, visibility, conversationId } = meta;
-        if (creatorId || visibility || conversationId) {
-            const access = new FileAccess();
-            access.fileId = video.id;
-            access.fileType = 'video';
-            if (visibility) access.visibility = visibility as FileVisibility;
-            if (creatorId) access.creatorId = creatorId;
-            if (conversationId) access.conversationId = conversationId;
-            this.em.persist(access);
-            await this.em.flush();
-        }
+        await persistFileAccess(this.em, video.id, 'video', access);
 
         return video;
     }
 
     @CreateRequestContext()
-    async uploadRepairRequestVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
-        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.RepairRequest, ownerId, 'repair-request-videos');
+    async uploadRepairRequestVideoStream(
+        stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams,
+    ) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.RepairRequest, ownerId, 'repair-request-videos', access);
     }
 
     @CreateRequestContext()
-    async uploadReviewVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
-        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Review, ownerId, 'review-videos');
+    async uploadReviewVideoStream(
+        stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams,
+    ) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Review, ownerId, 'review-videos', access);
     }
 
     @CreateRequestContext()
-    async uploadDeviceVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
-        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Device, ownerId, 'device-videos');
+    async uploadDeviceVideoStream(
+        stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams,
+    ) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Device, ownerId, 'device-videos', access);
     }
 
     @CreateRequestContext()
-    async uploadArticleVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string) {
-        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Article, ownerId, 'article-videos');
+    async uploadArticleVideoStream(
+        stream: NodeJS.ReadableStream, meta: StreamUploadMeta, ownerId: string, access?: AccessParams,
+    ) {
+        return this.uploadOwnedVideoStream(stream, meta, VideoTypeEnum.Article, ownerId, 'article-videos', access);
     }
 
     @CreateRequestContext()

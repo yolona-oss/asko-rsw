@@ -2,11 +2,12 @@ import { CreateRequestContext, EntityManager } from "@mikro-orm/postgresql";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
-import { ImageTypeEnum, FileVisibility } from "@asko/shared";
+import { ImageTypeEnum } from "@asko/shared";
 import { Image } from 'entities/image.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { ImageObj } from "entities/image.obj";
 import { AppErrors } from "common/error";
+import { AccessParams, persistFileAccess } from "common/file-access.helper";
 import { IMAGE_RESIZE_QUEUE } from "modules/image-resize-queue.module";
 import { STORAGE_PROVIDER, StorageProvider, StreamUploadMeta } from "storage/storage-provider.interface";
 import type { ImageResizeJobData } from "./image-resize.processor";
@@ -19,12 +20,6 @@ const RESIZE_JOB_OPTS = {
     removeOnFail: { count: 5000 },
 };
 
-interface AccessParams {
-    creatorId?: string;
-    visibility?: string;
-    conversationId?: string;
-}
-
 @Injectable()
 export class ImageService {
     constructor(
@@ -35,18 +30,6 @@ export class ImageService {
 
     private async enqueueResize(imageId: string): Promise<void> {
         await this.resizeQueue.add('resize', { imageId }, RESIZE_JOB_OPTS);
-    }
-
-    private async createFileAccess(fileId: string, params: AccessParams): Promise<void> {
-        if (!params.creatorId && !params.visibility && !params.conversationId) return;
-        const access = new FileAccess();
-        access.fileId = fileId;
-        access.fileType = 'image';
-        if (params.visibility) access.visibility = params.visibility as FileVisibility;
-        if (params.creatorId) access.creatorId = params.creatorId;
-        if (params.conversationId) access.conversationId = params.conversationId;
-        this.em.persist(access);
-        await this.em.flush();
     }
 
     private async uploadOwned(
@@ -64,7 +47,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ownerType);
         await this.em.persistAndFlush(image);
         await this.enqueueResize(image.id);
-        if (access) await this.createFileAccess(image.id, access);
+        await persistFileAccess(this.em, image.id, 'image', access);
         return image;
     }
 
@@ -84,7 +67,7 @@ export class ImageService {
         image.order = await this.countAttached(ownerId, ownerType);
         await this.em.persistAndFlush(image);
         await this.enqueueResize(image.id);
-        if (access) await this.createFileAccess(image.id, access);
+        await persistFileAccess(this.em, image.id, 'image', access);
         return image;
     }
 
@@ -107,7 +90,7 @@ export class ImageService {
         image.order = 0;
         await this.em.persistAndFlush(image);
         await this.enqueueResize(image.id);
-        if (access) await this.createFileAccess(image.id, access);
+        await persistFileAccess(this.em, image.id, 'image', access);
         return image;
     }
 
@@ -121,7 +104,7 @@ export class ImageService {
         image.order = 0;
         await this.em.persistAndFlush(image);
         await this.enqueueResize(image.id);
-        if (access) await this.createFileAccess(image.id, access);
+        await persistFileAccess(this.em, image.id, 'image', access);
         return image;
     }
 
@@ -224,7 +207,7 @@ export class ImageService {
         image.order = 0;
         await this.em.persistAndFlush(image);
         await this.enqueueResize(image.id);
-        if (access) await this.createFileAccess(image.id, access);
+        await persistFileAccess(this.em, image.id, 'image', access);
         return image;
     }
 

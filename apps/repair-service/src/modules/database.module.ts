@@ -22,6 +22,7 @@ import {
     WSchedulePattern,
     WSchedulePatternHistory,
     UserStatusHistory,
+    PaidPayment,
 } from '../entities';
 import { isProdEnv } from '@asko/shared';
 
@@ -56,6 +57,7 @@ import { isProdEnv } from '@asko/shared';
                         WSchedulePattern,
                         WSchedulePatternHistory,
                         UserStatusHistory,
+                        PaidPayment,
                     ],
                     debug: !isProdEnv(),
                 };

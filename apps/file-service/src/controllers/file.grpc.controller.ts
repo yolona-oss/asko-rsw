@@ -6,6 +6,7 @@ import { VideoService } from 'services/video.service';
 import { ImageCleanupService } from 'services/image-cleanup.service';
 import { DocumentService } from 'services/document.service';
 import { AppError, AppErrors } from 'common/error';
+import { toAccessParams } from 'common/file-access.helper';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
 import { PassThrough, Readable } from 'stream';
 import { Observable } from 'rxjs';
@@ -159,11 +160,7 @@ export class FileGrpcController {
             const image = await this.imageService.uploadStreamGeneric(
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype, alt: meta.alt },
-                {
-                    creatorId: meta.creatorId || undefined,
-                    visibility: meta.visibility || undefined,
-                    conversationId: meta.conversationId || undefined,
-                },
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -174,6 +171,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadUserAvatarStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -184,6 +182,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadDeviceImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -194,6 +193,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadArticleImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -204,6 +204,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadRepairRequestImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -214,6 +215,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadReviewImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -224,6 +226,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadDevicePartImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -234,6 +237,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const image = await this.imageService.uploadBrokenPartImageStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { image: entityToRecord(image) };
         });
@@ -348,13 +352,11 @@ export class FileGrpcController {
     @GrpcStreamMethod('FileService', 'UploadVideo')
     uploadVideo(in$: Observable<UploadChunk>) {
         return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadStreamGeneric(pt, {
-                originalname: meta.originalname,
-                mimetype: meta.mimetype,
-                creatorId: meta.creatorId || undefined,
-                visibility: meta.visibility || undefined,
-                conversationId: meta.conversationId || undefined,
-            });
+            const video = await this.videoService.uploadStreamGeneric(
+                pt,
+                { originalname: meta.originalname, mimetype: meta.mimetype },
+                toAccessParams(meta),
+            );
             return { video: videoEntityToRecord(video) };
         });
     }
@@ -366,6 +368,7 @@ export class FileGrpcController {
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype },
                 meta.ownerId,
+                toAccessParams(meta),
             );
             return { video: videoEntityToRecord(video) };
         });
@@ -376,6 +379,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const video = await this.videoService.uploadReviewVideoStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { video: videoEntityToRecord(video) };
         });
@@ -386,6 +390,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const video = await this.videoService.uploadDeviceVideoStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { video: videoEntityToRecord(video) };
         });
@@ -396,6 +401,7 @@ export class FileGrpcController {
         return this.toStreamUpload(in$, async (pt, meta) => {
             const video = await this.videoService.uploadArticleVideoStream(
                 pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
+                toAccessParams(meta),
             );
             return { video: videoEntityToRecord(video) };
         });
@@ -449,11 +455,7 @@ export class FileGrpcController {
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype },
                 meta.ownerId,
-                {
-                    creatorId: meta.creatorId || undefined,
-                    visibility: meta.visibility || undefined,
-                    conversationId: meta.conversationId || undefined,
-                },
+                toAccessParams(meta),
             );
             return { document: documentToRecord(doc) };
         });
@@ -466,11 +468,7 @@ export class FileGrpcController {
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype },
                 meta.ownerId,
-                {
-                    creatorId: meta.creatorId || undefined,
-                    visibility: meta.visibility || undefined,
-                    conversationId: meta.conversationId || undefined,
-                },
+                toAccessParams(meta),
             );
             return { document: documentToRecord(doc) };
         });
@@ -479,17 +477,18 @@ export class FileGrpcController {
     @GrpcStreamMethod('FileService', 'UploadDocument')
     uploadDocument(in$: Observable<UploadChunk>) {
         return this.toStreamUpload(in$, async (pt, meta) => {
-            // `visibility` field is reused to carry ownerType for the generic path.
+            // `visibility` field is reused to carry ownerType for the generic
+            // path, so we drop it from AccessParams (no real visibility policy
+            // arrives on this RPC) and pass through only creatorId + conversationId.
             const doc = await this.documentService.uploadStreamDocument(
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype },
                 meta.visibility || '',
                 meta.ownerId,
-                {
-                    creatorId: meta.creatorId || undefined,
-                    visibility: undefined,
-                    conversationId: meta.conversationId || undefined,
-                },
+                toAccessParams({
+                    creatorId: meta.creatorId,
+                    conversationId: meta.conversationId,
+                }),
             );
             return { document: documentToRecord(doc) };
         });

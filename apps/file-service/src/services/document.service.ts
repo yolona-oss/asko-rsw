@@ -4,7 +4,6 @@ import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { PassThrough, Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
-import { FileVisibility } from '@asko/shared';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -13,6 +12,7 @@ import { Document } from 'entities/document.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { AppConfig } from 'app.config';
 import { AppErrors } from 'common/error';
+import { AccessParams, persistFileAccess } from 'common/file-access.helper';
 import 'multer';
 
 export const ALLOWED_DOCUMENT_MIMES = [
@@ -23,12 +23,6 @@ export const ALLOWED_DOCUMENT_MIMES = [
 ] as const;
 
 type AllowedDocumentMime = (typeof ALLOWED_DOCUMENT_MIMES)[number];
-
-interface AccessParams {
-    creatorId?: string;
-    visibility?: string;
-    conversationId?: string;
-}
 
 @Injectable()
 export class DocumentService {
@@ -105,19 +99,6 @@ export class DocumentService {
         };
     }
 
-    private async persistAccess(fileId: string, params?: AccessParams): Promise<void> {
-        if (!params) return;
-        if (!params.creatorId && !params.visibility && !params.conversationId) return;
-        const access = new FileAccess();
-        access.fileId = fileId;
-        access.fileType = 'document';
-        if (params.visibility) access.visibility = params.visibility as FileVisibility;
-        if (params.creatorId) access.creatorId = params.creatorId;
-        if (params.conversationId) access.conversationId = params.conversationId;
-        this.em.persist(access);
-        await this.em.flush();
-    }
-
     @CreateRequestContext()
     async upload(
         file: Express.Multer.File,
@@ -143,7 +124,7 @@ export class DocumentService {
         doc.sizeBytes = file.size ?? file.buffer.length;
         await this.em.persistAndFlush(doc);
 
-        await this.persistAccess(doc.id, access);
+        await persistFileAccess(this.em, doc.id, 'document', access);
         return doc;
     }
 
@@ -242,7 +223,7 @@ export class DocumentService {
         doc.sizeBytes = uploaded.sizeBytes;
         await this.em.persistAndFlush(doc);
 
-        await this.persistAccess(doc.id, access);
+        await persistFileAccess(this.em, doc.id, 'document', access);
         return doc;
     }
 
