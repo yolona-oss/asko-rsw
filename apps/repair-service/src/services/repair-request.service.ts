@@ -59,18 +59,32 @@ export class RepairRequestService {
     ]);
 
     /**
-     * Walk the full statusTimestamps array and sum up all active work time
-     * (EN_ROUTE + IN_PROGRESS periods, excluding PAUSED and everything else).
-     * Returns total active minutes, or null if no active work was done.
+     * Walk the statusTimestamps array (scoped to the current repairer's session) and sum
+     * active work time (EN_ROUTE + IN_PROGRESS periods). The session starts at the LAST
+     * ASSIGNED entry — everything before that belongs to a previous repairer after reassignment.
+     *
+     * @param openPeriodEndTime If provided and an active period is still open at the end
+     *   (e.g., called during reassignment while the old repairer was IN_PROGRESS), the open
+     *   period is closed at this time. Otherwise, open periods are discarded.
      */
-    private computeActiveWorkMinutes(request: RepairRequest): number | null {
+    private computeActiveWorkMinutes(request: RepairRequest, openPeriodEndTime?: Date): number | null {
         const entries = request.statusTimestamps;
         if (!entries.length) return null;
+
+        // Scope to the current repairer's session — find last ASSIGNED entry
+        let startIdx = 0;
+        for (let i = entries.length - 1; i >= 0; i--) {
+            if (entries[i].status === RepairRequestStatus.ASSIGNED) {
+                startIdx = i;
+                break;
+            }
+        }
 
         let totalMs = 0;
         let activeStart: Date | null = null;
 
-        for (const entry of entries) {
+        for (let i = startIdx; i < entries.length; i++) {
+            const entry = entries[i];
             const isActive = RepairRequestService.ACTIVE_WORK_STATUSES.has(entry.status);
             const ts = new Date(entry.timestamp);
 
@@ -82,16 +96,23 @@ export class RepairRequestService {
             }
         }
 
+        // Close any still-open active period (e.g., reassignment while IN_PROGRESS)
+        if (activeStart && openPeriodEndTime) {
+            totalMs += openPeriodEndTime.getTime() - activeStart.getTime();
+        }
+
         const totalMinutes = Math.round(totalMs / 60_000);
         return totalMinutes > 0 ? totalMinutes : null;
     }
 
     /**
-     * Record overtime as total active work time on this request.
-     * Called once at any terminal status (completed, refused, cancelled, refunded).
+     * Record overtime as total active work time on this request, scoped to the
+     * current repairer's session. Called at:
+     *  - terminal status (completed, refused, cancelled, refunded) — natural period closure
+     *  - reassignment (with openPeriodEndTime = now) — closes out the old repairer's book
      */
-    private async recordScheduleEntries(repairerUserId: string, request: RepairRequest): Promise<void> {
-        const totalMinutes = this.computeActiveWorkMinutes(request);
+    private async recordScheduleEntries(repairerUserId: string, request: RepairRequest, openPeriodEndTime?: Date): Promise<void> {
+        const totalMinutes = this.computeActiveWorkMinutes(request, openPeriodEndTime);
         if (!totalMinutes) return;
         const startTime = '00:00';
         const h = Math.floor(totalMinutes / 60);
@@ -99,7 +120,7 @@ export class RepairRequestService {
         const endTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
         const terminalIso = this.lastTimestampFor(request.statusTimestamps, request.status);
-        const workDate = terminalIso ? new Date(terminalIso) : new Date();
+        const workDate = terminalIso ? new Date(terminalIso) : (openPeriodEndTime ?? new Date());
         const dateOnly = new Date(workDate.getFullYear(), workDate.getMonth(), workDate.getDate());
 
         await this.scheduleService.recordOvertime(repairerUserId, dateOnly, startTime, endTime, request.id);
@@ -997,6 +1018,12 @@ export class RepairRequestService {
 
         await this.assertScheduleAllows(newRepairer, 'Переназначить мастера');
         await this.assertEnoughScheduleTime(newRepairer);
+
+        // Close out old repairer's active work time before transferring.
+        // Passes `new Date()` so any still-open EN_ROUTE/IN_PROGRESS period is counted up to now.
+        try {
+            await this.recordScheduleEntries(oldRepairer.userId, request, new Date());
+        } catch { /* non-critical */ }
 
         const oldStatus = request.status;
         request.repairer = this.em.getReference(Repairer, newRepairerId);

@@ -2,6 +2,11 @@
 
 > ASKO Repair Management Platform — Work Schedule & Availability System
 
+**Related docs:**
+- [Repair Request Architecture](./repair-request.md) — how repair requests consume the schedule (guards, overtime recording, timezone)
+- [Repair Service README](../README.md) — service overview
+- [Top-level docs index](../../../docs/README.md)
+
 ---
 
 ## Table of Contents
