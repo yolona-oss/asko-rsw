@@ -12,11 +12,26 @@ function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
+function toNumberSize(bytes: unknown): number {
+  if (typeof bytes === 'number') return bytes;
+  if (typeof bytes === 'string') return Number(bytes) || 0;
+  if (bytes && typeof bytes === 'object') {
+    const { low, high, unsigned } = bytes as { low?: number; high?: number; unsigned?: boolean };
+    if (typeof low === 'number' && typeof high === 'number') {
+      return unsigned
+        ? high * 0x100000000 + (low >>> 0)
+        : high * 0x100000000 + (low >>> 0);
+    }
+  }
+  return 0;
+}
+
 function formatFileSize(bytes?: number): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} Б`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+  const n = toNumberSize(bytes);
+  if (!n) return '';
+  if (n < 1024) return `${n} Б`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} КБ`;
+  return `${(n / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
 interface Attachment {

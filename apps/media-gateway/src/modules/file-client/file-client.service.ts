@@ -284,12 +284,16 @@ export class FileClientService implements OnModuleInit {
 
     // --- Documents ---
 
+    private normalizeDocument(doc: DocumentRecord): DocumentRecord {
+        return { ...doc, sizeBytes: Number(doc.sizeBytes ?? 0) };
+    }
+
     private toDocumentResponse(res: DocumentResponse) {
-        return { document: res.document };
+        return { document: res.document ? this.normalizeDocument(res.document) : res.document };
     }
 
     private toDocumentListResponse(res: DocumentListResponse) {
-        return { documents: res.documents ?? [] };
+        return { documents: (res.documents ?? []).map(d => this.normalizeDocument(d)) };
     }
 
     async uploadBrokenPartDocument(file: Express.Multer.File, ownerId: string) {
