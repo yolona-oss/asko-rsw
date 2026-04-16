@@ -1031,6 +1031,7 @@ export class RepairRequestService {
         request.status = RepairRequestStatus.ASSIGNED;
         request.statusBeforePause = undefined;
         request.refuseReason = undefined;
+        request.stepsLocked = false;
         this.recordStatusTimestamp(request, RepairRequestStatus.ASSIGNED);
         await this.em.flush();
 
