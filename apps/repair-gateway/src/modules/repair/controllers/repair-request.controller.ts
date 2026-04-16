@@ -4,6 +4,7 @@ import {
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
+import { RepairAccessService } from 'modules/repair-client/repair-access.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
@@ -74,16 +75,8 @@ export class RepairRequestController {
         private readonly chatClient: ChatClientService,
         private readonly paymentService: PaymentClientService,
         private readonly fileService: FileClientService,
+        private readonly repairAccess: RepairAccessService,
     ) { }
-
-    /** Only the attached manager (or admins) may mutate this repair request. */
-    private async assertManagerOwnership(user: JwtPayload, requestId: string): Promise<void> {
-        if (isAdmin(user)) return;
-        const { request } = await this.repairClient.findById(requestId);
-        if (request?.managerId && request.managerId !== user.sub) {
-            throw AppErrors.forbidden('Этой заявкой управляет другой менеджер');
-        }
-    }
 
     // ── Stats ──
 
@@ -206,7 +199,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
         // Add repairer to conversation
         if (result.request.conversationId) {
@@ -224,7 +217,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
     async approveRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         return this.repairClient.approveRefund(id);
     }
 
@@ -232,7 +225,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
     async denyRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         return this.repairClient.denyRefund(id);
     }
 
@@ -240,7 +233,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/accept')
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub, true);
@@ -252,7 +245,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/detach')
     async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.removeParticipant(request.conversationId, user.sub, user.sub);
@@ -264,7 +257,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         // Get old repairer before reassign
         const before = await this.repairClient.findById(id);
         const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
@@ -444,7 +437,7 @@ export class RepairRequestController {
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/avr/remove')
     async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertManagerOwnership(user, id);
+        await this.repairAccess.assertManagerOwnership(user, id);
         return this.repairClient.removeAvrByManager(user.sub, id);
     }
 

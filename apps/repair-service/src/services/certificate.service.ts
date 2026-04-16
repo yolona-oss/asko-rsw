@@ -6,7 +6,6 @@ import { DealerProfile } from 'entities/dealer-profile.entity';
 import { RepairRequest } from 'entities/repair-request.entity';
 import {
     CertificateStatus,
-    PaymentStatus,
     PaymentTargetType,
     PointsTransactionType,
     RepairRequestStatus,
@@ -16,7 +15,7 @@ import {
 import { PointsTransaction } from 'entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
 import { PaymentCommandService } from 'modules/payment-command.service';
-import { PaymentClientService } from 'modules/payment-client/payment-client.service';
+import { PaidPaymentService } from './paid-payment.service';
 import { SignatureService } from './signature.service';
 import { CertificatePdfService } from './certificate-pdf.service';
 
@@ -41,7 +40,7 @@ export class CertificateService {
     constructor(
         private readonly em: EntityManager,
         private readonly paymentCommandService: PaymentCommandService,
-        private readonly paymentClient: PaymentClientService,
+        private readonly paidPayments: PaidPaymentService,
         private readonly signatureService: SignatureService,
         private readonly certificatePdfService: CertificatePdfService,
     ) {}
@@ -603,25 +602,20 @@ export class CertificateService {
         const sig = this.signatureService.verifyStoredSignature(cert.signedPayload, cert.signature);
         if (!sig.valid) return { ok: false, reason: 'signature_invalid' };
 
-        // Cross-check with payment-service only when the cert was actually invoiced.
-        // addCertificate() creates bundled certs with price=null; no Payment row exists
-        // for them by design.
+        // Cross-check against the local PaidPayment cache only when the cert
+        // was actually invoiced. addCertificate() creates bundled certs with
+        // price=null; no Payment row exists for them by design.
+        //
+        // The cache is populated by the `payment.paid` RMQ consumer in this
+        // service (see payment-event.consumer.ts). If payment-service is down,
+        // no new events arrive and this check fails closed — the same
+        // behavior as the previous synchronous gRPC cross-check.
         if (cert.price != null) {
-            try {
-                const { payments } = await this.paymentClient.getPaymentsByTarget(
-                    PaymentTargetType.CERTIFICATE,
-                    cert.id,
-                );
-                const hasSuccess = payments?.some((p) => p.status === PaymentStatus.PAID);
-                if (!hasSuccess) return { ok: false, reason: 'payment_not_found' };
-            } catch (err) {
-                // Fail closed when payment-service is unreachable. The normal
-                // markPaid() RMQ webhook path still runs independently, so open
-                // repair requests will get re-flipped to valid once payment-service
-                // comes back and emits the next payment.paid event.
-                console.error('[CertificateService] payment cross-check failed:', err);
-                return { ok: false, reason: 'payment_not_found' };
-            }
+            const hasPaid = await this.paidPayments.hasPaid(
+                PaymentTargetType.CERTIFICATE,
+                cert.id,
+            );
+            if (!hasPaid) return { ok: false, reason: 'payment_not_found' };
         }
 
         return { ok: true };

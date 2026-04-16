@@ -17,3 +17,4 @@ export { WSchedule } from './wschedule.entity';
 export { WSchedulePattern } from './wschedule-pattern.entity';
 export { WSchedulePatternHistory, PatternChangeType } from './wschedule-pattern-history.entity';
 export { UserStatusHistory } from './user-status-history.entity';
+export { PaidPayment } from './paid-payment.entity';

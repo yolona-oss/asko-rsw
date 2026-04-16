@@ -4,6 +4,7 @@ import { PaymentTargetType } from '@asko/shared';
 import { CertificateService } from 'services/certificate.service';
 import { RepairRequestService } from 'services/repair-request.service';
 import { DealerService } from 'services/dealer.service';
+import { PaidPaymentService } from 'services/paid-payment.service';
 
 @Controller()
 export class PaymentEventConsumer {
@@ -13,6 +14,7 @@ export class PaymentEventConsumer {
         private readonly certificateService: CertificateService,
         private readonly repairRequestService: RepairRequestService,
         private readonly dealerService: DealerService,
+        private readonly paidPayments: PaidPaymentService,
     ) {}
 
     @EventPattern('payment.paid')
@@ -21,6 +23,20 @@ export class PaymentEventConsumer {
         const msg = context.getMessage();
 
         try {
+            // Populate the denormalized cache so CertificateService can
+            // verify integrity without an outbound gRPC call.
+            if (data.paymentId && data.targetType && data.targetId) {
+                await this.paidPayments.upsert({
+                    paymentId: data.paymentId,
+                    targetType: data.targetType,
+                    targetId: data.targetId,
+                    userId: data.userId,
+                    amount: data.amount,
+                    currency: data.currency,
+                    paidAt: data.timestamp ? new Date(data.timestamp) : new Date(),
+                });
+            }
+
             if (data.targetType === PaymentTargetType.CERTIFICATE && data.targetId) {
                 await this.certificateService.markPaid(data.targetId);
                 this.logger.log(`Certificate ${data.targetId} marked as paid`);

@@ -7,7 +7,6 @@ import { AppConfig, AppConfigModule } from './app.config';
 import { DatabaseModule } from 'modules/database.module';
 import { RepairEventService } from 'modules/repair-event.service';
 import { PaymentCommandService } from 'modules/payment-command.service';
-import { PaymentClientModule } from 'modules/payment-client/payment-client.module';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { AddressValidationConsumer } from 'consumers/address-validation.consumer';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
@@ -32,6 +31,7 @@ import {
     WSchedulePattern,
     WSchedulePatternHistory,
     UserStatusHistory,
+    PaidPayment,
 } from './entities';
 import { DeviceGrpcController } from 'controllers/device.grpc.controller';
 import { CertificateGrpcController } from 'controllers/certificate.grpc.controller';
@@ -63,6 +63,7 @@ import { WSchedulePatternService } from 'services/wschedule-pattern.service';
 import { WSchedulePatternHistoryService } from 'services/wschedule-pattern-history.service';
 import { WScheduleReportService } from 'services/wschedule-report.service';
 import { ScheduleEndSweepService } from 'services/schedule-end-sweep.service';
+import { PaidPaymentService } from 'services/paid-payment.service';
 import { SupplierService } from 'providers/supplier/supplier.service';
 import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provider';
 
@@ -92,8 +93,8 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
             WSchedulePattern,
             WSchedulePatternHistory,
             UserStatusHistory,
+            PaidPayment,
         ]),
-        PaymentClientModule,
         ClientsModule.registerAsync([
             {
                 name: 'REPAIR_EVENTS',
@@ -184,6 +185,7 @@ import { DummySupplierProvider } from 'providers/supplier/dummy-supplier.provide
         WSchedulePatternHistoryService,
         WScheduleReportService,
         ScheduleEndSweepService,
+        PaidPaymentService,
         DummySupplierProvider,
         SupplierService,
     ],

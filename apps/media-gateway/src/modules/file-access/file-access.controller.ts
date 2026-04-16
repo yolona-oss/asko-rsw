@@ -1,21 +1,31 @@
-import { Controller, Get, Param, Res, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
 
 import { OptionalAuth, JwtAuthUser } from '@asko/gateway-common';
-import { JwtPayload, Role } from '@asko/shared';
-import { FileClientService } from 'modules/file-client/file-client.service';
-import { ChatClientService } from 'modules/chat-client/chat-client.service';
+import { JwtPayload } from '@asko/shared';
+import { FileAccessService } from './file-access.service';
+
+const MIME_MAP: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mov': 'video/quicktime',
+    '.pdf': 'application/pdf',
+};
 
 @ApiTags('Files')
 @Controller('files')
 export class FileAccessController {
-    constructor(
-        private readonly fileClient: FileClientService,
-        private readonly chatClient: ChatClientService,
-    ) {}
+    constructor(private readonly fileAccess: FileAccessService) {}
 
     @OptionalAuth()
     @Get('image/:id')
@@ -24,7 +34,7 @@ export class FileAccessController {
         @JwtAuthUser() user?: JwtPayload,
         @Res() res?: Response,
     ) {
-        return this.handleAccess(id, 'image', user, res!);
+        return this.handle(id, 'image', user, res!);
     }
 
     @OptionalAuth()
@@ -34,7 +44,7 @@ export class FileAccessController {
         @JwtAuthUser() user?: JwtPayload,
         @Res() res?: Response,
     ) {
-        return this.handleAccess(id, 'video', user, res!);
+        return this.handle(id, 'video', user, res!);
     }
 
     @OptionalAuth()
@@ -44,77 +54,23 @@ export class FileAccessController {
         @JwtAuthUser() user?: JwtPayload,
         @Res() res?: Response,
     ) {
-        return this.handleAccess(id, 'document', user, res!);
+        return this.handle(id, 'document', user, res!);
     }
 
-    private async handleAccess(id: string, type: string, user: JwtPayload | undefined, res: Response) {
-        let fileAccess;
-        try {
-            fileAccess = await this.fileClient.getFileAccess(id, type);
-        } catch {
-            throw new NotFoundException('File not found');
-        }
+    private async handle(id: string, type: string, user: JwtPayload | undefined, res: Response) {
+        const access = await this.fileAccess.assertReadable(id, type, user);
 
-        const visibility = fileAccess.visibility || 'public';
-
-        // Check access
-        if (visibility !== 'public') {
-            if (!user) throw new ForbiddenException('Authentication required');
-
-            const userId = user.sub;
-            const userRoles: string[] = user.roles ?? [];
-            const isAdmin = userRoles.includes(Role.ADMIN) || userRoles.includes(Role.SUPER_ADMIN);
-
-            switch (visibility) {
-                case 'private':
-                    if (fileAccess.creatorId !== userId && !isAdmin) {
-                        throw new ForbiddenException('Access denied');
-                    }
-                    break;
-                case 'role_restricted':
-                    if (
-                        fileAccess.creatorId !== userId &&
-                        !isAdmin &&
-                        !userRoles.includes(Role.MANAGER) &&
-                        !userRoles.includes(Role.REPAIRER)
-                    ) {
-                        throw new ForbiddenException('Access denied');
-                    }
-                    break;
-                case 'participants_only':
-                    if (fileAccess.conversationId) {
-                        try {
-                            const { participants } = await this.chatClient.listParticipants(
-                                fileAccess.conversationId,
-                            );
-                            const isParticipant = participants.some((p) => p.userId === userId);
-                            if (!isParticipant) throw new ForbiddenException('Access denied');
-                        } catch (e) {
-                            if (e instanceof ForbiddenException) throw e;
-                            throw new ForbiddenException('Access denied');
-                        }
-                    } else {
-                        throw new ForbiddenException('Access denied');
-                    }
-                    break;
-            }
-        }
-
-        // Serve the file
-        const url = fileAccess.storageUrl;
+        const url = access.storageUrl;
         if (!url) throw new NotFoundException('File URL not available');
 
-        // Detect local storage URLs (contain /images/, /videos/, or /documents/ path segments)
+        // Remote CDN (Cloudinary, etc.) — redirect unless the URL is a local
+        // path (served off disk from the shared Docker volume).
         const isLocal = url.includes('/images/') || url.includes('/videos/') || url.includes('/documents/');
-
-        // Remote CDN (Cloudinary, etc.) — redirect
         if (!isLocal && url.startsWith('http')) {
             return res.redirect(url);
         }
 
-        // Local file — resolve the path on disk
         const staticPath = process.env.STATIC_PATH || 'images';
-
         let relativePath = url;
         if (url.includes('/images/')) {
             relativePath = url.split('/images/').pop() || '';
@@ -129,23 +85,8 @@ export class FileAccessController {
             throw new NotFoundException('File not found on disk');
         }
 
-        // Determine content type
         const ext = path.extname(filePath).toLowerCase();
-        const mimeMap: Record<string, string> = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp',
-            '.svg': 'image/svg+xml',
-            '.ico': 'image/x-icon',
-            '.mp4': 'video/mp4',
-            '.webm': 'video/webm',
-            '.mov': 'video/quicktime',
-            '.pdf': 'application/pdf',
-        };
-
-        res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
+        res.setHeader('Content-Type', MIME_MAP[ext] || 'application/octet-stream');
         res.setHeader('Cache-Control', 'private, max-age=3600');
         fs.createReadStream(filePath).pipe(res);
     }

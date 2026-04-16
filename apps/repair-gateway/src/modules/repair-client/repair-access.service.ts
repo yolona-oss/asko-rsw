@@ -48,4 +48,17 @@ export class RepairAccessService {
         if (!part) throw AppErrors.notFound('Запчасть не найдена');
         await this.assertRepairRequestParticipant(user, part.repairRequestId);
     }
+
+    /**
+     * Assert the user is the manager assigned to this request, or an admin.
+     * Strict — does NOT accept the request creator or repairer. Used by
+     * manager-only mutations (assign, reassign, set-price, etc.).
+     */
+    async assertManagerOwnership(user: JwtPayload, requestId: string): Promise<void> {
+        if (isAdmin(user)) return;
+        const { request } = await this.repairClient.findById(requestId);
+        if (request?.managerId && request.managerId !== user.sub) {
+            throw AppErrors.forbidden('Этой заявкой управляет другой менеджер');
+        }
+    }
 }
