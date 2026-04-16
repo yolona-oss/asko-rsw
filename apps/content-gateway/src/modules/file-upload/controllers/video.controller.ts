@@ -8,7 +8,7 @@ import {
     type StreamingUploadPayload,
     assertMime,
 } from '@asko/gateway-common';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { ContentFileClientService } from 'modules/file-client/file-client.service';
 import { VideoResponseDto } from 'common/dto/responses';
 
 const VIDEO_MAX_SIZE = 100 * 1024 * 1024;
@@ -17,7 +17,7 @@ const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
 @ApiTags('Article uploads')
 @Controller('articles')
 export class ArticleVideoUploadController {
-    constructor(private readonly fileService: FileClientService) {}
+    constructor(private readonly fileService: ContentFileClientService) {}
 
     @ApiCreatedResponse({ type: VideoResponseDto })
     @RequiredRoles(...ADMIN_ROLES)

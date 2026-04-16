@@ -3,10 +3,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { MetricsModule } from '@asko/observability';
-import { JwtGuard, GATEWAY_CONFIG, UserClientModule } from '@asko/gateway-common';
+import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 
 import { AppConfig, AppConfigModule } from './app.config';
 
+import { AuthFileClientService } from 'modules/file-client/file-client.service';
 import { AuthModule } from 'modules/auth/auth.module';
 import { OAuthModule } from 'modules/oauth/oauth.module';
 import { InviteModule } from 'modules/invite/invite.module';
@@ -28,6 +29,12 @@ import { HealthModule } from 'modules/health/health.module';
         UserClientModule.registerAsync({
             inject: [AppConfig],
             useFactory: (config: AppConfig) => ({ userServiceUrl: config.userServiceUrl }),
+        }),
+
+        FileClientModule.registerAsync({
+            serviceClass: AuthFileClientService,
+            inject: [AppConfig],
+            useFactory: (config: AppConfig) => ({ fileServiceUrl: config.fileServiceUrl }),
         }),
         AuthModule,
         OAuthModule,

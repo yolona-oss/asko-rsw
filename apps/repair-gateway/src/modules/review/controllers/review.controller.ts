@@ -5,7 +5,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum, Role } from '@asko/shared';
 import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
 import {
@@ -24,7 +24,7 @@ export class ReviewController {
         private readonly repairClient: RepairClientService,
         private readonly repairerClient: RepairerClientService,
         private readonly chatClient: ChatClientService,
-        private readonly fileService: FileClientService,
+        private readonly fileService: RepairFileClientService,
     ) {}
 
     @ApiCreatedResponse({ type: ReviewResponseDto })

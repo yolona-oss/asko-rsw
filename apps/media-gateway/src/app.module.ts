@@ -3,7 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
-import { JwtGuard, GATEWAY_CONFIG, UserClientModule } from '@asko/gateway-common';
+import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 import { join } from 'path';
 
 import { AppConfig, AppConfigModule } from './app.config';
@@ -21,6 +21,11 @@ import { HealthModule } from 'modules/health/health.module';
         UserClientModule.registerAsync({
             inject: [AppConfig],
             useFactory: (config: AppConfig) => ({ userServiceUrl: config.userServiceUrl }),
+        }),
+
+        FileClientModule.registerAsync({
+            inject: [AppConfig],
+            useFactory: (config: AppConfig) => ({ fileServiceUrl: config.fileServiceUrl }),
         }),
 
         // Legacy static file serving for old URLs in DB (/images/*, /videos/*)

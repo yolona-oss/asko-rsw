@@ -14,7 +14,7 @@ import {
     type StreamingUploadPayload,
     assertMime,
 } from '@asko/gateway-common';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import { RepairAccessService } from 'modules/repair-client/repair-access.service';
 import { VideoResponseDto } from 'common/dto/responses';
 
@@ -25,7 +25,7 @@ const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
 @Controller()
 export class RepairVideoUploadController {
     constructor(
-        private readonly fileService: FileClientService,
+        private readonly fileService: RepairFileClientService,
         private readonly repairAccess: RepairAccessService,
     ) {}
 

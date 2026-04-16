@@ -10,7 +10,7 @@ import {
     isAdmin,
     isSelf,
 } from '@asko/gateway-common';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { AuthFileClientService } from 'modules/file-client/file-client.service';
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 const AVATAR_MIME = /(jpg|jpeg|png|webp)$/;
@@ -18,7 +18,7 @@ const AVATAR_MIME = /(jpg|jpeg|png|webp)$/;
 @ApiTags('Users')
 @Controller('auth/users')
 export class UserController {
-    constructor(private readonly fileService: FileClientService) {}
+    constructor(private readonly fileService: AuthFileClientService) {}
 
     @ApiCreatedResponse()
     @Post(':userId/avatar')

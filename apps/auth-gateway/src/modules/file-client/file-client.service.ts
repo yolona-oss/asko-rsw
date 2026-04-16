@@ -1,42 +1,14 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
-import { ClientGrpc } from '@nestjs/microservices';
-import { grpcStreamUpload, type StreamUploadOptions } from '@asko/gateway-common';
+import { Injectable } from '@nestjs/common';
+import { FileClientService, grpcStreamUpload, type StreamUploadOptions } from '@asko/gateway-common';
 import type { Readable } from 'node:stream';
 
-import type {
-    FileServiceClient,
-    ImageRecord,
-    ImageResponse,
-} from '@asko/proto';
-
 /**
- * Minimal file client for auth-gateway — exposes only the avatar upload
- * that lives under /auth/users/:userId/avatar, via client-streaming gRPC.
+ * Auth-gateway-local file client: adds the avatar upload RPC on top of the
+ * shared base. Avatar uploads belong to the auth domain (/auth/users/:id/avatar),
+ * so the RPC method lives here rather than in gateway-common.
  */
 @Injectable()
-export class FileClientService implements OnModuleInit {
-    private fileService!: FileServiceClient;
-
-    constructor(
-        @Inject('FILE_PACKAGE') private readonly client: ClientGrpc,
-    ) {}
-
-    onModuleInit() {
-        this.fileService = this.client.getService<FileServiceClient>('FileService');
-    }
-
-    private parseRecord(record: ImageRecord): ImageRecord & { imageJson: any } {
-        try {
-            return { ...record, imageJson: JSON.parse(record.imageJson) };
-        } catch {
-            return record as any;
-        }
-    }
-
-    private parseImageResponse(res: ImageResponse) {
-        return { image: this.parseRecord(res.image) };
-    }
-
+export class AuthFileClientService extends FileClientService {
     async uploadUserAvatar(
         stream: Readable,
         originalname: string,

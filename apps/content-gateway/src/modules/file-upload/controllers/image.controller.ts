@@ -8,7 +8,7 @@ import {
     type StreamingUploadPayload,
     assertMime,
 } from '@asko/gateway-common';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { ContentFileClientService } from 'modules/file-client/file-client.service';
 import { ImageResponseDto } from 'common/dto/responses';
 
 const IMAGE_MAX_SIZE = 10 * 1024 * 1024;
@@ -17,7 +17,7 @@ const IMAGE_MIME = /(jpg|jpeg|png|webp)$/;
 @ApiTags('Article uploads')
 @Controller('articles')
 export class ArticleImageUploadController {
-    constructor(private readonly fileService: FileClientService) {}
+    constructor(private readonly fileService: ContentFileClientService) {}
 
     @ApiCreatedResponse({ type: ImageResponseDto })
     @RequiredRoles(...ADMIN_ROLES)

@@ -1,55 +1,17 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
-import { ClientGrpc } from '@nestjs/microservices';
-import { grpcCall, grpcStreamUpload, type StreamUploadOptions } from '@asko/gateway-common';
-import { ImageTypeEnum } from '@asko/shared';
+import { Injectable } from '@nestjs/common';
+import { FileClientService, grpcStreamUpload, type StreamUploadOptions } from '@asko/gateway-common';
+import type { DocumentResponse } from '@asko/proto';
 import { Readable } from 'node:stream';
 
-import type {
-    FileServiceClient,
-    ImageRecord,
-    ImageResponse,
-    ImageListResponse,
-    CountResponse,
-    EmptyFileResponse,
-    VideoRecord,
-    VideoResponse,
-    VideoListResponse,
-    FileAccessResponse,
-    DocumentRecord,
-    DocumentResponse,
-    DocumentListResponse,
-} from '@asko/proto';
-
+/**
+ * Repair-gateway-local file client: adds per-domain upload RPCs (repair
+ * request, review, device, device part, broken part) on top of the shared
+ * base. These belong to the repair domain and live here rather than in
+ * gateway-common.
+ */
 @Injectable()
-export class FileClientService implements OnModuleInit {
-    private fileService!: FileServiceClient;
-
-    constructor(
-        @Inject('FILE_PACKAGE') private readonly client: ClientGrpc,
-    ) {}
-
-    onModuleInit() {
-        this.fileService = this.client.getService<FileServiceClient>('FileService');
-    }
-
-    /** Parse imageJson from gRPC string to object for REST responses */
-    private parseRecord(record: ImageRecord): ImageRecord & { imageJson: any } {
-        try {
-            return { ...record, imageJson: JSON.parse(record.imageJson) };
-        } catch {
-            return record as any;
-        }
-    }
-
-    private parseImageResponse(res: ImageResponse) {
-        return { image: this.parseRecord(res.image) };
-    }
-
-    private parseImageListResponse(res: ImageListResponse) {
-        return { images: (res.images ?? []).map((r) => this.parseRecord(r)) };
-    }
-
-    // ─── Upload operations ──────────────────────────────────────────────
+export class RepairFileClientService extends FileClientService {
+    // ─── Image uploads ──────────────────────────────────────────────────
 
     async uploadRepairRequestImage(
         stream: Readable, originalname: string, mimetype: string, ownerId: string, opts: StreamUploadOptions,
@@ -101,93 +63,14 @@ export class FileClientService implements OnModuleInit {
         return this.parseImageResponse(res);
     }
 
-    // ─── URL operations ─────────────────────────────────────────────────
-
-    async createFromUrl(url: string, ownerType?: ImageTypeEnum, ownerId?: string, order?: number) {
-        const res = await grpcCall(this.fileService.createFromUrl({
-            url,
-            ownerType: ownerType ?? '',
-            ownerId: ownerId ?? '',
-            order: order ?? 0,
-        }));
-        return this.parseImageResponse(res);
-    }
-
-    // ─── Management operations ──────────────────────────────────────────
-
-    remove(id: string): Promise<EmptyFileResponse> {
-        return grpcCall(this.fileService.remove({ id }));
-    }
-
-    unattachImage(imageId: string): Promise<EmptyFileResponse> {
-        return grpcCall(this.fileService.unattachImage({ id: imageId }));
-    }
-
-    async attachImage(imageId: string, dto: { ownerType: ImageTypeEnum; ownerId: string }) {
-        const res = await grpcCall(this.fileService.attachImage({
-            imageId,
-            ownerType: dto.ownerType,
-            ownerId: dto.ownerId,
-        }));
-        return this.parseImageResponse(res);
-    }
-
-    async findAttachedImages(ownerType: ImageTypeEnum, ownerId: string) {
-        const res = await grpcCall(this.fileService.findAttachedImages({ ownerType, ownerId }));
-        return this.parseImageListResponse(res);
-    }
-
-    countAttached(ownerId: string, ownerType: ImageTypeEnum): Promise<CountResponse> {
-        return grpcCall(this.fileService.countAttached({ ownerId, ownerType }));
-    }
-
-    deleteByOwner(ownerType: ImageTypeEnum, ownerId: string): Promise<CountResponse> {
-        return grpcCall(this.fileService.deleteByOwner({ ownerType, ownerId }));
-    }
-
-    // ─── Reorder operations ─────────────────────────────────────────────
-
-    reorderImages(ownerType: ImageTypeEnum, ownerId: string, schema: { id: string; order: number }[]): Promise<EmptyFileResponse> {
-        return grpcCall(this.fileService.reorderImages({ ownerType, ownerId, schema }));
-    }
-
-    async reorderByIds(ownerType: ImageTypeEnum, ownerId: string, imageIds: string[]) {
-        const res = await grpcCall(this.fileService.reorderByIds({ ownerType, ownerId, imageIds }));
-        return this.parseImageListResponse(res);
-    }
-
-    // ─── Video helpers ───────────────────────────────────────────────────
-
-    private parseVideoRecord(record: VideoRecord): VideoRecord & { videoJson: any } {
-        try {
-            return { ...record, videoJson: JSON.parse(record.videoJson) };
-        } catch {
-            return record as any;
-        }
-    }
-
-    private parseVideoResponse(res: VideoResponse) {
-        return { video: this.parseVideoRecord(res.video) };
-    }
-
-    private parseVideoListResponse(res: VideoListResponse) {
-        return { videos: (res.videos ?? []).map((r) => this.parseVideoRecord(r)) };
-    }
-
-    // ─── Video upload operations ─────────────────────────────────────────
+    // ─── Video uploads ──────────────────────────────────────────────────
 
     async uploadRepairRequestVideo(
-        stream: Readable,
-        originalname: string,
-        mimetype: string,
-        ownerId: string,
-        opts: StreamUploadOptions,
+        stream: Readable, originalname: string, mimetype: string, ownerId: string, opts: StreamUploadOptions,
     ) {
         const res = await grpcStreamUpload(
-            (chunks$) => this.fileService.uploadRepairRequestVideo(chunks$),
-            stream,
-            { originalname, mimetype, ownerId },
-            opts,
+            (c$) => this.fileService.uploadRepairRequestVideo(c$),
+            stream, { originalname, mimetype, ownerId }, opts,
         );
         return this.parseVideoResponse(res);
     }
@@ -212,25 +95,16 @@ export class FileClientService implements OnModuleInit {
         return this.parseVideoResponse(res);
     }
 
-    // ─── Video management operations ─────────────────────────────────────
-
-    removeVideo(id: string): Promise<EmptyFileResponse> {
-        return grpcCall(this.fileService.removeVideo({ id }));
-    }
-
-    async findAttachedVideos(ownerType: string, ownerId: string) {
-        const res = await grpcCall(this.fileService.findAttachedVideos({ ownerType, ownerId }));
-        return this.parseVideoListResponse(res);
-    }
-
-    // ─── Documents ────────────────────────────────────────────────────────
+    // ─── Document uploads ───────────────────────────────────────────────
 
     /**
-     * Internal helper for the AVR flow: file-service generates a PDF buffer
-     * in-process, then we stream it to file-service's generic document RPC.
-     * The buffer-to-stream hop is only ~200 KB–1 MB so the overhead is nil.
+     * AVR flow: file-service generates a PDF buffer in-process, then we
+     * stream it back to the generic document RPC. The buffer-to-stream hop
+     * is only ~200 KB–1 MB so the overhead is nil.
      */
-    async uploadDocument(pdfBuffer: Buffer, filename: string, ownerType: string, ownerId: string, creatorId?: string): Promise<DocumentResponse> {
+    async uploadDocumentBuffer(
+        pdfBuffer: Buffer, filename: string, ownerType: string, ownerId: string, creatorId?: string,
+    ): Promise<DocumentResponse> {
         return grpcStreamUpload(
             (c$) => this.fileService.uploadDocument(c$),
             Readable.from(pdfBuffer),
@@ -239,7 +113,9 @@ export class FileClientService implements OnModuleInit {
         );
     }
 
-    async uploadDocumentFile(file: Express.Multer.File, ownerType: string, ownerId: string, creatorId?: string): Promise<DocumentResponse> {
+    async uploadDocumentFile(
+        file: Express.Multer.File, ownerType: string, ownerId: string, creatorId?: string,
+    ): Promise<DocumentResponse> {
         return grpcStreamUpload(
             (c$) => this.fileService.uploadDocument(c$),
             Readable.from(file.buffer),
@@ -270,24 +146,5 @@ export class FileClientService implements OnModuleInit {
             { originalname, mimetype, ownerId, visibility: 'role_restricted', creatorId: creatorId ?? '' },
             opts,
         );
-    }
-
-    async getDocument(id: string): Promise<DocumentRecord> {
-        const res = await grpcCall(this.fileService.getDocument({ id }));
-        return res.document;
-    }
-
-    async getDocumentsByOwner(ownerType: string, ownerId: string): Promise<DocumentListResponse> {
-        return grpcCall(this.fileService.getDocumentsByOwner({ ownerType, ownerId }));
-    }
-
-    deleteDocument(id: string): Promise<EmptyFileResponse> {
-        return grpcCall(this.fileService.deleteDocument({ id }));
-    }
-
-    // ─── Access control ──────────────────────────────────────────────────
-
-    getFileAccess(id: string, type: string): Promise<FileAccessResponse> {
-        return grpcCall(this.fileService.getFileAccess({ id, type }));
     }
 }

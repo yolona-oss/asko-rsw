@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { MetricsService } from '@asko/observability';
 import { PaidPayment } from 'entities/paid-payment.entity';
 
 /**
@@ -24,14 +25,20 @@ export interface UpsertPaidPaymentInput {
 
 @Injectable()
 export class PaidPaymentService {
-    constructor(private readonly em: EntityManager) {}
+    constructor(
+        private readonly em: EntityManager,
+        @Optional() private readonly metrics?: MetricsService,
+    ) {}
 
     /**
      * Idempotent upsert — called from the `payment.paid` event handler.
      * Duplicate deliveries with the same `paymentId` are silently merged.
+     *
+     * Emits `paid_payment_cache_upsert_total{source}` so dashboards can
+     * separate event-driven inserts from future backfill runs.
      */
     @CreateRequestContext()
-    async upsert(input: UpsertPaidPaymentInput): Promise<void> {
+    async upsert(input: UpsertPaidPaymentInput, source: 'event' | 'backfill' = 'event'): Promise<void> {
         const existing = await this.em.findOne(PaidPayment, { paymentId: input.paymentId });
         if (existing) {
             existing.targetType = input.targetType;
@@ -41,6 +48,7 @@ export class PaidPaymentService {
             existing.currency = input.currency;
             if (input.paidAt) existing.paidAt = input.paidAt;
             await this.em.flush();
+            this.metrics?.paidPaymentCacheUpsertTotal.inc({ source });
             return;
         }
 
@@ -54,16 +62,23 @@ export class PaidPaymentService {
             paidAt: input.paidAt ?? new Date(),
         });
         await this.em.persistAndFlush(row);
+        this.metrics?.paidPaymentCacheUpsertTotal.inc({ source });
     }
 
     /**
      * True iff a paid payment exists in the cache for the given target.
      * Used by the certificate-integrity verifier.
+     *
+     * Emits `paid_payment_cache_lookup_total{result}` — a spike in
+     * `miss` indicates the event stream is broken or a cert predates the
+     * cache population window.
      */
     @CreateRequestContext()
     async hasPaid(targetType: string, targetId: string): Promise<boolean> {
         const count = await this.em.count(PaidPayment, { targetType, targetId });
-        return count > 0;
+        const hit = count > 0;
+        this.metrics?.paidPaymentCacheLookupTotal.inc({ result: hit ? 'hit' : 'miss' });
+        return hit;
     }
 
     /**

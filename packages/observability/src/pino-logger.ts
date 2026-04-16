@@ -17,6 +17,7 @@ export class PinoLogger implements LoggerService {
 
         this.logger = pino({
             level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+            serializers: { err: pino.stdSerializers.err },
             transport,
         }).child({ service: serviceName });
     }
@@ -27,6 +28,11 @@ export class PinoLogger implements LoggerService {
     }
 
     error(message: any, ...optionalParams: any[]) {
+        if (message instanceof Error) {
+            const context = this.extractContext(optionalParams);
+            this.logger.error({ err: message, context }, message.message || message.name);
+            return;
+        }
         if (optionalParams.length >= 2) {
             this.logger.error(
                 { stack: optionalParams[0], context: optionalParams[1] },

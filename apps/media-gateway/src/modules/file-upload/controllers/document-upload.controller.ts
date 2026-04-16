@@ -6,9 +6,9 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { FileClientService } from 'modules/file-client/file-client.service';
 import { ADMIN_ROLES } from '@asko/shared';
 import {
+    FileClientService,
     RequiredRoles,
     StreamingFile,
     StreamingUploadInterceptor,

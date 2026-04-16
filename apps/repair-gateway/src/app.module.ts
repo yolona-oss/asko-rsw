@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
-import { JwtGuard, GATEWAY_CONFIG, UserClientModule } from '@asko/gateway-common';
+import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 
 import { AppConfig, AppConfigModule } from './app.config';
 
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import { RepairModule } from 'modules/repair/repair.module';
 import { DeviceModule } from 'modules/device/device.module';
 import { CertificateModule } from 'modules/certificate/certificate.module';
@@ -28,6 +29,12 @@ import { HealthModule } from 'modules/health/health.module';
         UserClientModule.registerAsync({
             inject: [AppConfig],
             useFactory: (config: AppConfig) => ({ userServiceUrl: config.userServiceUrl }),
+        }),
+
+        FileClientModule.registerAsync({
+            serviceClass: RepairFileClientService,
+            inject: [AppConfig],
+            useFactory: (config: AppConfig) => ({ fileServiceUrl: config.fileServiceUrl }),
         }),
 
         RepairModule,

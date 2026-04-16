@@ -39,3 +39,5 @@ export {
 export { UserClientModule, UserClientService } from './modules';
 export type { UserClientModuleOptions } from './modules';
 export { USER_CLIENT_OPTIONS } from './modules';
+export { FileClientModule, FileClientService, FILE_CLIENT_OPTIONS } from './modules';
+export type { FileClientModuleOptions } from './modules';

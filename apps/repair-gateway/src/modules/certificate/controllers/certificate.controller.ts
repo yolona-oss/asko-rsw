@@ -3,7 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CertificateClientService } from 'modules/repair-client/certificate-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
@@ -53,7 +53,7 @@ export class CertificateController {
         private readonly userClient: UserClientService,
         private readonly paymentService: PaymentClientService,
         private readonly dealerClient: DealerClientService,
-        private readonly fileService: FileClientService,
+        private readonly fileService: RepairFileClientService,
     ) {}
 
     private async enrichCertificates(certs: any[]): Promise<void> {
@@ -358,7 +358,7 @@ export class CertificateController {
 
         // 6. Upload PDF to file-service
         const filename = `cert-${cert.certificateNumber}.pdf`;
-        const docResult = await this.fileService.uploadDocument(
+        const docResult = await this.fileService.uploadDocumentBuffer(
             Buffer.from(result.pdfBuffer),
             filename,
             'certificate',

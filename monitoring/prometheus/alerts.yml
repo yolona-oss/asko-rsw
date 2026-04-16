@@ -186,3 +186,100 @@ groups:
         annotations:
           summary: "Redis is evicting keys"
           description: "Redis evicted {{ $value }} keys in the last 5 minutes — memory pressure."
+
+  - name: event_signing
+    rules:
+      # Any signature verify that failed for tamper / wrong-key reasons is
+      # an immediate red flag: a compromised service or a forged publisher.
+      - alert: EventSignatureTampering
+        expr: sum(rate(event_signing_verify_total{outcome="signature_invalid"}[5m])) by (service, group) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Event signature verify failing on {{ $labels.service }} ({{ $labels.group }})"
+          description: "HMAC signature mismatch on cross-service events — possible forgery or key drift. Investigate immediately."
+
+      # Replayed nonces — only fires when a nonce store is configured.
+      - alert: EventSignatureReplay
+        expr: sum(rate(event_signing_verify_total{outcome="replay"}[10m])) by (service, group) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Replayed event detected on {{ $labels.service }} ({{ $labels.group }})"
+          description: "A previously-seen nonce was re-delivered — possible replay attack or broker misconfiguration."
+
+      # During soft-mode rollout, track how often we accept unsigned events.
+      # This line should trend toward zero; when it flatlines at zero for
+      # 24h, you can safely flip enforceOnConsume=true for that group.
+      - alert: EventSignatureSoftModeStillBusy
+        expr: sum(rate(event_signing_verify_total{outcome="unsigned_accepted"}[30m])) by (service, group) > 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.service }} still accepting unsigned events in group {{ $labels.group }}"
+          description: "Some publisher hasn't migrated to SignedEventPublisher yet. Not dangerous, but blocks enforcement flip."
+
+      # Enforce-mode rejections indicate a publisher is misconfigured.
+      - alert: EventSignatureUnsignedRejected
+        expr: sum(rate(event_signing_verify_total{outcome="unsigned_rejected"}[5m])) by (service, group) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} rejecting unsigned events in group {{ $labels.group }}"
+          description: "An upstream publisher is sending unsigned events to an enforced group — either the publisher was reverted or a rogue service is attempting to publish."
+
+  - name: authorization
+    rules:
+      # A sudden surge in denies usually means a misconfigured role or a
+      # probe; an extreme ratio means the UI is broken.
+      - alert: AccessDenySurge
+        expr: |
+          sum(rate(access_assert_total{outcome="deny"}[5m])) by (service, assertion)
+            > 3 * sum(avg_over_time(rate(access_assert_total{outcome="deny"}[5m])[1h:5m])) by (service, assertion)
+          and sum(rate(access_assert_total{outcome="deny"}[5m])) by (service, assertion) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Access deny surge on {{ $labels.service }} — {{ $labels.assertion }}"
+          description: "Deny rate is >3× the 1-hour average for assertion {{ $labels.assertion }}. Investigate role changes, UI regressions, or probing."
+
+      # Unexpected errors during assertions (downstream service unreachable, etc.)
+      - alert: AccessAssertErrors
+        expr: sum(rate(access_assert_total{outcome="error"}[5m])) by (service, assertion) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Access assertion errors on {{ $labels.service }} — {{ $labels.assertion }}"
+          description: "Error rate >0.1/s while evaluating {{ $labels.assertion }}. Downstream service is flaky or returning unexpected shapes."
+
+  - name: paid_payment_cache
+    rules:
+      # Integrity-check misses for paid certificates indicate the event
+      # stream is stale or the cache wasn't backfilled on deploy.
+      - alert: PaidPaymentCacheMissRate
+        expr: |
+          sum(rate(paid_payment_cache_lookup_total{result="miss"}[5m])) by (service)
+            / (sum(rate(paid_payment_cache_lookup_total[5m])) by (service) > 0)
+          > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PaidPayment cache miss rate high on {{ $labels.service }}"
+          description: "More than 20% of cache lookups miss. Either payment-service events stopped flowing, or certs pre-date the cache — run the backfill."
+
+      # Zero upsert activity over a long window = event consumer is wedged.
+      - alert: PaidPaymentCacheStale
+        expr: sum(increase(paid_payment_cache_upsert_total[1h])) by (service) == 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "No PaidPayment cache writes in the last hour on {{ $labels.service }}"
+          description: "payment.paid events aren't being consumed — check RMQ connectivity or payment-service publisher."

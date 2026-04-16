@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import { IsOptional, IsString, IsBoolean } from 'class-validator';
 import {
     CreateDeviceDto,
@@ -49,7 +49,7 @@ import {
 export class DeviceController {
     constructor(
         private readonly deviceClient: DeviceClientService,
-        private readonly fileService: FileClientService,
+        private readonly fileService: RepairFileClientService,
     ) {}
 
     // ── Admin: catalog management ──

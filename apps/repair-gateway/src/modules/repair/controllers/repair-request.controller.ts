@@ -9,7 +9,7 @@ import { RepairerClientService } from 'modules/repair-client/repairer-client.ser
 import { UserClientService } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
+import { RepairFileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateRepairRequestDto,
     AssignRepairerDto,
@@ -74,7 +74,7 @@ export class RepairRequestController {
         private readonly userClient: UserClientService,
         private readonly chatClient: ChatClientService,
         private readonly paymentService: PaymentClientService,
-        private readonly fileService: FileClientService,
+        private readonly fileService: RepairFileClientService,
         private readonly repairAccess: RepairAccessService,
     ) { }
 
@@ -412,7 +412,7 @@ export class RepairRequestController {
 
         // Upload PDF to file-service
         const filename = `avr-${id.slice(0, 8)}.pdf`;
-        const docResult = await this.fileService.uploadDocument(
+        const docResult = await this.fileService.uploadDocumentBuffer(
             Buffer.from(avrResult.pdfBuffer),
             filename,
             'avr',

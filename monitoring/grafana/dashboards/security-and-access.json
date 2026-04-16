@@ -1,0 +1,279 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "title": "Event signing",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "id": 100
+    },
+    {
+      "type": "timeseries",
+      "title": "Publish outcomes (per group)",
+      "description": "Rate of cross-service event publishes, bucketed by signing outcome.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "sum by (service, group, outcome) (rate(event_signing_publish_total[5m]))",
+          "legendFormat": "{{service}} / {{group}} / {{outcome}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 101
+    },
+    {
+      "type": "timeseries",
+      "title": "Verify outcomes (per group)",
+      "description": "Rate of inbound events, by verify outcome. `signature_invalid` or `replay` > 0 fires an alert.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "targets": [
+        {
+          "expr": "sum by (service, group, outcome) (rate(event_signing_verify_total[5m]))",
+          "legendFormat": "{{service}} / {{group}} / {{outcome}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 102
+    },
+    {
+      "type": "stat",
+      "title": "Tamper attempts (last 1h)",
+      "description": "Total signature_invalid events. Should be zero in steady state.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "expr": "sum(increase(event_signing_verify_total{outcome=\"signature_invalid\"}[1h]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 103
+    },
+    {
+      "type": "stat",
+      "title": "Replay attempts (last 1h)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 9 },
+      "targets": [
+        {
+          "expr": "sum(increase(event_signing_verify_total{outcome=\"replay\"}[1h]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 104
+    },
+    {
+      "type": "stat",
+      "title": "Unsigned accepted (soft mode) — last 1h",
+      "description": "Should trend to zero before enabling enforceOnConsume.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 9 },
+      "targets": [
+        {
+          "expr": "sum by (group) (increase(event_signing_verify_total{outcome=\"unsigned_accepted\"}[1h]))",
+          "legendFormat": "{{group}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 105
+    },
+    {
+      "type": "timeseries",
+      "title": "Verify duration p95",
+      "description": "HMAC verify latency. Sub-millisecond in practice; watch for regressions.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 9 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, service, group) (rate(event_signing_verify_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{service}} / {{group}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 106
+    },
+    {
+      "type": "row",
+      "title": "Authorization",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "collapsed": false,
+      "id": 200
+    },
+    {
+      "type": "timeseries",
+      "title": "Allow vs deny (per assertion)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "sum by (service, assertion, outcome) (rate(access_assert_total[5m]))",
+          "legendFormat": "{{service}} / {{assertion}} / {{outcome}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 201
+    },
+    {
+      "type": "timeseries",
+      "title": "Top denying assertions",
+      "description": "Top 10 assertions by deny rate over the last 5m.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (service, assertion) (rate(access_assert_total{outcome=\"deny\"}[5m])))",
+          "legendFormat": "{{service}} / {{assertion}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 202
+    },
+    {
+      "type": "row",
+      "title": "PaidPayment cache (repair-service)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "collapsed": false,
+      "id": 300
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache hit vs miss",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "targets": [
+        {
+          "expr": "sum by (result) (rate(paid_payment_cache_lookup_total[5m]))",
+          "legendFormat": "{{result}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 301
+    },
+    {
+      "type": "stat",
+      "title": "Miss ratio (5m)",
+      "description": "Warns above 20%.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 23 },
+      "targets": [
+        {
+          "expr": "sum(rate(paid_payment_cache_lookup_total{result=\"miss\"}[5m])) / (sum(rate(paid_payment_cache_lookup_total[5m])) > 0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 0.2 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 302
+    },
+    {
+      "type": "timeseries",
+      "title": "Upsert source (events vs backfill)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 23 },
+      "targets": [
+        {
+          "expr": "sum by (source) (rate(paid_payment_cache_upsert_total[5m]))",
+          "legendFormat": "{{source}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "legend": { "placement": "bottom", "showLegend": true } },
+      "id": 303
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["asko", "security", "access"],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "query": "prometheus",
+        "hide": 0,
+        "refresh": 1
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "ASKO — Security & Access",
+  "uid": "asko-security-access",
+  "version": 1,
+  "weekStart": ""
+}

@@ -3,7 +3,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { ContentClientService } from 'modules/content-client/content-client.service';
-import { FileClientService } from 'modules/file-client/file-client.service';
 import {
     CreateArticleDto,
     UpdateArticleDto,
@@ -12,7 +11,10 @@ import {
     ADMIN_ROLES,
     ImageTypeEnum,
 } from '@asko/shared';
-import { RequiredRoles, Public, OptionalAuth, JwtAuthUser } from '@asko/gateway-common';
+import {
+    RequiredRoles, Public, OptionalAuth, JwtAuthUser,
+    FileClientService,
+} from '@asko/gateway-common';
 import { JwtPayload } from '@asko/shared';
 import {
     ArticleResponseDto,
