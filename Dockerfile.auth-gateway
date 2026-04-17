@@ -42,6 +42,8 @@ COPY --from=builder /app/packages/shared ./node_modules/@asko/shared
 # `packages/gateway-common/node_modules/@asko/shared` (a pnpm symlink) and needs
 # the full shared package (package.json + dist) at `/app/packages/shared`.
 COPY --from=builder /app/packages/shared ./packages/shared
+COPY --from=builder /app/packages/authorization ./node_modules/@asko/authorization
+COPY --from=builder /app/packages/authorization ./packages/authorization
 COPY --from=builder /app/packages/gateway-common ./node_modules/@asko/gateway-common
 COPY --from=builder /app/packages/gateway-common ./packages/gateway-common
 COPY --from=builder /app/packages/observability ./node_modules/@asko/observability
