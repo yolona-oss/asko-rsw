@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfig } from 'app.config';
+import { safePath } from 'common/safe-path';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import ffmpeg from 'fluent-ffmpeg';
@@ -24,9 +25,9 @@ export class VideoCompressService {
     }
 
     async compress(publicId: string): Promise<VideoCompressResult> {
-        const inputPath = path.join(this.staticPath, 'videos', publicId);
+        const inputPath = safePath(this.staticPath, 'videos', publicId);
         const parsed = path.parse(inputPath);
-        const tempPath = path.join(parsed.dir, `${parsed.name}_compressing.mp4`);
+        const tempPath = safePath(parsed.dir, `${parsed.name}_compressing.mp4`);
 
         await new Promise<void>((resolve, reject) => {
             ffmpeg(inputPath)
@@ -59,7 +60,7 @@ export class VideoCompressService {
         }
 
         const finalPath = formatChanged
-            ? path.join(parsed.dir, `${parsed.name}.mp4`)
+            ? safePath(parsed.dir, `${parsed.name}.mp4`)
             : inputPath;
         await fs.rename(tempPath, finalPath);
 
