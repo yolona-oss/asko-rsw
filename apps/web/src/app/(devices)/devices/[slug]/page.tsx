@@ -29,7 +29,7 @@ export async function generateMetadata({
   if (!device) return {};
 
   const description = device.description?.slice(0, 160).trim() || `${device.name} — характеристики, цена, сервис ASKO`;
-  const previewImage = images.sort((a, b) => a.order - b.order)[0];
+  const previewImage = images.sort((a: any, b: any) => a.order - b.order)[0];
   const ogImage = getImageUrl(previewImage, 'medium');
 
   return {
@@ -130,7 +130,7 @@ async function ProductDetailContent({ slug }: { slug: string }) {
     notFound();
   }
 
-  const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
+  const typeLabels = Object.fromEntries(categories.map((c: { name: string; label: string }) => [c.name, c.label]));
   const product = deviceToProduct(device, images, typeLabels);
 
   // Fetch related articles by device tags, fallback to latest if fewer than 4
