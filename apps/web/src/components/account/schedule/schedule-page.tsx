@@ -40,7 +40,7 @@ export function SchedulePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<ScheduleEntry | undefined>(undefined);
   const [formDefaultUserId, setFormDefaultUserId] = useState<string | undefined>(undefined);
-  const [formDefaultType, setFormDefaultType] = useState<'vacation' | 'sick_leave' | 'overtime' | 'extra_day' | undefined>(undefined);
+  const [formDefaultType, setFormDefaultType] = useState<'vacation' | 'sick_leave' | 'overtime' | 'schedule_override' | undefined>(undefined);
   const [formLockType, setFormLockType] = useState(false);
   const [reportUserId, setReportUserId] = useState<string | null>(null);
 
@@ -151,7 +151,7 @@ export function SchedulePage() {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     try {
-      await scheduleApi.update(entry.id, { dateTo: todayStr });
+      await scheduleApi.updateSickLeave(entry.id, { dateTo: todayStr });
       await fetchAll();
     } catch { /* */ }
   };
@@ -167,7 +167,7 @@ export function SchedulePage() {
   const openProposeExtraDay = (targetUserId: string) => {
     setEditItem(undefined);
     setFormDefaultUserId(targetUserId);
-    setFormDefaultType('extra_day');
+    setFormDefaultType('schedule_override');
     setFormLockType(true);
     setFormOpen(true);
   };

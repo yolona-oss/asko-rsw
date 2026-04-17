@@ -3,10 +3,13 @@ import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
 import { RepairRequestStatus } from '@asko/shared';
 import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
-import { WSchedule, ScheduleEntryType, ScheduleStatus } from '../entities/wschedule.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { RepairRequestService } from 'modules/repair-request/services/repair-request.service';
-import { WScheduleService } from './wschedule.service';
+import { ScheduleGuardService } from './schedule-guard.service';
+import { OvertimeService } from './overtime.service';
+import { ScheduleOverrideService } from './schedule-override.service';
+import { VacationService } from './vacation.service';
+import { SickLeaveService } from './sick-leave.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 import { getLocalNow } from 'common/timezone';
@@ -20,7 +23,11 @@ export class ScheduleEndSweepService {
     constructor(
         private readonly em: EntityManager,
         private readonly repairRequestService: RepairRequestService,
-        private readonly scheduleService: WScheduleService,
+        private readonly scheduleGuard: ScheduleGuardService,
+        private readonly overtimeService: OvertimeService,
+        private readonly overrideService: ScheduleOverrideService,
+        private readonly vacationService: VacationService,
+        private readonly sickLeaveService: SickLeaveService,
         private readonly schedulePatternService: WSchedulePatternService,
         private readonly events: RepairEventService,
     ) {}
@@ -39,7 +46,6 @@ export class ScheduleEndSweepService {
 
         if (activeRequests.length === 0) return;
 
-        // Group requests by repairer userId
         const byRepairer = new Map<string, { repairer: Repairer; requests: RepairRequest[] }>();
         for (const req of activeRequests) {
             const repairer = req.repairer as Repairer;
@@ -54,7 +60,7 @@ export class ScheduleEndSweepService {
 
         for (const [repairerUserId, { repairer, requests }] of byRepairer) {
             try {
-                const tz = await this.scheduleService.resolveTimezone(repairer.userId);
+                const tz = await this.scheduleGuard.resolveTimezone(repairer.userId);
                 const now = new Date();
                 const { todayStart } = getLocalNow(tz);
                 await this.processRepairer(repairerUserId, requests, now, todayStart);
@@ -73,18 +79,16 @@ export class ScheduleEndSweepService {
         todayStart: Date,
     ): Promise<void> {
         const endTime = await this.resolveEffectiveEndTime(repairerUserId, now, todayStart);
-        if (!endTime) return; // no work schedule today or cannot determine endTime
+        if (!endTime) return;
 
         const endMs = endTime.getTime();
         const deadlineMs = endMs + CONFIRMATION_TIMEOUT_MS;
 
         for (const request of requests) {
-            // Already confirmed today — skip
             if (request.scheduleEndConfirmedAt && request.scheduleEndConfirmedAt >= todayStart) {
                 continue;
             }
 
-            // Phase 1: schedule end reached → notify (once per day)
             if (now.getTime() >= endMs && (!request.scheduleEndNotifiedAt || request.scheduleEndNotifiedAt < todayStart)) {
                 request.scheduleEndNotifiedAt = now;
                 await this.em.flush();
@@ -102,7 +106,6 @@ export class ScheduleEndSweepService {
                 );
             }
 
-            // Phase 2: 30min past end → auto-pause if not confirmed
             if (
                 now.getTime() >= deadlineMs &&
                 request.scheduleEndNotifiedAt && request.scheduleEndNotifiedAt >= todayStart &&
@@ -116,12 +119,6 @@ export class ScheduleEndSweepService {
         }
     }
 
-    /**
-     * Determine the effective end time for today. Priority:
-     * 1. Approved OVERTIME / EXTRA_DAY entries for today — use latest endTime
-     * 2. Schedule pattern slot for today
-     * Returns null if repairer is not scheduled to work today.
-     */
     private async resolveEffectiveEndTime(
         repairerUserId: string,
         now: Date,
@@ -129,39 +126,31 @@ export class ScheduleEndSweepService {
     ): Promise<Date | null> {
         const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-        // Check for approved overtime / extra_day entries covering today
-        const overrides = await this.em.find(WSchedule, {
-            userId: repairerUserId,
-            status: ScheduleStatus.APPROVED,
-            type: { $in: [ScheduleEntryType.OVERTIME, ScheduleEntryType.EXTRA_DAY] },
-            dateFrom: { $lte: todayEnd },
-            dateTo: { $gte: todayStart },
-        });
-
         // Check for vacation / sick leave — if present, repairer is off
-        const leaveEntries = await this.em.find(WSchedule, {
-            userId: repairerUserId,
-            status: ScheduleStatus.APPROVED,
-            type: { $in: [ScheduleEntryType.VACATION, ScheduleEntryType.SICK_LEAVE] },
-            dateFrom: { $lte: todayEnd },
-            dateTo: { $gte: todayStart },
-        });
-        if (leaveEntries.length > 0) return null;
+        const [vacationBlock, sickLeaveBlock] = await Promise.all([
+            this.vacationService.findBlockingToday(repairerUserId, todayStart),
+            this.sickLeaveService.findBlockingToday(repairerUserId, todayStart),
+        ]);
+        if (vacationBlock || sickLeaveBlock) return null;
+
+        // Check for approved overtime / schedule override entries covering today
+        const [overtimes, overrides] = await Promise.all([
+            this.overtimeService.findTodayEntries(repairerUserId, todayStart, todayEnd),
+            this.overrideService.findTodayEntries(repairerUserId, todayStart, todayEnd),
+        ]);
 
         // Resolve pattern slot for today
         const patternSlot = await this.schedulePatternService.resolveSlotForDate(repairerUserId, now);
 
-        // Collect candidate end times
         let latestEndTime: Date | null = null;
 
-        // From pattern
         if (patternSlot?.work) {
             const patternEnd = this.timeToDate(patternSlot.endTime, todayStart);
             if (patternEnd) latestEndTime = patternEnd;
         }
 
-        // From overtime / extra_day overrides — take the latest endTime
-        for (const entry of overrides) {
+        const allTimeEntries = [...overtimes, ...overrides];
+        for (const entry of allTimeEntries) {
             const entryEnd = this.timeToDate(entry.endTime, todayStart);
             if (entryEnd && (!latestEndTime || entryEnd > latestEndTime)) {
                 latestEndTime = entryEnd;

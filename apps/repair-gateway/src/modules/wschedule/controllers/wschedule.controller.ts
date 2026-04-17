@@ -1,10 +1,15 @@
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
 import {
-    CreateWScheduleDto,
-    UpdateWScheduleDto,
-    QueryScheduleDto,
     CreateVacationDto,
+    UpdateVacationDto,
+    CreateSickLeaveDto,
+    UpdateSickLeaveDto,
+    CreateOvertimeDto,
+    UpdateOvertimeDto,
+    CreateScheduleOverrideDto,
+    UpdateScheduleOverrideDto,
+    QueryScheduleDto,
     UpsertPatternDto,
     ScheduleEntryType,
     ScheduleStatus,
@@ -14,16 +19,18 @@ import {
     JwtPayload,
     parseDateTime,
     startOfDay,
-    assertNotInPast,
     assertDateNotBeforeToday,
     assertDateIsToday,
-    assertMaxDuration,
+    assertDurationRange,
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
 import {
-    WScheduleRecordDto,
+    VacationRecordDto,
+    SickLeaveRecordDto,
+    OvertimeRecordDto,
+    ScheduleOverrideRecordDto,
     PaginatedScheduleResponseDto,
     SchedulePatternRecordDto,
     SchedulePatternListResponseDto,
@@ -37,10 +44,6 @@ export class WScheduleController {
         private readonly deviceClient: DeviceClientService,
     ) {}
 
-    /**
-     * Schedule timing depends on the target user's timezone, which is derived from their
-     * validated address. Block any schedule manipulation when the target has no valid address.
-     */
     private async assertTargetHasValidAddress(targetUserId: string): Promise<void> {
         const result = await this.deviceClient.findUserAddresses(targetUserId);
         const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === 'valid');
@@ -51,73 +54,242 @@ export class WScheduleController {
         }
     }
 
-    @ApiCreatedResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
-    @Post()
-    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateWScheduleDto) {
-        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
-        await this.assertTargetHasValidAddress(dto.userId);
-        if (dto.type === ScheduleEntryType.EXTRA_DAY) {
-            assertDateIsToday(dto.dateFrom);
-        } else if (dto.type === ScheduleEntryType.OVERTIME) {
-            assertDateNotBeforeToday(dto.dateFrom);
-        } else if (dto.type === ScheduleEntryType.SICK_LEAVE) {
-            assertDateNotBeforeToday(dto.dateFrom);
-            assertMaxDuration(dto.dateFrom, dto.dateTo, 30);
-        } else {
-            assertNotInPast(dto.dateFrom, dto.startTime ?? '00:00');
-        }
-        if (dto.type === ScheduleEntryType.VACATION) {
-            await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
-        }
-        if (dto.type === ScheduleEntryType.SICK_LEAVE) {
-            await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.SICK_LEAVE, 'больничный');
-        }
-        const result = await this.scheduleClient.create({
-            userId: dto.userId,
-            type: dto.type,
-            dateFrom: dto.dateFrom,
-            dateTo: dto.dateTo,
-            startTime: dto.startTime,
-            endTime: dto.endTime,
-            note: dto.note,
-            actorId: user.sub,
-        });
-        return result.schedule;
-    }
+    // ── Vacation ──
 
-    @ApiCreatedResponse({ type: WScheduleRecordDto })
+    @ApiCreatedResponse({ type: VacationRecordDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
-        assertNotInPast(dto.dateFrom, '00:00');
-        await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
-        const result = await this.scheduleClient.create({
+        assertDateNotBeforeToday(dto.dateFrom);
+        assertDurationRange(dto.durationDays, 1, 365);
+        await this.assertNoActiveVacation(dto.userId);
+        const result = await this.scheduleClient.createVacation({
             userId: dto.userId,
-            type: ScheduleEntryType.VACATION,
             dateFrom: dto.dateFrom,
-            dateTo: dto.dateTo,
-            startTime: '00:00',
-            endTime: '23:59',
+            durationDays: dto.durationDays,
             note: dto.note,
             actorId: user.sub,
         });
-        return result.schedule;
+        return result.vacation;
     }
+
+    @ApiOkResponse({ type: VacationRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Put('vacation/:id')
+    async updateVacation(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateVacationDto) {
+        const existing = (await this.scheduleClient.findVacationById(id)).vacation;
+        if (!existing?.id) throw new NotFoundException('Отпуск не найден');
+        await this.assertTargetHasValidAddress(existing.userId);
+
+        if (!isAdmin(user) && existing.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+
+        if (!isAdmin(user)) {
+            const startsAt = parseDateTime(existing.dateFrom, '00:00');
+            if (startsAt.getTime() <= Date.now()) {
+                throw new ForbiddenException('Нельзя изменить отпуск после его начала');
+            }
+        }
+
+        const result = await this.scheduleClient.updateVacation({ id, dateTo: dto.dateTo, note: dto.note ?? undefined, actorId: user.sub });
+        return result.vacation;
+    }
+
+    // ── SickLeave ──
+
+    @ApiCreatedResponse({ type: SickLeaveRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Post('sick-leave')
+    async createSickLeave(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateSickLeaveDto) {
+        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(dto.userId);
+        assertDateNotBeforeToday(dto.dateFrom);
+        assertDurationRange(dto.durationDays, 1, 30);
+        await this.assertNoActiveSickLeave(dto.userId);
+        const result = await this.scheduleClient.createSickLeave({
+            userId: dto.userId,
+            dateFrom: dto.dateFrom,
+            durationDays: dto.durationDays,
+            note: dto.note,
+            actorId: user.sub,
+        });
+        return result.sickLeave;
+    }
+
+    @ApiOkResponse({ type: SickLeaveRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Put('sick-leave/:id')
+    async updateSickLeave(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateSickLeaveDto) {
+        const existing = (await this.scheduleClient.findSickLeaveById(id)).sickLeave;
+        if (!existing?.id) throw new NotFoundException('Больничный не найден');
+        await this.assertTargetHasValidAddress(existing.userId);
+
+        if (!isAdmin(user) && existing.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+
+        if (!isAdmin(user) && dto.dateTo) {
+            const today = startOfDay(new Date());
+            const newTo = startOfDay(parseDateTime(dto.dateTo, '00:00'));
+            const from = startOfDay(parseDateTime(existing.dateFrom, '00:00'));
+            if (newTo.getTime() < from.getTime()) {
+                throw new BadRequestException('Дата завершения не может быть раньше даты начала');
+            }
+            if (newTo.getTime() > today.getTime()) {
+                throw new BadRequestException('Можно завершить больничный только сегодняшним днём или раньше');
+            }
+        }
+
+        const result = await this.scheduleClient.updateSickLeave({ id, dateTo: dto.dateTo, note: dto.note ?? undefined, actorId: user.sub });
+        return result.sickLeave;
+    }
+
+    // ── Overtime ──
+
+    @ApiCreatedResponse({ type: OvertimeRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Post('overtime')
+    async createOvertime(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateOvertimeDto) {
+        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(dto.userId);
+        assertDateNotBeforeToday(dto.date);
+        const result = await this.scheduleClient.createOvertime({
+            userId: dto.userId,
+            date: dto.date,
+            startTime: dto.startTime,
+            endTime: dto.endTime,
+            note: dto.note,
+            actorId: user.sub,
+        });
+        return result.overtime;
+    }
+
+    @ApiOkResponse({ type: OvertimeRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Put('overtime/:id')
+    async updateOvertime(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateOvertimeDto) {
+        const existing = (await this.scheduleClient.findOvertimeById(id)).overtime;
+        if (!existing?.id) throw new NotFoundException('Переработка не найдена');
+        await this.assertTargetHasValidAddress(existing.userId);
+
+        if (!isStaff(user) && existing.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+
+        const result = await this.scheduleClient.updateOvertime({ id, startTime: dto.startTime, endTime: dto.endTime, note: dto.note ?? undefined, actorId: user.sub });
+        return result.overtime;
+    }
+
+    // ── ScheduleOverride ──
+
+    @ApiCreatedResponse({ type: ScheduleOverrideRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Post('override')
+    async createScheduleOverride(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateScheduleOverrideDto) {
+        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(dto.userId);
+        assertDateIsToday(dto.date);
+        const result = await this.scheduleClient.createScheduleOverride({
+            userId: dto.userId,
+            date: dto.date,
+            startTime: dto.startTime,
+            endTime: dto.endTime,
+            note: dto.note,
+            actorId: user.sub,
+        });
+        return result.scheduleOverride;
+    }
+
+    @ApiOkResponse({ type: ScheduleOverrideRecordDto })
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Put('override/:id')
+    async updateScheduleOverride(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateScheduleOverrideDto) {
+        const existing = (await this.scheduleClient.findScheduleOverrideById(id)).scheduleOverride;
+        if (!existing?.id) throw new NotFoundException('Замена выходного не найдена');
+        await this.assertTargetHasValidAddress(existing.userId);
+
+        if (!isStaff(user) && existing.userId !== user.sub) {
+            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+        }
+
+        const existingDay = startOfDay(parseDateTime(existing.date, '00:00')).getTime();
+        const today = startOfDay(new Date()).getTime();
+        if (existingDay !== today) {
+            throw new ForbiddenException('Замену выходного можно изменить только в тот день, на который она создана');
+        }
+
+        const result = await this.scheduleClient.updateScheduleOverride({ id, startTime: dto.startTime, endTime: dto.endTime, note: dto.note ?? undefined, actorId: user.sub });
+        return result.scheduleOverride;
+    }
+
+    // ── Unified query ──
 
     @ApiOkResponse({ type: PaginatedScheduleResponseDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Get()
     async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: QueryScheduleDto) {
         if (!isStaff(user)) {
-            // Non-staff callers can only list their own entries.
             query.userId = user.sub;
         }
         const result = await this.scheduleClient.findAll(query);
         return { ...result, data: result.data ?? [] };
     }
+
+    // ── Generic approve/reject/delete (by ID, tries all types) ──
+
+    @ApiOkResponse()
+    @RequiredRoles(...ADMIN_ROLES)
+    @Delete(':id')
+    async deleteEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
+        const entry = await this.findEntryById(id);
+        switch (entry.type) {
+            case ScheduleEntryType.VACATION: await this.scheduleClient.deleteVacation(id, user.sub); return;
+            case ScheduleEntryType.SICK_LEAVE: await this.scheduleClient.deleteSickLeave(id, user.sub); return;
+            case ScheduleEntryType.OVERTIME: await this.scheduleClient.deleteOvertime(id, user.sub); return;
+            case ScheduleEntryType.SCHEDULE_OVERRIDE: await this.scheduleClient.deleteScheduleOverride(id, user.sub); return;
+        }
+    }
+
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Post(':id/approve')
+    async approveEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        const entry = await this.findEntryById(id);
+        if (entry.status !== ScheduleStatus.PENDING) {
+            throw new BadRequestException('Можно подтверждать только ожидающие записи');
+        }
+        await this.assertTargetHasValidAddress(entry.userId);
+        this.assertCanApproveOrReject(user, entry);
+
+        switch (entry.type) {
+            case ScheduleEntryType.VACATION: return (await this.scheduleClient.approveVacation(id, user.sub)).vacation;
+            case ScheduleEntryType.SICK_LEAVE: return (await this.scheduleClient.approveSickLeave(id, user.sub)).sickLeave;
+            case ScheduleEntryType.OVERTIME: return (await this.scheduleClient.approveOvertime(id, user.sub)).overtime;
+            case ScheduleEntryType.SCHEDULE_OVERRIDE: return (await this.scheduleClient.approveScheduleOverride(id, user.sub)).scheduleOverride;
+        }
+    }
+
+    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Post(':id/reject')
+    async rejectEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        const entry = await this.findEntryById(id);
+        if (entry.status !== ScheduleStatus.PENDING) {
+            throw new BadRequestException('Можно отклонять только ожидающие записи');
+        }
+        await this.assertTargetHasValidAddress(entry.userId);
+        this.assertCanApproveOrReject(user, entry);
+
+        switch (entry.type) {
+            case ScheduleEntryType.VACATION: return (await this.scheduleClient.rejectVacation(id, user.sub)).vacation;
+            case ScheduleEntryType.SICK_LEAVE: return (await this.scheduleClient.rejectSickLeave(id, user.sub)).sickLeave;
+            case ScheduleEntryType.OVERTIME: return (await this.scheduleClient.rejectOvertime(id, user.sub)).overtime;
+            case ScheduleEntryType.SCHEDULE_OVERRIDE: return (await this.scheduleClient.rejectScheduleOverride(id, user.sub)).scheduleOverride;
+        }
+    }
+
+    // ── Pattern endpoints (unchanged) ──
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
@@ -125,7 +297,6 @@ export class WScheduleController {
     async getPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
         assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         const result = await this.scheduleClient.patternGet(userId);
-        // Empty pattern is returned as a blank record (id === '') — client handles as null.
         return result.pattern?.id ? result.pattern : null;
     }
 
@@ -221,185 +392,96 @@ export class WScheduleController {
         return this.scheduleClient.scheduleReport({ userId, dateFrom, dateTo });
     }
 
-    @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
-    @Get(':id')
-    async findOne(@Param('id') id: string) {
-        const result = await this.scheduleClient.findById(id);
-        return result.schedule;
-    }
+    // ── Helpers ──
 
-    @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
-    @Put(':id')
-    async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateWScheduleDto) {
-        const existing = (await this.scheduleClient.findById(id)).schedule;
-        if (!existing || !existing.id) throw new NotFoundException('Запись расписания не найдена');
-        await this.assertTargetHasValidAddress(existing.userId);
+    private async findEntryById(id: string): Promise<{ type: ScheduleEntryType; id: string; userId: string; status: string; createdBy: string }> {
+        const results = await Promise.allSettled([
+            this.scheduleClient.findVacationById(id),
+            this.scheduleClient.findSickLeaveById(id),
+            this.scheduleClient.findOvertimeById(id),
+            this.scheduleClient.findScheduleOverrideById(id),
+        ]);
 
-        const userIsAdmin = isAdmin(user);
-        const userIsStaff = isStaff(user);
-
-        // Non-staff callers may only touch their own records.
-        if (!userIsStaff && existing.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
-        }
-
-        let forceStatusPending = false;
-        if (!userIsAdmin) {
-            if (existing.type === ScheduleEntryType.SICK_LEAVE) {
-                if (dto.type !== undefined && dto.type !== ScheduleEntryType.SICK_LEAVE) {
-                    throw new ForbiddenException('Нельзя изменить тип записи');
+        for (let i = 0; i < results.length; i++) {
+            const r = results[i];
+            if (r.status === 'fulfilled') {
+                const types = [ScheduleEntryType.VACATION, ScheduleEntryType.SICK_LEAVE, ScheduleEntryType.OVERTIME, ScheduleEntryType.SCHEDULE_OVERRIDE] as const;
+                const records = [
+                    (r.value as any).vacation,
+                    (r.value as any).sickLeave,
+                    (r.value as any).overtime,
+                    (r.value as any).scheduleOverride,
+                ];
+                const record = records[i];
+                if (record?.id) {
+                    return {
+                        type: types[i],
+                        id: record.id,
+                        userId: record.userId,
+                        status: record.status,
+                        createdBy: record.createdBy || '',
+                    };
                 }
-                if (dto.dateFrom !== undefined || dto.startTime !== undefined || dto.endTime !== undefined) {
-                    throw new ForbiddenException('Можно только завершить больничный раньше');
-                }
-                if (!dto.dateTo) {
-                    throw new ForbiddenException('Укажите дату завершения');
-                }
-                const today = startOfDay(new Date());
-                const newTo = startOfDay(parseDateTime(dto.dateTo, '00:00'));
-                const from = startOfDay(parseDateTime(existing.dateFrom, '00:00'));
-                if (newTo.getTime() < from.getTime()) {
-                    throw new BadRequestException('Дата завершения не может быть раньше даты начала');
-                }
-                if (newTo.getTime() > today.getTime()) {
-                    throw new BadRequestException('Можно завершить больничный только сегодняшним днём или раньше');
-                }
-            } else if (existing.type === ScheduleEntryType.VACATION) {
-                if (dto.type !== undefined && dto.type !== ScheduleEntryType.VACATION) {
-                    throw new ForbiddenException('Нельзя изменить тип записи');
-                }
-                const startsAt = parseDateTime(existing.dateFrom, existing.startTime || '00:00');
-                if (startsAt.getTime() <= Date.now()) {
-                    throw new ForbiddenException('Нельзя изменить запись отпуска после её начала');
-                }
-                if (dto.dateFrom !== undefined && dto.dateFrom !== '') {
-                    assertNotInPast(dto.dateFrom, dto.startTime ?? existing.startTime ?? '00:00');
-                }
-                if (dto.status !== undefined && dto.status !== ScheduleStatus.PENDING) {
-                    throw new ForbiddenException('Нельзя менять статус записи');
-                }
-                forceStatusPending = true;
-            } else {
-                throw new ForbiddenException('Нет прав на изменение этой записи');
             }
         }
 
-        const effectiveType = dto.type ?? existing.type;
-        if (effectiveType === ScheduleEntryType.VACATION) {
-            await this.assertNoActiveEntry(existing.userId, ScheduleEntryType.VACATION, 'отпуск', id);
-        }
-        if (effectiveType === ScheduleEntryType.SICK_LEAVE) {
-            await this.assertNoActiveEntry(existing.userId, ScheduleEntryType.SICK_LEAVE, 'больничный', id);
-        }
-
-        if (existing.type === ScheduleEntryType.EXTRA_DAY) {
-            const existingDay = startOfDay(parseDateTime(existing.dateFrom, '00:00')).getTime();
-            const today = startOfDay(new Date()).getTime();
-            if (existingDay !== today) {
-                throw new ForbiddenException('Дополнительный день можно изменить только в тот день, на который он создан');
-            }
-        }
-
-        const result = await this.scheduleClient.update({
-            id,
-            type: dto.type,
-            dateFrom: dto.dateFrom ?? undefined,
-            dateTo: dto.dateTo ?? undefined,
-            startTime: dto.startTime,
-            endTime: dto.endTime,
-            status: forceStatusPending ? ScheduleStatus.PENDING : dto.status,
-            note: dto.note ?? undefined,
-            actorId: user.sub,
-        });
-        return result.schedule;
+        throw new NotFoundException('Запись расписания не найдена');
     }
 
-    @ApiOkResponse()
-    @RequiredRoles(...ADMIN_ROLES)
-    @Delete(':id')
-    async delete(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
-        await this.scheduleClient.delete(id, user.sub);
-    }
-
-    @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
-    @Post(':id/approve')
-    async approve(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertCanApproveOrReject(user, id);
-        const result = await this.scheduleClient.approve(id, user.sub);
-        return result.schedule;
-    }
-
-    @ApiOkResponse({ type: WScheduleRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
-    @Post(':id/reject')
-    async reject(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.assertCanApproveOrReject(user, id);
-        const result = await this.scheduleClient.reject(id, user.sub);
-        return result.schedule;
-    }
-
-    private async assertNoActiveEntry(userId: string, type: ScheduleEntryType, label: string, excludeId?: string): Promise<void> {
-        const today = new Date().toISOString().slice(0, 10);
-        const result = await this.scheduleClient.findAll({
-            userId,
-            type,
-            limit: 50,
-        });
-        const hasActive = (result.data ?? []).some(
-            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today && e.id !== excludeId,
-        );
-        if (hasActive) {
-            throw new BadRequestException(`У пользователя уже есть активный ${label}`);
-        }
-    }
-
-    /**
-     * Approval rule: the approver must differ from the creator.
-     * - If the target user (entry.userId) created the request → only staff can approve/reject.
-     * - If staff created the request for a target user → only the target user can approve/reject.
-     * - Self-approval is always blocked.
-     * - Auto-generated entries (createdBy is empty) are already APPROVED, so they never reach this guard.
-     */
-    private async assertCanApproveOrReject(user: JwtPayload, scheduleId: string): Promise<void> {
-        const result = await this.scheduleClient.findById(scheduleId);
-        const entry = result.schedule;
-        if (!entry || !entry.id) throw new NotFoundException('Запись расписания не найдена');
-        if (entry.status !== ScheduleStatus.PENDING) {
-            throw new BadRequestException('Можно подтверждать только ожидающие записи');
-        }
-        await this.assertTargetHasValidAddress(entry.userId);
-
-        const userIsStaff = isStaff(user);
+    private assertCanApproveOrReject(user: JwtPayload, entry: { userId: string; createdBy: string }): void {
+        const userIsStaffMember = isStaff(user);
         const userIsTarget = entry.userId === user.sub;
         const createdBy = entry.createdBy || '';
 
-        // Block self-approval explicitly (creator cannot approve their own entry)
         if (createdBy && createdBy === user.sub) {
             throw new ForbiddenException('Нельзя подтвердить собственный запрос — требуется второе лицо');
         }
 
-        // Determine who created the entry. If unknown (legacy/auto-generated), allow staff approval (current behavior).
         const createdBySelf = createdBy && createdBy === entry.userId;
         const createdByStaff = createdBy && createdBy !== entry.userId;
 
         if (createdBySelf) {
-            // Target user created the entry → must be approved by staff
-            if (!userIsStaff) {
+            if (!userIsStaffMember) {
                 throw new ForbiddenException('Запись должна быть подтверждена сотрудником');
             }
         } else if (createdByStaff) {
-            // Staff created the entry for the target user → must be approved by target user
             if (!userIsTarget) {
                 throw new ForbiddenException('Запись должна быть подтверждена адресатом');
             }
         } else {
-            // Legacy (unknown creator): preserve existing behavior — staff or target user can act
-            if (!userIsStaff && !userIsTarget) {
+            if (!userIsStaffMember && !userIsTarget) {
                 throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
             }
+        }
+    }
+
+    private async assertNoActiveVacation(userId: string): Promise<void> {
+        const today = new Date().toISOString().slice(0, 10);
+        const result = await this.scheduleClient.findAll({
+            userId,
+            type: ScheduleEntryType.VACATION,
+            limit: 50,
+        });
+        const hasActive = (result.data ?? []).some(
+            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today,
+        );
+        if (hasActive) {
+            throw new BadRequestException('У пользователя уже есть активный отпуск');
+        }
+    }
+
+    private async assertNoActiveSickLeave(userId: string): Promise<void> {
+        const today = new Date().toISOString().slice(0, 10);
+        const result = await this.scheduleClient.findAll({
+            userId,
+            type: ScheduleEntryType.SICK_LEAVE,
+            limit: 50,
+        });
+        const hasActive = (result.data ?? []).some(
+            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today,
+        );
+        if (hasActive) {
+            throw new BadRequestException('У пользователя уже есть активный больничный');
         }
     }
 }

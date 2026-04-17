@@ -1,6 +1,6 @@
 import { Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { ScheduleStatus } from './wschedule.entity';
+import { ScheduleStatus } from './schedule-status.enum';
 
 export interface PatternSlotData {
     work: boolean;

@@ -31,46 +31,42 @@ describe('getAll', () => {
   });
 });
 
-describe('getOne', () => {
-  it('calls GET /schedule/:id', () => {
-    scheduleApi.getOne('sch-1');
-    expect(mockApi.get).toHaveBeenCalledWith('/schedule/sch-1');
-  });
-});
-
-describe('create', () => {
-  it('calls POST /schedule with body', () => {
-    const data = {
-      userId: 'u1',
-      type: 'work',
-      dateFrom: '2026-01-01',
-      dateTo: '2026-01-02',
-      startTime: '09:00',
-      endTime: '18:00',
-    };
-    scheduleApi.create(data);
-    expect(mockApi.post).toHaveBeenCalledWith('/schedule', data);
-  });
-});
-
 describe('createVacation', () => {
   it('calls POST /schedule/vacation with body', () => {
-    const data = {
-      userId: 'u1',
-      dateFrom: '2026-06-01',
-      dateTo: '2026-06-14',
-      note: 'Summer break',
-    };
+    const data = { userId: 'u1', dateFrom: '2026-06-01', durationDays: 14, note: 'Summer break' };
     scheduleApi.createVacation(data);
     expect(mockApi.post).toHaveBeenCalledWith('/schedule/vacation', data);
   });
 });
 
-describe('update', () => {
-  it('calls PUT /schedule/:id with body', () => {
-    const data = { type: 'overtime', note: 'urgent' };
-    scheduleApi.update('sch-1', data);
-    expect(mockApi.put).toHaveBeenCalledWith('/schedule/sch-1', data);
+describe('createSickLeave', () => {
+  it('calls POST /schedule/sick-leave with body', () => {
+    const data = { userId: 'u1', dateFrom: '2026-01-01', durationDays: 5 };
+    scheduleApi.createSickLeave(data);
+    expect(mockApi.post).toHaveBeenCalledWith('/schedule/sick-leave', data);
+  });
+});
+
+describe('createOvertime', () => {
+  it('calls POST /schedule/overtime with body', () => {
+    const data = { userId: 'u1', date: '2026-01-01', startTime: '18:00', endTime: '20:00' };
+    scheduleApi.createOvertime(data);
+    expect(mockApi.post).toHaveBeenCalledWith('/schedule/overtime', data);
+  });
+});
+
+describe('createOverride', () => {
+  it('calls POST /schedule/override with body', () => {
+    const data = { userId: 'u1', date: '2026-01-01', startTime: '09:00', endTime: '18:00' };
+    scheduleApi.createOverride(data);
+    expect(mockApi.post).toHaveBeenCalledWith('/schedule/override', data);
+  });
+});
+
+describe('updateVacation', () => {
+  it('calls PUT /schedule/vacation/:id with body', () => {
+    scheduleApi.updateVacation('v-1', { dateTo: '2026-06-10' });
+    expect(mockApi.put).toHaveBeenCalledWith('/schedule/vacation/v-1', { dateTo: '2026-06-10' });
   });
 });
 

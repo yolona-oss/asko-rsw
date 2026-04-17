@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';
 import { ScheduleReportModal } from './schedule-report-modal';
 import { PatternEditor } from './pattern-editor';
@@ -38,7 +38,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   const canDelete = role === 'admin';
 
   const [pattern, setPattern] = useState<PatternRecordDto | null>(null);
-  const [dateEntries, setDateEntries] = useState<ScheduleRecord[]>([]);
+  const [dateEntries, setDateEntries] = useState<ScheduleEntryRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -97,7 +97,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     try {
-      await scheduleApi.update(id, { dateTo: todayStr });
+      await scheduleApi.updateSickLeave(id, { dateTo: todayStr });
       fetchData();
     } catch { /* */ }
   };
@@ -125,7 +125,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
     setFormOpen(true);
   };
 
-  const openEdit = (entry: ScheduleRecord) => {
+  const openEdit = (entry: ScheduleEntryRecord) => {
     setEditItem(entry);
     setFormOpen(true);
   };
@@ -260,7 +260,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
                 {(() => {
                   const staffCanApprove = canApprove && entry.status === 'pending';
                   const repairerCanApprove =
-                    isOwnSchedule && entry.status === 'pending' && entry.type === 'extra_day';
+                    isOwnSchedule && entry.status === 'pending' && entry.type === 'schedule_override';
                   const showApprove = staffCanApprove || repairerCanApprove;
                   const selfCanEditVacation =
                     isOwnSchedule &&

@@ -65,12 +65,12 @@ export function UserScheduleBatch({
   const pendingCount = entries.filter((e) => e.status === 'pending').length;
   const upcomingVacation = entries.filter((e) => e.type === 'vacation').length;
   const overtimeCount = entries.filter((e) => e.type === 'overtime').length;
-  const extraDayCount = entries.filter((e) => e.type === 'extra_day').length;
+  const extraDayCount = entries.filter((e) => e.type === 'schedule_override').length;
 
   const today = new Date();
   const hasExtraDayToday = entries.some(
     (e) =>
-      e.type === 'extra_day' &&
+      e.type === 'schedule_override' &&
       e.status === 'approved' &&
       isDateInRange(today, e.dateFrom, e.dateTo),
   );

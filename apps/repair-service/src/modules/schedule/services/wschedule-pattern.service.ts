@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedulePattern, PatternSlotData, PatternPendingData } from '../entities/wschedule-pattern.entity';
 import { PatternChangeType } from '../entities/wschedule-pattern-history.entity';
-import { ScheduleStatus } from '../entities/wschedule.entity';
+import { ScheduleStatus } from '../entities/schedule-status.enum';
 import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
 import { RepairRequestStatus } from '@asko/shared';
 import { WSchedulePatternHistoryService } from './wschedule-pattern-history.service';

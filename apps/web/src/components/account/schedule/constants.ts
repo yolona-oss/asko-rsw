@@ -5,7 +5,7 @@ export const TYPE_LABELS: Record<string, string> = {
   vacation: 'Отпуск',
   sick_leave: 'Больничный',
   overtime: 'Переработка',
-  extra_day: 'Дополнительный день',
+  schedule_override: 'Замена выходного',
 };
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -24,7 +24,7 @@ export const TYPE_BADGE_VARIANT: Record<string, BadgeVariant> = {
   vacation: 'warning',
   sick_leave: 'error',
   overtime: 'neutral',
-  extra_day: 'success',
+  schedule_override: 'success',
 };
 
 export function formatDate(d: string) {
@@ -46,7 +46,7 @@ export const TYPE_FILTER: FilterDefinition = {
     { value: 'vacation', label: 'Отпуск' },
     { value: 'sick_leave', label: 'Больничные' },
     { value: 'overtime', label: 'Переработки' },
-    { value: 'extra_day', label: 'Доп. дни' },
+    { value: 'schedule_override', label: 'Замены выходных' },
   ],
 };
 

@@ -53,7 +53,7 @@ export function computeStats(entries: ScheduleEntry[]): ScheduleStats {
       if (end > start) overtimeMinutes += end - start;
     }
 
-    if (entry.type === 'extra_day' && overlaps(entry, now, next30)) {
+    if (entry.type === 'schedule_override' && overlaps(entry, now, next30)) {
       const from = parseDate(entry.dateFrom);
       const to = parseDate(entry.dateTo);
       extraDaysCount += countDays(from < now ? now : from, to > next30 ? next30 : to);

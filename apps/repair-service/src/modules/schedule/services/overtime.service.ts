@@ -1,0 +1,176 @@
+import { Injectable } from '@nestjs/common';
+import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
+import { Overtime } from '../entities/overtime.entity';
+import { ScheduleStatus } from '../entities/schedule-status.enum';
+import { AppErrors } from 'common/error';
+import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
+import type { CreateOvertimeRequest, UpdateOvertimeRequest, FindAllSchedulesRequest } from '@asko/proto';
+
+function parseDate(value: string): Date {
+    return new Date(value);
+}
+
+function timeToMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function timesOverlap(s1: string, e1: string, s2: string, e2: string): boolean {
+    const start1 = timeToMinutes(s1);
+    const end1 = timeToMinutes(e1);
+    const start2 = timeToMinutes(s2);
+    const end2 = timeToMinutes(e2);
+    return start1 < end2 && start2 < end1;
+}
+
+@Injectable()
+export class OvertimeService {
+    constructor(private readonly em: EntityManager) {}
+
+    @CreateRequestContext()
+    async create(data: CreateOvertimeRequest): Promise<Overtime> {
+        await this.assertNoOverlap(data.userId, parseDate(data.date), data.startTime, data.endTime);
+        const entry = new Overtime();
+        entry.userId = data.userId;
+        entry.date = parseDate(data.date);
+        entry.startTime = data.startTime;
+        entry.endTime = data.endTime;
+        entry.note = data.note || null;
+        entry.status = ScheduleStatus.PENDING;
+        entry.createdBy = data.actorId || null;
+        await this.em.persistAndFlush(entry);
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async findAll(query: FindAllSchedulesRequest): Promise<{ data: Overtime[]; overallCount: number; page: number; limit: number }> {
+        const page = query.page || 1;
+        const limit = query.limit || 20;
+        const where: any = {};
+        if (query.userId) where.userId = query.userId;
+        if (query.status) where.status = query.status.includes(',') ? { $in: query.status.split(',') } : query.status;
+        if (query.dateFrom) where.date = { ...where.date, $gte: parseDate(query.dateFrom) };
+        if (query.dateTo) where.date = { ...where.date, $lte: parseDate(query.dateTo) };
+        const orderBy: any = query.sortBy
+            ? { [query.sortBy]: query.sortOrder === 'desc' ? 'DESC' : 'ASC' }
+            : { date: 'DESC' };
+
+        const [data, overallCount] = await this.em.findAndCount(Overtime, where, {
+            orderBy,
+            limit,
+            offset: (page - 1) * limit,
+        });
+        return { data, overallCount, page, limit };
+    }
+
+    @CreateRequestContext()
+    async findOne(id: string): Promise<Overtime> {
+        return this.em.findOneOrFail(Overtime, { id });
+    }
+
+    @CreateRequestContext()
+    async update(id: string, data: UpdateOvertimeRequest): Promise<Overtime> {
+        const entry = await this.em.findOneOrFail(Overtime, { id });
+        const newStart = data.startTime ?? entry.startTime;
+        const newEnd = data.endTime ?? entry.endTime;
+        if (data.startTime !== undefined || data.endTime !== undefined) {
+            await this.assertNoOverlap(entry.userId, entry.date, newStart, newEnd, entry.id);
+        }
+        if (data.startTime !== undefined && data.startTime !== '') entry.startTime = data.startTime;
+        if (data.endTime !== undefined && data.endTime !== '') entry.endTime = data.endTime;
+        if (data.note !== undefined) entry.note = data.note || null;
+        await this.em.flush();
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async delete(id: string): Promise<{ id: string; userId: string }> {
+        const entry = await this.em.findOneOrFail(Overtime, { id });
+        const snapshot = { id: entry.id, userId: entry.userId };
+        await this.em.removeAndFlush(entry);
+        return snapshot;
+    }
+
+    @CreateRequestContext()
+    async approve(id: string, approvedBy: string): Promise<Overtime> {
+        const entry = await this.em.findOneOrFail(Overtime, { id });
+        entry.status = ScheduleStatus.APPROVED;
+        entry.approvedBy = approvedBy;
+        await this.em.flush();
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async reject(id: string, approvedBy: string): Promise<Overtime> {
+        const entry = await this.em.findOneOrFail(Overtime, { id });
+        entry.status = ScheduleStatus.REJECTED;
+        entry.approvedBy = approvedBy;
+        await this.em.flush();
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async recordOvertime(userId: string, date: Date, startTime: string, endTime: string, requestId: string): Promise<Overtime> {
+        await this.assertNoOverlap(userId, date, startTime, endTime);
+        const entry = new Overtime();
+        entry.userId = userId;
+        entry.date = date;
+        entry.startTime = startTime;
+        entry.endTime = endTime;
+        entry.status = ScheduleStatus.APPROVED;
+        entry.autoGenerated = true;
+        entry.note = `Авто: заявка #${requestId.slice(0, 8)}`;
+        await this.em.persistAndFlush(entry);
+        return entry;
+    }
+
+    @CreateRequestContext()
+    async getTodayOvertimeMinutes(userId: string, timezone?: string): Promise<number> {
+        const { todayStart, todayEnd } = getLocalNow(timezone ?? DEFAULT_TIMEZONE);
+        const entries = await this.em.find(Overtime, {
+            userId,
+            status: ScheduleStatus.APPROVED,
+            date: { $gte: todayStart, $lte: todayEnd },
+        });
+        let total = 0;
+        for (const entry of entries) {
+            total += Math.max(0, timeToMinutes(entry.endTime) - timeToMinutes(entry.startTime));
+        }
+        return total;
+    }
+
+    @CreateRequestContext()
+    async findTodayEntries(userId: string, todayStart: Date, todayEnd: Date): Promise<Overtime[]> {
+        return this.em.find(Overtime, {
+            userId,
+            status: ScheduleStatus.APPROVED,
+            date: { $gte: todayStart, $lte: todayEnd },
+        });
+    }
+
+    @CreateRequestContext()
+    async findInRange(userId: string, dateFrom: Date, dateTo: Date): Promise<Overtime[]> {
+        return this.em.find(Overtime, {
+            userId,
+            status: ScheduleStatus.APPROVED,
+            date: { $gte: dateFrom, $lte: dateTo },
+        });
+    }
+
+    private async assertNoOverlap(userId: string, date: Date, startTime: string, endTime: string, excludeId?: string): Promise<void> {
+        const where: any = {
+            userId,
+            date,
+            status: { $ne: ScheduleStatus.REJECTED },
+        };
+        if (excludeId) where.id = { $ne: excludeId };
+        const existing = await this.em.find(Overtime, where);
+        for (const entry of existing) {
+            if (timesOverlap(startTime, endTime, entry.startTime, entry.endTime)) {
+                throw AppErrors.badRequest(
+                    `Переработка пересекается с существующей записью (${entry.startTime}–${entry.endTime})`,
+                );
+            }
+        }
+    }
+}

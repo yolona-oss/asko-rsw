@@ -2,14 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedulePattern } from '../entities/wschedule-pattern.entity';
 import { WSchedulePatternHistory } from '../entities/wschedule-pattern-history.entity';
-import { WSchedule, ScheduleEntryType, ScheduleStatus } from '../entities/wschedule.entity';
+import { ScheduleStatus } from '../entities/schedule-status.enum';
 import { UserStatusHistory } from 'modules/repairer/entities/user-status-history.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
+import { VacationService } from './vacation.service';
+import { SickLeaveService } from './sick-leave.service';
+import { OvertimeService } from './overtime.service';
+import { ScheduleOverrideService } from './schedule-override.service';
 import { WSchedulePatternHistoryService } from './wschedule-pattern-history.service';
 import { WSchedulePatternService, ResolvedSlot } from './wschedule-pattern.service';
 
 const MS_PER_DAY = 86_400_000;
 const MAX_REPORT_DAYS = 365;
+
+function timeToMinutes(start: string, end: string): number {
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
+}
 
 export interface ScheduleAggregateReport {
     userId: string;
@@ -34,6 +44,10 @@ export interface ScheduleAggregateReport {
 export class WScheduleReportService {
     constructor(
         private readonly em: EntityManager,
+        private readonly vacationService: VacationService,
+        private readonly sickLeaveService: SickLeaveService,
+        private readonly overtimeService: OvertimeService,
+        private readonly overrideService: ScheduleOverrideService,
         private readonly historyService: WSchedulePatternHistoryService,
         private readonly patternService: WSchedulePatternService,
     ) {}
@@ -63,13 +77,13 @@ export class WScheduleReportService {
         );
         const livePattern = await this.em.findOne(WSchedulePattern, { userId });
 
-        // 4. Schedule entries overlapping the range
-        const scheduleEntries = await this.em.find(WSchedule, {
-            userId,
-            status: ScheduleStatus.APPROVED,
-            dateFrom: { $lte: dateTo },
-            dateTo: { $gte: dateFrom },
-        });
+        // 4. Schedule entries overlapping the range (all 4 types in parallel)
+        const [vacations, sickLeaves, overtimes, overrides] = await Promise.all([
+            this.vacationService.findInRange(userId, dateFrom, dateTo),
+            this.sickLeaveService.findInRange(userId, dateFrom, dateTo),
+            this.overtimeService.findInRange(userId, dateFrom, dateTo),
+            this.overrideService.findInRange(userId, dateFrom, dateTo),
+        ]);
 
         // 5. Count pattern revisions in range
         const patternRevisions = await this.em.count(WSchedulePatternHistory, {
@@ -87,7 +101,6 @@ export class WScheduleReportService {
         for (let i = 0; i < totalDays; i++) {
             const day = new Date(dateFrom.getTime() + i * MS_PER_DAY);
 
-            // Determine active status on this day
             const active = this.isActiveOnDate(statusHistory, day);
             if (!active) {
                 inactiveDays++;
@@ -95,7 +108,6 @@ export class WScheduleReportService {
             }
             activeDays++;
 
-            // Resolve pattern slot for this day
             const slot = this.resolveSlotForDate(patternHistory, livePattern, day);
             if (!slot) {
                 noPatternDays++;
@@ -110,32 +122,26 @@ export class WScheduleReportService {
 
         // 7. Aggregate schedule entries
         let vacationDays = 0;
-        let sickLeaveDays = 0;
-        let overtimeCount = 0;
-        let overtimeTotalMinutes = 0;
-        let extraDayCount = 0;
-
-        for (const entry of scheduleEntries) {
-            const entryFrom = entry.dateFrom > dateFrom ? entry.dateFrom : dateFrom;
-            const entryTo = entry.dateTo < dateTo ? entry.dateTo : dateTo;
-            const days = Math.floor((entryTo.getTime() - entryFrom.getTime()) / MS_PER_DAY) + 1;
-
-            switch (entry.type) {
-                case ScheduleEntryType.VACATION:
-                    vacationDays += days;
-                    break;
-                case ScheduleEntryType.SICK_LEAVE:
-                    sickLeaveDays += days;
-                    break;
-                case ScheduleEntryType.OVERTIME:
-                    overtimeCount++;
-                    overtimeTotalMinutes += this.timeDiffMinutes(entry.startTime, entry.endTime);
-                    break;
-                case ScheduleEntryType.EXTRA_DAY:
-                    extraDayCount++;
-                    break;
-            }
+        for (const v of vacations) {
+            const entryFrom = v.dateFrom > dateFrom ? v.dateFrom : dateFrom;
+            const entryTo = v.dateTo < dateTo ? v.dateTo : dateTo;
+            vacationDays += Math.floor((entryTo.getTime() - entryFrom.getTime()) / MS_PER_DAY) + 1;
         }
+
+        let sickLeaveDays = 0;
+        for (const s of sickLeaves) {
+            const entryFrom = s.dateFrom > dateFrom ? s.dateFrom : dateFrom;
+            const entryTo = s.dateTo < dateTo ? s.dateTo : dateTo;
+            sickLeaveDays += Math.floor((entryTo.getTime() - entryFrom.getTime()) / MS_PER_DAY) + 1;
+        }
+
+        let overtimeCount = overtimes.length;
+        let overtimeTotalMinutes = 0;
+        for (const o of overtimes) {
+            overtimeTotalMinutes += timeToMinutes(o.startTime, o.endTime);
+        }
+
+        const extraDayCount = overrides.length;
 
         return {
             userId,
@@ -157,12 +163,8 @@ export class WScheduleReportService {
         };
     }
 
-    /**
-     * Determine if user was active on a given date using status history.
-     * If no history rows exist, default to active.
-     */
     private isActiveOnDate(history: UserStatusHistory[], date: Date): boolean {
-        let active = true; // default: assume active if no history
+        let active = true;
         for (const entry of history) {
             if (entry.changedAt <= date) {
                 active = entry.isActive;
@@ -173,16 +175,11 @@ export class WScheduleReportService {
         return active;
     }
 
-    /**
-     * Resolve the pattern slot for a given date using history + live pattern.
-     * Finds the most recent pattern version that was active on the date.
-     */
     private resolveSlotForDate(
         history: WSchedulePatternHistory[],
         livePattern: WSchedulePattern | null,
         date: Date,
     ): ResolvedSlot | null {
-        // Find the latest history entry with effectiveFrom <= date
         let activeVersion: { cycleLength: number; anchorDate: Date; slots: any[]; defaultStartTime: string; defaultEndTime: string; status: string } | null = null;
 
         for (let i = history.length - 1; i >= 0; i--) {
@@ -192,8 +189,6 @@ export class WScheduleReportService {
             }
         }
 
-        // If the live pattern's updatedAt > the latest history entry, the live pattern may be
-        // the current version for dates after the last history snapshot.
         if (livePattern && livePattern.status === ScheduleStatus.APPROVED) {
             if (!activeVersion || livePattern.updatedAt >= (activeVersion as WSchedulePatternHistory).changedAt) {
                 return this.patternService.resolveFromPattern(livePattern, date);
@@ -202,7 +197,6 @@ export class WScheduleReportService {
 
         if (!activeVersion || activeVersion.status !== ScheduleStatus.APPROVED) return null;
 
-        // Resolve using the historical pattern data
         return this.resolveFromHistoryEntry(activeVersion, date);
     }
 
@@ -220,11 +214,5 @@ export class WScheduleReportService {
             startTime: slot.startTime || entry.defaultStartTime,
             endTime: slot.endTime || entry.defaultEndTime,
         };
-    }
-
-    private timeDiffMinutes(start: string, end: string): number {
-        const [sh, sm] = start.split(':').map(Number);
-        const [eh, em] = end.split(':').map(Number);
-        return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
     }
 }

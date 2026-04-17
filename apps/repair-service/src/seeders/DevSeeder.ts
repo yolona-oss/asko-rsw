@@ -17,7 +17,10 @@ import {
     PointsTransaction,
     PointsWithdrawal,
     DevicePart,
-    WSchedule,
+    Vacation,
+    SickLeave,
+    Overtime,
+    ScheduleOverride,
     WSchedulePattern,
 } from '../entities';
 import { DEV_USER_IDS } from './dev-ids';
@@ -58,7 +61,10 @@ export class DevSeeder extends Seeder {
         await em.nativeDelete(PointsWithdrawal, {});
         await em.nativeDelete(DealerProfile, {});
         await em.nativeDelete(Repairer, {});
-        await em.nativeDelete(WSchedule, {});
+        await em.nativeDelete(Vacation, {});
+        await em.nativeDelete(SickLeave, {});
+        await em.nativeDelete(Overtime, {});
+        await em.nativeDelete(ScheduleOverride, {});
         await em.nativeDelete(WSchedulePattern, {});
         await em.nativeDelete(DevicePart, {});
         await em.nativeDelete(Device, {});

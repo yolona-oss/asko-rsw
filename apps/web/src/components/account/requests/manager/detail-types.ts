@@ -46,7 +46,7 @@ export interface RepairerOption {
   user?: { firstName?: string; lastName?: string };
 }
 
-export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "extra_day" | "off" | "working" | "unknown";
+export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "schedule_override" | "off" | "working" | "unknown";
 
 export interface RepairerScheduleInfo {
   status: RepairerScheduleStatus;

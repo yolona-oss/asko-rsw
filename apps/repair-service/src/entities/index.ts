@@ -15,6 +15,10 @@ export { DealerProfile } from '../modules/dealer/entities/dealer-profile.entity'
 export { DealerClient } from '../modules/dealer/entities/dealer-client.entity';
 export { PointsTransaction } from '../modules/dealer/entities/points-transaction.entity';
 export { PointsWithdrawal } from '../modules/dealer/entities/points-withdrawal.entity';
-export { WSchedule } from '../modules/schedule/entities/wschedule.entity';
+export { Vacation } from '../modules/schedule/entities/vacation.entity';
+export { SickLeave } from '../modules/schedule/entities/sick-leave.entity';
+export { Overtime } from '../modules/schedule/entities/overtime.entity';
+export { ScheduleOverride } from '../modules/schedule/entities/schedule-override.entity';
+export { ScheduleStatus } from '../modules/schedule/entities/schedule-status.enum';
 export { WSchedulePattern } from '../modules/schedule/entities/wschedule-pattern.entity';
 export { WSchedulePatternHistory, PatternChangeType } from '../modules/schedule/entities/wschedule-pattern-history.entity';

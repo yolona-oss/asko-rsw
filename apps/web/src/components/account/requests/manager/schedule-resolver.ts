@@ -1,4 +1,4 @@
-import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
 import type { RepairerScheduleInfo } from './detail-types';
 
 const MS_PER_DAY = 86_400_000;
@@ -7,7 +7,7 @@ function utcDayStart(d: Date): number {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
-function coversToday(entry: ScheduleRecord, todayStart: number): boolean {
+function coversToday(entry: ScheduleEntryRecord, todayStart: number): boolean {
   const from = utcDayStart(new Date(entry.dateFrom));
   const to = utcDayStart(new Date(entry.dateTo));
   return from <= todayStart && todayStart <= to;
@@ -15,7 +15,7 @@ function coversToday(entry: ScheduleRecord, todayStart: number): boolean {
 
 export function resolveScheduleForToday(
   pattern: PatternRecordDto | null | undefined,
-  entries?: ScheduleRecord[] | null,
+  entries?: ScheduleEntryRecord[] | null,
 ): RepairerScheduleInfo {
   const todayStart = utcDayStart(new Date());
   const all = entries ?? [];
@@ -25,12 +25,12 @@ export function resolveScheduleForToday(
   );
 
   const hasPendingExtraDay = all.some(
-    (e) => e.type === 'extra_day' && e.status === 'pending' && coversToday(e, todayStart),
+    (e) => e.type === 'schedule_override' && e.status === 'pending' && coversToday(e, todayStart),
   );
 
-  const extraDay = approvedToday.find((e) => e.type === 'extra_day');
+  const extraDay = approvedToday.find((e) => e.type === 'schedule_override');
   if (extraDay) {
-    return { status: 'extra_day', startTime: extraDay.startTime, endTime: extraDay.endTime };
+    return { status: 'schedule_override', startTime: extraDay.startTime, endTime: extraDay.endTime };
   }
 
   const overtime = approvedToday.find((e) => e.type === 'overtime');
@@ -66,7 +66,7 @@ export function compareBySchedule(
   b: RepairerScheduleInfo,
 ): number {
   const rank = (s: RepairerScheduleInfo['status']): number => {
-    if (s === 'working' || s === 'extra_day' || s === 'overtime') return 0;
+    if (s === 'working' || s === 'schedule_override' || s === 'overtime') return 0;
     if (s === 'unknown') return 1;
     if (s === 'off') return 2;
     if (s === 'sick_leave') return 3;

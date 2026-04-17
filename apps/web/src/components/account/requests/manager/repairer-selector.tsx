@@ -229,9 +229,9 @@ export function RepairerSelector({
                         {schedule.startTime && schedule.endTime ? `Работает ${schedule.startTime}–${schedule.endTime}` : 'Работает сегодня'}
                       </Badge>
                     )}
-                    {schedule?.status === 'extra_day' && (
+                    {schedule?.status === 'schedule_override' && (
                       <Badge variant="success" className="text-xs px-1.5 py-0">
-                        {schedule.startTime && schedule.endTime ? `Доп. день ${schedule.startTime}–${schedule.endTime}` : 'Доп. день'}
+                        {schedule.startTime && schedule.endTime ? `Замена выходного ${schedule.startTime}–${schedule.endTime}` : 'Замена выходного'}
                       </Badge>
                     )}
                     {schedule?.status === 'overtime' && (

@@ -37,11 +37,11 @@ jest.mock('modules/certificate/entities/certificate.entity', () => ({ Certificat
 jest.mock('modules/repairer/entities/repairer.entity', () => ({ Repairer: class Repairer {} }));
 jest.mock('modules/device/entities/address.entity', () => ({ Address: class Address {} }));
 jest.mock('../entities/work-step.entity', () => ({ WorkStep: class WorkStep {} }));
-jest.mock('modules/schedule/entities/wschedule.entity', () => ({
-    WSchedule: class WSchedule {},
-    ScheduleEntryType: { VACATION: 'vacation', SICK_LEAVE: 'sick_leave', EXTRA_DAY: 'extra_day', OVERTIME: 'overtime' },
-    ScheduleStatus: { APPROVED: 'approved' },
-}));
+jest.mock('modules/schedule/entities/vacation.entity', () => ({ Vacation: class Vacation {} }));
+jest.mock('modules/schedule/entities/sick-leave.entity', () => ({ SickLeave: class SickLeave {} }));
+jest.mock('modules/schedule/entities/overtime.entity', () => ({ Overtime: class Overtime {} }));
+jest.mock('modules/schedule/entities/schedule-override.entity', () => ({ ScheduleOverride: class ScheduleOverride {} }));
+jest.mock('modules/schedule/entities/schedule-status.enum', () => ({ ScheduleStatus: { PENDING: 'pending', APPROVED: 'approved', REJECTED: 'rejected' } }));
 jest.mock('../entities/broken-part.entity', () => ({ BrokenPart: class BrokenPart {} }));
 jest.mock('modules/device/entities/device-part.entity', () => ({ DevicePart: class DevicePart {} }));
 
@@ -49,7 +49,7 @@ jest.mock('modules/device/entities/device-part.entity', () => ({ DevicePart: cla
 jest.mock('./broken-part.service', () => ({ BrokenPartService: jest.fn() }));
 jest.mock('modules/certificate/services/certificate.service', () => ({ CertificateService: jest.fn() }));
 jest.mock('modules/shared-services/services/signature.service', () => ({ SignatureService: jest.fn() }));
-jest.mock('modules/schedule/services/wschedule.service', () => ({ WScheduleService: jest.fn() }));
+jest.mock('modules/schedule/services/schedule-guard.service', () => ({ ScheduleGuardService: jest.fn() }));
 jest.mock('modules/schedule/services/wschedule-pattern.service', () => ({ WSchedulePatternService: jest.fn() }));
 jest.mock('modules/payment-command.service', () => ({ PaymentCommandService: jest.fn() }));
 jest.mock('services/repair-event.service', () => ({

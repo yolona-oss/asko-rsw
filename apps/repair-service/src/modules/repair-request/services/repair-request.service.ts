@@ -14,7 +14,7 @@ import { WorkStep } from '../entities/work-step.entity';
 import { BrokenPartService } from './broken-part.service';
 import { CertificateService } from 'modules/certificate/services/certificate.service';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
-import { WScheduleService } from 'modules/schedule/services/wschedule.service';
+import { ScheduleGuardService } from 'modules/schedule/services/schedule-guard.service';
 import { AvrPdfService, type AvrData } from './avr-pdf.service';
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
@@ -34,7 +34,7 @@ export class RepairRequestService {
         private readonly brokenPartService: BrokenPartService,
         private readonly certificateService: CertificateService,
         private readonly signatureService: SignatureService,
-        private readonly scheduleService: WScheduleService,
+        private readonly scheduleService: ScheduleGuardService,
         private readonly avrPdfService: AvrPdfService,
     ) {}
 

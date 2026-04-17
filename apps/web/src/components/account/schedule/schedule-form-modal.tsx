@@ -16,11 +16,11 @@ interface ScheduleFormModalProps {
   onSaved: () => void;
   editItem?: any;
   defaultUserId?: string;
-  defaultType?: 'vacation' | 'sick_leave' | 'overtime' | 'extra_day';
+  defaultType?: 'vacation' | 'sick_leave' | 'overtime' | 'schedule_override';
   lockType?: boolean;
 }
 
-const EXCEPTION_TYPES = ['vacation', 'sick_leave', 'overtime', 'extra_day'] as const;
+const EXCEPTION_TYPES = ['vacation', 'sick_leave', 'overtime', 'schedule_override'] as const;
 
 function isSameDay(a: string, b: string): boolean {
   return a.slice(0, 10) === b.slice(0, 10);
@@ -88,12 +88,12 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
   );
 
   const isRange = type === 'vacation' || type === 'sick_leave';
-  const needsTimes = type === 'overtime' || type === 'extra_day';
+  const needsTimes = type === 'overtime' || type === 'schedule_override';
 
   const editBlockedReason = useMemo<string | null>(() => {
     if (!isEdit || !editItem) return null;
     const itemType = editItem.type as string;
-    if (itemType === 'extra_day') {
+    if (itemType === 'schedule_override') {
       if (!isSameDay(editItem.dateFrom ?? '', todayISO())) {
         return 'Дополнительный день можно изменить только в тот день, на который он создан';
       }
@@ -134,7 +134,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
     if (new Date(effectiveTo) < new Date(dateFrom)) throw new Error('Дата окончания раньше даты начала');
 
     const effectiveStart = needsTimes ? startTime : '00:00';
-    if (type === 'extra_day') {
+    if (type === 'schedule_override') {
       if (dateFrom !== todayISO()) throw new Error('Дополнительный день можно создать только на сегодня');
     } else if (type === 'overtime') {
       if (combineDateTimeMs(dateFrom, '00:00') < combineDateTimeMs(todayISO(), '00:00'))
@@ -148,32 +148,27 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
       throw new Error('Нельзя создавать запись в прошлом');
     }
 
+    const userId = editItem?.userId ?? defaultUserId ?? '';
+    const durationDays = Math.max(1, Math.floor((new Date(effectiveTo).getTime() - new Date(dateFrom).getTime()) / 86_400_000) + 1);
+
     if (isEdit) {
-      await scheduleApi.update(editItem.id, {
-        type,
-        dateFrom,
-        dateTo: effectiveTo,
-        startTime: needsTimes ? startTime : '00:00',
-        endTime: needsTimes ? endTime : '23:59',
-        note: note || null,
-      });
+      if (type === 'vacation') {
+        await scheduleApi.updateVacation(editItem.id, { dateTo: effectiveTo, note: note || null });
+      } else if (type === 'sick_leave') {
+        await scheduleApi.updateSickLeave(editItem.id, { dateTo: effectiveTo, note: note || null });
+      } else if (type === 'overtime') {
+        await scheduleApi.updateOvertime(editItem.id, { startTime, endTime, note: note || null });
+      } else {
+        await scheduleApi.updateOverride(editItem.id, { startTime, endTime, note: note || null });
+      }
     } else if (type === 'vacation') {
-      await scheduleApi.createVacation({
-        userId: editItem?.userId ?? defaultUserId ?? '',
-        dateFrom,
-        dateTo: effectiveTo,
-        note: note || undefined,
-      });
+      await scheduleApi.createVacation({ userId, dateFrom, durationDays, note: note || undefined });
+    } else if (type === 'sick_leave') {
+      await scheduleApi.createSickLeave({ userId, dateFrom, durationDays, note: note || undefined });
+    } else if (type === 'overtime') {
+      await scheduleApi.createOvertime({ userId, date: dateFrom, startTime, endTime, note: note || undefined });
     } else {
-      await scheduleApi.create({
-        userId: editItem?.userId ?? defaultUserId ?? '',
-        type,
-        dateFrom,
-        dateTo: effectiveTo,
-        startTime: needsTimes ? startTime : '00:00',
-        endTime: needsTimes ? endTime : '23:59',
-        note: note || undefined,
-      });
+      await scheduleApi.createOverride({ userId, date: dateFrom, startTime, endTime, note: note || undefined });
     }
   }, [type, dateFrom, dateTo, startTime, endTime, note, isEdit, editItem, defaultUserId, isRange, needsTimes, editBlockedReason, createBlockedReason]);
 
@@ -221,7 +216,7 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
           <Select value={type} onChange={(e) => {
             const v = e.target.value;
             setType(v);
-            if (v === 'extra_day') { setDateFrom(todayISO()); setDateTo(todayISO()); }
+            if (v === 'schedule_override') { setDateFrom(todayISO()); setDateTo(todayISO()); }
           }} disabled={typeSelectDisabled}>
             {availableTypes.map((k) => (
               <option key={k} value={k}>
@@ -251,9 +246,9 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
             <Input
               type="date"
               min={todayISO()}
-              max={type === 'extra_day' ? todayISO() : undefined}
-              value={type === 'extra_day' ? todayISO() : dateFrom}
-              disabled={type === 'extra_day'}
+              max={type === 'schedule_override' ? todayISO() : undefined}
+              value={type === 'schedule_override' ? todayISO() : dateFrom}
+              disabled={type === 'schedule_override'}
               onChange={(e) => { setDateFrom(e.target.value); setDateTo(e.target.value); }}
             />
           </FormField>

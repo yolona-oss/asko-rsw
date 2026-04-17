@@ -38,3 +38,15 @@ export function assertMaxDuration(dateFromIso: string, dateToIso: string, maxDay
         throw AppErrors.badRequest(message ?? `Максимальная длительность — ${maxDays} дней`);
     }
 }
+
+export function assertDurationRange(durationDays: number, min: number, max: number, message?: string): void {
+    if (!Number.isInteger(durationDays) || durationDays < min || durationDays > max) {
+        throw AppErrors.badRequest(message ?? `Длительность должна быть от ${min} до ${max} дней`);
+    }
+}
+
+export function computeDateTo(dateFromIso: string, durationDays: number): string {
+    const from = startOfDay(parseDateTime(dateFromIso, '00:00'));
+    const to = new Date(from.getTime() + (durationDays - 1) * 86_400_000);
+    return to.toISOString().slice(0, 10);
+}

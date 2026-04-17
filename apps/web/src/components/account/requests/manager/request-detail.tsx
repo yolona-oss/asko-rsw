@@ -16,7 +16,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto, ScheduleRecord } from '@/lib/api/schedule';
+import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { deviceApi } from '@/lib/api/device';
@@ -42,7 +42,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
   const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
-  const [scheduleEntries, setScheduleEntries] = useState<Record<string, ScheduleRecord[]>>({});
+  const [scheduleEntries, setScheduleEntries] = useState<Record<string, ScheduleEntryRecord[]>>({});
   const [selectedRepairer, setSelectedRepairer] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +93,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             setPatterns(byUser);
           }
           if (entriesRes.status === 'fulfilled') {
-            const byUser: Record<string, ScheduleRecord[]> = {};
+            const byUser: Record<string, ScheduleEntryRecord[]> = {};
             const userIdSet = new Set(userIds);
             for (const e of entriesRes.value.data?.data ?? []) {
               if (!userIdSet.has(e.userId)) continue;
@@ -194,11 +194,9 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!repairer) return;
     const today = new Date().toISOString().slice(0, 10);
     try {
-      await scheduleApi.create({
+      await scheduleApi.createOverride({
         userId: repairer.userId,
-        type: 'extra_day',
-        dateFrom: today,
-        dateTo: today,
+        date: today,
         startTime: '09:00',
         endTime: '18:00',
       });

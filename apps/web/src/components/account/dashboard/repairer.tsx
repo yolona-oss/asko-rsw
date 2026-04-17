@@ -7,7 +7,7 @@ import { displayName, getGreeting } from '@/lib/account';
 import { repairerApi } from '@/lib/api/repairer';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { ScheduleRecord } from '@/lib/api/schedule';
+import type { ScheduleEntryRecord } from '@/lib/api/schedule';
 import { computeStats } from '@/components/account/schedule/stats';
 import { Card, Button, Badge } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
@@ -36,7 +36,7 @@ export function RepairerDashboard() {
   const [detectedAddress, setDetectedAddress] = useState<string | null>(null);
   const [activeRequest, setActiveRequest] = useState<any | null>(null);
   const [completedCount, setCompletedCount] = useState<number | null>(null);
-  const [scheduleEntries, setScheduleEntries] = useState<ScheduleRecord[]>([]);
+  const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntryRecord[]>([]);
 
   const sendLocation = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {

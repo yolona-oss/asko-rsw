@@ -16,20 +16,76 @@ import { ScheduleEntryType, ScheduleStatus } from './schedule.type.js';
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(T.*)?$/;
 
-export class CreateWScheduleDto {
+// ── Vacation DTOs ──
+
+export class CreateVacationDto {
     @IsString()
     userId!: string;
-
-    @IsEnum(ScheduleEntryType)
-    type!: ScheduleEntryType;
 
     @IsString()
     @Matches(ISO_DATE_REGEX)
     dateFrom!: string;
 
+    @IsInt()
+    @Min(1)
+    durationDays!: number;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class UpdateVacationDto {
+    @IsOptional()
     @IsString()
     @Matches(ISO_DATE_REGEX)
-    dateTo!: string;
+    dateTo?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string | null;
+}
+
+// ── SickLeave DTOs ──
+
+export class CreateSickLeaveDto {
+    @IsString()
+    userId!: string;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    dateFrom!: string;
+
+    @IsInt()
+    @Min(1)
+    @Max(30)
+    durationDays!: number;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class UpdateSickLeaveDto {
+    @IsOptional()
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    dateTo?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string | null;
+}
+
+// ── Overtime DTOs ──
+
+export class CreateOvertimeDto {
+    @IsString()
+    userId!: string;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    date!: string;
 
     @IsString()
     @Matches(TIME_REGEX)
@@ -44,21 +100,7 @@ export class CreateWScheduleDto {
     note?: string;
 }
 
-export class UpdateWScheduleDto {
-    @IsOptional()
-    @IsEnum(ScheduleEntryType)
-    type?: ScheduleEntryType;
-
-    @IsOptional()
-    @IsString()
-    @Matches(ISO_DATE_REGEX)
-    dateFrom?: string;
-
-    @IsOptional()
-    @IsString()
-    @Matches(ISO_DATE_REGEX)
-    dateTo?: string;
-
+export class UpdateOvertimeDto {
     @IsOptional()
     @IsString()
     @Matches(TIME_REGEX)
@@ -70,13 +112,50 @@ export class UpdateWScheduleDto {
     endTime?: string;
 
     @IsOptional()
-    @IsEnum(ScheduleStatus)
-    status?: ScheduleStatus;
+    @IsString()
+    note?: string | null;
+}
+
+// ── ScheduleOverride DTOs ──
+
+export class CreateScheduleOverrideDto {
+    @IsString()
+    userId!: string;
+
+    @IsString()
+    @Matches(ISO_DATE_REGEX)
+    date!: string;
+
+    @IsString()
+    @Matches(TIME_REGEX)
+    startTime!: string;
+
+    @IsString()
+    @Matches(TIME_REGEX)
+    endTime!: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+}
+
+export class UpdateScheduleOverrideDto {
+    @IsOptional()
+    @IsString()
+    @Matches(TIME_REGEX)
+    startTime?: string;
+
+    @IsOptional()
+    @IsString()
+    @Matches(TIME_REGEX)
+    endTime?: string;
 
     @IsOptional()
     @IsString()
     note?: string | null;
 }
+
+// ── Unified query DTO ──
 
 export class QueryScheduleDto {
     @IsOptional()
@@ -118,22 +197,7 @@ export class QueryScheduleDto {
     sortOrder?: 'asc' | 'desc';
 }
 
-export class CreateVacationDto {
-    @IsString()
-    userId!: string;
-
-    @IsString()
-    @Matches(ISO_DATE_REGEX)
-    dateFrom!: string;
-
-    @IsString()
-    @Matches(ISO_DATE_REGEX)
-    dateTo!: string;
-
-    @IsOptional()
-    @IsString()
-    note?: string;
-}
+// ── Pattern DTOs (unchanged) ──
 
 export class PatternSlotDto {
     @IsBoolean()
