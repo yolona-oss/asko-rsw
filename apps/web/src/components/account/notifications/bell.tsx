@@ -15,7 +15,7 @@ import { useTheme } from '@/lib/theme';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
-import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG } from './constants';
+import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup } from './constants';
 import { NotificationIcon } from './icon';
 
 const REMINDER_MS = 5 * 60 * 1000;
@@ -164,6 +164,7 @@ export function NotificationBell() {
 
   // ── Expand / Collapse notification body ──────────────────────
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -174,15 +175,25 @@ export function NotificationBell() {
     });
   }, []);
 
+  const toggleGroup = useCallback((group: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
+  }, []);
+
   // ── Open / Close panel ───────────────────────────────────────
   const handleClose = useCallback(() => {
     if (notifMode === 'dock') {
       setNotifOpen(false);
       setExpandedIds(new Set());
+      setExpandedGroups(new Set());
       return;
     }
     setClosing(true);
-    setTimeout(() => { setNotifOpen(false); setClosing(false); setExpandedIds(new Set()); }, 250);
+    setTimeout(() => { setNotifOpen(false); setClosing(false); setExpandedIds(new Set()); setExpandedGroups(new Set()); }, 250);
   }, [notifMode, setNotifOpen]);
 
   const handleToggle = useCallback(() => {
@@ -337,7 +348,9 @@ export function NotificationBell() {
       removingIds={removingIds}
       markingAll={markingAll}
       expandedIds={expandedIds}
+      expandedGroups={expandedGroups}
       onToggleExpand={toggleExpand}
+      onToggleGroup={toggleGroup}
       onMarkRead={markRead}
       onNavigate={handleNavigate}
     />
@@ -437,6 +450,7 @@ export function NotificationDockPanel() {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [markingAll, setMarkingAll] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const markRead = useCallback((id: string) => {
     setRemovingIds((prev) => new Set(prev).add(id));
@@ -477,6 +491,15 @@ export function NotificationDockPanel() {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleGroup = useCallback((group: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
       return next;
     });
   }, []);
@@ -527,7 +550,9 @@ export function NotificationDockPanel() {
           removingIds={removingIds}
           markingAll={markingAll}
           expandedIds={expandedIds}
+          expandedGroups={expandedGroups}
           onToggleExpand={toggleExpand}
+          onToggleGroup={toggleGroup}
           onMarkRead={markRead}
           onNavigate={handleNavigate}
         />
@@ -690,14 +715,37 @@ function MobileSheet({
   );
 }
 
-// ─── Notification List ───────────────────────────────────────────
+// ─── Notification List (grouped) ────────────────────────────────
+
+interface NotificationGroup {
+  key: string;
+  label: string;
+  items: NotificationRecord[];
+}
+
+function buildGroups(notifications: NotificationRecord[]): NotificationGroup[] {
+  const map = new Map<string, NotificationRecord[]>();
+  const order: string[] = [];
+  for (const n of notifications) {
+    const key = getNotificationGroup(n.type);
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key)!.push(n);
+  }
+  return order.map(key => ({
+    key,
+    label: GROUP_LABELS[key] ?? key,
+    items: map.get(key)!,
+  }));
+}
 
 function NotificationList({
   notifications,
   removingIds,
   markingAll,
   expandedIds,
+  expandedGroups,
   onToggleExpand,
+  onToggleGroup,
   onMarkRead,
   onNavigate,
 }: {
@@ -705,7 +753,9 @@ function NotificationList({
   removingIds: Set<string>;
   markingAll: boolean;
   expandedIds: Set<string>;
+  expandedGroups: Set<string>;
   onToggleExpand: (id: string) => void;
+  onToggleGroup: (group: string) => void;
   onMarkRead: (id: string) => void;
   onNavigate: (n: NotificationRecord) => void;
 }) {
@@ -717,60 +767,139 @@ function NotificationList({
     );
   }
 
+  const groups = buildGroups(notifications);
+
   return (
     <>
-      {notifications.map((n, i) => {
-        const navigable = isNotificationNavigable(n);
-        const isRemoving = removingIds.has(n.id);
-        const isExpanded = expandedIds.has(n.id);
+      {groups.map(group => {
+        const isGroupOpen = expandedGroups.has(group.key);
+        const latestTime = group.items[0]?.createdAt;
         return (
-          <div
-            key={n.id}
-            className={`group/item border-b border-border-light/50 last:border-b-0 ${isRemoving
-              ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
-              : 'animate-[notification-item_300ms_ease-out_both]'
-              }`}
-            style={{ animationDelay: `${isRemoving && markingAll ? i * 50 : isRemoving ? 0 : i * 50}ms` }}
-          >
+          <div key={group.key} className="border-b border-border-light/50 last:border-b-0">
+            {/* Group summary */}
             <button
               type="button"
-              onClick={() => navigable ? onNavigate(n) : onToggleExpand(n.id)}
-              className="w-full flex items-start gap-2.5 text-left cursor-pointer px-3 py-2.5 hover:bg-surface-hover transition-colors"
+              onClick={() => onToggleGroup(group.key)}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface-hover transition-colors cursor-pointer"
             >
-              <div className="flex-shrink-0 mt-0.5">
-                <NotificationIcon type={n.type} />
+              <div className="flex-shrink-0">
+                <NotificationIcon type={group.items[0].type} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-text-main leading-tight">
-                  {n.title}
-                </p>
-                <p className={`text-xs text-text-sub mt-0.5 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                  {n.body}
-                </p>
-                <span className="text-[10px] text-text-sub/60 mt-1 block">
-                  {formatTimeAgo(new Date(n.createdAt).getTime())}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-medium text-text-main">{group.label}</span>
+                  <span className="text-[11px] text-text-sub bg-surface-secondary px-1.5 py-px min-w-[18px] text-center">
+                    {group.items.length}
+                  </span>
+                </div>
+                {!isGroupOpen && latestTime && (
+                  <span className="text-[10px] text-text-sub/60 mt-0.5 block">
+                    {formatTimeAgo(new Date(latestTime).getTime())}
+                  </span>
+                )}
               </div>
-              {n.body && n.body.length > 60 && (
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
-                    }`}
-                  onClick={(e) => { e.stopPropagation(); onToggleExpand(n.id); }}
-                />
-              )}
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 transition-transform duration-200 ${isGroupOpen ? 'rotate-180' : ''}`}
+              />
             </button>
-            <div className="flex items-center justify-end px-3 pb-1.5 -mt-0.5">
-              <button
-                type="button"
-                onClick={() => onMarkRead(n.id)}
-                className="text-[10px] text-text-sub/50 hover:text-brand-red transition-colors cursor-pointer"
-              >
-                Прочитано
-              </button>
-            </div>
+
+            {/* Group children */}
+            {isGroupOpen && (
+              <div className="border-t border-border-light/30">
+                {group.items.map((n, i) => (
+                  <NotificationItem
+                    key={n.id}
+                    notification={n}
+                    index={i}
+                    isRemoving={removingIds.has(n.id)}
+                    markingAll={markingAll}
+                    isExpanded={expandedIds.has(n.id)}
+                    onToggleExpand={onToggleExpand}
+                    onMarkRead={onMarkRead}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
     </>
+  );
+}
+
+// ─── Individual Notification Item ────────────────────────────────
+
+function NotificationItem({
+  notification: n,
+  index: i,
+  isRemoving,
+  markingAll,
+  isExpanded,
+  onToggleExpand,
+  onMarkRead,
+  onNavigate,
+}: {
+  notification: NotificationRecord;
+  index: number;
+  isRemoving: boolean;
+  markingAll: boolean;
+  isExpanded: boolean;
+  onToggleExpand: (id: string) => void;
+  onMarkRead: (id: string) => void;
+  onNavigate: (n: NotificationRecord) => void;
+}) {
+  const navigable = isNotificationNavigable(n);
+
+  return (
+    <div
+      className={`border-b border-border-light/30 last:border-b-0 ${isRemoving
+        ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
+        : 'animate-[notification-item_300ms_ease-out_both]'
+      }`}
+      style={{ animationDelay: `${isRemoving && markingAll ? i * 50 : isRemoving ? 0 : i * 50}ms` }}
+    >
+      <button
+        type="button"
+        onClick={() => onToggleExpand(n.id)}
+        className="w-full flex items-start gap-2.5 text-left cursor-pointer pl-10 pr-3 py-2 hover:bg-surface-hover transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-text-main leading-tight">
+            {n.title}
+          </p>
+          <p className={`text-xs text-text-sub mt-0.5 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+            {n.body}
+          </p>
+          <span className="text-[10px] text-text-sub/60 mt-1 block">
+            {formatTimeAgo(new Date(n.createdAt).getTime())}
+          </span>
+        </div>
+        {n.body && n.body.length > 60 && (
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(n.id); }}
+          />
+        )}
+      </button>
+      <div className="flex items-center justify-end gap-3 pl-10 pr-3 pb-1.5 -mt-0.5">
+        {navigable && (
+          <button
+            type="button"
+            onClick={() => onNavigate(n)}
+            className="text-[10px] text-text-sub/50 hover:text-brand-red transition-colors cursor-pointer"
+          >
+            Перейти
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onMarkRead(n.id)}
+          className="text-[10px] text-text-sub/50 hover:text-brand-red transition-colors cursor-pointer"
+        >
+          Прочитано
+        </button>
+      </div>
+    </div>
   );
 }

@@ -135,3 +135,20 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
   message: { icon: 'message' },
   system: { icon: 'system' },
 };
+
+export const GROUP_LABELS: Record<string, string> = {
+  repair: 'Ремонт',
+  payment: 'Оплата',
+  certificate: 'Сертификаты',
+  chat: 'Чат',
+  schedule: 'Расписание',
+  address: 'Адрес',
+  device: 'Устройство',
+  message: 'Сообщение',
+  system: 'Система',
+};
+
+export function getNotificationGroup(type: string): string {
+  return NOTIFICATION_TYPE_CONFIG[type]?.icon ?? 'system';
+}
+
