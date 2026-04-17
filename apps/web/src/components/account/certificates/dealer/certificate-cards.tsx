@@ -3,7 +3,8 @@
 import { Card } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { Certificate } from './types';
-import { STATUS_LABELS, STATUS_COLORS, formatDate } from './constants';
+import { formatDate } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_COLORS } from './constants';
 
 function CertificateCardItem({
   cert,

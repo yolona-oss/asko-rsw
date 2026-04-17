@@ -1,10 +1,10 @@
 'use client';
 
 import { Badge } from '@asko/ui';
+import { formatDateTime } from '@asko/shared/client';
 import {
   PAYMENT_STATUS_VARIANT,
   PAYMENT_STATUS_LABELS_USER,
-  formatPaymentDate,
   formatPaymentAmount,
 } from './payment-constants';
 
@@ -36,7 +36,7 @@ export function PaymentTransactionList({
         >
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-sm text-text-main">
-              {formatPaymentDate(p.paidAt || p.createdAt)}
+              {formatDateTime(p.paidAt || p.createdAt)}
             </span>
             {p.refundedAmount > 0 && (
               <span className="text-xs text-error">

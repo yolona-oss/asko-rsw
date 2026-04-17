@@ -2,7 +2,8 @@
 
 import { Clock } from 'lucide-react';
 import type { RepairRequestStatus, IStatusTimestampEntry } from '@asko/shared/client';
-import { STATUS_TITLES, formatDate } from './detail-constants';
+import { STATUS_TITLES } from './detail-constants';
+import { formatTimestamp } from '@asko/shared/client';
 
 interface StatusTimelineProps {
   statusTimestamps: IStatusTimestampEntry[];
@@ -54,7 +55,7 @@ export function StatusTimeline({ statusTimestamps, currentStatus }: StatusTimeli
                 <span className={`text-sm font-medium ${isCurrent ? 'text-text-main' : 'text-text-sub'}`}>
                   {STATUS_TITLES[entry.status] ?? entry.status}
                 </span>
-                <span className="text-xs text-text-sub">{formatDate(entry.timestamp)}</span>
+                <span className="text-xs text-text-sub">{formatTimestamp(entry.timestamp)}</span>
               </div>
             </div>
           );

@@ -7,7 +7,8 @@ import { CertificateDetail, fetchCertificateOne } from '@/components/account/cer
 import { DataGrid } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import type { Certificate } from './types';
-import { STATUS_LABELS, STATUS_COLORS, formatDate } from './constants';
+import { formatDate } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_COLORS } from './constants';
 
 const columns: DataGridColumn<Certificate>[] = [
   {

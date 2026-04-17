@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@asko/ui';
-import { formatDate } from './detail-constants';
+import { formatTimestamp } from '@asko/shared/client';
 import type { WorkStep } from './detail-types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -76,13 +76,13 @@ export function WorkStepCard({ step, index }: { step: WorkStep; index: number })
       {/* Declined info */}
       {isDeclined && (
         <p className="text-[12px] sm:text-sm text-text-sub">
-          Отклонено новым мастером{step.declinedAt ? ` — ${formatDate(step.declinedAt)}` : ''}
+          Отклонено новым мастером{step.declinedAt ? ` — ${formatTimestamp(step.declinedAt)}` : ''}
         </p>
       )}
 
       {/* Completed timestamp */}
       {isCompleted && !isDeclined && (
-        <p className="text-[12px] sm:text-sm text-text-sub">{formatDate(step.updatedAt)}</p>
+        <p className="text-[12px] sm:text-sm text-text-sub">{formatTimestamp(step.updatedAt)}</p>
       )}
     </div>
   );

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { SkeletonBlock } from '@asko/ui';
 import { invitationApi } from '@/lib/api/invitation';
-import { INVITE_ROLE_LABELS, formatDateTime, isExpired } from './constants';
+import { formatDateTimeCompact } from '@asko/shared/client';
+import { INVITE_ROLE_LABELS, isExpired } from './constants';
 
 export function InviteListPopup({ onClose }: { onClose: () => void }) {
   const [invites, setInvites] = useState<any[]>([]);
@@ -79,7 +80,7 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
                       )}
                     </div>
                     <p className="text-xs text-text-sub mt-0.5">
-                      Истекает: {formatDateTime(inv.expiresAt)}
+                      Истекает: {formatDateTimeCompact(inv.expiresAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

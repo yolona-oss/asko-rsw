@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@asko/ui';
-import { formatTimeAgo } from '@/lib/format-time-ago';
+import { formatTimeAgo } from '@asko/shared/client';
 
 export interface DraftResumeDialogProps {
   open: boolean;

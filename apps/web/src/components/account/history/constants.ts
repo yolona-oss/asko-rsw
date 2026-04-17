@@ -32,20 +32,4 @@ export const STATUS_BADGE: Partial<Record<RepairRequestStatus, BadgeVariant>> = 
   [RepairRequestStatus.ACCEPTED]: 'info',
 };
 
-export function formatDateShort(dateStr: Date | string) {
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
-export function formatDateLong(dateStr: Date | string) {
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
 export const LIMIT = 10;

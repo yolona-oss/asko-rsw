@@ -41,11 +41,3 @@ export const STATUS_FILTER_DEF: FilterDefinition = {
   type: 'tabs',
   options: STATUS_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
 };
-
-export function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}

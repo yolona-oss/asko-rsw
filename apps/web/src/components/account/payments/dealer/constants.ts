@@ -48,14 +48,6 @@ export const POINTS_TX_BADGE_VARIANT: Record<string, BadgeVariant> = {
   adjustment: 'neutral',
 };
 
-export function formatDate(dateStr: Date | string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
 export function formatAmount(amount: number) {
   return amount.toLocaleString('ru-RU');
 }

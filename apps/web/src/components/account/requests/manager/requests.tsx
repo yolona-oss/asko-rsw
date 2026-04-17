@@ -21,7 +21,8 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';
 import type { TabKey, RepairRequest, ConversationInfo } from './list-types';
-import { PAGE_SIZE, TAB_FILTER, STATUS_MAP, STATUS_COLORS, STATUS_LABELS, formatDate } from './list-constants';
+import { formatDateTime } from '@asko/shared/client';
+import { PAGE_SIZE, TAB_FILTER, STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
 import { RequestCardItem } from './request-card-item';
 import { ChatStatusBadges } from './chat-status-badges';
 
@@ -152,7 +153,7 @@ export function ManagerRequests() {
       sortField: 'createdAt',
       width: 140,
       mobileLabel: 'Дата:',
-      render: (req) => <p className="text-sm text-text-main">{formatDate(req.createdAt)}</p>,
+      render: (req) => <p className="text-sm text-text-main">{formatDateTime(req.createdAt)}</p>,
     },
   ], [convInfoMap, currentUserId]);
 

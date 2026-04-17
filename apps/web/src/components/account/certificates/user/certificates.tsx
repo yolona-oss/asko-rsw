@@ -23,14 +23,14 @@ import { PaymentModal } from '@/components/account/payments/user/payment-modal';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
 import { downloadDocument } from '@/lib/file-url';
-import { CertificateStatus } from '@asko/shared/client';
+import { CertificateStatus, formatDate } from '@asko/shared/client';
 import type { ICertificate } from '@/lib/api/types';
 import { CertificateCard } from './certificate-card';
 import { DeviceSlider } from './device-slider';
 import { AddDeviceForm } from './add-device-form';
 import { EditUserDeviceForm } from './edit-user-device-form';
 import { AddCertificateForm } from './add-certificate-form';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate } from './constants';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT } from './constants';
 import type { UserDevice } from './types';
 
 const PAGE_SIZE = 20;

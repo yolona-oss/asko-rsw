@@ -1,4 +1,4 @@
-import { startOfDay } from '@asko/shared/client';
+import { startOfDay, countDays, timeToMinutes } from '@asko/shared/client';
 import type { ScheduleEntry } from './types';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -11,15 +11,6 @@ function overlaps(entry: ScheduleEntry, from: Date, to: Date): boolean {
   const entryFrom = parseDate(entry.dateFrom);
   const entryTo = parseDate(entry.dateTo);
   return entryFrom <= to && entryTo >= from;
-}
-
-function countDays(from: Date, to: Date): number {
-  return Math.floor((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY) + 1;
-}
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
 }
 
 export interface ScheduleStats {

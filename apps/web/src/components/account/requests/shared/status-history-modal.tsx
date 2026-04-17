@@ -3,14 +3,12 @@
 import { Modal } from '@asko/ui';
 import { X, Check, Clock, Pause, Ban, Truck, Wrench } from 'lucide-react';
 import type { IStatusTimestampEntry } from '@asko/shared/client';
+import { formatDuration, formatActiveMinutes, formatTimestamp } from '@asko/shared/client';
 import {
   STATUS_TITLES,
   statusColor,
   isActiveWorkStatus,
   computeActiveMinutes,
-  formatDuration,
-  formatActiveMinutes,
-  formatTimestamp,
   type StatusColorCategory,
 } from './status-constants';
 

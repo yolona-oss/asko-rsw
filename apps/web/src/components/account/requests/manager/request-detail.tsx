@@ -24,7 +24,8 @@ import { getImageUrl } from '@/lib/file-url';
 import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
 import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption, RepairerScheduleInfo } from './detail-types';
-import { STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './detail-constants';
+import { formatDateTime } from '@asko/shared/client';
+import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './detail-constants';
 import { RequestChat } from './request-chat';
 import { RepairerSelector } from './repairer-selector';
 import { resolveScheduleForToday, compareBySchedule } from './schedule-resolver';
@@ -319,7 +320,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         <div className="flex-1 flex flex-col gap-5">
           <div>
             <p className="text-sm text-text-sub">Дата создания заявки:</p>
-            <p className="text-sm font-medium text-text-main">{formatDate(request.createdAt)}</p>
+            <p className="text-sm font-medium text-text-main">{formatDateTime(request.createdAt)}</p>
           </div>
 
           {isAssigned && (
@@ -336,7 +337,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               )}
               {request.repairer?.lastLocationUpdate && (
                 <p className="text-xs text-text-sub">
-                  Обновлено: {formatDate(request.repairer.lastLocationUpdate)}
+                  Обновлено: {formatDateTime(request.repairer.lastLocationUpdate)}
                 </p>
               )}
             </div>

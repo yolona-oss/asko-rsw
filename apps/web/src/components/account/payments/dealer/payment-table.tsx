@@ -10,7 +10,8 @@ import {
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import type { PaymentRecord } from '@/lib/api/payment';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatDate, formatAmount } from './constants';
+import { formatDateTime } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatAmount } from './constants';
 
 const columns: DataGridColumn<PaymentRecord>[] = [
   {
@@ -49,7 +50,7 @@ const columns: DataGridColumn<PaymentRecord>[] = [
     width: 160,
     mobileLabel: 'Дата:',
     render: (p) => (
-      <p className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</p>
+      <p className="text-sm text-text-sub">{formatDateTime(p.paidAt || p.createdAt)}</p>
     ),
   },
 ];
@@ -104,7 +105,7 @@ export function PaymentTable({
                 </Badge>
               }
             />
-            <DetailRow label="Дата" value={formatDate(item.paidAt || item.createdAt)} />
+            <DetailRow label="Дата" value={formatDateTime(item.paidAt || item.createdAt)} />
           </div>
         )}
       />

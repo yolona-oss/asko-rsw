@@ -29,10 +29,11 @@ import type { IPointsTransaction } from '@/lib/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getMyWithdraws } from '@/store/withdraw-slice';
 import {
-  formatAmount, formatDate,
+  formatAmount,
   POINTS_TX_LABELS, POINTS_TX_BADGE_VARIANT,
   STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS,
 } from './constants';
+import { formatDateTime } from '@asko/shared/client';
 import { WithdrawalHistory } from './withdrawal-history';
 
 // ─── Chart bucketing helpers ───────────────────────────────────────────────
@@ -95,14 +96,14 @@ const pointsColumns: DataGridColumn<IPointsTransaction>[] = [
   { key: 'reason', header: 'Описание', sortable: false, mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
   { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-success' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
   { key: 'type', header: 'Тип', sortable: false, width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
-  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDate(tx.createdAt)}</span> },
+  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (tx) => <span className="text-sm text-text-sub">{formatDateTime(tx.createdAt)}</span> },
 ];
 
 const paymentColumns: DataGridColumn<PaymentRecord>[] = [
   { key: 'type', header: 'Тип', sortable: false, mobileLabel: 'Тип:', render: (p) => <span className="text-sm font-medium text-text-main">{TARGET_LABELS[p.targetType ?? ''] ?? 'Платёж'}</span> },
   { key: 'amount', header: 'Сумма', width: 140, mobileLabel: 'Сумма:', render: (p) => <span className="text-sm font-bold text-text-main">{formatAmount(p.amount)} ₽</span> },
   { key: 'status', header: 'Статус', width: 140, mobileLabel: 'Статус:', render: (p) => <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge> },
-  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</span> },
+  { key: 'date', header: 'Дата', sortField: 'createdAt', width: 160, mobileLabel: 'Дата:', render: (p) => <span className="text-sm text-text-sub">{formatDateTime(p.paidAt || p.createdAt)}</span> },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -259,7 +260,7 @@ export function DealerPayments() {
                 <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge>
               </div>
               <span className={`text-lg font-medium ${tx.amount > 0 ? 'text-success' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span>
-              <span className="text-xs text-text-sub">{formatDate(tx.createdAt)}</span>
+              <span className="text-xs text-text-sub">{formatDateTime(tx.createdAt)}</span>
             </Card>
           ))}
         </div>
@@ -290,7 +291,7 @@ export function DealerPayments() {
                 <Badge variant={STATUS_BADGE_VARIANT[p.status] ?? 'neutral'}>{STATUS_LABELS[p.status] ?? p.status}</Badge>
               </div>
               <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-              <span className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</span>
+              <span className="text-sm text-text-sub">{formatDateTime(p.paidAt || p.createdAt)}</span>
             </Card>
           ))}
         </div>
@@ -307,7 +308,7 @@ export function DealerPayments() {
             <DetailRow label="Описание" value={item.reason ?? '-'} />
             <DetailRow label="Сумма" value={<span className={item.amount > 0 ? 'text-success' : 'text-brand-red'}>{item.amount > 0 ? '+' : ''}{formatAmount(item.amount)}</span>} />
             <DetailRow label="Тип" value={<Badge variant={POINTS_TX_BADGE_VARIANT[item.type] ?? 'neutral'}>{POINTS_TX_LABELS[item.type] ?? item.type}</Badge>} />
-            <DetailRow label="Дата" value={formatDate(item.createdAt)} />
+            <DetailRow label="Дата" value={formatDateTime(item.createdAt)} />
           </div>
         )}
       />
@@ -321,7 +322,7 @@ export function DealerPayments() {
             <DetailRow label="Тип" value={TARGET_LABELS[item.targetType ?? ''] ?? 'Платёж'} />
             <DetailRow label="Сумма" value={`${formatAmount(item.amount)} ₽`} />
             <DetailRow label="Статус" value={<Badge variant={STATUS_BADGE_VARIANT[item.status] ?? 'neutral'}>{STATUS_LABELS[item.status] ?? item.status}</Badge>} />
-            <DetailRow label="Дата" value={formatDate(item.paidAt || item.createdAt)} />
+            <DetailRow label="Дата" value={formatDateTime(item.paidAt || item.createdAt)} />
           </div>
         )}
       />

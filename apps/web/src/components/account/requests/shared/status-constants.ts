@@ -65,36 +65,3 @@ export function computeActiveMinutes(entries: IStatusTimestampEntry[]): number {
 
   return Math.round(totalMs / 60_000);
 }
-
-export function formatDuration(ms: number): string {
-  if (ms < 60_000) return '< 1 мин';
-  const totalMin = Math.round(ms / 60_000);
-  if (totalMin < 60) return `${totalMin} мин`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h < 24) {
-    return m > 0 ? `${h}ч ${m}м` : `${h}ч`;
-  }
-  const d = Math.floor(h / 24);
-  const remH = h % 24;
-  return remH > 0 ? `${d} дн. ${remH}ч` : `${d} дн.`;
-}
-
-export function formatActiveMinutes(minutes: number): string {
-  if (minutes <= 0) return '0 мин';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} мин`;
-  if (m === 0) return `${h}ч`;
-  return `${h}ч ${m}м`;
-}
-
-export function formatTimestamp(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}

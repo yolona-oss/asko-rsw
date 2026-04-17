@@ -14,7 +14,8 @@ import { useSidebar } from '@/components/account/layout/sidebar-context';
 import { useTheme } from '@/lib/theme';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
-import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, getTimeAgo } from './constants';
+import { formatTimeAgo } from '@asko/shared/client';
+import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG } from './constants';
 import { NotificationIcon } from './icon';
 
 const REMINDER_MS = 5 * 60 * 1000;
@@ -747,7 +748,7 @@ function NotificationList({
                   {n.body}
                 </p>
                 <span className="text-[10px] text-text-sub/60 mt-1 block">
-                  {getTimeAgo(n.createdAt)}
+                  {formatTimeAgo(new Date(n.createdAt).getTime())}
                 </span>
               </div>
               {n.body && n.body.length > 60 && (

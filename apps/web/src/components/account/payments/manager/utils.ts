@@ -2,8 +2,8 @@ import type { PaymentRecord } from '@/lib/api/payment';
 import type { ChartBucket, DateRange } from '@asko/ui';
 
 export { defaultRange, formatRangeLabel, toInputDate } from '@asko/ui';
+export { formatDateTime as formatDateFull } from '@asko/shared/client';
 export {
-  formatPaymentDate as formatDateFull,
   formatPaymentAmount as formatAmount,
 } from '@/components/account/payments/shared/payment-constants';
 

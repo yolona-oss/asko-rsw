@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
-import { CertificateStatus } from '@asko/shared/client';
+import { CertificateStatus, formatDate, formatDateLong } from '@asko/shared/client';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { deviceApi } from '@/lib/api/device';
 import type { ICertificate } from '@/lib/api/types';
 import { getPlaceholderSrc } from '@/lib/placeholders';
-import { STATUS_LABELS, formatDate, formatDateLong } from './constants';
+import { STATUS_LABELS } from './constants';
 import { getImageUrl } from '@/lib/image-url';
 
 export function CertificateCard({

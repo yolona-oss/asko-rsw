@@ -43,7 +43,10 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
       setParticipantNames(prev => {
         const next = { ...prev };
         for (const u of users) {
-          next[u.id] = [u.lastName, u.firstName].filter(Boolean).join(' ') || u.id.slice(0, 8);
+          const roleSet = new Set(u.roles.map(r => r.toLowerCase()));
+          next[u.id] = [u.lastName, u.firstName]
+            .filter(part => part && !roleSet.has(part.toLowerCase()))
+            .join(' ') || u.id.slice(0, 8);
         }
         return next;
       });

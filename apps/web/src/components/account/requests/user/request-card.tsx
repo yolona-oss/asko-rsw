@@ -2,7 +2,8 @@
 
 import { Card, Badge } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate } from './list-constants';
+import { formatDate } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT } from './list-constants';
 import type { RepairRequest } from './list-types';
 
 export function RequestCard({ request, onClick, onDoubleClick }: {

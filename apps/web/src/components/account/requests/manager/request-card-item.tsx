@@ -3,7 +3,8 @@
 import { Card } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { RepairRequest, ConversationInfo } from './list-types';
-import { STATUS_MAP, STATUS_COLORS, STATUS_LABELS, formatDate } from './list-constants';
+import { formatDateTime } from '@asko/shared/client';
+import { STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
 import { ChatStatusBadges } from './chat-status-badges';
 
 export function RequestCardItem({ request, convInfo, currentUserId, onClick, onDoubleClick }: {
@@ -22,7 +23,7 @@ export function RequestCardItem({ request, convInfo, currentUserId, onClick, onD
   return (
     <Card padding="none" className={`p-5 flex flex-col gap-3${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
       <div className="flex items-center gap-2 text-xs text-text-sub">
-        <span>{formatDate(request.createdAt)}</span>
+        <span>{formatDateTime(request.createdAt)}</span>
         {location && (
           <>
             <span>&bull;</span>

@@ -20,7 +20,8 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { repairerApi } from '@/lib/api/repairer';
 import type { IRepairer } from '@/lib/api/types';
 import type { AccessTab } from './constants';
-import { TAB_FILTER, LIMIT, repairerName, formatDate } from './constants';
+import { formatDateTimeCompact } from '@asko/shared/client';
+import { TAB_FILTER, LIMIT, repairerName } from './constants';
 import { RepairerCard } from './repairer-card';
 
 export function ManagerAccess() {
@@ -145,7 +146,7 @@ export function ManagerAccess() {
       sortable: false,
       width: 160,
       mobileLabel: 'Геопозиция:',
-      render: (rep) => <p className="text-sm text-text-main">{formatDate(rep.lastLocationUpdate)}</p>,
+      render: (rep) => <p className="text-sm text-text-main">{formatDateTimeCompact(rep.lastLocationUpdate)}</p>,
     },
   ], []);
 

@@ -53,8 +53,3 @@ export function getStepIndex(status: RepairRequestStatus): number {
   const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));
   return idx >= 0 ? idx : 0;
 }
-
-export function formatDate(dateStr: Date | string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-}

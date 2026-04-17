@@ -40,8 +40,3 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const PAGE_SIZE = 12;
-
-export function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}

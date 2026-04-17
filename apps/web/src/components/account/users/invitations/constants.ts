@@ -36,15 +36,6 @@ export const STATUS_FILTER: FilterDefinition = {
   ],
 };
 
-export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export function isExpired(expiresAt: string | Date): boolean {
   return new Date(expiresAt) < new Date();

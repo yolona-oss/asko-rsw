@@ -15,12 +15,12 @@ import {
   SkeletonCard,
 } from '@asko/ui';
 import type { DataGridColumn, DropdownMenuEntry, FilterValues, SortOrder } from '@asko/ui';
-import { CertificateStatus } from '@asko/shared/client';
+import { CertificateStatus, formatDate } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { certificateApi } from '@/lib/api/certificate';
 import type { ICertificate } from '@/lib/api/types';
-import { STATUS_FILTER, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './constants';
+import { STATUS_FILTER, STATUS_BADGE_VARIANT, STATUS_LABELS } from './constants';
 import type { CertTab } from './types';
 import { CertificateCard } from './certificate-card';
 

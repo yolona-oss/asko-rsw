@@ -9,7 +9,8 @@ import {
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import type { IInvitationLink } from '@/lib/api/types';
-import { ROLE_LABELS, formatDate, isExpired } from './constants';
+import { formatDateTimeCompact } from '@asko/shared/client';
+import { ROLE_LABELS, isExpired } from './constants';
 
 export function InvitationCard({
   invitation,
@@ -63,7 +64,7 @@ export function InvitationCard({
         </div>
         <p className="text-xs font-mono text-text-sub truncate">{invitation.token.slice(0, 20)}...</p>
         <p className={`text-sm ${expired ? 'text-brand-red' : 'text-text-main'}`}>
-          Истекает: {formatDate(invitation.expiresAt)}
+          Истекает: {formatDateTimeCompact(invitation.expiresAt)}
         </p>
         {link && (
           <p className="text-xs font-mono text-text-main break-all bg-success-bg p-2">{link}</p>

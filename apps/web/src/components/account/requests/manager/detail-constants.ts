@@ -40,11 +40,3 @@ export const REPAIRER_REQUEST_STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
 };
-
-export function formatDate(dateStr: Date | string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}

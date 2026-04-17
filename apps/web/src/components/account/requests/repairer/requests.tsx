@@ -20,7 +20,8 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { RepairRequestStatus } from '@asko/shared/client';
-import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './list-constants';
+import { formatDateTime } from '@asko/shared/client';
+import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS } from './list-constants';
 import type { TabKey } from './list-constants';
 import type { RepairRequest } from './list-types';
 import { RequestCard } from './request-card';
@@ -88,7 +89,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
       width: 140,
       mobileLabel: 'Дата:',
       render: (request) => (
-        <p className="text-sm text-text-main">{formatDate(request.createdAt)}</p>
+        <p className="text-sm text-text-main">{formatDateTime(request.createdAt)}</p>
       ),
     },
   ], []);

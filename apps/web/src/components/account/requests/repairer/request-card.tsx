@@ -2,7 +2,8 @@
 
 import { Card, Badge, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import { STATUS_BADGE_VARIANT, STATUS_LABELS, formatDate } from './list-constants';
+import { formatDateTime } from '@asko/shared/client';
+import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './list-constants';
 import type { RepairRequest } from './list-types';
 
 export function RequestCard({ request, highlight, onClick, onDoubleClick }: {
@@ -22,7 +23,7 @@ export function RequestCard({ request, highlight, onClick, onDoubleClick }: {
       <Card padding="none" className={`p-5 flex flex-col gap-3 ${highlight ? 'ring-2 ring-brand-red' : ''}${onClick || onDoubleClick ? ' cursor-pointer' : ''}`} onClick={handleClick} onDoubleClick={handleDoubleClick}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs text-text-sub">
-            <span>{formatDate(request.createdAt)}</span>
+            <span>{formatDateTime(request.createdAt)}</span>
             {request.address?.city && (
               <>
                 <span>&bull;</span>

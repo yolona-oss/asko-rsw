@@ -22,7 +22,8 @@ import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, formatDate, STATUS_FILTER, type StatusFilter } from './list-constants';
+import { formatDate } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, STATUS_FILTER, type StatusFilter } from './list-constants';
 import type { RepairRequest } from './list-types';
 import { RequestCard } from './request-card';
 

@@ -13,8 +13,8 @@ import { PaymentModal } from '@/components/account/payments/user/payment-modal';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
-import { RepairRequestStatus } from '@asko/shared/client';
-import { TARGET_LABELS, pluralPayments, formatAmount, formatDate } from './constants';
+import { RepairRequestStatus, formatDate } from '@asko/shared/client';
+import { TARGET_LABELS, pluralPayments, formatAmount } from './constants';
 import type { RequestSummary } from './types';
 
 const STATUS_LABELS: Record<string, string> = {

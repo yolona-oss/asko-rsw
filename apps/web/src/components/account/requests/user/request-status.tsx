@@ -25,8 +25,8 @@ import {
   STATUS_DESCRIPTIONS,
   STATUS_TITLES,
   getStepIndex,
-  formatDate,
 } from './detail-constants';
+import { formatTimestamp } from '@asko/shared/client';
 import type { RepairRequest, WorkStep } from './detail-types';
 import { StepCircle } from './step-circle';
 import { StepLine } from './step-line';
@@ -182,7 +182,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <h2 className="text-2xl lg:text-[28px] font-medium tracking-[-0.01em] text-text-main">
           {statusTitle}
         </h2>
-        <span className="text-sm text-text-sub">{formatDate((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find(e => e.status === request.status)?.timestamp ?? request.updatedAt)}</span>
+        <span className="text-sm text-text-sub">{formatTimestamp((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find(e => e.status === request.status)?.timestamp ?? request.updatedAt)}</span>
         {request.certificateValid === false && !(!request.certificateSnapshot && request.certificate?.paid && request.certificate?.status === 'active') && (
           <div className="flex flex-col gap-1 mt-2">
             <CertificateWarningBadge valid={request.certificateValid} certificate={request.certificate} hasSnapshot={!!request.certificateSnapshot} />

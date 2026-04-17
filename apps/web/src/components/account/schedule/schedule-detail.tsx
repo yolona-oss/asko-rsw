@@ -9,9 +9,9 @@ import {
   STATUS_LABELS,
   STATUS_BADGE_VARIANT,
   TYPE_BADGE_VARIANT,
-  formatDate,
   formatRange,
 } from './constants';
+import { formatDate } from '@asko/shared/client';
 
 export async function fetchScheduleOne(item: ScheduleEntry): Promise<ScheduleEntry> {
   const { data } = await api.get<ScheduleEntry>(`/schedule/${item.id}`, { _silent: true } as any);

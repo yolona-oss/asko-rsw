@@ -25,7 +25,8 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
 import type { IInvitationLink } from '@/lib/api/types';
-import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, formatDate, isExpired } from './constants';
+import { formatDateTimeCompact } from '@asko/shared/client';
+import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, isExpired } from './constants';
 import { InvitationCard } from './invitation-card';
 
 const PAGE_SIZE = 20;
@@ -174,7 +175,7 @@ export function AdminInvitations() {
       mobileLabel: 'Истекает:',
       render: (inv) => {
         const expired = isExpired(inv.expiresAt);
-        return <p className={`text-sm ${expired ? 'text-brand-red' : 'text-text-main'}`}>{formatDate(inv.expiresAt)}</p>;
+        return <p className={`text-sm ${expired ? 'text-brand-red' : 'text-text-main'}`}>{formatDateTimeCompact(inv.expiresAt)}</p>;
       },
     },
     {

@@ -2,7 +2,8 @@
 
 import { Badge, Card } from '@asko/ui';
 import type { PaymentRecord } from '@/lib/api/payment';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatDate, formatAmount } from './constants';
+import { formatDateTime } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatAmount } from './constants';
 
 export function PaymentCards({
   payments,
@@ -22,7 +23,7 @@ export function PaymentCards({
             </Badge>
           </div>
           <span className="text-lg font-bold text-text-main">{formatAmount(p.amount)} ₽</span>
-          <p className="text-sm text-text-sub">{formatDate(p.paidAt || p.createdAt)}</p>
+          <p className="text-sm text-text-sub">{formatDateTime(p.paidAt || p.createdAt)}</p>
         </Card>
       ))}
     </div>

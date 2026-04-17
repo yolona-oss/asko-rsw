@@ -1,7 +1,8 @@
 'use client';
 
 import { Badge, Card } from '@asko/ui';
-import { WITHDRAW_STATUS_LABELS, WITHDRAW_BADGE_VARIANT, formatDate, formatAmount } from './constants';
+import { formatDateTime } from '@asko/shared/client';
+import { WITHDRAW_STATUS_LABELS, WITHDRAW_BADGE_VARIANT, formatAmount } from './constants';
 
 interface Withdrawal {
   id: string;
@@ -29,7 +30,7 @@ export function WithdrawalHistory({
             {w.cardNumber && (
               <span className="text-sm text-text-sub">•••• {w.cardNumber.replace(/\D/g, '').slice(-4)}</span>
             )}
-            <span className="text-sm text-text-sub">{formatDate(w.requestedAt)}</span>
+            <span className="text-sm text-text-sub">{formatDateTime(w.requestedAt)}</span>
           </div>
           <Badge variant={WITHDRAW_BADGE_VARIANT[w.status] ?? 'neutral'}>
             {WITHDRAW_STATUS_LABELS[w.status] ?? w.status}

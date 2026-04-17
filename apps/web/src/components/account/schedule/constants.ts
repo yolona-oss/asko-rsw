@@ -1,4 +1,5 @@
 import type { BadgeVariant, FilterDefinition } from '@asko/ui';
+import { formatDate } from '@asko/shared/client';
 import type { PatternSlot } from './types';
 
 export const TYPE_LABELS: Record<string, string> = {
@@ -26,10 +27,6 @@ export const TYPE_BADGE_VARIANT: Record<string, BadgeVariant> = {
   overtime: 'neutral',
   schedule_override: 'success',
 };
-
-export function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 export function formatRange(from?: string, to?: string) {
   if (!from && !to) return '-';

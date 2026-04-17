@@ -58,6 +58,18 @@ export {
     formatIsoDate,
     combineDateTimeMs,
     MONTH_NAMES_RU,
+    pluralizeRu,
+    timeToMinutes,
+    countDays,
+    parseDurationToMs,
+    formatDate,
+    formatDateLong,
+    formatDateTime,
+    formatDateTimeCompact,
+    formatTimestamp,
+    formatTimeAgo,
+    formatDuration,
+    formatActiveMinutes,
 } from './utils/date.js';
 
 // Chat

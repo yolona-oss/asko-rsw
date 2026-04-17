@@ -23,7 +23,8 @@ import type { DataGridColumn, SortOrder, FilterValues } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { RepairRequestStatus } from '@asko/shared/client';
-import { STATUS_LABEL, STATUS_BADGE, formatDateShort, formatDateLong, LIMIT, GROUP_FILTER, type GroupKey } from './constants';
+import { formatDate, formatDateLong } from '@asko/shared/client';
+import { STATUS_LABEL, STATUS_BADGE, LIMIT, GROUP_FILTER, type GroupKey } from './constants';
 
 interface DeviceGroup {
   deviceId: string;
@@ -75,7 +76,7 @@ const requestColumns: DataGridColumn<any>[] = [
     width: 140,
     mobileLabel: 'Дата:',
     render: (req) => (
-      <p className="text-sm text-text-sub">{formatDateShort(req.updatedAt)}</p>
+      <p className="text-sm text-text-sub">{formatDate(req.updatedAt)}</p>
     ),
   },
 ];
@@ -103,7 +104,7 @@ const deviceColumns: DataGridColumn<DeviceGroup>[] = [
     width: 160,
     mobileLabel: 'Последняя:',
     render: (g) => (
-      <p className="text-sm text-text-sub">{formatDateShort(g.lastDate)}</p>
+      <p className="text-sm text-text-sub">{formatDate(g.lastDate)}</p>
     ),
   },
 ];
