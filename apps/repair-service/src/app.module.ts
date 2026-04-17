@@ -8,7 +8,6 @@ import { DatabaseModule } from 'modules/database.module';
 import { RmqClientsModule } from 'modules/rmq-clients.module';
 import { SharedServicesModule } from 'modules/shared-services/shared-services.module';
 import { WorkScheduleModule } from 'modules/schedule/schedule.module';
-import { SupplierModule } from 'modules/supplier/supplier.module';
 import { DeviceModule } from 'modules/device/device.module';
 import { CertificateModule } from 'modules/certificate/certificate.module';
 import { DealerModule } from 'modules/dealer/dealer.module';
@@ -35,7 +34,6 @@ import { ScheduleEndSweepService } from 'modules/schedule/services/schedule-end-
         RmqClientsModule,
         SharedServicesModule,
         WorkScheduleModule,
-        SupplierModule,
         DeviceModule,
         CertificateModule,
         DealerModule,

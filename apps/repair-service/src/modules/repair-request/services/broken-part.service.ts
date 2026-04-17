@@ -5,7 +5,7 @@ import { RepairRequest } from '../entities/repair-request.entity';
 import { DevicePart } from 'modules/device/entities/device-part.entity';
 import { BrokenPartStatus, RepairRequestStatus, Role, ADMIN_ROLES } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { SupplierService } from 'modules/supplier/supplier.service';
+import { SupplierService } from './supplier.service';
 
 const TERMINAL_STATUSES = [
     RepairRequestStatus.COMPLETED,
