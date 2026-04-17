@@ -496,6 +496,34 @@ export class RepairEventConsumer {
         }
     }
 
+    // ── Parts Events ──
+
+    @EventPattern('repair.part_shipped')
+    async handlePartShipped(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const shortId = String(data.repairId ?? '').slice(0, 8);
+
+        try {
+            if (data.repairerUserId) {
+                await this.notificationService.createNotification(
+                    data.repairerUserId,
+                    NotificationType.REPAIR_PART_SHIPPED,
+                    'Запчасть доставлена',
+                    `Запчасть «${data.partName}» для заявки №${shortId} доставлена. Можно продолжить ремонт.`,
+                    NotificationTargetType.REPAIR_REQUEST,
+                    data.repairId,
+                    data,
+                );
+            }
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] repair.part_shipped error:', e);
+            channel.ack(msg);
+        }
+    }
+
     // ── AVR Events ──
 
     @EventPattern('repair.avr_signing_requested')

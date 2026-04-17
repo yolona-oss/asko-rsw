@@ -5,6 +5,8 @@ import { RepairRequest } from '../entities/repair-request.entity';
 import { DevicePart } from 'modules/device/entities/device-part.entity';
 import { BrokenPartStatus, RepairRequestStatus, Role, ADMIN_ROLES } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
+import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { SupplierService } from './supplier.service';
 
 const TERMINAL_STATUSES = [
@@ -18,6 +20,7 @@ const TERMINAL_STATUSES = [
 export class BrokenPartService {
     constructor(
         private readonly em: EntityManager,
+        private readonly repairEventService: RepairEventService,
         @Inject(forwardRef(() => SupplierService))
         private readonly supplierService: SupplierService,
     ) {}
@@ -257,18 +260,33 @@ export class BrokenPartService {
         partId: string,
         payload: { status: 'shipped' | 'failed'; externalOrderId: string },
     ): Promise<void> {
-        const part = await this.em.findOne(BrokenPart, { id: partId });
+        const part = await this.em.findOne(BrokenPart, { id: partId }, { populate: ['repairRequest.repairer'] });
         if (!part) return;
         if (part.externalOrderId !== payload.externalOrderId) return;
 
         if (payload.status === 'shipped') {
             part.status = BrokenPartStatus.SHIPPED;
+            await this.em.flush();
+
+            const request = part.repairRequest as RepairRequest;
+            const repairer = request.repairer as Repairer | undefined;
+            if (repairer?.userId) {
+                await this.repairEventService.emit({
+                    type: RepairEventType.PART_SHIPPED,
+                    repairId: request.id,
+                    userId: request.userId,
+                    repairerUserId: repairer.userId,
+                    timestamp: new Date(),
+                    partId: part.id,
+                    partName: part.name,
+                });
+            }
         } else {
             part.status = BrokenPartStatus.ADDED;
             part.externalOrderId = undefined;
             part.supplierProvider = undefined;
             part.orderedAt = undefined;
+            await this.em.flush();
         }
-        await this.em.flush();
     }
 }

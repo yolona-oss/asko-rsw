@@ -43,6 +43,7 @@ export enum NotificationType {
     ADDRESS_VALIDATION_FAILED = 'address_validation_failed',
     USER_DEVICE_VALIDATED = 'user_device_validated',
     USER_DEVICE_VALIDATION_FAILED = 'user_device_validation_failed',
+    REPAIR_PART_SHIPPED = 'repair_part_shipped',
 }
 
 export enum NotificationTargetType {

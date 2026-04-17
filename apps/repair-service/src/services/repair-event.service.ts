@@ -19,6 +19,7 @@ export enum RepairEventType {
     ADDRESS_VALIDATION_FAILED = 'address.validation_failed',
     USER_DEVICE_VALIDATED = 'user_device.validated',
     USER_DEVICE_VALIDATION_FAILED = 'user_device.validation_failed',
+    PART_SHIPPED = 'repair.part_shipped',
 }
 
 export interface AddressEvent {
@@ -67,6 +68,8 @@ export interface RepairEvent {
     oldRepairerUserId?: string;
     newRepairerUserId?: string;
     reason?: string;
+    partId?: string;
+    partName?: string;
     timestamp: Date;
 }
 
