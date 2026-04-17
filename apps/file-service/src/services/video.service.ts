@@ -6,11 +6,11 @@ import { VideoTypeEnum } from "@asko/shared";
 import { Video } from 'entities/video.entity';
 import { FileAccess } from 'entities/file-access.entity';
 import { AppErrors } from "common/error";
-import { AccessParams, persistFileAccess, toAccessParams } from "common/file-access.helper";
+import { AccessParams, persistFileAccess } from "common/file-access.helper";
 import { STORAGE_PROVIDER, StorageProvider, StreamUploadMeta } from "storage/storage-provider.interface";
 import { VIDEO_COMPRESS_QUEUE } from "modules/video-compress-queue.module";
+import { AppConfig } from "app.config";
 import type { VideoCompressJobData } from "./video-compress.processor";
-import 'multer';
 
 const COMPRESS_JOB_OPTS = {
     attempts: 3,
@@ -25,96 +25,12 @@ export class VideoService {
         private readonly em: EntityManager,
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
         @InjectQueue(VIDEO_COMPRESS_QUEUE) private readonly compressQueue: Queue<VideoCompressJobData>,
+        private readonly config: AppConfig,
     ) { }
 
     private async enqueueCompress(videoId: string): Promise<void> {
+        if (this.config.fileStorageMode !== 'local') return;
         await this.compressQueue.add('compress', { videoId }, COMPRESS_JOB_OPTS);
-    }
-
-    @CreateRequestContext()
-    async findOne(id: string): Promise<Video> {
-        return this.em.findOneOrFail(Video, { id });
-    }
-
-    @CreateRequestContext()
-    async findAccess(fileId: string): Promise<FileAccess | null> {
-        return this.em.findOne(FileAccess, { fileId, fileType: 'video' });
-    }
-
-    @CreateRequestContext()
-    async upload(
-        file: Express.Multer.File,
-        creatorId?: string,
-        visibility?: string,
-        conversationId?: string,
-    ) {
-        const result = await this.storage.uploadVideo(file);
-        const video = new Video();
-        video.video = result;
-        video.order = 0;
-        await this.em.persistAndFlush(video);
-        await this.enqueueCompress(video.id);
-
-        await persistFileAccess(
-            this.em,
-            video.id,
-            'video',
-            toAccessParams({ creatorId, visibility, conversationId }),
-        );
-
-        return video;
-    }
-
-    @CreateRequestContext()
-    async uploadRepairRequestVideo(file: Express.Multer.File, ownerId: string) {
-        const result = await this.storage.uploadVideo(file, 'repair-request-videos');
-        const video = new Video();
-        video.video = result;
-        video.ownerType = VideoTypeEnum.RepairRequest;
-        video.ownerId = String(ownerId);
-        video.order = await this.countAttached(ownerId, VideoTypeEnum.RepairRequest);
-        await this.em.persistAndFlush(video);
-        await this.enqueueCompress(video.id);
-        return video;
-    }
-
-    @CreateRequestContext()
-    async uploadReviewVideo(file: Express.Multer.File, ownerId: string) {
-        const result = await this.storage.uploadVideo(file, 'review-videos');
-        const video = new Video();
-        video.video = result;
-        video.ownerType = VideoTypeEnum.Review;
-        video.ownerId = String(ownerId);
-        video.order = await this.countAttached(ownerId, VideoTypeEnum.Review);
-        await this.em.persistAndFlush(video);
-        await this.enqueueCompress(video.id);
-        return video;
-    }
-
-    @CreateRequestContext()
-    async uploadDeviceVideo(file: Express.Multer.File, ownerId: string) {
-        const result = await this.storage.uploadVideo(file, 'device-videos');
-        const video = new Video();
-        video.video = result;
-        video.ownerType = VideoTypeEnum.Device;
-        video.ownerId = String(ownerId);
-        video.order = await this.countAttached(ownerId, VideoTypeEnum.Device);
-        await this.em.persistAndFlush(video);
-        await this.enqueueCompress(video.id);
-        return video;
-    }
-
-    @CreateRequestContext()
-    async uploadArticleVideo(file: Express.Multer.File, ownerId: string) {
-        const result = await this.storage.uploadVideo(file, 'article-videos');
-        const video = new Video();
-        video.video = result;
-        video.ownerType = VideoTypeEnum.Article;
-        video.ownerId = String(ownerId);
-        video.order = await this.countAttached(ownerId, VideoTypeEnum.Article);
-        await this.em.persistAndFlush(video);
-        await this.enqueueCompress(video.id);
-        return video;
     }
 
     private async uploadOwnedVideoStream(
@@ -138,6 +54,16 @@ export class VideoService {
     }
 
     @CreateRequestContext()
+    async findOne(id: string): Promise<Video> {
+        return this.em.findOneOrFail(Video, { id });
+    }
+
+    @CreateRequestContext()
+    async findAccess(fileId: string): Promise<FileAccess | null> {
+        return this.em.findOne(FileAccess, { fileId, fileType: 'video' });
+    }
+
+    @CreateRequestContext()
     async uploadStreamGeneric(
         stream: NodeJS.ReadableStream,
         meta: StreamUploadMeta,
@@ -149,9 +75,7 @@ export class VideoService {
         video.order = 0;
         await this.em.persistAndFlush(video);
         await this.enqueueCompress(video.id);
-
         await persistFileAccess(this.em, video.id, 'video', access);
-
         return video;
     }
 

@@ -1,7 +1,7 @@
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
-import { PassThrough, Readable } from 'stream';
+import { PassThrough } from 'stream';
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import { v4 as uuid } from 'uuid';
@@ -14,7 +14,6 @@ import { AppConfig } from 'app.config';
 import { AppErrors } from 'common/error';
 import { AccessParams, persistFileAccess } from 'common/file-access.helper';
 import { safePath } from 'common/safe-path';
-import 'multer';
 
 export const ALLOWED_DOCUMENT_MIMES = [
     'application/pdf',
@@ -73,92 +72,6 @@ export class DocumentService {
         return this.config.publicUrl;
     }
 
-    private async uploadToCloudinary(
-        file: Express.Multer.File,
-        folder: string,
-    ): Promise<{ url: string; publicId: string }> {
-        return new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: `asko/documents/${folder}`,
-                    resource_type: 'raw',
-                    public_id: `${uuid()}_${file.originalname.replace(/[^\w.-]/g, '_')}`,
-                    use_filename: false,
-                    unique_filename: true,
-                },
-                (err, result) => {
-                    if (err || !result) return reject(err ?? new Error('Cloudinary returned no result'));
-                    const r = result as UploadApiResponse;
-                    resolve({ url: r.secure_url ?? r.url, publicId: r.public_id });
-                },
-            );
-            Readable.from(file.buffer).pipe(uploadStream);
-        });
-    }
-
-    private async uploadToLocal(
-        file: Express.Multer.File,
-        folder: string,
-    ): Promise<{ url: string; publicId: string }> {
-        const ext = this.extFromMime(file.mimetype, file.originalname);
-        const filename = `${uuid()}.${ext}`;
-        const relative = `documents/${folder}/${filename}`;
-        const dir = safePath(this.staticPath, 'documents', folder);
-        await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(safePath(dir, filename), file.buffer);
-        return {
-            url: `${this.publicUrl}/documents/${folder}/${filename}`,
-            publicId: relative,
-        };
-    }
-
-    @CreateRequestContext()
-    async upload(
-        file: Express.Multer.File,
-        ownerType: string,
-        ownerId: string,
-        access?: AccessParams,
-    ): Promise<Document> {
-        if (!file?.buffer) throw AppErrors.badRequest('No file buffer');
-        this.assertMime(file.mimetype);
-
-        const uploaded =
-            this.config.fileStorageMode === 'local'
-                ? await this.uploadToLocal(file, ownerType)
-                : await this.uploadToCloudinary(file, ownerType);
-
-        const doc = new Document();
-        doc.ownerType = ownerType;
-        doc.ownerId = String(ownerId);
-        doc.storageUrl = uploaded.url;
-        doc.publicId = uploaded.publicId;
-        doc.mimeType = file.mimetype;
-        doc.filename = file.originalname;
-        doc.sizeBytes = file.size ?? file.buffer.length;
-        await this.em.persistAndFlush(doc);
-
-        await persistFileAccess(this.em, doc.id, 'document', access);
-        return doc;
-    }
-
-    @CreateRequestContext()
-    async uploadBrokenPartDocument(
-        file: Express.Multer.File,
-        ownerId: string,
-        access?: AccessParams,
-    ): Promise<Document> {
-        return this.upload(file, 'broken-part', ownerId, access);
-    }
-
-    @CreateRequestContext()
-    async uploadRepairRequestDocument(
-        file: Express.Multer.File,
-        ownerId: string,
-        access?: AccessParams,
-    ): Promise<Document> {
-        return this.upload(file, 'repair-request', ownerId, access);
-    }
-
     private async uploadStreamToLocal(
         stream: NodeJS.ReadableStream,
         mimetype: string,
@@ -185,8 +98,6 @@ export class DocumentService {
         originalname: string,
         folder: string,
     ): Promise<{ url: string; publicId: string; sizeBytes: number }> {
-        // Cloudinary does not stream back byte counts — tee the stream so we
-        // can count locally without buffering.
         let bytes = 0;
         const counter = new PassThrough();
         counter.on('data', (chunk: Buffer) => { bytes += chunk.length; });

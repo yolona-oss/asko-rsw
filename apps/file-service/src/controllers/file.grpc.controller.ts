@@ -8,7 +8,8 @@ import { DocumentService } from 'services/document.service';
 import { AppError, AppErrors } from 'common/error';
 import { toAccessParams } from 'common/file-access.helper';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
-import { PassThrough, Readable } from 'stream';
+import type { FileAccess } from 'entities/file-access.entity';
+import { PassThrough } from 'stream';
 import { Observable } from 'rxjs';
 import type {
     UploadChunk,
@@ -35,12 +36,12 @@ import type { Document } from 'entities/document.entity';
 function toGrpcError(error: unknown): RpcException {
     if (error instanceof AppError) {
         let grpcCode: number;
-        switch (true) {
-            case error.httpStatus === 400: grpcCode = status.INVALID_ARGUMENT; break;
-            case error.httpStatus === 401: grpcCode = status.UNAUTHENTICATED; break;
-            case error.httpStatus === 403: grpcCode = status.PERMISSION_DENIED; break;
-            case error.httpStatus === 404: grpcCode = status.NOT_FOUND; break;
-            case error.httpStatus === 409: grpcCode = status.ALREADY_EXISTS; break;
+        switch (error.httpStatus) {
+            case 400: grpcCode = status.INVALID_ARGUMENT; break;
+            case 401: grpcCode = status.UNAUTHENTICATED; break;
+            case 403: grpcCode = status.PERMISSION_DENIED; break;
+            case 404: grpcCode = status.NOT_FOUND; break;
+            case 409: grpcCode = status.ALREADY_EXISTS; break;
             default: grpcCode = status.INTERNAL; break;
         }
         return new RpcException({ code: grpcCode, message: error.message });
@@ -48,8 +49,6 @@ function toGrpcError(error: unknown): RpcException {
     const msg = error instanceof Error ? error.message : 'Internal error';
     return new RpcException({ code: status.INTERNAL, message: msg });
 }
-
-// toMulterFile helper removed — all upload RPCs are now client-streaming.
 
 function entityToRecord(entity: Image) {
     return {
@@ -525,7 +524,7 @@ export class FileGrpcController {
         try {
             let storageUrl = '';
             let publicId = '';
-            let access: any = null;
+            let access: FileAccess | null = null;
 
             if (data.type === 'video') {
                 const video = await this.videoService.findOne(data.id);

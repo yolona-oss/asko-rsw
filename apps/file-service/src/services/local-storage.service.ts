@@ -5,7 +5,6 @@ import { StorageProvider, StreamUploadMeta, VideoUploadResult } from 'storage/st
 import { safePath } from 'common/safe-path';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 
@@ -35,6 +34,15 @@ export class LocalStorageService implements StorageProvider {
         return map[mimeType] ?? 'jpg';
     }
 
+    private videoExtFromMime(mimeType: string): string {
+        const map: Record<string, string> = {
+            'video/mp4': 'mp4',
+            'video/webm': 'webm',
+            'video/quicktime': 'mov',
+        };
+        return map[mimeType] ?? 'mp4';
+    }
+
     private buildResult(relativePath: string, filename: string, format: string): CloudinaryUploadResult {
         const fileUrl = `${this.publicUrl}/images/${relativePath}`;
         return {
@@ -51,73 +59,6 @@ export class LocalStorageService implements StorageProvider {
         };
     }
 
-    async uploadImage(file: Express.Multer.File, folder: string = 'default'): Promise<CloudinaryUploadResult> {
-        const ext = this.extFromMime(file.mimetype);
-        const filename = `${uuid()}.${ext}`;
-        const dir = safePath(this.staticPath, folder);
-        await this.ensureDir(dir);
-        await fs.writeFile(safePath(dir, filename), file.buffer);
-        return this.buildResult(`${folder}/${filename}`, file.originalname, ext);
-    }
-
-    async uploadImageBuffer(buffer: Buffer, filename: string, folder: string = 'default'): Promise<CloudinaryUploadResult> {
-        const ext = path.extname(filename).replace('.', '') || 'jpg';
-        const storedName = `${uuid()}.${ext}`;
-        const dir = safePath(this.staticPath, folder);
-        await this.ensureDir(dir);
-        await fs.writeFile(safePath(dir, storedName), buffer);
-        return this.buildResult(`${folder}/${storedName}`, filename, ext);
-    }
-
-    async uploadStream(stream: NodeJS.ReadableStream, mimeType: string): Promise<CloudinaryUploadResult | undefined> {
-        const ext = this.extFromMime(mimeType);
-        const filename = `${uuid()}.${ext}`;
-        const dir = safePath(this.staticPath, 'uploads');
-        await this.ensureDir(dir);
-        const filePath = safePath(dir, filename);
-        await pipeline(stream, createWriteStream(filePath));
-        return this.buildResult(`uploads/${filename}`, filename, ext);
-    }
-
-    async uploadImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, folder: string = 'default'): Promise<CloudinaryUploadResult> {
-        const ext = this.extFromMime(meta.mimetype);
-        const filename = `${uuid()}.${ext}`;
-        const dir = safePath(this.staticPath, folder);
-        await this.ensureDir(dir);
-        await pipeline(stream, createWriteStream(safePath(dir, filename)));
-        return this.buildResult(`${folder}/${filename}`, meta.originalname, ext);
-    }
-
-    async deleteImage(id: string): Promise<void> {
-        const filePath = safePath(this.staticPath, id);
-        await fs.unlink(filePath).catch(() => {});
-    }
-
-    async deleteImages(ids: string[]): Promise<void> {
-        await Promise.all(ids.map(id => this.deleteImage(id)));
-    }
-
-    async generateThumbnail(url: string, _width: number, _height: number): Promise<string> {
-        return url;
-    }
-
-    async generateMultipleSizes(url: string): Promise<{ thumbnail: string; medium: string; large: string }> {
-        return { thumbnail: url, medium: url, large: url };
-    }
-
-    generateSizedUrl(url: string): string {
-        return url;
-    }
-
-    private videoExtFromMime(mimeType: string): string {
-        const map: Record<string, string> = {
-            'video/mp4': 'mp4',
-            'video/webm': 'webm',
-            'video/quicktime': 'mov',
-        };
-        return map[mimeType] ?? 'mp4';
-    }
-
     private buildVideoResult(relativePath: string, filename: string, format: string, size?: number): VideoUploadResult {
         const fileUrl = `${this.publicUrl}/videos/${relativePath}`;
         return {
@@ -131,13 +72,13 @@ export class LocalStorageService implements StorageProvider {
         };
     }
 
-    async uploadVideo(file: Express.Multer.File, folder: string = 'default'): Promise<VideoUploadResult> {
-        const ext = this.videoExtFromMime(file.mimetype);
+    async uploadImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, folder: string = 'default'): Promise<CloudinaryUploadResult> {
+        const ext = this.extFromMime(meta.mimetype);
         const filename = `${uuid()}.${ext}`;
-        const dir = safePath(this.staticPath, 'videos', folder);
+        const dir = safePath(this.staticPath, folder);
         await this.ensureDir(dir);
-        await fs.writeFile(safePath(dir, filename), file.buffer);
-        return this.buildVideoResult(`${folder}/${filename}`, file.originalname, ext, file.size);
+        await pipeline(stream, createWriteStream(safePath(dir, filename)));
+        return this.buildResult(`${folder}/${filename}`, meta.originalname, ext);
     }
 
     async uploadVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, folder: string = 'default'): Promise<VideoUploadResult> {
@@ -151,8 +92,21 @@ export class LocalStorageService implements StorageProvider {
         return this.buildVideoResult(`${folder}/${filename}`, meta.originalname, ext, stat?.size);
     }
 
+    async deleteImage(id: string): Promise<void> {
+        const filePath = safePath(this.staticPath, id);
+        await fs.unlink(filePath).catch(() => {});
+    }
+
+    async deleteImages(ids: string[]): Promise<void> {
+        await Promise.all(ids.map(id => this.deleteImage(id)));
+    }
+
     async deleteVideo(id: string): Promise<void> {
         const filePath = safePath(this.staticPath, 'videos', id);
         await fs.unlink(filePath).catch(() => {});
+    }
+
+    generateSizedUrl(url: string): string {
+        return url;
     }
 }

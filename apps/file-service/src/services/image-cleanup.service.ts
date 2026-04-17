@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
 import { Image } from 'entities/image.entity';
 import { ImageTypeEnum } from '@asko/shared';
+import { collectPublicIds } from 'common/image-utils';
 import { STORAGE_PROVIDER, StorageProvider } from 'storage/storage-provider.interface';
 
 const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
@@ -59,25 +60,7 @@ export class ImageCleanupService {
         if (allToDelete.length === 0) return;
 
         this.logger.log(`Cleaning ${orphans.length} orphans + ${staleImages.length} stale images`);
-
-        for (const image of allToDelete) {
-            try {
-                const publicIds = Object.values(image.image)
-                    .filter(Boolean)
-                    .map((entry) => entry.public_id)
-                    .filter(Boolean);
-
-                if (publicIds.length > 0) {
-                    await this.storage.deleteImages(publicIds);
-                }
-            } catch (e) {
-                this.logger.error(`Failed to delete files for image ${image.id}: ${e}`);
-            }
-
-            this.em.remove(image);
-        }
-
-        await this.em.flush();
+        await this.deleteImageEntities(allToDelete);
         this.logger.log(`Cleaned ${allToDelete.length} images total`);
     }
 
@@ -87,25 +70,23 @@ export class ImageCleanupService {
         const images = await this.em.find(Image, { ownerType, ownerId });
         if (images.length === 0) return 0;
 
+        await this.deleteImageEntities(images);
+        this.logger.log(`Deleted ${images.length} images for ${ownerType}/${ownerId}`);
+        return images.length;
+    }
+
+    private async deleteImageEntities(images: Image[]): Promise<void> {
         for (const image of images) {
             try {
-                const publicIds = Object.values(image.image)
-                    .filter(Boolean)
-                    .map((entry) => entry.public_id)
-                    .filter(Boolean);
-
+                const publicIds = collectPublicIds(image);
                 if (publicIds.length > 0) {
                     await this.storage.deleteImages(publicIds);
                 }
             } catch (e) {
                 this.logger.error(`Failed to delete files for image ${image.id}: ${e}`);
             }
-
             this.em.remove(image);
         }
-
         await this.em.flush();
-        this.logger.log(`Deleted ${images.length} images for ${ownerType}/${ownerId}`);
-        return images.length;
     }
 }
