@@ -2260,6 +2260,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairUploadController_uploadRepairRequestImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairUploadController_uploadRepairRequestVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairUploadController_uploadRepairRequestDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/broken-parts/{partId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairUploadController_uploadBrokenPartImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/broken-parts/{partId}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairUploadController_uploadBrokenPartDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["RepairUploadController_deleteDocument"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/devices": {
         parameters: {
             query?: never;
@@ -2461,7 +2557,7 @@ export interface paths {
         };
         get: operations["DeviceController_findImages"];
         put?: never;
-        post: operations["RepairImageUploadController_uploadDeviceImage"];
+        post: operations["DeviceUploadController_uploadDeviceImage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2578,6 +2674,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["PartsController_update"];
+        trace?: never;
+    };
+    "/devices/{id}/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DeviceUploadController_uploadDeviceVideo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parts/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DeviceUploadController_uploadDevicePartImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/certificates/add": {
@@ -3243,7 +3371,7 @@ export interface paths {
         };
         get: operations["ReviewController_findImages"];
         put?: never;
-        post: operations["RepairImageUploadController_uploadReviewImage"];
+        post: operations["ReviewUploadController_uploadReviewImage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3308,6 +3436,22 @@ export interface paths {
         get: operations["ReviewController_findByRequest"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/{id}/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReviewUploadController_uploadReviewVideo"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3682,150 +3826,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/repair-requests/{id}/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairImageUploadController_uploadRepairRequestImage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/repair-requests/broken-parts/{partId}/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairImageUploadController_uploadBrokenPartImage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/parts/{id}/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairImageUploadController_uploadDevicePartImage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/repair-requests/{id}/videos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairVideoUploadController_uploadRepairRequestVideo"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/reviews/{id}/videos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairVideoUploadController_uploadReviewVideo"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/devices/{id}/videos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairVideoUploadController_uploadDeviceVideo"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/repair-requests/{id}/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairDocumentUploadController_uploadRepairRequestDocument"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/repair-requests/broken-parts/{partId}/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairDocumentUploadController_uploadBrokenPartDocument"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/repair-requests/documents/{documentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["RepairDocumentUploadController_deleteDocument"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4107,7 +4107,7 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed" | "repair_schedule_ending" | "repair_schedule_auto_paused" | "address_validated" | "address_validation_failed" | "user_device_validated" | "user_device_validation_failed";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed" | "repair_schedule_ending" | "repair_schedule_auto_paused" | "address_validated" | "address_validation_failed" | "user_device_validated" | "user_device_validation_failed" | "repair_part_shipped";
         /** @enum {string} */
         NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "address" | "userDevice" | "system";
         NotificationRecordDto: {
@@ -8079,6 +8079,128 @@ export interface operations {
             };
         };
     };
+    RepairUploadController_uploadRepairRequestImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageResponseDto"];
+                };
+            };
+        };
+    };
+    RepairUploadController_uploadRepairRequestVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    RepairUploadController_uploadRepairRequestDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RepairUploadController_uploadBrokenPartImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageResponseDto"];
+                };
+            };
+        };
+    };
+    RepairUploadController_uploadBrokenPartDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RepairUploadController_deleteDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
     DeviceController_findAll: {
         parameters: {
             query?: never;
@@ -8476,7 +8598,7 @@ export interface operations {
             };
         };
     };
-    RepairImageUploadController_uploadDeviceImage: {
+    DeviceUploadController_uploadDeviceImage: {
         parameters: {
             query?: never;
             header?: never;
@@ -8822,6 +8944,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DevicePartResponseDto"];
+                };
+            };
+        };
+    };
+    DeviceUploadController_uploadDeviceVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
+                };
+            };
+        };
+    };
+    DeviceUploadController_uploadDevicePartImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageResponseDto"];
                 };
             };
         };
@@ -9810,7 +9974,7 @@ export interface operations {
             };
         };
     };
-    RepairImageUploadController_uploadReviewImage: {
+    ReviewUploadController_uploadReviewImage: {
         parameters: {
             query?: never;
             header?: never;
@@ -9909,6 +10073,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReviewResponseDto"];
+                };
+            };
+        };
+    };
+    ReviewUploadController_uploadReviewVideo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoResponseDto"];
                 };
             };
         };
@@ -10635,191 +10820,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    RepairImageUploadController_uploadRepairRequestImage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImageResponseDto"];
-                };
-            };
-        };
-    };
-    RepairImageUploadController_uploadBrokenPartImage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                partId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImageResponseDto"];
-                };
-            };
-        };
-    };
-    RepairImageUploadController_uploadDevicePartImage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImageResponseDto"];
-                };
-            };
-        };
-    };
-    RepairVideoUploadController_uploadRepairRequestVideo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VideoResponseDto"];
-                };
-            };
-        };
-    };
-    RepairVideoUploadController_uploadReviewVideo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VideoResponseDto"];
-                };
-            };
-        };
-    };
-    RepairVideoUploadController_uploadDeviceVideo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VideoResponseDto"];
-                };
-            };
-        };
-    };
-    RepairDocumentUploadController_uploadRepairRequestDocument: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RepairDocumentUploadController_uploadBrokenPartDocument: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                partId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RepairDocumentUploadController_deleteDocument: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                documentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EmptyResponseDto"];
                 };
             };
         };

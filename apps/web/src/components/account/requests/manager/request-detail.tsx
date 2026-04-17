@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Badge, Button, ImageGallery, Modal, SkeletonCard } from '@asko/ui';
-import { ClipboardCopy, ArrowLeft } from 'lucide-react';
+import { ClipboardCopy, ArrowLeft, Globe, Check, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/requests/shared/broken-parts/editor';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
@@ -30,38 +29,10 @@ import { RequestChat } from './request-chat';
 import { RepairerSelector } from './repairer-selector';
 import { resolveScheduleForToday, compareBySchedule } from './schedule-resolver';
 
-const ASSIGN_MESSAGES = [
-  'Назначение мастера…',
-  'Отправка уведомления…',
-  'Обновление статуса заявки…',
-  'Почти готово…',
-];
-
-const REASSIGN_MESSAGES = [
-  'Переназначение мастера…',
-  'Уведомление нового мастера…',
-  'Обновление статуса заявки…',
-  'Почти готово…',
-];
-
-function useTimedMessages(messages: string[], active: boolean, interval = 2000) {
-  const [index, setIndex] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
-
-  useEffect(() => {
-    if (!active) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIndex(0);
-      clearInterval(timerRef.current);
-      return;
-    }
-    timerRef.current = setInterval(() => {
-      setIndex((prev) => Math.min(prev + 1, messages.length - 1));
-    }, interval);
-    return () => clearInterval(timerRef.current);
-  }, [active, messages.length, interval]);
-
-  return messages[index];
+function isCrossCityError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const msg = (error as any)?.response?.data?.message ?? (error as any)?.message ?? '';
+  return typeof msg === 'string' && msg.includes('часового пояса');
 }
 
 export function ManagerRequestDetail({ requestId }: { requestId: string }) {
@@ -77,6 +48,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [assignSuccess, setAssignSuccess] = useState(false);
+  const [crossCityPrompt, setCrossCityPrompt] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatAttached, setChatAttached] = useState(false);
@@ -175,24 +147,28 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     );
   }, [repairers, scheduleInfoByRepairer]);
 
-  const performAssign = async (repairerId: string) => {
+  const performAssign = async (repairerId: string, allowCrossCity?: boolean) => {
     if (!request) return;
     setAssigning(true);
     setAssignSuccess(false);
+    setCrossCityPrompt(false);
     try {
       const isReassign = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
       if (isReassign) {
-        await repairRequestApi.reassign(request.id, repairerId);
+        await repairRequestApi.reassign(request.id, repairerId, allowCrossCity);
       } else {
-        await repairRequestApi.assign(request.id, repairerId);
+        await repairRequestApi.assign(request.id, repairerId, allowCrossCity);
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
       setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
       setAssigning(false);
       setAssignSuccess(true);
       setTimeout(() => setAssignSuccess(false), 3000);
-    } catch {
+    } catch (e) {
       setAssigning(false);
+      if (isCrossCityError(e)) {
+        setCrossCityPrompt(true);
+      }
     }
   };
 
@@ -205,6 +181,11 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       return;
     }
     await performAssign(selectedRepairer);
+  };
+
+  const handleConfirmCrossCity = async () => {
+    if (!selectedRepairer) return;
+    await performAssign(selectedRepairer, true);
   };
 
   const handleProposeExtraDay = async () => {
@@ -383,16 +364,27 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           )}
 
           {/* Master assignment / reassignment */}
+          {/* Cross-city indicator */}
+          {request.isCrossCity && (
+            <div className="flex items-center gap-2 px-3 py-2 border border-info-border bg-info-bg text-info-deep text-sm">
+              <Globe className="w-4 h-4 flex-shrink-0" />
+              <span>Межгород: разница {request.timezoneOffsetHours != null ? `${request.timezoneOffsetHours > 0 ? '+' : ''}${request.timezoneOffsetHours}ч` : '—'}</span>
+            </div>
+          )}
+
           {canAssign && !isTerminal && (
             <AssignSection
               isAssigned={isAssigned}
               assigning={assigning}
               assignSuccess={assignSuccess}
+              crossCityPrompt={crossCityPrompt}
               selectedRepairer={selectedRepairer}
               onSelectRepairer={setSelectedRepairer}
               repairers={sortedRepairers}
               scheduleInfo={scheduleInfoByRepairer}
               onAssign={handleAssign}
+              onConfirmCrossCity={handleConfirmCrossCity}
+              onDismissCrossCity={() => setCrossCityPrompt(false)}
               requestAddress={request.address}
               currentRepairerId={request.repairer?.id}
             />
@@ -510,17 +502,20 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   );
 }
 
-/* ─── Animated assign/reassign section ─── */
+/* ─── Assign/reassign section ─── */
 
 interface AssignSectionProps {
   isAssigned: boolean;
   assigning: boolean;
   assignSuccess: boolean;
+  crossCityPrompt: boolean;
   selectedRepairer: string;
   onSelectRepairer: (id: string) => void;
   repairers: RepairerOption[];
   scheduleInfo: Record<string, RepairerScheduleInfo>;
   onAssign: () => void;
+  onConfirmCrossCity: () => void;
+  onDismissCrossCity: () => void;
   requestAddress?: { city?: string; latitude?: number; longitude?: number };
   currentRepairerId?: string;
 }
@@ -529,133 +524,86 @@ function AssignSection({
   isAssigned,
   assigning,
   assignSuccess,
+  crossCityPrompt,
   selectedRepairer,
   onSelectRepairer,
   repairers,
   scheduleInfo,
   onAssign,
+  onConfirmCrossCity,
+  onDismissCrossCity,
   requestAddress,
   currentRepairerId,
 }: AssignSectionProps) {
-  const messages = isAssigned ? REASSIGN_MESSAGES : ASSIGN_MESSAGES;
-  const timedMessage = useTimedMessages(messages, assigning);
+  if (assigning) {
+    return (
+      <div className="flex items-center gap-3 py-4 px-4 border border-border-main bg-surface-secondary">
+        <Loader2 className="w-5 h-5 text-brand-red animate-spin flex-shrink-0" />
+        <span className="text-sm text-text-sub">
+          {isAssigned ? 'Переназначение мастера…' : 'Назначение мастера…'}
+        </span>
+      </div>
+    );
+  }
+
+  if (assignSuccess) {
+    return (
+      <div className="flex items-center gap-2 py-3 px-4 border border-success bg-success/10 text-success-deep">
+        <Check className="w-5 h-5 flex-shrink-0" />
+        <span className="text-sm font-medium">
+          {isAssigned ? 'Мастер успешно переназначен' : 'Мастер успешно назначен'}
+        </span>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
-      <AnimatePresence mode="wait">
-        {assigning ? (
-          <motion.div
-            key="assigning"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col items-center justify-center gap-3 py-6 px-4 border border-border-main bg-bg-sub"
-          >
-            {/* Spinner */}
-            <motion.div
-              className="w-8 h-8 border-[2.5px] border-border-main border-t-brand-red rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-            />
-            {/* Timed message */}
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={timedMessage}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="text-sm text-text-sub"
-              >
-                {timedMessage}
-              </motion.p>
-            </AnimatePresence>
-            {/* Progress dots */}
-            <div className="flex gap-1.5">
-              {messages.map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full"
-                  animate={{
-                    backgroundColor: i <= messages.indexOf(timedMessage) ? 'var(--color-brand-red)' : 'var(--color-border-light)',
-                  }}
-                  transition={{ duration: 0.3 }}
-                />
-              ))}
-            </div>
-          </motion.div>
-        ) : assignSuccess ? (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-center gap-2 py-3 px-4 border border-success-border bg-success-bg text-success-deep"
-          >
-            <motion.svg
-              className="w-5 h-5 flex-shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <motion.path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              />
-            </motion.svg>
-            <span className="text-sm font-medium">
-              {isAssigned ? 'Мастер успешно переназначен' : 'Мастер успешно назначен'}
-            </span>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col gap-3"
-          >
-            <div>
-              <p className="text-sm font-bold text-text-main">
-                {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
-              </p>
-              {isAssigned && (
-                <p className="text-xs text-text-sub mt-1">
-                  При смене исполнителя заявка перейдёт в статус «Назначена».
-                </p>
-              )}
-            </div>
-            <RepairerSelector
-              repairers={repairers}
-              scheduleInfo={scheduleInfo}
-              selectedId={selectedRepairer}
-              onSelect={onSelectRepairer}
-              requestAddress={requestAddress}
-              currentRepairerId={currentRepairerId}
-              placeholder="Выбрать доступного мастера"
-            />
-            <button
-              type="button"
-              onClick={onAssign}
-              disabled={!selectedRepairer}
-              className="w-full lg:w-auto lg:self-end px-5 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red disabled:opacity-50 cursor-pointer transition-colors"
-            >
-              {isAssigned ? 'Переназначить' : 'Назначить'}
-            </button>
-          </motion.div>
+    <div className="flex flex-col gap-3">
+      <div>
+        <p className="text-sm font-bold text-text-main">
+          {isAssigned ? 'Переназначить мастера' : 'Назначение мастера'}
+        </p>
+        {isAssigned && (
+          <p className="text-xs text-text-sub mt-1">
+            При смене исполнителя заявка перейдёт в статус «Назначена».
+          </p>
         )}
-      </AnimatePresence>
+      </div>
+      <RepairerSelector
+        repairers={repairers}
+        scheduleInfo={scheduleInfo}
+        selectedId={selectedRepairer}
+        onSelect={onSelectRepairer}
+        requestAddress={requestAddress}
+        currentRepairerId={currentRepairerId}
+        placeholder="Выбрать доступного мастера"
+      />
+
+      {crossCityPrompt && (
+        <div className="flex flex-col gap-2 px-3 py-2.5 border border-warning bg-warning/10 text-sm">
+          <div className="flex items-start gap-2">
+            <Globe className="w-4 h-4 text-warning-deep flex-shrink-0 mt-0.5" />
+            <span className="text-warning-deep">
+              Мастер находится в другом часовом поясе. Подтвердите межгородское назначение.
+            </span>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="secondary" size="sm" onClick={onDismissCrossCity}>Отмена</Button>
+            <Button variant="primary" size="sm" onClick={onConfirmCrossCity}>Назначить межгород</Button>
+          </div>
+        </div>
+      )}
+
+      {!crossCityPrompt && (
+        <button
+          type="button"
+          onClick={onAssign}
+          disabled={!selectedRepairer}
+          className="w-full lg:w-auto lg:self-end px-5 py-2.5 text-sm font-medium text-text-on-brand bg-brand-red disabled:opacity-50 cursor-pointer transition-colors"
+        >
+          {isAssigned ? 'Переназначить' : 'Назначить'}
+        </button>
+      )}
     </div>
   );
 }

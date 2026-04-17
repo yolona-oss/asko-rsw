@@ -20,7 +20,7 @@ export interface RepairRequestDetail {
   } | null;
   user?: { firstName?: string; lastName?: string; phone?: string };
   userDevice?: { device?: { name?: string } };
-  address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number };
+  address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number; timezone?: string };
   statusTimestamps?: IStatusTimestampEntry[];
   repairer?: {
     id: string;
@@ -30,6 +30,8 @@ export interface RepairRequestDetail {
     lastLocationUpdate?: string;
     user?: { firstName?: string; lastName?: string };
   };
+  isCrossCity?: boolean;
+  timezoneOffsetHours?: number;
 }
 
 export interface RepairerOption {

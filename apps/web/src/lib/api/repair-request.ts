@@ -45,8 +45,8 @@ export const repairRequestApi = {
   },
 
   // Status changes
-  assign(requestId: string, repairerId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/assign`, { repairerId } satisfies AssignRepairerDto);
+  assign(requestId: string, repairerId: string, allowCrossCity?: boolean) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/assign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
   },
 
   accept(requestId: string) {
@@ -61,8 +61,8 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/start`);
   },
 
-  reassign(requestId: string, repairerId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/reassign`, { repairerId } satisfies AssignRepairerDto);
+  reassign(requestId: string, repairerId: string, allowCrossCity?: boolean) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/reassign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
   },
 
   acceptChat(requestId: string) {
