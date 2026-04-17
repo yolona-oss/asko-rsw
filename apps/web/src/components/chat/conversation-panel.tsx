@@ -14,6 +14,8 @@ import type { UploadingEntry } from './uploading-indicator';
 import { notificationApi } from '@/lib/api/notification';
 import { setActiveConversation } from '@/lib/active-conversation';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
+import { useAccount } from '@/components/account/layout/provider';
+import { displayName as buildDisplayName } from '@/lib/account';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
 import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
@@ -128,12 +130,18 @@ export function ConversationPanel({
   const isDirect = conversation.type === 'direct';
   const isGroup = conversation.type === 'group';
 
-  // Fetch avatars for all participants (for dropdown)
+  // Current user info for participant list
+  const { user: currentUser } = useAccount();
+  const currentUserName = currentUser ? buildDisplayName(currentUser) : '';
+  const currentUserRole = currentUser?.roles.find(r => r !== 'user') ?? currentUser?.roles[0] ?? '';
+
+  // Fetch avatars for all participants (including self for dropdown)
   const allParticipantIds = useMemo(
-    () => conversation.participants.map(p => p.userId).filter(id => id !== currentUserId),
-    [conversation.participants, currentUserId],
+    () => conversation.participants.map(p => p.userId),
+    [conversation.participants],
   );
   const avatarMap = useUserAvatars(allParticipantIds);
+  const currentUserAvatarSrc = currentUser?.avatar ?? avatarMap[currentUserId] ?? undefined;
   const headerAvatarSrc = isDirect && otherParticipant ? (avatarMap[otherParticipant.userId] ?? undefined) : conversation.avatarUrl;
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
 
@@ -236,10 +244,12 @@ export function ConversationPanel({
             <div className="flex flex-col gap-2.5">
               {conversation.participants.map(p => {
                 const isMe = p.userId === currentUserId;
-                const name = isMe ? 'Вы' : (participantNames[p.userId] || p.userId.slice(0, 8));
-                const online = presenceMap[p.userId] ?? false;
-                const src = avatarMap[p.userId] ?? undefined;
-                const roleKey = participantRoles[p.userId];
+                const name = isMe
+                  ? (currentUserName || participantNames[p.userId] || p.userId.slice(0, 8))
+                  : (participantNames[p.userId] || p.userId.slice(0, 8));
+                const online = isMe ? true : (presenceMap[p.userId] ?? false);
+                const src = isMe ? currentUserAvatarSrc : (avatarMap[p.userId] ?? undefined);
+                const roleKey = isMe ? currentUserRole : participantRoles[p.userId];
                 const roleLabel = roleKey ? ROLE_LABELS[roleKey] : undefined;
                 return (
                   <div key={p.userId} className="flex items-center gap-2.5">
@@ -250,11 +260,14 @@ export function ConversationPanel({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="text-sm text-text-main truncate">{name}</p>
+                        {isMe && (
+                          <span className="flex-shrink-0 text-[10px] font-medium text-text-sub bg-surface-secondary px-1.5 py-0.5">вы</span>
+                        )}
                         {roleLabel && (
                           <span className="flex-shrink-0 text-[10px] font-medium text-text-sub bg-surface-secondary px-1.5 py-0.5">{roleLabel}</span>
                         )}
                       </div>
-                      <p className="text-xs text-text-sub">{online ? 'В сети' : 'Не в сети'}</p>
+                      <p className="text-xs text-text-sub">{isMe ? 'В сети' : (online ? 'В сети' : 'Не в сети')}</p>
                     </div>
                   </div>
                 );
