@@ -6,9 +6,10 @@ import { RepairRequest } from 'modules/repair-request/entities/repair-request.en
 import { WSchedule, ScheduleEntryType, ScheduleStatus } from '../entities/wschedule.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { RepairRequestService } from 'modules/repair-request/services/repair-request.service';
+import { WScheduleService } from './wschedule.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
-import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
+import { getLocalNow } from 'common/timezone';
 
 const CONFIRMATION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -19,6 +20,7 @@ export class ScheduleEndSweepService {
     constructor(
         private readonly em: EntityManager,
         private readonly repairRequestService: RepairRequestService,
+        private readonly scheduleService: WScheduleService,
         private readonly schedulePatternService: WSchedulePatternService,
         private readonly events: RepairEventService,
     ) {}
@@ -52,7 +54,7 @@ export class ScheduleEndSweepService {
 
         for (const [repairerUserId, { repairer, requests }] of byRepairer) {
             try {
-                const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+                const tz = await this.scheduleService.resolveTimezone(repairer.userId);
                 const now = new Date();
                 const { todayStart } = getLocalNow(tz);
                 await this.processRepairer(repairerUserId, requests, now, todayStart);

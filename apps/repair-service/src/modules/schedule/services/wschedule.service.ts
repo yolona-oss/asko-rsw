@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedule, ScheduleEntryType, ScheduleStatus } from '../entities/wschedule.entity';
+import { Address } from 'modules/device/entities/address.entity';
 import { WSchedulePatternService } from './wschedule-pattern.service';
 import { AppErrors } from 'common/error';
 import { getLocalNow, getLocalDateAsUtc, DEFAULT_TIMEZONE } from 'common/timezone';
@@ -12,7 +13,6 @@ function parseDate(value: string): Date {
 
 interface RepairerScheduleCtx {
     userId: string;
-    timezone?: string;
 }
 
 const MAX_OVERTIME_MINUTES_PER_DAY = 4 * 60;       // 4 hours
@@ -24,6 +24,15 @@ export class WScheduleService {
         private readonly em: EntityManager,
         private readonly patternService: WSchedulePatternService,
     ) {}
+
+    /**
+     * Resolve the repairer's schedule timezone from their primary user address.
+     * Falls back to DEFAULT_TIMEZONE if no primary address or no timezone on it.
+     */
+    async resolveTimezone(userId: string): Promise<string> {
+        const address = await this.em.findOne(Address, { userId, isPrimary: true });
+        return address?.timezone ?? DEFAULT_TIMEZONE;
+    }
 
     @CreateRequestContext()
     async create(data: CreateScheduleRequest): Promise<WSchedule> {
@@ -207,7 +216,7 @@ export class WScheduleService {
      *  it counts RepairRequest rows, not schedule rows.)
      */
     async assertScheduleAllows(repairer: RepairerScheduleCtx, action: string): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+        const tz = await this.resolveTimezone(repairer.userId);
         const { nowTime, todayStart, todayEnd } = getLocalNow(tz);
         const dateForPattern = getLocalDateAsUtc(tz);
 
@@ -259,7 +268,7 @@ export class WScheduleService {
      * Used for assignment to avoid assigning work that can't be started.
      */
     async assertEnoughScheduleTime(repairer: RepairerScheduleCtx): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+        const tz = await this.resolveTimezone(repairer.userId);
         const { nowTime } = getLocalNow(tz);
         const dateForPattern = getLocalDateAsUtc(tz);
         const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
@@ -286,7 +295,7 @@ export class WScheduleService {
         requestId: string,
         assignedAt?: Date,
     ): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+        const tz = await this.resolveTimezone(repairer.userId);
         const date = assignedAt ?? new Date();
         const dateForPattern = getLocalDateAsUtc(tz);
         const blocking = await this.findBlockingToday(repairer.userId, tz);
@@ -304,7 +313,7 @@ export class WScheduleService {
      * past the scheduled end.
      */
     async assertPresenceAllowed(repairer: RepairerScheduleCtx, action: string): Promise<void> {
-        const tz = repairer.timezone ?? DEFAULT_TIMEZONE;
+        const tz = await this.resolveTimezone(repairer.userId);
         const blocking = await this.findBlockingToday(repairer.userId, tz);
         if (blocking) {
             const label = blocking.type === ScheduleEntryType.VACATION ? 'отпуске' : 'больничном';
