@@ -43,6 +43,7 @@ export interface RemoveParticipantRequest {
     conversationId: string;
     userId: string;
     removedBy: string;
+    force?: boolean;
 }
 
 export interface ListParticipantsRequest {

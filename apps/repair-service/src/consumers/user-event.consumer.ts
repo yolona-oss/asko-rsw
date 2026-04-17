@@ -2,9 +2,9 @@ import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Role } from '@asko/shared';
-import { RepairerService } from 'services/repairer.service';
-import { DealerService } from 'services/dealer.service';
-import { UserStatusHistory } from 'entities/user-status-history.entity';
+import { RepairerService } from 'modules/repairer/services/repairer.service';
+import { DealerService } from 'modules/dealer/services/dealer.service';
+import { UserStatusHistory } from 'modules/repairer/entities/user-status-history.entity';
 
 interface UserRegisteredPayload {
     userId: string;

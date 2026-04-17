@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { sleep } from '@asko/shared';
-import { Address } from 'entities/address.entity';
+import { Address } from 'modules/device/entities/address.entity';
 import type { AddressValidationEvent } from 'modules/address-validation.service';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';

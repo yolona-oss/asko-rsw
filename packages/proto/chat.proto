@@ -72,6 +72,7 @@ message RemoveParticipantRequest {
     string conversationId = 1;
     string userId = 2;
     string removedBy = 3;
+    bool force = 4;
 }
 
 message ListParticipantsRequest {

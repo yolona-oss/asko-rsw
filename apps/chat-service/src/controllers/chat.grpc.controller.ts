@@ -182,7 +182,7 @@ export class ChatGrpcController {
     @GrpcMethod('ChatService', 'RemoveParticipant')
     async removeParticipant(data: RemoveParticipantRequest) {
         try {
-            await this.conversationService.removeParticipant(data.conversationId, data.userId, data.removedBy);
+            await this.conversationService.removeParticipant(data.conversationId, data.userId, data.removedBy, data.force ?? false);
             return {};
         } catch (e) { throw toGrpcError(e); }
     }

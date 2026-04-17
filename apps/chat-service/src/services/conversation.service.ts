@@ -168,11 +168,13 @@ export class ConversationService {
     }
 
     @CreateRequestContext()
-    async removeParticipant(conversationId: string, userId: string, removedBy: string): Promise<void> {
+    async removeParticipant(conversationId: string, userId: string, removedBy: string, force = false): Promise<void> {
         const conversation = await this.em.findOne(Conversation, { id: conversationId });
         if (!conversation) throw AppErrors.conversationNotFound();
 
-        await this.assertParticipant(conversationId, removedBy);
+        if (!force) {
+            await this.assertParticipant(conversationId, removedBy);
+        }
 
         const participant = await this.em.findOne(ConversationParticipant, {
             conversation: { id: conversationId },

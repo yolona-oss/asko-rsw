@@ -260,18 +260,20 @@ export class RepairRequestController {
         const before = await this.repairClient.findById(id);
         const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
         if (result.request.conversationId) {
-            try {
-                // Remove old repairer from chat
-                if (before.request.repairerId) {
+            // Remove old repairer from chat
+            if (before.request.repairerId) {
+                try {
                     const { repairer: oldRep } = await this.repairerClient.findRepairerById(before.request.repairerId);
                     if (oldRep?.userId) {
-                        await this.chatClient.removeParticipant(result.request.conversationId, oldRep.userId, user.sub);
+                        await this.chatClient.removeParticipant(result.request.conversationId, oldRep.userId, user.sub, true);
                     }
-                }
-                // Add new repairer to chat
+                } catch { /* non-critical */ }
+            }
+            // Add new repairer to chat
+            try {
                 const { repairer: newRep } = await this.repairerClient.findRepairerById(dto.repairerId);
                 if (newRep?.userId) {
-                    await this.chatClient.addParticipant(result.request.conversationId, newRep.userId, user.sub);
+                    await this.chatClient.addParticipant(result.request.conversationId, newRep.userId, user.sub, true);
                 }
             } catch { /* non-critical */ }
         }

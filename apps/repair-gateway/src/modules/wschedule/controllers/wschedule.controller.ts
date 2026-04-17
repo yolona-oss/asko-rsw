@@ -20,6 +20,7 @@ import {
     assertMaxDuration,
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
+import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
 import {
     WScheduleRecordDto,
@@ -31,13 +32,31 @@ import {
 @ApiTags('Schedule')
 @Controller('schedule')
 export class WScheduleController {
-    constructor(private readonly scheduleClient: ScheduleClientService) {}
+    constructor(
+        private readonly scheduleClient: ScheduleClientService,
+        private readonly deviceClient: DeviceClientService,
+    ) {}
+
+    /**
+     * Schedule timing depends on the target user's timezone, which is derived from their
+     * validated address. Block any schedule manipulation when the target has no valid address.
+     */
+    private async assertTargetHasValidAddress(targetUserId: string): Promise<void> {
+        const result = await this.deviceClient.findUserAddresses(targetUserId);
+        const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === 'valid');
+        if (!hasValid) {
+            throw new BadRequestException(
+                'У адресата нет подтверждённого адреса. Расписание привязано к часовому поясу — сначала добавьте и подтвердите адрес.',
+            );
+        }
+    }
 
     @ApiCreatedResponse({ type: WScheduleRecordDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateWScheduleDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(dto.userId);
         if (dto.type === ScheduleEntryType.EXTRA_DAY) {
             assertDateIsToday(dto.dateFrom);
         } else if (dto.type === ScheduleEntryType.OVERTIME) {
@@ -72,6 +91,7 @@ export class WScheduleController {
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(dto.userId);
         assertNotInPast(dto.dateFrom, '00:00');
         await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
         const result = await this.scheduleClient.create({
@@ -114,6 +134,7 @@ export class WScheduleController {
     @Put('pattern/:userId')
     async upsertPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
         assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
+        await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternUpsert({
             userId,
             cycleLength: dto.cycleLength,
@@ -143,6 +164,7 @@ export class WScheduleController {
     @RequiredRoles(...STAFF_ROLES)
     @Post('pattern/:userId/approve')
     async approvePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+        await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternApprove(userId, user.sub);
         return result.pattern;
     }
@@ -151,6 +173,7 @@ export class WScheduleController {
     @RequiredRoles(...STAFF_ROLES)
     @Post('pattern/:userId/reject')
     async rejectPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+        await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternReject(userId, user.sub);
         return result.pattern;
     }
@@ -212,6 +235,7 @@ export class WScheduleController {
     async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateWScheduleDto) {
         const existing = (await this.scheduleClient.findById(id)).schedule;
         if (!existing || !existing.id) throw new NotFoundException('Запись расписания не найдена');
+        await this.assertTargetHasValidAddress(existing.userId);
 
         const userIsAdmin = isAdmin(user);
         const userIsStaff = isStaff(user);
@@ -346,6 +370,7 @@ export class WScheduleController {
         if (entry.status !== ScheduleStatus.PENDING) {
             throw new BadRequestException('Можно подтверждать только ожидающие записи');
         }
+        await this.assertTargetHasValidAddress(entry.userId);
 
         const userIsStaff = isStaff(user);
         const userIsTarget = entry.userId === user.sub;

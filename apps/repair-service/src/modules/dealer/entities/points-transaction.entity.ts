@@ -1,0 +1,31 @@
+import { Entity, PrimaryKey, Property, ManyToOne, Enum, OptionalProps } from '@mikro-orm/core';
+import { v4 as uuid } from 'uuid';
+import { PointsTransactionType } from '@asko/shared';
+import { DealerProfile } from './dealer-profile.entity';
+import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
+
+@Entity()
+export class PointsTransaction {
+    [OptionalProps]?: 'repairRequest' | 'createdAt';
+
+    @PrimaryKey()
+    id: string = uuid();
+
+    @ManyToOne(() => DealerProfile)
+    dealer!: DealerProfile;
+
+    @Enum({ items: () => PointsTransactionType, nativeEnumName: 'points_transaction_type' })
+    type!: PointsTransactionType;
+
+    @Property({ type: 'integer' })
+    amount!: number;
+
+    @Property({ type: 'varchar', length: 500 })
+    reason!: string;
+
+    @ManyToOne(() => RepairRequest, { nullable: true })
+    repairRequest?: RepairRequest;
+
+    @Property({ type: 'datetime' })
+    createdAt = new Date();
+}

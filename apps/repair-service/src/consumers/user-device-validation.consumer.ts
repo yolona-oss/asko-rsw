@@ -2,10 +2,10 @@ import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { sleep } from '@asko/shared';
-import { UserDevice } from 'entities/user-device.entity';
+import { UserDevice } from 'modules/device/entities/user-device.entity';
 import type { UserDeviceValidationEvent } from 'modules/user-device-validation.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
-import { ExternalCertValidationService } from 'services/external-cert-validation.service';
+import { ExternalCertValidationService } from 'modules/certificate/services/external-cert-validation.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 
 const MAX_RETRIES = 3;
