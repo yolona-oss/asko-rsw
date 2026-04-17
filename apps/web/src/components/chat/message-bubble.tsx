@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { FileText, Download } from 'lucide-react';
 import { LightboxModal } from '@asko/ui';
 import type { ChatMessage } from '@/lib/chat-types';
@@ -76,11 +76,38 @@ interface MessageBubbleProps {
   senderRole?: string;
   /** All image URLs from the conversation, for lightbox prev/next navigation */
   conversationImages?: string[];
+  /** Per-user read positions: userId → lastReadMessageId */
+  readPositions?: Record<string, string>;
+  /** Message ID → chronological order index */
+  messageOrderIndex?: Map<string, number>;
+  /** Other participants in the conversation (excluding current user) */
+  otherParticipants?: { userId: string }[];
+  /** Display names for participants */
+  participantNames?: Record<string, string>;
 }
 
-export function MessageBubble({ message, isOwn, showSender, senderName, senderRole, conversationImages }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, showSender, senderName, senderRole, conversationImages, readPositions, messageOrderIndex, otherParticipants, participantNames }: MessageBubbleProps) {
   const attachment = useMemo(() => parseAttachment(message.attachmentJson), [message.attachmentJson]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+
+  // Compute per-user seen status for own messages
+  const receipts = useMemo(() => {
+    if (!isOwn || !readPositions || !messageOrderIndex || !otherParticipants) return null;
+    const myOrder = messageOrderIndex.get(message.id);
+    if (myOrder === undefined) return null;
+
+    return otherParticipants.map(p => {
+      const readMsgId = readPositions[p.userId];
+      if (!readMsgId) return { userId: p.userId, seen: false };
+      const readOrder = messageOrderIndex.get(readMsgId);
+      // If readOrder is found and >= this message's order, participant has seen it
+      // If readMsgId is not in the current window, it might be an older message
+      // (meaning they haven't read up to this point)
+      const seen = readOrder !== undefined && readOrder >= myOrder;
+      return { userId: p.userId, seen };
+    });
+  }, [isOwn, readPositions, messageOrderIndex, otherParticipants, message.id]);
 
   const handleOpenDocument = useCallback(() => {
     if (attachment?.documentId) {
@@ -215,7 +242,32 @@ export function MessageBubble({ message, isOwn, showSender, senderName, senderRo
                 изменено
               </span>
             )}
-            {isOwn && <MessageStatusIcon status={message.status} dark />}
+            {isOwn && receipts && receipts.length > 0 ? (
+              <span className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setReceiptOpen(v => !v); }}
+                  className="inline-flex items-center gap-0.5 cursor-pointer"
+                >
+                  <MessageStatusIcon status={message.status} dark />
+                  {receipts.length > 1 && (
+                    <span className={`text-[9px] ${message.status === 'seen' ? 'text-info' : 'text-text-on-dark/50'}`}>
+                      {receipts.filter(r => r.seen).length}/{receipts.length}
+                    </span>
+                  )}
+                </button>
+                {receiptOpen && (
+                  <ReadReceiptPopup
+                    receipts={receipts}
+                    participantNames={participantNames ?? {}}
+                    messageCreatedAt={message.createdAt}
+                    onClose={() => setReceiptOpen(false)}
+                  />
+                )}
+              </span>
+            ) : isOwn ? (
+              <MessageStatusIcon status={message.status} dark />
+            ) : null}
           </div>
         </div>
       </div>
@@ -229,6 +281,54 @@ export function MessageBubble({ message, isOwn, showSender, senderName, senderRo
           onClose={() => setLightboxOpen(false)}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Read Receipt Detail Popup ──────────────────────────────────
+
+function ReadReceiptPopup({
+  receipts,
+  participantNames,
+  messageCreatedAt,
+  onClose,
+}: {
+  receipts: { userId: string; seen: boolean }[];
+  participantNames: Record<string, string>;
+  messageCreatedAt: string;
+  onClose: () => void;
+}) {
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={popupRef}
+      className="absolute bottom-full right-0 mb-1 z-50 bg-surface border border-border-light shadow-lg py-1.5 min-w-[180px]"
+    >
+      <p className="text-[10px] font-medium text-text-sub px-3 pb-1 border-b border-border-light/50 mb-1">
+        Статус доставки
+      </p>
+      {receipts.map(r => (
+        <div key={r.userId} className="flex items-center justify-between gap-3 px-3 py-1">
+          <span className="text-[11px] text-text-main truncate">
+            {participantNames[r.userId] || r.userId.slice(0, 8)}
+          </span>
+          <span className={`text-[10px] flex-shrink-0 ${r.seen ? 'text-info' : 'text-text-sub/50'}`}>
+            {r.seen ? 'Прочитано' : 'Доставлено'}
+          </span>
+        </div>
+      ))}
+      <p className="text-[9px] text-text-sub/40 px-3 pt-1 border-t border-border-light/50 mt-1">
+        Отправлено {formatTime(messageCreatedAt)}
+      </p>
     </div>
   );
 }

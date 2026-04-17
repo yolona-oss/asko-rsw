@@ -65,6 +65,8 @@ export function RequestChat({ conversationId, currentUserId }: { conversationId:
         realtimeMessages={realtimeMessages}
         participantNames={{}}
         participantRoles={{}}
+        readPositions={{}}
+        participants={conversation.participants}
       />
       <TypingIndicator userNames={typingNames} />
       <MessageInput

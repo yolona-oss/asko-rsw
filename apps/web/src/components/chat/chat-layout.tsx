@@ -26,6 +26,8 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [uploadingUsers, setUploadingUsers] = useState<Map<string, { conversationId: string; type: string }>>(new Map());
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
+  // Per-user read positions: userId → lastReadMessageId (updated by WebSocket)
+  const [readPositions, setReadPositions] = useState<Record<string, string>>({});
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const uploadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const initialConversationHandled = useRef(false);
@@ -161,8 +163,15 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
       }, 15000));
     }, []),
 
-    onMessageRead: useCallback(() => {
-      // Could update read receipts UI here
+    onMessageRead: useCallback(({ userId, messageId, affectedMessageIds }: { userId: string; conversationId: string; messageId: string; affectedMessageIds?: string[] }) => {
+      setReadPositions(prev => ({ ...prev, [userId]: messageId }));
+      // Update status of affected realtime messages to 'seen'
+      if (affectedMessageIds && affectedMessageIds.length > 0) {
+        const affected = new Set(affectedMessageIds);
+        setRealtimeMessages(prev => prev.map(m =>
+          affected.has(m.id) ? { ...m, status: 'seen' as const } : m,
+        ));
+      }
     }, []),
 
     onConversationNew: useCallback(() => {
@@ -171,8 +180,13 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   });
 
   const handleSelectConversation = useCallback((conversation: ChatConversation) => {
-    // Clear realtime messages for the previous conversation
+    // Clear realtime messages and bootstrap read positions from participant data
     setRealtimeMessages([]);
+    const positions: Record<string, string> = {};
+    for (const p of conversation.participants) {
+      if (p.lastReadMessageId) positions[p.userId] = p.lastReadMessageId;
+    }
+    setReadPositions(positions);
     setActiveConversation(conversation);
   }, []);
 
@@ -217,6 +231,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
               typingUsers={typingUsers}
               uploadingUsers={uploadingUsers}
               realtimeMessages={realtimeMessages}
+              readPositions={readPositions}
               onBack={handleBack}
               participantNames={participantNames}
               participantRoles={participantRoles}

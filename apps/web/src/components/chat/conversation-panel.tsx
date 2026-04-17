@@ -38,6 +38,7 @@ interface ConversationPanelProps {
   typingUsers: Map<string, string>;
   uploadingUsers: Map<string, { conversationId: string; type: string }>;
   realtimeMessages: ChatMessage[];
+  readPositions: Record<string, string>;
   onBack?: () => void;
   participantNames: Record<string, string>;
   participantRoles: Record<string, string>;
@@ -51,6 +52,7 @@ export function ConversationPanel({
   typingUsers,
   uploadingUsers,
   realtimeMessages,
+  readPositions,
   onBack,
   participantNames,
   participantRoles,
@@ -285,6 +287,8 @@ export function ConversationPanel({
         realtimeMessages={conversationRealtimeMessages}
         participantNames={participantNames}
         participantRoles={participantRoles}
+        readPositions={readPositions}
+        participants={conversation.participants}
       />
 
       {/* Activity indicators */}

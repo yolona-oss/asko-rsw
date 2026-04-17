@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { chatApi } from '@/lib/api/chat';
 import { MessageBubble } from './message-bubble';
-import type { ChatMessage } from '@/lib/chat-types';
+import type { ChatMessage, ChatParticipant } from '@/lib/chat-types';
 
 interface MessageListProps {
   conversationId: string;
@@ -14,6 +14,8 @@ interface MessageListProps {
   realtimeMessages: ChatMessage[];
   participantNames: Record<string, string>;
   participantRoles: Record<string, string>;
+  readPositions: Record<string, string>;
+  participants: ChatParticipant[];
 }
 
 export function MessageList({
@@ -23,6 +25,8 @@ export function MessageList({
   realtimeMessages,
   participantNames,
   participantRoles,
+  readPositions,
+  participants,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -176,6 +180,19 @@ export function MessageList({
     }, []);
   }, [allMessages]);
 
+  // Build message order index: messageId → position (0-based, chronological)
+  const messageOrderIndex = useMemo(() => {
+    const idx = new Map<string, number>();
+    allMessages.forEach((m, i) => idx.set(m.id, i));
+    return idx;
+  }, [allMessages]);
+
+  // Other participants (for read receipts on own messages)
+  const otherParticipants = useMemo(
+    () => participants.filter(p => p.userId !== currentUserId),
+    [participants, currentUserId],
+  );
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -208,6 +225,10 @@ export function MessageList({
             showSender={isGroup}
             senderName={participantNames[msg.senderId] ?? 'Пользователь'}
             senderRole={participantRoles[msg.senderId]}
+            readPositions={readPositions}
+            messageOrderIndex={messageOrderIndex}
+            otherParticipants={otherParticipants}
+            participantNames={participantNames}
           />
         </div>
       ))}
