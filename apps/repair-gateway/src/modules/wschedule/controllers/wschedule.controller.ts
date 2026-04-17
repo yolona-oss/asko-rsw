@@ -19,6 +19,7 @@ import {
     JwtPayload,
     parseDateTime,
     startOfDay,
+    assertNotInPast,
     assertDateNotBeforeToday,
     assertDateIsToday,
     assertDurationRange,
@@ -62,7 +63,7 @@ export class WScheduleController {
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
-        assertDateNotBeforeToday(dto.dateFrom);
+        assertNotInPast(dto.dateFrom, '00:00');
         assertDurationRange(dto.durationDays, 1, 365);
         await this.assertNoActiveVacation(dto.userId);
         const result = await this.scheduleClient.createVacation({

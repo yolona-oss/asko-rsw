@@ -48,7 +48,7 @@ async function DevicesContent({ page }: { page: number }) {
     fetchDevices(page, LIMIT),
     fetchDeviceCategories(),
   ]);
-  const typeLabels = Object.fromEntries(categories.map((c) => [c.name, c.label]));
+  const typeLabels = Object.fromEntries(categories.map((c: { name: string; label: string }) => [c.name, c.label]));
   const totalPages = Math.ceil(total / LIMIT);
 
   const imageMap = new Map<string, string | null>();
