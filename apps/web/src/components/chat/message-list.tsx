@@ -179,7 +179,6 @@ export function MessageList({
     }, []);
   }, [allMessages]);
 
-  // Pre-compute per-message read receipts (only for own messages)
   const receiptsMap = useMemo(() => {
     const others = participants.filter(p => p.userId !== currentUserId);
     if (others.length === 0) return new Map<string, { userId: string; seen: boolean }[]>();
@@ -187,9 +186,6 @@ export function MessageList({
     const orderIndex = new Map<string, number>();
     allMessages.forEach((m, i) => orderIndex.set(m.id, i));
 
-    // For each participant, resolve their read position to an order index.
-    // If their lastReadMessageId is not in the loaded window, it's older — they haven't
-    // read up to the visible messages yet (conservative: mark unseen).
     const participantReadOrder = new Map<string, number>();
     for (const p of others) {
       const readMsgId = readPositions[p.userId];

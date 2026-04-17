@@ -26,7 +26,6 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [uploadingUsers, setUploadingUsers] = useState<Map<string, { conversationId: string; type: string }>>(new Map());
   const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
-  // Per-user read positions: userId → lastReadMessageId (updated by WebSocket)
   const [readPositions, setReadPositions] = useState<Record<string, string>>({});
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const uploadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());

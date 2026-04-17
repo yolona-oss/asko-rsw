@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FileText, Download } from 'lucide-react';
 import { LightboxModal } from '@asko/ui';
 import type { ChatMessage } from '@/lib/chat-types';
@@ -84,6 +85,7 @@ export function MessageBubble({ message, isOwn, showSender, senderName, senderRo
   const attachment = useMemo(() => parseAttachment(message.attachmentJson), [message.attachmentJson]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const receiptTriggerRef = useRef<HTMLButtonElement>(null);
 
   const handleOpenDocument = useCallback(() => {
     if (attachment?.documentId) {
@@ -219,8 +221,9 @@ export function MessageBubble({ message, isOwn, showSender, senderName, senderRo
               </span>
             )}
             {isOwn && receipts && receipts.length > 0 ? (
-              <span className="relative">
+              <>
                 <button
+                  ref={receiptTriggerRef}
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setReceiptOpen(v => !v); }}
                   className="inline-flex items-center gap-0.5 cursor-pointer"
@@ -237,10 +240,11 @@ export function MessageBubble({ message, isOwn, showSender, senderName, senderRo
                     receipts={receipts}
                     participantNames={participantNames ?? {}}
                     messageCreatedAt={message.createdAt}
+                    anchorRef={receiptTriggerRef}
                     onClose={() => setReceiptOpen(false)}
                   />
                 )}
-              </span>
+              </>
             ) : isOwn ? (
               <MessageStatusIcon status={message.status} dark />
             ) : null}
@@ -267,27 +271,42 @@ function ReadReceiptPopup({
   receipts,
   participantNames,
   messageCreatedAt,
+  anchorRef,
   onClose,
 }: {
   receipts: { userId: string; seen: boolean }[];
   participantNames: Record<string, string>;
   messageCreatedAt: string;
+  anchorRef: React.RefObject<HTMLElement | null>;
   onClose: () => void;
 }) {
   const popupRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    setPos({ top: rect.top - 4, left: rect.right });
+  }, [anchorRef]);
 
   useEffect(() => {
     const handle = (e: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) onClose();
+      if (popupRef.current?.contains(e.target as Node)) return;
+      if (anchorRef.current?.contains(e.target as Node)) return;
+      onClose();
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
-  }, [onClose]);
+  }, [onClose, anchorRef]);
 
-  return (
+  if (!pos) return null;
+
+  return createPortal(
     <div
       ref={popupRef}
-      className="absolute bottom-full right-0 mb-1 z-50 bg-surface border border-border-light shadow-lg py-1.5 min-w-[180px]"
+      className="fixed z-[9999] bg-surface border border-border-light shadow-lg py-1.5 min-w-[180px]"
+      style={{ top: pos.top, left: pos.left, transform: 'translate(-100%, -100%)' }}
     >
       <p className="text-[10px] font-medium text-text-sub px-3 pb-1 border-b border-border-light/50 mb-1">
         Статус доставки
@@ -305,6 +324,7 @@ function ReadReceiptPopup({
       <p className="text-[9px] text-text-sub/40 px-3 pt-1 border-t border-border-light/50 mt-1">
         Отправлено {formatTime(messageCreatedAt)}
       </p>
-    </div>
+    </div>,
+    document.body,
   );
 }
