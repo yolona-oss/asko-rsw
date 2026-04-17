@@ -198,7 +198,7 @@ export class RepairRequestController {
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         await this.repairAccess.assertManagerOwnership(user, id);
-        const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId);
+        const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
         // Add repairer to conversation
         if (result.request.conversationId) {
             try {
@@ -258,7 +258,7 @@ export class RepairRequestController {
         await this.repairAccess.assertManagerOwnership(user, id);
         // Get old repairer before reassign
         const before = await this.repairClient.findById(id);
-        const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId);
+        const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
         if (result.request.conversationId) {
             // Remove old repairer from chat
             if (before.request.repairerId) {

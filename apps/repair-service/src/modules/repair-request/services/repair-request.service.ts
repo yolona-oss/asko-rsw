@@ -349,20 +349,41 @@ export class RepairRequestService {
         return request;
     }
 
+    /** Resolve device-address timezone from a loaded request, or by loading it. */
+    private async getDeviceTimezone(request: RepairRequest): Promise<string | undefined> {
+        if (!request.address) {
+            await this.em.populate(request, ['address']);
+        }
+        return (request.address as Address | undefined)?.timezone ?? undefined;
+    }
+
     /** Manager assigns repairer to request */
     @CreateRequestContext()
-    async assignRepairer(managerId: string, requestId: string, repairerId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
+    async assignRepairer(managerId: string, requestId: string, repairerId: string, allowCrossCity?: boolean): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['address'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertTransition(request.status, RepairRequestStatus.ASSIGNED);
 
-        // Validate repairer directly
         const repairer = await this.em.findOne(Repairer, { id: repairerId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
-        await this.scheduleService.assertScheduleAllows(repairer, 'Назначить мастера');
-        await this.scheduleService.assertEnoughScheduleTime(repairer);
+        // Cross-city detection
+        const deviceTimezone = await this.getDeviceTimezone(request);
+        const repairerTimezone = await this.scheduleService.resolveTimezone(repairer.userId);
+        if (deviceTimezone && deviceTimezone !== repairerTimezone) {
+            if (!allowCrossCity) {
+                const offset = this.scheduleService.computeTimezoneOffsetHours(repairerTimezone, deviceTimezone);
+                throw AppErrors.badRequest(
+                    `Мастер из другого часового пояса (разница ${offset > 0 ? '+' : ''}${offset}ч). Для назначения передайте allowCrossCity`,
+                );
+            }
+            request.isCrossCity = true;
+            request.timezoneOffsetHours = this.scheduleService.computeTimezoneOffsetHours(repairerTimezone, deviceTimezone);
+        }
+
+        await this.scheduleService.assertScheduleAllows(repairer, 'Назначить мастера', deviceTimezone);
+        await this.scheduleService.assertEnoughScheduleTime(repairer, deviceTimezone);
         await this.assertNoConcurrentCap(repairer.id, 'Назначить мастера');
 
         const oldStatus = request.status;
@@ -420,7 +441,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.scheduleService.assertScheduleAllows(repairer, 'Принять заявку');
+        const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
+        await this.scheduleService.assertScheduleAllows(repairer, 'Принять заявку', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Принять заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
@@ -495,7 +517,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.scheduleService.assertScheduleAllows(repairer, 'Выезд к клиенту');
+        const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
+        await this.scheduleService.assertScheduleAllows(repairer, 'Выезд к клиенту', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Выезд к клиенту');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
@@ -527,7 +550,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.scheduleService.assertScheduleAllows(repairer, 'Начать работу');
+        const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
+        await this.scheduleService.assertScheduleAllows(repairer, 'Начать работу', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Начать работу');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
@@ -766,7 +790,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.scheduleService.assertScheduleAllows(repairer, 'Возобновить заявку');
+        const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
+        await this.scheduleService.assertScheduleAllows(repairer, 'Возобновить заявку', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Возобновить заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
@@ -798,7 +823,8 @@ export class RepairRequestService {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
         if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
 
-        await this.scheduleService.assertPresenceAllowed(repairer, 'Подтверждение');
+        const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
+        await this.scheduleService.assertPresenceAllowed(repairer, 'Подтверждение', deviceTz);
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
@@ -841,8 +867,8 @@ export class RepairRequestService {
 
     /** Manager transfers request from current repairer to a new one (any non-terminal state with a repairer) */
     @CreateRequestContext()
-    async reassign(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
+    async reassign(managerId: string, requestId: string, newRepairerId: string, allowCrossCity?: boolean): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer', 'address'] });
         if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
         assertActionTransition('reassign', request.status);
 
@@ -865,8 +891,25 @@ export class RepairRequestService {
         if (!newRepairer) throw AppErrors.dbEntityNotFound('Repairer not found');
         if (!newRepairer.isActive) throw AppErrors.badRequest('Repairer is not active');
 
-        await this.scheduleService.assertScheduleAllows(newRepairer, 'Переназначить мастера');
-        await this.scheduleService.assertEnoughScheduleTime(newRepairer);
+        // Cross-city detection
+        const deviceTimezone = await this.getDeviceTimezone(request);
+        const repairerTimezone = await this.scheduleService.resolveTimezone(newRepairer.userId);
+        if (deviceTimezone && deviceTimezone !== repairerTimezone) {
+            if (!allowCrossCity) {
+                const offset = this.scheduleService.computeTimezoneOffsetHours(repairerTimezone, deviceTimezone);
+                throw AppErrors.badRequest(
+                    `Мастер из другого часового пояса (разница ${offset > 0 ? '+' : ''}${offset}ч). Для переназначения передайте allowCrossCity`,
+                );
+            }
+            request.isCrossCity = true;
+            request.timezoneOffsetHours = this.scheduleService.computeTimezoneOffsetHours(repairerTimezone, deviceTimezone);
+        } else {
+            request.isCrossCity = false;
+            request.timezoneOffsetHours = undefined;
+        }
+
+        await this.scheduleService.assertScheduleAllows(newRepairer, 'Переназначить мастера', deviceTimezone);
+        await this.scheduleService.assertEnoughScheduleTime(newRepairer, deviceTimezone);
         await this.assertNoConcurrentCap(newRepairer.id, 'Переназначить мастера');
 
         // Close out old repairer's active work time before transferring.

@@ -891,6 +891,8 @@ message RepairRequestRecord {
     string statusTimestamps = 40;
     string scheduleEndNotifiedAt = 41;
     string scheduleEndConfirmedAt = 42;
+    bool isCrossCity = 43;
+    int32 timezoneOffsetHours = 44;
 }
 
 message BrokenPartRecord {
@@ -957,6 +959,7 @@ message RepairAssignRepairerRequest {
     string managerId = 1;
     string requestId = 2;
     string repairerId = 3;
+    bool allowCrossCity = 4;
 }
 
 message RepairAcceptRequest {
@@ -1072,6 +1075,7 @@ message RepairReassignRepairerRequest {
     string managerId = 1;
     string requestId = 2;
     string newRepairerId = 3;
+    bool allowCrossCity = 4;
 }
 
 message RepairFindPausedByRepairerRequest {

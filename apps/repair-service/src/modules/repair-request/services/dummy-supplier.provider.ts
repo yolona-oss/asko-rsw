@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { sleep } from '@asko/shared';
 import { BrokenPartService } from './broken-part.service';
@@ -25,6 +25,7 @@ export class DummySupplierProvider implements SupplierProvider {
     private static readonly SHIP_DELAY_MAX = 6000;
 
     constructor(
+        @Inject(forwardRef(() => BrokenPartService))
         private readonly brokenPartService: BrokenPartService,
     ) {}
 

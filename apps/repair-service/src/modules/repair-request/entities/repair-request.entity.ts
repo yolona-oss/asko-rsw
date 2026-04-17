@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps' | 'scheduleEndNotifiedAt' | 'scheduleEndConfirmedAt';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps' | 'scheduleEndNotifiedAt' | 'scheduleEndConfirmedAt' | 'isCrossCity' | 'timezoneOffsetHours';
 
     @PrimaryKey()
     id: string = uuid();
@@ -128,4 +128,10 @@ export class RepairRequest {
 
     @Property({ type: 'datetime', nullable: true })
     scheduleEndConfirmedAt?: Date;
+
+    @Property({ type: 'boolean', default: false })
+    isCrossCity: boolean = false;
+
+    @Property({ type: 'smallint', nullable: true })
+    timezoneOffsetHours?: number;
 }

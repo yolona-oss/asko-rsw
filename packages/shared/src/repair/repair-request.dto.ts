@@ -42,6 +42,10 @@ export class UpdateRepairRequestDto {
 export class AssignRepairerDto {
     @IsString()
     repairerId!: string;
+
+    @IsOptional()
+    @IsBoolean()
+    allowCrossCity?: boolean;
 }
 
 export class SetRepairPriceDto {

@@ -57,8 +57,8 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.requestRefund({ userId, requestId, reason }));
     }
 
-    assignRepairer(managerId: string, requestId: string, repairerId: string): Promise<RepairRequestResponse> {
-        return grpcCall(this.repairService.assignRepairer({ managerId, requestId, repairerId }));
+    assignRepairer(managerId: string, requestId: string, repairerId: string, allowCrossCity?: boolean): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.assignRepairer({ managerId, requestId, repairerId, allowCrossCity }));
     }
 
     acceptRequest(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
@@ -109,8 +109,8 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.confirmSchedulePresence({ repairerUserId, requestId }));
     }
 
-    reassignRepairer(managerId: string, requestId: string, newRepairerId: string): Promise<RepairRequestResponse> {
-        return grpcCall(this.repairService.reassignRepairer({ managerId, requestId, newRepairerId }));
+    reassignRepairer(managerId: string, requestId: string, newRepairerId: string, allowCrossCity?: boolean): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.reassignRepairer({ managerId, requestId, newRepairerId, allowCrossCity }));
     }
 
     acceptCompletion(userId: string, requestId: string): Promise<RepairRequestResponse> {

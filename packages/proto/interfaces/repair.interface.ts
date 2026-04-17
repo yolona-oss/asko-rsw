@@ -817,6 +817,8 @@ export interface RepairRequestRecord {
     statusTimestamps?: string;
     scheduleEndNotifiedAt?: string;
     scheduleEndConfirmedAt?: string;
+    isCrossCity?: boolean;
+    timezoneOffsetHours?: number;
 }
 
 export interface BrokenPartRecord {
@@ -883,6 +885,7 @@ export interface RepairAssignRepairerRequest {
     managerId: string;
     requestId: string;
     repairerId: string;
+    allowCrossCity?: boolean;
 }
 
 export interface RepairAcceptRequest {
@@ -998,6 +1001,7 @@ export interface RepairReassignRepairerRequest {
     managerId: string;
     requestId: string;
     newRepairerId: string;
+    allowCrossCity?: boolean;
 }
 
 export interface RepairFindPausedByRepairerRequest {

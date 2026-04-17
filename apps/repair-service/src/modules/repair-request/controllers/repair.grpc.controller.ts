@@ -234,6 +234,8 @@ function requestToRecord(entity: RepairRequest) {
         statusTimestamps: JSON.stringify(entity.statusTimestamps ?? []),
         scheduleEndNotifiedAt: entity.scheduleEndNotifiedAt?.toISOString() ?? '',
         scheduleEndConfirmedAt: entity.scheduleEndConfirmedAt?.toISOString() ?? '',
+        isCrossCity: entity.isCrossCity ?? false,
+        timezoneOffsetHours: entity.timezoneOffsetHours ?? 0,
     };
 }
 
@@ -321,7 +323,7 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'AssignRepairer')
     async assignRepairer(data: RepairAssignRepairerRequest) {
         try {
-            const request = await this.repairRequestService.assignRepairer(data.managerId, data.requestId, data.repairerId);
+            const request = await this.repairRequestService.assignRepairer(data.managerId, data.requestId, data.repairerId, data.allowCrossCity);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }
@@ -425,7 +427,7 @@ export class RepairGrpcController {
     @GrpcMethod('RepairService', 'ReassignRepairer')
     async reassignRepairer(data: RepairReassignRepairerRequest) {
         try {
-            const request = await this.repairRequestService.reassign(data.managerId, data.requestId, data.newRepairerId);
+            const request = await this.repairRequestService.reassign(data.managerId, data.requestId, data.newRepairerId, data.allowCrossCity);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

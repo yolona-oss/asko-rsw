@@ -79,6 +79,7 @@ function createMockEm() {
         removeAndFlush: jest.fn(),
         count: jest.fn(),
         getReference: jest.fn((_entity: any, id: string) => ({ id })),
+        populate: jest.fn(),
     };
 }
 
@@ -110,6 +111,9 @@ function createMockDeps() {
             assertEnoughScheduleTime: jest.fn(),
             ensureExtraDayIfOff: jest.fn(),
             assertPresenceAllowed: jest.fn(),
+            resolveDeviceTimezone: jest.fn().mockResolvedValue(undefined),
+            resolveTimezone: jest.fn().mockResolvedValue('Europe/Moscow'),
+            computeTimezoneOffsetHours: jest.fn().mockReturnValue(0),
         },
     };
 }

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WSchedule, ScheduleEntryType, ScheduleStatus } from '../entities/wschedule.entity';
 import { Address } from 'modules/device/entities/address.entity';
-import { WSchedulePatternService } from './wschedule-pattern.service';
+import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
+import { WSchedulePatternService, type ResolvedSlot } from './wschedule-pattern.service';
 import { AppErrors } from 'common/error';
 import { getLocalNow, getLocalDateAsUtc, DEFAULT_TIMEZONE } from 'common/timezone';
 import type { CreateScheduleRequest, UpdateScheduleRequest, FindAllSchedulesRequest } from '@asko/proto';
@@ -161,10 +162,30 @@ export class WScheduleService {
     // ── Schedule validation API (consumed by repair-request service) ──
 
     /**
+     * Resolve the device-address timezone for a repair request.
+     * Returns undefined if the request has no address or the address has no timezone.
+     */
+    async resolveDeviceTimezone(requestId: string): Promise<string | undefined> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['address'] });
+        const address = request?.address as Address | undefined;
+        return address?.timezone ?? undefined;
+    }
+
+    /**
+     * Compute the signed hour offset between two IANA timezones (tz2 - tz1).
+     * E.g. computeTimezoneOffsetHours('Europe/Moscow', 'Asia/Vladivostok') = 7.
+     */
+    computeTimezoneOffsetHours(tz1: string, tz2: string): number {
+        const t1 = getLocalNow(tz1);
+        const t2 = getLocalNow(tz2);
+        // Compare midnight offsets: todayStart is midnight-in-tz expressed as UTC
+        const diffMs = t1.todayStart.getTime() - t2.todayStart.getTime();
+        return Math.round(diffMs / (60 * 60 * 1000));
+    }
+
+    /**
      * Returns the first APPROVED vacation/sick-leave entry covering today, or null.
-     * An APPROVED EXTRA_DAY covering today overrides the block — managers can propose
-     * an extra work day during a repairer's vacation, and once the repairer accepts,
-     * the repairer can be assigned to requests for that specific day.
+     * An APPROVED EXTRA_DAY covering today overrides the block.
      */
     @CreateRequestContext()
     async findBlockingToday(userId: string, timezone?: string): Promise<WSchedule | null> {
@@ -210,53 +231,75 @@ export class WScheduleService {
     }
 
     /**
+     * Assert work-hours boundaries (rest day, before start, after end) for a given timezone.
+     * Used as the core check that runs once per timezone in dual-tz mode.
+     */
+    private async assertTimeBoundaries(
+        repairer: RepairerScheduleCtx,
+        slot: ResolvedSlot | null,
+        tz: string,
+        action: string,
+        tzLabel?: string,
+    ): Promise<void> {
+        const { nowTime, todayStart, todayEnd } = getLocalNow(tz);
+        const suffix = tzLabel ? ` (${tzLabel})` : '';
+
+        if (!slot) return;
+
+        if (!slot.work) {
+            throw AppErrors.badRequest(`Сегодня выходной день мастера${suffix}. ${action} невозможно`);
+        }
+
+        if (nowTime < slot.startTime) {
+            throw AppErrors.badRequest(`Рабочий день ещё не начался (начало в ${slot.startTime})${suffix}. ${action} невозможно`);
+        }
+
+        if (nowTime > slot.endTime) {
+            const overrides = await this.em.find(WSchedule, {
+                userId: repairer.userId,
+                status: ScheduleStatus.APPROVED,
+                type: { $in: [ScheduleEntryType.OVERTIME, ScheduleEntryType.EXTRA_DAY] },
+                dateFrom: { $lte: todayEnd },
+                dateTo: { $gte: todayStart },
+            });
+            const extended = overrides.some(e => e.endTime && nowTime <= e.endTime);
+            if (!extended) {
+                throw AppErrors.badRequest(`Рабочий день завершён (окончание в ${slot.endTime})${suffix}. ${action} невозможно`);
+            }
+        }
+    }
+
+    /**
      * Comprehensive schedule guard — throws if repairer cannot work right now.
      * Checks: vacation/sick, rest day, before start, after end, overtime cap.
-     * (Concurrent-active-requests cap stays in the repair-request service since
-     *  it counts RepairRequest rows, not schedule rows.)
+     *
+     * When `deviceTimezone` is provided and differs from the repairer's home tz,
+     * the work-hours boundaries are validated in BOTH timezones (full schedule mirror).
+     * Vacation/sick + overtime cap stay repairer-tz only.
      */
-    async assertScheduleAllows(repairer: RepairerScheduleCtx, action: string): Promise<void> {
+    async assertScheduleAllows(repairer: RepairerScheduleCtx, action: string, deviceTimezone?: string): Promise<void> {
         const tz = await this.resolveTimezone(repairer.userId);
-        const { nowTime, todayStart, todayEnd } = getLocalNow(tz);
         const dateForPattern = getLocalDateAsUtc(tz);
 
-        // 1. Vacation / sick leave
+        // 1. Vacation / sick leave (repairer tz only)
         const blocking = await this.findBlockingToday(repairer.userId, tz);
         if (blocking) {
             const label = blocking.type === ScheduleEntryType.VACATION ? 'отпуске' : 'больничном';
             throw AppErrors.badRequest(`Мастер на ${label}. ${action} невозможно`);
         }
 
-        // 2. Resolve pattern
+        // 2. Resolve pattern + time boundaries in repairer tz
         const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
+        await this.assertTimeBoundaries(repairer, slot, tz, action);
 
-        if (slot) {
-            if (!slot.work) {
-                throw AppErrors.badRequest(`Сегодня выходной день мастера. ${action} невозможно`);
-            }
-
-            // 3. Before schedule start
-            if (nowTime < slot.startTime) {
-                throw AppErrors.badRequest(`Рабочий день ещё не начался (начало в ${slot.startTime}). ${action} невозможно`);
-            }
-
-            // 4. After schedule end (check overrides)
-            if (nowTime > slot.endTime) {
-                const overrides = await this.em.find(WSchedule, {
-                    userId: repairer.userId,
-                    status: ScheduleStatus.APPROVED,
-                    type: { $in: [ScheduleEntryType.OVERTIME, ScheduleEntryType.EXTRA_DAY] },
-                    dateFrom: { $lte: todayEnd },
-                    dateTo: { $gte: todayStart },
-                });
-                const extended = overrides.some(e => e.endTime && nowTime <= e.endTime);
-                if (!extended) {
-                    throw AppErrors.badRequest(`Рабочий день завершён (окончание в ${slot.endTime}). ${action} невозможно`);
-                }
-            }
+        // 3. Dual-tz: also check in device timezone
+        if (deviceTimezone && deviceTimezone !== tz) {
+            const deviceDateForPattern = getLocalDateAsUtc(deviceTimezone);
+            const deviceSlot = await this.patternService.resolveSlotForDate(repairer.userId, deviceDateForPattern);
+            await this.assertTimeBoundaries(repairer, deviceSlot, deviceTimezone, action, 'по месту ремонта');
         }
 
-        // 5. Daily overtime cap
+        // 4. Daily overtime cap (repairer tz only)
         const overtimeMinutesToday = await this.getTodayOvertimeMinutes(repairer.userId, tz);
         if (overtimeMinutesToday >= MAX_OVERTIME_MINUTES_PER_DAY) {
             throw AppErrors.badRequest(`Превышен лимит переработки (${MAX_OVERTIME_MINUTES_PER_DAY / 60}ч/день). ${action} невозможно`);
@@ -265,23 +308,30 @@ export class WScheduleService {
 
     /**
      * Check remaining schedule time — throws if less than MIN_REMAINING_SCHEDULE_MINUTES left.
-     * Used for assignment to avoid assigning work that can't be started.
+     * Checks both repairer and device timezones when provided.
      */
-    async assertEnoughScheduleTime(repairer: RepairerScheduleCtx): Promise<void> {
+    async assertEnoughScheduleTime(repairer: RepairerScheduleCtx, deviceTimezone?: string): Promise<void> {
+        const checkInTz = async (tz: string) => {
+            const { nowTime } = getLocalNow(tz);
+            const dateForPattern = getLocalDateAsUtc(tz);
+            const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
+            if (!slot || !slot.work) return;
+
+            const [nh, nm] = nowTime.split(':').map(Number);
+            const [eh, em] = slot.endTime.split(':').map(Number);
+            const remainingMinutes = (eh * 60 + em) - (nh * 60 + nm);
+
+            if (remainingMinutes > 0 && remainingMinutes < MIN_REMAINING_SCHEDULE_MINUTES) {
+                throw AppErrors.badRequest(
+                    `До конца рабочего дня осталось менее ${MIN_REMAINING_SCHEDULE_MINUTES} мин. Назначение невозможно`,
+                );
+            }
+        };
+
         const tz = await this.resolveTimezone(repairer.userId);
-        const { nowTime } = getLocalNow(tz);
-        const dateForPattern = getLocalDateAsUtc(tz);
-        const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
-        if (!slot || !slot.work) return;
-
-        const [nh, nm] = nowTime.split(':').map(Number);
-        const [eh, em] = slot.endTime.split(':').map(Number);
-        const remainingMinutes = (eh * 60 + em) - (nh * 60 + nm);
-
-        if (remainingMinutes > 0 && remainingMinutes < MIN_REMAINING_SCHEDULE_MINUTES) {
-            throw AppErrors.badRequest(
-                `До конца рабочего дня осталось менее ${MIN_REMAINING_SCHEDULE_MINUTES} мин. Назначение невозможно`,
-            );
+        await checkInTz(tz);
+        if (deviceTimezone && deviceTimezone !== tz) {
+            await checkInTz(deviceTimezone);
         }
     }
 
@@ -309,21 +359,31 @@ export class WScheduleService {
 
     /**
      * For `confirmSchedulePresence`: blocks vacation/sick, today-rest, and enforces daily overtime cap.
-     * Does not enforce start/end time boundaries since the caller is explicitly confirming presence
-     * past the scheduled end.
+     * Does not enforce start/end time boundaries since the caller is explicitly confirming
+     * presence past the scheduled end. Checks rest day in device tz too when provided.
      */
-    async assertPresenceAllowed(repairer: RepairerScheduleCtx, action: string): Promise<void> {
+    async assertPresenceAllowed(repairer: RepairerScheduleCtx, action: string, deviceTimezone?: string): Promise<void> {
         const tz = await this.resolveTimezone(repairer.userId);
         const blocking = await this.findBlockingToday(repairer.userId, tz);
         if (blocking) {
             const label = blocking.type === ScheduleEntryType.VACATION ? 'отпуске' : 'больничном';
             throw AppErrors.badRequest(`Мастер на ${label}. ${action} невозможно`);
         }
-        const dateForPattern = getLocalDateAsUtc(tz);
-        const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
-        if (slot && !slot.work) {
-            throw AppErrors.badRequest(`Сегодня выходной день. ${action} невозможно`);
+
+        const checkRestDay = async (checkTz: string, tzLabel?: string) => {
+            const dateForPattern = getLocalDateAsUtc(checkTz);
+            const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
+            const suffix = tzLabel ? ` (${tzLabel})` : '';
+            if (slot && !slot.work) {
+                throw AppErrors.badRequest(`Сегодня выходной день${suffix}. ${action} невозможно`);
+            }
+        };
+
+        await checkRestDay(tz);
+        if (deviceTimezone && deviceTimezone !== tz) {
+            await checkRestDay(deviceTimezone, 'по месту ремонта');
         }
+
         const overtimeMinutes = await this.getTodayOvertimeMinutes(repairer.userId, tz);
         if (overtimeMinutes >= MAX_OVERTIME_MINUTES_PER_DAY) {
             throw AppErrors.badRequest(
