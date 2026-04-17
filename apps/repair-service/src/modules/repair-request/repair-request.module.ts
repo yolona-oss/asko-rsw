@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RepairRequest } from './entities/repair-request.entity';
 import { WorkStep } from './entities/work-step.entity';
@@ -17,7 +17,7 @@ import { AvrPdfService } from './services/avr-pdf.service';
         MikroOrmModule.forFeature([RepairRequest, WorkStep, BrokenPart]),
         WorkScheduleModule,
         CertificateModule,
-        SupplierModule,
+        forwardRef(() => SupplierModule),
     ],
     controllers: [RepairGrpcController],
     providers: [
