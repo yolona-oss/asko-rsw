@@ -18,7 +18,7 @@ const MAX_OVERTIME_MINUTES_PER_DAY = 4 * 60;
 const MIN_REMAINING_SCHEDULE_MINUTES = 30;
 
 @Injectable()
-export class ScheduleGuardService {
+export class ScheduleRuleService {
     constructor(
         private readonly em: EntityManager,
         private readonly vacationService: VacationService,

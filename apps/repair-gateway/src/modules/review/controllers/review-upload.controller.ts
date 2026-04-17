@@ -5,16 +5,15 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { JwtPayload } from '@asko/shared';
+import { CheckPolicy } from '@asko/authorization';
 import {
-    JwtAuthUser,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
     assertMime,
 } from '@asko/gateway-common';
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
-import { RepairAccessService } from 'modules/repair/services/repair-access.service';
+import { ReviewOwnerPolicy } from '../policies/review-owner.policy';
 import { ImageResponseDto, VideoResponseDto } from 'common/dto/responses';
 
 const IMAGE_MAX_SIZE = 10 * 1024 * 1024;
@@ -27,18 +26,16 @@ const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
 export class ReviewUploadController {
     constructor(
         private readonly fileService: RepairFileClientService,
-        private readonly repairAccess: RepairAccessService,
     ) {}
 
     @ApiCreatedResponse({ type: ImageResponseDto })
+    @CheckPolicy(ReviewOwnerPolicy)
     @Post('reviews/:id/images')
     @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
     async uploadReviewImage(
-        @JwtAuthUser() user: JwtPayload,
         @StreamingFile() upload: StreamingUploadPayload,
         @Param('id') id: string,
     ) {
-        await this.repairAccess.assertReviewOwner(user, id);
         assertMime(upload.mimeType, IMAGE_MIME);
         return this.fileService.uploadReviewImage(
             upload.stream, upload.filename, upload.mimeType, id,
@@ -47,14 +44,13 @@ export class ReviewUploadController {
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
+    @CheckPolicy(ReviewOwnerPolicy)
     @Post('reviews/:id/videos')
     @UseInterceptors(new StreamingUploadInterceptor(VIDEO_MAX_SIZE))
     async uploadReviewVideo(
-        @JwtAuthUser() user: JwtPayload,
         @StreamingFile() upload: StreamingUploadPayload,
         @Param('id') id: string,
     ) {
-        await this.repairAccess.assertReviewOwner(user, id);
         assertMime(upload.mimeType, VIDEO_MIME);
         return this.fileService.uploadReviewVideo(
             upload.stream, upload.filename, upload.mimeType, id,

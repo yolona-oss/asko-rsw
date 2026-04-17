@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
+import { AuthorizationModule } from '@asko/authorization';
 import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 
 import { AppConfig, AppConfigModule } from './app.config';
@@ -23,6 +24,7 @@ import { HealthModule } from 'modules/health/health.module';
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'repair-gateway' }),
+        AuthorizationModule.forRoot(),
         JwtModule,
 
         UserClientModule.registerAsync({

@@ -6,6 +6,7 @@ import { AppConfig } from 'app.config';
 import { ChatController } from './controllers/chat.controller';
 import { ChatGateway } from './gateways/chat.gateway';
 import { ChatPrivacyService } from './services/chat-privacy.service';
+import { ConversationCreationPolicy } from './policies/conversation-creation.policy';
 import { redisProvider } from 'providers/redis.provider';
 
 @Module({
@@ -18,7 +19,7 @@ import { redisProvider } from 'providers/redis.provider';
         JwtModule,
     ],
     controllers: [ChatController],
-    providers: [ChatGateway, ChatPrivacyService, redisProvider],
+    providers: [ChatGateway, ChatPrivacyService, ConversationCreationPolicy, redisProvider],
     exports: [ChatGateway, ChatPrivacyService],
 })
 export class ChatModule {}

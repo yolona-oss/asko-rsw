@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { MetricsModule } from '@asko/observability';
+import { AuthorizationModule } from '@asko/authorization';
 import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 
 import { AppConfig, AppConfigModule } from './app.config';
@@ -18,6 +19,7 @@ import { HealthModule } from 'modules/health/health.module';
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'auth-gateway' }),
+        AuthorizationModule.forRoot(),
         JwtModule,
 
         // Default: 60 requests per minute per IP

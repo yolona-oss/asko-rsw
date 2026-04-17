@@ -13,7 +13,7 @@ import { VacationService } from './services/vacation.service';
 import { SickLeaveService } from './services/sick-leave.service';
 import { OvertimeService } from './services/overtime.service';
 import { ScheduleOverrideService } from './services/schedule-override.service';
-import { ScheduleGuardService } from './services/schedule-guard.service';
+import { ScheduleRuleService } from './services/schedule-rule.service';
 import { WSchedulePatternService } from './services/wschedule-pattern.service';
 import { WSchedulePatternHistoryService } from './services/wschedule-pattern-history.service';
 import { WScheduleReportService } from './services/wschedule-report.service';
@@ -28,11 +28,11 @@ import { WScheduleReportService } from './services/wschedule-report.service';
         SickLeaveService,
         OvertimeService,
         ScheduleOverrideService,
-        ScheduleGuardService,
+        ScheduleRuleService,
         WSchedulePatternService,
         WSchedulePatternHistoryService,
         WScheduleReportService,
     ],
-    exports: [ScheduleGuardService, WSchedulePatternService, VacationService, SickLeaveService, OvertimeService, ScheduleOverrideService],
+    exports: [ScheduleRuleService, WSchedulePatternService, VacationService, SickLeaveService, OvertimeService, ScheduleOverrideService],
 })
 export class WorkScheduleModule {}

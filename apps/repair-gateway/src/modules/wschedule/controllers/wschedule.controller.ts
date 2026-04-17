@@ -26,7 +26,9 @@ import {
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { RequiredRoles, JwtAuthUser, isStaff, isAdmin, assertSelfOrStaff } from '@asko/gateway-common';
+import { RequiredRoles, JwtAuthUser, isStaff, isAdmin } from '@asko/gateway-common';
+import { CheckPolicy } from '@asko/authorization';
+import { ScheduleSelfOrStaffPolicy } from '../policies/schedule-self-or-staff.policy';
 import {
     VacationRecordDto,
     SickLeaveRecordDto,
@@ -58,10 +60,10 @@ export class WScheduleController {
     // ── Vacation ──
 
     @ApiCreatedResponse({ type: VacationRecordDto })
+    @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
-        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
         assertNotInPast(dto.dateFrom, '00:00');
         assertDurationRange(dto.durationDays, 1, 365);
@@ -102,10 +104,10 @@ export class WScheduleController {
     // ── SickLeave ──
 
     @ApiCreatedResponse({ type: SickLeaveRecordDto })
+    @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('sick-leave')
     async createSickLeave(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateSickLeaveDto) {
-        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateNotBeforeToday(dto.dateFrom);
         assertDurationRange(dto.durationDays, 1, 30);
@@ -151,10 +153,10 @@ export class WScheduleController {
     // ── Overtime ──
 
     @ApiCreatedResponse({ type: OvertimeRecordDto })
+    @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('overtime')
     async createOvertime(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateOvertimeDto) {
-        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateNotBeforeToday(dto.date);
         const result = await this.scheduleClient.createOvertime({
@@ -187,10 +189,10 @@ export class WScheduleController {
     // ── ScheduleOverride ──
 
     @ApiCreatedResponse({ type: ScheduleOverrideRecordDto })
+    @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Post('override')
     async createScheduleOverride(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateScheduleOverrideDto) {
-        assertSelfOrStaff(user, dto.userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateIsToday(dto.date);
         const result = await this.scheduleClient.createScheduleOverride({
@@ -294,18 +296,18 @@ export class WScheduleController {
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Get('pattern/:userId')
-    async getPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
-        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
+    async getPattern(@Param('userId') userId: string) {
         const result = await this.scheduleClient.patternGet(userId);
         return result.pattern?.id ? result.pattern : null;
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Put('pattern/:userId')
     async upsertPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
-        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternUpsert({
             userId,
@@ -326,9 +328,9 @@ export class WScheduleController {
 
     @ApiOkResponse()
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Delete('pattern/:userId')
     async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
-        assertSelfOrStaff(user, userId, 'Нет доступа к расписанию другого пользователя');
         await this.scheduleClient.patternDelete(userId, user.sub);
     }
 
@@ -360,17 +362,16 @@ export class WScheduleController {
         return { data: result.data ?? [] };
     }
 
+    @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
     @Get('pattern/:userId/history')
     async getPatternHistory(
-        @JwtAuthUser() user: JwtPayload,
         @Param('userId') userId: string,
         @Query('dateFrom') dateFrom?: string,
         @Query('dateTo') dateTo?: string,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
     ) {
-        assertSelfOrStaff(user, userId, 'Нет доступа к истории расписания другого пользователя');
         return this.scheduleClient.patternHistory({
             userId,
             dateFrom: dateFrom || '',

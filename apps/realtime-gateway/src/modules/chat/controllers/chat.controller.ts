@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
-import { UserClientService } from '@asko/gateway-common';
+import { UserClientService, JwtAuthUser } from '@asko/gateway-common';
+import { CheckPolicy } from '@asko/authorization';
 import { ChatGateway } from '../gateways/chat.gateway';
-import { ChatPrivacyService } from '../services/chat-privacy.service';
-import { JwtAuthUser } from '@asko/gateway-common';
+import { ConversationCreationPolicy } from '../policies/conversation-creation.policy';
 import { JwtPayload } from '@asko/shared';
 import {
     ConversationResponseDto,
@@ -25,25 +25,17 @@ export class ChatController {
         private readonly chatClient: ChatClientService,
         private readonly chatGateway: ChatGateway,
         private readonly userClient: UserClientService,
-        private readonly chatPrivacy: ChatPrivacyService,
     ) {}
 
     // ─── Conversations ────────────────────────────────────────────────
 
     @ApiCreatedResponse({ type: ConversationResponseDto })
+    @CheckPolicy(ConversationCreationPolicy)
     @Post('conversations')
     async createConversation(
         @JwtAuthUser() user: JwtPayload,
         @Body() body: { type: string; name?: string; participantIds: string[]; avatarUrl?: string },
     ) {
-        // Privacy check: verify each participant accepts conversations
-        for (const participantId of body.participantIds) {
-            const allowed = await this.chatPrivacy.canCreateConversation(user.roles, participantId);
-            if (!allowed) {
-                throw new ForbiddenException('Пользователь не принимает новые чаты');
-            }
-        }
-
         const result = await this.chatClient.createConversation(
             user.id, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
         );

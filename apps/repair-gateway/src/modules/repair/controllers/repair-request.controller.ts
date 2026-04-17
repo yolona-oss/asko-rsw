@@ -4,7 +4,6 @@ import {
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
-import { RepairAccessService } from '../services/repair-access.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { UserClientService } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
@@ -33,10 +32,11 @@ import {
     ADMIN_ROLES,
     Role,
     JwtPayload,
-    AppErrors,
 } from '@asko/shared';
 import { IsOptional, IsString } from 'class-validator';
-import { RequiredRoles, JwtAuthUser, isAdmin } from '@asko/gateway-common';
+import { CheckPolicy } from '@asko/authorization';
+import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { RepairManagerPolicy } from '../policies/repair-manager.policy';
 
 import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
@@ -73,7 +73,6 @@ export class RepairRequestController {
         private readonly chatClient: ChatClientService,
         private readonly paymentService: PaymentClientService,
         private readonly fileService: RepairFileClientService,
-        private readonly repairAccess: RepairAccessService,
     ) { }
 
     // ── Stats ──
@@ -194,10 +193,10 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        await this.repairAccess.assertManagerOwnership(user, id);
         const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
         // Add repairer to conversation
         if (result.request.conversationId) {
@@ -212,26 +211,26 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
-    async approveRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.repairAccess.assertManagerOwnership(user, id);
+    async approveRefund(@Param('id') id: string) {
         return this.repairClient.approveRefund(id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
-    async denyRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.repairAccess.assertManagerOwnership(user, id);
+    async denyRefund(@Param('id') id: string) {
         return this.repairClient.denyRefund(id);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/accept')
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.repairAccess.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub, true);
@@ -240,10 +239,10 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/detach')
     async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.repairAccess.assertManagerOwnership(user, id);
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.removeParticipant(request.conversationId, user.sub, user.sub);
@@ -252,10 +251,10 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
-        await this.repairAccess.assertManagerOwnership(user, id);
         // Get old repairer before reassign
         const before = await this.repairClient.findById(id);
         const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
@@ -434,10 +433,10 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairManagerPolicy)
     @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/avr/remove')
     async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
-        await this.repairAccess.assertManagerOwnership(user, id);
         return this.repairClient.removeAvrByManager(user.sub, id);
     }
 

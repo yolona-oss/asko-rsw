@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
+import { AuthorizationModule } from '@asko/authorization';
 import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
 import { join } from 'path';
 
@@ -16,6 +17,7 @@ import { HealthModule } from 'modules/health/health.module';
     imports: [
         AppConfigModule,
         MetricsModule.register({ serviceName: 'media-gateway' }),
+        AuthorizationModule.forRoot(),
         JwtModule,
 
         UserClientModule.registerAsync({
