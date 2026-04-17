@@ -2,36 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { addressApi } from '@/lib/api/address';
-import { Button, Modal, Input, FormField } from '@asko/ui';
+import { Button, Modal, AddressInput, type AddressValue } from '@asko/ui';
 import { MapPin, Plus, Pencil, Trash2, Star } from 'lucide-react';
 import type { StatusMessage } from './types';
 import type { IAddressBook } from '@asko/shared/client';
-
-interface AddressFormData {
-  city: string;
-  district: string;
-  street: string;
-  house: string;
-  building: string;
-  apartment: string;
-  entrance: string;
-  floor: string;
-  intercom: string;
-  comment: string;
-}
-
-const emptyForm: AddressFormData = {
-  city: '',
-  district: '',
-  street: '',
-  house: '',
-  building: '',
-  apartment: '',
-  entrance: '',
-  floor: '',
-  intercom: '',
-  comment: '',
-};
 
 function formatAddress(a: IAddressBook): string {
   const parts: string[] = [];
@@ -46,6 +20,21 @@ function formatAddress(a: IAddressBook): string {
   return parts.join(', ');
 }
 
+function addressToValue(a: IAddressBook): AddressValue {
+  return {
+    city: a.city ?? '',
+    district: a.district,
+    street: a.street ?? '',
+    house: a.house ?? '',
+    building: a.building,
+    apartment: a.apartment,
+    entrance: a.entrance,
+    floor: a.floor,
+    intercom: a.intercom,
+    comment: a.comment,
+  };
+}
+
 export function AddressesSection() {
   const [addresses, setAddresses] = useState<IAddressBook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +43,7 @@ export function AddressesSection() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<AddressFormData>(emptyForm);
+  const [addressValue, setAddressValue] = useState<AddressValue | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -78,35 +67,24 @@ export function AddressesSection() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    setAddressValue(null);
     setModalOpen(true);
   };
 
   const openEdit = (addr: IAddressBook) => {
     setEditingId(addr.id);
-    setForm({
-      city: addr.city ?? '',
-      district: addr.district ?? '',
-      street: addr.street ?? '',
-      house: addr.house ?? '',
-      building: addr.building ?? '',
-      apartment: addr.apartment ?? '',
-      entrance: addr.entrance ?? '',
-      floor: addr.floor ?? '',
-      intercom: addr.intercom ?? '',
-      comment: addr.comment ?? '',
-    });
+    setAddressValue(addressToValue(addr));
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalOpen(false);
     setEditingId(null);
-    setForm(emptyForm);
+    setAddressValue(null);
   };
 
   const handleSave = async () => {
-    if (!form.city.trim() || !form.street.trim() || !form.house.trim()) {
+    if (!addressValue) {
       showMessage({ type: 'error', text: 'Заполните город, улицу и дом' });
       return;
     }
@@ -114,16 +92,18 @@ export function AddressesSection() {
     setSaving(true);
     try {
       const payload = {
-        city: form.city.trim(),
-        ...(form.district.trim() ? { district: form.district.trim() } : {}),
-        street: form.street.trim(),
-        house: form.house.trim(),
-        ...(form.building.trim() ? { building: form.building.trim() } : {}),
-        ...(form.apartment.trim() ? { apartment: form.apartment.trim() } : {}),
-        ...(form.entrance.trim() ? { entrance: form.entrance.trim() } : {}),
-        ...(form.floor.trim() ? { floor: form.floor.trim() } : {}),
-        ...(form.intercom.trim() ? { intercom: form.intercom.trim() } : {}),
-        ...(form.comment.trim() ? { comment: form.comment.trim() } : {}),
+        city: addressValue.city,
+        street: addressValue.street,
+        house: addressValue.house,
+        ...(addressValue.district ? { district: addressValue.district } : {}),
+        ...(addressValue.building ? { building: addressValue.building } : {}),
+        ...(addressValue.apartment ? { apartment: addressValue.apartment } : {}),
+        ...(addressValue.entrance ? { entrance: addressValue.entrance } : {}),
+        ...(addressValue.floor ? { floor: addressValue.floor } : {}),
+        ...(addressValue.intercom ? { intercom: addressValue.intercom } : {}),
+        ...(addressValue.comment ? { comment: addressValue.comment } : {}),
+        ...(addressValue.latitude != null ? { latitude: addressValue.latitude } : {}),
+        ...(addressValue.longitude != null ? { longitude: addressValue.longitude } : {}),
       };
 
       if (editingId) {
@@ -168,9 +148,6 @@ export function AddressesSection() {
       showMessage({ type: 'error', text: 'Не удалось изменить основной адрес' });
     }
   };
-
-  const updateField = (field: keyof AddressFormData) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => setForm(prev => ({ ...prev, [field]: e.target.value }));
 
   if (loading) {
     return (
@@ -269,93 +246,17 @@ export function AddressesSection() {
           <p className="text-sm font-bold text-text-main">
             {editingId ? 'Редактировать адрес' : 'Новый адрес'}
           </p>
-          <FormField label="Город *">
-            <Input
-              placeholder="Москва"
-              value={form.city}
-              onChange={updateField('city')}
-              autoComplete="off"
-            />
-          </FormField>
-          <FormField label="Район">
-            <Input
-              placeholder="Центральный"
-              value={form.district}
-              onChange={updateField('district')}
-              autoComplete="off"
-            />
-          </FormField>
-          <FormField label="Улица *">
-            <Input
-              placeholder="Ленина"
-              value={form.street}
-              onChange={updateField('street')}
-              autoComplete="off"
-            />
-          </FormField>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <FormField label="Дом *">
-              <Input
-                placeholder="4"
-                value={form.house}
-                onChange={updateField('house')}
-                autoComplete="off"
-              />
-            </FormField>
-            <FormField label="Корпус">
-              <Input
-                placeholder="2"
-                value={form.building}
-                onChange={updateField('building')}
-                autoComplete="off"
-              />
-            </FormField>
-            <FormField label="Подъезд">
-              <Input
-                placeholder="1"
-                value={form.entrance}
-                onChange={updateField('entrance')}
-                autoComplete="off"
-              />
-            </FormField>
-            <FormField label="Этаж">
-              <Input
-                placeholder="5"
-                value={form.floor}
-                onChange={updateField('floor')}
-                autoComplete="off"
-              />
-            </FormField>
-            <FormField label="Квартира">
-              <Input
-                placeholder="59"
-                value={form.apartment}
-                onChange={updateField('apartment')}
-                autoComplete="off"
-              />
-            </FormField>
-            <FormField label="Домофон">
-              <Input
-                placeholder="59"
-                value={form.intercom}
-                onChange={updateField('intercom')}
-                autoComplete="off"
-              />
-            </FormField>
-          </div>
-          <FormField label="Комментарий">
-            <Input
-              placeholder="Доп. информация"
-              value={form.comment}
-              onChange={updateField('comment')}
-              autoComplete="off"
-            />
-          </FormField>
+          <AddressInput
+            key={editingId ?? 'new'}
+            value={addressValue}
+            onChange={setAddressValue}
+            label="Адрес"
+          />
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="secondary" onClick={closeModal} disabled={saving}>
               Отмена
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || !addressValue}>
               {saving ? 'Сохранение...' : editingId ? 'Сохранить' : 'Добавить'}
             </Button>
           </div>

@@ -27,4 +27,4 @@ echo "    redis                -> localhost:6379"
 echo "    rabbitmq             -> localhost:5672 (management: localhost:15672)"
 echo ""
 
-pnpm turbo run start:dev --concurrency 13 --filter='!@asko/web' --filter='!@asko/ui' --filter='!@asko/shared' --filter='!@asko/proto' --filter='!@asko/gateway-common' --filter='!@asko/observability'
+pnpm turbo run start:dev --concurrency 13 --filter='!@asko/web' --filter='!@asko/ui' --filter='!@asko/shared' --filter='!@asko/proto' --filter='!@asko/gateway-common' --filter='!@asko/observability' --filter='!@asko/authorization'

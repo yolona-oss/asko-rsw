@@ -62,6 +62,7 @@ echo ""
 echo "=== Building shared packages ==="
 pnpm --filter @asko/shared run build
 pnpm --filter @asko/observability run build
+pnpm --filter @asko/authorization run build
 pnpm --filter @asko/gateway-common run build
 pnpm --filter @asko/ui run build
 
