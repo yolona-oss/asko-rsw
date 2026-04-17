@@ -84,7 +84,7 @@ export class WScheduleController {
         if (!existing?.id) throw new NotFoundException('Отпуск не найден');
         await this.assertTargetHasValidAddress(existing.userId);
 
-        if (!isAdmin(user) && existing.userId !== user.sub) {
+        if (!isStaff(user) && existing.userId !== user.sub) {
             throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
         }
 
@@ -128,7 +128,7 @@ export class WScheduleController {
         if (!existing?.id) throw new NotFoundException('Больничный не найден');
         await this.assertTargetHasValidAddress(existing.userId);
 
-        if (!isAdmin(user) && existing.userId !== user.sub) {
+        if (!isStaff(user) && existing.userId !== user.sub) {
             throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
         }
 

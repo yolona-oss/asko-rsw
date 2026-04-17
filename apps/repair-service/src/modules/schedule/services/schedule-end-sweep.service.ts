@@ -5,14 +5,14 @@ import { RepairRequestStatus } from '@asko/shared';
 import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { RepairRequestService } from 'modules/repair-request/services/repair-request.service';
-import { ScheduleGuardService } from './schedule-guard.service';
 import { OvertimeService } from './overtime.service';
 import { ScheduleOverrideService } from './schedule-override.service';
 import { VacationService } from './vacation.service';
 import { SickLeaveService } from './sick-leave.service';
 import { WSchedulePatternService } from './wschedule-pattern.service';
+import { Address } from 'modules/device/entities/address.entity';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
-import { getLocalNow } from 'common/timezone';
+import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
 
 const CONFIRMATION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -23,14 +23,13 @@ export class ScheduleEndSweepService {
     constructor(
         private readonly em: EntityManager,
         private readonly repairRequestService: RepairRequestService,
-        private readonly scheduleGuard: ScheduleGuardService,
         private readonly overtimeService: OvertimeService,
         private readonly overrideService: ScheduleOverrideService,
         private readonly vacationService: VacationService,
         private readonly sickLeaveService: SickLeaveService,
         private readonly schedulePatternService: WSchedulePatternService,
         private readonly events: RepairEventService,
-    ) {}
+    ) { }
 
     @Cron('* * * * *')
     @CreateRequestContext()
@@ -58,10 +57,15 @@ export class ScheduleEndSweepService {
             group.requests.push(req);
         }
 
+        // Batch-load timezones to avoid N+1 on Address table
+        const userIds = [...byRepairer.keys()];
+        const addresses = await this.em.find(Address, { userId: { $in: userIds }, isPrimary: true });
+        const tzMap = new Map(addresses.map(a => [a.userId, a.timezone ?? DEFAULT_TIMEZONE]));
+
+        const now = new Date();
         for (const [repairerUserId, { repairer, requests }] of byRepairer) {
             try {
-                const tz = await this.scheduleGuard.resolveTimezone(repairer.userId);
-                const now = new Date();
+                const tz = tzMap.get(repairer.userId) ?? DEFAULT_TIMEZONE;
                 const { todayStart } = getLocalNow(tz);
                 await this.processRepairer(repairerUserId, requests, now, todayStart);
             } catch (e) {
