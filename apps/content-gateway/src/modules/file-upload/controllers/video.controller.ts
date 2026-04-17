@@ -1,6 +1,6 @@
 import { Controller, Param, Post, UseInterceptors } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES } from '@asko/shared';
+import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
 import {
     RequiredRoles,
     StreamingFile,
@@ -11,8 +11,7 @@ import {
 import { ContentFileClientService } from 'modules/file-client/file-client.service';
 import { VideoResponseDto } from 'common/dto/responses';
 
-const VIDEO_MAX_SIZE = 100 * 1024 * 1024;
-const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
+const { maxBytes: VIDEO_MAX_SIZE, mime: VIDEO_MIME } = UPLOAD_LIMITS.video;
 
 @ApiTags('Article uploads')
 @Controller('articles')

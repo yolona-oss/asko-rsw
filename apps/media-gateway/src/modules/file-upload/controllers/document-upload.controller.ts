@@ -6,7 +6,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES } from '@asko/shared';
+import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
 import {
     FileClientService,
     RequiredRoles,
@@ -16,8 +16,7 @@ import {
     assertMime,
 } from '@asko/gateway-common';
 
-const DOCUMENT_MIME_REGEX = /(pdf|jpeg|jpg|png|webp|msword|wordprocessingml\.document|ms-excel|spreadsheetml\.sheet|plain|csv)$/i;
-const DOCUMENT_MAX_SIZE = 20 * 1024 * 1024;
+const { maxBytes: DOCUMENT_MAX_SIZE, mime: DOCUMENT_MIME_REGEX } = UPLOAD_LIMITS.document;
 
 @ApiTags('File Upload')
 @Controller('file-upload/document')

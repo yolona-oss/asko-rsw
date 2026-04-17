@@ -10,7 +10,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, AttachVideoDto, VideoTypeEnum } from '@asko/shared';
+import { ADMIN_ROLES, AttachVideoDto, UPLOAD_LIMITS, VideoTypeEnum } from '@asko/shared';
 import {
     FileClientService,
     RequiredRoles,
@@ -25,8 +25,7 @@ import {
     VideoListResponseDto,
 } from 'common/dto/responses';
 
-const VIDEO_MAX_SIZE = 100 * 1024 * 1024;
-const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
+const { maxBytes: VIDEO_MAX_SIZE, mime: VIDEO_MIME } = UPLOAD_LIMITS.video;
 
 @ApiTags('Video Upload')
 @Controller('file-upload/video')

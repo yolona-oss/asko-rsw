@@ -1,6 +1,6 @@
 import { Controller, Param, Post, UseInterceptors } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES } from '@asko/shared';
+import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
 import {
     RequiredRoles,
     StreamingFile,
@@ -11,8 +11,7 @@ import {
 import { ContentFileClientService } from 'modules/file-client/file-client.service';
 import { ImageResponseDto } from 'common/dto/responses';
 
-const IMAGE_MAX_SIZE = 10 * 1024 * 1024;
-const IMAGE_MIME = /(jpg|jpeg|png|webp)$/;
+const { maxBytes: IMAGE_MAX_SIZE, mime: IMAGE_MIME } = UPLOAD_LIMITS.image;
 
 @ApiTags('Article uploads')
 @Controller('articles')

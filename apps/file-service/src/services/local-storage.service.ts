@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppConfig } from 'app.config';
 import { CloudinaryUploadResult } from './cloudinary.service';
 import { StorageProvider, StreamUploadMeta, VideoUploadResult } from 'storage/storage-provider.interface';
+import { safePath } from 'common/safe-path';
 import { v4 as uuid } from 'uuid';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -53,27 +54,27 @@ export class LocalStorageService implements StorageProvider {
     async uploadImage(file: Express.Multer.File, folder: string = 'default'): Promise<CloudinaryUploadResult> {
         const ext = this.extFromMime(file.mimetype);
         const filename = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, folder);
+        const dir = safePath(this.staticPath, folder);
         await this.ensureDir(dir);
-        await fs.writeFile(path.join(dir, filename), file.buffer);
+        await fs.writeFile(safePath(dir, filename), file.buffer);
         return this.buildResult(`${folder}/${filename}`, file.originalname, ext);
     }
 
     async uploadImageBuffer(buffer: Buffer, filename: string, folder: string = 'default'): Promise<CloudinaryUploadResult> {
         const ext = path.extname(filename).replace('.', '') || 'jpg';
         const storedName = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, folder);
+        const dir = safePath(this.staticPath, folder);
         await this.ensureDir(dir);
-        await fs.writeFile(path.join(dir, storedName), buffer);
+        await fs.writeFile(safePath(dir, storedName), buffer);
         return this.buildResult(`${folder}/${storedName}`, filename, ext);
     }
 
     async uploadStream(stream: NodeJS.ReadableStream, mimeType: string): Promise<CloudinaryUploadResult | undefined> {
         const ext = this.extFromMime(mimeType);
         const filename = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, 'uploads');
+        const dir = safePath(this.staticPath, 'uploads');
         await this.ensureDir(dir);
-        const filePath = path.join(dir, filename);
+        const filePath = safePath(dir, filename);
         await pipeline(stream, createWriteStream(filePath));
         return this.buildResult(`uploads/${filename}`, filename, ext);
     }
@@ -81,14 +82,14 @@ export class LocalStorageService implements StorageProvider {
     async uploadImageStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, folder: string = 'default'): Promise<CloudinaryUploadResult> {
         const ext = this.extFromMime(meta.mimetype);
         const filename = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, folder);
+        const dir = safePath(this.staticPath, folder);
         await this.ensureDir(dir);
-        await pipeline(stream, createWriteStream(path.join(dir, filename)));
+        await pipeline(stream, createWriteStream(safePath(dir, filename)));
         return this.buildResult(`${folder}/${filename}`, meta.originalname, ext);
     }
 
     async deleteImage(id: string): Promise<void> {
-        const filePath = path.join(this.staticPath, id);
+        const filePath = safePath(this.staticPath, id);
         await fs.unlink(filePath).catch(() => {});
     }
 
@@ -133,25 +134,25 @@ export class LocalStorageService implements StorageProvider {
     async uploadVideo(file: Express.Multer.File, folder: string = 'default'): Promise<VideoUploadResult> {
         const ext = this.videoExtFromMime(file.mimetype);
         const filename = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, 'videos', folder);
+        const dir = safePath(this.staticPath, 'videos', folder);
         await this.ensureDir(dir);
-        await fs.writeFile(path.join(dir, filename), file.buffer);
+        await fs.writeFile(safePath(dir, filename), file.buffer);
         return this.buildVideoResult(`${folder}/${filename}`, file.originalname, ext, file.size);
     }
 
     async uploadVideoStream(stream: NodeJS.ReadableStream, meta: StreamUploadMeta, folder: string = 'default'): Promise<VideoUploadResult> {
         const ext = this.videoExtFromMime(meta.mimetype);
         const filename = `${uuid()}.${ext}`;
-        const dir = path.join(this.staticPath, 'videos', folder);
+        const dir = safePath(this.staticPath, 'videos', folder);
         await this.ensureDir(dir);
-        const filePath = path.join(dir, filename);
+        const filePath = safePath(dir, filename);
         await pipeline(stream, createWriteStream(filePath));
         const stat = await fs.stat(filePath).catch(() => undefined);
         return this.buildVideoResult(`${folder}/${filename}`, meta.originalname, ext, stat?.size);
     }
 
     async deleteVideo(id: string): Promise<void> {
-        const filePath = path.join(this.staticPath, 'videos', id);
+        const filePath = safePath(this.staticPath, 'videos', id);
         await fs.unlink(filePath).catch(() => {});
     }
 }

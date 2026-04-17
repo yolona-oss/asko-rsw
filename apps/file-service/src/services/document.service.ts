@@ -13,6 +13,7 @@ import { FileAccess } from 'entities/file-access.entity';
 import { AppConfig } from 'app.config';
 import { AppErrors } from 'common/error';
 import { AccessParams, persistFileAccess } from 'common/file-access.helper';
+import { safePath } from 'common/safe-path';
 import 'multer';
 
 export const ALLOWED_DOCUMENT_MIMES = [
@@ -20,6 +21,12 @@ export const ALLOWED_DOCUMENT_MIMES = [
     'image/jpeg',
     'image/png',
     'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'text/csv',
 ] as const;
 
 type AllowedDocumentMime = (typeof ALLOWED_DOCUMENT_MIMES)[number];
@@ -43,6 +50,12 @@ export class DocumentService {
             'image/jpeg': 'jpg',
             'image/png': 'png',
             'image/webp': 'webp',
+            'application/msword': 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+            'application/vnd.ms-excel': 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+            'text/plain': 'txt',
+            'text/csv': 'csv',
         };
         if (map[mimeType]) return map[mimeType];
         if (originalName) {
@@ -90,9 +103,9 @@ export class DocumentService {
         const ext = this.extFromMime(file.mimetype, file.originalname);
         const filename = `${uuid()}.${ext}`;
         const relative = `documents/${folder}/${filename}`;
-        const dir = path.join(this.staticPath, 'documents', folder);
+        const dir = safePath(this.staticPath, 'documents', folder);
         await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(path.join(dir, filename), file.buffer);
+        await fs.writeFile(safePath(dir, filename), file.buffer);
         return {
             url: `${this.publicUrl}/documents/${folder}/${filename}`,
             publicId: relative,
@@ -155,9 +168,9 @@ export class DocumentService {
         const ext = this.extFromMime(mimetype, originalname);
         const filename = `${uuid()}.${ext}`;
         const relative = `documents/${folder}/${filename}`;
-        const dir = path.join(this.staticPath, 'documents', folder);
+        const dir = safePath(this.staticPath, 'documents', folder);
         await fs.mkdir(dir, { recursive: true });
-        const filePath = path.join(dir, filename);
+        const filePath = safePath(dir, filename);
         await pipeline(stream, createWriteStream(filePath));
         const stat = await fs.stat(filePath).catch(() => undefined);
         return {
@@ -274,7 +287,7 @@ export class DocumentService {
         if (!doc) throw AppErrors.dbEntityNotFound(`Document ${id} not found`);
 
         if (this.config.fileStorageMode === 'local' && doc.publicId) {
-            const filePath = path.join(this.staticPath, doc.publicId);
+            const filePath = safePath(this.staticPath, doc.publicId);
             await fs.unlink(filePath).catch(() => {});
         } else if (doc.publicId) {
             try {

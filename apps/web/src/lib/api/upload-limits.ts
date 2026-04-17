@@ -1,56 +1,16 @@
 /**
- * Client-side upload limits — mirrors the server-side `MaxFileSizeValidator`
- * and MIME patterns enforced by `StreamingUploadInterceptor` + `assertMime`
- * on each gateway. Forms validate before POST so users get an inline error
- * instead of a round-trip 400.
- *
- * Keep in sync with:
- *   - apps/auth-gateway/src/modules/user/user.controller.ts (avatar)
- *   - apps/repair-gateway/src/modules/{repair,review,device}/controllers/*-upload.controller.ts
- *   - apps/content-gateway/src/modules/file-upload/controllers/*.ts
- *   - apps/media-gateway/src/modules/file-upload/controllers/*.ts
+ * Client-side upload validation — re-exports the canonical limits from
+ * `@asko/shared/client` and adds browser-only helpers (File/Blob size +
+ * MIME checks).
  */
 
+import { UPLOAD_LIMITS } from '@asko/shared/client';
+import type { UploadKind } from '@asko/shared/client';
+
+export { UPLOAD_LIMITS };
+export type { UploadLimitDef, UploadKind } from '@asko/shared/client';
+
 const MB = 1024 * 1024;
-
-export interface UploadLimit {
-    /** Human-readable kind, used in error messages. */
-    kind: 'avatar' | 'image' | 'video' | 'document';
-    maxBytes: number;
-    /** Regex of allowed MIME subtypes (after the `/`). */
-    mime: RegExp;
-    /** Pretty list of allowed extensions for error messages. */
-    allowedExts: string;
-}
-
-export const UPLOAD_LIMITS = {
-    avatar: {
-        kind: 'avatar',
-        maxBytes: 5 * MB,
-        mime: /(jpg|jpeg|png|webp)$/,
-        allowedExts: 'JPG, PNG, WEBP',
-    },
-    image: {
-        kind: 'image',
-        maxBytes: 10 * MB,
-        mime: /(jpg|jpeg|png|webp)$/,
-        allowedExts: 'JPG, PNG, WEBP',
-    },
-    video: {
-        kind: 'video',
-        maxBytes: 100 * MB,
-        mime: /(mp4|webm|mov|quicktime)$/,
-        allowedExts: 'MP4, WEBM, MOV',
-    },
-    document: {
-        kind: 'document',
-        maxBytes: 20 * MB,
-        mime: /(pdf|jpeg|jpg|png|webp|msword|wordprocessingml\.document|ms-excel|spreadsheetml\.sheet|plain|csv)$/i,
-        allowedExts: 'PDF, DOC, DOCX, XLS, XLSX, CSV, TXT, JPG, PNG, WEBP',
-    },
-} as const satisfies Record<string, UploadLimit>;
-
-export type UploadKind = keyof typeof UPLOAD_LIMITS;
 
 /**
  * Throws with a Russian user-facing message when the file violates the

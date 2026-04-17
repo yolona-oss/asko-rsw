@@ -2,16 +2,17 @@
 
 import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from 'react';
 import { FileText } from 'lucide-react';
+import { UPLOAD_LIMITS } from '@asko/shared/client';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 
-const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/jpg';
-const VIDEO_ACCEPT = 'video/mp4,video/webm,video/mov,video/quicktime';
-const DOCUMENT_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv';
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
-const MAX_DOCUMENT_SIZE = 20 * 1024 * 1024; // 20MB
+const IMAGE_ACCEPT = UPLOAD_LIMITS.image.accept;
+const VIDEO_ACCEPT = UPLOAD_LIMITS.video.accept;
+const DOCUMENT_ACCEPT = UPLOAD_LIMITS.document.accept;
+const MAX_IMAGE_SIZE = UPLOAD_LIMITS.image.maxBytes;
+const MAX_VIDEO_SIZE = UPLOAD_LIMITS.video.maxBytes;
+const MAX_DOCUMENT_SIZE = UPLOAD_LIMITS.document.maxBytes;
 
 const DOCUMENT_MIME_TYPES = new Set([
   'application/pdf',

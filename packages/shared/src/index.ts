@@ -34,6 +34,9 @@ export * from './utils/timezone-lookup.js';
 export { SmsRu } from './external/sms_ru/index.js';
 export type { SmsSendOptions, SmsRuResponse } from './external/sms_ru/index.js';
 
+// Upload limits (single source of truth for all gateways + frontend)
+export * from './upload/index.js';
+
 // Error system
 export * from './error/index.js';
 

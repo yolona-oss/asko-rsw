@@ -1,7 +1,8 @@
 import type { PartFormData, FormData } from './types';
+import { UPLOAD_LIMITS } from '@asko/shared/client';
 
-export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-export const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+export const ACCEPTED_IMAGE_TYPES = UPLOAD_LIMITS.image.accept.split(',');
+export const MAX_IMAGE_SIZE = UPLOAD_LIMITS.image.maxBytes;
 
 export const EMPTY_PART_FORM: PartFormData = {
   name: '',

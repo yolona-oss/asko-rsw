@@ -5,7 +5,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES } from '@asko/shared';
+import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
 import {
     RequiredRoles,
     StreamingFile,
@@ -16,10 +16,8 @@ import {
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
 import { ImageResponseDto, VideoResponseDto } from 'common/dto/responses';
 
-const IMAGE_MAX_SIZE = 10 * 1024 * 1024;
-const IMAGE_MIME = /(jpg|jpeg|png|webp)$/;
-const VIDEO_MAX_SIZE = 100 * 1024 * 1024;
-const VIDEO_MIME = /(mp4|webm|mov|quicktime)$/;
+const { maxBytes: IMAGE_MAX_SIZE, mime: IMAGE_MIME } = UPLOAD_LIMITS.image;
+const { maxBytes: VIDEO_MAX_SIZE, mime: VIDEO_MIME } = UPLOAD_LIMITS.video;
 
 @ApiTags('Device uploads')
 @Controller()

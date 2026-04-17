@@ -15,6 +15,7 @@ import {
     AttachImageDto,
     CreateImageFromUrlDto,
     ImageTypeEnum,
+    UPLOAD_LIMITS,
 } from '@asko/shared';
 import {
     FileClientService,
@@ -30,8 +31,7 @@ import {
     ImageListResponseDto,
 } from 'common/dto/responses';
 
-const GENERIC_IMAGE_MAX_SIZE = 10 * 1024 * 1024;
-const GENERIC_IMAGE_MIME = /(jpg|jpeg|png|webp)$/;
+const { maxBytes: GENERIC_IMAGE_MAX_SIZE, mime: GENERIC_IMAGE_MIME } = UPLOAD_LIMITS.image;
 
 @ApiTags('File Upload')
 @Controller('file-upload/image')

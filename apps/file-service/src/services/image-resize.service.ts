@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppConfig } from 'app.config';
 import { CloudinaryUploadResult } from './cloudinary.service';
 import type { ResizeSizeConfig } from 'common/resize-config';
+import { safePath } from 'common/safe-path';
 import sharp from 'sharp';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -28,7 +29,7 @@ export class ImageResizeService {
         originalPublicId: string,
         sizes: ResizeSizeConfig[],
     ): Promise<Record<string, CloudinaryUploadResult>> {
-        const inputPath = path.join(this.staticPath, originalPublicId);
+        const inputPath = safePath(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);
         const folder = path.dirname(originalPublicId);
 
@@ -60,7 +61,7 @@ export class ImageResizeService {
             }
 
             const outputName = `${parsed.name}${suffix}${parsed.ext}`;
-            const outputPath = path.join(parsed.dir, outputName);
+            const outputPath = safePath(parsed.dir, outputName);
             const relativePath = `${folder}/${outputName}`;
 
             await sharp(inputPath)
@@ -87,9 +88,9 @@ export class ImageResizeService {
     }
 
     async compressOriginal(originalPublicId: string): Promise<{ width: number; height: number; size: number }> {
-        const inputPath = path.join(this.staticPath, originalPublicId);
+        const inputPath = safePath(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);
-        const tempPath = path.join(parsed.dir, `${parsed.name}_compressing${parsed.ext}`);
+        const tempPath = safePath(parsed.dir, `${parsed.name}_compressing${parsed.ext}`);
 
         const format = parsed.ext.replace('.', '').toLowerCase();
         let pipeline = sharp(inputPath)
@@ -113,11 +114,11 @@ export class ImageResizeService {
     }
 
     async deleteResizedFiles(originalPublicId: string): Promise<void> {
-        const inputPath = path.join(this.staticPath, originalPublicId);
+        const inputPath = safePath(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);
 
         for (const suffix of ['_thumb', '_medium', '_large']) {
-            const filePath = path.join(parsed.dir, `${parsed.name}${suffix}${parsed.ext}`);
+            const filePath = safePath(parsed.dir, `${parsed.name}${suffix}${parsed.ext}`);
             await fs.unlink(filePath).catch(() => {});
         }
     }

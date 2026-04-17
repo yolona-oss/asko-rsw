@@ -95,6 +95,10 @@ export { FileVisibility } from './image/file.type.js';
 export { DefaultImages } from './image/default-images.enum.js';
 export type { DefaultImagesType } from './image/default-images.enum.js';
 
+// Upload limits
+export { UPLOAD_LIMITS } from './upload/upload-limits.js';
+export type { UploadLimitDef, UploadKind } from './upload/upload-limits.js';
+
 // Common
 export {
     DEFAULT_REQUEST_PAGE,

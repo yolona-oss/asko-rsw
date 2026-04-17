@@ -1,5 +1,6 @@
 import { Controller, Param, Post, UseInterceptors } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { UPLOAD_LIMITS } from '@asko/shared';
 import { CheckPolicy } from '@asko/authorization';
 import {
     StreamingFile,
@@ -10,8 +11,7 @@ import {
 import { AuthFileClientService } from 'modules/file-client/file-client.service';
 import { SelfOrAdminPolicy } from './policies/self-or-admin.policy';
 
-const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
-const AVATAR_MIME = /(jpg|jpeg|png|webp)$/;
+const { maxBytes: AVATAR_MAX_SIZE, mime: AVATAR_MIME } = UPLOAD_LIMITS.avatar;
 
 @ApiTags('Users')
 @Controller('auth/users')
