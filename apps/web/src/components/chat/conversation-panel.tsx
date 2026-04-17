@@ -137,13 +137,13 @@ export function ConversationPanel({
   const currentUserName = currentUser ? buildDisplayName(currentUser) : '';
   const currentUserRole = currentUser?.roles.find(r => r !== 'user') ?? currentUser?.roles[0] ?? '';
 
-  // Fetch avatars for all participants (including self for dropdown)
+  // Fetch avatars for other participants (self avatar comes from useAccount)
   const allParticipantIds = useMemo(
-    () => conversation.participants.map(p => p.userId),
-    [conversation.participants],
+    () => conversation.participants.map(p => p.userId).filter(id => id !== currentUserId),
+    [conversation.participants, currentUserId],
   );
   const avatarMap = useUserAvatars(allParticipantIds);
-  const currentUserAvatarSrc = currentUser?.avatar ?? avatarMap[currentUserId] ?? undefined;
+  const currentUserAvatarSrc = currentUser?.avatar ?? undefined;
   const headerAvatarSrc = isDirect && otherParticipant ? (avatarMap[otherParticipant.userId] ?? undefined) : conversation.avatarUrl;
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
 

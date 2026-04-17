@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,6 +25,67 @@ const PANEL_WIDTH = 350;
 const MOBILE_MIN_H = 172;
 /** Mobile sheet snaps to this fraction of viewport on release */
 const MOBILE_SNAP_RATIO = 0.75;
+
+function useToggleSet() {
+  const [set, setSet] = useState<Set<string>>(new Set());
+  const toggle = useCallback((key: string) => {
+    setSet(prev => { const next = new Set(prev); if (next.has(key)) next.delete(key); else next.add(key); return next; });
+  }, []);
+  const clear = useCallback(() => setSet(new Set()), []);
+  return [set, toggle, clear] as const;
+}
+
+function useNotificationActions(queryClient: ReturnType<typeof useQueryClient>, notifications: NotificationRecord[], router: ReturnType<typeof useRouter>) {
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const [markingAll, setMarkingAll] = useState(false);
+  const [expandedIds, toggleExpand, clearExpanded] = useToggleSet();
+  const [expandedGroups, toggleGroup, clearGroups] = useToggleSet();
+
+  const clearAll = useCallback(() => { clearExpanded(); clearGroups(); }, [clearExpanded, clearGroups]);
+
+  const markRead = useCallback((id: string) => {
+    setRemovingIds(prev => new Set(prev).add(id));
+    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], old => ({
+      count: Math.max(0, (old?.count ?? 1) - 1),
+    }));
+    setTimeout(() => {
+      queryClient.setQueryData<ListCache>(['notifications-unread-list'], old => {
+        if (!old) return old;
+        const filtered = old.data.filter(n => n.id !== id);
+        return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
+      });
+      setRemovingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    }, 400);
+    notificationApi.markAsRead(id);
+  }, [queryClient]);
+
+  const markAllRead = useCallback(() => {
+    const ids = notifications.map(n => n.id);
+    if (ids.length === 0) return;
+    setMarkingAll(true);
+    setRemovingIds(new Set(ids));
+    const totalMs = (ids.length - 1) * 50 + 400;
+    setTimeout(() => {
+      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
+      queryClient.setQueryData<ListCache>(['notifications-unread-list'], old => {
+        if (!old) return old;
+        return { ...old, data: [], overallCount: 0 };
+      });
+      setRemovingIds(new Set());
+      setMarkingAll(false);
+    }, totalMs);
+    notificationApi.markAllAsRead();
+  }, [queryClient, notifications]);
+
+  const handleNavigate = useCallback((n: NotificationRecord) => {
+    const config = NOTIFICATION_TYPE_CONFIG[n.type];
+    const href = config?.href?.(n);
+    markRead(n.id);
+    if (href) router.push(href);
+  }, [markRead, router]);
+
+  return { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead, handleNavigate, clearAll };
+}
 
 function isNotificationNavigable(n: NotificationRecord): boolean {
   return !!NOTIFICATION_TYPE_CONFIG[n.type]?.href;
@@ -120,95 +181,30 @@ export function NotificationBell() {
     }, [queryClient]),
   );
 
-  // ── Optimistic mark single as read (with exit animation) ─────
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-
-  const markRead = useCallback((id: string) => {
-    setRemovingIds((prev) => new Set(prev).add(id));
-    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
-      count: Math.max(0, (old?.count ?? 1) - 1),
-    }));
-    setTimeout(() => {
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-        if (!old) return old;
-        const filtered = old.data.filter((n) => n.id !== id);
-        return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
-      });
-      setRemovingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
-    }, 400);
-    notificationApi.markAsRead(id);
-  }, [queryClient]);
-
-  // ── Optimistic mark all as read ──────────────────────────────
-  const [markingAll, setMarkingAll] = useState(false);
-
-  const markAllRead = useCallback(() => {
-    const ids = notifications.map((n) => n.id);
-    if (ids.length === 0) return;
-    setMarkingAll(true);
-    setRemovingIds(new Set(ids));
-
-    const totalMs = (ids.length - 1) * 50 + 400;
-    setTimeout(() => {
-      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-        if (!old) return old;
-        return { ...old, data: [], overallCount: 0 };
-      });
-      setRemovingIds(new Set());
-      setMarkingAll(false);
-    }, totalMs);
-
-    notificationApi.markAllAsRead();
-  }, [queryClient, notifications]);
-
-  // ── Expand / Collapse notification body ──────────────────────
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
-  const toggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleGroup = useCallback((group: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
-  }, []);
+  const actions = useNotificationActions(queryClient, notifications, router);
+  const { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead } = actions;
 
   // ── Open / Close panel ───────────────────────────────────────
   const handleClose = useCallback(() => {
     if (notifMode === 'dock') {
       setNotifOpen(false);
-      setExpandedIds(new Set());
-      setExpandedGroups(new Set());
+      actions.clearAll();
       return;
     }
     setClosing(true);
-    setTimeout(() => { setNotifOpen(false); setClosing(false); setExpandedIds(new Set()); setExpandedGroups(new Set()); }, 250);
-  }, [notifMode, setNotifOpen]);
+    setTimeout(() => { setNotifOpen(false); setClosing(false); actions.clearAll(); }, 250);
+  }, [notifMode, setNotifOpen, actions]);
 
   const handleToggle = useCallback(() => {
     if (open) handleClose();
     else setNotifOpen(true);
   }, [open, handleClose, setNotifOpen]);
 
-  // ── Navigate to notification target ──────────────────────────
+  // ── Navigate to notification target (closes overlay panel) ──
   const handleNavigate = useCallback((n: NotificationRecord) => {
-    const config = NOTIFICATION_TYPE_CONFIG[n.type];
-    const href = config?.href?.(n);
-    markRead(n.id);
+    actions.handleNavigate(n);
     handleClose();
-    if (href) router.push(href);
-  }, [markRead, handleClose, router]);
+  }, [actions, handleClose]);
 
   // ── Outside click (overlay mode only) ────────────────────────
   const desktopPanelRef = useRef<HTMLDivElement>(null);
@@ -447,69 +443,7 @@ export function NotificationDockPanel() {
   const unreadCount = countData?.count ?? 0;
   const notifications = listData?.data ?? [];
 
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-  const [markingAll, setMarkingAll] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
-  const markRead = useCallback((id: string) => {
-    setRemovingIds((prev) => new Set(prev).add(id));
-    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
-      count: Math.max(0, (old?.count ?? 1) - 1),
-    }));
-    setTimeout(() => {
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-        if (!old) return old;
-        const filtered = old.data.filter((n) => n.id !== id);
-        return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
-      });
-      setRemovingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
-    }, 400);
-    notificationApi.markAsRead(id);
-  }, [queryClient]);
-
-  const markAllRead = useCallback(() => {
-    const ids = notifications.map((n) => n.id);
-    if (ids.length === 0) return;
-    setMarkingAll(true);
-    setRemovingIds(new Set(ids));
-    const totalMs = (ids.length - 1) * 50 + 400;
-    setTimeout(() => {
-      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-        if (!old) return old;
-        return { ...old, data: [], overallCount: 0 };
-      });
-      setRemovingIds(new Set());
-      setMarkingAll(false);
-    }, totalMs);
-    notificationApi.markAllAsRead();
-  }, [queryClient, notifications]);
-
-  const toggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleGroup = useCallback((group: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
-  }, []);
-
-  const handleNavigate = useCallback((n: NotificationRecord) => {
-    const config = NOTIFICATION_TYPE_CONFIG[n.type];
-    const href = config?.href?.(n);
-    markRead(n.id);
-    if (href) router.push(href);
-  }, [markRead, router]);
+  const { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead, handleNavigate } = useNotificationActions(queryClient, notifications, router);
 
   if (!open || notifMode !== 'dock') return null;
 
@@ -767,7 +701,7 @@ function NotificationList({
     );
   }
 
-  const groups = buildGroups(notifications);
+  const groups = useMemo(() => buildGroups(notifications), [notifications]);
 
   return (
     <>

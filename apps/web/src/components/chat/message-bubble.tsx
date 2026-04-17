@@ -74,40 +74,16 @@ interface MessageBubbleProps {
   showSender?: boolean;
   senderName?: string;
   senderRole?: string;
-  /** All image URLs from the conversation, for lightbox prev/next navigation */
   conversationImages?: string[];
-  /** Per-user read positions: userId → lastReadMessageId */
-  readPositions?: Record<string, string>;
-  /** Message ID → chronological order index */
-  messageOrderIndex?: Map<string, number>;
-  /** Other participants in the conversation (excluding current user) */
-  otherParticipants?: { userId: string }[];
-  /** Display names for participants */
+  /** Pre-computed per-user read receipts for this message (null = no receipt data) */
+  receipts?: { userId: string; seen: boolean }[] | null;
   participantNames?: Record<string, string>;
 }
 
-export function MessageBubble({ message, isOwn, showSender, senderName, senderRole, conversationImages, readPositions, messageOrderIndex, otherParticipants, participantNames }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, showSender, senderName, senderRole, conversationImages, receipts, participantNames }: MessageBubbleProps) {
   const attachment = useMemo(() => parseAttachment(message.attachmentJson), [message.attachmentJson]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
-
-  // Compute per-user seen status for own messages
-  const receipts = useMemo(() => {
-    if (!isOwn || !readPositions || !messageOrderIndex || !otherParticipants) return null;
-    const myOrder = messageOrderIndex.get(message.id);
-    if (myOrder === undefined) return null;
-
-    return otherParticipants.map(p => {
-      const readMsgId = readPositions[p.userId];
-      if (!readMsgId) return { userId: p.userId, seen: false };
-      const readOrder = messageOrderIndex.get(readMsgId);
-      // If readOrder is found and >= this message's order, participant has seen it
-      // If readMsgId is not in the current window, it might be an older message
-      // (meaning they haven't read up to this point)
-      const seen = readOrder !== undefined && readOrder >= myOrder;
-      return { userId: p.userId, seen };
-    });
-  }, [isOwn, readPositions, messageOrderIndex, otherParticipants, message.id]);
 
   const handleOpenDocument = useCallback(() => {
     if (attachment?.documentId) {

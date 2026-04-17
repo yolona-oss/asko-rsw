@@ -57,13 +57,12 @@ export function MessageList({
   }, [data]);
 
   // Combine all messages: older loaded + initial fetch + realtime
-  const allMessages = useMemo(
-    () =>
-      [...olderMessages, ...fetchedMessages, ...realtimeMessages]
-        .filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i)
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
-    [olderMessages, fetchedMessages, realtimeMessages],
-  );
+  const allMessages = useMemo(() => {
+    const seen = new Set<string>();
+    return [...olderMessages, ...fetchedMessages, ...realtimeMessages]
+      .filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; })
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }, [olderMessages, fetchedMessages, realtimeMessages]);
 
   // Reset state when conversation changes
   useEffect(() => {
@@ -180,18 +179,37 @@ export function MessageList({
     }, []);
   }, [allMessages]);
 
-  // Build message order index: messageId → position (0-based, chronological)
-  const messageOrderIndex = useMemo(() => {
-    const idx = new Map<string, number>();
-    allMessages.forEach((m, i) => idx.set(m.id, i));
-    return idx;
-  }, [allMessages]);
+  // Pre-compute per-message read receipts (only for own messages)
+  const receiptsMap = useMemo(() => {
+    const others = participants.filter(p => p.userId !== currentUserId);
+    if (others.length === 0) return new Map<string, { userId: string; seen: boolean }[]>();
 
-  // Other participants (for read receipts on own messages)
-  const otherParticipants = useMemo(
-    () => participants.filter(p => p.userId !== currentUserId),
-    [participants, currentUserId],
-  );
+    const orderIndex = new Map<string, number>();
+    allMessages.forEach((m, i) => orderIndex.set(m.id, i));
+
+    // For each participant, resolve their read position to an order index.
+    // If their lastReadMessageId is not in the loaded window, it's older — they haven't
+    // read up to the visible messages yet (conservative: mark unseen).
+    const participantReadOrder = new Map<string, number>();
+    for (const p of others) {
+      const readMsgId = readPositions[p.userId];
+      if (readMsgId) {
+        const order = orderIndex.get(readMsgId);
+        if (order !== undefined) participantReadOrder.set(p.userId, order);
+      }
+    }
+
+    const map = new Map<string, { userId: string; seen: boolean }[]>();
+    for (const msg of allMessages) {
+      if (msg.senderId !== currentUserId) continue;
+      const myOrder = orderIndex.get(msg.id)!;
+      map.set(msg.id, others.map(p => {
+        const readOrder = participantReadOrder.get(p.userId);
+        return { userId: p.userId, seen: readOrder !== undefined && readOrder >= myOrder };
+      }));
+    }
+    return map;
+  }, [allMessages, participants, currentUserId, readPositions]);
 
   if (isLoading) {
     return (
@@ -225,9 +243,7 @@ export function MessageList({
             showSender={isGroup}
             senderName={participantNames[msg.senderId] ?? 'Пользователь'}
             senderRole={participantRoles[msg.senderId]}
-            readPositions={readPositions}
-            messageOrderIndex={messageOrderIndex}
-            otherParticipants={otherParticipants}
+            receipts={receiptsMap.get(msg.id) ?? null}
             participantNames={participantNames}
           />
         </div>

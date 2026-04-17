@@ -164,7 +164,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
     }, []),
 
     onMessageRead: useCallback(({ userId, messageId, affectedMessageIds }: { userId: string; conversationId: string; messageId: string; affectedMessageIds?: string[] }) => {
-      setReadPositions(prev => ({ ...prev, [userId]: messageId }));
+      setReadPositions(prev => prev[userId] === messageId ? prev : { ...prev, [userId]: messageId });
       // Update status of affected realtime messages to 'seen'
       if (affectedMessageIds && affectedMessageIds.length > 0) {
         const affected = new Set(affectedMessageIds);
