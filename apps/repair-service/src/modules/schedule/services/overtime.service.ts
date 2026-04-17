@@ -4,24 +4,8 @@ import { Overtime } from '../entities/overtime.entity';
 import { ScheduleStatus } from '../entities/schedule-status.enum';
 import { AppErrors } from 'common/error';
 import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
+import { parseDate, timeToMinutes, timesOverlap } from './schedule-utils';
 import type { CreateOvertimeRequest, UpdateOvertimeRequest, FindAllSchedulesRequest } from '@asko/proto';
-
-function parseDate(value: string): Date {
-    return new Date(value);
-}
-
-function timeToMinutes(time: string): number {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-}
-
-function timesOverlap(s1: string, e1: string, s2: string, e2: string): boolean {
-    const start1 = timeToMinutes(s1);
-    const end1 = timeToMinutes(e1);
-    const start2 = timeToMinutes(s2);
-    const end2 = timeToMinutes(e2);
-    return start1 < end2 && start2 < end1;
-}
 
 @Injectable()
 export class OvertimeService {
@@ -55,11 +39,9 @@ export class OvertimeService {
             ? { [query.sortBy]: query.sortOrder === 'desc' ? 'DESC' : 'ASC' }
             : { date: 'DESC' };
 
-        const [data, overallCount] = await this.em.findAndCount(Overtime, where, {
-            orderBy,
-            limit,
-            offset: (page - 1) * limit,
-        });
+        const opts: any = { orderBy };
+        if (limit > 0) { opts.limit = limit; opts.offset = (page - 1) * limit; }
+        const [data, overallCount] = await this.em.findAndCount(Overtime, where, opts);
         return { data, overallCount, page, limit };
     }
 

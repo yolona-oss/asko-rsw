@@ -65,7 +65,7 @@ export class WScheduleController {
         await this.assertTargetHasValidAddress(dto.userId);
         assertNotInPast(dto.dateFrom, '00:00');
         assertDurationRange(dto.durationDays, 1, 365);
-        await this.assertNoActiveVacation(dto.userId);
+        await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.VACATION, 'отпуск');
         const result = await this.scheduleClient.createVacation({
             userId: dto.userId,
             dateFrom: dto.dateFrom,
@@ -109,7 +109,7 @@ export class WScheduleController {
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateNotBeforeToday(dto.dateFrom);
         assertDurationRange(dto.durationDays, 1, 30);
-        await this.assertNoActiveSickLeave(dto.userId);
+        await this.assertNoActiveEntry(dto.userId, ScheduleEntryType.SICK_LEAVE, 'больничный');
         const result = await this.scheduleClient.createSickLeave({
             userId: dto.userId,
             dateFrom: dto.dateFrom,
@@ -456,33 +456,17 @@ export class WScheduleController {
         }
     }
 
-    private async assertNoActiveVacation(userId: string): Promise<void> {
+    private async assertNoActiveEntry(userId: string, type: ScheduleEntryType, label: string): Promise<void> {
         const today = new Date().toISOString().slice(0, 10);
         const result = await this.scheduleClient.findAll({
             userId,
-            type: ScheduleEntryType.VACATION,
-            limit: 50,
+            type,
+            status: [ScheduleStatus.PENDING, ScheduleStatus.APPROVED].join(','),
+            dateFrom: today,
+            limit: 1,
         });
-        const hasActive = (result.data ?? []).some(
-            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today,
-        );
-        if (hasActive) {
-            throw new BadRequestException('У пользователя уже есть активный отпуск');
-        }
-    }
-
-    private async assertNoActiveSickLeave(userId: string): Promise<void> {
-        const today = new Date().toISOString().slice(0, 10);
-        const result = await this.scheduleClient.findAll({
-            userId,
-            type: ScheduleEntryType.SICK_LEAVE,
-            limit: 50,
-        });
-        const hasActive = (result.data ?? []).some(
-            (e) => e.status !== ScheduleStatus.REJECTED && e.dateTo?.slice(0, 10) >= today,
-        );
-        if (hasActive) {
-            throw new BadRequestException('У пользователя уже есть активный больничный');
+        if ((result.data ?? []).length > 0) {
+            throw new BadRequestException(`У пользователя уже есть активный ${label}`);
         }
     }
 }

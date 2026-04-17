@@ -432,6 +432,11 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             avrSignedDocumentId={(request as any).avrSignedDocumentId}
             avrSigningMethod={(request as any).avrSigningMethod}
             avrSignedAt={(request as any).avrSignedAt}
+            onRemove={!isTerminal ? async () => {
+              await repairRequestApi.removeAvrByManager(request.id);
+              const { data: updatedRes } = await repairRequestApi.getOne(requestId);
+              setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
+            } : undefined}
           />
 
           {/* Broken parts */}

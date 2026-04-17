@@ -47,16 +47,16 @@ export class ScheduleGuardService {
     }
 
     async findBlockingToday(userId: string, timezone?: string): Promise<{ type: 'vacation' | 'sick_leave' } | null> {
-        const { todayStart } = getLocalNow(timezone ?? DEFAULT_TIMEZONE);
+        const { todayStart, todayEnd } = getLocalNow(timezone ?? DEFAULT_TIMEZONE);
 
-        const vacation = await this.vacationService.findBlockingToday(userId, todayStart);
-        const sickLeave = await this.sickLeaveService.findBlockingToday(userId, todayStart);
+        const [vacation, sickLeave] = await Promise.all([
+            this.vacationService.findBlockingToday(userId, todayStart),
+            this.sickLeaveService.findBlockingToday(userId, todayStart),
+        ]);
 
         const blocking = vacation ? 'vacation' as const : sickLeave ? 'sick_leave' as const : null;
         if (!blocking) return null;
 
-        // An approved schedule override for today overrides the block
-        const { todayEnd } = getLocalNow(timezone ?? DEFAULT_TIMEZONE);
         const override = await this.overrideService.findBlockingOverride(userId, todayStart, todayEnd);
         if (override) return null;
 

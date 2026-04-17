@@ -337,41 +337,44 @@ export class ScheduleGrpcController {
     async findAllScheduleEntries(data: FindAllSchedulesRequest): Promise<SchedulePaginatedResponse> {
         try {
             const typeFilter = data.type;
-            const entries: ScheduleEntryRecord[] = [];
-            let overallCount = 0;
+            const page = data.page || 1;
+            const limit = data.limit || 20;
+            // Fetch all matching rows (no per-table pagination) so we can sort globally
+            const noPagination = { ...data, page: 0, limit: 0, type: '' };
 
+            const queries: Promise<{ entries: ScheduleEntryRecord[]; count: number }>[] = [];
             if (!typeFilter || typeFilter === ScheduleEntryType.VACATION) {
-                const r = await this.vacationService.findAll({ ...data, type: '' });
-                entries.push(...r.data.map(vacationToEntry));
-                overallCount += r.overallCount;
+                queries.push(this.vacationService.findAll(noPagination).then(r => ({ entries: r.data.map(vacationToEntry), count: r.overallCount })));
             }
             if (!typeFilter || typeFilter === ScheduleEntryType.SICK_LEAVE) {
-                const r = await this.sickLeaveService.findAll({ ...data, type: '' });
-                entries.push(...r.data.map(sickLeaveToEntry));
-                overallCount += r.overallCount;
+                queries.push(this.sickLeaveService.findAll(noPagination).then(r => ({ entries: r.data.map(sickLeaveToEntry), count: r.overallCount })));
             }
             if (!typeFilter || typeFilter === ScheduleEntryType.OVERTIME) {
-                const r = await this.overtimeService.findAll({ ...data, type: '' });
-                entries.push(...r.data.map(overtimeToEntry));
-                overallCount += r.overallCount;
+                queries.push(this.overtimeService.findAll(noPagination).then(r => ({ entries: r.data.map(overtimeToEntry), count: r.overallCount })));
             }
             if (!typeFilter || typeFilter === ScheduleEntryType.SCHEDULE_OVERRIDE) {
-                const r = await this.overrideService.findAll({ ...data, type: '' });
-                entries.push(...r.data.map(overrideToEntry));
-                overallCount += r.overallCount;
+                queries.push(this.overrideService.findAll(noPagination).then(r => ({ entries: r.data.map(overrideToEntry), count: r.overallCount })));
             }
 
-            // Sort merged results
+            const results = await Promise.all(queries);
+            const entries: ScheduleEntryRecord[] = [];
+            let overallCount = 0;
+            for (const r of results) {
+                entries.push(...r.entries);
+                overallCount += r.count;
+            }
+
+            // Sort merged results globally
             const sortBy = data.sortBy || 'dateFrom';
             const desc = !data.sortOrder || data.sortOrder === 'desc';
+            const SORTABLE_FIELDS = new Set(['dateFrom', 'dateTo', 'createdAt', 'updatedAt', 'status', 'type']);
+            const effectiveSortBy = SORTABLE_FIELDS.has(sortBy) ? sortBy : 'dateFrom';
             entries.sort((a, b) => {
-                const av = (a as any)[sortBy] ?? '';
-                const bv = (b as any)[sortBy] ?? '';
+                const av = a[effectiveSortBy as keyof ScheduleEntryRecord] ?? '';
+                const bv = b[effectiveSortBy as keyof ScheduleEntryRecord] ?? '';
                 return desc ? (bv > av ? 1 : bv < av ? -1 : 0) : (av > bv ? 1 : av < bv ? -1 : 0);
             });
 
-            const page = data.page || 1;
-            const limit = data.limit || 20;
             const offset = (page - 1) * limit;
             const paginated = entries.slice(offset, offset + limit);
 

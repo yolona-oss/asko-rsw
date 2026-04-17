@@ -2,15 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { SickLeave } from '../entities/sick-leave.entity';
 import { ScheduleStatus } from '../entities/schedule-status.enum';
+import { parseDate, computeDateTo } from './schedule-utils';
 import type { CreateSickLeaveRequest, UpdateSickLeaveRequest, FindAllSchedulesRequest } from '@asko/proto';
-
-function parseDate(value: string): Date {
-    return new Date(value);
-}
-
-function computeDateTo(dateFrom: Date, durationDays: number): Date {
-    return new Date(dateFrom.getTime() + (durationDays - 1) * 86_400_000);
-}
 
 @Injectable()
 export class SickLeaveService {
@@ -43,11 +36,9 @@ export class SickLeaveService {
             ? { [query.sortBy]: query.sortOrder === 'desc' ? 'DESC' : 'ASC' }
             : { dateFrom: 'DESC' };
 
-        const [data, overallCount] = await this.em.findAndCount(SickLeave, where, {
-            orderBy,
-            limit,
-            offset: (page - 1) * limit,
-        });
+        const opts: any = { orderBy };
+        if (limit > 0) { opts.limit = limit; opts.offset = (page - 1) * limit; }
+        const [data, overallCount] = await this.em.findAndCount(SickLeave, where, opts);
         return { data, overallCount, page, limit };
     }
 

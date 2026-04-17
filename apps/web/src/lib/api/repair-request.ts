@@ -118,6 +118,10 @@ export const repairRequestApi = {
     return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/offline/confirm`);
   },
 
+  removeAvrByManager(requestId: string) {
+    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/remove`);
+  },
+
   uploadAvrScan(requestId: string, file: File) {
     const form = new FormData();
     form.append('file', file);

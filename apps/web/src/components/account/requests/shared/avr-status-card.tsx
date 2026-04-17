@@ -1,8 +1,9 @@
 'use client';
 
-import { Badge, Card } from '@asko/ui';
+import { useState } from 'react';
+import { Badge, Button, Card } from '@asko/ui';
 import { AvrStatus } from '@asko/shared/client';
-import { Download, FileCheck, FileClock, FileX, FileMinus, AlertTriangle } from 'lucide-react';
+import { Download, FileCheck, FileClock, FileX, FileMinus, AlertTriangle, Trash2 } from 'lucide-react';
 import { openDocument } from '@/lib/file-url';
 
 interface AvrStatusCardProps {
@@ -11,6 +12,7 @@ interface AvrStatusCardProps {
   avrSignedDocumentId?: string;
   avrSigningMethod?: string;
   avrSignedAt?: string;
+  onRemove?: () => Promise<void>;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' | 'error'; icon: typeof FileCheck }> = {
@@ -21,10 +23,12 @@ const STATUS_CONFIG: Record<string, { label: string; variant: 'success' | 'warni
   [AvrStatus.SIGNED_OFFLINE]: { label: 'Подписан (бумажный)', variant: 'success', icon: FileCheck },
 };
 
-export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, avrSigningMethod, avrSignedAt }: AvrStatusCardProps) {
+export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, avrSigningMethod, avrSignedAt, onRemove }: AvrStatusCardProps) {
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
   const config = avrStatus ? STATUS_CONFIG[avrStatus] : undefined;
 
-  // Unknown or missing status → error state
   if (!config) {
     return (
       <Card padding="none" className="p-3 sm:p-4 flex flex-col gap-2 border-error-border bg-error-bg">
@@ -42,7 +46,19 @@ export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, a
 
   const Icon = config.icon;
   const isNone = avrStatus === AvrStatus.NONE;
+  const canRemove = onRemove && !isNone;
   const signedDate = avrSignedAt ? new Date(avrSignedAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+
+  const handleRemove = async () => {
+    if (!onRemove) return;
+    setRemoving(true);
+    try {
+      await onRemove();
+    } finally {
+      setRemoving(false);
+      setConfirmRemove(false);
+    }
+  };
 
   return (
     <Card padding="none" className="p-3 sm:p-4 flex flex-col gap-2">
@@ -88,6 +104,29 @@ export function AvrStatusCard({ avrStatus, avrDocumentId, avrSignedDocumentId, a
               Документ не прикреплён
             </span>
           )}
+        </div>
+      )}
+
+      {canRemove && !confirmRemove && (
+        <button
+          type="button"
+          onClick={() => setConfirmRemove(true)}
+          className="inline-flex items-center gap-1.5 text-[13px] sm:text-sm text-error hover:underline cursor-pointer self-start"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Удалить акт
+        </button>
+      )}
+
+      {canRemove && confirmRemove && (
+        <div className="flex items-center gap-2 text-[13px] sm:text-sm">
+          <span className="text-text-sub">Удалить акт?</span>
+          <Button variant="danger" size="sm" onClick={handleRemove} disabled={removing}>
+            {removing ? 'Удаление…' : 'Да, удалить'}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setConfirmRemove(false)} disabled={removing}>
+            Отмена
+          </Button>
         </div>
       )}
     </Card>

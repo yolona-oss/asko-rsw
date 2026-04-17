@@ -2,11 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { ScheduleOverride } from '../entities/schedule-override.entity';
 import { ScheduleStatus } from '../entities/schedule-status.enum';
+import { parseDate } from './schedule-utils';
 import type { CreateScheduleOverrideRequest, UpdateScheduleOverrideRequest, FindAllSchedulesRequest } from '@asko/proto';
-
-function parseDate(value: string): Date {
-    return new Date(value);
-}
 
 @Injectable()
 export class ScheduleOverrideService {
@@ -39,11 +36,9 @@ export class ScheduleOverrideService {
             ? { [query.sortBy]: query.sortOrder === 'desc' ? 'DESC' : 'ASC' }
             : { date: 'DESC' };
 
-        const [data, overallCount] = await this.em.findAndCount(ScheduleOverride, where, {
-            orderBy,
-            limit,
-            offset: (page - 1) * limit,
-        });
+        const opts: any = { orderBy };
+        if (limit > 0) { opts.limit = limit; opts.offset = (page - 1) * limit; }
+        const [data, overallCount] = await this.em.findAndCount(ScheduleOverride, where, opts);
         return { data, overallCount, page, limit };
     }
 
