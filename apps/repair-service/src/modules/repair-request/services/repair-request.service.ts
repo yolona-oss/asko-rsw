@@ -203,7 +203,7 @@ export class RepairRequestService {
                 throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
             }
             if (addressEntity.validationStatus === 'error') {
-                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес устройства.');
+                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес.');
             }
         }
 

@@ -286,11 +286,11 @@ export function CreateRequest() {
 
     const addrValidation = selectedDev?.address?.validationStatus;
     if (addrValidation === 'pending') {
-      setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+      setError('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
       return;
     }
     if (addrValidation === 'invalid' || addrValidation === 'error') {
-      setError('Адрес устройства не прошёл проверку. Обновите адрес в разделе «Сертификаты».');
+      setError('Адрес не прошёл проверку. Обновите адрес в профиле.');
       return;
     }
 
@@ -411,16 +411,16 @@ export function CreateRequest() {
           if (vs === 'pending') return (
             <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep flex items-center gap-2">
               <span className="inline-block w-3 h-3 border-2 border-warning-deep border-t-transparent rounded-full animate-spin flex-shrink-0" />
-              Адрес устройства проходит проверку. Отправка заявки будет доступна после подтверждения.
+              Адрес проходит проверку. Отправка заявки будет доступна после подтверждения.
             </div>
           );
           if (vs === 'invalid' || vs === 'error') return (
             <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep flex flex-col gap-2">
               <span>
-                Адрес устройства не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}.
+                Адрес не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}.
               </span>
               <a
-                href="/account/certificates"
+                href="/account/profile"
                 className="text-sm font-medium text-error-deep underline underline-offset-2 hover:no-underline w-fit"
               >
                 Обновить адрес

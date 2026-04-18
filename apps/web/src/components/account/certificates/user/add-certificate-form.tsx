@@ -200,11 +200,11 @@ export function AddCertificateForm({
 
       const vs = selectedDevice?.address?.validationStatus;
       if (vs === 'pending') {
-        setError('Адрес устройства ещё проходит проверку. Попробуйте через несколько секунд.');
+        setError('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
         return;
       }
       if (vs === 'invalid' || vs === 'error') {
-        setError('Адрес устройства не прошёл проверку. Обновите адрес устройства.');
+        setError('Адрес не прошёл проверку. Обновите адрес в профиле.');
         return;
       }
 

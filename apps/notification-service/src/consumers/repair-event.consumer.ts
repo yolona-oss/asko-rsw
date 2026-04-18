@@ -329,7 +329,7 @@ export class RepairEventConsumer {
                 data.userId,
                 NotificationType.ADDRESS_VALIDATED,
                 'Адрес подтверждён',
-                `Адрес ${addr} успешно прошёл проверку. Теперь вы можете создать заявку на ремонт.`,
+                `Адрес ${addr} успешно прошёл проверку.`,
                 NotificationTargetType.ADDRESS,
                 data.addressId,
                 data,

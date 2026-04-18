@@ -3,8 +3,10 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
 import { slugify } from '@asko/shared';
+import { resolveTimezone } from 'common/timezone-lookup';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
+import { AddressValidationPublisher } from 'modules/address-validation.service';
 
 const DEVICE_SORTABLE_FIELDS = ['createdAt', 'name', 'brand', 'model', 'isFeatured'] as const;
 
@@ -14,7 +16,43 @@ export class DeviceService {
         private readonly em: EntityManager,
         private readonly signatureService: SignatureService,
         private readonly deviceValidationPublisher: UserDeviceValidationPublisher,
+        private readonly addressValidationPublisher: AddressValidationPublisher,
     ) {}
+
+    /** Clone an address for a user and trigger validation. */
+    private async cloneAddressForUser(source: Address, userId: string): Promise<Address> {
+        const existing = await this.em.count(Address, { userId });
+        const clone = this.em.create(Address, {
+            userId,
+            city: source.city,
+            district: source.district,
+            street: source.street,
+            house: source.house,
+            building: source.building,
+            apartment: source.apartment,
+            entrance: source.entrance,
+            floor: source.floor,
+            intercom: source.intercom,
+            comment: source.comment,
+            latitude: source.latitude,
+            longitude: source.longitude,
+            timezone: resolveTimezone(source.city, source.longitude),
+            isPrimary: existing === 0,
+        });
+        await this.em.persistAndFlush(clone);
+
+        this.addressValidationPublisher.emit({
+            addressId: clone.id,
+            city: clone.city,
+            street: clone.street,
+            house: clone.house,
+            latitude: clone.latitude,
+            longitude: clone.longitude,
+            attempt: 0,
+        }).catch((e) => console.error('[DeviceService] Failed to queue address validation:', e));
+
+        return clone;
+    }
 
     // ── Device catalog (admin) ──────────────────────────────────────────
 
@@ -260,8 +298,11 @@ export class DeviceService {
         const device = await this.em.findOne(Device, { id: dto.deviceId });
         if (!device) throw AppErrors.dbEntityNotFound('Device not found');
 
-        const address = await this.em.findOne(Address, { id: dto.addressId });
+        let address = await this.em.findOne(Address, { id: dto.addressId });
         if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (address.userId !== userId) {
+            address = await this.cloneAddressForUser(address, userId);
+        }
 
         const userDevice = this.em.create(UserDevice, {
             userId,
@@ -309,8 +350,11 @@ export class DeviceService {
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
         if (dto.addressId) {
-            const address = await this.em.findOne(Address, { id: dto.addressId });
+            let address = await this.em.findOne(Address, { id: dto.addressId });
             if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+            if (address.userId !== userId) {
+                address = await this.cloneAddressForUser(address, userId);
+            }
             userDevice.address = address;
         }
 
