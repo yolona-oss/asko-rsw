@@ -1,7 +1,7 @@
 import { Property } from '@mikro-orm/core';
-import { ICloudinaryImage, IImageObj } from '@asko/shared';
+import { IImageEntry, IImageObj } from '@asko/shared';
 
-export class CloudinaryImage implements ICloudinaryImage {
+export class CloudinaryImage implements IImageEntry {
     @Property()
     public_id: string;
 

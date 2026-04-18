@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { FileAccess } from 'entities/file-access.entity';
+import { FileAccess } from 'common/file-access.entity';
 import {
     AccessParams,
     FileKind,

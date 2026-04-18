@@ -31,10 +31,11 @@ export class DocumentUploadController {
     @UseInterceptors(new StreamingUploadInterceptor(DOCUMENT_MAX_SIZE))
     async uploadGeneric(@StreamingFile() upload: StreamingUploadPayload) {
         assertMime(upload.mimeType, DOCUMENT_MIME_REGEX);
-        return this.fileService.uploadDocument(
-            upload.stream, upload.filename, upload.mimeType, '', '',
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: DOCUMENT_MAX_SIZE },
         );
+        return { document: res.document };
     }
 
     @ApiOkResponse()

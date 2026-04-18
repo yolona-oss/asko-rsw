@@ -1,6 +1,6 @@
 import { ImageTypeEnum } from '@asko/shared';
 import { Entity, PrimaryKey, Property, OptionalProps, Enum } from '@mikro-orm/core';
-import { ImageObj } from 'entities/image.obj';
+import { ImageObj } from 'image/image.obj';
 import { v4 } from 'uuid';
 
 @Entity()

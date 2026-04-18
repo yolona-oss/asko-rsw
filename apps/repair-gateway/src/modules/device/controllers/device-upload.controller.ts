@@ -5,7 +5,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
+import { ADMIN_ROLES, ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
 import {
     RequiredRoles,
     StreamingFile,
@@ -33,10 +33,12 @@ export class DeviceUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, IMAGE_MIME);
-        return this.fileService.uploadDeviceImage(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: IMAGE_MAX_SIZE },
+            { ownerType: ImageTypeEnum.Device, ownerId: id },
         );
+        return { image: res.image };
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
@@ -48,10 +50,12 @@ export class DeviceUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, VIDEO_MIME);
-        return this.fileService.uploadDeviceVideo(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: VIDEO_MAX_SIZE },
+            { ownerType: ImageTypeEnum.Device, ownerId: id },
         );
+        return { video: res.video };
     }
 
     @ApiCreatedResponse({ type: ImageResponseDto })
@@ -63,9 +67,11 @@ export class DeviceUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, IMAGE_MIME);
-        return this.fileService.uploadDevicePartImage(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: IMAGE_MAX_SIZE },
+            { ownerType: ImageTypeEnum.DevicePart, ownerId: id },
         );
+        return { image: res.image };
     }
 }

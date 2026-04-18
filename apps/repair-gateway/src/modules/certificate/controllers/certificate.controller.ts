@@ -325,7 +325,7 @@ export class CertificateController {
         let deviceImageMimetype: string | undefined;
         if (deviceCatalogId) {
             try {
-                const { images } = await this.fileService.findAttachedImages(
+                const { images } = await this.fileService.findAttachedImagesRaw(
                     ImageTypeEnum.Device, deviceCatalogId,
                 );
                 if (images.length > 0) {

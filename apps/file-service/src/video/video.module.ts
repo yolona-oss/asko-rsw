@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Video } from 'entities/video.entity';
-import { VideoCompressProcessor } from 'services/video-compress.processor';
-import { VideoCompressService } from 'services/video-compress.service';
+import { Video } from './video.entity';
+import { VideoService } from './video.service';
+import { VideoCompressService } from './video-compress.service';
+import { VideoCompressProcessor } from './video-compress.processor';
 
 export const VIDEO_COMPRESS_QUEUE = 'video-compress';
 
@@ -13,9 +14,10 @@ export const VIDEO_COMPRESS_QUEUE = 'video-compress';
         MikroOrmModule.forFeature([Video]),
     ],
     providers: [
+        VideoService,
         VideoCompressService,
         VideoCompressProcessor,
     ],
-    exports: [BullModule],
+    exports: [VideoService],
 })
-export class VideoCompressQueueModule {}
+export class VideoModule {}

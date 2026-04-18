@@ -30,14 +30,13 @@
         "isolatedModules": true,
         "types": ["node", "multer", "jest"],
         "paths": {
-            "entities/*": ["entities/*"],
-            "entities": ["entities"],
             "common/*": ["common/*"],
-            "modules/*": ["modules/*"],
-            "services/*": ["services/*"],
+            "image/*": ["image/*"],
+            "video/*": ["video/*"],
+            "document/*": ["document/*"],
             "storage/*": ["storage/*"],
-            "controllers/*": ["controllers/*"],
-            "utils/*": ["utils/*"]
+            "upload/*": ["upload/*"],
+            "database/*": ["database/*"]
         }
     }
 }

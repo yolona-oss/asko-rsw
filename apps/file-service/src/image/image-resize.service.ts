@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { IImageEntry } from '@asko/shared';
 import { AppConfig } from 'app.config';
-import { CloudinaryUploadResult } from './cloudinary.service';
-import type { ResizeSizeConfig } from 'common/resize-config';
+import type { ResizeSizeConfig } from 'image/resize-config';
 import { safePath } from 'common/safe-path';
 import sharp from 'sharp';
 import * as path from 'path';
@@ -28,7 +28,7 @@ export class ImageResizeService {
     async generateSizes(
         originalPublicId: string,
         sizes: ResizeSizeConfig[],
-    ): Promise<Record<string, CloudinaryUploadResult>> {
+    ): Promise<Record<string, IImageEntry>> {
         const inputPath = safePath(this.staticPath, originalPublicId);
         const parsed = path.parse(inputPath);
         const folder = path.dirname(originalPublicId);
@@ -37,12 +37,11 @@ export class ImageResizeService {
         const origW = originalMeta.width ?? 0;
         const origH = originalMeta.height ?? 0;
 
-        const results: Record<string, CloudinaryUploadResult> = {};
+        const results: Record<string, IImageEntry> = {};
 
         for (const size of sizes) {
             const suffix = SUFFIX_MAP[size.name] ?? `_${size.name}`;
 
-            // Skip resize if original already matches target
             if (origW === size.width && origH === size.height) {
                 const originalUrl = `${this.publicUrl}/images/${originalPublicId}`;
                 results[size.name] = {
@@ -94,7 +93,7 @@ export class ImageResizeService {
 
         const format = parsed.ext.replace('.', '').toLowerCase();
         let pipeline = sharp(inputPath)
-            .rotate() // auto-orient + strip EXIF
+            .rotate()
             .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true });
 
         if (format === 'jpg' || format === 'jpeg') {

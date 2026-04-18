@@ -5,8 +5,10 @@ import type { Readable } from 'node:stream';
 import { grpcCall, grpcStreamUpload } from '../../grpc';
 import type { StreamUploadOptions } from '../../grpc';
 
+import { FileVisibility } from '@asko/shared';
 import type {
     FileServiceClient,
+    UploadStart,
     ImageRecord,
     ImageResponse,
     ImageListResponse,
@@ -19,19 +21,19 @@ import type {
     DocumentRecord,
     DocumentResponse,
     DocumentListResponse,
+    UploadFileResponse,
 } from '@asko/proto';
 
-/**
- * Base gRPC client for file-service, shared by every gateway.
- *
- * Provides:
- *  - parse helpers for image/video/document records
- *  - common (non-domain-specific) RPCs: attach, find, reorder, remove, access,
- *    generic upload/uploadVideo/uploadDocument.
- *
- * Gateway-specific domain uploads (e.g. uploadUserAvatar, uploadArticleImage,
- * uploadRepairRequestImage) are declared in the subclass that owns the domain.
- */
+export interface UploadFileParams {
+    ownerType?: string;
+    ownerId?: string;
+    replaceExisting?: boolean;
+    alt?: string;
+    visibility?: FileVisibility;
+    creatorId?: string;
+    conversationId?: string;
+}
+
 @Injectable()
 export class FileClientService implements OnModuleInit {
     protected fileService!: FileServiceClient;
@@ -44,11 +46,53 @@ export class FileClientService implements OnModuleInit {
         this.fileService = this.client.getService<FileServiceClient>('FileService');
     }
 
+    // ─── URL sanitization ───────────────────────────────────────────────
+
+    private sanitizeImageJson(id: string, parsed: any): any {
+        if (!parsed || typeof parsed !== 'object') return parsed;
+        const url = `/files/image/${id}`;
+        const sanitize = (variant: any) => {
+            if (!variant || typeof variant !== 'object') return variant;
+            return {
+                url,
+                secure_url: url,
+                width: variant.width,
+                height: variant.height,
+                format: variant.format,
+                resource_type: variant.resource_type,
+                original_filename: variant.original_filename,
+            };
+        };
+        const result: any = {};
+        for (const key of ['original', 'thumbnail', 'medium', 'large']) {
+            if (parsed[key]) result[key] = sanitize(parsed[key]);
+        }
+        return result;
+    }
+
+    private sanitizeVideoJson(id: string, parsed: any): any {
+        if (!parsed || typeof parsed !== 'object') return parsed;
+        const url = `/files/video/${id}`;
+        return {
+            url,
+            secure_url: url,
+            format: parsed.format,
+            resource_type: parsed.resource_type,
+            original_filename: parsed.original_filename,
+            duration: parsed.duration,
+            size: parsed.size,
+        };
+    }
+
     // ─── Parse helpers ──────────────────────────────────────────────────
 
     protected parseRecord(record: ImageRecord): ImageRecord & { imageJson: any } {
         try {
-            return { ...record, imageJson: JSON.parse(record.imageJson) };
+            const parsed = JSON.parse(record.imageJson);
+            return {
+                ...record,
+                imageJson: record.id ? this.sanitizeImageJson(record.id, parsed) : parsed,
+            };
         } catch {
             return record as any;
         }
@@ -64,7 +108,11 @@ export class FileClientService implements OnModuleInit {
 
     protected parseVideoRecord(record: VideoRecord): VideoRecord & { videoJson: any } {
         try {
-            return { ...record, videoJson: JSON.parse(record.videoJson) };
+            const parsed = JSON.parse(record.videoJson);
+            return {
+                ...record,
+                videoJson: record.id ? this.sanitizeVideoJson(record.id, parsed) : parsed,
+            };
         } catch {
             return record as any;
         }
@@ -79,7 +127,12 @@ export class FileClientService implements OnModuleInit {
     }
 
     protected normalizeDocument(doc: DocumentRecord): DocumentRecord {
-        return { ...doc, sizeBytes: Number(doc.sizeBytes ?? 0) };
+        return {
+            ...doc,
+            sizeBytes: Number(doc.sizeBytes ?? 0),
+            storageUrl: doc.id ? `/files/document/${doc.id}` : doc.storageUrl,
+            publicId: '',
+        };
     }
 
     protected toDocumentResponse(res: DocumentResponse) {
@@ -90,19 +143,59 @@ export class FileClientService implements OnModuleInit {
         return { documents: (res.documents ?? []).map((d) => this.normalizeDocument(d)) };
     }
 
-    // ─── Generic image uploads (admin / shared) ─────────────────────────
+    // ─── Raw helpers (server-side only, NOT for API responses) ──────────
 
-    async upload(
-        stream: Readable, originalname: string, mimetype: string,
-        opts: StreamUploadOptions, alt?: string,
-    ) {
+    /**
+     * Returns attached images with raw storage URLs (NOT sanitized).
+     * Used exclusively by server-side code that needs to fetch actual file
+     * bytes (e.g. certificate PDF generation). Never expose to API consumers.
+     */
+    async findAttachedImagesRaw(ownerType: string, ownerId: string) {
+        const res = await grpcCall(this.fileService.findAttachedImages({ ownerType, ownerId }));
+        return {
+            images: (res.images ?? []).map((r) => {
+                try {
+                    return { ...r, imageJson: JSON.parse(r.imageJson) };
+                } catch {
+                    return r as any;
+                }
+            }),
+        };
+    }
+
+    // ─── Unified upload ─────────────────────────────────────────────────
+
+    async uploadFile(
+        stream: Readable,
+        originalname: string,
+        mimetype: string,
+        opts: StreamUploadOptions,
+        params: UploadFileParams = {},
+    ): Promise<UploadFileResponse> {
+        const start: UploadStart = {
+            originalname,
+            mimetype,
+            ownerId: params.ownerId ?? '',
+            ownerType: params.ownerType ?? '',
+            replaceExisting: params.replaceExisting ?? false,
+            alt: params.alt ?? '',
+            visibility: params.visibility ?? '',
+            creatorId: params.creatorId ?? '',
+            conversationId: params.conversationId ?? '',
+        };
+
         const res = await grpcStreamUpload(
-            (c$) => this.fileService.upload(c$),
+            (c$) => this.fileService.uploadFile(c$),
             stream,
-            { originalname, mimetype, ownerId: '', alt: alt ?? '' },
+            start,
             opts,
         );
-        return this.parseImageResponse(res);
+
+        if (res.image) res.image = this.parseRecord(res.image);
+        if (res.video) res.video = this.parseVideoRecord(res.video);
+        if (res.document) res.document = this.normalizeDocument(res.document);
+
+        return res;
     }
 
     async createFromUrl(url: string, ownerType?: string, ownerId?: string, order?: number) {
@@ -162,18 +255,6 @@ export class FileClientService implements OnModuleInit {
 
     // ─── Videos ─────────────────────────────────────────────────────────
 
-    async uploadVideo(
-        stream: Readable, originalname: string, mimetype: string, opts: StreamUploadOptions,
-    ) {
-        const res = await grpcStreamUpload(
-            (c$) => this.fileService.uploadVideo(c$),
-            stream,
-            { originalname, mimetype, ownerId: '' },
-            opts,
-        );
-        return this.parseVideoResponse(res);
-    }
-
     removeVideo(id: string): Promise<EmptyFileResponse> {
         return grpcCall(this.fileService.removeVideo({ id }));
     }
@@ -198,24 +279,9 @@ export class FileClientService implements OnModuleInit {
 
     // ─── Documents ──────────────────────────────────────────────────────
 
-    async uploadDocument(
-        stream: Readable, originalname: string, mimetype: string,
-        ownerType: string, ownerId: string, opts: StreamUploadOptions, creatorId?: string,
-    ): Promise<DocumentResponse> {
-        const res = await grpcStreamUpload(
-            (c$) => this.fileService.uploadDocument(c$),
-            stream,
-            // `visibility` carries ownerType for the generic path; see
-            // file-service's UploadDocument @GrpcStreamMethod handler.
-            { originalname, mimetype, ownerId, visibility: ownerType, creatorId: creatorId ?? '' },
-            opts,
-        );
-        return this.toDocumentResponse(res);
-    }
-
     async getDocument(id: string): Promise<DocumentRecord> {
         const res = await grpcCall(this.fileService.getDocument({ id }));
-        return res.document;
+        return this.normalizeDocument(res.document);
     }
 
     async getDocumentsByOwner(ownerType: string, ownerId: string): Promise<DocumentListResponse> {

@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
-import { Image } from 'entities/image.entity';
+import { Image } from 'image/image.entity';
 import { ImageTypeEnum } from '@asko/shared';
-import { collectPublicIds } from 'common/image-utils';
+import { collectPublicIds } from 'image/image-utils';
 import { STORAGE_PROVIDER, StorageProvider } from 'storage/storage-provider.interface';
 
 const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
@@ -18,23 +18,18 @@ export class ImageCleanupService {
         @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
     ) {}
 
-    /** Every day at 4 AM — clean unattached orphans and stale dangling images */
     @Cron('0 4 * * *')
     @CreateRequestContext()
     async cleanOrphanImages(): Promise<void> {
         const orphanCutoff = new Date(Date.now() - ORPHAN_AGE_MS);
         const staleCutoff = new Date(Date.now() - STALE_AGE_MS);
 
-        // 1. Unattached images older than 24h
         const orphans = await this.em.find(Image, {
             ownerId: null,
             ownerType: null,
             createdAt: { $lt: orphanCutoff },
         }, { limit: 200 });
 
-        // 2. Find stale owner groups — all images for a given (ownerType, ownerId)
-        //    where the newest image in that group hasn't been updated in 30 days.
-        //    This catches images whose targets were deleted without cleanup.
         const staleOwners = await this.em.getConnection().execute<
             { owner_type: string; owner_id: string }[]
         >(`
@@ -64,7 +59,6 @@ export class ImageCleanupService {
         this.logger.log(`Cleaned ${allToDelete.length} images total`);
     }
 
-    /** Called by gRPC when an entity is deleted — immediately clean its images */
     @CreateRequestContext()
     async deleteByOwner(ownerType: ImageTypeEnum, ownerId: string): Promise<number> {
         const images = await this.em.find(Image, { ownerType, ownerId });
@@ -77,13 +71,9 @@ export class ImageCleanupService {
 
     private async deleteImageEntities(images: Image[]): Promise<void> {
         for (const image of images) {
-            try {
-                const publicIds = collectPublicIds(image);
-                if (publicIds.length > 0) {
-                    await this.storage.deleteImages(publicIds);
-                }
-            } catch (e) {
-                this.logger.error(`Failed to delete files for image ${image.id}: ${e}`);
+            const publicIds = collectPublicIds(image);
+            if (publicIds.length > 0) {
+                await this.storage.deleteBatch(publicIds, 'image');
             }
             this.em.remove(image);
         }

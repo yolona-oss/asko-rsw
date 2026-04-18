@@ -1,4 +1,4 @@
-import type { Image } from 'entities/image.entity';
+import type { Image } from 'image/image.entity';
 
 /** Extract all storage public_ids from an image (original + resized variants). */
 export function collectPublicIds(image: Image): string[] {

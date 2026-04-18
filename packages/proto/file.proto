@@ -3,50 +3,29 @@ syntax = "proto3";
 package file;
 
 service FileService {
-    // Upload operations
-    rpc Upload(stream UploadChunk) returns (ImageResponse);
-    rpc UploadUserAvatar(stream UploadChunk) returns (ImageResponse);
-    rpc UploadDeviceImage(stream UploadChunk) returns (ImageResponse);
-    rpc UploadArticleImage(stream UploadChunk) returns (ImageResponse);
-    rpc UploadRepairRequestImage(stream UploadChunk) returns (ImageResponse);
-    rpc UploadReviewImage(stream UploadChunk) returns (ImageResponse);
-    rpc UploadDevicePartImage(stream UploadChunk) returns (ImageResponse);
-    rpc UploadBrokenPartImage(stream UploadChunk) returns (ImageResponse);
+    // Upload
+    rpc UploadFile(stream UploadChunk) returns (UploadFileResponse);
 
     // URL operations
     rpc CreateFromUrl(CreateFromUrlRequest) returns (ImageResponse);
 
-    // Management operations
+    // Image management
     rpc Remove(ImageIdRequest) returns (EmptyResponse);
     rpc UnattachImage(ImageIdRequest) returns (EmptyResponse);
     rpc AttachImage(AttachImageRequest) returns (ImageResponse);
     rpc FindAttachedImages(FindAttachedRequest) returns (ImageListResponse);
     rpc CountAttached(CountAttachedRequest) returns (CountResponse);
-
-    // Cleanup
     rpc DeleteByOwner(FindAttachedRequest) returns (CountResponse);
-
-    // Reorder operations
     rpc ReorderImages(ReorderImagesRequest) returns (EmptyResponse);
     rpc ReorderByIds(ReorderByIdsRequest) returns (ImageListResponse);
 
-    // Video upload operations
-    rpc UploadVideo(stream UploadChunk) returns (VideoResponse);
-    rpc UploadRepairRequestVideo(stream UploadChunk) returns (VideoResponse);
-    rpc UploadReviewVideo(stream UploadChunk) returns (VideoResponse);
-    rpc UploadDeviceVideo(stream UploadChunk) returns (VideoResponse);
-    rpc UploadArticleVideo(stream UploadChunk) returns (VideoResponse);
-
-    // Video management operations
+    // Video management
     rpc RemoveVideo(VideoIdRequest) returns (EmptyResponse);
     rpc FindAttachedVideos(FindAttachedRequest) returns (VideoListResponse);
     rpc AttachVideo(AttachVideoRequest) returns (VideoResponse);
     rpc UnattachVideo(VideoIdRequest) returns (EmptyResponse);
 
-    // Document operations
-    rpc UploadBrokenPartDocument(stream UploadChunk) returns (DocumentResponse);
-    rpc UploadRepairRequestDocument(stream UploadChunk) returns (DocumentResponse);
-    rpc UploadDocument(stream UploadChunk) returns (DocumentResponse);
+    // Document management
     rpc GetDocument(DocumentIdRequest) returns (DocumentResponse);
     rpc GetDocumentsByOwner(FindAttachedRequest) returns (DocumentListResponse);
     rpc DeleteDocument(DocumentIdRequest) returns (EmptyResponse);
@@ -69,6 +48,8 @@ message UploadStart {
     string creatorId      = 5;  // documents only
     string conversationId = 6;  // documents only
     string alt            = 7;  // generic image upload only; ignored otherwise
+    string ownerType      = 8;  // e.g. "user", "device", "repair_request"
+    bool   replaceExisting = 9; // delete existing files for (ownerType, ownerId) before upload
 }
 
 // Client-streaming payload for all file upload RPCs.
@@ -230,4 +211,13 @@ message DocumentResponse {
 
 message DocumentListResponse {
     repeated DocumentRecord documents = 1;
+}
+
+// ─── Unified upload ──────────────────────────────────────────────────
+
+message UploadFileResponse {
+    string fileType = 1;
+    ImageRecord image = 2;
+    VideoRecord video = 3;
+    DocumentRecord document = 4;
 }

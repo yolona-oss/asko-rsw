@@ -6,7 +6,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AppErrors, ImageTypeEnum, JwtPayload, UPLOAD_LIMITS } from '@asko/shared';
+import { AppErrors, FileVisibility, ImageTypeEnum, JwtPayload, UPLOAD_LIMITS } from '@asko/shared';
 import { CheckPolicy, isAdmin } from '@asko/authorization';
 import {
     JwtAuthUser,
@@ -44,10 +44,12 @@ export class RepairUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, IMAGE_MIME);
-        return this.fileService.uploadRepairRequestImage(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: IMAGE_MAX_SIZE },
+            { ownerType: ImageTypeEnum.RepairRequest, ownerId: id },
         );
+        return { image: res.image };
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
@@ -59,10 +61,12 @@ export class RepairUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, VIDEO_MIME);
-        return this.fileService.uploadRepairRequestVideo(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: VIDEO_MAX_SIZE },
+            { ownerType: ImageTypeEnum.RepairRequest, ownerId: id },
         );
+        return { video: res.video };
     }
 
     @ApiCreatedResponse()
@@ -75,10 +79,12 @@ export class RepairUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, DOCUMENT_MIME_REGEX);
-        return this.fileService.uploadRepairRequestDocument(
-            upload.stream, upload.filename, upload.mimeType, id,
-            { maxBytes: DOCUMENT_MAX_SIZE }, user.sub,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
+            { maxBytes: DOCUMENT_MAX_SIZE },
+            { ownerType: ImageTypeEnum.RepairRequest, ownerId: id, visibility: FileVisibility.ROLE_RESTRICTED, creatorId: user.sub },
         );
+        return { document: res.document };
     }
 
     // ── Broken-part images / documents ──
@@ -92,10 +98,12 @@ export class RepairUploadController {
         @Param('partId') partId: string,
     ) {
         assertMime(upload.mimeType, IMAGE_MIME);
-        return this.fileService.uploadBrokenPartImage(
-            upload.stream, upload.filename, upload.mimeType, partId,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: IMAGE_MAX_SIZE },
+            { ownerType: ImageTypeEnum.BrokenPart, ownerId: partId },
         );
+        return { image: res.image };
     }
 
     @ApiCreatedResponse()
@@ -108,10 +116,12 @@ export class RepairUploadController {
         @Param('partId') partId: string,
     ) {
         assertMime(upload.mimeType, DOCUMENT_MIME_REGEX);
-        return this.fileService.uploadBrokenPartDocument(
-            upload.stream, upload.filename, upload.mimeType, partId,
-            { maxBytes: DOCUMENT_MAX_SIZE }, user.sub,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
+            { maxBytes: DOCUMENT_MAX_SIZE },
+            { ownerType: ImageTypeEnum.BrokenPart, ownerId: partId, visibility: FileVisibility.ROLE_RESTRICTED, creatorId: user.sub },
         );
+        return { document: res.document };
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })

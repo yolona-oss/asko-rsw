@@ -1,4 +1,9 @@
-export class ICloudinaryImage {
+/**
+ * Storage-agnostic image entry metadata. Stores dimensions, URLs, and
+ * provider-specific identifiers for a single image variant (original,
+ * thumbnail, medium, large).
+ */
+export class IImageEntry {
     public_id: string;
     version: number;
     signature: string;

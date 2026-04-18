@@ -1,6 +1,6 @@
 import { Global, Injectable, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { getEnvFilePath } from '@asko/shared';
+import { getEnvFilePath, FileStorageMode } from '@asko/shared';
 
 @Injectable()
 export class AppConfig {
@@ -20,8 +20,12 @@ export class AppConfig {
         };
     }
 
-    get fileStorageMode(): 'cloudinary' | 'local' {
-        return (this.configService.get<string>('FILE_STORAGE_MODE') ?? 'cloudinary') as 'cloudinary' | 'local';
+    get fileStorageMode(): FileStorageMode {
+        const raw = this.configService.get<string>('FILE_STORAGE_MODE');
+        if (raw && Object.values(FileStorageMode).includes(raw as FileStorageMode)) {
+            return raw as FileStorageMode;
+        }
+        return FileStorageMode.CLOUDINARY;
     }
 
     get staticPath(): string {
@@ -50,6 +54,18 @@ export class AppConfig {
         };
     }
 
+    get s3() {
+        return {
+            bucket: this.configService.getOrThrow<string>('S3_BUCKET'),
+            region: this.configService.get<string>('S3_REGION') ?? 'us-east-1',
+            endpoint: this.configService.get<string>('S3_ENDPOINT'),
+            accessKeyId: this.configService.getOrThrow<string>('S3_ACCESS_KEY_ID'),
+            secretAccessKey: this.configService.getOrThrow<string>('S3_SECRET_ACCESS_KEY'),
+            prefix: this.configService.get<string>('S3_PREFIX') ?? '',
+            cdnUrl: this.configService.get<string>('S3_CDN_URL'),
+            forcePathStyle: this.configService.get<string>('S3_FORCE_PATH_STYLE') === 'true',
+        };
+    }
 }
 
 @Global()

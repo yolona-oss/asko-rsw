@@ -1,5 +1,5 @@
 export * from './attach-image.dto.js';
-export * from './cloudinary-image.type.js';
+export * from './image-entry.type.js';
 export * from './create-image-from-url.dto.js';
 export * from './default-images.enum.js';
 export * from './file.type.js';

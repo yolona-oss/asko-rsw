@@ -40,10 +40,11 @@ export class VideoUploadController {
     @UseInterceptors(new StreamingUploadInterceptor(VIDEO_MAX_SIZE))
     async upload(@StreamingFile() upload: StreamingUploadPayload) {
         assertMime(upload.mimeType, VIDEO_MIME);
-        return this.fileService.uploadVideo(
+        const res = await this.fileService.uploadFile(
             upload.stream, upload.filename, upload.mimeType,
             { maxBytes: VIDEO_MAX_SIZE },
         );
+        return { video: res.video };
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })

@@ -1,14 +1,15 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, GrpcStreamMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
-import { ImageService } from 'services/image.service';
-import { VideoService } from 'services/video.service';
-import { ImageCleanupService } from 'services/image-cleanup.service';
-import { DocumentService } from 'services/document.service';
+import { ImageService } from 'image/image.service';
+import { VideoService } from 'video/video.service';
+import { ImageCleanupService } from 'image/image-cleanup.service';
+import { DocumentService } from 'document/document.service';
+import { UploadService } from 'upload/upload.service';
 import { AppError, AppErrors } from 'common/error';
 import { toAccessParams } from 'common/file-access.helper';
 import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
-import type { FileAccess } from 'entities/file-access.entity';
+import type { FileAccess } from 'common/file-access.entity';
 import { PassThrough } from 'stream';
 import { Observable } from 'rxjs';
 import type {
@@ -29,9 +30,9 @@ import type {
     DocumentResponse,
     DocumentListResponse,
 } from '@asko/proto';
-import type { Image } from 'entities/image.entity';
-import type { Video } from 'entities/video.entity';
-import type { Document } from 'entities/document.entity';
+import type { Image } from 'image/image.entity';
+import type { Video } from 'video/video.entity';
+import type { Document } from 'document/document.entity';
 
 function toGrpcError(error: unknown): RpcException {
     if (error instanceof AppError) {
@@ -96,17 +97,9 @@ export class FileGrpcController {
         private readonly videoService: VideoService,
         private readonly cleanupService: ImageCleanupService,
         private readonly documentService: DocumentService,
+        private readonly uploadService: UploadService,
     ) {}
 
-    /**
-     * Drive a client-streaming upload: assemble a PassThrough from the
-     * incoming `UploadChunk` stream (first message carries `start`,
-     * subsequent ones carry `data`), then hand the stream to the service.
-     *
-     * The PassThrough is ended when the incoming gRPC stream completes;
-     * the service promise resolves only after the storage provider has
-     * drained it, so back-pressure stays natural.
-     */
     private toStreamUpload<Resp>(
         in$: Observable<UploadChunk>,
         run: (pt: PassThrough, meta: UploadStart) => Promise<Resp>,
@@ -143,7 +136,6 @@ export class FileGrpcController {
                         return;
                     }
                     pt.end();
-                    // service promise (started on first chunk) will complete on its own
                 },
             });
 
@@ -151,94 +143,28 @@ export class FileGrpcController {
         });
     }
 
-    // ─── Upload operations ──────────────────────────────────────────────
+    // ─── Unified upload ─────────────────────────────────────────────────
 
-    @GrpcStreamMethod('FileService', 'Upload')
-    upload(in$: Observable<UploadChunk>) {
+    @GrpcStreamMethod('FileService', 'UploadFile')
+    uploadFile(in$: Observable<UploadChunk>) {
         return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadStreamGeneric(
+            const result = await this.uploadService.uploadFile(
                 pt,
                 { originalname: meta.originalname, mimetype: meta.mimetype, alt: meta.alt },
+                meta.ownerType || undefined,
+                meta.ownerId || undefined,
+                meta.replaceExisting ?? false,
                 toAccessParams(meta),
             );
-            return { image: entityToRecord(image) };
-        });
-    }
 
-    @GrpcStreamMethod('FileService', 'UploadUserAvatar')
-    uploadUserAvatar(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadUserAvatarStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadDeviceImage')
-    uploadDeviceImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadDeviceImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadArticleImage')
-    uploadArticleImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadArticleImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadRepairRequestImage')
-    uploadRepairRequestImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadRepairRequestImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadReviewImage')
-    uploadReviewImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadReviewImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadDevicePartImage')
-    uploadDevicePartImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadDevicePartImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadBrokenPartImage')
-    uploadBrokenPartImage(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const image = await this.imageService.uploadBrokenPartImageStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { image: entityToRecord(image) };
+            switch (result.fileType) {
+                case 'image':
+                    return { fileType: 'image', image: entityToRecord(result.image!) };
+                case 'video':
+                    return { fileType: 'video', video: videoEntityToRecord(result.video!) };
+                case 'document':
+                    return { fileType: 'document', document: documentToRecord(result.document!) };
+            }
         });
     }
 
@@ -257,7 +183,7 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    // ─── Management operations ──────────────────────────────────────────
+    // ─── Image management ───────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'Remove')
     async remove(data: ImageIdRequest) {
@@ -320,7 +246,7 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    // ─── Reorder operations ─────────────────────────────────────────────
+    // ─── Reorder ────────────────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'ReorderImages')
     async reorderImages(data: ReorderImagesRequest) {
@@ -346,65 +272,7 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    // ─── Video operations ────────────────────────────────────────────────
-
-    @GrpcStreamMethod('FileService', 'UploadVideo')
-    uploadVideo(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadStreamGeneric(
-                pt,
-                { originalname: meta.originalname, mimetype: meta.mimetype },
-                toAccessParams(meta),
-            );
-            return { video: videoEntityToRecord(video) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadRepairRequestVideo')
-    uploadRepairRequestVideo(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadRepairRequestVideoStream(
-                pt,
-                { originalname: meta.originalname, mimetype: meta.mimetype },
-                meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { video: videoEntityToRecord(video) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadReviewVideo')
-    uploadReviewVideo(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadReviewVideoStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { video: videoEntityToRecord(video) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadDeviceVideo')
-    uploadDeviceVideo(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadDeviceVideoStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { video: videoEntityToRecord(video) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadArticleVideo')
-    uploadArticleVideo(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const video = await this.videoService.uploadArticleVideoStream(
-                pt, { originalname: meta.originalname, mimetype: meta.mimetype }, meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { video: videoEntityToRecord(video) };
-        });
-    }
+    // ─── Video management ───────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'RemoveVideo')
     async removeVideo(data: VideoIdRequest) {
@@ -445,53 +313,7 @@ export class FileGrpcController {
         } catch (e) { throw toGrpcError(e); }
     }
 
-    // ─── Document operations ────────────────────────────────────────────
-
-    @GrpcStreamMethod('FileService', 'UploadBrokenPartDocument')
-    uploadBrokenPartDocument(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const doc = await this.documentService.uploadBrokenPartDocumentStream(
-                pt,
-                { originalname: meta.originalname, mimetype: meta.mimetype },
-                meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { document: documentToRecord(doc) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadRepairRequestDocument')
-    uploadRepairRequestDocument(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            const doc = await this.documentService.uploadRepairRequestDocumentStream(
-                pt,
-                { originalname: meta.originalname, mimetype: meta.mimetype },
-                meta.ownerId,
-                toAccessParams(meta),
-            );
-            return { document: documentToRecord(doc) };
-        });
-    }
-
-    @GrpcStreamMethod('FileService', 'UploadDocument')
-    uploadDocument(in$: Observable<UploadChunk>) {
-        return this.toStreamUpload(in$, async (pt, meta) => {
-            // `visibility` field is reused to carry ownerType for the generic
-            // path, so we drop it from AccessParams (no real visibility policy
-            // arrives on this RPC) and pass through only creatorId + conversationId.
-            const doc = await this.documentService.uploadStreamDocument(
-                pt,
-                { originalname: meta.originalname, mimetype: meta.mimetype },
-                meta.visibility || '',
-                meta.ownerId,
-                toAccessParams({
-                    creatorId: meta.creatorId,
-                    conversationId: meta.conversationId,
-                }),
-            );
-            return { document: documentToRecord(doc) };
-        });
-    }
+    // ─── Document management ────────────────────────────────────────────
 
     @GrpcMethod('FileService', 'GetDocument')
     async getDocument(data: DocumentIdRequest): Promise<DocumentResponse> {
@@ -527,20 +349,29 @@ export class FileGrpcController {
             let access: FileAccess | null = null;
 
             if (data.type === 'video') {
-                const video = await this.videoService.findOne(data.id);
+                const [video, videoAccess] = await Promise.all([
+                    this.videoService.findOne(data.id),
+                    this.videoService.findAccess(data.id),
+                ]);
                 storageUrl = video.video?.secure_url ?? video.video?.url ?? '';
                 publicId = video.video?.public_id ?? '';
-                access = await this.videoService.findAccess(data.id);
+                access = videoAccess;
             } else if (data.type === 'document') {
-                const doc = await this.documentService.findOne(data.id);
+                const [doc, docAccess] = await Promise.all([
+                    this.documentService.findOne(data.id),
+                    this.documentService.findAccess(data.id),
+                ]);
                 storageUrl = doc.storageUrl;
                 publicId = doc.publicId ?? '';
-                access = await this.documentService.findAccess(data.id);
+                access = docAccess;
             } else {
-                const image = await this.imageService.findOne(data.id);
+                const [image, imageAccess] = await Promise.all([
+                    this.imageService.findOne(data.id),
+                    this.imageService.findAccess(data.id),
+                ]);
                 storageUrl = image.image?.original?.secure_url ?? image.image?.original?.url ?? '';
                 publicId = image.image?.original?.public_id ?? '';
-                access = await this.imageService.findAccess(data.id);
+                access = imageAccess;
             }
 
             return {

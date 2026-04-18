@@ -5,7 +5,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { UPLOAD_LIMITS } from '@asko/shared';
+import { ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
 import { CheckPolicy } from '@asko/authorization';
 import {
     StreamingFile,
@@ -36,10 +36,12 @@ export class ReviewUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, IMAGE_MIME);
-        return this.fileService.uploadReviewImage(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: IMAGE_MAX_SIZE },
+            { ownerType: ImageTypeEnum.Review, ownerId: id },
         );
+        return { image: res.image };
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
@@ -51,9 +53,11 @@ export class ReviewUploadController {
         @Param('id') id: string,
     ) {
         assertMime(upload.mimeType, VIDEO_MIME);
-        return this.fileService.uploadReviewVideo(
-            upload.stream, upload.filename, upload.mimeType, id,
+        const res = await this.fileService.uploadFile(
+            upload.stream, upload.filename, upload.mimeType,
             { maxBytes: VIDEO_MAX_SIZE },
+            { ownerType: ImageTypeEnum.Review, ownerId: id },
         );
+        return { video: res.video };
     }
 }

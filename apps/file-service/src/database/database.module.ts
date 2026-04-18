@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { AppConfig } from '../app.config';
-import { Image } from 'entities/image.entity';
-import { Video } from 'entities/video.entity';
-import { FileAccess } from 'entities/file-access.entity';
+import { AppConfig } from 'app.config';
+import { Image } from 'image/image.entity';
+import { Video } from 'video/video.entity';
+import { FileAccess } from 'common/file-access.entity';
 import { isProdEnv } from '@asko/shared';
-import { Document } from 'entities/document.entity';
+import { Document } from 'document/document.entity';
 
 @Module({
     imports: [

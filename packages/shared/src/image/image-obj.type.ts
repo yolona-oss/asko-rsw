@@ -1,8 +1,8 @@
-import { ICloudinaryImage } from "./cloudinary-image.type.js";
+import { IImageEntry } from "./image-entry.type.js";
 
 export class IImageObj {
-  original: ICloudinaryImage;
-  thumbnail?: ICloudinaryImage;
-  medium?: ICloudinaryImage;
-  large?: ICloudinaryImage;
+  original: IImageEntry;
+  thumbnail?: IImageEntry;
+  medium?: IImageEntry;
+  large?: IImageEntry;
 }

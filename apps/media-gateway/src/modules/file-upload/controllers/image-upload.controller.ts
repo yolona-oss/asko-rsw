@@ -48,11 +48,12 @@ export class ImageUploadController {
         @StreamingFile() upload: StreamingUploadPayload,
     ) {
         assertMime(upload.mimeType, GENERIC_IMAGE_MIME);
-        return this.fileService.upload(
+        const res = await this.fileService.uploadFile(
             upload.stream, upload.filename, upload.mimeType,
             { maxBytes: GENERIC_IMAGE_MAX_SIZE },
-            upload.fields.alt,
+            { alt: upload.fields.alt },
         );
+        return { image: res.image };
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })

@@ -1,6 +1,6 @@
 import { VideoTypeEnum } from '@asko/shared';
 import { Entity, PrimaryKey, Property, OptionalProps, Enum } from '@mikro-orm/core';
-import { VideoMetadata } from 'entities/video-metadata.obj';
+import { VideoMetadata } from './video-metadata.obj';
 import { v4 } from 'uuid';
 
 @Entity()

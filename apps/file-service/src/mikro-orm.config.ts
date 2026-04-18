@@ -4,12 +4,12 @@ import { getEnvFilePath } from '@asko/shared';
 import { defineConfig } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import path from 'path';
-import { Image } from 'entities/image.entity';
-import { Video } from 'entities/video.entity';
-import { FileAccess } from 'entities/file-access.entity';
+import { Image } from 'image/image.entity';
+import { Video } from 'video/video.entity';
+import { FileAccess } from 'common/file-access.entity';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'app.config';
-import { Document } from 'entities/document.entity';
+import { Document } from 'document/document.entity';
 
 dotenvConfig({ path: getEnvFilePath(), override: true });
 

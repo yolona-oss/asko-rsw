@@ -14,6 +14,8 @@ export interface UploadStart {
     creatorId?: string;
     conversationId?: string;
     alt?: string;
+    ownerType?: string;
+    replaceExisting?: boolean;
 }
 
 /**
@@ -178,44 +180,39 @@ export interface DocumentListResponse {
     documents: DocumentRecord[];
 }
 
+// ─── Unified upload ──────────────────────────────────────────────────
+
+export interface UploadFileResponse {
+    fileType: string;
+    image?: ImageRecord;
+    video?: VideoRecord;
+    document?: DocumentRecord;
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface FileServiceClient {
-    upload(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadUserAvatar(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadDeviceImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadArticleImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadRepairRequestImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadReviewImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadDevicePartImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
-    uploadBrokenPartImage(stream: Observable<UploadChunk>): Observable<ImageResponse>;
+    // Upload
+    uploadFile(stream: Observable<UploadChunk>): Observable<UploadFileResponse>;
     createFromUrl(request: CreateFromUrlRequest): Observable<ImageResponse>;
 
+    // Image management
     remove(request: ImageIdRequest): Observable<EmptyFileResponse>;
     unattachImage(request: ImageIdRequest): Observable<EmptyFileResponse>;
     attachImage(request: AttachImageRequest): Observable<ImageResponse>;
     findAttachedImages(request: FindAttachedRequest): Observable<ImageListResponse>;
     countAttached(request: CountAttachedRequest): Observable<CountResponse>;
     deleteByOwner(request: FindAttachedRequest): Observable<CountResponse>;
-
     reorderImages(request: ReorderImagesRequest): Observable<EmptyFileResponse>;
     reorderByIds(request: ReorderByIdsRequest): Observable<ImageListResponse>;
 
-    // Video operations
-    uploadVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
-    uploadRepairRequestVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
-    uploadReviewVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
-    uploadDeviceVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
-    uploadArticleVideo(stream: Observable<UploadChunk>): Observable<VideoResponse>;
+    // Video management
     removeVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
     findAttachedVideos(request: FindAttachedRequest): Observable<VideoListResponse>;
     attachVideo(request: AttachVideoRequest): Observable<VideoResponse>;
     unattachVideo(request: VideoIdRequest): Observable<EmptyFileResponse>;
 
-    // Document operations
-    uploadBrokenPartDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
-    uploadRepairRequestDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
-    uploadDocument(stream: Observable<UploadChunk>): Observable<DocumentResponse>;
+    // Document management
     getDocument(request: DocumentIdRequest): Observable<DocumentResponse>;
     getDocumentsByOwner(request: FindAttachedRequest): Observable<DocumentListResponse>;
     deleteDocument(request: DocumentIdRequest): Observable<EmptyFileResponse>;

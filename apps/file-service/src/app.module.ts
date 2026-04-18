@@ -1,22 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetricsModule } from '@asko/observability';
 import { AppConfig, AppConfigModule } from './app.config';
-import { DatabaseModule } from 'modules/database.module';
-import { StorageModule } from 'modules/storage.module';
-import { ImageResizeQueueModule } from 'modules/image-resize-queue.module';
-import { VideoCompressQueueModule } from 'modules/video-compress-queue.module';
-import { Image } from 'entities/image.entity';
-import { Video } from 'entities/video.entity';
-import { FileAccess } from 'entities/file-access.entity';
-import { Document } from 'entities/document.entity';
-import { ImageService } from 'services/image.service';
-import { VideoService } from 'services/video.service';
-import { ImageCleanupService } from 'services/image-cleanup.service';
-import { DocumentService } from 'services/document.service';
-import { FileGrpcController } from 'controllers/file.grpc.controller';
+import { DatabaseModule } from 'database/database.module';
+import { StorageModule } from 'storage/storage.module';
+import { ImageModule } from 'image/image.module';
+import { VideoModule } from 'video/video.module';
+import { DocumentModule } from 'document/document.module';
+import { UploadModule } from 'upload/upload.module';
 
 @Module({
     imports: [
@@ -31,16 +23,10 @@ import { FileGrpcController } from 'controllers/file.grpc.controller';
         }),
         DatabaseModule,
         StorageModule,
-        MikroOrmModule.forFeature([Image, Video, FileAccess, Document]),
-        ImageResizeQueueModule,
-        VideoCompressQueueModule,
-    ],
-    controllers: [FileGrpcController],
-    providers: [
-        ImageService,
-        VideoService,
-        ImageCleanupService,
-        DocumentService,
+        ImageModule,
+        VideoModule,
+        DocumentModule,
+        UploadModule,
     ],
 })
 export class AppModule {}
