@@ -44,7 +44,7 @@
     "moduleNameMapper": { "^(\\.{1,2}/.*)\\.js$": "$1" }
   },
   "dependencies": {
-    "axios": "^1.8.4",
+    "axios": "^1.15.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
     "jose": "^6.0.10",
