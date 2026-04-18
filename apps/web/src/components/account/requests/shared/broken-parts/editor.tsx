@@ -3,25 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Badge } from '@asko/ui';
-import type { BadgeVariant } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { getImageUrl as getFileImageUrl } from '@/lib/file-url';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { BrokenPartModal } from './modal';
 import type { BrokenPart, BrokenPartImage } from './types';
-
-const STATUS_LABELS: Record<string, string> = {
-  added: 'Добавлена',
-  ordered: 'Заказана',
-  shipped: 'Доставляется',
-  replaced: 'Заменена',
-};
-const STATUS_VARIANT: Record<string, BadgeVariant> = {
-  added: 'warning',
-  ordered: 'info',
-  shipped: 'info',
-  replaced: 'success',
-};
+import { STATUS_LABELS, STATUS_VARIANT } from './constants';
 
 function getImageSrc(img: BrokenPartImage): string | undefined {
   if (img.id) return getFileImageUrl(img.id);

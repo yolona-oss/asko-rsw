@@ -11,13 +11,7 @@ export const STATUS_TABS: { key: StatusFilter; label: string }[] = [
   { key: CertificateStatus.REVOKED, label: 'Отозванные' },
 ];
 
-export const STATUS_LABELS: Record<string, string> = {
-  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
-  [CertificateStatus.ACTIVE]: 'Активен',
-  [CertificateStatus.EXPIRED]: 'Истек',
-  [CertificateStatus.REVOKED]: 'Отозван',
-};
+export { STATUS_LABELS } from '../shared/certificate-constants';
 
 export const STATUS_COLORS: Record<string, string> = {
   [CertificateStatus.PENDING_PAYMENT]: 'text-warning',

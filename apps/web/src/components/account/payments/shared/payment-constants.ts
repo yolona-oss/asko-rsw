@@ -57,12 +57,6 @@ export const PAYMENT_TARGET_LABELS: Record<string, string> = {
   dealerWithdrawal: 'Вывод средств дилера',
 };
 
-// ── Formatters ──
-
-export function formatPaymentAmount(amount: number) {
-  return amount.toLocaleString('ru-RU');
-}
-
 // ── Payment totals computation ──
 
 export interface PaymentTotals {

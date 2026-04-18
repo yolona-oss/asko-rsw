@@ -33,21 +33,7 @@ export const STATUS_DESCRIPTIONS: Record<string, string> = {
   [RepairRequestStatus.REFUNDED]: 'Средства возвращены на ваш счёт.',
 };
 
-export const STATUS_TITLES: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Заявка создана',
-  [RepairRequestStatus.PAID]: 'Оплата получена',
-  [RepairRequestStatus.ASSIGNED]: 'Назначение мастера',
-  [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку',
-  [RepairRequestStatus.EN_ROUTE]: 'Мастер в пути',
-  [RepairRequestStatus.IN_PROGRESS]: 'Ремонт в процессе',
-  [RepairRequestStatus.PAUSED]: 'Ремонт приостановлен',
-  [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
-  [RepairRequestStatus.COMPLETED]: 'Ремонт завершён',
-  [RepairRequestStatus.CANCELLED]: 'Заявка отменена',
-  [RepairRequestStatus.REFUSED]: 'Мастер отказался',
-  [RepairRequestStatus.REFUND_REQUESTED]: 'Запрос возврата',
-  [RepairRequestStatus.REFUNDED]: 'Средства возвращены',
-};
+export { STATUS_TITLES } from '../shared/status-constants';
 
 export function getStepIndex(status: RepairRequestStatus): number {
   const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));

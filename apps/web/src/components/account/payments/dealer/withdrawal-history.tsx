@@ -1,8 +1,8 @@
 'use client';
 
 import { Badge, Card } from '@asko/ui';
-import { formatDateTime } from '@asko/shared/client';
-import { WITHDRAW_STATUS_LABELS, WITHDRAW_BADGE_VARIANT, formatAmount } from './constants';
+import { formatDateTime, formatAmount } from '@asko/shared/client';
+import { WITHDRAW_STATUS_LABELS, WITHDRAW_BADGE_VARIANT } from './constants';
 
 interface Withdrawal {
   id: string;

@@ -1,11 +1,10 @@
 'use client';
 
 import { Badge } from '@asko/ui';
-import { formatDateTime } from '@asko/shared/client';
+import { formatDateTime, formatAmount } from '@asko/shared/client';
 import {
   PAYMENT_STATUS_VARIANT,
   PAYMENT_STATUS_LABELS_USER,
-  formatPaymentAmount,
 } from './payment-constants';
 
 /**
@@ -40,13 +39,13 @@ export function PaymentTransactionList({
             </span>
             {p.refundedAmount > 0 && (
               <span className="text-xs text-error">
-                возврат {formatPaymentAmount(p.refundedAmount)} ₽
+                возврат {formatAmount(p.refundedAmount)} ₽
               </span>
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm font-medium text-text-main">
-              {formatPaymentAmount(p.amount)} ₽
+              {formatAmount(p.amount)} ₽
             </span>
             <Badge variant={PAYMENT_STATUS_VARIANT[p.status] ?? 'neutral'}>
               {labels[p.status] ?? p.status}

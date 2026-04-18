@@ -46,6 +46,4 @@ export const INVITE_ROLE_LABELS: Record<string, string> = {
   admin: 'Администратор',
 };
 
-export function isExpired(expiresAt: string | Date): boolean {
-  return new Date(expiresAt) < new Date();
-}
+export { isExpired } from '@asko/shared/client';

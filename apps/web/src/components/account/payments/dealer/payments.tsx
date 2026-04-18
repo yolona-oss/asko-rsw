@@ -29,11 +29,10 @@ import type { IPointsTransaction } from '@/lib/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getMyWithdraws } from '@/store/withdraw-slice';
 import {
-  formatAmount,
   POINTS_TX_LABELS, POINTS_TX_BADGE_VARIANT,
   STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS,
 } from './constants';
-import { formatDateTime } from '@asko/shared/client';
+import { formatDateTime, formatAmount } from '@asko/shared/client';
 import { WithdrawalHistory } from './withdrawal-history';
 
 // ─── Chart bucketing helpers ───────────────────────────────────────────────

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { addressApi } from '@/lib/api/address';
 import { Button, Modal, AddressInput, type AddressValue } from '@asko/ui';
-import { MapPin, Plus, Pencil, Trash2, Star } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, Star, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import type { StatusMessage } from './types';
 import type { IAddressBook } from '@asko/shared/client';
 
@@ -18,6 +18,32 @@ function formatAddress(a: IAddressBook): string {
   if (a.floor) parts.push(`этаж ${a.floor}`);
   if (a.apartment) parts.push(`кв. ${a.apartment}`);
   return parts.join(', ');
+}
+
+function ValidationBadge({ status, error }: { status?: string; error?: string }) {
+  switch (status) {
+    case 'valid':
+      return (
+        <span className="inline-flex items-center gap-1 text-xs text-success flex-shrink-0" title="Адрес подтверждён">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Подтверждён</span>
+        </span>
+      );
+    case 'invalid':
+      return (
+        <span className="inline-flex items-center gap-1 text-xs text-error flex-shrink-0" title={error || 'Адрес не прошёл проверку'}>
+          <AlertCircle className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Не подтверждён</span>
+        </span>
+      );
+    default:
+      return (
+        <span className="inline-flex items-center gap-1 text-xs text-warning flex-shrink-0" title="Адрес на проверке">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">На проверке</span>
+        </span>
+      );
+  }
 }
 
 function addressToValue(a: IAddressBook): AddressValue {
@@ -183,7 +209,7 @@ export function AddressesSection() {
             >
               <MapPin className="w-5 h-5 text-icon flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm text-text-main truncate">
                     {formatAddress(addr)}
                   </p>
@@ -192,6 +218,7 @@ export function AddressesSection() {
                       Основной
                     </span>
                   )}
+                  <ValidationBadge status={addr.validationStatus} error={addr.validationError} />
                 </div>
                 {addr.comment && (
                   <p className="text-xs text-text-sub mt-0.5 truncate">{addr.comment}</p>

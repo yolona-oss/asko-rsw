@@ -10,8 +10,8 @@ import {
 } from '@asko/ui';
 import type { DataGridColumn, SortOrder } from '@asko/ui';
 import type { PaymentRecord } from '@/lib/api/payment';
-import { formatDateTime } from '@asko/shared/client';
-import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS, formatAmount } from './constants';
+import { formatDateTime, formatAmount } from '@asko/shared/client';
+import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS } from './constants';
 
 const columns: DataGridColumn<PaymentRecord>[] = [
   {

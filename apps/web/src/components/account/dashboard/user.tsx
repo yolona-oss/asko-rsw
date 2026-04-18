@@ -13,8 +13,8 @@ import { PaymentModal } from '@/components/account/payments/user/payment-modal';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';
 import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
-import { RepairRequestStatus, formatDate } from '@asko/shared/client';
-import { TARGET_LABELS, pluralPayments, formatAmount } from './constants';
+import { RepairRequestStatus, formatDate, pluralizeRu, formatAmount } from '@asko/shared/client';
+import { TARGET_LABELS } from './constants';
 import type { RequestSummary } from './types';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -183,7 +183,7 @@ export function UserDashboard() {
             <span className="text-[24px] font-bold leading-[28px] text-text-main">
               {loading ? '-' : pendingCount === 0 ? '-' : pendingCount === 1
                 ? `${formatAmount(pendingTotal)} ₽`
-                : `${formatAmount(pendingTotal)}₽ x ${pendingCount} ${pluralPayments(pendingCount)}`
+                : `${formatAmount(pendingTotal)}₽ x ${pendingCount} ${pluralizeRu(pendingCount, 'платёж', 'платежа', 'платежей')}`
               }
             </span>
           </div>

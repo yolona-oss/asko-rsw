@@ -188,6 +188,20 @@ export function formatActiveMinutes(minutes: number): string {
     return `${h}ч ${m}м`;
 }
 
+// ── Numeric formatting ──
+
+/** Format number with ru-RU locale grouping: 1 234 567 */
+export function formatAmount(amount: number): string {
+    return amount.toLocaleString('ru-RU');
+}
+
+// ── Validation ──
+
+/** Check if a date/timestamp is in the past */
+export function isExpired(expiresAt: string | Date): boolean {
+    return new Date(expiresAt) < new Date();
+}
+
 // ── Constants ──
 
 export const MONTH_NAMES_RU = [

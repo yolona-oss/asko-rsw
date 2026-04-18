@@ -3,9 +3,7 @@ import type { ChartBucket, DateRange } from '@asko/ui';
 
 export { defaultRange, formatRangeLabel, toInputDate } from '@asko/ui';
 export { formatDateTime as formatDateFull } from '@asko/shared/client';
-export {
-  formatPaymentAmount as formatAmount,
-} from '@/components/account/payments/shared/payment-constants';
+export { formatAmount } from '@asko/shared/client';
 
 export function payerName(user?: PaymentRecord['user']) {
   if (!user) return '-';

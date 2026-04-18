@@ -23,10 +23,4 @@ export const STATUS_BADGE_VARIANT: Record<CertTab, 'success' | 'warning' | 'erro
   revoked: 'error',
 };
 
-export const STATUS_LABELS: Record<string, string> = {
-  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
-  [CertificateStatus.ACTIVE]: 'Активен',
-  [CertificateStatus.EXPIRED]: 'Истек',
-  [CertificateStatus.REVOKED]: 'Отозван',
-};
+export { STATUS_LABELS } from '../shared/certificate-constants';

@@ -10,25 +10,12 @@ import {
   Modal,
   Textarea,
 } from '@asko/ui';
-import type { BadgeVariant } from '@asko/ui';
 import { FileText, Image as ImageIcon, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { getImageUrl as getFileImageUrl, openDocument } from '@/lib/file-url';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import type { BrokenPart, BrokenPartImage, BrokenPartDocument } from './types';
-
-const STATUS_LABELS: Record<string, string> = {
-  added: 'Добавлена',
-  ordered: 'Заказана',
-  shipped: 'Доставляется',
-  replaced: 'Заменена',
-};
-const STATUS_VARIANT: Record<string, BadgeVariant> = {
-  added: 'warning',
-  ordered: 'info',
-  shipped: 'info',
-  replaced: 'success',
-};
+import { STATUS_LABELS, STATUS_VARIANT } from './constants';
 
 function formatDateTime(value?: string | Date): string {
   if (!value) return '';

@@ -47,7 +47,3 @@ export const POINTS_TX_BADGE_VARIANT: Record<string, BadgeVariant> = {
   spent: 'warning',
   adjustment: 'neutral',
 };
-
-export function formatAmount(amount: number) {
-  return amount.toLocaleString('ru-RU');
-}

@@ -7,13 +7,10 @@ import { AvrStatusCard } from './avr-status-card';
 import { StatusHistoryModal } from './status-history-modal';
 import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
 import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
-import { formatPaymentAmount } from '@/components/account/payments/shared/payment-constants';
+import { formatAmount, formatDate } from '@asko/shared/client';
 import type { BadgeVariant } from '@asko/ui';
 import { api } from '@/lib/api/client';
 import { reviewApi } from '@/lib/api/review';
-
-const fmt = (d: string) =>
-  new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 const statusVariant = (s: string): BadgeVariant => {
   switch (s) {
@@ -23,8 +20,6 @@ const statusVariant = (s: string): BadgeVariant => {
     default: return 'neutral';
   }
 };
-
-const fmtAmount = (n: number) => formatPaymentAmount(n);
 
 
 export async function fetchRepairRequestOne(item: any): Promise<any> {
@@ -55,7 +50,7 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
       <DetailRow label="Клиент" value={loading ? '...' : (userName ?? '-')} />
       <DetailRow label="Описание" value={loading ? '...' : (item.description ? (item.description.length > 120 ? item.description.slice(0, 120) + '...' : item.description) : '-')} />
       <DetailRow label="Стоимость" value={item.totalCost != null ? `${item.totalCost} \u20BD` : '-'} />
-      <DetailRow label="Дата создания" value={item.createdAt ? fmt(item.createdAt) : '-'} />
+      <DetailRow label="Дата создания" value={item.createdAt ? formatDate(item.createdAt) : '-'} />
 
       {/* Status history */}
       {Array.isArray(item.statusTimestamps) && item.statusTimestamps.length > 0 && (
@@ -117,14 +112,14 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
           <DetailSection label="Расписание" summary="Загрузить..."
             fetchData={async () => { try { const { data } = await api.get('/schedule/', { params: { userId: item.repairer.userId, limit: 5 }, _silent: true } as any); setSchedule(data.data ?? []); } catch {} }}>
             {schedule && schedule.length > 0 ? schedule.map((s: any, i: number) => (
-              <DetailRow key={i} label={fmt(s.date ?? s.startDate ?? s.createdAt)} value={`${s.type ?? '-'} — ${s.status ?? '-'}`} />
+              <DetailRow key={i} label={formatDate(s.date ?? s.startDate ?? s.createdAt)} value={`${s.type ?? '-'} — ${s.status ?? '-'}`} />
             )) : <DetailRow label="Расписание" value="Нет записей" />}
           </DetailSection>
         </DetailSection>
       )}
 
       {/* Payment */}
-      <DetailSection label="Платежи" summary={item.totalCost != null ? `${fmtAmount(item.totalCost)} \u20BD` : '-'}
+      <DetailSection label="Платежи" summary={item.totalCost != null ? `${formatAmount(item.totalCost)} \u20BD` : '-'}
         fetchData={async () => { try { const { data } = await api.get(`/repair-requests/${item.id}/payments`, { _silent: true } as any); setPayments(data.payments ?? data.data ?? []); } catch {} }}>
         {payments && payments.length > 0 ? (
           <>
@@ -185,7 +180,7 @@ export function RepairRequestDetail({ item, loading }: { item: any; loading: boo
               }
             />
             {review.comment && <DetailRow label="Комментарий" value={review.comment} />}
-            {review.createdAt && <DetailRow label="Дата" value={fmt(review.createdAt)} />}
+            {review.createdAt && <DetailRow label="Дата" value={formatDate(review.createdAt)} />}
           </>
         ) : (
           <DetailRow label="Отзыв" value="Нет отзыва" />

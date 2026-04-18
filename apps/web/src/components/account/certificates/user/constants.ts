@@ -1,13 +1,7 @@
 import { CertificateStatus } from '@asko/shared/client';
 import type { BadgeVariant } from '@asko/ui';
 
-export const STATUS_LABELS: Record<string, string> = {
-  [CertificateStatus.PENDING_PAYMENT]: 'Ожидает оплаты',
-  [CertificateStatus.VALIDATION_ERROR]: 'Ошибка валидации',
-  [CertificateStatus.ACTIVE]: 'Активен',
-  [CertificateStatus.EXPIRED]: 'Истек',
-  [CertificateStatus.REVOKED]: 'Отозван',
-};
+export { STATUS_LABELS } from '../shared/certificate-constants';
 
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [CertificateStatus.PENDING_PAYMENT]: 'warning',
