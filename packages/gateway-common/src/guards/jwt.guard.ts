@@ -3,11 +3,10 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
-import { REQUEST_USER_KEY, JwtPayload, Role, extractToken, AppErrors } from '@asko/shared';
+import { REQUEST_USER_KEY, JwtPayload, extractToken, AppErrors } from '@asko/shared';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
-import { ROLES_KEY } from '../decorators/role.decorator';
 import { GATEWAY_CONFIG } from './gateway-config.token';
 
 /**
@@ -46,11 +45,6 @@ export class JwtGuard implements CanActivate {
             context.getClass(),
         ]);
 
-        const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
-
         const request = context.switchToHttp().getRequest();
         const { accessToken } = extractToken(request);
 
@@ -72,12 +66,7 @@ export class JwtGuard implements CanActivate {
 
             request[REQUEST_USER_KEY] = payload;
 
-            // No specific roles required - any authenticated user is allowed
-            if (!requiredRoles) {
-                return true;
-            }
-
-            return requiredRoles.some((role) => payload.roles.includes(role));
+            return true;
         } catch (error: any) {
             if (isOptionalAuth) return true;
             throw AppErrors.unauthorized(`Token validation failed. ${error}`);

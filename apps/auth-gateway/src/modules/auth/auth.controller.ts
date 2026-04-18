@@ -5,7 +5,6 @@ import { Request, Response } from 'express'
 
 import {
     UserClientService,
-    RequiredRoles,
     Public,
     JwtAuthUser,
     AuthSessionResponseDto,
@@ -16,7 +15,6 @@ import {
     AuthUserDto,
 } from '@asko/gateway-common';
 import {
-    ALL_ROLES,
     REFRESH_TOKEN,
     ConfirmMailDto,
     LoginCredentials,
@@ -188,7 +186,6 @@ export class AuthController {
             }).json({ access_token: result.accessToken });
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiResponse({ status: 205, type: EmptyResponseDto })
     @Post('/logout')
     async logout(
@@ -210,7 +207,6 @@ export class AuthController {
             .json({});
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Post('/master-logout')
     async logoutAll(
         @JwtAuthUser() user: JwtPayload,
@@ -232,14 +228,12 @@ export class AuthController {
 
     // ─── Sessions ─────────────────────────────────────────────────────────
 
-    @RequiredRoles(...ALL_ROLES)
     @Get('/sessions')
     async listSessions(@JwtAuthUser() user: JwtPayload) {
         const result = await this.userClient.listSessions({ id: user.id });
         return { sessions: result.sessions };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Delete('/sessions/:id')
     async revokeSession(
         @JwtAuthUser() user: JwtPayload,
@@ -328,7 +322,6 @@ export class AuthController {
         return { retryAfter: result.retryAfter };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable')
     async enableMfa(@JwtAuthUser() user: JwtPayload) {
@@ -336,7 +329,6 @@ export class AuthController {
         return { message: result.message, retryAfter: result.retryAfter };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable/verify')
     async verifyEnableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: VerifyEnableMfaDto) {
@@ -344,7 +336,6 @@ export class AuthController {
         return { message: result.message };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable')
     async initiateDisableMfa(@JwtAuthUser() user: JwtPayload) {
@@ -352,7 +343,6 @@ export class AuthController {
         return { message: result.message, retryAfter: result.retryAfter };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable/verify')
     async confirmDisableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: DisableMfaDto) {
@@ -360,7 +350,6 @@ export class AuthController {
         return { message: result.message };
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @ApiOkResponse({ type: MessageResponseDto })
     @Get('/mfa/status')
     async getMfaStatus(@JwtAuthUser() user: JwtPayload) {
@@ -416,13 +405,12 @@ export class AuthController {
 
     // ─── Phone Verification (authenticated) ─────────────────────────────
 
-    @RequiredRoles(...ALL_ROLES)
     @Post('/phone/send-verification')
     async sendPhoneVerification(@JwtAuthUser() user: JwtPayload) {
         return await this.userClient.sendPhoneVerification({ userId: user.id });
     }
 
-    @RequiredRoles(...ALL_ROLES)
+
     @Post('/phone/confirm-verification')
     async confirmPhoneVerification(
         @JwtAuthUser() user: JwtPayload,
@@ -431,7 +419,7 @@ export class AuthController {
         return await this.userClient.confirmPhoneVerification({ userId: user.id, code: dto.code });
     }
 
-    @RequiredRoles(...ALL_ROLES)
+
     @Post('/phone/request-change')
     async requestPhoneChange(
         @JwtAuthUser() user: JwtPayload,
@@ -440,7 +428,7 @@ export class AuthController {
         return await this.userClient.requestPhoneChange({ userId: user.id, newPhone: dto.newPhone });
     }
 
-    @RequiredRoles(...ALL_ROLES)
+
     @Post('/phone/confirm-change')
     async confirmPhoneChange(
         @JwtAuthUser() user: JwtPayload,

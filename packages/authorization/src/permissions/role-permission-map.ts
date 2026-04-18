@@ -54,6 +54,11 @@ export const ROLE_PERMISSIONS: ReadonlyMap<Role, ReadonlySet<Permission>> = new 
         Permission.DEALER_MANAGE,
         // Files
         Permission.FILE_VIEW,
+        // Invitations
+        Permission.INVITE_MANAGE,
+        // User admin
+        Permission.USER_VIEW_ALL,
+        Permission.USER_UPDATE_ANY,
     ])],
 
     [Role.DEALER, new Set([

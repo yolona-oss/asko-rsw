@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto, ADMIN_ROLES } from '@asko/shared';
-import { RequiredRoles, Public } from '@asko/gateway-common';
+import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
+import { Public } from '@asko/gateway-common';
 import { MessageResponseDto } from 'common/dto/responses';
 import {
     DeviceCategoryRecordDto,
@@ -30,7 +31,7 @@ export class DeviceCategoryController {
         return result.category;
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post()
     @ApiCreatedResponse({ type: DeviceCategoryRecordDto })
     async create(@Body() dto: CreateDeviceCategoryDto) {
@@ -40,7 +41,7 @@ export class DeviceCategoryController {
         return result.category;
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Patch(':id')
     @ApiOkResponse({ type: DeviceCategoryRecordDto })
     async update(@Param('id') id: string, @Body() dto: UpdateDeviceCategoryDto) {
@@ -50,7 +51,7 @@ export class DeviceCategoryController {
         return result.category;
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {

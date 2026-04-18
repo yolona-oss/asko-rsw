@@ -6,13 +6,12 @@ import { RepairerClientService } from 'modules/repair-client/repairer-client.ser
 import { UserClientService } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
-    ALL_ROLES,
-    ADMIN_ROLES,
     Role,
     JwtPayload,
     PaymentTargetType,
 } from '@asko/shared';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser } from '@asko/gateway-common';
 import {
     PaymentOptionsResponseDto,
     ProcessInvoiceResponseDto,
@@ -41,21 +40,19 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaymentOptionsResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('options')
     async getOptions() {
         return this.paymentService.getOptions();
     }
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post('create')
     async createPayment(@JwtAuthUser() user: JwtPayload, @Body() dto: CreatePaymentDto) {
         return this.paymentService.createPayment(user.sub, dto);
     }
 
     @ApiOkResponse({ description: 'Cash payment confirmed' })
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER, Role.REPAIRER)
+    @Permissions(Permission.PAYMENT_CONFIRM_CASH)
     @Post('confirm-cash')
     async confirmCashPayment(
         @JwtAuthUser() user: JwtPayload,
@@ -89,7 +86,7 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.PAYMENT_VIEW_ALL)
     @Get('list')
     async listPayments(
         @Query('page') page?: number,
@@ -112,7 +109,6 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('my/stats')
     async getMyStats(
         @JwtAuthUser() user: JwtPayload,
@@ -123,7 +119,6 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async getMyPayments(
         @JwtAuthUser() user: JwtPayload,
@@ -141,7 +136,7 @@ export class PaymentController {
     }
 
     @ApiOkResponse({ type: PaymentStatsResponseDto })
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.PAYMENT_VIEW_ALL)
     @Get('stats')
     async getStats(
         @Query('dateFrom') dateFrom?: string,

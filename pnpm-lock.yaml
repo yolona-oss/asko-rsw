@@ -260,6 +260,9 @@ importers:
 
   apps/content-gateway:
     dependencies:
+      '@asko/authorization':
+        specifier: workspace:*
+        version: link:../../packages/authorization
       '@asko/gateway-common':
         specifier: workspace:*
         version: link:../../packages/gateway-common

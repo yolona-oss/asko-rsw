@@ -8,11 +8,10 @@ import {
     UpdateRepairerDto,
     UpdateLocationDto,
     PaginationDto,
-    ADMIN_ROLES,
-    Role,
     JwtPayload,
 } from '@asko/shared';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser } from '@asko/gateway-common';
 import {
     RepairerResponseDto,
     PaginatedRepairersResponseDto,
@@ -47,7 +46,7 @@ export class RepairerController {
     }
 
     @ApiCreatedResponse({ type: RepairerResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Post()
     async create(@Body() dto: CreateRepairerDto) {
         const result = await this.repairerClient.createRepairer(dto.userId, dto.city, dto.specializations ?? []);
@@ -56,7 +55,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: RepairerResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Patch(':id')
     async update(@Param('id') id: string, @Body() dto: UpdateRepairerDto) {
         const result = await this.repairerClient.updateRepairer(id, dto);
@@ -65,7 +64,7 @@ export class RepairerController {
     }
 
     @ApiCreatedResponse({ type: RepairerResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIRER_OWN_PROFILE)
     @Post('location')
     async updateLocation(@JwtAuthUser() user: JwtPayload, @Body() dto: UpdateLocationDto) {
         const result = await this.repairerClient.updateLocation(user.sub, dto.latitude, dto.longitude);
@@ -74,7 +73,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: RepairerResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIRER_OWN_PROFILE)
     @Get('me')
     async getMyProfile(@JwtAuthUser() user: JwtPayload) {
         const result = await this.repairerClient.getMyProfile(user.sub);
@@ -83,7 +82,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: PaginatedRepairersResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Get()
     async findAll(@Query() pagination: PaginationDto) {
         const result = await this.repairerClient.findAllRepairers(pagination);
@@ -93,7 +92,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: RepairerListResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Get('city/:city')
     async findByCity(@Param('city') city: string) {
         const result = await this.repairerClient.findActiveInCity(city);
@@ -103,7 +102,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: PaginatedRepairersResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Get('for-assignment')
     async findForAssignment(@Query() pagination: PaginationDto) {
         const result = await this.repairerClient.findAllRepairers(pagination);
@@ -125,7 +124,7 @@ export class RepairerController {
     }
 
     @ApiOkResponse({ type: RepairerResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIRER_MANAGE)
     @Get(':id')
     async findOne(@Param('id') id: string) {
         const result = await this.repairerClient.findRepairerById(id);

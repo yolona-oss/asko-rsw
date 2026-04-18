@@ -1,5 +1,6 @@
-import { SetMetadata } from '@nestjs/common';
+import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 import { Permission } from './permission.enum.js';
+import { PermissionGuard } from './permission.guard.js';
 
 export const PERMISSIONS_KEY = Symbol('permissions');
 
@@ -8,6 +9,8 @@ export const PERMISSIONS_KEY = Symbol('permissions');
  * at least one of the listed permissions (OR logic). Checked by
  * {@link PermissionGuard} via the static role→permission map.
  *
+ * Automatically applies `@UseGuards(PermissionGuard)`.
+ *
  * @example
  * ```ts
  * @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
@@ -15,5 +18,9 @@ export const PERMISSIONS_KEY = Symbol('permissions');
  * async assign(...) { ... }
  * ```
  */
-export const Permissions = (...permissions: Permission[]) =>
-    SetMetadata(PERMISSIONS_KEY, permissions);
+export function Permissions(...permissions: Permission[]) {
+    return applyDecorators(
+        SetMetadata(PERMISSIONS_KEY, permissions),
+        UseGuards(PermissionGuard),
+    );
+}

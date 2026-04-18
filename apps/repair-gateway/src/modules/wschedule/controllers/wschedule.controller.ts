@@ -13,9 +13,6 @@ import {
     UpsertPatternDto,
     ScheduleEntryType,
     ScheduleStatus,
-    STAFF_ROLES,
-    ADMIN_ROLES,
-    Role,
     JwtPayload,
     parseDateTime,
     startOfDay,
@@ -26,8 +23,8 @@ import {
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { RequiredRoles, JwtAuthUser, isStaff, isAdmin } from '@asko/gateway-common';
-import { CheckPolicy } from '@asko/authorization';
+import { Permissions, Permission, CheckPolicy, isStaff, isAdmin } from '@asko/authorization';
+import { JwtAuthUser } from '@asko/gateway-common';
 import { ScheduleSelfOrStaffPolicy } from '../policies/schedule-self-or-staff.policy';
 import {
     VacationRecordDto,
@@ -61,7 +58,7 @@ export class WScheduleController {
 
     @ApiCreatedResponse({ type: VacationRecordDto })
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post('vacation')
     async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
         await this.assertTargetHasValidAddress(dto.userId);
@@ -79,7 +76,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: VacationRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Put('vacation/:id')
     async updateVacation(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateVacationDto) {
         const existing = (await this.scheduleClient.findVacationById(id)).vacation;
@@ -105,7 +102,7 @@ export class WScheduleController {
 
     @ApiCreatedResponse({ type: SickLeaveRecordDto })
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post('sick-leave')
     async createSickLeave(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateSickLeaveDto) {
         await this.assertTargetHasValidAddress(dto.userId);
@@ -123,7 +120,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: SickLeaveRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Put('sick-leave/:id')
     async updateSickLeave(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateSickLeaveDto) {
         const existing = (await this.scheduleClient.findSickLeaveById(id)).sickLeave;
@@ -154,7 +151,7 @@ export class WScheduleController {
 
     @ApiCreatedResponse({ type: OvertimeRecordDto })
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post('overtime')
     async createOvertime(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateOvertimeDto) {
         await this.assertTargetHasValidAddress(dto.userId);
@@ -171,7 +168,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: OvertimeRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Put('overtime/:id')
     async updateOvertime(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateOvertimeDto) {
         const existing = (await this.scheduleClient.findOvertimeById(id)).overtime;
@@ -190,7 +187,7 @@ export class WScheduleController {
 
     @ApiCreatedResponse({ type: ScheduleOverrideRecordDto })
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post('override')
     async createScheduleOverride(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateScheduleOverrideDto) {
         await this.assertTargetHasValidAddress(dto.userId);
@@ -207,7 +204,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: ScheduleOverrideRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Put('override/:id')
     async updateScheduleOverride(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateScheduleOverrideDto) {
         const existing = (await this.scheduleClient.findScheduleOverrideById(id)).scheduleOverride;
@@ -231,7 +228,7 @@ export class WScheduleController {
     // ── Unified query ──
 
     @ApiOkResponse({ type: PaginatedScheduleResponseDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_VIEW_OWN)
     @Get()
     async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: QueryScheduleDto) {
         if (!isStaff(user)) {
@@ -244,7 +241,7 @@ export class WScheduleController {
     // ── Generic approve/reject/delete (by ID, tries all types) ──
 
     @ApiOkResponse()
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.SCHEDULE_DELETE)
     @Delete(':id')
     async deleteEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
         const entry = await this.findEntryById(id);
@@ -256,7 +253,7 @@ export class WScheduleController {
         }
     }
 
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post(':id/approve')
     async approveEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
@@ -274,7 +271,7 @@ export class WScheduleController {
         }
     }
 
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Post(':id/reject')
     async rejectEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
@@ -295,7 +292,7 @@ export class WScheduleController {
     // ── Pattern endpoints (unchanged) ──
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Get('pattern/:userId')
     async getPattern(@Param('userId') userId: string) {
@@ -304,7 +301,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Put('pattern/:userId')
     async upsertPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
@@ -327,7 +324,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse()
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Delete('pattern/:userId')
     async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
@@ -335,7 +332,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @Permissions(Permission.SCHEDULE_PATTERN_APPROVE)
     @Post('pattern/:userId/approve')
     async approvePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
         await this.assertTargetHasValidAddress(userId);
@@ -344,7 +341,7 @@ export class WScheduleController {
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
-    @RequiredRoles(...STAFF_ROLES)
+    @Permissions(Permission.SCHEDULE_PATTERN_APPROVE)
     @Post('pattern/:userId/reject')
     async rejectPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
         await this.assertTargetHasValidAddress(userId);
@@ -354,7 +351,7 @@ export class WScheduleController {
 
     @ApiOkResponse({ type: SchedulePatternListResponseDto })
     @ApiQuery({ name: 'userIds', required: true, description: 'Comma-separated user IDs' })
-    @RequiredRoles(...STAFF_ROLES)
+    @Permissions(Permission.SCHEDULE_PATTERN_APPROVE)
     @Get('patterns')
     async getManyPatterns(@Query('userIds') userIds?: string) {
         const ids = (userIds ?? '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -363,7 +360,7 @@ export class WScheduleController {
     }
 
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
-    @RequiredRoles(...STAFF_ROLES, Role.REPAIRER)
+    @Permissions(Permission.SCHEDULE_CREATE)
     @Get('pattern/:userId/history')
     async getPatternHistory(
         @Param('userId') userId: string,
@@ -381,7 +378,7 @@ export class WScheduleController {
         });
     }
 
-    @RequiredRoles(...STAFF_ROLES)
+    @Permissions(Permission.SCHEDULE_REPORT)
     @Get('report/:userId')
     async getScheduleReport(
         @Param('userId') userId: string,

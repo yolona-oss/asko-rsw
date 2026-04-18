@@ -11,15 +11,14 @@ import {
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
-    ADMIN_ROLES,
     AttachImageDto,
     CreateImageFromUrlDto,
     ImageTypeEnum,
     UPLOAD_LIMITS,
 } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
     FileClientService,
-    RequiredRoles,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
@@ -41,7 +40,7 @@ export class ImageUploadController {
     ) {}
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('upload')
     @UseInterceptors(new StreamingUploadInterceptor(GENERIC_IMAGE_MAX_SIZE))
     async upload(
@@ -57,21 +56,21 @@ export class ImageUploadController {
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Delete('delete/:imageId')
     async remove(@Param('imageId') imageId: string) {
         return this.fileService.remove(imageId);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Put('unattach/:imageId')
     async unattach(@Param('imageId') imageId: string) {
         return this.fileService.unattachImage(imageId);
     }
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('attach/:imageId')
     async attach(
         @Param('imageId') imageId: string,
@@ -93,7 +92,7 @@ export class ImageUploadController {
     }
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('from-url')
     async createFromUrl(@Body() dto: CreateImageFromUrlDto) {
         return this.fileService.createFromUrl(dto.url, dto.ownerType, dto.ownerId);

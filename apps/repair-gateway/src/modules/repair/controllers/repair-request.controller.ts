@@ -28,14 +28,11 @@ import {
     PaymentTargetType,
     PaymentProviderType,
     ImageTypeEnum,
-    ALL_ROLES,
-    ADMIN_ROLES,
-    Role,
     JwtPayload,
 } from '@asko/shared';
 import { IsOptional, IsString } from 'class-validator';
-import { CheckPolicy } from '@asko/authorization';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { CheckPolicy, Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser } from '@asko/gateway-common';
 import { RepairManagerPolicy } from '../policies/repair-manager.policy';
 
 import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
@@ -77,7 +74,7 @@ export class RepairRequestController {
 
     // ── Stats ──
 
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.REPAIR_REQUEST_METRICS)
     @Get('metrics/completion')
     async getCompletionMetrics(
         @Query('dateFrom') dateFrom: string,
@@ -89,7 +86,6 @@ export class RepairRequestController {
     // ── User endpoints ──
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairRequestDto) {
         const result = await this.repairClient.createRequest(user.sub, dto);
@@ -107,7 +103,6 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findByUser(user.sub, query);
@@ -116,14 +111,12 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/cancel')
     async cancel(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.cancelRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/request-refund')
     async requestRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RequestRefundDto) {
         return this.repairClient.requestRefund(user.sub, id, dto.reason);
@@ -132,7 +125,6 @@ export class RepairRequestController {
     // ── Payment endpoints ──
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
     async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
@@ -143,7 +135,6 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
@@ -155,7 +146,6 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: PaymentListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('repairRequest', id);
@@ -164,7 +154,7 @@ export class RepairRequestController {
     // ── Manager endpoints ──
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_VIEW_ALL)
     @Get()
     async findAll(@Query() query: RepairQueryDto) {
         const result = await this.repairClient.findAll(query);
@@ -176,14 +166,14 @@ export class RepairRequestController {
                 enrichments.push(
                     this.userClient.findUserById({ id: req.userId })
                         .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
-                        .catch(() => {}),
+                        .catch(() => { }),
                 );
             }
             if ((req as any).repairer?.userId) {
                 enrichments.push(
                     this.userClient.findUserById({ id: (req as any).repairer.userId })
                         .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
-                        .catch(() => {}),
+                        .catch(() => { }),
                 );
             }
         }
@@ -194,7 +184,6 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
@@ -205,14 +194,15 @@ export class RepairRequestController {
                 if (repairer?.userId) {
                     await this.chatClient.addParticipant(result.request.conversationId, repairer.userId, user.sub);
                 }
-            } catch { /* non-critical */ }
+            } catch {
+                console.error('Cannot add repaairer to assigned repair request conversation')
+            }
         }
         return result;
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/approve-refund')
     async approveRefund(@Param('id') id: string) {
         return this.repairClient.approveRefund(id);
@@ -220,7 +210,6 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/deny-refund')
     async denyRefund(@Param('id') id: string) {
         return this.repairClient.denyRefund(id);
@@ -228,7 +217,6 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/accept')
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
@@ -240,7 +228,6 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/chat/detach')
     async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
@@ -252,7 +239,6 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         // Get old repairer before reassign
@@ -282,7 +268,7 @@ export class RepairRequestController {
     // ── Repairer endpoints ──
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('paused')
     async findPaused(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
         const result = await this.repairClient.findPausedByRepairer(user.sub, pagination);
@@ -291,7 +277,7 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: RepairRequestRecordDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('active')
     async findActive(@JwtAuthUser() user: JwtPayload) {
         try {
@@ -304,7 +290,7 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('assigned')
     async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
@@ -313,28 +299,27 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/accept-completion')
     async acceptCompletion(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.acceptCompletion(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_ACCEPT)
     @Post(':id/accept')
     async accept(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.acceptRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_DEPART)
     @Post(':id/depart')
     async depart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.depart(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_REFUSE)
     @Post(':id/refuse')
     async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
         const result = await this.repairClient.refuseRequest(user.sub, id, dto.reason);
@@ -348,35 +333,35 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_PAUSE)
     @Post(':id/pause')
     async pause(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.pauseRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_RESUME)
     @Post(':id/resume')
     async resume(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.resumeRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_CONFIRM_PRESENCE)
     @Post(':id/confirm-presence')
     async confirmSchedulePresence(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.confirmSchedulePresence(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_START_WORK)
     @Post(':id/start')
     async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.startWork(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_SET_PRICE)
     @Post(':id/set-price')
     async setPrice(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
         return this.repairClient.setPrice(user.sub, id, dto.amount);
@@ -385,7 +370,7 @@ export class RepairRequestController {
     // ── AVR (Work Completion Act) ──
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/generate')
     async generateAvr(
         @JwtAuthUser() user: JwtPayload,
@@ -426,7 +411,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/reset')
     async resetAvr(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.resetAvr(user.sub, id);
@@ -434,14 +419,12 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairManagerPolicy)
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
     @Post(':id/avr/remove')
     async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.removeAvrByManager(user.sub, id);
     }
 
     @ApiCreatedResponse()
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/avr/sign/initiate')
     async initiateAvrSigning(@Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
@@ -451,7 +434,6 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse()
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/avr/sign/resend')
     async resendAvrOtp(@Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
@@ -459,7 +441,6 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/avr/sign/verify')
     async verifyAvrSigning(
         @Param('id') id: string,
@@ -482,7 +463,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/offline/confirm')
     async confirmAvrOffline(
         @JwtAuthUser() user: JwtPayload,
@@ -492,7 +473,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/scan/upload')
     @UseInterceptors(FilesInterceptor('file', 1))
     async uploadAvrScan(
@@ -518,21 +499,21 @@ export class RepairRequestController {
     // ── Work steps ──
 
     @ApiCreatedResponse({ type: WorkStepResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps')
     async addStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddWorkStepDto) {
         return this.repairClient.addStep(user.sub, id, dto);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/lock')
     async lockSteps(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.lockSteps(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: WorkStepResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/update')
     async updateStep(
         @JwtAuthUser() user: JwtPayload,
@@ -544,35 +525,34 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: CompleteStepResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/complete')
     async completeStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.completeStep(user.sub, id, stepId);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/delete')
     async deleteStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.deleteStep(user.sub, id, stepId);
     }
 
     @ApiOkResponse({ type: WorkStepListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id/steps')
     async getSteps(@Param('id') id: string) {
         return this.repairClient.getSteps(id);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/diagnostics/approve')
     async approveDiagnostics(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.approveDiagnostics(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: WorkStepListResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/diagnostics/decline')
     async declineDiagnostics(
         @JwtAuthUser() user: JwtPayload,
@@ -585,21 +565,21 @@ export class RepairRequestController {
     // ── Broken parts ──
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts')
     async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, user.roles, id, { ...dto, isSuggestion: false });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.USER)
+    @Permissions(Permission.REPAIR_REQUEST_SUGGEST_PART)
     @Post(':id/broken-parts/suggest')
     async suggestBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, user.roles, id, { name: dto.name, note: dto.note, isSuggestion: true });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -611,7 +591,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/status')
     async updateBrokenPartStatus(
         @JwtAuthUser() user: JwtPayload,
@@ -623,7 +603,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/delete')
     async deleteBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -635,7 +615,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/order')
     async orderBrokenPart(
         @JwtAuthUser() user: JwtPayload,
@@ -647,7 +627,6 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: BrokenPartListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id/broken-parts')
     async getBrokenParts(@Param('id') id: string) {
         return this.repairClient.getBrokenParts(id);
@@ -656,14 +635,13 @@ export class RepairRequestController {
     // ── Broken part images ──
 
     @ApiOkResponse({ type: ImageListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id/broken-parts/:partId/images')
     async findBrokenPartImages(@Param('partId') partId: string) {
         return this.fileService.findAttachedImages(ImageTypeEnum.BrokenPart, partId);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
-    @RequiredRoles(Role.REPAIRER, Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/images/:imageId/delete')
     async removeBrokenPartImage(@Param('imageId') imageId: string) {
         return this.fileService.remove(imageId);
@@ -672,7 +650,6 @@ export class RepairRequestController {
     // ── Get by ID (any authenticated user) ──
 
     @ApiOkResponse({ type: RepairRequestResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
         const result = await this.repairClient.findById(id);
@@ -685,7 +662,7 @@ export class RepairRequestController {
             enrichments.push(
                 this.userClient.findUserById({ id: req.userId })
                     .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
-                    .catch(() => {}),
+                    .catch(() => { }),
             );
         }
         // Enrich nested repairer with user data
@@ -693,7 +670,7 @@ export class RepairRequestController {
             enrichments.push(
                 this.userClient.findUserById({ id: (req as any).repairer.userId })
                     .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
-                    .catch(() => {}),
+                    .catch(() => { }),
             );
         }
         await Promise.all(enrichments);

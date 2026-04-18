@@ -3,7 +3,6 @@ import { ApiTags, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 
 import {
     UserClientService,
-    RequiredRoles,
     Public,
     JwtAuthUser,
     AuthUserDto,
@@ -11,14 +10,15 @@ import {
     InviteLinkResponseDto,
     MessageResponseDto,
 } from '@asko/gateway-common';
-import { ADMIN_ROLES, Role, CreateInvitationLinkDto } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
+import { CreateInvitationLinkDto } from '@asko/shared';
 
 @ApiTags('Invitations')
 @Controller('invite')
 export class InviteController {
     constructor(private readonly userClient: UserClientService) {}
 
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.INVITE_MANAGE)
     @ApiCreatedResponse({ type: InviteCreatedResponseDto })
     @Post('/')
     async create(
@@ -32,7 +32,7 @@ export class InviteController {
         });
     }
 
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.INVITE_MANAGE)
     @ApiOkResponse({ type: [InviteLinkResponseDto] })
     @Get('/')
     async findAll() {
@@ -47,7 +47,7 @@ export class InviteController {
         return this.userClient.checkInvite({ token });
     }
 
-    @RequiredRoles(...ADMIN_ROLES, Role.MANAGER)
+    @Permissions(Permission.INVITE_MANAGE)
     @ApiOkResponse({ type: MessageResponseDto })
     @Delete('/:id')
     async remove(@Param('id') id: string) {

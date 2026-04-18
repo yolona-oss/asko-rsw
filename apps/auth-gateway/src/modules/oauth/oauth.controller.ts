@@ -12,12 +12,11 @@ import {
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
-import { ALL_ROLES, REFRESH_TOKEN } from '@asko/shared';
+import { REFRESH_TOKEN } from '@asko/shared';
 import type { JwtPayload } from '@asko/shared';
 
 import {
     Public,
-    RequiredRoles,
     JwtAuthUser,
     UserClientService,
     MessageResponseDto,
@@ -53,7 +52,7 @@ export class OAuthController {
     // ─── Get OAuth Links (authenticated) ────────────────────────────────
     // Declared before :provider so NestJS matches /links literally first.
 
-    @RequiredRoles(...ALL_ROLES)
+
     @ApiOkResponse({ type: OAuthLinksResponseDto })
     @Get('links')
     async getOAuthLinks(@JwtAuthUser() user: JwtPayload) {
@@ -202,7 +201,7 @@ export class OAuthController {
 
     // ─── Unlink OAuth (authenticated) ───────────────────────────────────
 
-    @RequiredRoles(...ALL_ROLES)
+
     @ApiOkResponse({ type: MessageResponseDto })
     @Delete(':provider')
     async unlinkOAuth(

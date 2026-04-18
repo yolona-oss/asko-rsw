@@ -10,10 +10,10 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, AttachVideoDto, UPLOAD_LIMITS, VideoTypeEnum } from '@asko/shared';
+import { AttachVideoDto, UPLOAD_LIMITS, VideoTypeEnum } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
     FileClientService,
-    RequiredRoles,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
@@ -35,7 +35,7 @@ export class VideoUploadController {
     ) {}
 
     @ApiCreatedResponse({ type: VideoResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('upload')
     @UseInterceptors(new StreamingUploadInterceptor(VIDEO_MAX_SIZE))
     async upload(@StreamingFile() upload: StreamingUploadPayload) {
@@ -48,21 +48,21 @@ export class VideoUploadController {
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Delete('delete/:videoId')
     async remove(@Param('videoId') videoId: string) {
         return this.fileService.removeVideo(videoId);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Put('unattach/:videoId')
     async unattach(@Param('videoId') videoId: string) {
         return this.fileService.unattachVideo(videoId);
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('attach/:videoId')
     async attach(
         @Param('videoId') videoId: string,

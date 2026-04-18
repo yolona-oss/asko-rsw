@@ -5,9 +5,9 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
+import { ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
-    RequiredRoles,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
@@ -25,7 +25,7 @@ export class DeviceUploadController {
     constructor(private readonly fileService: RepairFileClientService) {}
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post('devices/:id/images')
     @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
     async uploadDeviceImage(
@@ -42,7 +42,7 @@ export class DeviceUploadController {
     }
 
     @ApiCreatedResponse({ type: VideoResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post('devices/:id/videos')
     @UseInterceptors(new StreamingUploadInterceptor(VIDEO_MAX_SIZE))
     async uploadDeviceVideo(
@@ -59,7 +59,7 @@ export class DeviceUploadController {
     }
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post('parts/:id/images')
     @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
     async uploadDevicePartImage(

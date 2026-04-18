@@ -8,11 +8,11 @@ import {
     UpdateArticleDto,
     RecordArticleViewDto,
     PaginationDto,
-    ADMIN_ROLES,
     ImageTypeEnum,
 } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
-    RequiredRoles, Public, OptionalAuth, JwtAuthUser,
+    Public, OptionalAuth, JwtAuthUser,
     FileClientService,
 } from '@asko/gateway-common';
 import { JwtPayload } from '@asko/shared';
@@ -46,7 +46,7 @@ export class ArticlesController {
 
     // -- Admin: CRUD --
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Post()
     @ApiCreatedResponse({ type: ArticleResponseDto })
     async create(@Body() dto: CreateArticleDto) {
@@ -60,7 +60,7 @@ export class ArticlesController {
         return parseArticleRecord(result.article);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Patch(':id')
     @ApiOkResponse({ type: ArticleResponseDto })
     async update(@Param('id') id: string, @Body() dto: UpdateArticleDto) {
@@ -76,7 +76,7 @@ export class ArticlesController {
         return parseArticleRecord(result.article);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Delete('all')
     @ApiOkResponse({ type: DeleteCountResponseDto })
     async removeAll() {
@@ -84,7 +84,7 @@ export class ArticlesController {
         return { message: `Deleted ${result.count} articles`, count: result.count };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {
@@ -94,7 +94,7 @@ export class ArticlesController {
 
     // -- Admin: graph (manual linking) --
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Post(':id/link')
     @ApiCreatedResponse({ type: MessageResponseDto })
     async linkArticle(
@@ -105,7 +105,7 @@ export class ArticlesController {
         return { message: 'Articles linked' };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Delete(':id/link/:targetId')
     @ApiOkResponse({ type: MessageResponseDto })
     async unlinkArticle(
@@ -116,7 +116,7 @@ export class ArticlesController {
         return { message: 'Articles unlinked' };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Get(':id/edges')
     @ApiOkResponse()
     async getEdges(@Param('id') id: string) {
@@ -125,7 +125,7 @@ export class ArticlesController {
 
     // -- Admin: images --
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Put(':id/images/reorder')
     @ApiOkResponse({ type: ImageListResponseDto })
     async reorderImages(
@@ -136,7 +136,7 @@ export class ArticlesController {
         return this.fileService.reorderByIds(ImageTypeEnum.Article, id, imageIds);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Delete(':id/images/:imageId')
     @ApiOkResponse({ type: EmptyResponseDto })
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
@@ -173,7 +173,7 @@ export class ArticlesController {
         return { data: (result.data ?? []).map(parseArticleRecord) };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Get('graph')
     @ApiOkResponse()
     async getGraph() {
@@ -184,7 +184,7 @@ export class ArticlesController {
         };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_MANAGE)
     @Get('tags/stats')
     @ApiOkResponse()
     async getTagStats() {

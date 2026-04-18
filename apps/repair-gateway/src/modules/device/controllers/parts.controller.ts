@@ -8,10 +8,8 @@ import {
     CreateDevicePartDto,
     UpdateDevicePartDto,
     PaginationDto,
-    ADMIN_ROLES,
-    Role,
 } from '@asko/shared';
-import { RequiredRoles } from '@asko/gateway-common';
+import { Permissions, Permission } from '@asko/authorization';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { MessageResponseDto } from 'common/dto/responses';
 import {
@@ -42,7 +40,7 @@ export class PartsController {
     ) {}
 
     @Get()
-    @RequiredRoles(Role.REPAIRER, ...ADMIN_ROLES)
+    @Permissions(Permission.PARTS_VIEW)
     @ApiOkResponse({ type: PaginatedDevicePartsResponseDto })
     async getAll(@Query() query: PartsQueryDto) {
         return this.deviceClient.getAllDeviceParts({
@@ -56,13 +54,13 @@ export class PartsController {
     }
 
     @Post('import')
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.PARTS_MANAGE)
     async importParts(@Body() parts: Record<string, any>[]) {
         return this.deviceClient.importDeviceParts(parts);
     }
 
     @Post()
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.PARTS_MANAGE)
     @ApiCreatedResponse({ type: DevicePartResponseDto })
     async create(@Body() dto: CreateDevicePartDto) {
         return this.deviceClient.createDevicePart(dto.deviceId, {
@@ -76,7 +74,7 @@ export class PartsController {
     }
 
     @Patch(':partId')
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.PARTS_MANAGE)
     @ApiOkResponse({ type: DevicePartResponseDto })
     async update(@Param('partId') partId: string, @Body() dto: UpdateDevicePartDto) {
         return this.deviceClient.updateDevicePart(partId, {
@@ -91,7 +89,7 @@ export class PartsController {
     }
 
     @Delete(':partId')
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.PARTS_MANAGE)
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('partId') partId: string) {
         await this.deviceClient.deleteDevicePart(partId);

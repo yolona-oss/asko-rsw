@@ -101,4 +101,11 @@ export enum Permission {
     // ── Parts ──
     PARTS_VIEW                     = 'parts:view',
     PARTS_MANAGE                   = 'parts:manage',
+
+    // ── Invitations ──
+    INVITE_MANAGE                  = 'invite:manage',
+
+    // ── User admin ──
+    USER_VIEW_ALL                  = 'user:view-all',
+    USER_UPDATE_ANY                = 'user:update-any',
 }

@@ -1,14 +1,14 @@
 import { Controller, Param, Post, UseInterceptors } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
+import { ImageTypeEnum, UPLOAD_LIMITS } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
-    RequiredRoles,
+    FileClientService,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
     assertMime,
 } from '@asko/gateway-common';
-import { ContentFileClientService } from 'modules/file-client/file-client.service';
 import { ImageResponseDto } from 'common/dto/responses';
 
 const { maxBytes: IMAGE_MAX_SIZE, mime: IMAGE_MIME } = UPLOAD_LIMITS.image;
@@ -16,10 +16,10 @@ const { maxBytes: IMAGE_MAX_SIZE, mime: IMAGE_MIME } = UPLOAD_LIMITS.image;
 @ApiTags('Article uploads')
 @Controller('articles')
 export class ArticleImageUploadController {
-    constructor(private readonly fileService: ContentFileClientService) {}
+    constructor(private readonly fileService: FileClientService) {}
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.ARTICLE_UPLOAD)
     @Post(':id/images')
     @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
     async uploadArticleImage(

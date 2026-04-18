@@ -2,7 +2,6 @@
 export {
     IS_PUBLIC_KEY, Public,
     IS_OPTIONAL_AUTH_KEY, OptionalAuth,
-    ROLES_KEY, RequiredRoles,
     JwtAuthUser,
 } from './decorators';
 

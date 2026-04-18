@@ -6,10 +6,10 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ADMIN_ROLES, UPLOAD_LIMITS } from '@asko/shared';
+import { UPLOAD_LIMITS } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
 import {
     FileClientService,
-    RequiredRoles,
     StreamingFile,
     StreamingUploadInterceptor,
     type StreamingUploadPayload,
@@ -26,7 +26,7 @@ export class DocumentUploadController {
     ) {}
 
     @ApiCreatedResponse()
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.FILE_ADMIN_MANAGE)
     @Post('upload')
     @UseInterceptors(new StreamingUploadInterceptor(DOCUMENT_MAX_SIZE))
     async uploadGeneric(@StreamingFile() upload: StreamingUploadPayload) {

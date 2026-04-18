@@ -13,9 +13,6 @@ import {
     RegisterUserDeviceDto,
     UpdateUserDeviceDto,
     PaginationDto,
-    ALL_ROLES,
-    ADMIN_ROLES,
-    Role,
     JwtPayload,
     ImageTypeEnum,
 } from '@asko/shared';
@@ -29,7 +26,8 @@ class DeviceQueryDto extends PaginationDto {
     @IsBoolean()
     isFeatured?: boolean;
 }
-import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser, Public } from '@asko/gateway-common';
 import { DeleteCountResponseDto, MessageResponseDto, EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
     DeviceRecordDto,
@@ -51,14 +49,14 @@ export class DeviceController {
 
     // ── Admin: catalog management ──
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post()
     @ApiCreatedResponse({ type: DeviceRecordDto })
     async create(@Body() dto: CreateDeviceDto) {
         return this.deviceClient.createDevice(dto);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post('import')
     @ApiCreatedResponse({ type: ImportDevicesResponseDto })
     async importDevices(@Body() products: Record<string, any>[]) {
@@ -76,14 +74,14 @@ export class DeviceController {
         return { importedCount: result.importedCount, created: result.importedCount, errors: [] };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Patch(':id')
     @ApiOkResponse({ type: DeviceRecordDto })
     async update(@Param('id') id: string, @Body() dto: UpdateDeviceDto) {
         return this.deviceClient.updateDevice(id, dto);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete('all')
     @ApiOkResponse({ type: DeleteCountResponseDto })
     async removeAll() {
@@ -91,7 +89,7 @@ export class DeviceController {
         return { message: `Deleted ${result.deletedCount} devices`, count: result.deletedCount };
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {
@@ -101,7 +99,7 @@ export class DeviceController {
 
     // ── Admin: device images ──
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Put(':id/images/reorder')
     @ApiOkResponse({ type: ImageListResponseDto })
     async reorderImages(
@@ -112,7 +110,7 @@ export class DeviceController {
         return this.fileService.reorderByIds(ImageTypeEnum.Device, id, imageIds);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete(':id/images/:imageId')
     @ApiOkResponse({ type: EmptyResponseDto })
     async removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
@@ -122,21 +120,21 @@ export class DeviceController {
 
     // ── Admin: device parts catalog ──
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Post(':id/parts')
     @ApiCreatedResponse({ type: DevicePartResponseDto })
     async createPart(@Param('id') id: string, @Body() dto: CreateDevicePartDto) {
         return this.deviceClient.createDevicePart(id, dto);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Patch(':id/parts/:partId')
     @ApiOkResponse({ type: DevicePartResponseDto })
     async updatePart(@Param('id') _id: string, @Param('partId') partId: string, @Body() dto: UpdateDevicePartDto) {
         return this.deviceClient.updateDevicePart(partId, dto);
     }
 
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete(':id/parts/:partId')
     @ApiOkResponse({ type: MessageResponseDto })
     async removePart(@Param('id') _id: string, @Param('partId') partId: string) {
@@ -160,7 +158,7 @@ export class DeviceController {
         return this.fileService.findAttachedImages(ImageTypeEnum.DevicePart, partId);
     }
 
-    @RequiredRoles(Role.MANAGER, ...ADMIN_ROLES)
+    @Permissions(Permission.DEVICE_MANAGE)
     @Delete(':id/parts/:partId/images/:imageId')
     @ApiOkResponse({ type: EmptyResponseDto })
     async removePartImage(@Param('imageId') imageId: string) {
@@ -235,28 +233,24 @@ export class DeviceController {
 export class UserDeviceController {
     constructor(private readonly deviceClient: DeviceClientService) {}
 
-    @RequiredRoles(...ALL_ROLES)
     @Post()
     @ApiCreatedResponse({ type: UserDeviceRecordDto })
     async register(@JwtAuthUser() user: JwtPayload, @Body() dto: RegisterUserDeviceDto) {
         return this.deviceClient.registerUserDevice(user.sub, dto);
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Get()
     @ApiOkResponse({ type: UserDeviceListResponseDto })
     async findAll(@JwtAuthUser() user: JwtPayload) {
         return this.deviceClient.getUserDevices(user.sub);
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     @ApiOkResponse({ type: UserDeviceRecordDto })
     async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.deviceClient.getUserDevice(user.sub, id);
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Patch(':id')
     @ApiOkResponse({ type: UserDeviceRecordDto })
     async update(
@@ -267,7 +261,6 @@ export class UserDeviceController {
         return this.deviceClient.updateUserDevice(user.sub, id, dto);
     }
 
-    @RequiredRoles(...ALL_ROLES)
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {

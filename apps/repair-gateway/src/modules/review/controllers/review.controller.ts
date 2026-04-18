@@ -6,8 +6,9 @@ import { RepairClientService } from 'modules/repair-client/repair-client.service
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
-import { CreateReviewDto, PaginationDto, ALL_ROLES, JwtPayload, ImageTypeEnum, Role } from '@asko/shared';
-import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
+import { CreateReviewDto, PaginationDto, JwtPayload, ImageTypeEnum } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser, Public } from '@asko/gateway-common';
 import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
     ReviewResponseDto,
@@ -27,7 +28,6 @@ export class ReviewController {
     ) {}
 
     @ApiCreatedResponse({ type: ReviewResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateReviewDto) {
         const result = await this.repairerClient.createReview(
@@ -47,14 +47,12 @@ export class ReviewController {
     }
 
     @ApiOkResponse({ type: ReviewListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
         return this.repairerClient.findReviewsByUser(user.sub);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Delete(':id/images/:imageId')
     async removeImage(
         @JwtAuthUser() user: JwtPayload,
@@ -73,7 +71,7 @@ export class ReviewController {
     }
 
     @ApiOkResponse({ type: RatingResponseDto })
-    @RequiredRoles(Role.REPAIRER)
+    @Permissions(Permission.REVIEW_VIEW)
     @Get('rating/my')
     async findMyRating(@JwtAuthUser() user: JwtPayload) {
         const { repairer } = await this.repairerClient.getMyProfile(user.sub);
@@ -95,7 +93,6 @@ export class ReviewController {
     }
 
     @ApiOkResponse({ type: ReviewResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('request/:requestId')
     async findByRequest(@Param('requestId') requestId: string) {
         return this.repairerClient.findReviewByRequest(requestId);

@@ -15,9 +15,6 @@ import {
     ReapplyCertificateDto,
     CertificateStatus,
     PaginationDto,
-    ALL_ROLES,
-    ADMIN_ROLES,
-    Role,
     JwtPayload,
     PaymentTargetType,
     PaymentProviderType,
@@ -25,7 +22,8 @@ import {
     computeExpiresAt,
 } from '@asko/shared';
 
-import { RequiredRoles, JwtAuthUser, Public } from '@asko/gateway-common';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser, Public } from '@asko/gateway-common';
 
 class FindDealerCertificatesDto extends PaginationDto {
     @IsOptional()
@@ -80,7 +78,6 @@ export class CertificateController {
 
     /** User adds a certificate they purchased */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post('add')
     async addCertificate(@JwtAuthUser() user: JwtPayload, @Body() dto: AddCertificateDto) {
         return this.certificateClient.addCertificate(user.sub, {
@@ -92,7 +89,7 @@ export class CertificateController {
 
     /** Dealer creates a certificate for a client */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(Role.DEALER)
+    @Permissions(Permission.CERTIFICATE_CREATE)
     @Post('create')
     async createByDealer(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateCertificateDto) {
         // Resolve dealer profile to get dealerId
@@ -143,7 +140,6 @@ export class CertificateController {
 
     /** User self-creates a certificate for one of their devices (PENDING_PAYMENT + invoice) */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post('self-create')
     async selfCreate(@JwtAuthUser() user: JwtPayload, @Body() dto: SelfCreateCertificateDto) {
         const expiresAt = computeExpiresAt(dto.durationMonths).toISOString();
@@ -156,7 +152,6 @@ export class CertificateController {
 
     /** Reassign certificate to different device */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/reassign')
     async reassign(
         @JwtAuthUser() user: JwtPayload,
@@ -168,7 +163,6 @@ export class CertificateController {
 
     /** User reapplies (renews) an expired / near-expiry certificate */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/reapply')
     async reapply(
         @JwtAuthUser() user: JwtPayload,
@@ -183,7 +177,6 @@ export class CertificateController {
 
     /** User dismisses the "expiring soon" reminder for a certificate */
     @ApiOkResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/dismiss-reminder')
     async dismissReminder(
         @JwtAuthUser() user: JwtPayload,
@@ -194,7 +187,7 @@ export class CertificateController {
 
     /** Admin revokes a certificate */
     @ApiCreatedResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.CERTIFICATE_MANAGE)
     @Post(':id/revoke')
     async revoke(@Param('id') id: string) {
         return this.certificateClient.revokeCertificate(id);
@@ -202,7 +195,6 @@ export class CertificateController {
 
     /** Calculate certificate price before purchase */
     @ApiOkResponse({ type: CertPriceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('calculate-price')
     async calculatePrice(
         @Query('userDeviceId') userDeviceId: string,
@@ -214,7 +206,6 @@ export class CertificateController {
 
     /** User gets their certificates */
     @ApiOkResponse({ type: CertificateListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
         const result = await this.certificateClient.findByUser(user.sub);
@@ -224,7 +215,7 @@ export class CertificateController {
 
     /** Dealer gets certificates they created */
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
-    @RequiredRoles(Role.DEALER)
+    @Permissions(Permission.CERTIFICATE_CREATE)
     @Get('dealer')
     async findDealerCerts(
         @JwtAuthUser() user: JwtPayload,
@@ -241,7 +232,7 @@ export class CertificateController {
 
     /** Admin: list all certificates */
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
-    @RequiredRoles(...ADMIN_ROLES)
+    @Permissions(Permission.CERTIFICATE_MANAGE)
     @Get()
     async findAll(@Query() query: FindDealerCertificatesDto) {
         const result = await this.certificateClient.findAll(query);
@@ -252,7 +243,6 @@ export class CertificateController {
 
     /** Pay for a certificate */
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/pay')
     async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
@@ -264,7 +254,6 @@ export class CertificateController {
 
     /** Dummy pay for a certificate (testing) */
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/dummy-pay')
     async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
@@ -277,7 +266,6 @@ export class CertificateController {
 
     /** Get payments for a certificate */
     @ApiOkResponse({ type: PaymentListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id/payments')
     async getPayments(@Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('certificate', id);
@@ -300,7 +288,6 @@ export class CertificateController {
     // ── PDF Generation ──
 
     @ApiCreatedResponse()
-    @RequiredRoles(...ALL_ROLES)
     @Post(':id/pdf/generate')
     async generatePdf(
         @JwtAuthUser() _user: JwtPayload,
@@ -401,7 +388,6 @@ export class CertificateController {
     }
 
     @ApiOkResponse({ type: CertificateResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@Param('id') id: string) {
         const cert = await this.certificateClient.findById(id);

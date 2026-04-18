@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { ALL_ROLES, STAFF_ROLES, CreateAddressDto, UpdateAddressDto, JwtPayload, Role } from '@asko/shared';
-import { RequiredRoles, JwtAuthUser } from '@asko/gateway-common';
+import { CreateAddressDto, UpdateAddressDto, JwtPayload } from '@asko/shared';
+import { Permissions, Permission } from '@asko/authorization';
+import { JwtAuthUser } from '@asko/gateway-common';
 import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'modules/device/dto/device.response.dto';
 
 @ApiTags('Addresses')
@@ -11,7 +12,6 @@ export class AddressController {
     constructor(private readonly deviceClient: DeviceClientService) {}
 
     @ApiCreatedResponse({ type: AddressResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Post()
     async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateAddressDto) {
         const result = await this.deviceClient.createAddress(user.sub, dto);
@@ -19,7 +19,6 @@ export class AddressController {
     }
 
     @ApiOkResponse({ type: AddressResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Put(':id')
     async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateAddressDto) {
         const result = await this.deviceClient.updateAddress(user.sub, id, dto);
@@ -27,7 +26,6 @@ export class AddressController {
     }
 
     @ApiOkResponse()
-    @RequiredRoles(...ALL_ROLES)
     @Delete(':id')
     async remove(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         await this.deviceClient.deleteAddress(user.sub, id);
@@ -35,7 +33,6 @@ export class AddressController {
     }
 
     @ApiOkResponse({ type: AddressResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Patch(':id/primary')
     async setPrimary(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const result = await this.deviceClient.setPrimaryAddress(user.sub, id);
@@ -43,7 +40,6 @@ export class AddressController {
     }
 
     @ApiOkResponse({ type: AddressListResponseDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get()
     async findAll(@JwtAuthUser() user: JwtPayload) {
         const result = await this.deviceClient.findUserAddresses(user.sub);
@@ -51,7 +47,7 @@ export class AddressController {
     }
 
     @ApiOkResponse({ type: AddressListResponseDto })
-    @RequiredRoles(...STAFF_ROLES, Role.DEALER)
+    @Permissions(Permission.ADDRESS_VIEW_ANY)
     @Get('user/:userId')
     async findByUser(@Param('userId') userId: string) {
         const result = await this.deviceClient.findUserAddresses(userId);
@@ -59,7 +55,6 @@ export class AddressController {
     }
 
     @ApiOkResponse({ type: AddressRecordDto })
-    @RequiredRoles(...ALL_ROLES)
     @Get(':id')
     async findOne(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
         const result = await this.deviceClient.findAddressById(id);

@@ -8,7 +8,6 @@ import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@a
 
 import { AppConfig, AppConfigModule } from './app.config';
 
-import { AuthFileClientService } from 'modules/file-client/file-client.service';
 import { AuthModule } from 'modules/auth/auth.module';
 import { OAuthModule } from 'modules/oauth/oauth.module';
 import { InviteModule } from 'modules/invite/invite.module';
@@ -34,7 +33,6 @@ import { HealthModule } from 'modules/health/health.module';
         }),
 
         FileClientModule.registerAsync({
-            serviceClass: AuthFileClientService,
             inject: [AppConfig],
             useFactory: (config: AppConfig) => ({ fileServiceUrl: config.fileServiceUrl }),
         }),
