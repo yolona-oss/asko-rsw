@@ -218,7 +218,8 @@
             "idle",
             "typing",
             "uploading_image",
-            "uploading_video"
+            "uploading_video",
+            "uploading_document"
           ]
         }
       },
@@ -421,7 +422,8 @@
             "idle",
             "typing",
             "uploading_image",
-            "uploading_video"
+            "uploading_video",
+            "uploading_document"
           ]
         }
       },
@@ -727,7 +729,8 @@
             "idle",
             "typing",
             "uploading_image",
-            "uploading_video"
+            "uploading_video",
+            "uploading_document"
           ]
         }
       },
@@ -788,7 +791,8 @@
             "idle",
             "typing",
             "uploading_image",
-            "uploading_video"
+            "uploading_video",
+            "uploading_document"
           ],
           "mappedType": "unknown",
           "nativeEnumName": "user_activity"
@@ -905,7 +909,8 @@
             "idle",
             "typing",
             "uploading_image",
-            "uploading_video"
+            "uploading_video",
+            "uploading_document"
           ]
         }
       },
@@ -965,7 +970,8 @@
         "idle",
         "typing",
         "uploading_image",
-        "uploading_video"
+        "uploading_video",
+        "uploading_document"
       ]
     }
   }

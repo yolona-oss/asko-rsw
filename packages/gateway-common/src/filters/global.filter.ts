@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { AppError } from '@asko/shared';
+import { AppError, t, DEFAULT_LOCALE } from '@asko/shared';
+import type { Locale } from '@asko/shared';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -7,11 +8,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     catch(exception: any, host: ArgumentsHost): any {
         const ctx = host.switchToHttp();
+        const request = ctx.getRequest();
         const response = ctx.getResponse();
+        const lang: Locale = (request as any)?.lang ?? DEFAULT_LOCALE;
 
         if (exception instanceof AppError) {
-            const { errorCode, message, httpStatus } = exception;
-            return response.status(exception.httpStatus).json({
+            const { errorCode, httpStatus } = exception;
+            // Translate via i18n key if available, otherwise use raw message
+            const message = exception.messageKey
+                ? t(exception.messageKey, lang, exception.messageParams)
+                : exception.message;
+            return response.status(httpStatus).json({
                 errorCode,
                 message,
                 httpStatus,

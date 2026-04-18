@@ -1,9 +1,10 @@
 import { lastValueFrom, Observable } from 'rxjs';
 import { AppError, AppErrors, AppErrorTypeEnum } from '@asko/shared';
+import type { MsgKey } from '@asko/shared';
 
 export function fromGrpcError(error: any): never {
     if (error?.code !== undefined && error?.message) {
-        const msg = error.details || error.message;
+        const raw = error.details || error.message;
         let appErrorType: number;
         switch (error.code) {
             case 5: appErrorType = AppErrorTypeEnum.DB_ENTITY_NOT_FOUND; break;   // NOT_FOUND
@@ -14,7 +15,28 @@ export function fromGrpcError(error: any): never {
             case 8: appErrorType = 808; break;                                     // RESOURCE_EXHAUSTED (TOO_MANY_REQUESTS — gateway-specific, code 808)
             default: appErrorType = AppErrorTypeEnum.INTERNAL_ERROR; break;
         }
-        throw new AppError(appErrorType, { message: msg });
+
+        // Try to parse JSON envelope from service-side i18n
+        let messageKey: MsgKey | undefined;
+        let messageParams: Record<string, string | number> | undefined;
+        let fallbackMessage = raw;
+
+        if (typeof raw === 'string' && raw.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed.k) {
+                    messageKey = parsed.k as MsgKey;
+                    messageParams = parsed.p;
+                    fallbackMessage = parsed.m || raw;
+                }
+            } catch { /* not JSON — use raw string */ }
+        }
+
+        throw new AppError(appErrorType, {
+            message: fallbackMessage,
+            messageKey,
+            messageParams,
+        });
     }
     if (error instanceof AppError) throw error;
     throw AppErrors.internalError(error?.message ?? 'gRPC call failed');

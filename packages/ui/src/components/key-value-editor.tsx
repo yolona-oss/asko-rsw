@@ -2,6 +2,7 @@
 
 import { Button } from './button';
 import { Input } from './input';
+import { useUiLocale } from '../locale';
 
 export interface KVPair {
   key: string;
@@ -20,11 +21,12 @@ export interface KeyValueEditorProps {
 export function KeyValueEditor({
   pairs,
   onChange,
-  keyPlaceholder = 'Ключ',
-  valuePlaceholder = 'Значение',
+  keyPlaceholder,
+  valuePlaceholder,
   addLabel = '+ Добавить',
   className,
 }: KeyValueEditorProps) {
+  const locale = useUiLocale();
   const updatePair = (index: number, field: 'key' | 'value', val: string) => {
     const next = pairs.map((p, i) => (i === index ? { ...p, [field]: val } : p));
     onChange(next);
@@ -44,14 +46,14 @@ export function KeyValueEditor({
         <div key={i} className="flex gap-2 items-center">
           <Input
             type="text"
-            placeholder={keyPlaceholder}
+            placeholder={keyPlaceholder ?? locale.keyPlaceholder}
             value={pair.key}
             onChange={(e) => updatePair(i, 'key', e.target.value)}
             className="flex-1"
           />
           <Input
             type="text"
-            placeholder={valuePlaceholder}
+            placeholder={valuePlaceholder ?? locale.valuePlaceholder}
             value={pair.value}
             onChange={(e) => updatePair(i, 'value', e.target.value)}
             className="flex-1"

@@ -5,6 +5,7 @@ import { Image } from 'image/image.entity';
 import { FileAccess } from 'common/file-access.entity';
 import { ImageObj } from "image/image.obj";
 import { AppErrors } from "common/error";
+import { msg } from "@asko/shared";
 import { collectPublicIds } from "image/image-utils";
 import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
 
@@ -47,7 +48,7 @@ export class ImageService {
 
         for (const { id, order } of schema) {
             const img = map.get(id);
-            if (!img) throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
+            if (!img) throw AppErrors.dbEntityNotFound({ key: msg.file.imageNotFound });
             img.order = order;
         }
 
@@ -71,7 +72,7 @@ export class ImageService {
     @CreateRequestContext()
     async remove(id: string) {
         const image = await this.em.findOne(Image, { id });
-        if (!image) throw AppErrors.dbEntityNotFound(`Image ${id} not found`);
+        if (!image) throw AppErrors.dbEntityNotFound({ key: msg.file.imageNotFound });
         const ids = collectPublicIds(image);
         if (ids.length > 0) await this.storage.deleteBatch(ids, 'image');
         await this.em.removeAndFlush(image);
@@ -80,8 +81,8 @@ export class ImageService {
     @CreateRequestContext()
     async unattachImage(imageId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
-        if (!image) throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
-        if (!image.ownerType || !image.ownerId) throw AppErrors.badRequest(`Image ${imageId} not attached`);
+        if (!image) throw AppErrors.dbEntityNotFound({ key: msg.file.imageNotFound });
+        if (!image.ownerType || !image.ownerId) throw AppErrors.badRequest({ key: msg.file.imageNotAttached });
         const prevOwnerType = image.ownerType;
         const prevOwnerId = image.ownerId;
         image.ownerId = undefined;
@@ -94,7 +95,7 @@ export class ImageService {
     @CreateRequestContext()
     async attachImage(imageId: string, ownerType: ImageTypeEnum, ownerId: string) {
         const image = await this.em.findOne(Image, { id: imageId });
-        if (!image) throw AppErrors.dbEntityNotFound(`Image ${imageId} not found`);
+        if (!image) throw AppErrors.dbEntityNotFound({ key: msg.file.imageNotFound });
         image.ownerId = String(ownerId);
         image.ownerType = ownerType;
         image.order = await this.countAttached(image.ownerId, image.ownerType);

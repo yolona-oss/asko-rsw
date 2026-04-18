@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Overtime } from '../entities/overtime.entity';
 import { ScheduleStatus } from '../entities/schedule-status.enum';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { getLocalNow, DEFAULT_TIMEZONE } from 'common/timezone';
 import { parseDate, timeToMinutes, timesOverlap } from './schedule-utils';
@@ -149,9 +150,7 @@ export class OvertimeService {
         const existing = await this.em.find(Overtime, where);
         for (const entry of existing) {
             if (timesOverlap(startTime, endTime, entry.startTime, entry.endTime)) {
-                throw AppErrors.badRequest(
-                    `Переработка пересекается с существующей записью (${entry.startTime}–${entry.endTime})`,
-                );
+                throw AppErrors.badRequest({ key: msg.schedule.overtimeOverlap, params: { start: entry.startTime, end: entry.endTime } });
             }
         }
     }

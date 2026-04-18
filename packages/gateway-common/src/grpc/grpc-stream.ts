@@ -1,4 +1,4 @@
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import type { UploadChunk, UploadStart } from '@asko/proto';
 import type { Readable } from 'node:stream';
 import { lastValueFrom, Observable, Subject } from 'rxjs';
@@ -43,8 +43,8 @@ export async function grpcStreamUpload<Resp>(
         received += buf.length;
         if (received > opts.maxBytes) {
             aborted = true;
-            source.destroy(AppErrors.badRequest('File exceeds maximum upload size'));
-            chunks$.error(AppErrors.badRequest('File exceeds maximum upload size'));
+            source.destroy(AppErrors.badRequest({ key: msg.file.exceedsMaxSize }));
+            chunks$.error(AppErrors.badRequest({ key: msg.file.exceedsMaxSize }));
             return;
         }
         for (let off = 0; off < buf.length; off += chunkSize) {

@@ -172,6 +172,7 @@ message UserSettings {
     bool chat_accept_conversations = 2;
     bool chat_searchable = 3;
     string meta_json = 4;
+    string language = 5;
 }
 
 message UpdateUserRequest {

@@ -12,6 +12,12 @@ export type { IGatewayConfig } from './guards';
 // Filters
 export { GlobalExceptionFilter } from './filters';
 
+// Middleware
+export { LangMiddleware } from './middleware/lang.middleware';
+
+// Interceptors
+export { TranslateInterceptor } from './interceptors/translate.interceptor';
+
 // gRPC utilities
 export { fromGrpcError, grpcCall, grpcStreamUpload } from './grpc';
 export type { StreamUploadOptions } from './grpc';

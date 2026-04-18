@@ -1,9 +1,12 @@
 import { AppErrorTypeEnum } from './error-type.enum.js';
 import { IErrorMessage } from './ierror-message.interface.js';
 import { CommonErrorsDefinition } from './definition.js';
+import type { MsgKey } from '../i18n/messages.js';
 
-interface AppErrorModificationOptions extends Pick<IErrorMessage, 'message'> {
-    message: string;
+interface AppErrorOptions {
+    message?: string;
+    messageKey?: MsgKey;
+    messageParams?: Record<string, string | number>;
 }
 
 /**
@@ -13,11 +16,20 @@ interface AppErrorModificationOptions extends Pick<IErrorMessage, 'message'> {
  * Services that add domain-specific codes must call
  * `AppError.registerDefinitions()` at bootstrap so the
  * constructor can resolve them.
+ *
+ * When `messageKey` is set, gateways translate it into
+ * the user's locale via `t()` before sending the HTTP response.
  */
 export class AppError extends Error {
     public errorCode: number;
     public httpStatus: number;
     public message: string;
+
+    /** i18n message key — when set, gateways translate it. */
+    public messageKey?: MsgKey;
+
+    /** Interpolation params for the message key (e.g. `{ seconds: 30 }`). */
+    public messageParams?: Record<string, string | number>;
 
     /** Additional definitions registered by domain services. */
     private static extraDefinitions: Record<number, IErrorMessage> = {};
@@ -37,7 +49,7 @@ export class AppError extends Error {
 
     constructor(
         errorCode: number = AppErrorTypeEnum.BAD_REQUEST,
-        options?: Partial<AppErrorModificationOptions>,
+        options?: Partial<AppErrorOptions>,
     ) {
         super();
         const error: IErrorMessage | undefined = AppError.resolve(errorCode);
@@ -51,5 +63,7 @@ export class AppError extends Error {
         this.httpStatus = resolved.httpStatus;
         this.errorCode = errorCode;
         this.message = resolved.message;
+        this.messageKey = options?.messageKey;
+        this.messageParams = options?.messageParams;
     }
 }

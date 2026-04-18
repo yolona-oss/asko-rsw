@@ -2,6 +2,7 @@
 
 import { type InputHTMLAttributes, forwardRef, useCallback, useMemo } from 'react';
 import { cn } from '../utils/cn';
+import { useUiLocale } from '../locale';
 
 export interface ValidationResult {
   valid: boolean;
@@ -54,15 +55,16 @@ export const PatternInput = forwardRef<HTMLInputElement, PatternInputProps>(
     showValidBorder = false,
     ...props
   }, ref) => {
+    const locale = useUiLocale();
     const currentValue = typeof value === 'string' ? value : '';
     const displayValue = formatter ? formatter(currentValue) : currentValue;
 
     const validation = useMemo(() => {
       if (!currentValue) return null;
       if (validator) return validator(currentValue);
-      if (pattern) return { valid: pattern.test(currentValue), hint: 'Некорректный формат' };
+      if (pattern) return { valid: pattern.test(currentValue), hint: locale.patternInvalidFormat };
       return null;
-    }, [currentValue, validator, pattern]);
+    }, [currentValue, validator, pattern, locale]);
 
     const hasError = error || (showValidation && validation && !validation.valid && currentValue.length > 0);
     const displayErrorMsg = errorMessage || (showValidation ? validation?.hint : undefined);

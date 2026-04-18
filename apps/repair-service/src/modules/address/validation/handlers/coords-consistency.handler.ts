@@ -1,3 +1,4 @@
+import { msg } from '@asko/shared';
 import { AddressValidationHandler } from '../address-validation-handler';
 import type { AddressValidationContext } from '../address-validation-context';
 
@@ -22,7 +23,7 @@ export class CoordsConsistencyHandler extends AddressValidationHandler {
         const distance = haversineKm(lat, lon, nLat, nLon);
         if (distance > MAX_DISTANCE_KM) {
             ctx.invalid = true;
-            ctx.errorMessage = `Координаты не соответствуют адресу (расхождение ${distance.toFixed(1)} км)`;
+            ctx.errorMessage = msg.validation.coordsMismatch;
         }
     }
 }

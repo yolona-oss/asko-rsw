@@ -6,6 +6,7 @@ export interface IUserSettings {
     mfaMethods: string[];
     chatAcceptConversations: boolean;
     chatSearchable: boolean;
+    language: string;
     meta?: Record<string, any> | null;
 }
 

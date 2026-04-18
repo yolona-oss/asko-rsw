@@ -11,7 +11,7 @@ import {
     MessageResponseDto,
 } from '@asko/gateway-common';
 import { Permissions, Permission } from '@asko/authorization';
-import { CreateInvitationLinkDto } from '@asko/shared';
+import { CreateInvitationLinkDto, msg } from '@asko/shared';
 
 @ApiTags('Invitations')
 @Controller('invite')
@@ -52,6 +52,6 @@ export class InviteController {
     @Delete('/:id')
     async remove(@Param('id') id: string) {
         await this.userClient.deleteInvite({ id });
-        return { message: 'Invitation deleted' };
+        return { message: msg.auth.invitationDeleted };
     }
 }

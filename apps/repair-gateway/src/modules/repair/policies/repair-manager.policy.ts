@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import { isAdmin, type Policy, type PolicyContext } from '@asko/authorization';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 
@@ -20,7 +20,7 @@ export class RepairManagerPolicy implements Policy {
 
         const { request } = await this.repairClient.findById(ctx.params.id);
         if (request?.managerId && request.managerId !== ctx.user.sub) {
-            throw AppErrors.forbidden('Этой заявкой управляет другой менеджер');
+            throw AppErrors.forbidden({ key: msg.access.otherManagerOwns });
         }
         return true;
     }

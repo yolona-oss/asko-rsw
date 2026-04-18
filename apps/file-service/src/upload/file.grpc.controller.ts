@@ -1,14 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, GrpcStreamMethod, RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
 import { ImageService } from 'image/image.service';
 import { VideoService } from 'video/video.service';
 import { ImageCleanupService } from 'image/image-cleanup.service';
 import { DocumentService } from 'document/document.service';
 import { UploadService } from 'upload/upload.service';
-import { AppError, AppErrors } from 'common/error';
+import { AppErrors } from 'common/error';
 import { toAccessParams } from 'common/file-access.helper';
-import { ImageTypeEnum, VideoTypeEnum } from '@asko/shared';
+import { ImageTypeEnum, VideoTypeEnum, appErrorToGrpcPayload, msg } from '@asko/shared';
 import type { FileAccess } from 'common/file-access.entity';
 import { PassThrough } from 'stream';
 import { Observable } from 'rxjs';
@@ -35,20 +34,7 @@ import type { Video } from 'video/video.entity';
 import type { Document } from 'document/document.entity';
 
 function toGrpcError(error: unknown): RpcException {
-    if (error instanceof AppError) {
-        let grpcCode: number;
-        switch (error.httpStatus) {
-            case 400: grpcCode = status.INVALID_ARGUMENT; break;
-            case 401: grpcCode = status.UNAUTHENTICATED; break;
-            case 403: grpcCode = status.PERMISSION_DENIED; break;
-            case 404: grpcCode = status.NOT_FOUND; break;
-            case 409: grpcCode = status.ALREADY_EXISTS; break;
-            default: grpcCode = status.INTERNAL; break;
-        }
-        return new RpcException({ code: grpcCode, message: error.message });
-    }
-    const msg = error instanceof Error ? error.message : 'Internal error';
-    return new RpcException({ code: status.INTERNAL, message: msg });
+    return new RpcException(appErrorToGrpcPayload(error));
 }
 
 function entityToRecord(entity: Image) {
@@ -132,7 +118,7 @@ export class FileGrpcController {
                 },
                 complete: () => {
                     if (!meta) {
-                        subscriber.error(toGrpcError(AppErrors.badRequest('Missing UploadStart')));
+                        subscriber.error(toGrpcError(AppErrors.badRequest({ key: msg.file.missingUploadStart })));
                         return;
                     }
                     pt.end();

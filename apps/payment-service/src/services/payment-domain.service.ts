@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { PaymentStatus } from '@asko/shared';
+import { PaymentStatus, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { PaymentAuditEntity } from 'entities/payment-audit.entity';
 
@@ -24,7 +24,7 @@ export class PaymentDomainService {
 
     assertTransition(from: PaymentStatus, to: PaymentStatus): void {
         if (!this.canTransition(from, to)) {
-            throw AppErrors.badRequest(`Invalid payment status transition: ${from} -> ${to}`);
+            throw AppErrors.badRequest({ key: msg.payment.invalidStatusTransition, params: { from, to } });
         }
     }
 
@@ -47,17 +47,17 @@ export class PaymentDomainService {
 
     validateAmount(amount: number): void {
         if (typeof amount !== 'number' || !Number.isFinite(amount)) {
-            throw AppErrors.invalidData('Amount must be a valid number');
+            throw AppErrors.invalidData({ key: msg.payment.invalidAmount });
         }
         if (amount <= 0) {
-            throw AppErrors.invalidData('Amount must be greater than 0');
+            throw AppErrors.invalidData({ key: msg.payment.amountPositive });
         }
         if (amount > PaymentDomainService.MAX_AMOUNT) {
-            throw AppErrors.invalidData(`Amount must not exceed ${PaymentDomainService.MAX_AMOUNT}`);
+            throw AppErrors.invalidData({ key: msg.payment.amountTooLarge, params: { max: PaymentDomainService.MAX_AMOUNT } });
         }
         const decimals = amount.toString().split('.')[1];
         if (decimals && decimals.length > 2) {
-            throw AppErrors.invalidData('Amount must have at most 2 decimal places');
+            throw AppErrors.invalidData({ key: msg.payment.amountTooManyDecimals });
         }
     }
 }

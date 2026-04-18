@@ -3,7 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
 import { assertAddressValid } from 'common/validation';
-import { slugify, DeviceValidationStatus } from '@asko/shared';
+import { slugify, DeviceValidationStatus, msg } from '@asko/shared';
 import { resolveTimezone } from 'common/timezone-lookup';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
@@ -76,7 +76,7 @@ export class DeviceService {
         const finalSlug = existing ? `${slug}-${Date.now()}` : slug;
 
         const category = await this.em.findOne(DeviceCategory, { name: dto.type });
-        if (!category) throw AppErrors.badRequest(`Unknown device category: ${dto.type}`);
+        if (!category) throw AppErrors.badRequest({ key: msg.device.unknownCategory, params: { type: dto.type } });
 
         const device = this.em.create(Device, {
             name: dto.name,
@@ -202,7 +202,7 @@ export class DeviceService {
         isFeatured?: boolean;
     }): Promise<Device> {
         const device = await this.em.findOne(Device, { id });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
 
         if (dto.name) device.name = dto.name;
         if (dto.type) {
@@ -225,7 +225,7 @@ export class DeviceService {
     @CreateRequestContext()
     async deleteDevice(id: string): Promise<void> {
         const device = await this.em.findOne(Device, { id });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
         await this.em.removeAndFlush(device);
     }
 
@@ -274,14 +274,14 @@ export class DeviceService {
     @CreateRequestContext()
     async findById(id: string): Promise<Device> {
         const device = await this.em.findOne(Device, { id }, { populate: ['category'] });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
         return device;
     }
 
     @CreateRequestContext()
     async findBySlug(slug: string): Promise<Device> {
         const device = await this.em.findOne(Device, { slug }, { populate: ['category'] });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
         return device;
     }
 
@@ -297,10 +297,10 @@ export class DeviceService {
         notes?: string;
     }): Promise<UserDevice> {
         const device = await this.em.findOne(Device, { id: dto.deviceId });
-        if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+        if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
 
         let address = await this.em.findOne(Address, { id: dto.addressId });
-        if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
         if (address.userId !== userId) {
             address = await this.cloneAddressForUser(address, userId);
         }
@@ -349,11 +349,11 @@ export class DeviceService {
         const userDevice = await this.em.findOne(UserDevice, { id, userId }, {
             populate: ['device', 'address'],
         });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         if (dto.addressId) {
             let address = await this.em.findOne(Address, { id: dto.addressId });
-            if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+            if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
             if (address.userId !== userId) {
                 address = await this.cloneAddressForUser(address, userId);
             }
@@ -404,14 +404,14 @@ export class DeviceService {
         const userDevice = await this.em.findOne(UserDevice, { id, userId }, {
             populate: ['device', 'address'],
         });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
         return userDevice;
     }
 
     @CreateRequestContext()
     async removeUserDevice(userId: string, id: string): Promise<void> {
         const userDevice = await this.em.findOne(UserDevice, { id, userId });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
         await this.em.removeAndFlush(userDevice);
     }
 
@@ -472,14 +472,14 @@ export class DeviceService {
         let device: Device | undefined;
         if (deviceId) {
             const found = await this.em.findOne(Device, { id: deviceId });
-            if (!found) throw AppErrors.dbEntityNotFound('Device not found');
+            if (!found) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
             device = found;
         }
 
         let category: DeviceCategory | undefined;
         if (dto.categoryId) {
             const found = await this.em.findOne(DeviceCategory, { id: dto.categoryId });
-            if (!found) throw AppErrors.dbEntityNotFound('Device category not found');
+            if (!found) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
             category = found;
         }
 
@@ -507,7 +507,7 @@ export class DeviceService {
         categoryId?: string;
     }): Promise<DevicePart> {
         const part = await this.em.findOne(DevicePart, { id: partId });
-        if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.device.partNotFound });
 
         if (dto.name) part.name = dto.name;
         if (dto.partNumber !== undefined) part.partNumber = dto.partNumber;
@@ -518,7 +518,7 @@ export class DeviceService {
         if (dto.deviceId !== undefined) {
             if (dto.deviceId) {
                 const device = await this.em.findOne(Device, { id: dto.deviceId });
-                if (!device) throw AppErrors.dbEntityNotFound('Device not found');
+                if (!device) throw AppErrors.dbEntityNotFound({ key: msg.device.notFound });
                 part.device = device;
             } else {
                 part.device = undefined;
@@ -528,7 +528,7 @@ export class DeviceService {
         if (dto.categoryId !== undefined) {
             if (dto.categoryId) {
                 const category = await this.em.findOne(DeviceCategory, { id: dto.categoryId });
-                if (!category) throw AppErrors.dbEntityNotFound('Device category not found');
+                if (!category) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
                 part.category = category;
             } else {
                 part.category = undefined;
@@ -542,7 +542,7 @@ export class DeviceService {
     @CreateRequestContext()
     async deleteDevicePart(partId: string): Promise<void> {
         const part = await this.em.findOne(DevicePart, { id: partId });
-        if (!part) throw AppErrors.dbEntityNotFound('Device part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.device.partNotFound });
         await this.em.removeAndFlush(part);
     }
 
@@ -556,7 +556,7 @@ export class DeviceService {
         const userDevice = await this.em.findOne(UserDevice, { id }, {
             populate: ['device', 'address'],
         });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
         return userDevice;
     }
 }

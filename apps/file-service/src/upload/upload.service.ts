@@ -11,6 +11,7 @@ import { ImageObj } from 'image/image.obj';
 
 import { AppConfig } from 'app.config';
 import { AppErrors } from 'common/error';
+import { msg } from '@asko/shared';
 import { isAllowedDocumentMime } from 'upload/mime-utils';
 import { resolveUploadRoute } from 'upload/upload-routing';
 import { collectPublicIds } from 'image/image-utils';
@@ -56,7 +57,7 @@ export class UploadService {
         const route = resolveUploadRoute(meta.mimetype, ownerType, replaceExisting);
 
         if (route.mediaKind === 'document' && !isAllowedDocumentMime(meta.mimetype)) {
-            throw AppErrors.badRequest(`Unsupported document mime type: ${meta.mimetype}`);
+            throw AppErrors.badRequest({ key: msg.file.unsupportedMimeType, params: { mime: meta.mimetype } });
         }
 
         if (route.replaceExisting && ownerId) {

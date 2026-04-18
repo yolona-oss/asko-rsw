@@ -6,7 +6,8 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
 
-import { GlobalExceptionFilter, corsOptions, helmetOptions } from '@asko/gateway-common';
+import { GlobalExceptionFilter, TranslateInterceptor, corsOptions, helmetOptions } from '@asko/gateway-common';
+import { parseAcceptLanguage } from '@asko/shared';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { urlencoded } from 'express';
@@ -28,7 +29,11 @@ async function bootstrap() {
     app.useBodyParser('json', { limit: '2mb' });
     app.use(urlencoded({ limit: '50mb', extended: true }));
 
+    // i18n: attach request.lang from Accept-Language header
+    app.use((req: any, _res: any, next: any) => { req.lang = parseAcceptLanguage(req.headers['accept-language']); next(); });
+
     app.useGlobalFilters(new GlobalExceptionFilter())
+    app.useGlobalInterceptors(new TranslateInterceptor())
     app.enableCors(corsOptions)
 
     app.useGlobalPipes(

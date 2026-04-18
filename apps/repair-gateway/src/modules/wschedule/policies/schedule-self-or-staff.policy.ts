@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import { isStaff, type Policy, type PolicyContext } from '@asko/authorization';
 
 /**
@@ -19,10 +19,10 @@ export class ScheduleSelfOrStaffPolicy implements Policy {
         // Try param first (e.g. GET/PUT/DELETE pattern/:userId), then body (create DTOs)
         const targetUserId = ctx.params.userId ?? (ctx.body as any)?.userId;
         if (!targetUserId) {
-            throw AppErrors.badRequest('userId обязателен');
+            throw AppErrors.badRequest({ key: msg.access.userIdRequired });
         }
         if (ctx.user.sub !== targetUserId) {
-            throw AppErrors.forbidden('Нет доступа к расписанию другого пользователя');
+            throw AppErrors.forbidden({ key: msg.access.noAccessToSchedule });
         }
         return true;
     }

@@ -1,9 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
-import { AddressValidationStatus } from '@asko/shared';
+import { AddressValidationStatus, appErrorToGrpcPayload } from '@asko/shared';
 import { AddressService } from 'modules/address/services/address.service';
-import { AppError } from 'common/error';
 import type { Address } from 'modules/device/entities/address.entity';
 
 import type {
@@ -16,20 +14,7 @@ import type {
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
-    if (error instanceof AppError) {
-        let grpcCode: number;
-        switch (true) {
-            case error.httpStatus === 400: grpcCode = status.INVALID_ARGUMENT; break;
-            case error.httpStatus === 401: grpcCode = status.UNAUTHENTICATED; break;
-            case error.httpStatus === 403: grpcCode = status.PERMISSION_DENIED; break;
-            case error.httpStatus === 404: grpcCode = status.NOT_FOUND; break;
-            case error.httpStatus === 409: grpcCode = status.ALREADY_EXISTS; break;
-            default: grpcCode = status.INTERNAL; break;
-        }
-        return new RpcException({ code: grpcCode, message: error.message });
-    }
-    const msg = error instanceof Error ? error.message : 'Internal error';
-    return new RpcException({ code: status.INTERNAL, message: msg });
+    return new RpcException(appErrorToGrpcPayload(error));
 }
 
 function addressToRecord(entity: Address) {

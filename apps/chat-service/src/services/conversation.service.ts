@@ -4,7 +4,7 @@ import { Conversation } from 'entities/conversation.entity';
 import { ConversationParticipant } from 'entities/conversation-participant.entity';
 import { Message } from 'entities/message.entity';
 import { AppErrors } from 'common/error';
-import { ConversationType, ParticipantRole } from '@asko/shared';
+import { ConversationType, ParticipantRole, msg } from '@asko/shared';
 import { ChatEventService, ChatEventType } from './chat-event.service';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class ConversationService {
         // For direct conversations, check if one already exists between the two users
         if (convType === ConversationType.DIRECT) {
             if (participantIds.length !== 1) {
-                throw AppErrors.invalidData('Direct conversations require exactly one other participant');
+                throw AppErrors.invalidData({ key: msg.chat.directRequiresOneParticipant });
             }
             const otherId = participantIds[0];
             const existing = await this.findDirectConversation(creatorId, otherId);

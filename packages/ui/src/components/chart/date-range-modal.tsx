@@ -6,6 +6,7 @@ import { Button } from '../button';
 import { Input } from '../input';
 import type { DateRange, RangePreset } from './types';
 import { DEFAULT_RANGE_PRESETS, toInputDate } from './utils';
+import { useUiLocale } from '../../locale';
 
 export interface DateRangeModalProps {
   open: boolean;
@@ -28,9 +29,10 @@ export function DateRangeModal({
   range,
   onApply,
   presets = DEFAULT_RANGE_PRESETS,
-  title = 'Период',
+  title,
   showAllTime = true,
 }: DateRangeModalProps) {
+  const locale = useUiLocale();
   return (
     <Modal open={open} onClose={onClose}>
       {open && (
@@ -39,7 +41,7 @@ export function DateRangeModal({
           onApply={onApply}
           onClose={onClose}
           presets={presets}
-          title={title}
+          title={title ?? locale.chartPeriodTitle}
           showAllTime={showAllTime}
         />
       )}

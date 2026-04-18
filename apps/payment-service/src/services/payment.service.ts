@@ -10,6 +10,7 @@ import {
     CurrencyEnum,
     PaginatedResponseDto,
     PaginationDto,
+    msg,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { AppConfig } from '../app.config';
@@ -59,7 +60,7 @@ export class PaymentService {
 
         const lockKey = `payment:lock:${targetType}:${targetId}`;
         const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
-        if (!acquired) throw AppErrors.conflict('Payment already being processed for this target');
+        if (!acquired) throw AppErrors.conflict({ key: msg.payment.alreadyProcessing });
 
         try {
             const paidPayments = await this.em.find(PaymentEntity, {
@@ -200,20 +201,20 @@ export class PaymentService {
         const invoice = await this.em.findOne(PaymentEntity, {
             targetType, targetId, status: PaymentStatus.PENDING,
         });
-        if (!invoice) throw AppErrors.badRequest('No pending payment found for this target');
+        if (!invoice) throw AppErrors.badRequest({ key: msg.payment.noPending });
 
         if (invoice.userId !== userId) {
-            throw AppErrors.badRequest('Payment does not belong to this user');
+            throw AppErrors.badRequest({ key: msg.payment.notBelongsToUser });
         }
 
         const providerType = provider ?? this.providerService.getDefaultProvider();
 
         if (providerType === PaymentProviderType.CASH && targetType === PaymentTargetType.CERTIFICATE) {
-            throw AppErrors.badRequest('Cash payments are not allowed for certificates. Use online payment.');
+            throw AppErrors.badRequest({ key: msg.payment.cashNotAllowedCerts });
         }
 
         const providerImpl = this.providerService.getProvider(providerType);
-        if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
+        if (!providerImpl) throw AppErrors.badRequest({ key: msg.payment.unknownProvider, params: { provider: providerType } });
 
         invoice.provider = providerType;
         if (providerType === PaymentProviderType.CASH) {
@@ -276,7 +277,7 @@ export class PaymentService {
         // Lock to prevent double-payout on same target
         const lockKey = `payment:lock:${dto.targetType}:${dto.targetId}`;
         const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
-        if (!acquired) throw AppErrors.conflict('Payout already being processed for this target');
+        if (!acquired) throw AppErrors.conflict({ key: msg.payment.alreadyProcessing });
 
         try {
             // Check for existing payout (idempotency)
@@ -291,7 +292,7 @@ export class PaymentService {
 
             const providerType = dto.provider ?? this.providerService.getDefaultProvider();
             const providerImpl = this.providerService.getProvider(providerType);
-            if (!providerImpl) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
+            if (!providerImpl) throw AppErrors.badRequest({ key: msg.payment.unknownProvider, params: { provider: providerType } });
 
             const paymentRecord = this.em.create(PaymentEntity, {
                 userId: dto.recipientUserId,
@@ -361,7 +362,7 @@ export class PaymentService {
 
         const lockKey = `payment:lock:${dto.targetType}:${dto.targetId}`;
         const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
-        if (!acquired) throw AppErrors.conflict('Payment already being processed for this target');
+        if (!acquired) throw AppErrors.conflict({ key: msg.payment.alreadyProcessing });
 
         try {
             // If a PENDING invoice already exists for this target, reuse it
@@ -378,11 +379,11 @@ export class PaymentService {
             const providerType = dto.provider ?? this.providerService.getDefaultProvider();
 
             if (providerType === PaymentProviderType.CASH && dto.targetType === PaymentTargetType.CERTIFICATE) {
-                throw AppErrors.badRequest('Cash payments are not allowed for certificates. Use online payment.');
+                throw AppErrors.badRequest({ key: msg.payment.cashNotAllowedCerts });
             }
 
             const providerImpl = this.providerService.getProvider(providerType);
-            if (!providerImpl) throw AppErrors.badRequest(`Unknown payment provider: ${providerType}`);
+            if (!providerImpl) throw AppErrors.badRequest({ key: msg.payment.unknownProvider, params: { provider: providerType } });
 
             const isCash = providerType === PaymentProviderType.CASH;
             const paymentRecord = this.em.create(PaymentEntity, {
@@ -456,10 +457,10 @@ export class PaymentService {
     @CreateRequestContext()
     async handleWebhook(providerType: string, body: any, headers?: Record<string, string>) {
         const provider = this.providerService.getProvider(providerType);
-        if (!provider) throw AppErrors.badRequest(`Unknown provider: ${providerType}`);
+        if (!provider) throw AppErrors.badRequest({ key: msg.payment.unknownProvider, params: { provider: providerType } });
 
         if (!provider.verifyWebhook(body, headers)) {
-            throw AppErrors.badRequest('Invalid webhook signature');
+            throw AppErrors.badRequest({ key: msg.payment.invalidWebhookSignature });
         }
 
         const result = await provider.handleWebhook(body, headers);
@@ -522,7 +523,7 @@ export class PaymentService {
         const refundAmount = amount ?? remaining;
 
         if (refundAmount <= 0 || refundAmount > remaining) {
-            throw AppErrors.invalidData(`Refund amount must be between 0.01 and ${remaining}`);
+            throw AppErrors.invalidData({ key: msg.payment.refundRange, params: { remaining } });
         }
 
         const isFullRefund = refundAmount >= remaining;
@@ -582,15 +583,15 @@ export class PaymentService {
             if (!payment) throw AppErrors.paymentNotFound();
 
             if (payment.provider !== PaymentProviderType.CASH) {
-                throw AppErrors.badRequest('Only cash payments can be confirmed manually');
+                throw AppErrors.badRequest({ key: msg.payment.onlyCashCanConfirm });
             }
 
             if (payment.targetType === PaymentTargetType.CERTIFICATE) {
-                throw AppErrors.badRequest('Cash payments are not allowed for certificates');
+                throw AppErrors.badRequest({ key: msg.payment.cashNotAllowedCerts });
             }
 
             if (payment.status !== PaymentStatus.PENDING) {
-                throw AppErrors.badRequest(`Payment is not pending (current: ${payment.status})`);
+                throw AppErrors.badRequest({ key: msg.payment.notPending, params: { status: payment.status } });
             }
 
             // Attempt limiting — lock after too many failed tries
@@ -632,7 +633,7 @@ export class PaymentService {
                     `cash:${confirmedByUserId}`,
                     `Failed confirm: amount mismatch (provided ${amount}, expected ${payment.amount})`,
                 );
-                throw AppErrors.badRequest('Указанная сумма не совпадает с суммой платежа');
+                throw AppErrors.badRequest({ key: msg.payment.amountMismatch });
             }
 
             this.domainService.assertTransition(payment.status, PaymentStatus.PAID);

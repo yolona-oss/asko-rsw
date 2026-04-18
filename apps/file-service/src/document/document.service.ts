@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Document } from 'document/document.entity';
 import { FileAccess } from 'common/file-access.entity';
 import { AppErrors } from 'common/error';
+import { msg } from '@asko/shared';
 import { STORAGE_PROVIDER, StorageProvider } from 'storage/storage-provider.interface';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class DocumentService {
     @CreateRequestContext()
     async findOne(id: string): Promise<Document> {
         const doc = await this.em.findOne(Document, { id });
-        if (!doc) throw AppErrors.dbEntityNotFound(`Document ${id} not found`);
+        if (!doc) throw AppErrors.dbEntityNotFound({ key: msg.file.documentNotFound });
         return doc;
     }
 
@@ -37,7 +38,7 @@ export class DocumentService {
     @CreateRequestContext()
     async remove(id: string): Promise<void> {
         const doc = await this.em.findOne(Document, { id });
-        if (!doc) throw AppErrors.dbEntityNotFound(`Document ${id} not found`);
+        if (!doc) throw AppErrors.dbEntityNotFound({ key: msg.file.documentNotFound });
 
         if (doc.publicId) {
             await this.storage.delete(doc.publicId, 'raw');

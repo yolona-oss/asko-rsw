@@ -7,6 +7,7 @@ import { ScheduleOverrideService } from './schedule-override.service';
 import { WSchedulePatternService, type ResolvedSlot } from './wschedule-pattern.service';
 import { Address } from 'modules/device/entities/address.entity';
 import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { getLocalNow, getLocalDateAsUtc, DEFAULT_TIMEZONE } from 'common/timezone';
 
@@ -80,11 +81,11 @@ export class ScheduleRuleService {
         if (!slot) return;
 
         if (!slot.work) {
-            throw AppErrors.badRequest(`Сегодня выходной день мастера${suffix}. ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.schedule.repairerDayOff, params: { suffix, action } });
         }
 
         if (nowTime < slot.startTime) {
-            throw AppErrors.badRequest(`Рабочий день ещё не начался (начало в ${slot.startTime})${suffix}. ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.schedule.notStarted, params: { time: slot.startTime, suffix, action } });
         }
 
         if (nowTime > slot.endTime) {
@@ -95,7 +96,7 @@ export class ScheduleRuleService {
             const allEntries = [...overtimes, ...overrides];
             const extended = allEntries.some(e => e.endTime && nowTime <= e.endTime);
             if (!extended) {
-                throw AppErrors.badRequest(`Рабочий день завершён (окончание в ${slot.endTime})${suffix}. ${action} невозможно`);
+                throw AppErrors.badRequest({ key: msg.schedule.dayEnded, params: { time: slot.endTime, suffix, action } });
             }
         }
     }
@@ -108,7 +109,7 @@ export class ScheduleRuleService {
         const blocking = await this.findBlockingToday(repairer.userId, tz);
         if (blocking) {
             const label = blocking.type === 'vacation' ? 'отпуске' : 'больничном';
-            throw AppErrors.badRequest(`Мастер на ${label}. ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.schedule.onLeave, params: { label, action } });
         }
 
         // 2. Resolve pattern + time boundaries in repairer tz
@@ -125,7 +126,7 @@ export class ScheduleRuleService {
         // 4. Daily overtime cap (repairer tz only)
         const overtimeMinutesToday = await this.getTodayOvertimeMinutes(repairer.userId, tz);
         if (overtimeMinutesToday >= MAX_OVERTIME_MINUTES_PER_DAY) {
-            throw AppErrors.badRequest(`Превышен лимит переработки (${MAX_OVERTIME_MINUTES_PER_DAY / 60}ч/день). ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.schedule.overtimeLimit, params: { hours: MAX_OVERTIME_MINUTES_PER_DAY / 60, action } });
         }
     }
 
@@ -141,9 +142,7 @@ export class ScheduleRuleService {
             const remainingMinutes = (eh * 60 + em) - (nh * 60 + nm);
 
             if (remainingMinutes > 0 && remainingMinutes < MIN_REMAINING_SCHEDULE_MINUTES) {
-                throw AppErrors.badRequest(
-                    `До конца рабочего дня осталось менее ${MIN_REMAINING_SCHEDULE_MINUTES} мин. Назначение невозможно`,
-                );
+                throw AppErrors.badRequest({ key: msg.schedule.notEnoughTime, params: { minutes: MIN_REMAINING_SCHEDULE_MINUTES } });
             }
         };
 
@@ -180,7 +179,7 @@ export class ScheduleRuleService {
         const blocking = await this.findBlockingToday(repairer.userId, tz);
         if (blocking) {
             const label = blocking.type === 'vacation' ? 'отпуске' : 'больничном';
-            throw AppErrors.badRequest(`Мастер на ${label}. ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.schedule.onLeave, params: { label, action } });
         }
 
         const checkRestDay = async (checkTz: string, tzLabel?: string) => {
@@ -188,7 +187,7 @@ export class ScheduleRuleService {
             const slot = await this.patternService.resolveSlotForDate(repairer.userId, dateForPattern);
             const suffix = tzLabel ? ` (${tzLabel})` : '';
             if (slot && !slot.work) {
-                throw AppErrors.badRequest(`Сегодня выходной день${suffix}. ${action} невозможно`);
+                throw AppErrors.badRequest({ key: msg.schedule.dayOff, params: { suffix: suffix || '', action } });
             }
         };
 
@@ -199,9 +198,7 @@ export class ScheduleRuleService {
 
         const overtimeMinutes = await this.getTodayOvertimeMinutes(repairer.userId, tz);
         if (overtimeMinutes >= MAX_OVERTIME_MINUTES_PER_DAY) {
-            throw AppErrors.badRequest(
-                `Превышен лимит переработки (${MAX_OVERTIME_MINUTES_PER_DAY / 60}ч/день). ${action} невозможно`,
-            );
+            throw AppErrors.badRequest({ key: msg.schedule.overtimeLimit, params: { hours: MAX_OVERTIME_MINUTES_PER_DAY / 60, action } });
         }
     }
 }

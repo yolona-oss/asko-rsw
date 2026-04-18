@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppErrors, Role } from '@asko/shared';
+import { AppErrors, Role, msg } from '@asko/shared';
 import { isAdmin, type Policy, type PolicyContext } from '@asko/authorization';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
@@ -22,7 +22,7 @@ export class RepairParticipantPolicy implements Policy {
         if (isAdmin(ctx.user)) return true;
 
         const { request } = await this.repairClient.findById(requestId);
-        if (!request) throw AppErrors.notFound('Заявка не найдена');
+        if (!request) throw AppErrors.notFound({ key: msg.access.requestNotFound });
 
         if (ctx.user.roles.includes(Role.USER) && request.userId === ctx.user.sub) return true;
         if (ctx.user.roles.includes(Role.MANAGER) && request.managerId === ctx.user.sub) return true;
@@ -31,6 +31,6 @@ export class RepairParticipantPolicy implements Policy {
             if (repairer?.id === request.repairerId) return true;
         }
 
-        throw AppErrors.forbidden('Нет доступа к этой заявке');
+        throw AppErrors.forbidden({ key: msg.access.noAccessToRequest });
     }
 }

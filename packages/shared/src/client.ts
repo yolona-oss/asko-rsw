@@ -105,6 +105,10 @@ export type { DefaultImagesType } from './image/default-images.enum.js';
 export { UPLOAD_LIMITS } from './upload/upload-limits.js';
 export type { UploadLimitDef, UploadKind } from './upload/upload-limits.js';
 
+// i18n
+export { msg, isMsgKey, t, DEFAULT_LOCALE, SUPPORTED_LOCALES, parseAcceptLanguage } from './i18n/index.js';
+export type { MsgKey, Locale, TranslatableMessage } from './i18n/index.js';
+
 // Common
 export {
     DEFAULT_REQUEST_PAGE,

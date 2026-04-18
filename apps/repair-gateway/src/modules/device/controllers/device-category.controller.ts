@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
-import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto } from '@asko/shared';
+import { CreateDeviceCategoryDto, UpdateDeviceCategoryDto, msg } from '@asko/shared';
 import { Permissions, Permission } from '@asko/authorization';
 import { Public } from '@asko/gateway-common';
 import { MessageResponseDto } from 'common/dto/responses';
@@ -56,6 +56,6 @@ export class DeviceCategoryController {
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {
         await this.deviceClient.deleteDeviceCategory(id);
-        return { message: 'Category deleted' };
+        return { message: msg.device.categoryDeleted };
     }
 }

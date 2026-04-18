@@ -32,6 +32,7 @@ import {
     extractToken,
     getHostUrl,
     JwtPayload,
+    msg,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { CookieOptions } from 'express';
@@ -46,7 +47,7 @@ export class AuthController {
     private setRefreshTokenCookie(request: Request, response: Response, refreshToken: string): void {
         const url = getHostUrl(request.headers);
         if (!url) {
-            throw AppErrors.unauthorized('You are unauthenticated!');
+            throw AppErrors.unauthorized({ key: msg.common.unauthorized });
         }
         response.cookie(REFRESH_TOKEN.cookie.name, refreshToken, REFRESH_TOKEN.cookie.options as CookieOptions);
     }
@@ -156,7 +157,7 @@ export class AuthController {
         @Res() response: Response
     ) {
         const result = await this.userClient.resendConfirmation({ email: dto.email });
-        response.status(200).json({ message: "Email sent successfully", retryAfter: result.retryAfter });
+        response.status(200).json({ message: msg.auth.emailSentSuccessfully, retryAfter: result.retryAfter });
     }
 
     @Public()
@@ -240,7 +241,7 @@ export class AuthController {
         @Param('id') sessionId: string,
     ) {
         await this.userClient.revokeSession({ userId: user.id, sessionId });
-        return { message: 'Сессия завершена' };
+        return { message: msg.auth.sessionTerminated };
     }
 
     @Public()
@@ -443,7 +444,7 @@ export class AuthController {
         try {
             const { accessToken } = extractToken(request);
             if (!accessToken) {
-                throw AppErrors.unauthorized('Token not found');
+                throw AppErrors.unauthorized({ key: msg.auth.tokenNotFound });
             }
             const result = await this.userClient.findUserByAccessToken({ accessToken });
             return result.user;

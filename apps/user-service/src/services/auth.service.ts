@@ -28,6 +28,7 @@ import {
     MFA_OTP_EXPIRY_SECONDS,
     MFA_CHALLENGE_TOKEN_EXPIRY,
     PHONE_OTP_PENDING_REG_PREFIX,
+    msg,
 } from '@asko/shared';
 import {
     toAuthUser,
@@ -95,7 +96,7 @@ export class AuthService {
             const session = await this.GoogleLogin(params as LoginParams & Required<Pick<LoginCredentials, 'googleId'>>)
             return { status: 'SUCCESS', ...session }
         } else {
-            throw AppErrors.badRequest('No valid login method provided')
+            throw AppErrors.badRequest({ key: msg.auth.noLoginMethod })
         }
     }
 
@@ -106,7 +107,7 @@ export class AuthService {
         const lockSeconds = await this.loginThrottle.isLocked(params.email);
         if (lockSeconds > 0) {
             const minutes = Math.ceil(lockSeconds / 60);
-            throw AppErrors.tooManyRequests(`Account temporarily locked. Try again in ${minutes} min.`);
+            throw AppErrors.tooManyRequests({ key: msg.auth.accountLocked, params: { minutes } });
         }
 
         let user: User;
@@ -120,7 +121,7 @@ export class AuthService {
         await this.loginThrottle.resetAttempts(params.email);
 
         if (!user.isActive) {
-            throw AppErrors.forbidden('Account is disabled');
+            throw AppErrors.forbidden({ key: msg.auth.accountDisabled });
         }
 
         // MFA check — reload with lazy settings for MFA method lookup
@@ -172,10 +173,10 @@ export class AuthService {
 
         const user = await this.userService.findByPhone(phone);
         if (!user || !user.phoneVerified) {
-            throw AppErrors.unauthorized('Пользователь с этим номером не найден');
+            throw AppErrors.unauthorized({ key: msg.auth.userNotFoundByPhone });
         }
         if (!user.isActive) {
-            throw AppErrors.forbidden('Account is disabled');
+            throw AppErrors.forbidden({ key: msg.auth.accountDisabled });
         }
 
         // Check cooldown
@@ -232,7 +233,7 @@ export class AuthService {
         }
 
         if (!user.isActive) {
-            throw AppErrors.forbidden('Account is disabled');
+            throw AppErrors.forbidden({ key: msg.auth.accountDisabled });
         }
 
         const { access_token, refresh_token } = await this.generateTokens(
@@ -265,7 +266,7 @@ export class AuthService {
         } else if (dto.googleId) {
             return await this.GoogleRegister(dto, deviceInfo, ipAddress)
         } else {
-            throw AppErrors.badRequest('No valid registration method provided')
+            throw AppErrors.badRequest({ key: msg.auth.noRegistrationMethod })
         }
     }
 
@@ -315,13 +316,13 @@ export class AuthService {
         // Check if phone already registered
         const existing = await this.userService.findByPhone(phone);
         if (existing) {
-            throw AppErrors.conflict('Пользователь с этим номером уже зарегистрирован');
+            throw AppErrors.conflict({ key: msg.auth.phoneAlreadyRegistered });
         }
 
         // Check cooldown
         const cooldown = await this.otpService.checkPhoneCooldown(phone);
         if (cooldown > 0) {
-            throw AppErrors.tooManyRequests(`Подождите ${cooldown} сек. перед повторной отправкой`);
+            throw AppErrors.tooManyRequests({ key: msg.auth.waitCooldown, params: { seconds: cooldown } });
         }
 
         // Send OTP keyed by phone (no userId yet)
@@ -369,9 +370,9 @@ export class AuthService {
 
     async sendEmailConfirmation(user: User) {
         if (!user.email) {
-            throw AppErrors.badRequest('User has no email')
+            throw AppErrors.badRequest({ key: msg.auth.noEmail })
         } else if (user.emailVerified) {
-            throw AppErrors.badRequest('Email already confirmed')
+            throw AppErrors.badRequest({ key: msg.auth.emailAlreadyConfirmed })
         }
 
         const token = this.jwtService.sign<any>(
@@ -413,10 +414,10 @@ export class AuthService {
 
         const user = await this.userService.findByEmail(email)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         if (user.emailVerified) {
-            throw AppErrors.badRequest('Email already confirmed')
+            throw AppErrors.badRequest({ key: msg.auth.emailAlreadyConfirmed })
         }
         await this.sendEmailConfirmation(user);
         await this.redis.set(redisKey, '1', 'EX', EMAIL_CONFIRM_COOLDOWN_SECONDS);
@@ -445,7 +446,7 @@ export class AuthService {
     async refreshAccessToken(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<IAccessToken & Partial<IRefreshToken>> {
         try {
             if (!refreshToken) {
-                throw AppErrors.unauthorized('Refresh token not found')
+                throw AppErrors.unauthorized({ key: msg.auth.refreshTokenNotFound })
             }
 
             const rTknPayload = this.jwtService.verify<JwtRefreshPayload>(
@@ -456,13 +457,13 @@ export class AuthService {
 
             const result = await this.userService.findSessionAndUser(rTknHash);
             if (!result) {
-                throw AppErrors.unauthorized('Invalid refresh token')
+                throw AppErrors.unauthorized({ key: msg.auth.refreshTokenInvalid })
             }
 
             const { user, alreadyRotated } = result;
 
             if (!user.isActive) {
-                throw AppErrors.forbidden('Account is disabled');
+                throw AppErrors.forbidden({ key: msg.auth.accountDisabled });
             }
 
             // Generate new access token
@@ -514,7 +515,7 @@ export class AuthService {
     async validateUserCredentials(email: string, pass: string): Promise<User> {
         const user = await this.userService.findByEmail(email, ['addresses', 'sessions']);
         if (!user || !user.passwordHash || !(await Crypto.comparePasswords(pass, user.passwordHash))) {
-            throw AppErrors.unauthorized('Invalid credentials');
+            throw AppErrors.unauthorized({ key: msg.auth.invalidCredentials });
         }
         return user;
     }
@@ -611,7 +612,7 @@ export class AuthService {
                 expiresAt: new Date(Date.now() + parseSleepTimeToMs(this.config.jwt.reset_token.sign_options.expires_in))
             })
         } catch (error: any) {
-            throw AppErrors.badRequest(error.message ?? 'Failed to generate reset token')
+            throw AppErrors.badRequest(error.message ?? { key: msg.auth.resetTokenGenerationFailed })
         }
 
         return resetToken;
@@ -622,7 +623,7 @@ export class AuthService {
         const ttl = await this.redis.ttl(redisKey);
         if (ttl > 0) {
             return {
-                message: 'Письмо уже отправлено. Попробуйте позже.',
+                message: msg.auth.emailAlreadySent,
                 retryAfter: ttl,
             };
         }
@@ -630,7 +631,7 @@ export class AuthService {
         const user = await this.userService.findByEmail(email.toLowerCase());
         if (!user) {
             // Don't reveal whether email exists — return success-like response
-            return { message: 'Если аккаунт существует, письмо отправлено.', retryAfter: RESET_COOLDOWN_SECONDS };
+            return { message: msg.auth.emailSentIfAccountExists, retryAfter: RESET_COOLDOWN_SECONDS };
         }
 
         // Remove any existing reset tokens for this user
@@ -658,13 +659,13 @@ export class AuthService {
 
         await this.redis.set(redisKey, '1', 'EX', RESET_COOLDOWN_SECONDS);
 
-        return { message: 'Если аккаунт существует, письмо отправлено.', retryAfter: RESET_COOLDOWN_SECONDS };
+        return { message: msg.auth.emailSentIfAccountExists, retryAfter: RESET_COOLDOWN_SECONDS };
     }
 
     async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
         const parts = token.split('+');
         if (parts.length !== 2) {
-            throw AppErrors.badRequest('Недействительный токен сброса');
+            throw AppErrors.badRequest({ key: msg.auth.resetTokenInvalid });
         }
 
         const [resetTokenValue, resetTokenSecret] = parts;
@@ -675,7 +676,7 @@ export class AuthService {
 
         const user = await this.userService.findByResetToken(resetTokenHash);
         if (!user) {
-            throw AppErrors.badRequest('Недействительный или истекший токен сброса');
+            throw AppErrors.badRequest({ key: msg.auth.resetTokenExpired });
         }
 
         this.userService.checkPasswordStrength(newPassword);
@@ -683,7 +684,7 @@ export class AuthService {
         const passwordHash = await Crypto.createPasswordHash(newPassword);
         await this.userService.resetPasswordByToken(user.id, passwordHash);
 
-        return { message: 'Пароль успешно изменён' };
+        return { message: msg.auth.passwordChanged };
     }
 
     async requestEmailChange(userId: string, newEmail: string): Promise<{ message: string; retryAfter: number }> {
@@ -691,24 +692,24 @@ export class AuthService {
         const redisKey = `${EMAIL_CHANGE_KEY_PREFIX}${userId}`;
         const ttl = await this.redis.ttl(redisKey);
         if (ttl > 0) {
-            return { message: 'Письмо уже отправлено. Попробуйте позже.', retryAfter: ttl };
+            return { message: msg.auth.emailAlreadySent, retryAfter: ttl };
         }
 
         const user = await this.userService.findById(userId);
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         }
         if (!user.email || !user.emailVerified) {
-            throw AppErrors.badRequest('Email не подтверждён — измените его напрямую в профиле');
+            throw AppErrors.badRequest({ key: msg.auth.emailNotConfirmedEditDirectly });
         }
         if (user.email === normalizedEmail) {
-            throw AppErrors.badRequest('Новый email совпадает с текущим');
+            throw AppErrors.badRequest({ key: msg.auth.emailSameAsCurrent });
         }
 
         // Check if the new email is already taken
         const existing = await this.userService.findByEmail(normalizedEmail);
         if (existing) {
-            throw AppErrors.badRequest('Этот email уже используется');
+            throw AppErrors.badRequest({ key: msg.auth.emailAlreadyUsed });
         }
 
         const token = this.jwtService.sign<any>(
@@ -739,7 +740,7 @@ export class AuthService {
         });
 
         await this.redis.set(redisKey, '1', 'EX', EMAIL_CHANGE_COOLDOWN_SECONDS);
-        return { message: `Письмо для подтверждения отправлено на ${user.email}`, retryAfter: EMAIL_CHANGE_COOLDOWN_SECONDS };
+        return { message: msg.auth.emailConfirmationSent, retryAfter: EMAIL_CHANGE_COOLDOWN_SECONDS };
     }
 
     async confirmEmailChange(token: string): Promise<{ message: string }> {
@@ -749,22 +750,22 @@ export class AuthService {
             });
 
             if (!payload.id || !payload.newEmail) {
-                throw AppErrors.badRequest('Недействительный токен');
+                throw AppErrors.badRequest({ key: msg.auth.emailChangeTokenInvalid });
             }
 
             // Check new email isn't taken (could have been taken since the link was sent)
             const existing = await this.userService.findByEmail(payload.newEmail);
             if (existing && existing.id !== payload.id) {
-                throw AppErrors.badRequest('Этот email уже используется другим аккаунтом');
+                throw AppErrors.badRequest({ key: msg.auth.emailAlreadyUsedByOther });
             }
 
             await this.userService.changeEmail(payload.id, payload.newEmail);
             // The user proved ownership of the new email by clicking the confirmation link
             await this.userService.setEmailConfirmed(payload.id);
-            return { message: 'Email успешно изменён' };
+            return { message: msg.auth.emailChanged };
         } catch (err: any) {
             if (err instanceof AppError) throw err;
-            throw AppErrors.badRequest('Недействительный или истекший токен смены email');
+            throw AppErrors.badRequest({ key: msg.auth.emailChangeTokenExpired });
         }
     }
 
@@ -785,13 +786,13 @@ export class AuthService {
         const { userId, method: tokenMethod } = this.mfaService.verifyMfaChallengeToken(mfaToken);
 
         const user = await this.userService.findByIdWithSettings(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
 
         // Use method from token (handles phone-login users who have no MFA settings)
         const method = tokenMethod ?? this.mfaService.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
         const valid = await this.otpService.verify(userId, method, code);
         if (!valid) {
-            throw AppErrors.unauthorized('Неверный код');
+            throw AppErrors.unauthorized({ key: msg.auth.invalidCode });
         }
 
         const authProvider = method === MfaMethod.PHONE ? AuthProvider.PHONE : AuthProvider.EMAIL;
@@ -831,19 +832,19 @@ export class AuthService {
             if (payload.purpose !== 'phone_register') throw new Error();
             phone = payload.sub;
         } catch {
-            throw AppErrors.unauthorized('Недействительный или истекший токен регистрации');
+            throw AppErrors.unauthorized({ key: msg.auth.registrationTokenExpired });
         }
 
         // Verify OTP
         const valid = await this.otpService.verifyByPhone(phone, code);
         if (!valid) {
-            throw AppErrors.unauthorized('Неверный код');
+            throw AppErrors.unauthorized({ key: msg.auth.invalidCode });
         }
 
         // Get pending data from Redis
         const pendingKey = `${PHONE_OTP_PENDING_REG_PREFIX}${phone}`;
         const raw = await this.redis.get(pendingKey);
-        if (!raw) throw AppErrors.badRequest('Данные регистрации истекли');
+        if (!raw) throw AppErrors.badRequest({ key: msg.auth.registrationDataExpired });
         const pendingData = JSON.parse(raw);
         await this.redis.del(pendingKey);
 
@@ -877,7 +878,7 @@ export class AuthService {
             if (payload.purpose !== 'phone_register') throw new Error();
             phone = payload.sub;
         } catch {
-            throw AppErrors.unauthorized('Недействительный или истекший токен');
+            throw AppErrors.unauthorized({ key: msg.auth.registrationTokenExpired });
         }
 
         const cooldown = await this.otpService.checkPhoneCooldown(phone);
@@ -894,31 +895,31 @@ export class AuthService {
 
     async sendPhoneVerification(userId: string): Promise<{ message: string; retryAfter: number }> {
         const user = await this.userService.findById(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        if (!user.phone) throw AppErrors.badRequest('Номер телефона не указан');
-        if (user.phoneVerified) throw AppErrors.badRequest('Телефон уже подтверждён');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
+        if (!user.phone) throw AppErrors.badRequest({ key: msg.auth.phoneNotSet });
+        if (user.phoneVerified) throw AppErrors.badRequest({ key: msg.auth.phoneAlreadyVerified });
 
         const cooldown = await this.otpService.checkCooldown(userId, MfaMethod.PHONE);
         if (cooldown > 0) {
-            return { message: 'Код уже отправлен', retryAfter: cooldown };
+            return { message: msg.auth.codeAlreadySent, retryAfter: cooldown };
         }
 
         await this.otpService.send(userId, user.phone, MfaMethod.PHONE);
         await this.otpService.setCooldown(userId, MfaMethod.PHONE);
-        return { message: 'Код отправлен', retryAfter: 60 };
+        return { message: msg.auth.codeSent, retryAfter: 60 };
     }
 
     async confirmPhoneVerification(userId: string, code: string): Promise<{ message: string }> {
         const user = await this.userService.findById(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
-        if (!user.phone) throw AppErrors.badRequest('Номер телефона не указан');
-        if (user.phoneVerified) throw AppErrors.badRequest('Телефон уже подтверждён');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
+        if (!user.phone) throw AppErrors.badRequest({ key: msg.auth.phoneNotSet });
+        if (user.phoneVerified) throw AppErrors.badRequest({ key: msg.auth.phoneAlreadyVerified });
 
         const valid = await this.otpService.verify(userId, MfaMethod.PHONE, code);
-        if (!valid) throw AppErrors.unauthorized('Неверный код');
+        if (!valid) throw AppErrors.unauthorized({ key: msg.auth.invalidCode });
 
         await this.userService.setPhoneConfirmed(userId);
-        return { message: 'Телефон подтверждён' };
+        return { message: msg.auth.phoneVerified };
     }
 
     // ─── Phone change (verified phone requires OTP on new number) ─────
@@ -928,28 +929,28 @@ export class AuthService {
         const redisKey = `${PHONE_CHANGE_KEY_PREFIX}${userId}`;
         const ttl = await this.redis.ttl(redisKey);
         if (ttl > 0) {
-            return { message: 'Код уже отправлен. Попробуйте позже.', retryAfter: ttl };
+            return { message: msg.auth.codeAlreadySent, retryAfter: ttl };
         }
 
         const user = await this.userService.findById(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         if (!user.phone || !user.phoneVerified) {
-            throw AppErrors.badRequest('Телефон не подтверждён — измените его напрямую в профиле');
+            throw AppErrors.badRequest({ key: msg.auth.phoneNotVerifiedEditDirectly });
         }
         if (user.phone === normalized) {
-            throw AppErrors.badRequest('Новый номер совпадает с текущим');
+            throw AppErrors.badRequest({ key: msg.auth.phoneSameAsCurrent });
         }
 
         // Check if new phone is already taken
         const existing = await this.userService.findByPhone(normalized);
         if (existing) {
-            throw AppErrors.badRequest('Этот номер уже используется');
+            throw AppErrors.badRequest({ key: msg.auth.phoneAlreadyUsed });
         }
 
         // Send OTP to the NEW phone — verifying ownership
         const cooldown = await this.otpService.checkPhoneCooldown(normalized);
         if (cooldown > 0) {
-            return { message: 'Код уже отправлен', retryAfter: cooldown };
+            return { message: msg.auth.codeAlreadySent, retryAfter: cooldown };
         }
 
         await this.otpService.sendPhoneOtp(normalized);
@@ -957,28 +958,28 @@ export class AuthService {
 
         // Store pending phone change in Redis
         await this.redis.set(redisKey, normalized, 'EX', MFA_OTP_EXPIRY_SECONDS);
-        return { message: 'Код отправлен на новый номер', retryAfter: 60 };
+        return { message: msg.auth.codeSentToNewPhone, retryAfter: 60 };
     }
 
     async confirmPhoneChange(userId: string, code: string): Promise<{ message: string }> {
         const redisKey = `${PHONE_CHANGE_KEY_PREFIX}${userId}`;
         const newPhone = await this.redis.get(redisKey);
         if (!newPhone) {
-            throw AppErrors.badRequest('Запрос на смену номера не найден или истёк');
+            throw AppErrors.badRequest({ key: msg.auth.phoneChangeRequestExpired });
         }
 
         const valid = await this.otpService.verifyByPhone(newPhone, code);
-        if (!valid) throw AppErrors.unauthorized('Неверный код');
+        if (!valid) throw AppErrors.unauthorized({ key: msg.auth.invalidCode });
 
         // Check phone still available (race condition guard)
         const existing = await this.userService.findByPhone(newPhone);
         if (existing && existing.id !== userId) {
-            throw AppErrors.badRequest('Этот номер уже используется другим аккаунтом');
+            throw AppErrors.badRequest({ key: msg.auth.phoneAlreadyUsedByOther });
         }
 
         await this.userService.changePhone(userId, newPhone);
         await this.userService.setPhoneConfirmed(userId);
         await this.redis.del(redisKey);
-        return { message: 'Номер телефона изменён' };
+        return { message: msg.auth.phoneChanged };
     }
 }

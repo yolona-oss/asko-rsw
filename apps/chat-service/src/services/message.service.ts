@@ -4,7 +4,7 @@ import { Message } from 'entities/message.entity';
 import { Conversation } from 'entities/conversation.entity';
 import { ConversationParticipant } from 'entities/conversation-participant.entity';
 import { AppErrors } from 'common/error';
-import { MessageType, MessageStatus } from '@asko/shared';
+import { MessageType, MessageStatus, msg } from '@asko/shared';
 import { ChatEventService, ChatEventType } from './chat-event.service';
 
 @Injectable()
@@ -110,7 +110,7 @@ export class MessageService {
     async updateMessage(messageId: string, userId: string, text: string): Promise<Message> {
         const message = await this.em.findOne(Message, { id: messageId });
         if (!message) throw AppErrors.messageNotFound();
-        if (message.senderId !== userId) throw AppErrors.badRequest('Can only edit own messages');
+        if (message.senderId !== userId) throw AppErrors.badRequest({ key: msg.chat.editOwnOnly });
 
         message.text = text;
         message.isEdited = true;
@@ -123,7 +123,7 @@ export class MessageService {
     async deleteMessage(messageId: string, userId: string): Promise<void> {
         const message = await this.em.findOne(Message, { id: messageId });
         if (!message) throw AppErrors.messageNotFound();
-        if (message.senderId !== userId) throw AppErrors.badRequest('Can only delete own messages');
+        if (message.senderId !== userId) throw AppErrors.badRequest({ key: msg.chat.deleteOwnOnly });
 
         await this.em.removeAndFlush(message);
     }

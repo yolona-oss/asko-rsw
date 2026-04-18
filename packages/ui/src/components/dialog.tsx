@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 import { Button, type ButtonVariant } from './button';
+import { useUiLocale } from '../locale';
 
 export interface DialogProps {
   open: boolean;
@@ -22,13 +23,14 @@ export function Dialog({
   open,
   title,
   description,
-  confirmLabel = 'Продолжить',
-  cancelLabel = 'Отмена',
+  confirmLabel,
+  cancelLabel,
   confirmVariant = 'danger',
   loading,
   onConfirm,
   onCancel,
 }: DialogProps) {
+  const locale = useUiLocale();
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -78,10 +80,10 @@ export function Dialog({
         )}
         <div className="mt-6 flex gap-3 justify-end">
           <Button variant="secondary" size="sm" onClick={handleCancel} disabled={loading}>
-            {cancelLabel}
+            {cancelLabel ?? locale.dialogCancel}
           </Button>
           <Button variant={confirmVariant} size="sm" onClick={onConfirm} loading={loading}>
-            {confirmLabel}
+            {confirmLabel ?? locale.dialogConfirm}
           </Button>
         </div>
       </div>

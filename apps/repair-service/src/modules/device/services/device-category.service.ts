@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { DeviceCategory } from 'modules/device/entities/device-category.entity';
 import { Device } from 'modules/device/entities/device.entity';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
 @Injectable()
@@ -16,14 +17,14 @@ export class DeviceCategoryService {
     @CreateRequestContext()
     async findById(id: string): Promise<DeviceCategory> {
         const category = await this.em.findOne(DeviceCategory, { id });
-        if (!category) throw AppErrors.dbEntityNotFound('Device category not found');
+        if (!category) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
         return category;
     }
 
     @CreateRequestContext()
     async findByName(name: string): Promise<DeviceCategory> {
         const category = await this.em.findOne(DeviceCategory, { name });
-        if (!category) throw AppErrors.dbEntityNotFound(`Device category "${name}" not found`);
+        if (!category) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
         return category;
     }
 
@@ -42,7 +43,7 @@ export class DeviceCategoryService {
     @CreateRequestContext()
     async update(id: string, dto: { name?: string; label?: string; labelPlural?: string; order?: number }): Promise<DeviceCategory> {
         const category = await this.em.findOne(DeviceCategory, { id });
-        if (!category) throw AppErrors.dbEntityNotFound('Device category not found');
+        if (!category) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
         this.em.assign(category, dto);
         await this.em.flush();
         return category;
@@ -51,11 +52,11 @@ export class DeviceCategoryService {
     @CreateRequestContext()
     async delete(id: string): Promise<void> {
         const category = await this.em.findOne(DeviceCategory, { id });
-        if (!category) throw AppErrors.dbEntityNotFound('Device category not found');
+        if (!category) throw AppErrors.dbEntityNotFound({ key: msg.device.categoryNotFound });
 
         const deviceCount = await this.em.count(Device, { category: { id } });
         if (deviceCount > 0) {
-            throw AppErrors.badRequest(`Cannot delete category with ${deviceCount} device(s) attached`);
+            throw AppErrors.badRequest({ key: msg.device.cannotDeleteWithDevices, params: { count: deviceCount } });
         }
 
         await this.em.removeAndFlush(category);

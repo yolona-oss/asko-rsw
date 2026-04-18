@@ -11,6 +11,7 @@ import { OtpService } from './otp.service';
 import { User } from 'entities/auth/user.entity';
 import { Session } from 'entities/auth/session.entity';
 import { AppErrors } from 'common/error';
+import { msg } from '@asko/shared';
 
 import {
     MfaMethod,
@@ -99,7 +100,7 @@ export class MfaService {
             return { userId: payload.sub, method: payload.method ?? MfaMethod.EMAIL };
         } catch (err: any) {
             if (err?.httpStatus) throw err;
-            throw AppErrors.unauthorized('Недействительный или истекший MFA токен');
+            throw AppErrors.unauthorized({ key: msg.mfa.tokenInvalid });
         }
     }
 
@@ -158,27 +159,27 @@ export class MfaService {
         const user = await this.userService.findByIdWithSettings(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
         if (!user.email || !user.emailVerified) {
-            throw AppErrors.badRequest('Для включения MFA необходимо подтвердить email');
+            throw AppErrors.badRequest({ key: msg.mfa.requireEmailConfirmation });
         }
         if (this.isMfaEnabled(user)) {
-            throw AppErrors.badRequest('MFA уже включена');
+            throw AppErrors.badRequest({ key: msg.mfa.alreadyEnabled });
         }
 
         const cooldown = await this.otpService.checkCooldown(userId, MfaMethod.EMAIL);
         if (cooldown > 0) {
-            return { message: 'Код уже отправлен', retryAfter: cooldown };
+            return { message: msg.mfa.codeAlreadySent, retryAfter: cooldown };
         }
 
         await this.otpService.send(userId, user.email, MfaMethod.EMAIL);
         await this.otpService.setCooldown(userId, MfaMethod.EMAIL);
 
-        return { message: 'Код отправлен на email', retryAfter: 60 };
+        return { message: msg.mfa.codeSentToEmail, retryAfter: 60 };
     }
 
     async confirmEnableMfa(userId: string, code: string): Promise<void> {
         const valid = await this.otpService.verify(userId, MfaMethod.EMAIL, code);
         if (!valid) {
-            throw AppErrors.unauthorized('Неверный код');
+            throw AppErrors.unauthorized({ key: msg.mfa.invalidCode });
         }
         await this.userService.setMfaMethods(userId, [MfaMethod.EMAIL]);
     }
@@ -189,24 +190,24 @@ export class MfaService {
         const user = await this.userService.findByIdWithSettings(userId);
         if (!user) throw AppErrors.dbEntityNotFound('User not found');
         if (!this.isMfaEnabled(user)) {
-            throw AppErrors.badRequest('MFA не включена');
+            throw AppErrors.badRequest({ key: msg.mfa.notEnabled });
         }
 
         const cooldown = await this.otpService.checkCooldown(userId, MfaMethod.EMAIL);
         if (cooldown > 0) {
-            return { message: 'Код уже отправлен', retryAfter: cooldown };
+            return { message: msg.mfa.codeAlreadySent, retryAfter: cooldown };
         }
 
         await this.otpService.send(userId, user.email!, MfaMethod.EMAIL);
         await this.otpService.setCooldown(userId, MfaMethod.EMAIL);
 
-        return { message: 'Код отправлен на email', retryAfter: 60 };
+        return { message: msg.mfa.codeSentToEmail, retryAfter: 60 };
     }
 
     async confirmDisableMfa(userId: string, code: string): Promise<void> {
         const valid = await this.otpService.verify(userId, MfaMethod.EMAIL, code);
         if (!valid) {
-            throw AppErrors.unauthorized('Неверный код');
+            throw AppErrors.unauthorized({ key: msg.mfa.invalidCode });
         }
         await this.userService.setMfaMethods(userId, []);
     }

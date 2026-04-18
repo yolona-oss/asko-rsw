@@ -12,15 +12,16 @@ import type { DropdownMenuEntry } from './dropdown';
 const detailIcon = <Eye className="w-4 h-4 shrink-0" />;
 const navigateIcon = <ExternalLink className="w-4 h-4 shrink-0" />;
 
-/** Build context menu items with auto-injected "Подробнее" and "Перейти" */
+/** Build context menu items with auto-injected detail/navigate entries */
 export function buildCardMenuItems(
   onClick?: () => void,
   onDoubleClick?: () => void,
   customItems?: DropdownMenuEntry[],
+  labels?: { detail?: string; navigate?: string },
 ): DropdownMenuEntry[] {
   const auto: DropdownMenuEntry[] = [];
-  if (onClick) auto.push({ key: '__detail', label: 'Подробнее', icon: detailIcon, onClick });
-  if (onDoubleClick) auto.push({ key: '__navigate', label: 'Перейти', icon: navigateIcon, onClick: onDoubleClick });
+  if (onClick) auto.push({ key: '__detail', label: labels?.detail ?? 'Подробнее', icon: detailIcon, onClick });
+  if (onDoubleClick) auto.push({ key: '__navigate', label: labels?.navigate ?? 'Перейти', icon: navigateIcon, onClick: onDoubleClick });
   const custom = customItems ?? [];
   if (auto.length === 0) return custom;
   return custom.length > 0 ? [...auto, 'separator', ...custom] : auto;

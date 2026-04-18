@@ -5,7 +5,7 @@ import { UserDevice } from 'modules/device/entities/user-device.entity';
 import { Certificate } from 'modules/certificate/entities/certificate.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { Address } from 'modules/device/entities/address.entity';
-import { RepairRequestStatus, PaymentTargetType, AvrStatus, AvrSigningMethod } from '@asko/shared';
+import { RepairRequestStatus, PaymentTargetType, AvrStatus, AvrSigningMethod, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { assertUserDeviceReady } from 'common/validation';
 import { assertTransition, assertActionTransition, canTransition } from './repair-request-state-machine';
@@ -57,7 +57,7 @@ export class RepairRequestService {
 
     private assertAvrMutable(request: RepairRequest): void {
         if (RepairRequestService.TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Акт заблокирован: заявка в финальном статусе');
+            throw AppErrors.badRequest({ key: msg.repair.avrLocked });
         }
     }
 
@@ -134,8 +134,8 @@ export class RepairRequestService {
     async create(userId: string, dto: { userDeviceId: string; description: string; certificateId?: string; preferredDate?: string; brokenParts?: { devicePartId?: string; name?: string; note?: string }[] }): Promise<RepairRequest> {
         // Validate user device directly
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['address'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
-        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
+        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         // Check if there's already an active repair request for this device
         const activeRequest = await this.em.findOne(RepairRequest, {
@@ -150,7 +150,7 @@ export class RepairRequestService {
             },
         });
         if (activeRequest) {
-            throw AppErrors.conflict('Для этого устройства уже существует активная заявка на ремонт');
+            throw AppErrors.conflict({ key: msg.repair.activeExists });
         }
 
         // Cert validation: data-integrity problems (not_found / wrong_user / wrong_device)
@@ -168,10 +168,10 @@ export class RepairRequestService {
             );
             if (!result.ok) {
                 if (result.reason === 'not_found' || result.reason === 'wrong_user') {
-                    throw AppErrors.dbEntityNotFound('Certificate not found');
+                    throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
                 }
                 if (result.reason === 'wrong_device') {
-                    throw AppErrors.badRequest('Certificate does not belong to this device');
+                    throw AppErrors.badRequest({ key: msg.repair.certificateNotBelongsToDevice });
                 }
                 certificate = result.certificate;
                 certificateValid = false;
@@ -224,7 +224,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async markPaid(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.PAID);
 
         const oldStatus = request.status;
@@ -248,7 +248,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async requestRefund(userId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         assertTransition(request.status, RepairRequestStatus.REFUND_REQUESTED);
 
@@ -275,7 +275,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async approveRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.REFUNDED);
 
         request.status = RepairRequestStatus.REFUNDED;
@@ -310,7 +310,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async denyRefund(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertActionTransition('denyRefund', request.status);
 
         request.refundRequested = false;
@@ -342,12 +342,12 @@ export class RepairRequestService {
     @CreateRequestContext()
     async assignRepairer(managerId: string, requestId: string, repairerId: string, allowCrossCity?: boolean): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['address'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.ASSIGNED);
 
         const repairer = await this.em.findOne(Repairer, { id: repairerId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
-        if (!repairer.isActive) throw AppErrors.badRequest('Repairer is not active');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
+        if (!repairer.isActive) throw AppErrors.badRequest({ key: msg.repair.repairerNotActive });
 
         // Cross-city detection
         const deviceTimezone = await this.getDeviceTimezone(request);
@@ -412,7 +412,7 @@ export class RepairRequestService {
             ]},
         });
         if (activeCount >= RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS) {
-            throw AppErrors.badRequest(`У мастера ${activeCount} активных заявок (лимит: ${RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS}). ${action} невозможно`);
+            throw AppErrors.badRequest({ key: msg.repair.repairerLimitReached, params: { count: activeCount, limit: RepairRequestService.MAX_CONCURRENT_ACTIVE_REQUESTS, action } });
         }
     }
 
@@ -420,14 +420,14 @@ export class RepairRequestService {
     @CreateRequestContext()
     async acceptRequest(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
         await this.scheduleService.assertScheduleAllows(repairer, 'Принять заявку', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Принять заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.ACCEPTED);
 
         request.status = RepairRequestStatus.ACCEPTED;
@@ -463,10 +463,10 @@ export class RepairRequestService {
     @CreateRequestContext()
     async refuseRequest(repairerUserId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertActionTransition('refuse', request.status);
 
         request.status = RepairRequestStatus.REFUSED;
@@ -496,14 +496,14 @@ export class RepairRequestService {
     @CreateRequestContext()
     async depart(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
         await this.scheduleService.assertScheduleAllows(repairer, 'Выезд к клиенту', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Выезд к клиенту');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.EN_ROUTE);
 
         const oldStatus = request.status;
@@ -529,14 +529,14 @@ export class RepairRequestService {
     @CreateRequestContext()
     async startWork(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
         await this.scheduleService.assertScheduleAllows(repairer, 'Начать работу', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Начать работу');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.IN_PROGRESS);
 
         const oldStatus = request.status;
@@ -562,12 +562,12 @@ export class RepairRequestService {
     @CreateRequestContext()
     async setPrice(repairerUserId: string, requestId: string, amount: number): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         if (![RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.COMPLETED].includes(request.status)) {
-            throw AppErrors.badRequest('Price can only be set when request is in progress or completed');
+            throw AppErrors.badRequest({ key: msg.repair.priceOnlyInProgress });
         }
 
         request.totalCost = amount;
@@ -609,11 +609,11 @@ export class RepairRequestService {
     @CreateRequestContext()
     async complete(requestId: string, description?: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['certificate'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         const oldStatus = request.status;
         assertTransition(request.status, RepairRequestStatus.COMPLETED);
         if (!request.totalCost) {
-            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
+            throw AppErrors.badRequest({ key: msg.repair.mustSetPrice });
         }
 
         request.status = RepairRequestStatus.COMPLETED;
@@ -717,12 +717,12 @@ export class RepairRequestService {
     @CreateRequestContext()
     async acceptCompletion(userId: string, requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         if (request.status !== RepairRequestStatus.COMPLETED) {
-            throw AppErrors.badRequest('Can only accept completed repairs');
+            throw AppErrors.badRequest({ key: msg.repair.onlyAcceptCompleted });
         }
         if (request.acceptanceSignature) {
-            throw AppErrors.badRequest('Repair already accepted');
+            throw AppErrors.badRequest({ key: msg.repair.alreadyAccepted });
         }
 
         const payload = {
@@ -741,10 +741,10 @@ export class RepairRequestService {
     @CreateRequestContext()
     async pause(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.PAUSED);
 
         const oldStatus = request.status;
@@ -769,14 +769,14 @@ export class RepairRequestService {
     @CreateRequestContext()
     async resume(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
         await this.scheduleService.assertScheduleAllows(repairer, 'Возобновить заявку', deviceTz);
         await this.assertNoConcurrentCap(repairer.id, 'Возобновить заявку');
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertActionTransition('resume', request.status);
 
         const oldStatus = request.status;
@@ -802,15 +802,15 @@ export class RepairRequestService {
     @CreateRequestContext()
     async confirmSchedulePresence(repairerUserId: string, requestId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const deviceTz = await this.scheduleService.resolveDeviceTimezone(requestId);
         await this.scheduleService.assertPresenceAllowed(repairer, 'Подтверждение', deviceTz);
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         if (![RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
-            throw AppErrors.badRequest('Заявка должна быть в статусе «Принята», «В пути» или «В работе»');
+            throw AppErrors.badRequest({ key: msg.repair.mustBeInProgressStatus });
         }
 
         request.scheduleEndConfirmedAt = new Date();
@@ -822,7 +822,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async autoPauseForScheduleEnd(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         if (!canTransition(request.status, RepairRequestStatus.PAUSED)) return request;
 
         const oldStatus = request.status;
@@ -850,27 +850,27 @@ export class RepairRequestService {
     @CreateRequestContext()
     async reassign(managerId: string, requestId: string, newRepairerId: string, allowCrossCity?: boolean): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['repairer', 'address'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertActionTransition('reassign', request.status);
 
         if (request.avrStatus !== AvrStatus.NONE) {
-            throw AppErrors.badRequest('Нельзя переназначить мастера: акт выполненных работ сформирован. Сначала удалите акт.');
+            throw AppErrors.badRequest({ key: msg.repair.cannotReassignAvrExists });
         }
 
         const oldRepairer = request.repairer
             ? (typeof request.repairer === 'object' ? request.repairer : await this.em.findOne(Repairer, { id: String(request.repairer) }))
             : undefined;
         if (!oldRepairer) {
-            throw AppErrors.badRequest('Нельзя передать заявку без текущего мастера');
+            throw AppErrors.badRequest({ key: msg.repair.cannotTransferNoRepairer });
         }
 
         if (oldRepairer.id === newRepairerId) {
-            throw AppErrors.badRequest('Нельзя передать заявку текущему мастеру');
+            throw AppErrors.badRequest({ key: msg.repair.cannotTransferToSelf });
         }
 
         const newRepairer = await this.em.findOne(Repairer, { id: newRepairerId });
-        if (!newRepairer) throw AppErrors.dbEntityNotFound('Repairer not found');
-        if (!newRepairer.isActive) throw AppErrors.badRequest('Repairer is not active');
+        if (!newRepairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
+        if (!newRepairer.isActive) throw AppErrors.badRequest({ key: msg.repair.repairerNotActive });
 
         // Cross-city detection
         const deviceTimezone = await this.getDeviceTimezone(request);
@@ -943,7 +943,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async cancel(userId: string, requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId }, { populate: ['repairer'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         assertTransition(request.status, RepairRequestStatus.CANCELLED);
         const oldStatus = request.status;
         request.status = RepairRequestStatus.CANCELLED;
@@ -1004,7 +1004,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findActiveByRepairer(repairerUserId: string): Promise<RepairRequest | null> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         return this.em.findOne(
             RepairRequest,
@@ -1027,7 +1027,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async findPausedByRepairer(repairerUserId: string, pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: string }): Promise<{ data: RepairRequest[]; total: number }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const [data, total] = await this.em.findAndCount(
             RepairRequest,
@@ -1126,7 +1126,7 @@ export class RepairRequestService {
             { id },
             { populate: ['workSteps', 'userDevice', 'userDevice.device', 'userDevice.address', 'repairer', 'certificate', 'address'] }
         );
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         return request;
     }
 
@@ -1149,7 +1149,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async setConversationId(requestId: string, conversationId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         request.conversationId = conversationId;
         await this.em.flush();
     }
@@ -1225,19 +1225,19 @@ export class RepairRequestService {
         completionNote?: string,
     ): Promise<{ pdfBuffer: Buffer; request: RepairRequest }> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, {
             populate: ['userDevice', 'certificate', 'address'],
         });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         this.assertAvrMutable(request);
         if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
-            throw AppErrors.badRequest('АВР можно сформировать только после выполнения шагов ремонта');
+            throw AppErrors.badRequest({ key: msg.repair.avrRequiresSteps });
         }
         if (!request.totalCost) {
-            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед формированием акта');
+            throw AppErrors.badRequest({ key: msg.repair.avrRequiresPrice });
         }
 
         const workSteps = await this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'ASC' } });
@@ -1296,15 +1296,15 @@ export class RepairRequestService {
     @CreateRequestContext()
     async resetAvr(requestId: string, repairerUserId: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['userDevice', 'certificate', 'address'] as const });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         this.assertAvrMutable(request);
 
         if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
-            throw AppErrors.badRequest('Акт уже подписан или ещё не сформирован');
+            throw AppErrors.badRequest({ key: msg.repair.avrAlreadySignedOrNotGenerated });
         }
 
         this.clearAvrFields(request);
@@ -1316,12 +1316,12 @@ export class RepairRequestService {
     @CreateRequestContext()
     async removeAvrByManager(requestId: string, managerId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         this.assertAvrMutable(request);
 
         if (request.avrStatus === AvrStatus.NONE) {
-            throw AppErrors.badRequest('Акт не сформирован');
+            throw AppErrors.badRequest({ key: msg.repair.avrNotGenerated });
         }
 
         this.clearAvrFields(request);
@@ -1344,7 +1344,7 @@ export class RepairRequestService {
     @CreateRequestContext()
     async setAvrDocumentId(requestId: string, documentId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         this.assertAvrMutable(request);
         request.avrDocumentId = documentId;
         await this.em.flush();
@@ -1355,10 +1355,10 @@ export class RepairRequestService {
     @CreateRequestContext()
     async setAvrPendingSignature(requestId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['userDevice', 'repairer', 'certificate', 'address'] as const });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         this.assertAvrMutable(request);
         if (request.avrStatus !== AvrStatus.GENERATED) {
-            throw AppErrors.badRequest('Акт должен быть сформирован перед отправкой на подпись');
+            throw AppErrors.badRequest({ key: msg.repair.avrMustBeGeneratedBeforeSigning });
         }
         request.avrStatus = AvrStatus.PENDING_SIGNATURE;
         await this.em.flush();
@@ -1377,11 +1377,11 @@ export class RepairRequestService {
     @CreateRequestContext()
     async signAvrDigital(requestId: string, userId: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId }, { populate: ['certificate'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
-        if (request.userId !== userId) throw AppErrors.forbidden('Только заказчик может подписать акт');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        if (request.userId !== userId) throw AppErrors.forbidden({ key: msg.repair.avrOnlyOwnerCanSign });
         this.assertAvrMutable(request);
         if (![AvrStatus.GENERATED, AvrStatus.PENDING_SIGNATURE].includes(request.avrStatus)) {
-            throw AppErrors.badRequest('Акт не готов к подписанию');
+            throw AppErrors.badRequest({ key: msg.repair.avrNotReadyForSigning });
         }
 
         // Sign the AVR
@@ -1411,13 +1411,13 @@ export class RepairRequestService {
     @CreateRequestContext()
     async uploadAvrScan(requestId: string, repairerUserId: string, signedDocumentId?: string): Promise<RepairRequest> {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id }, { populate: ['certificate'] });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         this.assertAvrMutable(request);
         if (request.avrStatus !== AvrStatus.GENERATED) {
-            throw AppErrors.badRequest('Акт должен быть сформирован перед загрузкой подписанного скана');
+            throw AppErrors.badRequest({ key: msg.repair.avrMustBeGeneratedBeforeSigning });
         }
 
         if (signedDocumentId) request.avrSignedDocumentId = signedDocumentId;
@@ -1435,7 +1435,7 @@ export class RepairRequestService {
         const oldStatus = request.status;
         assertTransition(request.status, RepairRequestStatus.COMPLETED);
         if (!request.totalCost) {
-            throw AppErrors.badRequest('Необходимо указать стоимость ремонта перед завершением');
+            throw AppErrors.badRequest({ key: msg.repair.mustSetPrice });
         }
 
         request.status = RepairRequestStatus.COMPLETED;

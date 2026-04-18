@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { Modal } from './modal';
 import { Button } from './button';
+import { useUiLocale } from '../locale';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -72,11 +73,12 @@ export function CropModal({
   minCropSize = 80,
   maxCropSize = 400,
   containerSize = 420,
-  title = 'Обрезка изображения',
+  title,
   quality = 0.92,
   constrainToImage = true,
   magnetThreshold = 12,
 }: CropModalProps) {
+  const locale = useUiLocale();
   const isCircle = shape === 'circle';
   const outW = outputWidth;
   const outH = isCircle ? outputWidth : outputHeight;
@@ -347,7 +349,7 @@ export function CropModal({
 
   return (
     <Modal open onClose={onCancel} className="flex flex-col items-center gap-4 p-6 w-[480px] max-w-[95vw]">
-      <h3 className="text-base font-medium text-text-main">{title}</h3>
+      <h3 className="text-base font-medium text-text-main">{title ?? locale.cropTitle}</h3>
 
       <div
         ref={containerRef}

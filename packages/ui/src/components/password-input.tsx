@@ -3,6 +3,8 @@
 import { type InputHTMLAttributes, forwardRef, useState, useMemo } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useUiLocale } from '../locale';
+import type { UiLocale } from '../locale';
 
 export interface PasswordRule {
   label: string;
@@ -23,22 +25,22 @@ export interface PasswordInputProps
 }
 
 
-function getDefaultRules(min: number, max: number): PasswordRule[] {
+function getDefaultRules(min: number, max: number, locale: UiLocale): PasswordRule[] {
   return [
     {
       label: `от ${min} до ${max} символов`,
       test: (v) => v.length >= min && v.length <= max,
     },
     {
-      label: 'минимум одна заглавная буква (A-Z)',
+      label: locale.passwordRuleUppercase,
       test: (v) => /[A-Z]/.test(v),
     },
     {
-      label: 'минимум одна строчная буква (a-z)',
+      label: locale.passwordRuleLowercase,
       test: (v) => /[a-z]/.test(v),
     },
     {
-      label: 'минимум одна цифра или спецсимвол',
+      label: locale.passwordRuleDigitOrSpecial,
       test: (v) => /\d/.test(v) || /[^A-Za-z0-9]/.test(v),
     },
   ];
@@ -58,10 +60,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     },
     ref,
   ) => {
+    const locale = useUiLocale();
     const [visible, setVisible] = useState(false);
     const currentValue = typeof value === 'string' ? value : '';
 
-    const effectiveRules = useMemo(() => rules ?? getDefaultRules(min, max), [rules, min, max]);
+    const effectiveRules = useMemo(() => rules ?? getDefaultRules(min, max, locale), [rules, min, max, locale]);
 
     const results = useMemo(
       () => effectiveRules.map((rule) => ({ ...rule, passed: rule.test(currentValue) })),
@@ -112,7 +115,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             tabIndex={-1}
             onClick={() => setVisible((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-            aria-label={visible ? 'Скрыть пароль' : 'Показать пароль'}
+            aria-label={visible ? locale.hidePassword : locale.showPassword}
           >
             {visible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>

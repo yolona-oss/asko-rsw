@@ -5,6 +5,7 @@ import { UserSettings } from 'entities/auth/user-settings.entity';
 import { UserStatusHistory } from 'entities/auth/user-status-history.entity';
 
 import { AppErrors } from 'common/error';
+import { msg } from '@asko/shared';
 import { DeepPartial } from 'types/deep-partial.type';
 import CryptoService from './crypto.service'
 
@@ -217,7 +218,7 @@ export class UserService {
             type: TokenType.REFRESH,
         })
         if (!session) {
-            throw AppErrors.dbEntityNotFound('Сессия не найдена')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.sessionNotFound })
         }
         await this.em.removeAndFlush(session)
     }
@@ -393,6 +394,9 @@ export class UserService {
             if (newUserInfo.settings.chatSearchable !== undefined) {
                 s.chatSearchable = newUserInfo.settings.chatSearchable;
             }
+            if (newUserInfo.settings.language !== undefined) {
+                s.language = newUserInfo.settings.language;
+            }
             if (newUserInfo.settings.meta !== undefined) {
                 s.meta = { ...(s.meta ?? {}), ...newUserInfo.settings.meta };
             }
@@ -442,7 +446,7 @@ export class UserService {
         roles: Role[];
     }): Promise<User> {
         const existing = await this.findByPhone(data.phone);
-        if (existing) throw AppErrors.conflict('Пользователь с этим номером уже зарегистрирован');
+        if (existing) throw AppErrors.conflict({ key: msg.auth.phoneAlreadyRegistered });
 
         const settings = new UserSettings();
         const user = this.em.create(User, {
@@ -680,7 +684,7 @@ export class UserService {
     async linkOAuth(userId: string, provider: string, providerId: string, email?: string, avatarUrl?: string): Promise<void> {
         const existing = await this.em.findOne(UserOAuthLink, { provider, providerId });
         if (existing) {
-            if (existing.userId !== userId) throw AppErrors.badRequest('Этот аккаунт уже привязан к другому пользователю');
+            if (existing.userId !== userId) throw AppErrors.badRequest({ key: msg.auth.oauthAccountLinkedToOther });
             return; // already linked
         }
         const link = new UserOAuthLink();
@@ -707,7 +711,7 @@ export class UserService {
         // Don't allow unlinking if it's the only login method
         const user = await this.em.findOne(User, { id: userId });
         if (user && user.providers.length <= 1) {
-            throw AppErrors.badRequest('Нельзя отключить единственный способ входа');
+            throw AppErrors.badRequest({ key: msg.auth.cannotUnlinkLastLogin });
         }
 
         await this.em.removeAndFlush(link);

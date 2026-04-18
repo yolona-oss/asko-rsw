@@ -1,3 +1,4 @@
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
 const VALID = 'valid';
@@ -21,18 +22,12 @@ export function assertValidationStatus(
         case VALID:
             return;
         case INVALID:
-            throw AppErrors.badRequest(
-                `${label} не прошёл проверку: ${entity.validationError || 'проверка не пройдена'}`,
-            );
+            throw AppErrors.badRequest({ key: msg.validation.entityInvalid, params: { label, error: entity.validationError || 'проверка не пройдена' } });
         case ERROR:
-            throw AppErrors.badRequest(
-                `Не удалось проверить ${label.toLowerCase()}. Попробуйте обновить данные.`,
-            );
+            throw AppErrors.badRequest({ key: msg.validation.entityCheckFailed, params: { label: label.toLowerCase() } });
         default:
             // pending or unknown
-            throw AppErrors.badRequest(
-                `${label} ещё проходит проверку. Попробуйте через несколько секунд.`,
-            );
+            throw AppErrors.badRequest({ key: msg.validation.entityPending, params: { label } });
     }
 }
 

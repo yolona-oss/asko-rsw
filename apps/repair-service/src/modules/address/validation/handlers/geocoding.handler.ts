@@ -1,3 +1,4 @@
+import { msg } from '@asko/shared';
 import { AddressValidationHandler } from '../address-validation-handler';
 import type { AddressValidationContext } from '../address-validation-context';
 
@@ -19,7 +20,7 @@ export class GeocodingHandler extends AddressValidationHandler {
         const results = await res.json();
         if (!results || results.length === 0) {
             ctx.invalid = true;
-            ctx.errorMessage = 'Адрес не найден в базе OpenStreetMap';
+            ctx.errorMessage = msg.validation.addressNotFound;
             return;
         }
 

@@ -3,7 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { BrokenPart } from '../entities/broken-part.entity';
 import { RepairRequest } from '../entities/repair-request.entity';
 import { DevicePart } from 'modules/device/entities/device-part.entity';
-import { BrokenPartStatus, RepairRequestStatus, Role, ADMIN_ROLES } from '@asko/shared';
+import { BrokenPartStatus, RepairRequestStatus, Role, ADMIN_ROLES, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
@@ -49,17 +49,17 @@ export class BrokenPartService {
             }
         }
 
-        throw AppErrors.forbidden('Нет прав на изменение запчастей этой заявки');
+        throw AppErrors.forbidden({ key: msg.brokenPart.noAccess });
     }
 
     /** Add a broken part to a repair request (staff — requires catalog part) */
     @CreateRequestContext()
     async addBrokenPart(userId: string, roles: string[], requestId: string, dto: { devicePartId?: string; name?: string; note?: string; isSuggestion?: boolean }): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         if (TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя изменять запчасти для завершённой заявки');
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotModifyCompleted });
         }
 
         const isSuggestion = dto.isSuggestion ?? false;
@@ -70,20 +70,20 @@ export class BrokenPartService {
         if (isSuggestion) {
             // User suggestion: name required, no catalog reference needed
             if (!partName) {
-                throw AppErrors.badRequest('Необходимо указать название запчасти');
+                throw AppErrors.badRequest({ key: msg.brokenPart.mustSpecifyName });
             }
         } else {
             // Staff part: must reference catalog
             if (!dto.devicePartId) {
-                throw AppErrors.badRequest('Необходимо выбрать запчасть из каталога');
+                throw AppErrors.badRequest({ key: msg.brokenPart.mustSelectFromCatalog });
             }
             devicePart = await this.em.findOne(DevicePart, { id: dto.devicePartId }) ?? undefined;
-            if (!devicePart) throw AppErrors.dbEntityNotFound('Device part not found');
+            if (!devicePart) throw AppErrors.dbEntityNotFound({ key: msg.device.partNotFound });
             if (!partName) partName = devicePart.name;
         }
 
         if (!partName) {
-            throw AppErrors.badRequest('Необходимо указать название запчасти');
+            throw AppErrors.badRequest({ key: msg.brokenPart.mustSpecifyName });
         }
 
         const brokenPart = this.em.create(BrokenPart, {
@@ -102,7 +102,7 @@ export class BrokenPartService {
     @CreateRequestContext()
     async addBrokenPartsOnCreate(requestId: string, parts: { devicePartId?: string; name?: string; note?: string }[]): Promise<BrokenPart[]> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         const created: BrokenPart[] = [];
 
@@ -137,14 +137,14 @@ export class BrokenPartService {
     @CreateRequestContext()
     async updateBrokenPart(userId: string, roles: string[], requestId: string, partId: string, dto: { name?: string; note?: string }): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         if (TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя изменять запчасти для завершённой заявки');
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotModifyCompleted });
         }
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
-        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
 
         await this.assertCanMutate(userId, roles, request, part.isSuggestion);
 
@@ -159,14 +159,14 @@ export class BrokenPartService {
     @CreateRequestContext()
     async updateBrokenPartStatus(userId: string, roles: string[], requestId: string, partId: string, status: BrokenPartStatus): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         if (TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя изменять запчасти для завершённой заявки');
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotModifyCompleted });
         }
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
-        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
 
         // Status transitions are staff-only regardless of part origin
         await this.assertCanMutate(userId, roles, request, false);
@@ -180,14 +180,14 @@ export class BrokenPartService {
     @CreateRequestContext()
     async deleteBrokenPart(userId: string, roles: string[], requestId: string, partId: string): Promise<void> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         if (TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя изменять запчасти для завершённой заявки');
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotModifyCompleted });
         }
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
-        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
 
         await this.assertCanMutate(userId, roles, request, part.isSuggestion);
 
@@ -204,7 +204,7 @@ export class BrokenPartService {
     @CreateRequestContext()
     async findById(partId: string): Promise<BrokenPart> {
         const part = await this.em.findOne(BrokenPart, { id: partId }, { populate: ['repairRequest'] });
-        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
         return part;
     }
 
@@ -223,19 +223,19 @@ export class BrokenPartService {
         supplierName?: string,
     ): Promise<BrokenPart> {
         const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         if (TERMINAL_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя заказывать запчасти для завершённой заявки');
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotOrderCompleted });
         }
 
         await this.assertCanMutate(userId, roles, request, false);
 
         const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId });
-        if (!part) throw AppErrors.dbEntityNotFound('Broken part not found');
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
 
         if (part.status !== BrokenPartStatus.ADDED) {
-            throw AppErrors.badRequest('Запчасть уже была заказана');
+            throw AppErrors.badRequest({ key: msg.brokenPart.alreadyOrdered });
         }
 
         const provider = this.supplierService.getProvider(supplierName);

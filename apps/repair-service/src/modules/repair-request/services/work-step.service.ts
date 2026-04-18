@@ -3,7 +3,7 @@ import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { WorkStep } from '../entities/work-step.entity';
 import { RepairRequest } from '../entities/repair-request.entity';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
-import { WorkStepStatus, RepairRequestStatus } from '@asko/shared';
+import { WorkStepStatus, RepairRequestStatus, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { RepairRequestService } from './repair-request.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
@@ -30,11 +30,11 @@ export class WorkStepService {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (request.stepsLocked) {
-            throw AppErrors.badRequest('Шаги заблокированы для редактирования');
+            throw AppErrors.badRequest({ key: msg.workStep.locked });
         }
 
         if (![RepairRequestStatus.ACCEPTED, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
-            throw AppErrors.badRequest('Cannot add steps in current request status');
+            throw AppErrors.badRequest({ key: msg.workStep.cannotAddInStatus });
         }
 
         // Auto-calculate order if not provided
@@ -60,14 +60,14 @@ export class WorkStepService {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (request.stepsLocked) {
-            throw AppErrors.badRequest('Шаги заблокированы для редактирования');
+            throw AppErrors.badRequest({ key: msg.workStep.locked });
         }
 
         const step = await this.em.findOne(WorkStep, { id: stepId, repairRequest: requestId });
-        if (!step) throw AppErrors.dbEntityNotFound('Work step not found');
+        if (!step) throw AppErrors.dbEntityNotFound({ key: msg.workStep.notFound });
 
         if (step.isMandatory) {
-            throw AppErrors.badRequest('Обязательный шаг нельзя удалить');
+            throw AppErrors.badRequest({ key: msg.workStep.mandatoryCannotDelete });
         }
 
         await this.em.removeAndFlush(step);
@@ -80,24 +80,24 @@ export class WorkStepService {
 
         // Status changes require IN_PROGRESS
         if (dto.status && request.status !== RepairRequestStatus.IN_PROGRESS) {
-            throw AppErrors.badRequest('Управление шагами доступно только в статусе «В работе»');
+            throw AppErrors.badRequest({ key: msg.workStep.onlyInProgressStatus });
         }
 
         const step = await this.em.findOne(WorkStep, { id: stepId, repairRequest: requestId });
-        if (!step) throw AppErrors.dbEntityNotFound('Work step not found');
+        if (!step) throw AppErrors.dbEntityNotFound({ key: msg.workStep.notFound });
 
         if (step.isMandatory && dto.title && dto.title !== step.title) {
-            throw AppErrors.badRequest('Нельзя менять название обязательного шага');
+            throw AppErrors.badRequest({ key: msg.workStep.cannotRenameMandatory });
         }
 
         if (step.isFinal && dto.status === WorkStepStatus.SKIPPED) {
-            throw AppErrors.badRequest('Нельзя пропустить последний шаг');
+            throw AppErrors.badRequest({ key: msg.workStep.cannotSkipLast });
         }
 
         if (request.stepsLocked) {
             // When locked, only status + comment changes are allowed.
             if (dto.title || dto.description) {
-                throw AppErrors.badRequest('Шаги заблокированы - можно менять только статус');
+                throw AppErrors.badRequest({ key: msg.workStep.lockedStatusOnly });
             }
         }
 
@@ -116,12 +116,12 @@ export class WorkStepService {
         const { repairer, request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (TERMINAL_REPAIR_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя подтвердить диагностику в завершённом статусе');
+            throw AppErrors.badRequest({ key: msg.workStep.cannotConfirmInFinalStatus });
         }
 
         const mandatorySteps = await this.em.find(WorkStep, { repairRequest: requestId, isMandatory: true });
         if (mandatorySteps.length === 0) {
-            throw AppErrors.badRequest('Нет обязательных шагов для подтверждения');
+            throw AppErrors.badRequest({ key: msg.workStep.noMandatoryStepsToConfirm });
         }
 
         for (const step of mandatorySteps) {
@@ -147,13 +147,13 @@ export class WorkStepService {
         const { repairer, request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (TERMINAL_REPAIR_STATUSES.includes(request.status)) {
-            throw AppErrors.badRequest('Нельзя отклонить диагностику в завершённом статусе');
+            throw AppErrors.badRequest({ key: msg.workStep.cannotRejectInFinalStatus });
         }
 
         const allSteps = await this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'ASC' } });
         const mandatorySteps = allSteps.filter((s) => s.isMandatory && s.status !== WorkStepStatus.DECLINED);
         if (mandatorySteps.length === 0) {
-            throw AppErrors.badRequest('Нет обязательных шагов для отклонения');
+            throw AppErrors.badRequest({ key: msg.workStep.noMandatoryStepsToReject });
         }
 
         const now = new Date();
@@ -202,12 +202,12 @@ export class WorkStepService {
         const { request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (request.stepsLocked) {
-            throw AppErrors.badRequest('Шаги уже заблокированы');
+            throw AppErrors.badRequest({ key: msg.workStep.alreadyLocked });
         }
 
         const steps = await this.em.find(WorkStep, { repairRequest: requestId }, { orderBy: { order: 'DESC' } });
         if (steps.length < MIN_STEPS_TO_LOCK) {
-            throw AppErrors.badRequest(`Необходимо добавить минимум ${MIN_STEPS_TO_LOCK} шаг(ов) перед блокировкой`);
+            throw AppErrors.badRequest({ key: msg.workStep.minStepsToLock, params: { min: MIN_STEPS_TO_LOCK } });
         }
 
         // Auto-mark the last step as final
@@ -227,11 +227,11 @@ export class WorkStepService {
         const { repairer, request } = await this.resolveRepairerRequest(repairerUserId, requestId);
 
         if (request.status !== RepairRequestStatus.IN_PROGRESS) {
-            throw AppErrors.badRequest('Управление шагами доступно только в статусе «В работе»');
+            throw AppErrors.badRequest({ key: msg.workStep.onlyInProgressStatus });
         }
 
         const step = await this.em.findOne(WorkStep, { id: stepId, repairRequest: requestId });
-        if (!step) throw AppErrors.dbEntityNotFound('Work step not found');
+        if (!step) throw AppErrors.dbEntityNotFound({ key: msg.workStep.notFound });
 
         step.status = WorkStepStatus.COMPLETED;
         step.completedByRepairerId = repairer.id;
@@ -265,10 +265,10 @@ export class WorkStepService {
     /** Resolve repairer + request directly via EntityManager */
     private async resolveRepairerRequest(repairerUserId: string, requestId: string) {
         const repairer = await this.em.findOne(Repairer, { userId: repairerUserId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
         return { repairer, request };
     }

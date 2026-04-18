@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Address } from 'modules/device/entities/address.entity';
-import { AddressValidationStatus } from '@asko/shared';
+import { AddressValidationStatus, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { resolveTimezone } from 'common/timezone-lookup';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
@@ -79,7 +79,7 @@ export class AddressService {
         longitude?: number;
     }): Promise<Address> {
         const address = await this.em.findOne(Address, { id, userId });
-        if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
 
         const locationChanged =
             (dto.city !== undefined && dto.city !== address.city) ||
@@ -124,7 +124,7 @@ export class AddressService {
     @CreateRequestContext()
     async delete(userId: string, id: string): Promise<void> {
         const address = await this.em.findOne(Address, { id, userId });
-        if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
 
         const wasPrimary = address.isPrimary;
         await this.em.removeAndFlush(address);
@@ -142,7 +142,7 @@ export class AddressService {
     @CreateRequestContext()
     async setPrimary(userId: string, id: string): Promise<Address> {
         const address = await this.em.findOne(Address, { id, userId });
-        if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
 
         // Unset current primary
         const current = await this.em.findOne(Address, { userId, isPrimary: true });
@@ -163,7 +163,7 @@ export class AddressService {
     @CreateRequestContext()
     async findById(id: string): Promise<Address> {
         const address = await this.em.findOne(Address, { id });
-        if (!address) throw AppErrors.dbEntityNotFound('Address not found');
+        if (!address) throw AppErrors.dbEntityNotFound({ key: msg.address.notFound });
         return address;
     }
 }

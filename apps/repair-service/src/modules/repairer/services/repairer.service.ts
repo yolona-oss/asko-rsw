@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Repairer } from 'modules/repairer/entities/repairer.entity';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { resolveTimezone } from 'common/timezone-lookup';
 
@@ -13,7 +14,7 @@ export class RepairerService {
     @CreateRequestContext()
     async create(userId: string, city: string, specializations: string[] = []): Promise<Repairer> {
         const existing = await this.em.findOne(Repairer, { userId });
-        if (existing) throw AppErrors.dbEntityExists('Repairer profile already exists');
+        if (existing) throw AppErrors.dbEntityExists({ key: msg.repairer.profileAlreadyExists });
 
         const repairer = this.em.create(Repairer, {
             userId,
@@ -32,7 +33,7 @@ export class RepairerService {
         isActive?: boolean;
     }): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { id });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
 
         if (dto.city) {
             repairer.city = dto.city;
@@ -48,7 +49,7 @@ export class RepairerService {
     @CreateRequestContext()
     async updateLocation(userId: string, latitude: number, longitude: number): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
 
         repairer.latitude = latitude;
         repairer.longitude = longitude;
@@ -62,7 +63,7 @@ export class RepairerService {
     @CreateRequestContext()
     async getMyProfile(userId: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer profile not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.profileNotFound });
         return repairer;
     }
 
@@ -93,14 +94,14 @@ export class RepairerService {
     @CreateRequestContext()
     async findById(id: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { id });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
         return repairer;
     }
 
     @CreateRequestContext()
     async findByUserId(userId: string): Promise<Repairer> {
         const repairer = await this.em.findOne(Repairer, { userId });
-        if (!repairer) throw AppErrors.dbEntityNotFound('Repairer not found');
+        if (!repairer) throw AppErrors.dbEntityNotFound({ key: msg.repairer.notFound });
         return repairer;
     }
 

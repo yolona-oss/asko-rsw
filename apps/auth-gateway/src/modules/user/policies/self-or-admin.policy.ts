@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import { isAdmin, isSelf, type Policy, type PolicyContext } from '@asko/authorization';
 
 /**
@@ -12,9 +12,9 @@ import { isAdmin, isSelf, type Policy, type PolicyContext } from '@asko/authoriz
 export class SelfOrAdminPolicy implements Policy {
     async authorize(ctx: PolicyContext): Promise<boolean> {
         const targetUserId = ctx.params.userId;
-        if (!targetUserId) throw AppErrors.badRequest('userId обязателен');
+        if (!targetUserId) throw AppErrors.badRequest({ key: msg.access.userIdRequired });
         if (isSelf(ctx.user, targetUserId)) return true;
         if (isAdmin(ctx.user)) return true;
-        throw AppErrors.forbidden('Нет доступа к данным другого пользователя');
+        throw AppErrors.forbidden({ key: msg.access.noAccessToOtherUser });
     }
 }

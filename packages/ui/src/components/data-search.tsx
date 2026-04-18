@@ -3,6 +3,7 @@
 import { useState, useEffect, type InputHTMLAttributes } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useUiLocale } from '../locale';
 
 export interface DataSearchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   /** Current search value (controlled) */
@@ -20,10 +21,11 @@ export function DataSearch({
   onChange,
   debounce = 400,
   clearable = true,
-  placeholder = 'Поиск...',
+  placeholder,
   className,
   ...props
 }: DataSearchProps) {
+  const locale = useUiLocale();
   const [localValue, setLocalValue] = useState(value);
   const [lastSyncedValue, setLastSyncedValue] = useState(value);
 
@@ -54,7 +56,7 @@ export function DataSearch({
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? locale.searchPlaceholder}
         className={cn(
           'w-full pl-10 pr-4 py-2.5 text-sm text-text-main bg-surface',
           'border border-border-light outline-none transition-colors',

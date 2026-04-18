@@ -8,6 +8,7 @@ import {
     CreateDevicePartDto,
     UpdateDevicePartDto,
     PaginationDto,
+    msg,
 } from '@asko/shared';
 import { Permissions, Permission } from '@asko/authorization';
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
@@ -93,6 +94,6 @@ export class PartsController {
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('partId') partId: string) {
         await this.deviceClient.deleteDevicePart(partId);
-        return { message: 'Deleted' };
+        return { message: msg.device.deleted };
     }
 }

@@ -1,6 +1,10 @@
 // Utils
 export { cn } from './utils/cn';
 
+// Locale
+export { UiLocaleProvider, useUiLocale, ru as uiLocaleRu, en as uiLocaleEn } from './locale';
+export type { UiLocale } from './locale';
+
 // Components
 export { AddressInput } from './components/address-input';
 export type { AddressInputProps, AddressValue, SavedAddress } from './components/address-input';

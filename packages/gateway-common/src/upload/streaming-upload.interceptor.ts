@@ -4,7 +4,7 @@ import {
     Injectable,
     NestInterceptor,
 } from '@nestjs/common';
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import Busboy from 'busboy';
 import type { Readable } from 'node:stream';
 import type { Observable } from 'rxjs';
@@ -47,7 +47,7 @@ export class StreamingUploadInterceptor implements NestInterceptor {
         if (this.maxBytes !== undefined) {
             const contentLength = Number(req.headers['content-length'] ?? '0');
             if (contentLength > this.maxBytes) {
-                throw AppErrors.badRequest('Request body exceeds maximum upload size');
+                throw AppErrors.badRequest({ key: msg.file.exceedsMaxSize });
             }
         }
 
@@ -68,7 +68,7 @@ export class StreamingUploadInterceptor implements NestInterceptor {
                 if (resolved) {
                     // A second file part — drain it and reject.
                     fileStream.resume();
-                    reject(AppErrors.badRequest('Only one file allowed per upload'));
+                    reject(AppErrors.badRequest({ key: msg.file.onlyOneFile }));
                     return;
                 }
                 resolved = true;
@@ -93,7 +93,7 @@ export class StreamingUploadInterceptor implements NestInterceptor {
             busboy.on('finish', () => {
                 if (!resolved) {
                     resolved = true;
-                    reject(AppErrors.badRequest('No file part in request'));
+                    reject(AppErrors.badRequest({ key: msg.file.noFilePart }));
                 }
             });
 

@@ -15,6 +15,7 @@ import {
     WithdrawalStatus,
     PaginationDto,
 } from '@asko/shared';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
 
@@ -35,7 +36,7 @@ export class DealerService {
     async createProfile(dto: CreateDealerProfileDto): Promise<DealerProfile> {
         // User entity is in user-service DB - we only store userId reference
         const existing = await this.em.findOne(DealerProfile, { userId: dto.userId });
-        if (existing) throw AppErrors.dbEntityExists('Dealer profile already exists');
+        if (existing) throw AppErrors.dbEntityExists({ key: msg.dealer.profileAlreadyExists });
 
         const profile = this.em.create(DealerProfile, {
             userId: dto.userId,
@@ -62,7 +63,7 @@ export class DealerService {
     @CreateRequestContext()
     async updateProfile(dealerUserId: string, dto: UpdateDealerProfileDto): Promise<DealerProfile> {
         const profile = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!profile) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!profile) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
         this.em.assign(profile, dto);
 
         // Re-sign dealer agreement with updated data
@@ -83,7 +84,7 @@ export class DealerService {
     @CreateRequestContext()
     async getProfile(dealerUserId: string): Promise<DealerProfile> {
         const profile = await this.em.findOne(DealerProfile, { userId: dealerUserId }, { populate: ['clients'] });
-        if (!profile) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!profile) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
         return profile;
     }
 
@@ -91,10 +92,10 @@ export class DealerService {
     @CreateRequestContext()
     async addClient(dealerUserId: string, dto: AddDealerClientDto): Promise<DealerClient> {
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
 
         const existing = await this.em.findOne(DealerClient, { dealer: dealer.id, clientUserId: dto.clientUserId });
-        if (existing) throw AppErrors.dbEntityExists('Client already linked');
+        if (existing) throw AppErrors.dbEntityExists({ key: msg.dealer.clientAlreadyLinked });
 
         const client = this.em.create(DealerClient, {
             dealer,
@@ -147,7 +148,7 @@ export class DealerService {
     @CreateRequestContext()
     async getClients(dealerUserId: string): Promise<DealerClient[]> {
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
         return this.em.find(DealerClient, { dealer: dealer.id });
     }
 
@@ -167,7 +168,7 @@ export class DealerService {
     @CreateRequestContext()
     async getPointsHistory(dealerUserId: string, pagination: PaginationDto): Promise<{ data: PointsTransaction[]; total: number }> {
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
 
         const [data, total] = await this.em.findAndCount(
             PointsTransaction,
@@ -185,11 +186,11 @@ export class DealerService {
     @CreateRequestContext()
     async requestWithdrawal(dealerUserId: string, dto: RequestPointsWithdrawalDto): Promise<PointsWithdrawal> {
         if (!Number.isInteger(dto.amount) || dto.amount < 1) {
-            throw AppErrors.invalidData('Withdrawal amount must be a positive integer');
+            throw AppErrors.invalidData({ key: msg.dealer.withdrawalAmountPositive });
         }
 
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
 
         // Pessimistic lock on dealer row to prevent concurrent withdrawal race
         await this.em.getConnection().execute(
@@ -199,7 +200,7 @@ export class DealerService {
         await this.em.refresh(dealer);
 
         if (dealer.pointsBalance < dto.amount) {
-            throw AppErrors.badRequest('Insufficient points balance');
+            throw AppErrors.badRequest({ key: msg.dealer.insufficientPoints });
         }
 
         const withdrawal = this.em.create(PointsWithdrawal, {
@@ -229,14 +230,14 @@ export class DealerService {
     @CreateRequestContext()
     async processWithdrawal(withdrawalId: string, adminUserId: string, dto: ProcessWithdrawalDto): Promise<PointsWithdrawal> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
-        if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
+        if (!withdrawal) throw AppErrors.dbEntityNotFound({ key: msg.dealer.withdrawalNotFound });
         if (withdrawal.status !== WithdrawalStatus.PENDING) {
-            throw AppErrors.badRequest('Withdrawal already processed');
+            throw AppErrors.badRequest({ key: msg.dealer.withdrawalAlreadyProcessed });
         }
 
         // Only allow valid transitions from PENDING
         if (dto.status !== WithdrawalStatus.APPROVED && dto.status !== WithdrawalStatus.REJECTED) {
-            throw AppErrors.badRequest('Can only approve or reject a pending withdrawal');
+            throw AppErrors.badRequest({ key: msg.dealer.withdrawalInvalidStatus });
         }
 
         withdrawal.status = dto.status;
@@ -271,9 +272,9 @@ export class DealerService {
     @CreateRequestContext()
     async getWithdrawalForPayout(withdrawalId: string): Promise<{ amount: number; dealerUserId: string; cardNumber: string; cardHolderName: string }> {
         const withdrawal = await this.em.findOne(PointsWithdrawal, { id: withdrawalId }, { populate: ['dealer'] });
-        if (!withdrawal) throw AppErrors.dbEntityNotFound('Withdrawal not found');
+        if (!withdrawal) throw AppErrors.dbEntityNotFound({ key: msg.dealer.withdrawalNotFound });
         if (withdrawal.status !== WithdrawalStatus.APPROVED) {
-            throw AppErrors.badRequest('Withdrawal must be approved before payout');
+            throw AppErrors.badRequest({ key: msg.dealer.withdrawalNotApproved });
         }
         return {
             amount: withdrawal.amount,
@@ -328,7 +329,7 @@ export class DealerService {
     @CreateRequestContext()
     async getWithdrawals(dealerUserId: string): Promise<PointsWithdrawal[]> {
         const dealer = await this.em.findOne(DealerProfile, { userId: dealerUserId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
         return this.em.find(PointsWithdrawal, { dealer: dealer.id }, { orderBy: { requestedAt: 'DESC' } });
     }
 

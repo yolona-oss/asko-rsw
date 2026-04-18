@@ -19,6 +19,7 @@ import {
     PHONE_OTP_ATTEMPTS_REDIS_PREFIX,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
+import { msg } from '@asko/shared';
 
 @Injectable()
 export class OtpService {
@@ -61,7 +62,7 @@ export class OtpService {
         const attemptsKey = `${MFA_OTP_ATTEMPTS_REDIS_PREFIX}${userId}:${method}`;
         const attempts = parseInt(await this.redis.get(attemptsKey) || '0', 10);
         if (attempts >= MFA_OTP_MAX_ATTEMPTS) {
-            throw AppErrors.tooManyRequests('Слишком много попыток. Запросите новый код.');
+            throw AppErrors.tooManyRequests({ key: msg.otp.tooManyAttempts });
         }
 
         const key = `${MFA_OTP_REDIS_PREFIX}${userId}:${method}`;
@@ -130,7 +131,7 @@ export class OtpService {
         const attemptsKey = `${PHONE_OTP_ATTEMPTS_REDIS_PREFIX}${phone}`;
         const attempts = parseInt(await this.redis.get(attemptsKey) || '0', 10);
         if (attempts >= MFA_OTP_MAX_ATTEMPTS) {
-            throw AppErrors.tooManyRequests('Слишком много попыток. Запросите новый код.');
+            throw AppErrors.tooManyRequests({ key: msg.otp.tooManyAttempts });
         }
 
         const key = `${PHONE_OTP_REDIS_PREFIX}${phone}`;

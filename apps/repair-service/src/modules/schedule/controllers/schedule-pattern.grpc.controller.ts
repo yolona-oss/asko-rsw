@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
+import { appErrorToGrpcPayload } from '@asko/shared';
 import { WSchedulePatternService } from '../services/wschedule-pattern.service';
 import { WSchedulePatternHistoryService } from '../services/wschedule-pattern-history.service';
 import { WScheduleReportService } from '../services/wschedule-report.service';
@@ -24,6 +24,10 @@ import type {
     ScheduleAggregateReportResponse,
     ScheduleEmptyResponse,
 } from '@asko/proto';
+
+function toGrpcError(error: unknown): RpcException {
+    return new RpcException(appErrorToGrpcPayload(error));
+}
 
 function toPendingProto(data: WSchedulePattern['pendingData']): PatternPending | undefined {
     if (!data) return undefined;
@@ -130,7 +134,7 @@ export class SchedulePatternGrpcController {
             const pattern = await this.patternService.get(data.userId);
             return { pattern: pattern ? toRecord(pattern) : emptyRecord(data.userId) };
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -153,10 +157,7 @@ export class SchedulePatternGrpcController {
             }
             return { pattern: toRecord(result.pattern) };
         } catch (e) {
-            throw new RpcException({
-                code: status.INVALID_ARGUMENT,
-                message: e instanceof Error ? e.message : 'Invalid pattern',
-            });
+            throw toGrpcError(e);
         }
     }
 
@@ -177,7 +178,7 @@ export class SchedulePatternGrpcController {
             }
             return {};
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -187,7 +188,7 @@ export class SchedulePatternGrpcController {
             const patterns = await this.patternService.getMany(data.userIds ?? []);
             return { data: patterns.map(toRecord) };
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -206,7 +207,7 @@ export class SchedulePatternGrpcController {
             });
             return { pattern: toRecord(pattern) };
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -225,7 +226,7 @@ export class SchedulePatternGrpcController {
             });
             return { pattern: toRecord(pattern) };
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -245,7 +246,7 @@ export class SchedulePatternGrpcController {
                 limit: result.limit,
             };
         } catch (e) {
-            throw new RpcException({ code: status.INTERNAL, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 
@@ -261,8 +262,7 @@ export class SchedulePatternGrpcController {
                 new Date(data.dateTo),
             );
         } catch (e) {
-            const code = e instanceof Error && e.message.includes('required') ? status.INVALID_ARGUMENT : status.INTERNAL;
-            throw new RpcException({ code, message: e instanceof Error ? e.message : 'Internal error' });
+            throw toGrpcError(e);
         }
     }
 }

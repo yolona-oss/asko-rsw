@@ -3,4 +3,5 @@ export { AppErrorTypeEnum } from './error-type.enum.js';
 export { CommonErrorsDefinition } from './definition.js';
 export { AppErrors, createAppError } from './eval.js';
 export { wrapError, isAppError, throwAppError } from './utils.js';
+export { appErrorToGrpcPayload } from './to-grpc-error.js';
 export type { IErrorMessage } from './ierror-message.interface.js';

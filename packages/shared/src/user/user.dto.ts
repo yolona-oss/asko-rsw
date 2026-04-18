@@ -61,6 +61,10 @@ export class UpdateUserSettingsDto {
     chatSearchable?: boolean;
 
     @IsOptional()
+    @IsString()
+    language?: string;
+
+    @IsOptional()
     @IsObject()
     meta?: Record<string, any>;
 }

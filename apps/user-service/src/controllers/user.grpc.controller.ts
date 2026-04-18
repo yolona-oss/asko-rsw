@@ -84,28 +84,14 @@ import type {
     VerifyPasswordForSigningResponse,
 } from '@asko/proto';
 
-import { Role } from '@asko/shared';
+import { Role, appErrorToGrpcPayload, msg } from '@asko/shared';
 
 function toGrpcError(error: unknown): RpcException {
-    if (error instanceof AppError) {
-        let grpcCode: number;
-        switch (true) {
-            case error.httpStatus === 401: grpcCode = status.UNAUTHENTICATED; break;
-            case error.httpStatus === 403: grpcCode = status.PERMISSION_DENIED; break;
-            case error.httpStatus === 404: grpcCode = status.NOT_FOUND; break;
-            case error.httpStatus === 409: grpcCode = status.ALREADY_EXISTS; break;
-            case error.httpStatus === 429: grpcCode = status.RESOURCE_EXHAUSTED; break;
-            case error.httpStatus >= 400 && error.httpStatus < 500: grpcCode = status.INVALID_ARGUMENT; break;
-            default: grpcCode = status.INTERNAL; break;
-        }
-        return new RpcException({ code: grpcCode, message: error.message });
-    }
-    const msg = error instanceof Error ? error.message : String(error);
-    return new RpcException({ code: status.INTERNAL, message: msg });
+    return new RpcException(appErrorToGrpcPayload(error));
 }
 
 // Project settings only if the lazy relation has been populated (not a Reference proxy)
-function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversations: boolean; chatSearchable: boolean; metaJson: string } | undefined {
+function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversations: boolean; chatSearchable: boolean; metaJson: string; language: string } | undefined {
     const s = user.settings;
     if (!s || typeof s !== 'object' || s.__helper) return undefined;
     return {
@@ -113,6 +99,7 @@ function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversat
         chatAcceptConversations: !!s.chatAcceptConversations,
         chatSearchable: !!s.chatSearchable,
         metaJson: s.meta ? JSON.stringify(s.meta) : '',
+        language: s.language ?? 'ru',
     };
 }
 
@@ -385,7 +372,7 @@ export class UserGrpcController {
     async verifyEnableMfa(data: VerifyEnableMfaRequest): Promise<VerifyEnableMfaResponse> {
         try {
             await this.mfaService.confirmEnableMfa(data.userId, data.code);
-            return { message: 'MFA включена' };
+            return { message: msg.mfa.enabled };
         } catch (e) { throw toGrpcError(e); }
     }
 
@@ -401,7 +388,7 @@ export class UserGrpcController {
     async confirmDisableMfa(data: ConfirmDisableMfaRequest): Promise<ConfirmDisableMfaResponse> {
         try {
             await this.mfaService.confirmDisableMfa(data.userId, data.code);
-            return { message: 'MFA отключена' };
+            return { message: msg.mfa.disabled };
         } catch (e) { throw toGrpcError(e); }
     }
 

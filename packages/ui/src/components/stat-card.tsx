@@ -1,5 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import { cn } from '../utils/cn';
+import { useUiLocale } from '../locale';
 
 export interface StatCardTrend {
   /** Percentage change (e.g. 12 for +12%, -5 for -5%) */
@@ -65,6 +68,7 @@ export function StatCard({
   size = 'hero',
   className,
 }: StatCardProps) {
+  const locale = useUiLocale();
   const s = sizeStyles[size];
   return (
     <div className={cn(
@@ -87,7 +91,7 @@ export function StatCard({
           <span className={trend.value >= 0 ? 'text-success-deep' : 'text-brand-red'}>
             {trend.value >= 0 ? '+' : ''}{trend.value}%
           </span>
-          <span className="text-text-sub"> {trend.label ?? 'за период'}</span>
+          <span className="text-text-sub"> {trend.label ?? locale.statPeriodLabel}</span>
         </p>
       )}
       {children}

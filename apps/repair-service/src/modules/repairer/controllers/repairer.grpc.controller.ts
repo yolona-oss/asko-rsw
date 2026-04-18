@@ -1,9 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
+import { appErrorToGrpcPayload } from '@asko/shared';
 import { RepairerService } from 'modules/repairer/services/repairer.service';
 import { ReviewService } from 'modules/repairer/services/review.service';
-import { AppError } from 'common/error';
 import type { Repairer } from 'modules/repairer/entities/repairer.entity';
 import type { Review } from 'modules/repairer/entities/review.entity';
 
@@ -22,20 +21,7 @@ import type {
 } from '@asko/proto';
 
 function toGrpcError(error: unknown): RpcException {
-    if (error instanceof AppError) {
-        let grpcCode: number;
-        switch (true) {
-            case error.httpStatus === 400: grpcCode = status.INVALID_ARGUMENT; break;
-            case error.httpStatus === 401: grpcCode = status.UNAUTHENTICATED; break;
-            case error.httpStatus === 403: grpcCode = status.PERMISSION_DENIED; break;
-            case error.httpStatus === 404: grpcCode = status.NOT_FOUND; break;
-            case error.httpStatus === 409: grpcCode = status.ALREADY_EXISTS; break;
-            default: grpcCode = status.INTERNAL; break;
-        }
-        return new RpcException({ code: grpcCode, message: error.message });
-    }
-    const msg = error instanceof Error ? error.message : 'Internal error';
-    return new RpcException({ code: status.INTERNAL, message: msg });
+    return new RpcException(appErrorToGrpcPayload(error));
 }
 
 function repairerToRecord(entity: Repairer) {
@@ -232,7 +218,7 @@ export class RepairerGrpcController {
     async findReviewByRequest(data: RepairerFindByIdRequest) {
         try {
             const review = await this.reviewService.findByRepairRequest(data.id);
-            if (!review) throw new RpcException({ code: status.NOT_FOUND, message: 'Review not found' });
+            if (!review) throw new RpcException({ code: 5 /* NOT_FOUND */, message: 'Review not found' });
             return { review: reviewToRecord(review) };
         } catch (e) { throw toGrpcError(e); }
     }

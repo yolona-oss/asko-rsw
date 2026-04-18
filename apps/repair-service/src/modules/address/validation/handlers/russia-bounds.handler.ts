@@ -1,3 +1,4 @@
+import { msg } from '@asko/shared';
 import { AddressValidationHandler } from '../address-validation-handler';
 import type { AddressValidationContext } from '../address-validation-context';
 
@@ -13,7 +14,7 @@ export class RussiaBoundsHandler extends AddressValidationHandler {
             lon < RUSSIA_BOUNDS.lonMin || lon > RUSSIA_BOUNDS.lonMax
         ) {
             ctx.invalid = true;
-            ctx.errorMessage = 'Координаты находятся за пределами России';
+            ctx.errorMessage = msg.validation.coordsOutOfBounds;
         }
     }
 }

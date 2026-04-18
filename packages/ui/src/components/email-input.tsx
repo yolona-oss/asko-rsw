@@ -1,7 +1,9 @@
 'use client'
 
-import { type InputHTMLAttributes, forwardRef } from 'react';
+import { type InputHTMLAttributes, forwardRef, useMemo } from 'react';
 import { PatternInput, type ValidationResult } from './pattern-input';
+import { useUiLocale } from '../locale';
+import type { UiLocale } from '../locale';
 
 export interface EmailInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'pattern'> {
@@ -14,51 +16,58 @@ export interface EmailInputProps
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-function validateEmail(value: string): ValidationResult | null {
+function validateEmail(value: string, locale: UiLocale): ValidationResult | null {
   if (!value) return null;
 
   if (!value.includes('@')) {
-    return { valid: false, hint: 'Введите символ @' };
+    return { valid: false, hint: locale.emailEnterAt };
   }
 
   const [local, domain] = value.split('@');
 
   if (!local) {
-    return { valid: false, hint: 'Введите имя пользователя перед @' };
+    return { valid: false, hint: locale.emailEnterUsername };
   }
 
   if (!domain) {
-    return { valid: false, hint: 'Введите домен после @' };
+    return { valid: false, hint: locale.emailEnterDomain };
   }
 
   if (!domain.includes('.')) {
-    return { valid: false, hint: 'Домен должен содержать точку (например .com)' };
+    return { valid: false, hint: locale.emailDomainDot };
   }
 
   const parts = domain.split('.');
   const tld = parts[parts.length - 1];
   if (!tld || tld.length < 2) {
-    return { valid: false, hint: 'Доменная зона слишком короткая' };
+    return { valid: false, hint: locale.emailTldTooShort };
   }
 
   if (EMAIL_REGEX.test(value)) {
     return { valid: true, hint: '' };
   }
 
-  return { valid: false, hint: 'Некорректный формат email' };
+  return { valid: false, hint: locale.emailInvalidFormat };
 }
 
 export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
-  ({ showValidation = true, ...props }, ref) => (
-    <PatternInput
-      ref={ref}
-      type="email"
-      validator={validateEmail}
-      showValidation={showValidation}
-      showValidBorder
-      {...props}
-    />
-  ),
+  ({ showValidation = true, ...props }, ref) => {
+    const locale = useUiLocale();
+    const validator = useMemo(
+      () => (value: string) => validateEmail(value, locale),
+      [locale],
+    );
+    return (
+      <PatternInput
+        ref={ref}
+        type="email"
+        validator={validator}
+        showValidation={showValidation}
+        showValidBorder
+        {...props}
+      />
+    );
+  },
 );
 
 EmailInput.displayName = 'EmailInput';

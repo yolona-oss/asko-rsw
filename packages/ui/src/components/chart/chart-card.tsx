@@ -5,6 +5,7 @@ import type { ChartBucket, ChartStyle } from './types';
 import { BarChart } from './bar-chart';
 import { LineChart } from './line-chart';
 import type { ReactNode } from 'react';
+import { useUiLocale } from '../../locale';
 
 export interface ChartCardProps {
   /** Title below the value */
@@ -41,7 +42,7 @@ export function ChartCard({
   title,
   formattedValue,
   pctChange,
-  pctLabel = 'за период',
+  pctLabel,
   buckets,
   color,
   chartStyle,
@@ -53,6 +54,7 @@ export function ChartCard({
   valueSuffix,
   onBucketClick,
 }: ChartCardProps) {
+  const locale = useUiLocale();
   const pctColor = pctChange >= 0 ? 'text-success-deep' : 'text-brand-red';
 
   return (
@@ -74,14 +76,14 @@ export function ChartCard({
           </p>
           <p className="font-normal tracking-[-0.01em]" style={{ fontSize: 18, lineHeight: '22px' }}>
             <span className={pctColor}>{pctChange >= 0 ? '+' : ''}{pctChange}%</span>
-            <span className="text-success-deep"> {pctLabel}</span>
+            <span className="text-success-deep"> {pctLabel ?? locale.chartPeriodLabel}</span>
           </p>
         </div>
         <button
           type="button"
           onClick={onStyleToggle}
           className="text-text-sub hover:text-text-main transition-colors cursor-pointer p-1"
-          title={chartStyle === 'bar' ? 'Линейный график' : 'Столбчатый график'}
+          title={chartStyle === 'bar' ? locale.chartToggleLine : locale.chartToggleBar}
         >
           {chartStyle === 'bar' ? (
             <AlignLeft className="w-5 h-5" />

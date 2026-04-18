@@ -7,6 +7,7 @@ export class UserSettings {
         | 'mfaMethods'
         | 'chatAcceptConversations'
         | 'chatSearchable'
+        | 'language'
         | 'meta'
         | 'createdAt'
         | 'updatedAt';
@@ -25,6 +26,9 @@ export class UserSettings {
 
     @Property({ type: 'boolean', default: false })
     chatSearchable: boolean = false;
+
+    @Property({ type: 'varchar', length: 5, default: 'ru' })
+    language: string = 'ru';
 
     @Property({ type: 'json', nullable: true })
     meta?: Record<string, any> | null;

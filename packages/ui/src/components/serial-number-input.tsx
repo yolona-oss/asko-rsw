@@ -1,7 +1,8 @@
 'use client'
 
-import { type InputHTMLAttributes, forwardRef } from 'react';
+import { type InputHTMLAttributes, forwardRef, useMemo } from 'react';
 import { PatternInput, type ValidationResult } from './pattern-input';
+import { useUiLocale } from '../locale';
 
 export interface SerialNumberInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type' | 'pattern'> {
@@ -24,33 +25,40 @@ function extractSerial(value: string): string {
   return formatSerial(value);
 }
 
-function validateSerial(value: string): ValidationResult | null {
+function validateSerial(value: string, enterAfterPrefix: string, tooShort: string): ValidationResult | null {
   if (!value || value === 'SN-') return null;
   const body = value.replace(/^SN-/, '').replace(/[^a-zA-Z0-9]/g, '');
   if (body.length === 0) {
-    return { valid: false, hint: 'Введите серийный номер после SN-' };
+    return { valid: false, hint: enterAfterPrefix };
   }
   if (body.length < 4) {
-    return { valid: false, hint: 'Серийный номер слишком короткий' };
+    return { valid: false, hint: tooShort };
   }
   return { valid: true, hint: '' };
 }
 
 export const SerialNumberInput = forwardRef<HTMLInputElement, SerialNumberInputProps>(
-  ({ showValidation = true, ...props }, ref) => (
-    <PatternInput
-      ref={ref}
-      placeholder="SN-00000000"
-      formatter={formatSerial}
-      extractor={extractSerial}
-      keyFilter={/^[a-zA-Z0-9]$/}
-      focusValue="SN-"
-      validator={validateSerial}
-      showValidation={showValidation}
-      showValidBorder
-      {...props}
-    />
-  ),
+  ({ showValidation = true, ...props }, ref) => {
+    const locale = useUiLocale();
+    const validator = useMemo(
+      () => (value: string) => validateSerial(value, locale.serialEnterAfterPrefix, locale.serialTooShort),
+      [locale],
+    );
+    return (
+      <PatternInput
+        ref={ref}
+        placeholder="SN-00000000"
+        formatter={formatSerial}
+        extractor={extractSerial}
+        keyFilter={/^[a-zA-Z0-9]$/}
+        focusValue="SN-"
+        validator={validator}
+        showValidation={showValidation}
+        showValidBorder
+        {...props}
+      />
+    );
+  },
 );
 
 SerialNumberInput.displayName = 'SerialNumberInput';

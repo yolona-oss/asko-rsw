@@ -4,6 +4,7 @@ import { VideoTypeEnum } from "@asko/shared";
 import { Video } from './video.entity';
 import { FileAccess } from 'common/file-access.entity';
 import { AppErrors } from "common/error";
+import { msg } from "@asko/shared";
 import { STORAGE_PROVIDER, StorageProvider } from "storage/storage-provider.interface";
 
 @Injectable()
@@ -26,7 +27,7 @@ export class VideoService {
     @CreateRequestContext()
     async remove(id: string) {
         const video = await this.em.findOne(Video, { id });
-        if (!video) throw AppErrors.dbEntityNotFound(`Video ${id} not found`);
+        if (!video) throw AppErrors.dbEntityNotFound({ key: msg.file.videoNotFound });
         await this.storage.delete(video.video.public_id, 'video');
         await this.em.removeAndFlush(video);
     }
@@ -42,7 +43,7 @@ export class VideoService {
     @CreateRequestContext()
     async attachVideo(videoId: string, ownerType: VideoTypeEnum, ownerId: string) {
         const video = await this.em.findOne(Video, { id: videoId });
-        if (!video) throw AppErrors.dbEntityNotFound(`Video ${videoId} not found`);
+        if (!video) throw AppErrors.dbEntityNotFound({ key: msg.file.videoNotFound });
         video.ownerId = String(ownerId);
         video.ownerType = ownerType;
         video.order = await this.em.count(Video, { ownerId, ownerType });
@@ -53,7 +54,7 @@ export class VideoService {
     @CreateRequestContext()
     async unattachVideo(videoId: string) {
         const video = await this.em.findOne(Video, { id: videoId });
-        if (!video) throw AppErrors.dbEntityNotFound(`Video ${videoId} not found`);
+        if (!video) throw AppErrors.dbEntityNotFound({ key: msg.file.videoNotFound });
         video.ownerId = undefined;
         video.ownerType = undefined;
         await this.em.persistAndFlush(video);

@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
-import { REQUEST_USER_KEY, JwtPayload, extractToken, AppErrors } from '@asko/shared';
+import { REQUEST_USER_KEY, JwtPayload, extractToken, AppErrors, msg } from '@asko/shared';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
@@ -50,7 +50,7 @@ export class JwtGuard implements CanActivate {
 
         if (!accessToken) {
             if (isOptionalAuth) return true;
-            throw AppErrors.unauthorized('Authentication token not found.');
+            throw AppErrors.unauthorized({ key: msg.auth.tokenNotFound });
         }
 
         try {
@@ -61,7 +61,7 @@ export class JwtGuard implements CanActivate {
             // Block disabled users — don't attach their context
             if (payload.isActive === false) {
                 if (isOptionalAuth) return true; // proceed as anonymous
-                throw AppErrors.forbidden('Account is disabled');
+                throw AppErrors.forbidden({ key: msg.auth.accountDisabled });
             }
 
             request[REQUEST_USER_KEY] = payload;
@@ -69,7 +69,7 @@ export class JwtGuard implements CanActivate {
             return true;
         } catch (error: any) {
             if (isOptionalAuth) return true;
-            throw AppErrors.unauthorized(`Token validation failed. ${error}`);
+            throw AppErrors.unauthorized({ key: msg.auth.tokenValidationFailed, params: { error: String(error) } });
         }
     }
 }

@@ -1,4 +1,4 @@
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 
 /**
  * Reject the request before any bytes flow through the streaming pipeline
@@ -6,6 +6,6 @@ import { AppErrors } from '@asko/shared';
  */
 export function assertMime(received: string, allowed: RegExp): void {
     if (!allowed.test(received)) {
-        throw AppErrors.badRequest('Unsupported mime type');
+        throw AppErrors.badRequest({ key: msg.file.unsupportedMimeType, params: { mime: received } });
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppErrors } from '@asko/shared';
+import { AppErrors, msg } from '@asko/shared';
 import { isAdmin, type Policy, type PolicyContext } from '@asko/authorization';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairParticipantPolicy } from './repair-participant.policy';
@@ -23,7 +23,7 @@ export class BrokenPartAccessPolicy implements Policy {
         if (isAdmin(ctx.user)) return true;
 
         const { part } = await this.repairClient.findBrokenPartById(partId);
-        if (!part) throw AppErrors.notFound('Запчасть не найдена');
+        if (!part) throw AppErrors.notFound({ key: msg.access.partNotFound });
 
         return this.participantPolicy.authorize({
             ...ctx,

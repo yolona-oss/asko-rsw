@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
-import { REFRESH_TOKEN } from '@asko/shared';
+import { REFRESH_TOKEN, msg } from '@asko/shared';
 import type { JwtPayload } from '@asko/shared';
 
 import {
@@ -212,7 +212,7 @@ export class OAuthController {
             userId: user.id,
             provider,
         });
-        return { message: `${provider} unlinked successfully` };
+        return { message: msg.auth.oauthUnlinked };
     }
 
     // ─── Private Helpers ────────────────────────────────────────────────
@@ -250,7 +250,7 @@ export class OAuthController {
 
         if (!res.ok) {
             const text = await res.text();
-            throw AppErrors.badRequest(`Token exchange failed: ${text}`);
+            throw AppErrors.badRequest({ key: msg.auth.tokenExchangeFailed, params: { details: text } });
         }
 
         return res.json();
@@ -271,7 +271,7 @@ export class OAuthController {
 
         if (!res.ok) {
             const text = await res.text();
-            throw AppErrors.badRequest(`Profile fetch failed: ${text}`);
+            throw AppErrors.badRequest({ key: msg.auth.profileFetchFailed, params: { details: text } });
         }
 
         return res.json();

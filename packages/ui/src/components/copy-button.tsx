@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from './button';
+import { useUiLocale } from '../locale';
 
 export interface CopyButtonProps {
   /** Text to copy to clipboard */
@@ -15,10 +16,11 @@ export interface CopyButtonProps {
 
 export function CopyButton({
   text,
-  label = 'Копировать',
-  copiedLabel = 'Скопировано!',
+  label,
+  copiedLabel,
   className,
 }: CopyButtonProps) {
+  const locale = useUiLocale();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -30,7 +32,7 @@ export function CopyButton({
 
   return (
     <Button variant="secondary" size="sm" onClick={handleCopy} className={className}>
-      {copied ? copiedLabel : label}
+      {copied ? (copiedLabel ?? locale.copied) : (label ?? locale.copy)}
     </Button>
   );
 }

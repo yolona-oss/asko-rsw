@@ -3,6 +3,7 @@
 import { type ReactNode, useMemo } from 'react';
 import { cn } from '../utils/cn';
 import { SkeletonCard } from './skeleton';
+import { useUiLocale } from '../locale';
 
 export interface DataGroup<T> {
   key: string;
@@ -40,6 +41,7 @@ export function DataGroupedView<T>({
   gap = 'md',
   className,
 }: DataGroupedViewProps<T>) {
+  const locale = useUiLocale();
   const groups = useMemo<DataGroup<T>[]>(() => {
     const map = new Map<string, T[]>();
     const order: string[] = [];
@@ -75,7 +77,7 @@ export function DataGroupedView<T>({
   if (groups.length === 0) {
     return (
       <div className="px-5 py-8 text-center text-sm text-text-sub">
-        {emptyContent ?? 'Нет данных'}
+        {emptyContent ?? locale.noData}
       </div>
     );
   }

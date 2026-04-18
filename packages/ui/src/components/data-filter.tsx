@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { ChevronDown, X, Check } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useUiLocale } from '../locale';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ interface FilterMultiSelectProps {
 }
 
 function FilterMultiSelect({ filter, value, onChange }: FilterMultiSelectProps) {
+  const locale = useUiLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -184,7 +186,7 @@ function FilterMultiSelect({ filter, value, onChange }: FilterMultiSelectProps) 
     ? selectedLabels.length <= 2
       ? selectedLabels.join(', ')
       : `${selectedLabels[0]} +${selectedLabels.length - 1}`
-    : 'Все';
+    : locale.filterAll;
 
   return (
     <div ref={ref} className="relative flex items-center gap-2 flex-shrink-0">

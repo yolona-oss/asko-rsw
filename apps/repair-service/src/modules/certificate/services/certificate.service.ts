@@ -13,6 +13,7 @@ import {
     generateCertificateNumber,
 } from '@asko/shared';
 import { PointsTransaction } from 'modules/dealer/entities/points-transaction.entity';
+import { msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { assertUserDeviceReady, ValidationCache } from 'common/validation';
 import { PaymentCommandService } from 'modules/payment-command.service';
@@ -59,15 +60,15 @@ export class CertificateService {
         expiresAt: string;
     }): Promise<Certificate> {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
-        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
+        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         // Validate device + address
         assertUserDeviceReady(userDevice);
 
         // Check uniqueness
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
-        if (existing) throw AppErrors.dbEntityExists('Certificate number already registered');
+        if (existing) throw AppErrors.dbEntityExists({ key: msg.certificate.numberExists });
 
         const cert = this.em.create(Certificate, {
             userId,
@@ -103,8 +104,8 @@ export class CertificateService {
         description?: string;
     }): Promise<Certificate> {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
-        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
+        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         // Validate device + address
         assertUserDeviceReady(userDevice);
@@ -150,13 +151,13 @@ export class CertificateService {
         description?: string;
     }): Promise<Certificate> {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         // Validate device + address
         assertUserDeviceReady(userDevice);
 
         const dealer = await this.em.findOne(DealerProfile, { id: dto.dealerId });
-        if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+        if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
 
         const certNumber = generateCertificateNumber();
 
@@ -197,9 +198,9 @@ export class CertificateService {
     @CreateRequestContext()
     async markPaid(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['dealer', 'replacedCertificate'] });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         if (cert.status !== CertificateStatus.PENDING_PAYMENT) {
-            throw AppErrors.badRequest('Certificate is not pending payment');
+            throw AppErrors.badRequest({ key: msg.certificate.notPendingPayment });
         }
 
         cert.status = CertificateStatus.ACTIVE;
@@ -319,10 +320,10 @@ export class CertificateService {
         const source = await this.em.findOne(Certificate, { id: sourceCertId }, {
             populate: ['userDevice', 'userDevice.device'],
         });
-        if (!source) throw AppErrors.dbEntityNotFound('Certificate not found');
-        if (source.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!source) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
+        if (source.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         if (source.status === CertificateStatus.REVOKED) {
-            throw AppErrors.badRequest('Cannot reapply a revoked certificate');
+            throw AppErrors.badRequest({ key: msg.certificate.cannotReapplyRevoked });
         }
 
         const now = new Date();
@@ -330,19 +331,19 @@ export class CertificateService {
         if (!isExpired) {
             const reapplyWindowStart = new Date(source.expiresAt.getTime() - 30 * 24 * 60 * 60 * 1000);
             if (now < reapplyWindowStart) {
-                throw AppErrors.badRequest('Certificate can only be reapplied within 30 days of expiry');
+                throw AppErrors.badRequest({ key: msg.certificate.reapplyWindowExpired });
             }
         }
 
         const userDevice = typeof source.userDevice === 'object' ? source.userDevice : null;
-        if (!userDevice) throw AppErrors.badRequest('Source certificate has no device');
+        if (!userDevice) throw AppErrors.badRequest({ key: msg.certificate.noDevice });
 
         const pendingForDevice = await this.em.findOne(Certificate, {
             userDevice: userDevice.id,
             status: CertificateStatus.PENDING_PAYMENT,
         });
         if (pendingForDevice) {
-            throw AppErrors.dbEntityExists('A pending certificate already exists for this device');
+            throw AppErrors.dbEntityExists({ key: msg.certificate.pendingExists });
         }
 
         const certNumber = generateCertificateNumber();
@@ -377,8 +378,8 @@ export class CertificateService {
     @CreateRequestContext()
     async dismissExpiryReminder(userId: string, certId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
-        if (cert.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
+        if (cert.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
 
         cert.expiryReminderDismissed = true;
         await this.em.flush();
@@ -389,9 +390,9 @@ export class CertificateService {
     @CreateRequestContext()
     async revokeCertificate(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         if (cert.status === CertificateStatus.REVOKED) {
-            throw AppErrors.badRequest('Certificate is already revoked');
+            throw AppErrors.badRequest({ key: msg.certificate.alreadyRevoked });
         }
 
         cert.status = CertificateStatus.REVOKED;
@@ -405,15 +406,15 @@ export class CertificateService {
     @CreateRequestContext()
     async reassignCertificate(userId: string, certId: string, userDeviceId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
-        if (cert.userId !== userId) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
+        if (cert.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         if (cert.status !== CertificateStatus.ACTIVE) {
-            throw AppErrors.badRequest('Can only reassign active certificates');
+            throw AppErrors.badRequest({ key: msg.certificate.onlyActiveReassign });
         }
 
         const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
-        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
+        if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         cert.userDevice = userDevice;
         cert.pdfDocumentId = undefined;
@@ -425,7 +426,7 @@ export class CertificateService {
     @CreateRequestContext()
     async calculatePrice(userDeviceId: string, expiresAt: string): Promise<{ price: number; devicePrice: number; years: number }> {
         const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
-        if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
+        if (!userDevice) throw AppErrors.dbEntityNotFound({ key: msg.repair.userDeviceNotFound });
 
         const devicePrice = userDevice.device.price ?? 0;
         const years = Math.max(1, Math.ceil(
@@ -441,7 +442,7 @@ export class CertificateService {
     @CreateRequestContext()
     async findById(id: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id }, { populate: ['userDevice', 'userDevice.device', 'dealer'] });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         return cert;
     }
 
@@ -621,7 +622,7 @@ export class CertificateService {
         const cert = await this.em.findOne(Certificate, { id: certId }, {
             populate: ['userDevice', 'userDevice.device'],
         });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
 
         const durationMs = cert.expiresAt.getTime() - cert.issuedAt.getTime();
         const durationMonths = Math.round(durationMs / (1000 * 60 * 60 * 24 * 30));
@@ -647,7 +648,7 @@ export class CertificateService {
     @CreateRequestContext()
     async setPdfDocumentId(certId: string, documentId: string): Promise<Certificate> {
         const cert = await this.em.findOne(Certificate, { id: certId });
-        if (!cert) throw AppErrors.dbEntityNotFound('Certificate not found');
+        if (!cert) throw AppErrors.dbEntityNotFound({ key: msg.certificate.notFound });
         cert.pdfDocumentId = documentId;
         await this.em.flush();
         return cert;

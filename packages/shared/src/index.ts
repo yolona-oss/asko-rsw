@@ -40,5 +40,8 @@ export * from './upload/index.js';
 // Error system
 export * from './error/index.js';
 
+// i18n — message keys, catalogs, translate
+export * from './i18n/index.js';
+
 // Cross-service event signing (HMAC envelopes)
 export * from './event-signing/index.js';

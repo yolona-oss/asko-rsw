@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Review } from 'modules/repairer/entities/review.entity';
 import { RepairRequest } from 'modules/repair-request/entities/repair-request.entity';
-import { RepairRequestStatus } from '@asko/shared';
+import { RepairRequestStatus, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 
 @Injectable()
@@ -22,17 +22,17 @@ export class ReviewService {
             { id: dto.repairRequestId },
             { populate: ['repairer'] },
         );
-        if (!request) throw AppErrors.dbEntityNotFound('Repair request not found');
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         if (request.status !== RepairRequestStatus.COMPLETED) {
-            throw AppErrors.badRequest('Отзыв можно оставить только для завершённого ремонта');
+            throw AppErrors.badRequest({ key: msg.review.onlyForCompleted });
         }
         if (request.userId !== dto.userId) {
-            throw AppErrors.badRequest('Только владелец заявки может оставить отзыв');
+            throw AppErrors.badRequest({ key: msg.review.onlyOwner });
         }
 
         const repairer = request.repairer;
         if (!repairer) {
-            throw AppErrors.badRequest('К заявке не привязан исполнитель — отзыв невозможен');
+            throw AppErrors.badRequest({ key: msg.review.noRepairer });
         }
 
         // Check for duplicate review
@@ -40,11 +40,11 @@ export class ReviewService {
             repairRequest: dto.repairRequestId,
             userId: dto.userId,
         });
-        if (existing) throw AppErrors.dbEntityExists('Отзыв для этой заявки уже существует');
+        if (existing) throw AppErrors.dbEntityExists({ key: msg.review.alreadyExists });
 
         // Validate rating range
         if (dto.rating < 1 || dto.rating > 5) {
-            throw AppErrors.badRequest('Рейтинг должен быть от 1 до 5');
+            throw AppErrors.badRequest({ key: msg.review.ratingRange });
         }
 
         const review = this.em.create(Review, {
@@ -101,7 +101,7 @@ export class ReviewService {
         const review = await this.em.findOne(Review, { id: reviewId, userId }, {
             populate: ['repairer', 'repairRequest'],
         });
-        if (!review) throw AppErrors.dbEntityNotFound('Review not found');
+        if (!review) throw AppErrors.dbEntityNotFound({ key: msg.review.notFound });
         return review;
     }
 

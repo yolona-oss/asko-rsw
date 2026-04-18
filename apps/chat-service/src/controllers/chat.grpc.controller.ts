@@ -1,10 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { status } from '@grpc/grpc-js';
 import { ConversationService } from 'services/conversation.service';
 import { MessageService } from 'services/message.service';
 import { PresenceService } from 'services/presence.service';
-import { AppError } from 'common/error';
+import { appErrorToGrpcPayload } from '@asko/shared';
 import type {
     CreateConversationRequest,
     GetConversationRequest,
@@ -30,20 +29,7 @@ import type { Message } from 'entities/message.entity';
 import type { UserPresence } from 'entities/user-presence.entity';
 
 function toGrpcError(error: unknown): RpcException {
-    if (error instanceof AppError) {
-        let grpcCode: number;
-        switch (true) {
-            case error.httpStatus === 400: grpcCode = status.INVALID_ARGUMENT; break;
-            case error.httpStatus === 401: grpcCode = status.UNAUTHENTICATED; break;
-            case error.httpStatus === 403: grpcCode = status.PERMISSION_DENIED; break;
-            case error.httpStatus === 404: grpcCode = status.NOT_FOUND; break;
-            case error.httpStatus === 409: grpcCode = status.ALREADY_EXISTS; break;
-            default: grpcCode = status.INTERNAL; break;
-        }
-        return new RpcException({ code: grpcCode, message: error.message });
-    }
-    const msg = error instanceof Error ? error.message : 'Internal error';
-    return new RpcException({ code: status.INTERNAL, message: msg });
+    return new RpcException(appErrorToGrpcPayload(error));
 }
 
 function conversationToRecord(entity: Conversation, unreadCount = 0, lastMessage?: Message | null) {

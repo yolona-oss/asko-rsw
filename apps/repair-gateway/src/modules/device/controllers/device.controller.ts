@@ -15,6 +15,7 @@ import {
     PaginationDto,
     JwtPayload,
     ImageTypeEnum,
+    msg,
 } from '@asko/shared';
 
 class DeviceQueryDto extends PaginationDto {
@@ -94,7 +95,7 @@ export class DeviceController {
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@Param('id') id: string) {
         await this.deviceClient.deleteDevice(id);
-        return { message: 'Device deleted' };
+        return { message: msg.device.deleted };
     }
 
     // ── Admin: device images ──
@@ -139,7 +140,7 @@ export class DeviceController {
     @ApiOkResponse({ type: MessageResponseDto })
     async removePart(@Param('id') _id: string, @Param('partId') partId: string) {
         await this.deviceClient.deleteDevicePart(partId);
-        return { message: 'Device part deleted' };
+        return { message: msg.device.partDeleted };
     }
 
     @Public()
@@ -265,6 +266,6 @@ export class UserDeviceController {
     @ApiOkResponse({ type: MessageResponseDto })
     async remove(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         await this.deviceClient.removeUserDevice(user.sub, id);
-        return { message: 'Device removed from account' };
+        return { message: msg.device.removedFromAccount };
     }
 }
