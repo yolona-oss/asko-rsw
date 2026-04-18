@@ -3,7 +3,7 @@
 import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+import { SchedulePageSkeleton, MySchedulePageSkeleton } from '@/components/account/layout/page-skeleton';
 
 const SchedulePage = lazy(() => import('@/components/account/schedule/schedule-page').then(m => ({ default: m.SchedulePage })));
 const MySchedulePage = lazy(() => import('@/components/account/schedule/my-schedule-page').then(m => ({ default: m.MySchedulePage })));
@@ -16,5 +16,9 @@ export default function SchedulePageRoute() {
     ? <MySchedulePage />
     : <SchedulePage />;
 
-  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
+  const skeleton = role === 'repairer'
+    ? <MySchedulePageSkeleton />
+    : <SchedulePageSkeleton />;
+
+  return <Suspense fallback={skeleton}>{content}</Suspense>;
 }

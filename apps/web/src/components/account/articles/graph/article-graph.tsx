@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api/client';
+import { PageContainer } from '@/components/account/layout/page-container';
+import { PageHeader } from '@/components/account/layout/page-header';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -127,15 +129,27 @@ export function ArticleGraph() {
     }, []);
 
     if (loading) {
-        return <p className="text-sm text-text-sub p-4">Загрузка графа...</p>;
+        return (
+            <PageContainer>
+                <PageHeader>Граф связей статей</PageHeader>
+                <p className="text-sm text-text-sub">Загрузка графа...</p>
+            </PageContainer>
+        );
     }
 
     if (graphData.nodes.length === 0) {
-        return <p className="text-sm text-text-sub p-4">Нет данных для графа</p>;
+        return (
+            <PageContainer>
+                <PageHeader>Граф связей статей</PageHeader>
+                <p className="text-sm text-text-sub">Нет данных для графа</p>
+            </PageContainer>
+        );
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <PageContainer>
+            <PageHeader>Граф связей статей</PageHeader>
+            <div className="flex flex-col gap-4">
             {/* Legend */}
             <div className="flex gap-6 text-xs text-text-sub">
                 <span className="flex items-center gap-1.5">
@@ -213,6 +227,7 @@ export function ArticleGraph() {
                     </button>
                 </div>
             )}
-        </div>
+            </div>
+        </PageContainer>
     );
 }

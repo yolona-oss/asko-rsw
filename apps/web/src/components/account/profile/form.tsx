@@ -7,8 +7,10 @@ import { useAuth } from '@/lib/api/use-auth';
 import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../layout/avatar-crop-modal';
-import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
+import { Button, FormField, PhoneInput, EmailInput, NameInput, Card } from '@asko/ui';
 import { useFormGuard } from '@/hooks/use-form-guard';
+import { PageContainer } from '../layout/page-container';
+import { PageHeader } from '../layout/page-header';
 import { EditedMark } from '@/components/shared/edited-mark';
 import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
@@ -265,14 +267,24 @@ export function ProfileForm() {
   // ---- Skeleton ----
 
   if (!loaded) {
-    return <ProfileFormSkeleton />;
+    return (
+      <PageContainer>
+        <PageHeader>Профиль</PageHeader>
+        <Card>
+          <ProfileFormSkeleton />
+        </Card>
+      </PageContainer>
+    );
   }
 
   const displayAvatar = avatarPreview || user?.avatar;
 
   return (
     <>
-      <div className="flex flex-col gap-6 lg:gap-8">
+      <PageContainer>
+        <PageHeader>Профиль</PageHeader>
+        <Card>
+          <div className="flex flex-col gap-6 lg:gap-8">
         {/* Avatar section */}
         <AvatarSection
           displayAvatar={displayAvatar}
@@ -385,8 +397,10 @@ export function ProfileForm() {
               {message.text}
             </p>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
+        </Card>
+      </PageContainer>
 
       {guard.guardDialog}
       {guard.draftDialog}

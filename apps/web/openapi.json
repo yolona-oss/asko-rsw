@@ -9766,6 +9766,7 @@
           "address_validation_failed",
           "user_device_validated",
           "user_device_validation_failed",
+          "certificate_integrity_failed",
           "repair_part_shipped"
         ]
       },

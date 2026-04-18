@@ -3,7 +3,7 @@
 import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+import { AccountPageSkeleton, UserPaymentsSkeleton, DealerPaymentsSkeleton } from '@/components/account/layout/page-skeleton';
 
 const ManagerPayments = lazy(() => import('@/components/account/payments/manager').then(m => ({ default: m.ManagerPayments })));
 const DealerPayments = lazy(() => import('@/components/account/payments/dealer').then(m => ({ default: m.DealerPayments })));
@@ -28,5 +28,17 @@ export default function PaymentsPage() {
     }
   })();
 
-  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
+  const skeleton = (() => {
+    switch (role) {
+      case 'admin':
+      case 'manager':
+        return <AccountPageSkeleton />;
+      case 'dealer':
+        return <DealerPaymentsSkeleton />;
+      default:
+        return <UserPaymentsSkeleton />;
+    }
+  })();
+
+  return <Suspense fallback={skeleton}>{content}</Suspense>;
 }

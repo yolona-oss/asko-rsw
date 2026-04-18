@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { AccountPageSkeleton } from '@/components/account/layout/page-skeleton';
+import { DetailPageSkeleton } from '@/components/account/layout/page-skeleton';
 
 const UserRequestStatus = lazy(() => import('@/components/account/requests/user').then(m => ({ default: m.UserRequestStatus })));
 const ManagerRequestDetail = lazy(() => import('@/components/account/requests/manager').then(m => ({ default: m.ManagerRequestDetail })));
@@ -28,5 +28,5 @@ export default function RequestDetailPage() {
     return <UserRequestStatus requestId={id} />;
   })();
 
-  return <Suspense fallback={<AccountPageSkeleton />}>{content}</Suspense>;
+  return <Suspense fallback={<DetailPageSkeleton />}>{content}</Suspense>;
 }

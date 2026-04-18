@@ -3,7 +3,12 @@
 import { lazy, Suspense } from 'react';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
-import { DashboardPageSkeleton } from '@/components/account/layout/page-skeleton';
+import {
+  AdminDashboardSkeleton,
+  UserDashboardSkeleton,
+  DealerDashboardSkeleton,
+  RepairerDashboardSkeleton,
+} from '@/components/account/layout/page-skeleton';
 
 const UserDashboard = lazy(() => import('@/components/account/dashboard').then(m => ({ default: m.UserDashboard })));
 const DealerDashboard = lazy(() => import('@/components/account/dashboard/dealer').then(m => ({ default: m.DealerDashboard })));
@@ -16,8 +21,10 @@ export default function AccountDashboardPage() {
 
   if (!user) return null;
 
+  const role = primaryRole(user);
+
   const content = (() => {
-    switch (primaryRole(user)) {
+    switch (role) {
       case 'admin':
         return <AdminDashboard />;
       case 'dealer':
@@ -31,5 +38,19 @@ export default function AccountDashboardPage() {
     }
   })();
 
-  return <Suspense fallback={<DashboardPageSkeleton />}>{content}</Suspense>;
+  const skeleton = (() => {
+    switch (role) {
+      case 'admin':
+      case 'manager':
+        return <AdminDashboardSkeleton />;
+      case 'dealer':
+        return <DealerDashboardSkeleton />;
+      case 'repairer':
+        return <RepairerDashboardSkeleton />;
+      default:
+        return <UserDashboardSkeleton />;
+    }
+  })();
+
+  return <Suspense fallback={skeleton}>{content}</Suspense>;
 }
