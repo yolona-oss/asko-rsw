@@ -9,16 +9,20 @@ import { useSidebar } from './sidebar-context';
 import { useFormGuardContext } from './form-guard-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
-import { User, LogOut, Monitor, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Monitor, Sun, Moon, Languages } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
+import { useLanguage } from '@/lib/language';
+import { usersApi } from '@/lib/api/users';
 import { NotificationBell } from '../notifications';
 import { SessionsDialog } from './sessions-dialog';
+import type { Locale } from '@asko/shared/client';
 
 export function AccountHeader() {
   const { user } = useAccount();
   const { mobileOpen, setMobileOpen } = useSidebar();
   const { getGuard } = useFormGuardContext();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);
   const router = useRouter();
@@ -38,6 +42,12 @@ export function AccountHeader() {
     [getGuard, router],
   );
 
+  const toggleLanguage = useCallback(() => {
+    const next: Locale = language === 'ru' ? 'en' : 'ru';
+    setLanguage(next);
+    usersApi.updateProfile({ settings: { language: next } } as any).catch(() => {});
+  }, [language, setLanguage]);
+
   const avatarDropdownItems: DropdownMenuEntry[] = [
     {
       key: 'profile',
@@ -50,6 +60,12 @@ export function AccountHeader() {
       label: 'Устройства',
       icon: <Monitor className="w-4 h-4" />,
       onClick: () => setSessionsDialogOpen(true),
+    },
+    {
+      key: 'language',
+      label: language === 'ru' ? 'English' : 'Русский',
+      icon: <Languages className="w-4 h-4" />,
+      onClick: toggleLanguage,
     },
     'separator',
     {

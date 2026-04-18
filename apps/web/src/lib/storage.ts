@@ -64,4 +64,5 @@ export const STORAGE_KEYS = {
   soundMuted: (channel: string) => `asko:sound-muted:${channel}`,
   soundReminder: 'asko:sound-reminder',
   draft: (key: string) => `asko:draft:${key}`,
+  language: 'language',
 } as const;

@@ -11,12 +11,16 @@ export const api = axios.create({
   withCredentials: true, // send refresh token cookie
 });
 
-// Attach access token from Redux to every request
+// Attach access token + Accept-Language from localStorage to every request
 api.interceptors.request.use((config) => {
   const token = store.getState().auth.accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const lang = typeof window !== 'undefined'
+    ? localStorage.getItem('language') || 'ru'
+    : 'ru';
+  config.headers['Accept-Language'] = lang;
   return config;
 });
 

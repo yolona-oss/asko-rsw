@@ -3,26 +3,34 @@ import { Migration } from '@mikro-orm/migrations';
 export class Migration20260418201349 extends Migration {
 
   override async up(): Promise<void> {
-    this.addSql(`alter table "user" drop constraint "user_settings_id_fkey";`);
+    this.addSql(`alter table "user" drop constraint if exists "user_settings_id_fkey";`);
 
     this.addSql(`alter table "user_oauth_link" alter column "created_at" drop default;`);
     this.addSql(`alter table "user_oauth_link" alter column "created_at" type timestamptz using ("created_at"::timestamptz);`);
 
-    this.addSql(`drop index "idx_user_settings_chat_searchable";`);
+    this.addSql(`drop index if exists "idx_user_settings_chat_searchable";`);
 
-    this.addSql(`alter table "user_settings" add column "language" varchar(5) not null default 'ru';`);
+    this.addSql(`alter table "user_settings" add column if not exists "language" varchar(5) not null default 'ru';`);
     this.addSql(`alter table "user_settings" alter column "created_at" drop default;`);
     this.addSql(`alter table "user_settings" alter column "created_at" type timestamptz using ("created_at"::timestamptz);`);
     this.addSql(`alter table "user_settings" alter column "updated_at" drop default;`);
     this.addSql(`alter table "user_settings" alter column "updated_at" type timestamptz using ("updated_at"::timestamptz);`);
 
-    this.addSql(`alter table "user" add constraint "user_settings_id_foreign" foreign key ("settings_id") references "user_settings" ("id") on update cascade on delete cascade;`);
-    this.addSql(`alter table "user" drop constraint "idx_user_settings_id";`);
-    this.addSql(`alter table "user" add constraint "user_settings_id_unique" unique ("settings_id");`);
+    this.addSql(`do $$ begin
+      if not exists (select 1 from pg_constraint where conname = 'user_settings_id_foreign') then
+        alter table "user" add constraint "user_settings_id_foreign" foreign key ("settings_id") references "user_settings" ("id") on update cascade on delete cascade;
+      end if;
+    end $$;`);
+    this.addSql(`alter table "user" drop constraint if exists "idx_user_settings_id";`);
+    this.addSql(`do $$ begin
+      if not exists (select 1 from pg_constraint where conname = 'user_settings_id_unique') then
+        alter table "user" add constraint "user_settings_id_unique" unique ("settings_id");
+      end if;
+    end $$;`);
 
-    this.addSql(`drop index "idx_session_rotated_at";`);
+    this.addSql(`drop index if exists "idx_session_rotated_at";`);
 
-    this.addSql(`drop index "idx_user_status_user_changed";`);
+    this.addSql(`drop index if exists "idx_user_status_user_changed";`);
   }
 
   override async down(): Promise<void> {

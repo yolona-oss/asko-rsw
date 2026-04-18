@@ -9,6 +9,7 @@ import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput, Card } from '@asko/ui';
 import { useFormGuard } from '@/hooks/use-form-guard';
+import { useLanguage } from '@/lib/language';
 import { PageContainer } from '../layout/page-container';
 import { PageHeader } from '../layout/page-header';
 import { EditedMark } from '@/components/shared/edited-mark';
@@ -22,6 +23,7 @@ import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 import { SessionsSection } from './sessions-section';
 import { SoundSettingsSection } from './sound-settings-section';
+import { LanguageSection } from './language-section';
 import { AddressesSection } from './addresses-section';
 
 import {
@@ -34,6 +36,7 @@ export function ProfileForm() {
   const { user } = useAccount();
   const { user: authUser } = useAuth();
   const queryClient = useQueryClient();
+  const { setLanguage } = useLanguage();
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -100,6 +103,7 @@ export function ProfileForm() {
         if (settings) {
           setChatAcceptConversations(chatAccept);
           setChatSearchable(chatSearch);
+          if (settings.language) setLanguage(settings.language);
         }
         setInitialState({
           fullName: [data.lastName, data.firstName, (data as any).middleName].filter(Boolean).join(' '),
@@ -369,6 +373,10 @@ export function ProfileForm() {
           chatSearchable={chatSearchable}
           setChatSearchable={setChatSearchable}
         />
+
+        {/* Language */}
+        <div className="h-px bg-border-light" />
+        <LanguageSection />
 
         {/* Sounds */}
         <div className="h-px bg-border-light" />

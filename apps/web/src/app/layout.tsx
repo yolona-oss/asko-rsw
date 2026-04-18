@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import NextTopLoader from 'nextjs-toploader';
 import { ThemeProvider } from '@/lib/theme';
+import { LanguageProvider } from '@/lib/language';
 import { AppProviders } from '@/store/providers';
 import { YandexMetrika } from '@/components/YandexMetrika';
 import '@/styles/globals.css';
@@ -45,11 +46,15 @@ export default function RootLayout({
       <head>
         {/* Key 'theme' must match STORAGE_KEYS.theme in lib/storage.ts */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} />
+        {/* Sync html lang from stored preference before hydration */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var l=localStorage.getItem('language');if(l)document.documentElement.lang=l}catch{}` }} />
       </head>
       <body className="min-h-screen flex flex-col">
         <NextTopLoader color="var(--color-brand-red)" height={3} showSpinner={false} />
         <ThemeProvider>
-          <AppProviders>{children}</AppProviders>
+          <LanguageProvider>
+            <AppProviders>{children}</AppProviders>
+          </LanguageProvider>
         </ThemeProvider>
         <Suspense fallback={null}>
           <YandexMetrika />
