@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
-import { assertAddressValid } from 'common/address-validation.guard';
-import { slugify } from '@asko/shared';
+import { assertAddressValid } from 'common/validation';
+import { slugify, DeviceValidationStatus } from '@asko/shared';
 import { resolveTimezone } from 'common/timezone-lookup';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
@@ -371,7 +371,7 @@ export class DeviceService {
 
         // Re-validate if serial number changed
         if (serialChanged) {
-            userDevice.validationStatus = 'pending';
+            userDevice.validationStatus = DeviceValidationStatus.PENDING;
             userDevice.validationError = undefined;
         }
 

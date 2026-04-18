@@ -1,5 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
+import { DeviceValidationStatus } from '@asko/shared';
 import { Device } from './device.entity';
 import { Address } from './address.entity';
 
@@ -40,8 +41,8 @@ export class UserDevice {
     @Property({ type: 'text', nullable: true })
     registrationSignedPayload?: string;
 
-    @Property({ type: 'varchar', length: 20, default: 'pending' })
-    validationStatus: string = 'pending';
+    @Property({ type: 'varchar', length: 20, default: DeviceValidationStatus.PENDING })
+    validationStatus: DeviceValidationStatus = DeviceValidationStatus.PENDING;
 
     @Property({ type: 'text', nullable: true })
     validationError?: string;

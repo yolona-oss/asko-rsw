@@ -14,11 +14,13 @@ import {
 } from '@asko/shared';
 import { PointsTransaction } from 'modules/dealer/entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
-import { assertAddressValid } from 'common/address-validation.guard';
+import { assertUserDeviceReady, ValidationCache } from 'common/validation';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { PaidPaymentService } from 'modules/shared-services/services/paid-payment.service';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
 import { CertificatePdfService } from './certificate-pdf.service';
+import { buildCertIntegrityChain, type IntegrityFailReason, type CertIntegrityContext } from '../validation';
+import { RepairEventService, RepairEventType } from 'services/repair-event.service';
 
 const STATUS_LABELS: Record<string, string> = {
     pending_payment: 'Ожидает оплаты',
@@ -38,12 +40,15 @@ function calculateCertificatePrice(devicePrice: number, years: number): number {
 
 @Injectable()
 export class CertificateService {
+    private readonly integrityCache = new ValidationCache<{ ok: true } | { ok: false; reason: IntegrityFailReason }>(30_000);
+
     constructor(
         private readonly em: EntityManager,
         private readonly paymentCommandService: PaymentCommandService,
         private readonly paidPayments: PaidPaymentService,
         private readonly signatureService: SignatureService,
         private readonly certificatePdfService: CertificatePdfService,
+        private readonly repairEvents: RepairEventService,
     ) {}
 
     /** User adds an existing certificate (e.g. received with product) */
@@ -57,8 +62,8 @@ export class CertificateService {
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
         if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
 
-        // Validate address
-        assertAddressValid(typeof userDevice.address === 'object' ? userDevice.address : null);
+        // Validate device + address
+        assertUserDeviceReady(userDevice);
 
         // Check uniqueness
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
@@ -100,6 +105,9 @@ export class CertificateService {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
         if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
+
+        // Validate device + address
+        assertUserDeviceReady(userDevice);
 
         const certNumber = generateCertificateNumber();
 
@@ -144,8 +152,8 @@ export class CertificateService {
         const userDevice = await this.em.findOne(UserDevice, { id: dto.userDeviceId }, { populate: ['device', 'address'] });
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
-        // Validate address
-        assertAddressValid(typeof userDevice.address === 'object' ? userDevice.address : null);
+        // Validate device + address
+        assertUserDeviceReady(userDevice);
 
         const dealer = await this.em.findOne(DealerProfile, { id: dto.dealerId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
@@ -197,11 +205,13 @@ export class CertificateService {
         cert.status = CertificateStatus.ACTIVE;
         cert.paid = true;
         cert.pdfDocumentId = undefined;
+        this.integrityCache.invalidate(cert.id);
 
         if (cert.replacedCertificate && typeof cert.replacedCertificate === 'object') {
             const prior = cert.replacedCertificate;
             if (prior.status === CertificateStatus.ACTIVE) {
                 prior.status = CertificateStatus.EXPIRED;
+                this.integrityCache.invalidate(prior.id);
             }
         }
 
@@ -386,6 +396,7 @@ export class CertificateService {
 
         cert.status = CertificateStatus.REVOKED;
         cert.pdfDocumentId = undefined;
+        this.integrityCache.invalidate(cert.id);
         await this.em.flush();
         return cert;
     }
@@ -548,54 +559,51 @@ export class CertificateService {
         if (certDeviceId !== userDeviceId) return { ok: false, reason: 'wrong_device', certificate: cert };
 
         const integrity = await this.verifyCertificateIntegrity(cert);
-        if (!integrity.ok) return { ok: false, reason: integrity.reason, certificate: cert };
+        if (!integrity.ok) {
+            this.repairEvents.emitCertificateIntegrityEvent({
+                type: RepairEventType.CERTIFICATE_INTEGRITY_FAILED,
+                certificateId: cert.id,
+                certificateNumber: cert.certificateNumber,
+                userId,
+                failReason: integrity.reason,
+                timestamp: new Date(),
+            }).catch((e) => console.error('[CertificateService] Failed to emit integrity event:', e));
+            return { ok: false, reason: integrity.reason, certificate: cert };
+        }
 
         return { ok: true, certificate: cert };
     }
 
     /**
-     * Shared cert integrity check. Used by both validateCertificate (public gRPC
-     * API) and validateCertificateForRequest (internal, for repair-request creation).
-     *
-     * Checks are ordered cheap → expensive so invalid certs fail fast without
-     * spending a gRPC round-trip on the Payment cross-check:
-     *   1. status (REVOKED / EXPIRED)
-     *   2. expiresAt vs now
-     *   3. cert.paid flag (local pre-filter)
-     *   4. ECDSA signature verification
-     *   5. Payment-record cross-check against payment-service (only for
-     *      invoiced certs — bundled certs from addCertificate() have price=null
-     *      and no Payment row by design)
+     * Shared cert integrity check via Chain of Responsibility.
+     * Results cached for 30s to avoid repeated crypto + DB work on retries.
      */
     private async verifyCertificateIntegrity(
         cert: Certificate,
     ): Promise<{ ok: true } | { ok: false; reason: IntegrityFailReason }> {
-        if (cert.status === CertificateStatus.REVOKED) return { ok: false, reason: 'revoked' };
-        if (cert.status === CertificateStatus.EXPIRED || new Date() > cert.expiresAt) {
-            return { ok: false, reason: 'expired' };
-        }
-        if (!cert.paid) return { ok: false, reason: 'not_paid' };
+        const cached = this.integrityCache.get(cert.id);
+        if (cached) return cached;
 
-        const sig = this.signatureService.verifyStoredSignature(cert.signedPayload, cert.signature);
-        if (!sig.valid) return { ok: false, reason: 'signature_invalid' };
+        const chain = buildCertIntegrityChain(this.signatureService, this.paidPayments);
+        const ctx: CertIntegrityContext = {
+            certId: cert.id,
+            status: cert.status,
+            paid: !!cert.paid,
+            expiresAt: cert.expiresAt,
+            signedPayload: cert.signedPayload,
+            signature: cert.signature,
+            price: cert.price ?? null,
+            invalid: false,
+        };
 
-        // Cross-check against the local PaidPayment cache only when the cert
-        // was actually invoiced. addCertificate() creates bundled certs with
-        // price=null; no Payment row exists for them by design.
-        //
-        // The cache is populated by the `payment.paid` RMQ consumer in this
-        // service (see payment-event.consumer.ts). If payment-service is down,
-        // no new events arrive and this check fails closed — the same
-        // behavior as the previous synchronous gRPC cross-check.
-        if (cert.price != null) {
-            const hasPaid = await this.paidPayments.hasPaid(
-                PaymentTargetType.CERTIFICATE,
-                cert.id,
-            );
-            if (!hasPaid) return { ok: false, reason: 'payment_not_found' };
-        }
+        await chain.handle(ctx);
 
-        return { ok: true };
+        const result: { ok: true } | { ok: false; reason: IntegrityFailReason } = ctx.invalid
+            ? { ok: false, reason: ctx.failReason! }
+            : { ok: true };
+
+        this.integrityCache.set(cert.id, result);
+        return result;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -645,13 +653,6 @@ export class CertificateService {
         return cert;
     }
 }
-
-type IntegrityFailReason =
-    | 'revoked'
-    | 'expired'
-    | 'not_paid'
-    | 'signature_invalid'
-    | 'payment_not_found';
 
 const INTEGRITY_REASON_MESSAGES: Record<IntegrityFailReason, string> = {
     revoked: 'Certificate is revoked',

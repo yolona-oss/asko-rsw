@@ -1,12 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
-import { sleep } from '@asko/shared';
+import { sleep, DeviceValidationStatus } from '@asko/shared';
 import { UserDevice } from 'modules/device/entities/user-device.entity';
 import type { UserDeviceValidationEvent } from 'modules/user-device-validation.service';
 import { UserDeviceValidationPublisher } from 'modules/user-device-validation.service';
 import { ExternalCertValidationService } from 'modules/certificate/services/external-cert-validation.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
+import { buildDeviceValidationChain } from 'modules/device/validation';
+import type { DeviceValidationContext } from 'modules/device/validation';
 
 const MAX_RETRIES = 3;
 
@@ -37,7 +39,7 @@ export class UserDeviceValidationConsumer {
                 await this.validationPublisher.emit({ ...data, attempt: data.attempt + 1 });
             } else {
                 console.error(`[UserDeviceValidation] Max retries reached for ${data.userDeviceId}, marking as error`);
-                await this.markDevice(data.userDeviceId, 'error', 'Не удалось выполнить проверку: превышено число попыток');
+                await this.markDevice(data.userDeviceId, DeviceValidationStatus.ERROR, 'Не удалось выполнить проверку: превышено число попыток');
             }
 
             channel.ack(msg);
@@ -46,40 +48,25 @@ export class UserDeviceValidationConsumer {
 
     @CreateRequestContext()
     private async validate(data: UserDeviceValidationEvent): Promise<void> {
-        const { userDeviceId, deviceId, serialNumber } = data;
+        const chain = buildDeviceValidationChain(this.em, this.externalValidator);
 
-        // 1. Duplicate check: same device model + same serial number (excluding self)
-        const duplicate = await this.em.findOne(UserDevice, {
-            device: deviceId,
-            serialNumber,
-            id: { $ne: userDeviceId },
-            validationStatus: { $ne: 'invalid' },
-        });
+        const ctx: DeviceValidationContext = {
+            userDeviceId: data.userDeviceId,
+            deviceId: data.deviceId,
+            serialNumber: data.serialNumber,
+            invalid: false,
+        };
 
-        if (duplicate) {
-            await this.markDevice(
-                userDeviceId,
-                'invalid',
-                'Устройство с таким серийным номером уже зарегистрировано',
-            );
+        await chain.handle(ctx);
+
+        if (ctx.invalid) {
+            await this.markDevice(data.userDeviceId, DeviceValidationStatus.INVALID, ctx.errorMessage!);
             return;
         }
 
-        // 2. External serial number validation
-        const externalResult = await this.externalValidator.validateSerialNumber(serialNumber);
-        if (!externalResult.valid) {
-            await this.markDevice(
-                userDeviceId,
-                'invalid',
-                externalResult.reason || 'Серийный номер не прошёл внешнюю проверку',
-            );
-            return;
-        }
-
-        // 3. Mark as valid
-        const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
+        const userDevice = await this.em.findOne(UserDevice, { id: data.userDeviceId }, { populate: ['device'] });
         if (userDevice) {
-            userDevice.validationStatus = 'valid';
+            userDevice.validationStatus = DeviceValidationStatus.VALID;
             userDevice.validationError = undefined;
             await this.em.flush();
 
@@ -87,26 +74,26 @@ export class UserDeviceValidationConsumer {
 
             await this.repairEvents.emitUserDeviceEvent({
                 type: RepairEventType.USER_DEVICE_VALIDATED,
-                userDeviceId,
+                userDeviceId: data.userDeviceId,
                 userId: userDevice.userId,
-                serialNumber,
+                serialNumber: data.serialNumber,
                 deviceName,
                 timestamp: new Date(),
             });
         }
 
-        console.log(`[UserDeviceValidation] Device ${userDeviceId} validated successfully`);
+        console.log(`[UserDeviceValidation] Device ${data.userDeviceId} validated successfully`);
     }
 
     @CreateRequestContext()
-    private async markDevice(userDeviceId: string, status: string, error: string): Promise<void> {
+    private async markDevice(userDeviceId: string, status: DeviceValidationStatus, error: string): Promise<void> {
         const userDevice = await this.em.findOne(UserDevice, { id: userDeviceId }, { populate: ['device'] });
         if (userDevice) {
             userDevice.validationStatus = status;
             userDevice.validationError = error;
             await this.em.flush();
 
-            if (status === 'invalid' || status === 'error') {
+            if (status === DeviceValidationStatus.INVALID || status === DeviceValidationStatus.ERROR) {
                 const deviceName = typeof userDevice.device === 'object' ? userDevice.device.name : '';
 
                 await this.repairEvents.emitUserDeviceEvent({

@@ -19,6 +19,7 @@ export enum RepairEventType {
     ADDRESS_VALIDATION_FAILED = 'address.validation_failed',
     USER_DEVICE_VALIDATED = 'user_device.validated',
     USER_DEVICE_VALIDATION_FAILED = 'user_device.validation_failed',
+    CERTIFICATE_INTEGRITY_FAILED = 'certificate.integrity_failed',
     PART_SHIPPED = 'repair.part_shipped',
 }
 
@@ -51,6 +52,15 @@ export interface CertificateEvent {
     userDeviceId: string;
     expiresAt: string;
     daysUntilExpiry: number;
+    timestamp: Date;
+}
+
+export interface CertificateIntegrityEvent {
+    type: RepairEventType.CERTIFICATE_INTEGRITY_FAILED;
+    certificateId: string;
+    certificateNumber: string;
+    userId: string;
+    failReason: string;
     timestamp: Date;
 }
 
@@ -94,6 +104,11 @@ export class RepairEventService implements OnModuleInit {
 
     async emitCertificateEvent(event: CertificateEvent): Promise<void> {
         console.log(`[CertificateEvent] ${event.type}`, JSON.stringify(event));
+        this.rmqClient.emit(event.type, event);
+    }
+
+    async emitCertificateIntegrityEvent(event: CertificateIntegrityEvent): Promise<void> {
+        console.log(`[CertificateIntegrityEvent] ${event.type}`, JSON.stringify(event));
         this.rmqClient.emit(event.type, event);
     }
 

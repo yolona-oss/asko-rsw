@@ -1,8 +1,6 @@
-/**
- * Mutable context object passed through the validation chain.
- * Each handler reads from it and may enrich it (e.g., fill coords, set timezone).
- */
-export interface AddressValidationContext {
+import type { ValidationContext } from 'common/validation';
+
+export interface AddressValidationContext extends ValidationContext {
     addressId: string;
 
     city: string;
@@ -16,10 +14,6 @@ export interface AddressValidationContext {
     /** Coords resolved by geocoding (set by GeocodingHandler). */
     nominatimLatitude?: number;
     nominatimLongitude?: number;
-
-    /** Set to true by any handler that considers the address invalid. */
-    invalid: boolean;
-    errorMessage?: string;
 
     /** Resolved timezone (set by TimezoneHandler). */
     resolvedTimezone?: string;

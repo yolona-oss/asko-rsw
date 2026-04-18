@@ -91,6 +91,7 @@ export { NotificationType, NotificationTargetType } from './notification/notific
 export { AddressValidationStatus } from './address/address-validation-status.enum.js';
 
 // Device
+export { DeviceValidationStatus } from './device/device-validation-status.enum.js';
 export { DeviceType } from './device/device.type.js';
 
 // Image / video / file

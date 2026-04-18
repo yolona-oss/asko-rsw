@@ -7,7 +7,7 @@ import { Repairer } from 'modules/repairer/entities/repairer.entity';
 import { Address } from 'modules/device/entities/address.entity';
 import { RepairRequestStatus, PaymentTargetType, AvrStatus, AvrSigningMethod } from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { assertAddressValid } from 'common/address-validation.guard';
+import { assertUserDeviceReady } from 'common/validation';
 import { assertTransition, assertActionTransition, canTransition } from './repair-request-state-machine';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
@@ -180,23 +180,13 @@ export class RepairRequestService {
             }
         }
 
-        // Validate user device
-        if (userDevice.validationStatus === 'invalid') {
-            throw AppErrors.badRequest('Устройство не прошло проверку: ' + (userDevice.validationError || 'проверка не пройдена'));
-        }
-        if (userDevice.validationStatus === 'pending') {
-            throw AppErrors.badRequest('Устройство ещё проходит проверку. Попробуйте через несколько секунд.');
-        }
-        if (userDevice.validationStatus === 'error') {
-            throw AppErrors.badRequest('Не удалось проверить устройство. Попробуйте обновить данные устройства.');
-        }
+        // Validate device + address (cascading)
+        assertUserDeviceReady(userDevice);
 
-        // Validate address
+        // Resolve address reference for the request entity
         const addressEntity = userDevice.address
             ? (typeof userDevice.address === 'object' ? userDevice.address : await this.em.findOne(Address, { id: String(userDevice.address) }))
             : undefined;
-
-        assertAddressValid(addressEntity);
 
         const addressRef = addressEntity
             ? this.em.getReference(Address, addressEntity.id)

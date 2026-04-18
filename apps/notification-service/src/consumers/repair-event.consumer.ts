@@ -421,6 +421,40 @@ export class RepairEventConsumer {
         }
     }
 
+    // ── Certificate Integrity Events ──
+
+    @EventPattern('certificate.integrity_failed')
+    async handleCertificateIntegrityFailed(@Payload() data: any, @Ctx() context: RmqContext) {
+        const channel = context.getChannelRef();
+        const msg = context.getMessage();
+
+        const certLabel = data.certificateNumber || data.certificateId?.slice(0, 8);
+        const reasonMessages: Record<string, string> = {
+            revoked: 'сертификат отозван',
+            expired: 'срок действия сертификата истёк',
+            not_paid: 'сертификат не оплачен',
+            signature_invalid: 'подпись сертификата недействительна',
+            payment_not_found: 'оплата сертификата не подтверждена',
+        };
+        const reason = reasonMessages[data.failReason] || data.failReason || 'неизвестная ошибка';
+
+        try {
+            await this.notificationService.createNotification(
+                data.userId,
+                NotificationType.CERTIFICATE_INTEGRITY_FAILED,
+                'Сертификат не прошёл проверку',
+                `Сертификат ${certLabel} не прошёл проверку: ${reason}.`,
+                NotificationTargetType.CERTIFICATE,
+                data.certificateId,
+                data,
+            );
+            channel.ack(msg);
+        } catch (e) {
+            console.error('[RepairEventConsumer] certificate.integrity_failed error:', e);
+            channel.ack(msg);
+        }
+    }
+
     // ── Schedule End Events ──
 
     @EventPattern('repair.schedule_ending')
