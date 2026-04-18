@@ -4013,6 +4013,28 @@ export interface components {
             invite: components["schemas"]["InviteLinkResponseDto"];
             link: string;
         };
+        UserResponseDto: {
+            id: string;
+            firstName?: string;
+            lastName?: string;
+            middleName?: string;
+            email?: string;
+            phone?: string;
+            googleId?: string;
+            providers: components["schemas"]["AuthProvider"][];
+            roles: components["schemas"]["Role"][];
+            isActive: boolean;
+            createdAt: string;
+            updatedAt: string;
+            emailVerified?: boolean;
+            phoneVerified?: boolean;
+        };
+        PaginatedUsersResponseDto: {
+            data: components["schemas"]["UserResponseDto"][];
+            overallCount: number;
+            page: number;
+            limit: number;
+        };
         ChangePasswordDto: Record<string, never>;
         RequestEmailChangeDto: Record<string, never>;
         CreateArticleDto: Record<string, never>;
@@ -4636,22 +4658,6 @@ export interface components {
         PayoutResponseDto: {
             status: components["schemas"]["PaymentStatus"];
             paymentId: string;
-        };
-        UserResponseDto: {
-            id: string;
-            firstName?: string;
-            lastName?: string;
-            middleName?: string;
-            email?: string;
-            phone?: string;
-            googleId?: string;
-            providers: components["schemas"]["AuthProvider"][];
-            roles: components["schemas"]["Role"][];
-            isActive: boolean;
-            createdAt: string;
-            updatedAt: string;
-            emailVerified?: boolean;
-            phoneVerified?: boolean;
         };
         UpdateDealerProfileDto: Record<string, never>;
         DealerClientListResponseDto: {
@@ -5688,7 +5694,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PaginatedUsersResponseDto"];
+                };
             };
         };
     };
@@ -5705,7 +5713,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
+                };
             };
         };
     };
@@ -5724,7 +5734,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
             };
         };
     };
@@ -5743,7 +5755,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
             };
             201: {
                 headers: {
@@ -5768,7 +5782,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
             };
             201: {
                 headers: {
@@ -5791,7 +5807,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
+                };
             };
         };
     };
@@ -5812,7 +5830,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
+                };
             };
         };
     };
@@ -5833,7 +5853,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MessageResponseDto"];
+                };
             };
             201: {
                 headers: {

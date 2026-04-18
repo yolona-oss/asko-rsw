@@ -14,7 +14,9 @@ export type AccessToken = components['schemas']['AccessTokenResponseDto'];
 
 // ── Users ──
 export type UserResponse = components['schemas']['UserResponseDto'];
-export type PaginatedUsers = components['schemas']['PaginatedUsersResponseDto'];
+export type PaginatedUsers = 'PaginatedUsersResponseDto' extends keyof components['schemas']
+    ? components['schemas']['PaginatedUsersResponseDto']
+    : { data: UserResponse[]; overallCount: number; page: number; limit: number };
 
 // ── Devices ──
 export type DeviceRecord = components['schemas']['DeviceRecordDto'];

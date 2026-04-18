@@ -15,6 +15,8 @@ import {
     UserClientService,
     JwtAuthUser,
     AuthUserDto,
+    EmptyResponseDto,
+    MessageResponseDto,
 } from '@asko/gateway-common';
 import { Permissions, Permission } from '@asko/authorization';
 
@@ -24,6 +26,7 @@ import {
     PaginationDto,
     RequestEmailChangeDto,
 } from '@asko/shared';
+import { UserResponseDto, PaginatedUsersResponseDto } from 'common/dto/responses/user.response.dto';
 
 class UserQueryDto extends PaginationDto {
     @IsOptional()
@@ -45,14 +48,14 @@ export class UserManagementController {
     // ── Admin ──
 
     @Permissions(Permission.USER_VIEW_ALL)
-    @ApiOkResponse()
+    @ApiOkResponse({ type: PaginatedUsersResponseDto })
     @Get('/')
     async getAllUsers(@Query() query: UserQueryDto) {
         return this.userClient.findAllUsers(query);
     }
 
     @Permissions(Permission.USER_UPDATE_ANY)
-    @ApiOkResponse()
+    @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('/delete')
     async deleteUserById(@Query('userId') id: string) {
         await this.userClient.deleteUser({ id });
@@ -60,7 +63,7 @@ export class UserManagementController {
     }
 
     @Permissions(Permission.USER_UPDATE_ANY)
-    @ApiOkResponse()
+    @ApiOkResponse({ type: EmptyResponseDto })
     @Post(':id/disable')
     async disableUser(@Param('id') id: string) {
         await this.userClient.setUserActive({ id, isActive: false });
@@ -68,7 +71,7 @@ export class UserManagementController {
     }
 
     @Permissions(Permission.USER_UPDATE_ANY)
-    @ApiOkResponse()
+    @ApiOkResponse({ type: EmptyResponseDto })
     @Post(':id/enable')
     async enableUser(@Param('id') id: string) {
         await this.userClient.setUserActive({ id, isActive: true });
@@ -77,13 +80,13 @@ export class UserManagementController {
 
     // ── Self-profile ──
 
-    @ApiOkResponse()
+    @ApiOkResponse({ type: UserResponseDto })
     @Get('/profile')
     async getProfile(@JwtAuthUser() user: AuthUserDto) {
         return this.userClient.getProfile({ id: user.id });
     }
 
-    @ApiOkResponse()
+    @ApiOkResponse({ type: UserResponseDto })
     @Put('/')
     async updateProfile(
         @JwtAuthUser() user: AuthUserDto,
@@ -107,7 +110,7 @@ export class UserManagementController {
         });
     }
 
-    @ApiOkResponse()
+    @ApiOkResponse({ type: UserResponseDto })
     @Put('/password')
     async changePassword(
         @JwtAuthUser() user: AuthUserDto,
@@ -120,7 +123,7 @@ export class UserManagementController {
         });
     }
 
-    @ApiOkResponse()
+    @ApiOkResponse({ type: MessageResponseDto })
     @Post('/request-email-change')
     async requestEmailChange(
         @JwtAuthUser() user: AuthUserDto,
