@@ -30,6 +30,8 @@ export interface UseFormGuardOptions<T> {
   onSave?: () => Promise<void>;
   /** Called when user chooses to resume a saved draft */
   onApplyDraft?: (data: T) => void;
+  /** Maps field keys to human-readable labels shown in the unsaved-changes dialog */
+  fieldLabels?: Record<string, string>;
   externalDirty?: boolean;
   enabled?: boolean;
 }
@@ -56,6 +58,7 @@ export function useFormGuard<T>(
     initialState,
     onSave,
     onApplyDraft,
+    fieldLabels,
     externalDirty,
     enabled = true,
   } = options;
@@ -74,17 +77,20 @@ export function useFormGuard<T>(
   const [showGuard, setShowGuard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDraft, setShowDraft] = useState(false);
+  const [changes, setChanges] = useState<string[] | undefined>(undefined);
 
   const pendingActionRef = useRef<(() => void) | null>(null);
   const currentStateRef = useRef(currentState);
   const dirtyRef = useRef(dirty);
   const onSaveRef = useRef(onSave);
   const onApplyDraftRef = useRef(onApplyDraft);
+  const fieldLabelsRef = useRef(fieldLabels);
 
   currentStateRef.current = currentState;
   dirtyRef.current = dirty;
   onSaveRef.current = onSave;
   onApplyDraftRef.current = onApplyDraft;
+  fieldLabelsRef.current = fieldLabels;
 
   // --- localStorage draft ---
   const fullKey = STORAGE_KEYS.draft(storageKey);
@@ -118,14 +124,27 @@ export function useFormGuard<T>(
   // --- Guard dialog logic ---
   const stayResolverRef = useRef<((v: boolean) => void) | null>(null);
 
+  const snapshotChanges = useCallback(() => {
+    const labels = fieldLabelsRef.current;
+    if (!labels || initialState === undefined) { setChanges(undefined); return; }
+    const cur = currentStateRef.current as Record<string, unknown>;
+    const ini = initialState as Record<string, unknown>;
+    const result: string[] = [];
+    for (const key of Object.keys(labels)) {
+      if (!deepEqual(cur[key], ini[key])) result.push(labels[key]);
+    }
+    setChanges(result.length > 0 ? result : undefined);
+  }, [initialState]);
+
   const requestLeave = useCallback((action: () => void) => {
     if (!dirtyRef.current) {
       action();
       return;
     }
     pendingActionRef.current = action;
+    snapshotChanges();
     setShowGuard(true);
-  }, []);
+  }, [snapshotChanges]);
 
   const confirmLeaveForContext = useCallback((): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -135,9 +154,10 @@ export function useFormGuard<T>(
       }
       stayResolverRef.current = resolve;
       pendingActionRef.current = () => resolve(true);
+      snapshotChanges();
       setShowGuard(true);
     });
-  }, []);
+  }, [snapshotChanges]);
 
   const handleSave = useCallback(async () => {
     const save = onSaveRef.current;
@@ -268,11 +288,12 @@ export function useFormGuard<T>(
       createElement(UnsavedChangesDialog, {
         open: showGuard,
         saving,
+        changes,
         onSave: handleSave,
         onDismiss: handleDismiss,
         onStay: handleStay,
       }),
-    [showGuard, saving, handleSave, handleDismiss, handleStay],
+    [showGuard, saving, changes, handleSave, handleDismiss, handleStay],
   );
 
   const draftDialog = useMemo(

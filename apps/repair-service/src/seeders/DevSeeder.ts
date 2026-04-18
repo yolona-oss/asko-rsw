@@ -1,6 +1,6 @@
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { Seeder } from '@mikro-orm/seeder';
-import { slugify } from '@asko/shared';
+import { slugify, AddressValidationStatus } from '@asko/shared';
 import {
     DeviceCategory,
     Device,
@@ -151,7 +151,7 @@ export class DevSeeder extends Seeder {
             street: 'Тверская',
             house: '10',
             apartment: '42',
-            validationStatus: 'valid',
+            validationStatus: AddressValidationStatus.VALID,
             createdAt: now,
         });
         const addr2 = em.create(Address, {
@@ -160,7 +160,7 @@ export class DevSeeder extends Seeder {
             street: 'Невский проспект',
             house: '25',
             apartment: '7',
-            validationStatus: 'valid',
+            validationStatus: AddressValidationStatus.VALID,
             createdAt: now,
         });
         await em.flush();

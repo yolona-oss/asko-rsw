@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
+import { AddressValidationStatus } from '@asko/shared';
 import { AddressService } from 'modules/address/services/address.service';
 import { AppError } from 'common/error';
 import type { Address } from 'modules/device/entities/address.entity';
@@ -46,7 +47,7 @@ function addressToRecord(entity: Address) {
         comment: entity.comment ?? '',
         latitude: entity.latitude ?? 0,
         longitude: entity.longitude ?? 0,
-        validationStatus: entity.validationStatus ?? 'pending',
+        validationStatus: entity.validationStatus ?? AddressValidationStatus.PENDING,
         validationError: entity.validationError ?? '',
         isPrimary: entity.isPrimary ?? false,
     };

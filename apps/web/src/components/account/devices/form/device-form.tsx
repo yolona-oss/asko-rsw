@@ -101,6 +101,17 @@ export function AdminDeviceForm({ deviceId }: AdminDeviceFormProps) {
     initialState,
     onSave: saveDevice,
     onApplyDraft: handleApplyDraft,
+    fieldLabels: {
+      name: 'Название',
+      type: 'Тип товара',
+      model: 'Модель',
+      brand: 'Бренд',
+      description: 'Описание',
+      slug: 'Slug (URL)',
+      isFeatured: 'На главной',
+      specifications: 'Спецификации',
+      features: 'Характеристики',
+    },
   });
 
   const handleSubmit = async () => {

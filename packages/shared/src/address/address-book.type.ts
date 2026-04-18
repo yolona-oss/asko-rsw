@@ -1,3 +1,5 @@
+import type { AddressValidationStatus } from './address-validation-status.enum.js';
+
 export interface IAddressBook {
     id: string;
     city: string;
@@ -12,7 +14,7 @@ export interface IAddressBook {
     comment?: string;
     latitude?: number;
     longitude?: number;
-    validationStatus?: string;
+    validationStatus?: AddressValidationStatus;
     validationError?: string;
     isPrimary: boolean;
 }

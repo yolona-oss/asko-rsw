@@ -110,6 +110,12 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
       setAnchorDate(data.anchorDate);
       setDirty(true);
     },
+    fieldLabels: {
+      entries: 'Цикл дней',
+      defaultStart: 'Начало (по умолчанию)',
+      defaultEnd: 'Конец (по умолчанию)',
+      anchorDate: 'Старт цикла',
+    },
   });
 
   const applySnapshot = useCallback(

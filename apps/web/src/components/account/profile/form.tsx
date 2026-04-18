@@ -126,6 +126,13 @@ export function ProfileForm() {
     initialState,
     onSave: async () => { await handleSave(); },
     onApplyDraft: handleApplyDraft,
+    fieldLabels: {
+      fullName: 'ФИО',
+      email: 'Email',
+      phone: 'Телефон',
+      chatAcceptConversations: 'Приём сообщений',
+      chatSearchable: 'Видимость в поиске',
+    },
   });
 
   // ---- Avatar handling ----

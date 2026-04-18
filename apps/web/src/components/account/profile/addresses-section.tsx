@@ -5,7 +5,7 @@ import { addressApi } from '@/lib/api/address';
 import { Button, Modal, AddressInput, type AddressValue } from '@asko/ui';
 import { MapPin, Plus, Pencil, Trash2, Star, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import type { StatusMessage } from './types';
-import type { IAddressBook } from '@asko/shared/client';
+import { AddressValidationStatus, type IAddressBook } from '@asko/shared/client';
 
 function formatAddress(a: IAddressBook): string {
   const parts: string[] = [];
@@ -20,16 +20,16 @@ function formatAddress(a: IAddressBook): string {
   return parts.join(', ');
 }
 
-function ValidationBadge({ status, error }: { status?: string; error?: string }) {
+function ValidationBadge({ status, error }: { status?: AddressValidationStatus; error?: string }) {
   switch (status) {
-    case 'valid':
+    case AddressValidationStatus.VALID:
       return (
         <span className="inline-flex items-center gap-1 text-xs text-success flex-shrink-0" title="Адрес подтверждён">
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Подтверждён</span>
         </span>
       );
-    case 'invalid':
+    case AddressValidationStatus.INVALID:
       return (
         <span className="inline-flex items-center gap-1 text-xs text-error flex-shrink-0" title={error || 'Адрес не прошёл проверку'}>
           <AlertCircle className="w-3.5 h-3.5" />

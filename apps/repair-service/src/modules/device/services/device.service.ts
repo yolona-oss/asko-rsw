@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Device, DeviceCategory, UserDevice, Address, DevicePart } from 'entities';
 import { AppErrors } from 'common/error';
+import { assertAddressValid } from 'common/address-validation.guard';
 import { slugify } from '@asko/shared';
 import { resolveTimezone } from 'common/timezone-lookup';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
@@ -303,6 +304,7 @@ export class DeviceService {
         if (address.userId !== userId) {
             address = await this.cloneAddressForUser(address, userId);
         }
+        assertAddressValid(address);
 
         const userDevice = this.em.create(UserDevice, {
             userId,

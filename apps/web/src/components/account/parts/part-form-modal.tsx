@@ -99,6 +99,15 @@ function PartFormContent({ editPart, devices, categories, submitting, onClose, o
     initialState,
     onSave: savePart,
     onApplyDraft: handleApplyDraft,
+    fieldLabels: {
+      deviceId: 'Устройство',
+      categoryId: 'Категория',
+      group: 'Группа',
+      name: 'Название',
+      partNumber: 'Артикул',
+      price: 'Цена',
+      description: 'Описание',
+    },
   });
 
   const updateForm = (partial: Partial<PartFormData>) => {

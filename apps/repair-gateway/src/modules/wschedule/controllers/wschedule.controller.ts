@@ -22,6 +22,7 @@ import {
     assertDurationRange,
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
+import { AddressValidationStatus } from '@asko/shared';
 import { Permissions, Permission, CheckPolicy, isStaff, isAdmin } from '@asko/authorization';
 import { JwtAuthUser, AddressClientService } from '@asko/gateway-common';
 import { ScheduleSelfOrStaffPolicy } from '../policies/schedule-self-or-staff.policy';
@@ -45,7 +46,7 @@ export class WScheduleController {
 
     private async assertTargetHasValidAddress(targetUserId: string): Promise<void> {
         const result = await this.addressClient.findUserAddresses(targetUserId);
-        const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === 'valid');
+        const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === AddressValidationStatus.VALID);
         if (!hasValid) {
             throw new BadRequestException(
                 'У адресата нет подтверждённого адреса. Расписание привязано к часовому поясу — сначала добавьте и подтвердите адрес.',

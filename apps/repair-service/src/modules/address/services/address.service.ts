@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager } from '@mikro-orm/postgresql';
 import { Address } from 'modules/device/entities/address.entity';
+import { AddressValidationStatus } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { resolveTimezone } from 'common/timezone-lookup';
 import { AddressValidationPublisher } from 'modules/address-validation.service';
@@ -103,7 +104,7 @@ export class AddressService {
         // Re-resolve timezone if location changed
         if (locationChanged) {
             address.timezone = resolveTimezone(address.city, address.longitude);
-            address.validationStatus = 'pending';
+            address.validationStatus = AddressValidationStatus.PENDING;
             address.validationError = undefined;
             await this.em.flush();
             this.validationPublisher.emit({

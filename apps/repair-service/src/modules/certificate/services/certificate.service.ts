@@ -14,6 +14,7 @@ import {
 } from '@asko/shared';
 import { PointsTransaction } from 'modules/dealer/entities/points-transaction.entity';
 import { AppErrors } from 'common/error';
+import { assertAddressValid } from 'common/address-validation.guard';
 import { PaymentCommandService } from 'modules/payment-command.service';
 import { PaidPaymentService } from 'modules/shared-services/services/paid-payment.service';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
@@ -57,18 +58,7 @@ export class CertificateService {
         if (userDevice.userId !== userId) throw AppErrors.dbEntityNotFound('User device not found');
 
         // Validate address
-        const address = typeof userDevice.address === 'object' ? userDevice.address : null;
-        if (address) {
-            if (address.validationStatus === 'invalid') {
-                throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (address.validationError || 'адрес не найден'));
-            }
-            if (address.validationStatus === 'pending') {
-                throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
-            }
-            if (address.validationStatus === 'error') {
-                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес.');
-            }
-        }
+        assertAddressValid(typeof userDevice.address === 'object' ? userDevice.address : null);
 
         // Check uniqueness
         const existing = await this.em.findOne(Certificate, { certificateNumber: dto.certificateNumber });
@@ -155,18 +145,7 @@ export class CertificateService {
         if (!userDevice) throw AppErrors.dbEntityNotFound('User device not found');
 
         // Validate address
-        const addrForDealer = typeof userDevice.address === 'object' ? userDevice.address : null;
-        if (addrForDealer) {
-            if (addrForDealer.validationStatus === 'invalid') {
-                throw AppErrors.badRequest('Адрес не прошёл проверку: ' + (addrForDealer.validationError || 'адрес не найден'));
-            }
-            if (addrForDealer.validationStatus === 'pending') {
-                throw AppErrors.badRequest('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
-            }
-            if (addrForDealer.validationStatus === 'error') {
-                throw AppErrors.badRequest('Не удалось проверить адрес. Попробуйте обновить адрес.');
-            }
-        }
+        assertAddressValid(typeof userDevice.address === 'object' ? userDevice.address : null);
 
         const dealer = await this.em.findOne(DealerProfile, { id: dto.dealerId });
         if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');

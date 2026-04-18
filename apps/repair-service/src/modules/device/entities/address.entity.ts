@@ -1,5 +1,6 @@
 import { Entity, PrimaryKey, Property, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
+import { AddressValidationStatus } from '@asko/shared';
 
 @Entity()
 export class Address {
@@ -53,8 +54,8 @@ export class Address {
     @Property({ type: 'boolean', default: false })
     isPrimary: boolean = false;
 
-    @Property({ type: 'varchar', length: 20, default: 'pending' })
-    validationStatus: string = 'pending';
+    @Property({ type: 'varchar', length: 20, default: AddressValidationStatus.PENDING })
+    validationStatus: AddressValidationStatus = AddressValidationStatus.PENDING;
 
     @Property({ type: 'text', nullable: true })
     validationError?: string;

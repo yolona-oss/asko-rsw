@@ -87,6 +87,9 @@ export {
 // Notification
 export { NotificationType, NotificationTargetType } from './notification/notification.type.js';
 
+// Address
+export { AddressValidationStatus } from './address/address-validation-status.enum.js';
+
 // Device
 export { DeviceType } from './device/device.type.js';
 

@@ -1,6 +1,7 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateAddressDto {
+    @IsNotEmpty()
     @IsString()
     city!: string;
 
@@ -8,9 +9,11 @@ export class CreateAddressDto {
     @IsString()
     district?: string;
 
+    @IsNotEmpty()
     @IsString()
     street!: string;
 
+    @IsNotEmpty()
     @IsString()
     house!: string;
 
@@ -49,6 +52,7 @@ export class CreateAddressDto {
 
 export class UpdateAddressDto {
     @IsOptional()
+    @IsNotEmpty()
     @IsString()
     city?: string;
 
@@ -57,10 +61,12 @@ export class UpdateAddressDto {
     district?: string;
 
     @IsOptional()
+    @IsNotEmpty()
     @IsString()
     street?: string;
 
     @IsOptional()
+    @IsNotEmpty()
     @IsString()
     house?: string;
 

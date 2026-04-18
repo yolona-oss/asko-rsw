@@ -178,6 +178,14 @@ export function ScheduleFormModal({ open, onClose, onSaved, editItem, defaultUse
     initialState,
     onSave: saveSchedule,
     onApplyDraft: handleApplyDraft,
+    fieldLabels: {
+      type: 'Тип',
+      dateFrom: 'Дата начала',
+      dateTo: 'Дата окончания',
+      startTime: 'Начало',
+      endTime: 'Конец',
+      note: 'Примечание',
+    },
   });
 
   const guardedOnClose = guard.guardedClose(onClose);

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, ListSelect, Textarea, FormField } from '@asko/ui';
 import type { ListSelectOption } from '@asko/ui';
+import { AddressValidationStatus } from '@asko/shared/client';
 import { Plus, CheckCircle2, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -123,7 +124,7 @@ export function CreateRequest() {
 
   // Poll for validation status when selected device or its address is pending
   const selectedDevice = devices.find((d) => d.id === userDeviceId);
-  const addrIsPending = selectedDevice?.address?.validationStatus === 'pending';
+  const addrIsPending = selectedDevice?.address?.validationStatus === AddressValidationStatus.PENDING;
   const deviceIsPending = selectedDevice?.validationStatus === 'pending';
   const hasPendingValidation = addrIsPending || deviceIsPending;
 
@@ -140,9 +141,9 @@ export function CreateRequest() {
         let changed = false;
 
         // Check address status transition
-        if (addrIsPending && dev.address?.validationStatus !== 'pending') {
+        if (addrIsPending && dev.address?.validationStatus !== AddressValidationStatus.PENDING) {
           changed = true;
-          if (dev.address?.validationStatus === 'valid') {
+          if (dev.address?.validationStatus === AddressValidationStatus.VALID) {
             setAddressConfirmed(true);
             setTimeout(() => setAddressConfirmed(false), 5000);
           }
@@ -176,8 +177,8 @@ export function CreateRequest() {
       devices.map((d) => {
         const inRepair = devicesInRepair.has(d.id);
         const addrStatus = d.address?.validationStatus;
-        const addrInvalid = addrStatus === 'invalid' || addrStatus === 'error';
-        const addrPending = addrStatus === 'pending';
+        const addrInvalid = addrStatus === AddressValidationStatus.INVALID || addrStatus === AddressValidationStatus.ERROR;
+        const addrPending = addrStatus === AddressValidationStatus.PENDING;
         const devStatus = d.validationStatus;
         const devInvalid = devStatus === 'invalid' || devStatus === 'error';
         const devPending = devStatus === 'pending';
@@ -285,11 +286,11 @@ export function CreateRequest() {
     }
 
     const addrValidation = selectedDev?.address?.validationStatus;
-    if (addrValidation === 'pending') {
+    if (addrValidation === AddressValidationStatus.PENDING) {
       setError('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
       return;
     }
-    if (addrValidation === 'invalid' || addrValidation === 'error') {
+    if (addrValidation === AddressValidationStatus.INVALID || addrValidation === AddressValidationStatus.ERROR) {
       setError('Адрес не прошёл проверку. Обновите адрес в профиле.');
       return;
     }
@@ -408,13 +409,13 @@ export function CreateRequest() {
         {userDeviceId && (() => {
           const sel = devices.find((d) => d.id === userDeviceId);
           const vs = sel?.address?.validationStatus;
-          if (vs === 'pending') return (
+          if (vs === AddressValidationStatus.PENDING) return (
             <div className="px-4 py-3 bg-warning-bg border border-warning-border text-sm text-warning-deep flex items-center gap-2">
               <span className="inline-block w-3 h-3 border-2 border-warning-deep border-t-transparent rounded-full animate-spin flex-shrink-0" />
               Адрес проходит проверку. Отправка заявки будет доступна после подтверждения.
             </div>
           );
-          if (vs === 'invalid' || vs === 'error') return (
+          if (vs === AddressValidationStatus.INVALID || vs === AddressValidationStatus.ERROR) return (
             <div className="px-4 py-3 bg-error-bg border border-error-border text-sm text-error-deep flex flex-col gap-2">
               <span>
                 Адрес не прошёл проверку{sel?.address?.validationError ? `: ${sel.address.validationError}` : ''}.

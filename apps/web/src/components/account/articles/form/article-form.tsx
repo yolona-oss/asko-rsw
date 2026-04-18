@@ -113,6 +113,13 @@ export function AdminArticleForm({ articleId: initialArticleId }: ArticleFormPro
     initialState,
     onSave: saveArticle,
     onApplyDraft: handleApplyDraft,
+    fieldLabels: {
+      title: 'Заголовок',
+      slug: 'Slug (URL)',
+      description: 'Описание',
+      content: 'Текст статьи',
+      tagsInput: 'Теги',
+    },
   });
 
   const handleContentChange = (json: Record<string, any>) => {

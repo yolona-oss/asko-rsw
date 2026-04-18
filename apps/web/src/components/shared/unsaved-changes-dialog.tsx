@@ -5,6 +5,7 @@ import { Button } from '@asko/ui';
 export interface UnsavedChangesDialogProps {
   open: boolean;
   saving?: boolean;
+  changes?: string[];
   onSave: () => void;
   onDismiss: () => void;
   onStay: () => void;
@@ -13,6 +14,7 @@ export interface UnsavedChangesDialogProps {
 export function UnsavedChangesDialog({
   open,
   saving,
+  changes,
   onSave,
   onDismiss,
   onStay,
@@ -29,6 +31,18 @@ export function UnsavedChangesDialog({
         <p className="mt-2 text-sm text-text-sub">
           У вас есть несохранённые изменения. Что вы хотите сделать?
         </p>
+        {changes && changes.length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-1.5">
+            {changes.map((label) => (
+              <li
+                key={label}
+                className="text-xs text-text-sub bg-surface-secondary px-2 py-0.5"
+              >
+                {label}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:gap-3 sm:justify-end">
           <Button variant="secondary" size="sm" onClick={onStay} disabled={saving}>
             Остаться

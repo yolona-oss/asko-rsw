@@ -14,6 +14,7 @@ import {
   CERTIFICATE_DURATION_OPTIONS,
   CERTIFICATE_DURATION_LABELS,
   CertificateStatus,
+  AddressValidationStatus,
 } from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
@@ -122,12 +123,12 @@ export function AddCertificateForm({
         const state = resolveDeviceCertState(d.id, certificates);
         const name = `${d.device?.name ?? ''} ${d.device?.brand ?? ''} ${d.device?.model ?? ''}`.trim() || d.id;
         const vs = d.address?.validationStatus;
-        const blocked = vs === 'invalid' || vs === 'error';
+        const blocked = vs === AddressValidationStatus.INVALID || vs === AddressValidationStatus.ERROR;
 
         let statusText = '';
         let statusClass = 'text-text-sub';
         if (blocked) { statusText = 'адрес не подтверждён'; statusClass = 'text-error'; }
-        else if (vs === 'pending') { statusText = 'проверка...'; statusClass = 'text-warning'; }
+        else if (vs === AddressValidationStatus.PENDING) { statusText = 'проверка...'; statusClass = 'text-warning'; }
         else if (state.kind === 'expired') { statusText = 'сертификат истёк'; }
 
         return {
@@ -199,11 +200,11 @@ export function AddCertificateForm({
       if (!deviceId) return;
 
       const vs = selectedDevice?.address?.validationStatus;
-      if (vs === 'pending') {
+      if (vs === AddressValidationStatus.PENDING) {
         setError('Адрес ещё проходит проверку. Попробуйте через несколько секунд.');
         return;
       }
-      if (vs === 'invalid' || vs === 'error') {
+      if (vs === AddressValidationStatus.INVALID || vs === AddressValidationStatus.ERROR) {
         setError('Адрес не прошёл проверку. Обновите адрес в профиле.');
         return;
       }
