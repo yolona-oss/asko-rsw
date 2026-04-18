@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { authApi } from '@/lib/api/auth';
 import { Button, Input, Toggle } from '@asko/ui';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
 
 interface MfaSectionProps {
@@ -14,7 +15,7 @@ export function MfaSection({ emailVerified }: MfaSectionProps) {
   const [mfaLoading, setMfaLoading] = useState(false);
   const [mfaOtpStep, setMfaOtpStep] = useState<'enable' | 'disable' | null>(null);
   const [mfaOtpCode, setMfaOtpCode] = useState('');
-  const [mfaMessage, setMfaMessage] = useState<StatusMessage>(null);
+  const [mfaMessage, setMfaMessage] = useAutoReset<StatusMessage>(null, 5000);
   const [mfaCooldown, setMfaCooldown] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
@@ -76,7 +77,6 @@ export function MfaSection({ emailVerified }: MfaSectionProps) {
       setMfaMessage({ type: 'error', text: err?.response?.data?.message ?? 'Неверный код' });
     } finally {
       setMfaLoading(false);
-      setTimeout(() => setMfaMessage(null), 5000);
     }
   };
 

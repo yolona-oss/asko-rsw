@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import { useRouter } from 'next/navigation';
 import { Button, ListSelect, Textarea, FormField } from '@asko/ui';
 import type { ListSelectOption } from '@asko/ui';
@@ -92,8 +93,8 @@ export function CreateRequest() {
   const [showCreateCert, setShowCreateCert] = useState(false);
   const [localCert, setLocalCert] = useState<Certificate | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [addressConfirmed, setAddressConfirmed] = useState(false);
-  const [deviceConfirmed, setDeviceConfirmed] = useState(false);
+  const [addressConfirmed, setAddressConfirmed] = useAutoReset(false, 5000);
+  const [deviceConfirmed, setDeviceConfirmed] = useAutoReset(false, 5000);
 
   const fetchData = async () => {
     setLoadingDevices(true);
@@ -145,7 +146,6 @@ export function CreateRequest() {
           changed = true;
           if (dev.address?.validationStatus === AddressValidationStatus.VALID) {
             setAddressConfirmed(true);
-            setTimeout(() => setAddressConfirmed(false), 5000);
           }
         }
 
@@ -154,7 +154,6 @@ export function CreateRequest() {
           changed = true;
           if (dev.validationStatus === 'valid') {
             setDeviceConfirmed(true);
-            setTimeout(() => setDeviceConfirmed(false), 5000);
           }
         }
 

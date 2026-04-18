@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { addressApi } from '@/lib/api/address';
 import { Button, Modal, AddressInput, type AddressValue } from '@asko/ui';
 import { MapPin, Plus, Pencil, Trash2, Star, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
 import { AddressValidationStatus, type IAddressBook } from '@asko/shared/client';
 
@@ -64,7 +65,7 @@ function addressToValue(a: IAddressBook): AddressValue {
 export function AddressesSection() {
   const [addresses, setAddresses] = useState<IAddressBook[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<StatusMessage>(null);
+  const [message, setMessage] = useAutoReset<StatusMessage>(null, 4000);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -73,21 +74,16 @@ export function AddressesSection() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const showMessage = useCallback((msg: StatusMessage) => {
-    setMessage(msg);
-    if (msg) setTimeout(() => setMessage(null), 4000);
-  }, []);
-
   const load = useCallback(async () => {
     try {
       const { data } = await addressApi.list();
       setAddresses(data);
     } catch {
-      showMessage({ type: 'error', text: 'Не удалось загрузить адреса' });
+      setMessage({ type: 'error', text: 'Не удалось загрузить адреса' });
     } finally {
       setLoading(false);
     }
-  }, [showMessage]);
+  }, [setMessage]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -111,7 +107,7 @@ export function AddressesSection() {
 
   const handleSave = async () => {
     if (!addressValue) {
-      showMessage({ type: 'error', text: 'Заполните город, улицу и дом' });
+      setMessage({ type: 'error', text: 'Заполните город, улицу и дом' });
       return;
     }
 
@@ -135,15 +131,15 @@ export function AddressesSection() {
       if (editingId) {
         const { data } = await addressApi.update(editingId, payload);
         setAddresses(prev => prev.map(a => a.id === editingId ? data : a));
-        showMessage({ type: 'success', text: 'Адрес обновлён' });
+        setMessage({ type: 'success', text: 'Адрес обновлён' });
       } else {
         const { data } = await addressApi.create(payload as any);
         setAddresses(prev => [data, ...prev]);
-        showMessage({ type: 'success', text: 'Адрес добавлен' });
+        setMessage({ type: 'success', text: 'Адрес добавлен' });
       }
       closeModal();
     } catch {
-      showMessage({ type: 'error', text: editingId ? 'Не удалось обновить адрес' : 'Не удалось добавить адрес' });
+      setMessage({ type: 'error', text: editingId ? 'Не удалось обновить адрес' : 'Не удалось добавить адрес' });
     } finally {
       setSaving(false);
     }
@@ -154,9 +150,9 @@ export function AddressesSection() {
     try {
       await addressApi.remove(id);
       setAddresses(prev => prev.filter(a => a.id !== id));
-      showMessage({ type: 'success', text: 'Адрес удалён' });
+      setMessage({ type: 'success', text: 'Адрес удалён' });
     } catch {
-      showMessage({ type: 'error', text: 'Не удалось удалить адрес' });
+      setMessage({ type: 'error', text: 'Не удалось удалить адрес' });
     } finally {
       setDeletingId(null);
     }
@@ -169,9 +165,9 @@ export function AddressesSection() {
         ...a,
         isPrimary: a.id === id,
       })));
-      showMessage({ type: 'success', text: 'Основной адрес изменён' });
+      setMessage({ type: 'success', text: 'Основной адрес изменён' });
     } catch {
-      showMessage({ type: 'error', text: 'Не удалось изменить основной адрес' });
+      setMessage({ type: 'error', text: 'Не удалось изменить основной адрес' });
     }
   };
 

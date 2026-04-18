@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import Link from 'next/link';
 import { Badge, Button, ImageGallery, Modal, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft, Globe, Check, Loader2 } from 'lucide-react';
@@ -51,7 +52,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-  const [assignSuccess, setAssignSuccess] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useAutoReset(false, 3000);
   const [crossCityPrompt, setCrossCityPrompt] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -174,7 +175,6 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
       setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
       setAssigning(false);
       setAssignSuccess(true);
-      setTimeout(() => setAssignSuccess(false), 3000);
     } catch (e) {
       setAssigning(false);
       if (isCrossCityError(e)) {

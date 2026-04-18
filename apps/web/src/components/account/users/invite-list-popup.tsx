@@ -5,13 +5,14 @@ import { X } from 'lucide-react';
 import { SkeletonBlock } from '@asko/ui';
 import { invitationApi } from '@/lib/api/invitation';
 import { formatDateTimeCompact } from '@asko/shared/client';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import { INVITE_ROLE_LABELS, isExpired } from './constants';
 
 export function InviteListPopup({ onClose }: { onClose: () => void }) {
   const [invites, setInvites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useAutoReset<string | null>(null, 2000);
 
   useEffect(() => {
     invitationApi.getAll()
@@ -34,7 +35,6 @@ export function InviteListPopup({ onClose }: { onClose: () => void }) {
     const link = `${window.location.origin}/register?invite=${invite.token}`;
     navigator.clipboard.writeText(link).then(() => {
       setCopiedId(invite.id);
-      setTimeout(() => setCopiedId(null), 2000);
     });
   };
 

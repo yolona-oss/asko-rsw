@@ -5,6 +5,7 @@ import { Button, Select } from '@asko/ui';
 import { X } from 'lucide-react';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import { ROLE_OPTIONS, TTL_OPTIONS } from './constants';
 
 export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
@@ -13,7 +14,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [createdLink, setCreatedLink] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useAutoReset(false, 2000);
 
   const handleCreate = async () => {
     if (!role) return;
@@ -36,7 +37,6 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
   const handleCopy = () => {
     navigator.clipboard.writeText(createdLink).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     });
   };
 

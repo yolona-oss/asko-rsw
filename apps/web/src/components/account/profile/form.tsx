@@ -10,6 +10,7 @@ import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput } from '@asko/ui';
 import { useFormGuard } from '@/hooks/use-form-guard';
 import { EditedMark } from '@/components/shared/edited-mark';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from '@/components/skeleton';
 import { AvatarSection } from './avatar-section';
@@ -73,7 +74,7 @@ export function ProfileForm() {
   // Submission state
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [message, setMessage] = useState<StatusMessage>(null);
+  const [message, setMessage] = useAutoReset<StatusMessage>(null, 5000);
 
   // Load profile data once
   const profileLoaded = useRef(false);
@@ -160,7 +161,6 @@ export function ProfileForm() {
       setMessage({ type: 'error', text: 'Не удалось загрузить аватар' });
     } finally {
       setUploadingAvatar(false);
-      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -238,7 +238,6 @@ export function ProfileForm() {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
       setSaving(false);
-      setTimeout(() => setMessage(null), 5000);
     }
   };
 

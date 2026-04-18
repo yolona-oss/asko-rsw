@@ -6,6 +6,7 @@ import { broadcastLogout } from '@/lib/api/client';
 import { useLogout } from '@/lib/api/use-auth';
 import { Button } from '@asko/ui';
 import { Monitor, Smartphone, Globe, Trash2, LogOut } from 'lucide-react';
+import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
 
 interface SessionInfo {
@@ -50,7 +51,7 @@ export function SessionsSection() {
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [masterLoading, setMasterLoading] = useState(false);
-  const [message, setMessage] = useState<StatusMessage>(null);
+  const [message, setMessage] = useAutoReset<StatusMessage>(null, 3000);
   const logout = useLogout();
 
   const load = useCallback(async () => {
@@ -62,7 +63,7 @@ export function SessionsSection() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setMessage]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -77,7 +78,6 @@ export function SessionsSection() {
       setMessage({ type: 'error', text: 'Не удалось завершить сессию' });
     } finally {
       setRevoking(null);
-      setTimeout(() => setMessage(null), 3000);
     }
   };
 
