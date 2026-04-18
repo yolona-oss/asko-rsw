@@ -14,9 +14,9 @@ export type AccessToken = components['schemas']['AccessTokenResponseDto'];
 
 // ── Users ──
 export type UserResponse = components['schemas']['UserResponseDto'];
-export type PaginatedUsers = 'PaginatedUsersResponseDto' extends keyof components['schemas']
-    ? components['schemas']['PaginatedUsersResponseDto']
-    : { data: UserResponse[]; overallCount: number; page: number; limit: number };
+// PaginatedUsersResponseDto will appear in the generated spec after running ./scripts/openapi.sh
+// with auth-gateway running. Until then, use inline type matching the backend shape.
+export interface PaginatedUsers { data: UserResponse[]; overallCount: number; page: number; limit: number; }
 
 // ── Devices ──
 export type DeviceRecord = components['schemas']['DeviceRecordDto'];
