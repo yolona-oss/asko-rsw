@@ -190,7 +190,7 @@ export class ChatGrpcController {
     @GrpcMethod('ChatService', 'ListParticipants')
     async listParticipants(data: ListParticipantsRequest) {
         try {
-            const participants = await this.conversationService.listParticipants(data.conversationId);
+            const participants = await this.conversationService.listParticipants(data.conversationId, data.requesterId);
             return { participants: participants.map(participantToRecord) };
         } catch (e) { throw toGrpcError(e); }
     }

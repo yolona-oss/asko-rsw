@@ -77,6 +77,7 @@ message RemoveParticipantRequest {
 
 message ListParticipantsRequest {
     string conversationId = 1;
+    string requesterId = 2;   // when non-empty, service asserts requester is a participant
 }
 
 message SendMessageRequest {

@@ -48,6 +48,7 @@ export interface RemoveParticipantRequest {
 
 export interface ListParticipantsRequest {
     conversationId: string;
+    requesterId?: string;
 }
 
 export interface SendMessageRequest {

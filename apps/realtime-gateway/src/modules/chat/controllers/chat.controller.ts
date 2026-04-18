@@ -79,8 +79,8 @@ export class ChatController {
 
     @ApiOkResponse({ type: ParticipantListResponseDto })
     @Get('conversations/:id/participants')
-    async listParticipants(@Param('id') id: string) {
-        return this.chatClient.listParticipants(id);
+    async listParticipants(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
+        return this.chatClient.listParticipants(id, user.id);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })

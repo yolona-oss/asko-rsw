@@ -196,7 +196,10 @@ export class ConversationService {
     }
 
     @CreateRequestContext()
-    async listParticipants(conversationId: string): Promise<ConversationParticipant[]> {
+    async listParticipants(conversationId: string, requesterId?: string): Promise<ConversationParticipant[]> {
+        if (requesterId) {
+            await this.assertParticipant(conversationId, requesterId);
+        }
         return this.em.find(ConversationParticipant, { conversation: { id: conversationId } });
     }
 

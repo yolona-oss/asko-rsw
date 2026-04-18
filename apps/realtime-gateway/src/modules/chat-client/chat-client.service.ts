@@ -77,8 +77,8 @@ export class ChatClientService implements OnModuleInit {
         return grpcCall(this.chatService.removeParticipant({ conversationId, userId, removedBy, force }));
     }
 
-    async listParticipants(conversationId: string): Promise<ParticipantListResponse> {
-        const res = await grpcCall(this.chatService.listParticipants({ conversationId }));
+    async listParticipants(conversationId: string, requesterId?: string): Promise<ParticipantListResponse> {
+        const res = await grpcCall(this.chatService.listParticipants({ conversationId, requesterId }));
         return { ...res, participants: res.participants ?? [] };
     }
 
