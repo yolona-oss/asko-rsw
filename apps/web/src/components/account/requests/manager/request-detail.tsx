@@ -10,6 +10,9 @@ import { RepairRequestDocuments } from '@/components/account/requests/shared/rep
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
 import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
 import { WorkStepsView } from '@/components/account/requests/shared/work-steps-view';
+import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
+import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
+import { PAYMENT_STATUS_LABELS_MANAGER } from '@/components/account/payments/shared/payment-constants';
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/certificates/shared/certificate-applied-badge';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -56,6 +59,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [chatLoading, setChatLoading] = useState(false);
   const [offDayConfirm, setOffDayConfirm] = useState<RepairerOption | null>(null);
   const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -111,6 +115,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             .filter(Boolean);
           setPhotos(urls);
         } catch { }
+
+        // Fetch payments
+        try {
+          const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
+          setAllPayments(Array.isArray(paymentsData) ? paymentsData : (paymentsData as any).payments ?? []);
+        } catch { setAllPayments([]); }
 
       } catch { } finally {
         setLoading(false);
@@ -445,6 +455,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
           {/* Aggregate documents */}
           <RepairRequestDocuments requestId={requestId} readOnly={isTerminal} />
+
+          {/* Payments */}
+          {allPayments.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-bold text-text-main">Платежи</p>
+              <PaymentSummary payments={allPayments} />
+              <PaymentTransactionList payments={allPayments} statusLabels={PAYMENT_STATUS_LABELS_MANAGER} />
+            </div>
+          )}
 
           <Link
             href="/account/requests"

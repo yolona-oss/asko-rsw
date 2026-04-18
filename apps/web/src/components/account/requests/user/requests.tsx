@@ -22,6 +22,7 @@ import type { DataGridColumn, FilterValues, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import { formatDate } from '@asko/shared/client';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, STATUS_FILTER, type StatusFilter } from './list-constants';
 import type { RepairRequest } from './list-types';
@@ -41,6 +42,7 @@ export function UserRequests() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: '' });
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [paymentsMap, setPaymentsMap] = useState<Record<string, any[]>>({});
 
   const statusFilter = filterValues.status as StatusFilter;
 
@@ -55,8 +57,24 @@ export function UserRequests() {
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
       });
-      setRequests((data.data ?? []) as unknown as RepairRequest[]);
+      const items = (data.data ?? []) as unknown as RepairRequest[];
+      setRequests(items);
       setTotal(data.overallCount ?? 0);
+
+      // Batch-fetch payments for items with totalCost
+      const withCost = items.filter(r => r.totalCost != null && r.totalCost > 0);
+      if (withCost.length > 0) {
+        const map: Record<string, any[]> = {};
+        await Promise.all(withCost.map(async (r) => {
+          try {
+            const { data: payments } = await repairRequestApi.getPayments(r.id);
+            map[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+          } catch { /* skip */ }
+        }));
+        setPaymentsMap(map);
+      } else {
+        setPaymentsMap({});
+      }
     } catch {
     } finally {
       setLoading(false);
@@ -97,6 +115,14 @@ export function UserRequests() {
           {STATUS_LABELS[req.status] ?? req.status}
         </Badge>
       ),
+    },
+    {
+      key: 'payment',
+      header: 'Оплата',
+      sortable: false,
+      width: 150,
+      mobileLabel: 'Оплата:',
+      render: (req) => <PaymentStatusBadge payments={paymentsMap[req.id]} showAmount className="text-xs" />,
     },
     {
       key: 'date',
@@ -188,6 +214,7 @@ export function UserRequests() {
               <RequestCard
                 key={req.id}
                 request={req}
+                payments={paymentsMap[req.id]}
                 onClick={() => detail.onRowClick(req)}
                 onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
               />

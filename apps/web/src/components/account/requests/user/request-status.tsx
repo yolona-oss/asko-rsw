@@ -6,6 +6,8 @@ import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/payments/user/payment-modal';
+import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
+import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
 import { CreateCertificateModal } from '@/components/account/requests/user/create-certificate-modal';
 import { BrokenPartsView } from '@/components/account/requests/shared/broken-parts/view';
 import { BrokenPartSuggestSection } from '@/components/account/requests/shared/broken-parts/suggest';
@@ -48,8 +50,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [signingInitiated, setSigningInitiated] = useState(false);
   const [signingLoading, setSigningLoading] = useState(false);
 
-  // Payment modal state
+  // Payment state
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
   const [createCertOpen, setCreateCertOpen] = useState(false);
 
   // Review state
@@ -84,6 +87,12 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         imgResults.forEach((r) => { imgMap[r.id] = r.images; });
         setPartImages(imgMap);
       }
+
+      // Fetch payments
+      try {
+        const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
+        setAllPayments(Array.isArray(paymentsData) ? paymentsData : (paymentsData as any).payments ?? []);
+      } catch { setAllPayments([]); }
 
       // Check if already reviewed
       if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
@@ -232,6 +241,15 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </div>
         )}
       </div>
+
+      {/* Payment summary */}
+      {allPayments.length > 0 && (
+        <div className="max-w-lg flex flex-col gap-2 mt-4">
+          <h3 className="text-sm font-medium text-text-main">Платежи</h3>
+          <PaymentSummary payments={allPayments} />
+          <PaymentTransactionList payments={allPayments} />
+        </div>
+      )}
 
       {/* Payment modal */}
       <PaymentModal

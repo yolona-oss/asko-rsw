@@ -19,6 +19,7 @@ import type { FilterValues, DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import { RepairRequestStatus } from '@asko/shared/client';
 import { formatDateTime } from '@asko/shared/client';
 import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS } from './list-constants';
@@ -26,7 +27,7 @@ import type { TabKey } from './list-constants';
 import type { RepairRequest } from './list-types';
 import { RequestCard } from './request-card';
 
-function useRequestColumns(): DataGridColumn<RepairRequest>[] {
+function useRequestColumns(paymentsMap: Record<string, any[]>): DataGridColumn<RepairRequest>[] {
   return useMemo(() => [
     {
       key: 'client',
@@ -74,12 +75,15 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
       key: 'cost',
       header: 'Стоимость',
       sortField: 'totalCost',
-      width: 100,
+      width: 160,
       mobileLabel: 'Стоимость:',
       render: (request) => (
-        <p className="text-sm text-text-main">
-          {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '-'}
-        </p>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-sm text-text-main">
+            {request.totalCost != null && request.totalCost > 0 ? `${request.totalCost.toLocaleString('ru-RU')} ₽` : '-'}
+          </span>
+          <PaymentStatusBadge payments={paymentsMap[request.id]} className="text-xs" />
+        </span>
       ),
     },
     {
@@ -92,7 +96,7 @@ function useRequestColumns(): DataGridColumn<RepairRequest>[] {
         <p className="text-sm text-text-main">{formatDateTime(request.createdAt)}</p>
       ),
     },
-  ], []);
+  ], [paymentsMap]);
 }
 
 export function RepairerRequests() {
@@ -109,8 +113,9 @@ export function RepairerRequests() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [paymentsMap, setPaymentsMap] = useState<Record<string, any[]>>({});
 
-  const columns = useRequestColumns();
+  const columns = useRequestColumns(paymentsMap);
 
   // Fetch active request once
   useEffect(() => {
@@ -143,8 +148,24 @@ export function RepairerRequests() {
         result = await repairRequestApi.getAssigned(params);
       }
 
-      setRequests((result.data.data ?? []) as unknown as RepairRequest[]);
+      const items = (result.data.data ?? []) as unknown as RepairRequest[];
+      setRequests(items);
       setTotal(result.data.overallCount ?? 0);
+
+      // Fetch payment info for requests with cost
+      const withCost = items.filter(r => r.totalCost != null && r.totalCost > 0);
+      if (withCost.length > 0) {
+        const pMap: Record<string, any[]> = {};
+        await Promise.all(withCost.map(async (r) => {
+          try {
+            const { data: payments } = await repairRequestApi.getPayments(r.id);
+            pMap[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+          } catch { /* skip */ }
+        }));
+        setPaymentsMap(pMap);
+      } else {
+        setPaymentsMap({});
+      }
     } catch {
     } finally {
       setLoading(false);
@@ -189,6 +210,7 @@ export function RepairerRequests() {
           {view === 'card' ? (
             <RequestCard
               request={activeRequest}
+              payments={paymentsMap[activeRequest.id]}
               highlight
               onClick={() => detail.onRowClick(activeRequest)}
               onDoubleClick={() => router.push(`/account/requests/${activeRequest.id}`)}
@@ -245,6 +267,7 @@ export function RepairerRequests() {
                 <RequestCard
                   key={req.id}
                   request={req}
+                  payments={paymentsMap[req.id]}
                   highlight={showActiveHighlight && activeRequest?.id === req.id}
                   onClick={() => detail.onRowClick(req)}
                   onDoubleClick={() => router.push(`/account/requests/${req.id}`)}

@@ -20,6 +20,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';
+import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import type { TabKey, RepairRequest, ConversationInfo } from './list-types';
 import { formatDateTime } from '@asko/shared/client';
 import { PAGE_SIZE, TAB_FILTER, STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
@@ -43,6 +44,7 @@ export function ManagerRequests() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [paymentsMap, setPaymentsMap] = useState<Record<string, any[]>>({});
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -82,6 +84,21 @@ export function ManagerRequests() {
           }
         }));
         setConvInfoMap(infoMap);
+      }
+
+      // Fetch payment info for requests with cost
+      const withCost = items.filter(r => r.totalCost != null && r.totalCost > 0);
+      if (withCost.length > 0) {
+        const pMap: Record<string, any[]> = {};
+        await Promise.all(withCost.map(async (r) => {
+          try {
+            const { data: payments } = await repairRequestApi.getPayments(r.id);
+            pMap[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+          } catch { /* skip */ }
+        }));
+        setPaymentsMap(pMap);
+      } else {
+        setPaymentsMap({});
       }
     } catch { } finally {
       setLoading(false);
@@ -138,6 +155,14 @@ export function ManagerRequests() {
           </span>
         );
       },
+    },
+    {
+      key: 'payment',
+      header: 'Оплата',
+      sortable: false,
+      width: 150,
+      mobileLabel: 'Оплата:',
+      render: (req) => <PaymentStatusBadge payments={paymentsMap[req.id]} showAmount className="text-xs" />,
     },
     {
       key: 'chat',
@@ -204,6 +229,7 @@ export function ManagerRequests() {
                 key={req.id}
                 request={req}
                 convInfo={convInfoMap[req.id]}
+                payments={paymentsMap[req.id]}
                 currentUserId={currentUserId}
                 onClick={() => detail.onRowClick(req)}
                 onDoubleClick={() => router.push(`/account/requests/${req.id}`)}

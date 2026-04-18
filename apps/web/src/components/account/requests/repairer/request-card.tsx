@@ -2,12 +2,14 @@
 
 import { Card, Badge, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
+import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import { formatDateTime } from '@asko/shared/client';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './list-constants';
 import type { RepairRequest } from './list-types';
 
-export function RequestCard({ request, highlight, onClick, onDoubleClick }: {
+export function RequestCard({ request, payments, highlight, onClick, onDoubleClick }: {
   request: RepairRequest;
+  payments?: any[];
   highlight?: boolean;
   onClick?: () => void;
   onDoubleClick?: () => void;
@@ -31,9 +33,12 @@ export function RequestCard({ request, highlight, onClick, onDoubleClick }: {
               </>
             )}
           </div>
-          <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
-            {STATUS_LABELS[request.status] ?? request.status}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            <PaymentStatusBadge payments={payments} className="text-xs" />
+            <Badge variant={STATUS_BADGE_VARIANT[request.status] ?? 'neutral'} className="text-xs">
+              {STATUS_LABELS[request.status] ?? request.status}
+            </Badge>
+          </div>
         </div>
         <p className="text-sm font-medium text-text-main">{userName}</p>
         <p className="text-sm text-text-sub truncate">{deviceName}</p>

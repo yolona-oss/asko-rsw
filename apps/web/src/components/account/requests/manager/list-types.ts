@@ -6,6 +6,7 @@ export interface RepairRequest {
   id: string;
   description: string;
   status: RepairRequestStatus;
+  totalCost?: number;
   conversationId?: string;
   user?: { firstName?: string; lastName?: string };
   address?: { city?: string; street?: string };

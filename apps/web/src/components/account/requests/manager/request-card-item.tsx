@@ -2,14 +2,16 @@
 
 import { Card } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
+import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import type { RepairRequest, ConversationInfo } from './list-types';
 import { formatDateTime } from '@asko/shared/client';
 import { STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
 import { ChatStatusBadges } from './chat-status-badges';
 
-export function RequestCardItem({ request, convInfo, currentUserId, onClick, onDoubleClick }: {
+export function RequestCardItem({ request, convInfo, payments, currentUserId, onClick, onDoubleClick }: {
   request: RepairRequest;
   convInfo?: ConversationInfo;
+  payments?: any[];
   currentUserId: string;
   onClick?: () => void;
   onDoubleClick?: () => void;
@@ -32,11 +34,14 @@ export function RequestCardItem({ request, convInfo, currentUserId, onClick, onD
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        <span
-          className={`inline-flex items-center self-start px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-text-muted text-text-on-dark'}`}
-        >
-          {STATUS_LABELS[request.status] ?? request.status}
-        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className={`inline-flex items-center self-start px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[tabKey] ?? 'bg-text-muted text-text-on-dark'}`}
+          >
+            {STATUS_LABELS[request.status] ?? request.status}
+          </span>
+          <PaymentStatusBadge payments={payments} className="text-xs" />
+        </div>
         {request.conversationId && (
           <ChatStatusBadges convInfo={convInfo} currentUserId={currentUserId} requestStatus={request.status} />
         )}
