@@ -138,6 +138,14 @@ message UserIdRequest {
     string id = 1;
 }
 
+message UserIdsRequest {
+    repeated string ids = 1;
+}
+
+message UserListResponse {
+    repeated UserResponse users = 1;
+}
+
 message FindByEmailRequest {
     string email = 1;
 }
@@ -516,6 +524,7 @@ service UserService {
     // User CRUD
     rpc FindAllUsers(FindAllUsersRequest) returns (PaginatedUsersResponse);
     rpc FindUserById(UserIdRequest) returns (UserResponse);
+    rpc FindUsersByIds(UserIdsRequest) returns (UserListResponse);
     rpc DeleteUser(UserIdRequest) returns (EmptyResponse);
     rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
     rpc ChangePassword(ChangePasswordRequest) returns (UserResponse);

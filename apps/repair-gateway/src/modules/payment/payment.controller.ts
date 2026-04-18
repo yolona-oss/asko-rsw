@@ -6,11 +6,10 @@ import { RepairerClientService } from 'modules/repair-client/repairer-client.ser
 import { UserClientService } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
-    Role,
     JwtPayload,
     PaymentTargetType,
 } from '@asko/shared';
-import { Permissions, Permission } from '@asko/authorization';
+import { Permissions, Permission, isStaff as checkIsStaff } from '@asko/authorization';
 import { JwtAuthUser } from '@asko/gateway-common';
 import {
     PaymentOptionsResponseDto,
@@ -65,11 +64,7 @@ export class PaymentController {
             throw new ForbiddenException('Amount verification is required');
         }
 
-        const isStaff = user.roles.some((r) =>
-            r === Role.SUPER_ADMIN || r === Role.ADMIN || r === Role.MANAGER,
-        );
-
-        if (!isStaff) {
+        if (!checkIsStaff(user)) {
             // Repairer: verify they are assigned to the repair
             const { payment } = await this.paymentService.getPaymentById(body.paymentId);
             if (payment.targetType !== PaymentTargetType.REPAIR_REQUEST) {

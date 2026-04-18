@@ -61,7 +61,7 @@ pnpm install && turbo run build          # Install + build all
 
 Five gateways, all sharing JWT public key for local token validation. Host nginx (VPS) routes by URL prefix — frontend sees one domain.
 
-**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations. Also hosts `POST /auth/users/:userId/avatar` (avatar upload, self-or-admin). Talks to user-service, file-service.
+**Auth Gateway** (:4001) — `/auth/*`, `/invite/*`, `/users/*`. Login, register, OAuth (Google/VK/Yandex), MFA, phone verification, password reset, session, invitations, user profile CRUD, admin user management. Also hosts `POST /auth/users/:userId/avatar` (avatar upload, self-or-admin). Talks to user-service, file-service.
 
 **Repair Gateway** (:4002) — `/repair-requests/*`, `/devices/*`, `/user-devices/*`, `/device-categories/*`, `/certificates/*`, `/repairers/*`, `/dealers/*`, `/reviews/*`, `/schedule/*`, `/address/*`, `/payment/*`, `/parts/*`. Also hosts per-domain file uploads: `POST /repair-requests/:id/{images,videos,documents}`, `POST /reviews/:id/{images,videos}`, `POST /devices/:id/{images,videos}`, `POST /parts/:id/images`, `POST /repair-requests/broken-parts/:partId/{images,documents}`, and `DELETE /repair-requests/documents/:documentId`. Ownership enforced via `RepairAccessService` (`assertRepairRequestParticipant`, `assertReviewOwner`, `assertBrokenPartAccess`). Talks to repair-service, payment-service, file-service, user-service.
 
@@ -69,7 +69,7 @@ Five gateways, all sharing JWT public key for local token validation. Host nginx
 
 **Realtime Gateway** (:4004) — `/chat/*`, `/notifications/*`, `/socket.io/*`. WebSocket with sticky sessions. Talks to chat-service, notification-service, user-service. Redis adapter for cross-pod WebSocket.
 
-**Content Gateway** (:4005) — `/articles/*`, `/users/*`. Public article and user profile endpoints. Also hosts `POST /articles/:id/{images,videos}` (admin-only article media uploads). Talks to content-service, file-service.
+**Content Gateway** (:4005) — `/articles/*`. Article CRUD and public article endpoints. Also hosts `POST /articles/:id/{images,videos}` (admin-only article media uploads). Talks to content-service, file-service.
 
 ## Packages
 
@@ -78,8 +78,11 @@ All packages use `@asko/` prefix. All services use `@asko/service-name` in packa
 ### `@asko/shared`
 DTOs, types, enums, constants. AppError system. `slugify()`. `getEnvFilePath()` — returns `.env.prod`/`.env.dev` path or undefined (falls back to process.env). Subpath exports: `@asko/shared` (full), `@asko/shared/client` (web-safe), `@asko/shared/server` (server-only). Must build after changes.
 
+### `@asko/authorization`
+Centralized authorization: `Permission` enum, `ROLE_PERMISSIONS` static map, `@Permissions()` decorator + `PermissionGuard`, `@CheckPolicy()` decorator + `PolicyGuard`, `Policy` interface for ownership/entity checks. Role-check utils (`isStaff`, `isAdmin`, `isSelf`, `assertSelfOrStaff`). Import via `AuthorizationModule.forRoot()` in each gateway. Must build after changes.
+
 ### `@asko/gateway-common`
-Shared gateway infra: JwtGuard (`GATEWAY_CONFIG` injection token), decorators (`@JwtAuthUser`, `@Public`, `@OptionalAuth`, `@RequiredRoles`), GlobalExceptionFilter, `grpcCall()`, CORS/Helmet config, UserClientModule, shared response DTOs. Must build after changes.
+Shared gateway infra: JwtGuard (`GATEWAY_CONFIG` injection token), decorators (`@JwtAuthUser`, `@Public`, `@OptionalAuth`), GlobalExceptionFilter, `grpcCall()`, CORS/Helmet config, UserClientModule, FileClientModule, shared response DTOs. Must build after changes.
 
 ### `@asko/proto`
 gRPC .proto files + hand-written TS interfaces. No build step.
@@ -136,6 +139,7 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 * Russian UI strings. TypeScript strict. ESM. ES2022.
 * MikroORM v6. class-validator on all DTOs. argon2 for passwords. JWT ES256.
 * `@Public()` bypasses JWT. `@OptionalAuth()` tries JWT silently. Use `@JwtAuthUser()` decorator — never `(req as any).user`.
+* `@Permissions(Permission.XXX)` for role-based access. `@CheckPolicy(XxxPolicy)` for ownership/entity checks. Both from `@asko/authorization`.
 * User settings lazy-loaded (one-to-one to `user_settings` table). Use `findByIdWithSettings()` when settings needed. Never call `@CreateRequestContext()` method from within another — use `this.em.findOne()` directly.
 * `slugify()` from `@asko/shared` — single canonical implementation.
 

@@ -26,6 +26,8 @@ import type {
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
+    UserIdsRequest,
+    UserListResponse,
     FindByEmailRequest,
     FindAllUsersRequest,
     PaginatedUsersResponse,
@@ -502,6 +504,15 @@ export class UserGrpcController {
             const user = await this.userService.findByIdWithSettings(data.id);
             if (!user) throw toGrpcError(new RpcException({ code: status.NOT_FOUND, message: 'User not found' }));
             return userToResponse(user);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'FindUsersByIds')
+    async findUsersByIds(data: UserIdsRequest): Promise<UserListResponse> {
+        try {
+            const ids = (data.ids ?? []).slice(0, 100);
+            const users = await this.userService.findByIds(ids);
+            return { users: users.map(userToResponse) };
         } catch (e) { throw toGrpcError(e); }
     }
 

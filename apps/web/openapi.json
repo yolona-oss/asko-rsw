@@ -932,6 +932,189 @@
         ]
       }
     },
+    "/users": {
+      "get": {
+        "operationId": "UserManagementController_getAllUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "operationId": "UserManagementController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/delete": {
+      "delete": {
+        "operationId": "UserManagementController_deleteUserById",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/disable": {
+      "post": {
+        "operationId": "UserManagementController_disableUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/enable": {
+      "post": {
+        "operationId": "UserManagementController_enableUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "operationId": "UserManagementController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/password": {
+      "put": {
+        "operationId": "UserManagementController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/request-email-change": {
+      "post": {
+        "operationId": "UserManagementController_requestEmailChange",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestEmailChangeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/batch": {
+      "post": {
+        "operationId": "UserManagementController_getUsersBatch",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -1450,245 +1633,6 @@
         },
         "tags": [
           "Articles"
-        ]
-      }
-    },
-    "/users": {
-      "get": {
-        "operationId": "UsersController_getAllUsers",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedUsersResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      },
-      "put": {
-        "operationId": "UsersController_updateUserById",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/delete": {
-      "delete": {
-        "operationId": "UsersController_deleteUserById",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/password": {
-      "put": {
-        "operationId": "UsersController_changePassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangePasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/request-email-change": {
-      "post": {
-        "operationId": "UsersController_requestEmailChange",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestEmailChangeDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/batch": {
-      "post": {
-        "operationId": "UsersController_getUsersBatch",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Basic public profiles for given user IDs"
-          },
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/profile": {
-      "get": {
-        "operationId": "UsersController_getUserById",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/{id}/disable": {
-      "post": {
-        "operationId": "UsersController_disableUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/{id}/enable": {
-      "post": {
-        "operationId": "UsersController_enableUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponseDto"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Users"
         ]
       }
     },
@@ -8902,6 +8846,14 @@
           "link"
         ]
       },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RequestEmailChangeDto": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateArticleDto": {
         "type": "object",
         "properties": {}
@@ -9156,101 +9108,6 @@
         "required": [
           "message"
         ]
-      },
-      "UserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          },
-          "middleName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "googleId": {
-            "type": "string"
-          },
-          "providers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AuthProvider"
-            }
-          },
-          "roles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Role"
-            }
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          },
-          "emailVerified": {
-            "type": "boolean"
-          },
-          "phoneVerified": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "providers",
-          "roles",
-          "isActive",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "PaginatedUsersResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserResponseDto"
-            }
-          },
-          "overallCount": {
-            "type": "number"
-          },
-          "page": {
-            "type": "number"
-          },
-          "limit": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "data",
-          "overallCount",
-          "page",
-          "limit"
-        ]
-      },
-      "ChangePasswordDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "RequestEmailChangeDto": {
-        "type": "object",
-        "properties": {}
       },
       "ImageResponseDto": {
         "type": "object",
@@ -11511,6 +11368,67 @@
         "required": [
           "status",
           "paymentId"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "googleId": {
+            "type": "string"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthProvider"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "phoneVerified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "providers",
+          "roles",
+          "isActive",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "UpdateDealerProfileDto": {

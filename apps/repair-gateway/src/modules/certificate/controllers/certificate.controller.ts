@@ -215,7 +215,7 @@ export class CertificateController {
 
     /** Dealer gets certificates they created */
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
-    @Permissions(Permission.CERTIFICATE_CREATE)
+    @Permissions(Permission.CERTIFICATE_VIEW_OWN)
     @Get('dealer')
     async findDealerCerts(
         @JwtAuthUser() user: JwtPayload,

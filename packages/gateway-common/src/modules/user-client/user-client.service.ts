@@ -19,6 +19,7 @@ import type {
     FindByTokenRequest,
     AuthUserResponse,
     UserIdRequest,
+    UserListResponse,
     PaginatedUsersResponse,
     UpdateUserRequest,
     ChangePasswordRequest,
@@ -225,6 +226,10 @@ export class UserClientService implements OnModuleInit {
 
     findUserById(data: UserIdRequest): Promise<UserResponse> {
         return grpcCall(this.userService.findUserById(data));
+    }
+
+    findUsersByIds(ids: string[]): Promise<UserListResponse> {
+        return grpcCall(this.userService.findUsersByIds({ ids }));
     }
 
     findUserByEmail(email: string): Promise<UserResponse> {

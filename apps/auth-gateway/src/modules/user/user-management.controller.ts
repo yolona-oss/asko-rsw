@@ -59,7 +59,7 @@ export class UserManagementController {
         return {};
     }
 
-    @Permissions(Permission.USER_VIEW_ALL)
+    @Permissions(Permission.USER_UPDATE_ANY)
     @ApiOkResponse()
     @Post(':id/disable')
     async disableUser(@Param('id') id: string) {
@@ -67,7 +67,7 @@ export class UserManagementController {
         return {};
     }
 
-    @Permissions(Permission.USER_VIEW_ALL)
+    @Permissions(Permission.USER_UPDATE_ANY)
     @ApiOkResponse()
     @Post(':id/enable')
     async enableUser(@Param('id') id: string) {
@@ -139,13 +139,15 @@ export class UserManagementController {
     @Post('/batch')
     async getUsersBatch(@Body() body: { ids: string[] }) {
         const ids = (body.ids ?? []).slice(0, 100);
-        const results = await Promise.all(
-            ids.map((id: string) =>
-                this.userClient.findUserById({ id })
-                    .then((u: any) => u ? { id: u.id, firstName: u.firstName ?? '', lastName: u.lastName ?? '', roles: u.roles ?? [] } : null)
-                    .catch(() => null),
-            ),
-        );
-        return { users: results.filter(Boolean) };
+        if (ids.length === 0) return { users: [] };
+        const { users } = await this.userClient.findUsersByIds(ids);
+        return {
+            users: (users ?? []).map((u) => ({
+                id: u.id,
+                firstName: u.firstName ?? '',
+                lastName: u.lastName ?? '',
+                roles: u.roles ?? [],
+            })),
+        };
     }
 }

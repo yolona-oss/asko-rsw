@@ -136,6 +136,14 @@ export interface UserIdRequest {
     id: string;
 }
 
+export interface UserIdsRequest {
+    ids: string[];
+}
+
+export interface UserListResponse {
+    users: UserResponse[];
+}
+
 export interface FindByEmailRequest {
     email: string;
 }
@@ -512,6 +520,7 @@ export interface UserServiceClient {
 
     findAllUsers(request: FindAllUsersRequest): Observable<PaginatedUsersResponse>;
     findUserById(request: UserIdRequest): Observable<UserResponse>;
+    findUsersByIds(request: UserIdsRequest): Observable<UserListResponse>;
     findUserByEmail(request: FindByEmailRequest): Observable<UserResponse>;
     deleteUser(request: UserIdRequest): Observable<EmptyResponse>;
     updateUser(request: UpdateUserRequest): Observable<UserResponse>;

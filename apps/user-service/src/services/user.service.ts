@@ -95,6 +95,12 @@ export class UserService {
     }
 
     @CreateRequestContext()
+    async findByIds(ids: string[]): Promise<User[]> {
+        if (ids.length === 0) return [];
+        return await this.em.find(User, { id: { $in: ids } });
+    }
+
+    @CreateRequestContext()
     async findByPhone(phone: string,
         relations?: Populate<User, UserPopulateHints>
     ): Promise<User | null> {

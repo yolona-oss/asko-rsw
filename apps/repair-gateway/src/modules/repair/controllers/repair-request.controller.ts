@@ -183,6 +183,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/assign')
     async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
@@ -202,6 +203,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/approve-refund')
     async approveRefund(@Param('id') id: string) {
@@ -209,6 +211,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/deny-refund')
     async denyRefund(@Param('id') id: string) {
@@ -216,6 +219,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/chat/accept')
     async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -227,6 +231,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/chat/detach')
     async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
@@ -238,6 +243,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/reassign')
     async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
@@ -418,6 +424,7 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/avr/remove')
     async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
