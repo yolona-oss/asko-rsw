@@ -3,7 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { MetricsModule } from '@asko/observability';
 import { AuthorizationModule } from '@asko/authorization';
-import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule } from '@asko/gateway-common';
+import { JwtGuard, GATEWAY_CONFIG, UserClientModule, FileClientModule, AddressClientModule } from '@asko/gateway-common';
 
 import { AppConfig, AppConfigModule } from './app.config';
 
@@ -36,6 +36,11 @@ import { HealthModule } from 'modules/health/health.module';
             serviceClass: RepairFileClientService,
             inject: [AppConfig],
             useFactory: (config: AppConfig) => ({ fileServiceUrl: config.fileServiceUrl }),
+        }),
+
+        AddressClientModule.registerAsync({
+            inject: [AppConfig],
+            useFactory: (config: AppConfig) => ({ repairServiceUrl: config.repairServiceUrl }),
         }),
 
         RepairModule,

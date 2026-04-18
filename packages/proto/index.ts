@@ -24,6 +24,7 @@ export const REPAIR_PROTO_PATH = join(__dirname, 'repair.proto');
 export const REPAIR_PACKAGE_NAME = 'repair';
 export const REPAIR_SERVICE_NAME = 'RepairService';
 export const DEVICE_SERVICE_NAME = 'DeviceService';
+export const ADDRESS_SERVICE_NAME = 'AddressService';
 export const REPAIRER_SERVICE_NAME = 'RepairerService';
 export const CERTIFICATE_SERVICE_NAME = 'CertificateService';
 export const DEALER_SERVICE_NAME = 'DealerService';

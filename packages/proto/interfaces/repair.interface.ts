@@ -352,20 +352,23 @@ export interface DeviceServiceClient {
     getAllDeviceParts(request: GetAllDevicePartsRequest): Observable<PaginatedDevicePartsResponse>;
     importDeviceParts(request: ImportDevicePartsRequest): Observable<ImportDevicePartsResponse>;
 
-    // Address
-    createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
-    updateAddress(request: UpdateAddressRequest): Observable<AddressResponse>;
-    deleteAddress(request: DeleteAddressRequest): Observable<EmptyDeviceResponse>;
-    setPrimaryAddress(request: SetPrimaryAddressRequest): Observable<AddressResponse>;
-    findAddressById(request: FindByIdRequest): Observable<AddressResponse>;
-    findUserAddresses(request: FindUserAddressesRequest): Observable<AddressListResponse>;
-
     // Device categories
     findAllDeviceCategories(request: EmptyDeviceRequest): Observable<DeviceCategoryListResponse>;
     findDeviceCategoryById(request: FindByIdRequest): Observable<DeviceCategoryResponse>;
     createDeviceCategory(request: CreateDeviceCategoryRequest): Observable<DeviceCategoryResponse>;
     updateDeviceCategory(request: UpdateDeviceCategoryRequest): Observable<DeviceCategoryResponse>;
     deleteDeviceCategory(request: DeleteDeviceCategoryRequest): Observable<EmptyDeviceResponse>;
+}
+
+// ─── Address Service Client ───────────────────────────────────────────
+
+export interface AddressServiceClient {
+    createAddress(request: CreateAddressRequest): Observable<AddressResponse>;
+    updateAddress(request: UpdateAddressRequest): Observable<AddressResponse>;
+    deleteAddress(request: DeleteAddressRequest): Observable<EmptyDeviceResponse>;
+    setPrimaryAddress(request: SetPrimaryAddressRequest): Observable<AddressResponse>;
+    findAddressById(request: FindByIdRequest): Observable<AddressResponse>;
+    findUserAddresses(request: FindUserAddressesRequest): Observable<AddressListResponse>;
 }
 
 // ─── Device Category Interfaces ────────────────────────────────────────

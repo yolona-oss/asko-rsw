@@ -4,7 +4,7 @@ import { CertificateClientService } from 'modules/repair-client/certificate-clie
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
-import { UserClientService } from '@asko/gateway-common';
+import { UserClientService, AddressClientService } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
 import {
@@ -47,6 +47,7 @@ export class CertificateController {
     constructor(
         private readonly certificateClient: CertificateClientService,
         private readonly deviceClient: DeviceClientService,
+        private readonly addressClient: AddressClientService,
         private readonly userClient: UserClientService,
         private readonly paymentService: PaymentClientService,
         private readonly dealerClient: DealerClientService,
@@ -95,8 +96,8 @@ export class CertificateController {
         // Resolve dealer profile to get dealerId
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
 
-        // Create address via device-service
-        const addressRes = await this.deviceClient.createAddress(dto.clientUserId, {
+        // Create address via address-service
+        const addressRes = await this.addressClient.createAddress(dto.clientUserId, {
             city: dto.city,
             street: dto.street,
             house: dto.house,

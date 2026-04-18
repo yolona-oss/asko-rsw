@@ -36,20 +36,21 @@ service DeviceService {
     rpc GetAllDeviceParts(GetAllDevicePartsRequest) returns (PaginatedDevicePartsResponse);
     rpc ImportDeviceParts(ImportDevicePartsRequest) returns (ImportDevicePartsResponse);
 
-    // Address
-    rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
-    rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
-    rpc DeleteAddress(DeleteAddressRequest) returns (EmptyResponse);
-    rpc SetPrimaryAddress(SetPrimaryAddressRequest) returns (AddressResponse);
-    rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
-    rpc FindUserAddresses(FindUserAddressesRequest) returns (AddressListResponse);
-
     // Device categories
     rpc FindAllDeviceCategories(EmptyRequest) returns (DeviceCategoryListResponse);
     rpc FindDeviceCategoryById(FindByIdRequest) returns (DeviceCategoryResponse);
     rpc CreateDeviceCategory(CreateDeviceCategoryRequest) returns (DeviceCategoryResponse);
     rpc UpdateDeviceCategory(UpdateDeviceCategoryRequest) returns (DeviceCategoryResponse);
     rpc DeleteDeviceCategory(DeleteDeviceCategoryRequest) returns (EmptyResponse);
+}
+
+service AddressService {
+    rpc CreateAddress(CreateAddressRequest) returns (AddressResponse);
+    rpc UpdateAddress(UpdateAddressRequest) returns (AddressResponse);
+    rpc DeleteAddress(DeleteAddressRequest) returns (EmptyResponse);
+    rpc SetPrimaryAddress(SetPrimaryAddressRequest) returns (AddressResponse);
+    rpc FindAddressById(FindByIdRequest) returns (AddressResponse);
+    rpc FindUserAddresses(FindUserAddressesRequest) returns (AddressListResponse);
 }
 
 service CertificateService {

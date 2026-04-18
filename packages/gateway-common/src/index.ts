@@ -40,3 +40,5 @@ export type { UserClientModuleOptions } from './modules';
 export { USER_CLIENT_OPTIONS } from './modules';
 export { FileClientModule, FileClientService, FILE_CLIENT_OPTIONS } from './modules';
 export type { FileClientModuleOptions } from './modules';
+export { AddressClientModule, AddressClientService, ADDRESS_CLIENT_OPTIONS } from './modules';
+export type { AddressClientModuleOptions } from './modules';

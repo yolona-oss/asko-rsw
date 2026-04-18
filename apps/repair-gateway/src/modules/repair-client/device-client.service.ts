@@ -7,8 +7,6 @@ import type {
     DeviceResponse,
     UserDeviceResponse,
     UserDeviceListResponse,
-    AddressResponse,
-    AddressListResponse,
     PaginatedDevicesResponse,
     DevicePriceResponse,
     ImportDevicesResponse,
@@ -194,61 +192,6 @@ export class DeviceClientService implements OnModuleInit {
             genericOnly: params.genericOnly ?? false,
             categoryId: params.categoryId ?? '',
         }));
-    }
-
-    // ── Address ──
-
-    createAddress(userId: string, dto: { city: string; district?: string; street: string; house: string; building?: string; apartment?: string; entrance?: string; floor?: string; intercom?: string; comment?: string; latitude?: number; longitude?: number }): Promise<AddressResponse> {
-        return grpcCall(this.deviceService.createAddress({
-            userId,
-            city: dto.city,
-            district: dto.district ?? '',
-            street: dto.street,
-            house: dto.house,
-            building: dto.building ?? '',
-            apartment: dto.apartment ?? '',
-            entrance: dto.entrance ?? '',
-            floor: dto.floor ?? '',
-            intercom: dto.intercom ?? '',
-            comment: dto.comment ?? '',
-            latitude: dto.latitude ?? 0,
-            longitude: dto.longitude ?? 0,
-        }));
-    }
-
-    updateAddress(userId: string, id: string, dto: { city?: string; district?: string; street?: string; house?: string; building?: string; apartment?: string; entrance?: string; floor?: string; intercom?: string; comment?: string; latitude?: number; longitude?: number }): Promise<AddressResponse> {
-        return grpcCall(this.deviceService.updateAddress({
-            userId,
-            id,
-            city: dto.city ?? '',
-            district: dto.district ?? '',
-            street: dto.street ?? '',
-            house: dto.house ?? '',
-            building: dto.building ?? '',
-            apartment: dto.apartment ?? '',
-            entrance: dto.entrance ?? '',
-            floor: dto.floor ?? '',
-            intercom: dto.intercom ?? '',
-            comment: dto.comment ?? '',
-            latitude: dto.latitude ?? 0,
-            longitude: dto.longitude ?? 0,
-        }));
-    }
-
-    deleteAddress(userId: string, id: string): Promise<EmptyDeviceResponse> {
-        return grpcCall(this.deviceService.deleteAddress({ userId, id }));
-    }
-
-    setPrimaryAddress(userId: string, id: string): Promise<AddressResponse> {
-        return grpcCall(this.deviceService.setPrimaryAddress({ userId, id }));
-    }
-
-    findAddressById(id: string): Promise<AddressResponse> {
-        return grpcCall(this.deviceService.findAddressById({ id }));
-    }
-
-    findUserAddresses(userId: string): Promise<AddressListResponse> {
-        return grpcCall(this.deviceService.findUserAddresses({ userId }));
     }
 
     // ── Device categories ──

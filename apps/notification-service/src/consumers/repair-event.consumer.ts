@@ -354,7 +354,7 @@ export class RepairEventConsumer {
                 data.userId,
                 NotificationType.ADDRESS_VALIDATION_FAILED,
                 'Адрес не прошёл проверку',
-                `Адрес ${addr} не прошёл проверку${reason}. Обновите адрес устройства в разделе «Сертификаты».`,
+                `Адрес ${addr} не прошёл проверку${reason}. Обновите адрес в разделе «Адреса».`,
                 NotificationTargetType.ADDRESS,
                 data.addressId,
                 data,

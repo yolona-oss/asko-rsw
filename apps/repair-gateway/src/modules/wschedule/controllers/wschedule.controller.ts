@@ -22,9 +22,8 @@ import {
     assertDurationRange,
 } from '@asko/shared';
 import { ScheduleClientService } from '../services/schedule-client.service';
-import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { Permissions, Permission, CheckPolicy, isStaff, isAdmin } from '@asko/authorization';
-import { JwtAuthUser } from '@asko/gateway-common';
+import { JwtAuthUser, AddressClientService } from '@asko/gateway-common';
 import { ScheduleSelfOrStaffPolicy } from '../policies/schedule-self-or-staff.policy';
 import {
     VacationRecordDto,
@@ -41,11 +40,11 @@ import {
 export class WScheduleController {
     constructor(
         private readonly scheduleClient: ScheduleClientService,
-        private readonly deviceClient: DeviceClientService,
+        private readonly addressClient: AddressClientService,
     ) {}
 
     private async assertTargetHasValidAddress(targetUserId: string): Promise<void> {
-        const result = await this.deviceClient.findUserAddresses(targetUserId);
+        const result = await this.addressClient.findUserAddresses(targetUserId);
         const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === 'valid');
         if (!hasValid) {
             throw new BadRequestException(
