@@ -7,7 +7,7 @@ import { UserService } from 'services/user.service';
 import { InviteService } from 'services/invite.service';
 import { MfaService } from 'services/mfa.service';
 import { SigningService } from 'services/signing.service';
-import { AppError } from 'common/error';
+import { AppErrors } from 'common/error';
 
 import type {
     LoginRequest,
@@ -82,16 +82,19 @@ import type {
     VerifySigningOtpResponse,
     VerifyPasswordForSigningRequest,
     VerifyPasswordForSigningResponse,
+    GetUserProfileRequest,
+    GetUserProfilesBatchRequest,
 } from '@asko/proto';
 
 import { Role, appErrorToGrpcPayload, msg } from '@asko/shared';
+import { applyPrivacyFilter } from 'common/privacy/apply-privacy-filter';
 
 function toGrpcError(error: unknown): RpcException {
     return new RpcException(appErrorToGrpcPayload(error));
 }
 
 // Project settings only if the lazy relation has been populated (not a Reference proxy)
-function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversations: boolean; chatSearchable: boolean; metaJson: string; language: string } | undefined {
+function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversations: boolean; chatSearchable: boolean; metaJson: string; language: string; privacyRulesJson: string } | undefined {
     const s = user.settings;
     if (!s || typeof s !== 'object' || s.__helper) return undefined;
     return {
@@ -100,6 +103,7 @@ function settingsToProto(user: any): { mfaMethods: string[]; chatAcceptConversat
         chatSearchable: !!s.chatSearchable,
         metaJson: s.meta ? JSON.stringify(s.meta) : '',
         language: s.language ?? 'ru',
+        privacyRulesJson: s.privacyRules ? JSON.stringify(s.privacyRules) : '',
     };
 }
 
@@ -536,6 +540,7 @@ export class UserGrpcController {
                     chatAcceptConversations: data.settings.chatAcceptConversations,
                     chatSearchable: data.settings.chatSearchable,
                     meta: data.settings.metaJson ? (() => { try { return JSON.parse(data.settings!.metaJson); } catch { return undefined; } })() : undefined,
+                    privacyRules: data.settings.privacyRulesJson ? (() => { try { return JSON.parse(data.settings!.privacyRulesJson!); } catch { return undefined; } })() : undefined,
                 };
             }
 
@@ -758,6 +763,47 @@ export class UserGrpcController {
                     avatarUrl: l.avatarUrl ?? '',
                     createdAt: l.createdAt.toISOString(),
                 })),
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Privacy-Aware Profile ─────────────────────────────────────────
+
+    @GrpcMethod('UserService', 'GetUserProfile')
+    async getUserProfile(data: GetUserProfileRequest): Promise<UserResponse> {
+        try {
+            const user = await this.userService.findByIdWithSettings(data.id);
+            if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
+            const response = userToResponse(user);
+
+            const ctx = data.requester;
+            if (!ctx || ctx.isInternal) return response;
+
+            return applyPrivacyFilter(response, user.settings?.privacyRules, {
+                requesterId: ctx.requesterId || undefined,
+                requesterRoles: ctx.requesterRoles ?? [],
+            });
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('UserService', 'GetUserProfilesBatch')
+    async getUserProfilesBatch(data: GetUserProfilesBatchRequest): Promise<UserListResponse> {
+        try {
+            const ids = (data.ids ?? []).slice(0, 100);
+            const users = await this.userService.findByIdsWithSettings(ids);
+            const ctx = data.requester;
+            const skipFilter = !ctx || ctx.isInternal;
+            const requesterCtx = skipFilter ? null : {
+                requesterId: ctx!.requesterId || undefined,
+                requesterRoles: ctx!.requesterRoles ?? [],
+            };
+
+            return {
+                users: users.map(user => {
+                    const response = userToResponse(user);
+                    if (skipFilter) return response;
+                    return applyPrivacyFilter(response, user.settings?.privacyRules, requesterCtx!);
+                }),
             };
         } catch (e) { throw toGrpcError(e); }
     }

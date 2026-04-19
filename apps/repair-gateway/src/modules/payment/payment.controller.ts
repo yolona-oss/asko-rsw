@@ -3,7 +3,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
-import { UserClientService } from '@asko/gateway-common';
+import { UserClientService, buildRequesterContext } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
     JwtPayload,
@@ -28,11 +28,12 @@ export class PaymentController {
         private readonly repairerClient: RepairerClientService,
     ) {}
 
-    private async enrichPayments(payments: any[]): Promise<void> {
+    private async enrichPayments(payments: any[], requester?: JwtPayload): Promise<void> {
+        const ctx = buildRequesterContext(requester);
         await Promise.all(payments.map(async (p) => {
             if (!p.userId) return;
             try {
-                const u = await this.userClient.findUserById({ id: p.userId });
+                const u = await this.userClient.getUserProfile({ id: p.userId, requester: ctx });
                 if (u) p.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone };
             } catch { /* non-critical */ }
         }));
@@ -84,6 +85,7 @@ export class PaymentController {
     @Permissions(Permission.PAYMENT_VIEW_ALL)
     @Get('list')
     async listPayments(
+        @JwtAuthUser() user: JwtPayload,
         @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,
@@ -99,7 +101,7 @@ export class PaymentController {
             { page, limit, search, sortBy, sortOrder },
         );
         result.data = result.data ?? [];
-        await this.enrichPayments(result.data);
+        await this.enrichPayments(result.data, user);
         return result;
     }
 

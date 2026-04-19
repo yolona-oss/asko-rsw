@@ -1,5 +1,6 @@
 import { Entity, PrimaryKey, Property, OneToOne, OptionalProps } from '@mikro-orm/core';
 import { User } from './user.entity';
+import type { PrivacyRules } from '@asko/shared';
 
 @Entity({ tableName: 'user_settings' })
 export class UserSettings {
@@ -9,6 +10,7 @@ export class UserSettings {
         | 'chatSearchable'
         | 'language'
         | 'meta'
+        | 'privacyRules'
         | 'createdAt'
         | 'updatedAt';
 
@@ -32,6 +34,9 @@ export class UserSettings {
 
     @Property({ type: 'json', nullable: true })
     meta?: Record<string, any> | null;
+
+    @Property({ type: 'json', nullable: true, columnType: 'jsonb' })
+    privacyRules?: PrivacyRules | null;
 
     @Property({ type: 'datetime' })
     createdAt = new Date();

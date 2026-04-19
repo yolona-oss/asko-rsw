@@ -36,6 +36,8 @@ import type {
     EmptyResponse,
     SearchUsersForChatRequest,
     SearchUsersForChatResponse,
+    GetUserProfileRequest,
+    GetUserProfilesBatchRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     ResetPasswordRequest,
@@ -290,6 +292,16 @@ export class UserClientService implements OnModuleInit {
 
     searchUsersForChat(data: SearchUsersForChatRequest): Promise<SearchUsersForChatResponse> {
         return grpcCall(this.userService.searchUsersForChat(data));
+    }
+
+    // --- Privacy-aware profile ---
+
+    getUserProfile(data: GetUserProfileRequest): Promise<UserResponse> {
+        return grpcCall(this.userService.getUserProfile(data));
+    }
+
+    getUserProfilesBatch(data: GetUserProfilesBatchRequest): Promise<UserListResponse> {
+        return grpcCall(this.userService.getUserProfilesBatch(data));
     }
 
     // --- OAuth ---

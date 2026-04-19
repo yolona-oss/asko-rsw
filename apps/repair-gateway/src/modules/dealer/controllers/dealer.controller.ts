@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
-import { UserClientService } from '@asko/gateway-common';
+import { UserClientService, buildRequesterContext } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import {
     CreateDealerProfileDto,
@@ -114,8 +114,12 @@ export class DealerController {
     @ApiOkResponse({ type: UserResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('search-user')
-    async searchUser(@Query('email') email: string) {
-        return this.userClient.findUserByEmail(email);
+    async searchUser(@JwtAuthUser() user: JwtPayload, @Query('email') email: string) {
+        const found = await this.userClient.findUserByEmail(email);
+        return this.userClient.getUserProfile({
+            id: found.id,
+            requester: buildRequesterContext(user),
+        });
     }
 
     @ApiOkResponse({ type: DealerProfileResponseDto })

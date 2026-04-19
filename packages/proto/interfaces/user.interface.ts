@@ -170,6 +170,8 @@ export interface UserSettings {
     chatAcceptConversations: boolean;
     chatSearchable: boolean;
     metaJson: string;
+    language?: string;
+    privacyRulesJson?: string;
 }
 
 export interface UpdateUserRequest {
@@ -348,6 +350,24 @@ export interface ChatUserResult {
 
 export interface SearchUsersForChatResponse {
     users: ChatUserResult[];
+}
+
+// ─── Privacy-Aware Profile Fetch ────────────────────────────────────────────
+
+export interface RequesterContext {
+    requesterId: string;
+    requesterRoles: string[];
+    isInternal: boolean;
+}
+
+export interface GetUserProfileRequest {
+    id: string;
+    requester?: RequesterContext;
+}
+
+export interface GetUserProfilesBatchRequest {
+    ids: string[];
+    requester?: RequesterContext;
 }
 
 // ─── MFA Messages ───────────────────────────────────────────────────────────
@@ -538,6 +558,10 @@ export interface UserServiceClient {
     deleteInvite(request: InviteIdRequest): Observable<EmptyResponse>;
 
     searchUsersForChat(request: SearchUsersForChatRequest): Observable<SearchUsersForChatResponse>;
+
+    // Privacy-aware profile
+    getUserProfile(request: GetUserProfileRequest): Observable<UserResponse>;
+    getUserProfilesBatch(request: GetUserProfilesBatchRequest): Observable<UserListResponse>;
 
     // OAuth
     oAuthLogin(request: OAuthLoginRequest): Observable<LoginResponse>;

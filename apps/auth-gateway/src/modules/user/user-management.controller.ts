@@ -17,6 +17,8 @@ import {
     AuthUserDto,
     EmptyResponseDto,
     MessageResponseDto,
+    OptionalAuth,
+    buildRequesterContext,
 } from '@asko/gateway-common';
 import { Permissions, Permission } from '@asko/authorization';
 
@@ -25,6 +27,8 @@ import {
     ChangePasswordDto,
     PaginationDto,
     RequestEmailChangeDto,
+    DEFAULT_FIELD_VISIBILITY_RULE,
+    type PrivacyRules,
 } from '@asko/shared';
 import { UserResponseDto, PaginatedUsersResponseDto } from 'common/dto/responses/user.response.dto';
 
@@ -106,6 +110,7 @@ export class UserManagementController {
                 chatAcceptConversations: data.settings.chatAcceptConversations ?? false,
                 chatSearchable: data.settings.chatSearchable ?? false,
                 metaJson: data.settings.meta ? JSON.stringify(data.settings.meta) : '',
+                privacyRulesJson: data.settings.privacyRules ? JSON.stringify(data.settings.privacyRules) : undefined,
             } : undefined,
         });
     }
@@ -136,21 +141,74 @@ export class UserManagementController {
         return { message: result.message, retryAfter: result.retryAfter };
     }
 
-    // ── Public profiles ──
+    // ── Privacy settings ──
 
     @ApiOkResponse()
+    @Get('/privacy-settings')
+    async getPrivacySettings(@JwtAuthUser() user: AuthUserDto) {
+        const profile = await this.userClient.getProfile({ id: user.id });
+        const rules: PrivacyRules | null = profile.settings?.privacyRulesJson
+            ? (() => { try { return JSON.parse(profile.settings!.privacyRulesJson!); } catch { return null; } })()
+            : null;
+        return { privacyRules: rules, defaults: DEFAULT_FIELD_VISIBILITY_RULE };
+    }
+
+    @ApiOkResponse()
+    @Put('/privacy-settings')
+    async updatePrivacySettings(
+        @JwtAuthUser() user: AuthUserDto,
+        @Body() body: { privacyRules: PrivacyRules },
+    ) {
+        // Fetch current settings to avoid overriding other fields
+        const profile = await this.userClient.getProfile({ id: user.id });
+        const currentSettings = profile.settings;
+        return this.userClient.updateUser({
+            id: user.id,
+            name: '',
+            email: '',
+            phone: '',
+            password: '',
+            addressId: '',
+            currentPassword: '',
+            middleName: '',
+            settings: {
+                mfaMethods: currentSettings?.mfaMethods ?? [],
+                chatAcceptConversations: currentSettings?.chatAcceptConversations ?? false,
+                chatSearchable: currentSettings?.chatSearchable ?? false,
+                metaJson: currentSettings?.metaJson ?? '',
+                privacyRulesJson: JSON.stringify(body.privacyRules),
+            },
+        });
+    }
+
+    // ── Public profiles ──
+
+    @OptionalAuth()
+    @ApiOkResponse()
+    @Get('/:id/public-profile')
+    async getPublicProfile(
+        @JwtAuthUser() user: AuthUserDto | undefined,
+        @Param('id') id: string,
+    ) {
+        return this.userClient.getUserProfile({
+            id,
+            requester: buildRequesterContext(user),
+        });
+    }
+
+    @OptionalAuth()
+    @ApiOkResponse()
     @Post('/batch')
-    async getUsersBatch(@Body() body: { ids: string[] }) {
+    async getUsersBatch(
+        @JwtAuthUser() user: AuthUserDto | undefined,
+        @Body() body: { ids: string[] },
+    ) {
         const ids = (body.ids ?? []).slice(0, 100);
         if (ids.length === 0) return { users: [] };
-        const { users } = await this.userClient.findUsersByIds(ids);
-        return {
-            users: (users ?? []).map((u) => ({
-                id: u.id,
-                firstName: u.firstName ?? '',
-                lastName: u.lastName ?? '',
-                roles: u.roles ?? [],
-            })),
-        };
+        const { users } = await this.userClient.getUserProfilesBatch({
+            ids,
+            requester: buildRequesterContext(user),
+        });
+        return { users: users ?? [] };
     }
 }

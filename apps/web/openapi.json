@@ -1154,6 +1154,55 @@
         ]
       }
     },
+    "/users/privacy-settings": {
+      "get": {
+        "operationId": "UserManagementController_getPrivacySettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "operationId": "UserManagementController_updatePrivacySettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/public-profile": {
+      "get": {
+        "operationId": "UserManagementController_getPublicProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/users/batch": {
       "post": {
         "operationId": "UserManagementController_getUsersBatch",

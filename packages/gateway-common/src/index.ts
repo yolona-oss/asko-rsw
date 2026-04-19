@@ -27,7 +27,7 @@ export { StreamingUploadInterceptor, StreamingFile, assertMime } from './upload'
 export type { StreamingUploadPayload } from './upload';
 
 // Auth utilities
-export { isStaff, isAdmin, isSuperAdmin, isSelf, assertSelfOrStaff } from './auth';
+export { isStaff, isAdmin, isSuperAdmin, isSelf, assertSelfOrStaff, buildRequesterContext } from './auth';
 
 // Config
 export { corsOptions } from './config/cors.config';

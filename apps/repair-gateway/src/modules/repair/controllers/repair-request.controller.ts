@@ -5,7 +5,7 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
-import { UserClientService } from '@asko/gateway-common';
+import { UserClientService, buildRequesterContext } from '@asko/gateway-common';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { RepairFileClientService } from '../services/repair-file-client.service';
@@ -156,22 +156,22 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_VIEW_ALL)
     @Get()
-    async findAll(@Query() query: RepairQueryDto) {
+    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findAll(query);
         result.data = result.data ?? [];
-        // Collect all unique userIds to enrich (request owners + repairers)
+        const requester = buildRequesterContext(user);
         const enrichments: Promise<void>[] = [];
         for (const req of result.data) {
             if (req.userId) {
                 enrichments.push(
-                    this.userClient.findUserById({ id: req.userId })
+                    this.userClient.getUserProfile({ id: req.userId, requester })
                         .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                         .catch(() => { }),
                 );
             }
             if ((req as any).repairer?.userId) {
                 enrichments.push(
-                    this.userClient.findUserById({ id: (req as any).repairer.userId })
+                    this.userClient.getUserProfile({ id: (req as any).repairer.userId, requester })
                         .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                         .catch(() => { }),
                 );
@@ -658,24 +658,23 @@ export class RepairRequestController {
 
     @ApiOkResponse({ type: RepairRequestResponseDto })
     @Get(':id')
-    async findOne(@Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const result = await this.repairClient.findById(id);
         const req = result.request;
         if (!req) return result;
 
-        // Enrich with user data from user-service (in parallel)
+        const requester = buildRequesterContext(user);
         const enrichments: Promise<void>[] = [];
         if (req.userId) {
             enrichments.push(
-                this.userClient.findUserById({ id: req.userId })
+                this.userClient.getUserProfile({ id: req.userId, requester })
                     .then((u) => { if (u) (req as any).user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                     .catch(() => { }),
             );
         }
-        // Enrich nested repairer with user data
         if ((req as any).repairer?.userId) {
             enrichments.push(
-                this.userClient.findUserById({ id: (req as any).repairer.userId })
+                this.userClient.getUserProfile({ id: (req as any).repairer.userId, requester })
                     .then((u) => { if (u) (req as any).repairer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                     .catch(() => { }),
             );

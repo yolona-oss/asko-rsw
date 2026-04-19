@@ -7,6 +7,7 @@ import {
     IsObject,
 } from 'class-validator';
 import { Role } from './roles.type.js';
+import type { PrivacyRules } from './privacy.js';
 
 export class CreateUserDto {
     @IsOptional()
@@ -67,6 +68,10 @@ export class UpdateUserSettingsDto {
     @IsOptional()
     @IsObject()
     meta?: Record<string, any>;
+
+    @IsOptional()
+    @IsObject()
+    privacyRules?: PrivacyRules;
 }
 
 export class UpdateUserDto {

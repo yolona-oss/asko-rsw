@@ -173,6 +173,7 @@ message UserSettings {
     bool chat_searchable = 3;
     string meta_json = 4;
     string language = 5;
+    string privacy_rules_json = 6;
 }
 
 message UpdateUserRequest {
@@ -475,6 +476,24 @@ message ConfirmPhoneChangeResponse {
     string message = 1;
 }
 
+// ─── Privacy-Aware Profile Fetch ────────────────────────────────────────────
+
+message RequesterContext {
+    string requester_id = 1;
+    repeated string requester_roles = 2;
+    bool is_internal = 3;
+}
+
+message GetUserProfileRequest {
+    string id = 1;
+    RequesterContext requester = 2;
+}
+
+message GetUserProfilesBatchRequest {
+    repeated string ids = 1;
+    RequesterContext requester = 2;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 service UserService {
@@ -547,6 +566,10 @@ service UserService {
 
     // Chat
     rpc SearchUsersForChat(SearchUsersForChatRequest) returns (SearchUsersForChatResponse);
+
+    // Privacy-aware profile
+    rpc GetUserProfile(GetUserProfileRequest) returns (UserResponse);
+    rpc GetUserProfilesBatch(GetUserProfilesBatchRequest) returns (UserListResponse);
 
     // Signing OTP (AVR digital signatures)
     rpc SendSigningOtp(SendSigningOtpRequest) returns (SendSigningOtpResponse);

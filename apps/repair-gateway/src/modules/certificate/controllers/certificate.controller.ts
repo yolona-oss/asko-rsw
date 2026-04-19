@@ -4,7 +4,7 @@ import { CertificateClientService } from 'modules/repair-client/certificate-clie
 import { DeviceClientService } from 'modules/repair-client/device-client.service';
 import { DealerClientService } from 'modules/repair-client/dealer-client.service';
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
-import { UserClientService, AddressClientService } from '@asko/gateway-common';
+import { UserClientService, AddressClientService, buildRequesterContext } from '@asko/gateway-common';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { IsOptional, IsEnum } from 'class-validator';
 import {
@@ -54,21 +54,20 @@ export class CertificateController {
         private readonly fileService: RepairFileClientService,
     ) {}
 
-    private async enrichCertificates(certs: any[]): Promise<void> {
+    private async enrichCertificates(certs: any[], requester?: JwtPayload): Promise<void> {
+        const ctx = buildRequesterContext(requester);
         const enrichments: Promise<void>[] = [];
         for (const cert of certs) {
-            // Enrich certificate owner
             if (cert.userId) {
                 enrichments.push(
-                    this.userClient.findUserById({ id: cert.userId })
+                    this.userClient.getUserProfile({ id: cert.userId, requester: ctx })
                         .then((u) => { if (u) cert.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                         .catch(() => {}),
                 );
             }
-            // Enrich dealer user
             if (cert.dealer?.userId) {
                 enrichments.push(
-                    this.userClient.findUserById({ id: cert.dealer.userId })
+                    this.userClient.getUserProfile({ id: cert.dealer.userId, requester: ctx })
                         .then((u) => { if (u) cert.dealer.user = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, phone: u.phone }; })
                         .catch(() => {}),
                 );
@@ -210,7 +209,7 @@ export class CertificateController {
     @Get('my')
     async findMy(@JwtAuthUser() user: JwtPayload) {
         const result = await this.certificateClient.findByUser(user.sub);
-        await this.enrichCertificates(result.certificates ?? []);
+        await this.enrichCertificates(result.certificates ?? [], user);
         return result;
     }
 
@@ -227,7 +226,7 @@ export class CertificateController {
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
         const result = await this.certificateClient.findByDealer(dealerProfile.id, pagination, status);
         result.data = result.data ?? [];
-        await this.enrichCertificates(result.data);
+        await this.enrichCertificates(result.data, user);
         return result;
     }
 
@@ -235,10 +234,10 @@ export class CertificateController {
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
     @Permissions(Permission.CERTIFICATE_MANAGE)
     @Get()
-    async findAll(@Query() query: FindDealerCertificatesDto) {
+    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: FindDealerCertificatesDto) {
         const result = await this.certificateClient.findAll(query);
         result.data = result.data ?? [];
-        await this.enrichCertificates(result.data);
+        await this.enrichCertificates(result.data, user);
         return result;
     }
 
@@ -390,9 +389,9 @@ export class CertificateController {
 
     @ApiOkResponse({ type: CertificateResponseDto })
     @Get(':id')
-    async findOne(@Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const cert = await this.certificateClient.findById(id);
-        await this.enrichCertificates([cert]);
+        await this.enrichCertificates([cert], user);
         return cert;
     }
 }

@@ -102,6 +102,12 @@ export class UserService {
     }
 
     @CreateRequestContext()
+    async findByIdsWithSettings(ids: string[]): Promise<User[]> {
+        if (ids.length === 0) return [];
+        return await this.em.find(User, { id: { $in: ids } }, { populate: ['settings'] });
+    }
+
+    @CreateRequestContext()
     async findByPhone(phone: string,
         relations?: Populate<User, UserPopulateHints>
     ): Promise<User | null> {
@@ -399,6 +405,9 @@ export class UserService {
             }
             if (newUserInfo.settings.meta !== undefined) {
                 s.meta = { ...(s.meta ?? {}), ...newUserInfo.settings.meta };
+            }
+            if (newUserInfo.settings.privacyRules !== undefined) {
+                s.privacyRules = newUserInfo.settings.privacyRules;
             }
         }
 
