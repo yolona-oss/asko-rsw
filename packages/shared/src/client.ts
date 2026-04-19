@@ -15,6 +15,8 @@ export { MfaMethod } from './auth/mfa-method.enum.js';
 export { Role, ALL_ROLES, ADMIN_ROLES, STAFF_ROLES } from './user/roles.type.js';
 export { DEFAULT_USER_ROLE } from './user/default-user-role.constant.js';
 export { UserAddressType } from './user/user-address-type.enum.js';
+export { FieldVisibility, PrivacyFieldGroup, FIELD_GROUP_MEMBERS, ALL_PRIVACY_FIELDS, DEFAULT_FIELD_VISIBILITY_RULE } from './user/privacy.js';
+export type { UserListRule, FieldVisibilityRule, PrivacyRules } from './user/privacy.js';
 export {
     MAX_USER_PASSWORD_LENGTH,
     MIN_USER_PASSWORD_LENGTH,

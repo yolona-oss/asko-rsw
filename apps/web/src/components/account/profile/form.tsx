@@ -8,6 +8,7 @@ import { usersApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
 import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput, Card } from '@asko/ui';
+import type { PrivacyRules } from '@asko/shared/client';
 import { useFormGuard } from '@/hooks/use-form-guard';
 import { useLanguage } from '@/lib/language';
 import { PageContainer } from '../layout/page-container';
@@ -18,6 +19,7 @@ import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from '@/components/skeleton';
 import { AvatarSection } from './avatar-section';
 import { ChatPreferencesSection } from './chat-preferences-section';
+import { PrivacySection } from './privacy-section';
 import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
@@ -63,11 +65,14 @@ export function ProfileForm() {
   const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
   const [chatSearchable, setChatSearchable] = useState(false);
 
+  // Privacy
+  const [privacyRules, setPrivacyRules] = useState<PrivacyRules | null>(null);
+
   // Form guard
-  type ProfileSnapshot = { fullName: string; email: string; phone: string; chatAcceptConversations: boolean; chatSearchable: boolean };
+  type ProfileSnapshot = { fullName: string; email: string; phone: string; chatAcceptConversations: boolean; chatSearchable: boolean; privacyRules: PrivacyRules | null };
   const formState = useMemo<ProfileSnapshot>(
-    () => ({ fullName, email, phone, chatAcceptConversations, chatSearchable }),
-    [fullName, email, phone, chatAcceptConversations, chatSearchable],
+    () => ({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules }),
+    [fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules],
   );
   const [initialState, setInitialState] = useState<ProfileSnapshot | undefined>(undefined);
 
@@ -100,9 +105,13 @@ export function ProfileForm() {
         const settings = (data as any).settings;
         const chatAccept = settings?.chatAcceptConversations ?? false;
         const chatSearch = settings?.chatSearchable ?? false;
+        const privRules = settings?.privacyRulesJson
+          ? (() => { try { return JSON.parse(settings.privacyRulesJson); } catch { return null; } })()
+          : null;
         if (settings) {
           setChatAcceptConversations(chatAccept);
           setChatSearchable(chatSearch);
+          setPrivacyRules(privRules);
           if (settings.language) setLanguage(settings.language);
         }
         setInitialState({
@@ -111,6 +120,7 @@ export function ProfileForm() {
           phone: data.phone ?? '',
           chatAcceptConversations: chatAccept,
           chatSearchable: chatSearch,
+          privacyRules: privRules,
         });
       }),
       usersApi.getAvatarUrl(authUser.id).then((url) => {
@@ -125,6 +135,7 @@ export function ProfileForm() {
     setPhone(data.phone);
     setChatAcceptConversations(data.chatAcceptConversations);
     setChatSearchable(data.chatSearchable);
+    setPrivacyRules(data.privacyRules);
   }, []);
 
   const guard = useFormGuard<ProfileSnapshot>({
@@ -139,6 +150,7 @@ export function ProfileForm() {
       phone: 'Телефон',
       chatAcceptConversations: 'Приём сообщений',
       chatSearchable: 'Видимость в поиске',
+      privacyRules: 'Приватность',
     },
   });
 
@@ -196,6 +208,7 @@ export function ProfileForm() {
         settings: {
           chatAcceptConversations,
           chatSearchable,
+          privacyRules: privacyRules ?? undefined,
         },
       } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });
@@ -239,7 +252,7 @@ export function ProfileForm() {
         text: messages.length > 0 ? messages.join('. ') : 'Профиль сохранён',
       });
       guard.markSaved();
-      setInitialState({ fullName, email, phone, chatAcceptConversations, chatSearchable });
+      setInitialState({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
@@ -376,6 +389,13 @@ export function ProfileForm() {
           setChatAcceptConversations={setChatAcceptConversations}
           chatSearchable={chatSearchable}
           setChatSearchable={setChatSearchable}
+        />
+
+        {/* Privacy settings */}
+        <div className="h-px bg-border-light" />
+        <PrivacySection
+          privacyRules={privacyRules}
+          setPrivacyRules={setPrivacyRules}
         />
 
         {/* Language */}
