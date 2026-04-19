@@ -93,7 +93,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       // Fetch payments
       try {
         const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
-        setAllPayments(paymentsData.payments);
+        setAllPayments(paymentsData.payments ?? []);
       } catch { setAllPayments([]); }
 
       // Check if already reviewed

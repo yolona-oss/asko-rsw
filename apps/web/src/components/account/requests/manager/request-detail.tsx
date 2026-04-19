@@ -120,7 +120,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         // Fetch payments
         try {
           const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
-          setAllPayments(paymentsData.payments);
+          setAllPayments(paymentsData.payments ?? []);
         } catch { setAllPayments([]); }
 
       } catch { } finally {

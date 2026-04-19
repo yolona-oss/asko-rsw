@@ -116,7 +116,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
             setPhotos(urls);
           }).catch(() => {}),
           repairRequestApi.getPayments(requestId).then(({ data }) => {
-            const payments = data.payments;
+            const payments = data.payments ?? [];
             setAllPayments(payments);
             const cashPending = payments.find((p) => p.provider === 'cash' && p.status === 'pending');
             setPendingCashPayment(cashPending ?? null);
