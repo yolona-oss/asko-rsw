@@ -4,14 +4,13 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, X, ChevronDown, Volume2, VolumeX, Settings, CheckCheck, PanelRightOpen, PanelRightClose, Sun, Moon } from 'lucide-react';
+import { Bell, X, ChevronDown, CheckCheck, PanelRightOpen, PanelRightClose, BellOff } from 'lucide-react';
 import { notificationApi } from '@/lib/api/notification';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
 import { useSoundMute } from '@/lib/hooks/use-sound-mute';
 import { playSound, isReminderEnabled } from '@/lib/sound';
 import { getActiveConversation } from '@/lib/active-conversation';
 import { useSidebar } from '@/components/account/layout/sidebar-context';
-import { useTheme } from '@/lib/theme';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
@@ -95,8 +94,7 @@ export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const [soundMuted, toggleMute] = useSoundMute('notification');
-  const { theme, toggle: toggleTheme } = useTheme();
+  const [soundMuted] = useSoundMute('notification');
   const { notifOpen: open, notifMode, setNotifOpen, setNotifMode } = useSidebar();
   const [closing, setClosing] = useState(false);
 
@@ -256,9 +254,9 @@ export function NotificationBell() {
 
   // ── Shared panel header ──────────────────────────────────────
   const panelHeader = (
-    <div className="flex items-center justify-between px-3 py-2.5 border-b border-border-light flex-shrink-0">
+    <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
       <span className="text-sm font-medium text-text-main">Уведомления</span>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         {unreadCount > 0 && (
           <button
             type="button"
@@ -281,28 +279,12 @@ export function NotificationBell() {
     </div>
   );
 
-  // ── Quick actions footer ─────────────────────────────────────
+  // ── Simplified footer: mark-all + dock/overlay toggle ───────
   const panelFooter = (
     <div className="flex items-center justify-between px-3 py-2 border-t border-border-light flex-shrink-0 bg-surface-secondary">
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={toggleMute}
-          className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-          aria-label={soundMuted ? 'Включить звук' : 'Выключить звук'}
-          title={soundMuted ? 'Включить звук' : 'Выключить звук'}
-        >
-          {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-        </button>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-          title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-        >
-          {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-        </button>
-      </div>
+      <span className="text-[11px] text-text-sub">
+        {unreadCount > 0 ? `${unreadCount} непрочитанных` : 'Нет новых'}
+      </span>
       <div className="flex items-center gap-1">
         {unreadCount > 0 && (
           <button
@@ -325,14 +307,6 @@ export function NotificationBell() {
           {notifMode === 'overlay'
             ? <PanelRightOpen className="w-3.5 h-3.5" />
             : <PanelRightClose className="w-3.5 h-3.5" />}
-        </button>
-        <button
-          type="button"
-          onClick={() => { handleClose(); router.push('/account/notifications'); }}
-          className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-          title="Настройки"
-        >
-          <Settings className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
@@ -418,8 +392,6 @@ export function NotificationDockPanel() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { notifOpen: open, notifMode, setNotifOpen, setNotifMode } = useSidebar();
-  const [soundMuted, toggleMute] = useSoundMute('notification');
-  const { theme, toggle: toggleTheme } = useTheme();
 
   const { data: listData } = useQuery({
     queryKey: ['notifications-unread-list'],
@@ -453,9 +425,9 @@ export function NotificationDockPanel() {
       style={{ width: PANEL_WIDTH }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border-light flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
         <span className="text-sm font-medium text-text-main">Уведомления</span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
               type="button"
@@ -492,26 +464,11 @@ export function NotificationDockPanel() {
         />
       </div>
 
-      {/* Footer actions */}
+      {/* Footer */}
       <div className="flex items-center justify-between px-3 py-2 border-t border-border-light flex-shrink-0 bg-surface-secondary">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-            title={soundMuted ? 'Включить звук' : 'Выключить звук'}
-          >
-            {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-            title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-          >
-            {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-          </button>
-        </div>
+        <span className="text-[11px] text-text-sub">
+          {unreadCount > 0 ? `${unreadCount} непрочитанных` : 'Нет новых'}
+        </span>
         <div className="flex items-center gap-1">
           {unreadCount > 0 && (
             <button
@@ -531,14 +488,6 @@ export function NotificationDockPanel() {
             title="Открепить панель"
           >
             <PanelRightClose className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => { setNotifOpen(false); router.push('/account/notifications'); }}
-            className="p-1.5 text-text-sub hover:text-text-main transition-colors cursor-pointer"
-            title="Настройки"
-          >
-            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -695,8 +644,9 @@ function NotificationList({
 }) {
   if (notifications.length === 0) {
     return (
-      <div className="px-4 py-12 text-center text-sm text-text-sub">
-        Нет новых уведомлений
+      <div className="flex flex-col items-center justify-center gap-3 py-16 px-6">
+        <BellOff className="w-10 h-10 text-text-sub/30" />
+        <p className="text-sm text-text-sub text-center">Нет новых уведомлений</p>
       </div>
     );
   }
@@ -710,11 +660,11 @@ function NotificationList({
         const latestTime = group.items[0]?.createdAt;
         return (
           <div key={group.key} className="border-b border-border-light/50 last:border-b-0">
-            {/* Group summary */}
+            {/* Group header */}
             <button
               type="button"
               onClick={() => onToggleGroup(group.key)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface-hover transition-colors cursor-pointer"
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <div className="flex-shrink-0">
                 <NotificationIcon type={group.items[0].type} />
@@ -722,12 +672,12 @@ function NotificationList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-medium text-text-main">{group.label}</span>
-                  <span className="text-[11px] text-text-sub bg-surface-secondary px-1.5 py-px min-w-[18px] text-center">
+                  <span className="text-[11px] text-text-sub bg-surface-secondary px-1.5 py-0.5 min-w-[20px] text-center">
                     {group.items.length}
                   </span>
                 </div>
                 {!isGroupOpen && latestTime && (
-                  <span className="text-[10px] text-text-sub/60 mt-0.5 block">
+                  <span className="text-[11px] text-text-sub/50 mt-0.5 block">
                     {formatTimeAgo(new Date(latestTime).getTime())}
                   </span>
                 )}
@@ -737,7 +687,7 @@ function NotificationList({
               />
             </button>
 
-            {/* Group children */}
+            {/* Group items */}
             {isGroupOpen && (
               <div className="border-t border-border-light/30">
                 {group.items.map((n, i) => (
@@ -796,32 +746,36 @@ function NotificationItem({
       <button
         type="button"
         onClick={() => onToggleExpand(n.id)}
-        className="w-full flex items-start gap-2.5 text-left cursor-pointer pl-10 pr-3 py-2 hover:bg-surface-hover transition-colors"
+        className="w-full flex items-start gap-3 text-left cursor-pointer pl-11 pr-4 py-2.5 hover:bg-surface-hover transition-colors"
       >
+        {/* Unread dot */}
+        <span className="w-2 h-2 rounded-full bg-brand-red flex-shrink-0 mt-1.5 -ml-5" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-medium text-text-main leading-tight">
             {n.title}
           </p>
-          <p className={`text-xs text-text-sub mt-0.5 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-            {n.body}
-          </p>
-          <span className="text-[10px] text-text-sub/60 mt-1 block">
+          {n.body && (
+            <p className={`text-[12px] text-text-sub mt-1 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+              {n.body}
+            </p>
+          )}
+          <span className="text-[11px] text-text-sub/50 mt-1 block">
             {formatTimeAgo(new Date(n.createdAt).getTime())}
           </span>
         </div>
         {n.body && n.body.length > 60 && (
           <ChevronDown
-            className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
             onClick={(e) => { e.stopPropagation(); onToggleExpand(n.id); }}
           />
         )}
       </button>
-      <div className="flex items-center justify-end gap-3 pl-10 pr-3 pb-1.5 -mt-0.5">
+      <div className="flex items-center justify-end gap-4 pl-11 pr-4 pb-2 -mt-1">
         {navigable && (
           <button
             type="button"
             onClick={() => onNavigate(n)}
-            className="text-[10px] text-text-sub/50 hover:text-brand-red transition-colors cursor-pointer"
+            className="text-[11px] text-text-sub hover:text-brand-red transition-colors cursor-pointer"
           >
             Перейти
           </button>
@@ -829,7 +783,7 @@ function NotificationItem({
         <button
           type="button"
           onClick={() => onMarkRead(n.id)}
-          className="text-[10px] text-text-sub/50 hover:text-brand-red transition-colors cursor-pointer"
+          className="text-[11px] text-text-sub hover:text-brand-red transition-colors cursor-pointer"
         >
           Прочитано
         </button>
