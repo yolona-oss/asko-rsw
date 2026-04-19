@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CreateAddressDto, UpdateAddressDto, JwtPayload } from '@asko/shared';
-import { Permissions, Permission } from '@asko/authorization';
+import { Permissions, Permission, isStaff } from '@asko/authorization';
 import { JwtAuthUser, AddressClientService } from '@asko/gateway-common';
 import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'modules/device/dto/device.response.dto';
 
@@ -55,7 +55,13 @@ export class AddressController {
 
     @ApiOkResponse({ type: AddressRecordDto })
     @Get(':id')
-    async findOne(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+        if (!isStaff(user)) {
+            const { addresses } = await this.addressClient.findUserAddresses(user.sub);
+            if (!addresses?.some(a => a.id === id)) {
+                throw new ForbiddenException();
+            }
+        }
         const result = await this.addressClient.findAddressById(id);
         return result.address;
     }

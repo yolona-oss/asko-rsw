@@ -34,6 +34,7 @@ import { IsOptional, IsString } from 'class-validator';
 import { CheckPolicy, Permissions, Permission } from '@asko/authorization';
 import { JwtAuthUser } from '@asko/gateway-common';
 import { RepairManagerPolicy } from '../policies/repair-manager.policy';
+import { RepairParticipantPolicy } from '../policies/repair-participant.policy';
 
 import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
 import {
@@ -146,8 +147,9 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: PaymentListResponseDto })
+    @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/payments')
-    async getPayments(@Param('id') id: string) {
+    async getPayments(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('repairRequest', id);
     }
 
@@ -546,8 +548,9 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: WorkStepListResponseDto })
+    @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/steps')
-    async getSteps(@Param('id') id: string) {
+    async getSteps(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.getSteps(id);
     }
 
@@ -634,16 +637,18 @@ export class RepairRequestController {
     }
 
     @ApiOkResponse({ type: BrokenPartListResponseDto })
+    @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/broken-parts')
-    async getBrokenParts(@Param('id') id: string) {
+    async getBrokenParts(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
         return this.repairClient.getBrokenParts(id);
     }
 
     // ── Broken part images ──
 
     @ApiOkResponse({ type: ImageListResponseDto })
+    @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/broken-parts/:partId/images')
-    async findBrokenPartImages(@Param('partId') partId: string) {
+    async findBrokenPartImages(@JwtAuthUser() _user: JwtPayload, @Param('partId') partId: string) {
         return this.fileService.findAttachedImages(ImageTypeEnum.BrokenPart, partId);
     }
 
@@ -654,9 +659,10 @@ export class RepairRequestController {
         return this.fileService.remove(imageId);
     }
 
-    // ── Get by ID (any authenticated user) ──
+    // ── Get by ID (participant or staff) ──
 
     @ApiOkResponse({ type: RepairRequestResponseDto })
+    @CheckPolicy(RepairParticipantPolicy)
     @Get(':id')
     async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const result = await this.repairClient.findById(id);

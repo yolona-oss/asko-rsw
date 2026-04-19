@@ -22,8 +22,9 @@ import {
     computeExpiresAt,
 } from '@asko/shared';
 
-import { Permissions, Permission } from '@asko/authorization';
+import { CheckPolicy, Permissions, Permission } from '@asko/authorization';
 import { JwtAuthUser, Public } from '@asko/gateway-common';
+import { CertificateOwnerPolicy } from '../policies/certificate-owner.policy';
 
 class FindDealerCertificatesDto extends PaginationDto {
     @IsOptional()
@@ -388,6 +389,7 @@ export class CertificateController {
     }
 
     @ApiOkResponse({ type: CertificateResponseDto })
+    @CheckPolicy(CertificateOwnerPolicy)
     @Get(':id')
     async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const cert = await this.certificateClient.findById(id);
