@@ -152,3 +152,15 @@ export function getNotificationGroup(type: string): string {
   return NOTIFICATION_TYPE_CONFIG[type]?.icon ?? 'system';
 }
 
+export const URGENCY_BORDER: Record<string, string> = {
+  high: 'border-l-2 border-l-warning',
+  critical: 'border-l-2 border-l-error',
+};
+
+export const URGENCY_BORDER_DEFAULT = 'border-l-2 border-l-transparent';
+
+export const URGENCY_LABEL: Record<string, string> = {
+  high: 'Важное',
+  critical: 'Срочное',
+};
+

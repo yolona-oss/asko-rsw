@@ -14,7 +14,7 @@ import { useSidebar } from '@/components/account/layout/sidebar-context';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
-import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup } from './constants';
+import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup, URGENCY_BORDER, URGENCY_BORDER_DEFAULT, URGENCY_LABEL } from './constants';
 import { NotificationIcon } from './icon';
 
 const REMINDER_MS = 5 * 60 * 1000;
@@ -734,10 +734,13 @@ function NotificationItem({
   onNavigate: (n: NotificationRecord) => void;
 }) {
   const navigable = isNotificationNavigable(n);
+  const urgency = n.urgency ?? 'normal';
+  const urgencyBorder = URGENCY_BORDER[urgency] ?? URGENCY_BORDER_DEFAULT;
+  const urgencyLabel = URGENCY_LABEL[urgency];
 
   return (
     <div
-      className={`border-b border-border-light/30 last:border-b-0 ${isRemoving
+      className={`border-b border-border-light/30 last:border-b-0 ${urgencyBorder} ${isRemoving
         ? 'animate-[notification-remove_400ms_ease-in-out_forwards] pointer-events-none'
         : 'animate-[notification-item_300ms_ease-out_both]'
       }`}
@@ -749,11 +752,18 @@ function NotificationItem({
         className="w-full flex items-start gap-3 text-left cursor-pointer pl-11 pr-4 py-2.5 hover:bg-surface-hover transition-colors"
       >
         {/* Unread dot */}
-        <span className="w-2 h-2 rounded-full bg-brand-red flex-shrink-0 mt-1.5 -ml-5 animate-[unread-pulse_2s_ease-in-out_infinite]" />
+        <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 -ml-5 ${urgency === 'critical' ? 'bg-error animate-[unread-pulse_1s_ease-in-out_infinite]' : 'bg-brand-red animate-[unread-pulse_2s_ease-in-out_infinite]'}`} />
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-medium text-text-main leading-tight">
-            {n.title}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[13px] font-medium text-text-main leading-tight">
+              {n.title}
+            </p>
+            {urgencyLabel && (
+              <span className={`text-[10px] px-1.5 py-0.5 font-medium flex-shrink-0 ${urgency === 'critical' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
+                {urgencyLabel}
+              </span>
+            )}
+          </div>
           {n.body && (
             <p className={`text-[12px] text-text-sub mt-1 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
               {n.body}

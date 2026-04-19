@@ -21,6 +21,7 @@ message CreateNotificationRequest {
     string targetType = 5;
     string targetId = 6;
     string metadata = 7;
+    string urgency = 8;
 }
 
 message ListUserNotificationsRequest {
@@ -66,6 +67,7 @@ message NotificationRecord {
     bool isRead = 9;
     string readAt = 10;
     string createdAt = 11;
+    string urgency = 12;
 }
 
 message NotificationResponse {

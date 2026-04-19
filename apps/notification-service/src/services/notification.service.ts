@@ -1,9 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { NotificationEntity } from 'entities/notification.entity';
+import { NotificationUrgency } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { NotificationPushService } from './notification-push.service';
 import { NotificationEventPublisher } from './notification-event.publisher';
+
+export interface CreateNotificationParams {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    targetType?: string;
+    targetId?: string;
+    metadata?: Record<string, any>;
+    urgency?: NotificationUrgency;
+}
 
 const NOTIFICATION_SORTABLE_FIELDS = ['createdAt', 'isRead'] as const;
 
@@ -16,15 +28,8 @@ export class NotificationService {
     ) {}
 
     @CreateRequestContext()
-    async createNotification(
-        userId: string,
-        type: string,
-        title: string,
-        body: string,
-        targetType?: string,
-        targetId?: string,
-        metadata?: Record<string, any>,
-    ): Promise<NotificationEntity> {
+    async createNotification(params: CreateNotificationParams): Promise<NotificationEntity> {
+        const { userId, type, title, body, targetType, targetId, metadata, urgency } = params;
         const notification = this.em.create(NotificationEntity, {
             userId,
             type,
@@ -33,6 +38,7 @@ export class NotificationService {
             targetType,
             targetId,
             metadata,
+            urgency,
         });
         await this.em.persistAndFlush(notification);
 
@@ -47,6 +53,7 @@ export class NotificationService {
             metadata: notification.metadata ? JSON.stringify(notification.metadata) : '',
             isRead: false,
             createdAt: notification.createdAt.toISOString(),
+            urgency: notification.urgency,
         };
 
         // Push real-time to frontend via Redis → API gateway WebSocket

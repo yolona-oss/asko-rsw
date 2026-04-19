@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
-import { appErrorToGrpcPayload } from '@asko/shared';
+import { appErrorToGrpcPayload, NotificationUrgency } from '@asko/shared';
 import type {
     CreateNotificationRequest,
     ListUserNotificationsRequest,
@@ -29,6 +29,7 @@ function entityToRecord(entity: NotificationEntity) {
         isRead: entity.isRead,
         readAt: entity.readAt?.toISOString() ?? '',
         createdAt: entity.createdAt?.toISOString() ?? '',
+        urgency: entity.urgency,
     };
 }
 
@@ -40,15 +41,16 @@ export class NotificationGrpcController {
     async createNotification(data: CreateNotificationRequest) {
         try {
             const metadata = data.metadata ? JSON.parse(data.metadata) : undefined;
-            const notification = await this.notificationService.createNotification(
-                data.userId,
-                data.type,
-                data.title,
-                data.body,
-                data.targetType || undefined,
-                data.targetId || undefined,
+            const notification = await this.notificationService.createNotification({
+                userId: data.userId,
+                type: data.type,
+                title: data.title,
+                body: data.body,
+                targetType: data.targetType || undefined,
+                targetId: data.targetId || undefined,
                 metadata,
-            );
+                urgency: (data.urgency as NotificationUrgency) || undefined,
+            });
             return { notification: entityToRecord(notification) };
         } catch (e) { throw toGrpcError(e); }
     }

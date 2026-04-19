@@ -1,5 +1,6 @@
 import { Entity, PrimaryKey, Property, Index, OptionalProps } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
+import { NotificationUrgency } from '@asko/shared';
 
 @Entity({ tableName: 'notification' })
 @Index({
@@ -7,7 +8,7 @@ import { v4 as uuid } from 'uuid';
     name: 'idx_notification_target_unread',
 })
 export class NotificationEntity {
-    [OptionalProps]?: 'isRead' | 'readAt' | 'metadata' | 'createdAt' | 'targetType' | 'targetId';
+    [OptionalProps]?: 'isRead' | 'readAt' | 'metadata' | 'createdAt' | 'targetType' | 'targetId' | 'urgency';
 
     @PrimaryKey()
     id: string = uuid();
@@ -33,6 +34,9 @@ export class NotificationEntity {
 
     @Property({ type: 'json', nullable: true })
     metadata?: Record<string, any>;
+
+    @Property({ type: 'varchar', length: 20, default: 'normal' })
+    urgency: NotificationUrgency = NotificationUrgency.NORMAL;
 
     @Index()
     @Property({ type: 'boolean', default: false })

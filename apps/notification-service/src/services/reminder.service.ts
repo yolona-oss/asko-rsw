@@ -4,6 +4,7 @@ import {
     ReminderJobEntity,
     ReminderKind,
 } from 'entities/reminder-job.entity';
+import { NotificationUrgency } from '@asko/shared';
 import { AppConfig } from '../app.config';
 import { NotificationService } from './notification.service';
 
@@ -143,15 +144,16 @@ export class ReminderService {
                 );
                 continue;
             }
-            await this.notificationService.createNotification(
+            await this.notificationService.createNotification({
                 userId,
-                job.notificationType,
-                job.title,
-                job.body,
-                job.targetType,
-                job.targetId,
-                { ...(job.metadata ?? {}), reminderAttempt: job.fireCount + 1 },
-            );
+                type: job.notificationType,
+                title: job.title,
+                body: job.body,
+                targetType: job.targetType,
+                targetId: job.targetId,
+                metadata: { ...(job.metadata ?? {}), reminderAttempt: job.fireCount + 1 },
+                urgency: NotificationUrgency.HIGH,
+            });
             anyFired = true;
         }
 

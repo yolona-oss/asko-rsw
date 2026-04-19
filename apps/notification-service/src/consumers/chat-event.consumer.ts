@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
-import { NotificationType, NotificationTargetType } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency } from '@asko/shared';
 
 @Controller()
 export class ChatEventConsumer {
@@ -23,20 +23,20 @@ export class ChatEventConsumer {
 
             // Create a notification for each recipient
             for (const recipientId of data.recipientIds ?? []) {
-                await this.notificationService.createNotification(
-                    recipientId,
-                    NotificationType.CHAT_MESSAGE,
+                await this.notificationService.createNotification({
+                    userId: recipientId,
+                    type: NotificationType.CHAT_MESSAGE,
                     title,
                     body,
-                    NotificationTargetType.CONVERSATION,
-                    data.conversationId,
-                    {
+                    targetType: NotificationTargetType.CONVERSATION,
+                    targetId: data.conversationId,
+                    metadata: {
                         messageId: data.messageId,
                         senderId: data.senderId,
                         conversationId: data.conversationId,
                         messageType: data.messageType,
                     },
-                );
+                });
             }
 
             channel.ack(msg);
@@ -61,19 +61,19 @@ export class ChatEventConsumer {
                 : 'Начат новый диалог';
 
             for (const recipientId of data.recipientIds ?? []) {
-                await this.notificationService.createNotification(
-                    recipientId,
-                    NotificationType.CHAT_CONVERSATION_CREATED,
+                await this.notificationService.createNotification({
+                    userId: recipientId,
+                    type: NotificationType.CHAT_CONVERSATION_CREATED,
                     title,
                     body,
-                    NotificationTargetType.CONVERSATION,
-                    data.conversationId,
-                    {
+                    targetType: NotificationTargetType.CONVERSATION,
+                    targetId: data.conversationId,
+                    metadata: {
                         conversationId: data.conversationId,
                         conversationType: data.conversationType,
                         creatorId: data.creatorId,
                     },
-                );
+                });
             }
 
             channel.ack(msg);
@@ -93,18 +93,19 @@ export class ChatEventConsumer {
                 ? `Добавлены в "${data.conversationName}"`
                 : 'Добавлены в чат';
 
-            await this.notificationService.createNotification(
-                data.targetUserId,
-                NotificationType.CHAT_PARTICIPANT_ADDED,
+            await this.notificationService.createNotification({
+                userId: data.targetUserId,
+                type: NotificationType.CHAT_PARTICIPANT_ADDED,
                 title,
-                'Вас добавили в чат',
-                NotificationTargetType.CONVERSATION,
-                data.conversationId,
-                {
+                body: 'Вас добавили в чат',
+                targetType: NotificationTargetType.CONVERSATION,
+                targetId: data.conversationId,
+                metadata: {
                     conversationId: data.conversationId,
                     actorId: data.actorId,
                 },
-            );
+                urgency: NotificationUrgency.LOW,
+            });
 
             channel.ack(msg);
         } catch (e) {
@@ -123,18 +124,19 @@ export class ChatEventConsumer {
                 ? `Удалены из "${data.conversationName}"`
                 : 'Удалены из чата';
 
-            await this.notificationService.createNotification(
-                data.targetUserId,
-                NotificationType.CHAT_PARTICIPANT_REMOVED,
+            await this.notificationService.createNotification({
+                userId: data.targetUserId,
+                type: NotificationType.CHAT_PARTICIPANT_REMOVED,
                 title,
-                'Вас удалили из чата',
-                NotificationTargetType.CONVERSATION,
-                data.conversationId,
-                {
+                body: 'Вас удалили из чата',
+                targetType: NotificationTargetType.CONVERSATION,
+                targetId: data.conversationId,
+                metadata: {
                     conversationId: data.conversationId,
                     actorId: data.actorId,
                 },
-            );
+                urgency: NotificationUrgency.LOW,
+            });
 
             channel.ack(msg);
         } catch (e) {

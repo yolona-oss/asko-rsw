@@ -4,7 +4,7 @@ import { SignedEvent } from '@asko/observability';
 import { NotificationService } from 'services/notification.service';
 import { ReminderService } from 'services/reminder.service';
 import { AppConfig } from '../app.config';
-import { NotificationType, NotificationTargetType } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency } from '@asko/shared';
 
 @Controller()
 export class PaymentEventConsumer {
@@ -24,15 +24,15 @@ export class PaymentEventConsumer {
                 channel.ack(msg);
                 return;
             }
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.INVOICE_CREATED,
-                'Новый счёт на оплату',
-                `Создан счёт на сумму ${data.amount} ${data.currency}`,
-                NotificationTargetType.PAYMENT,
-                data.paymentId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.INVOICE_CREATED,
+                title: 'Новый счёт на оплату',
+                body: `Создан счёт на сумму ${data.amount} ${data.currency}`,
+                targetType: NotificationTargetType.PAYMENT,
+                targetId: data.paymentId,
+                metadata: data,
+            });
             await this.reminderService.scheduleReminder({
                 kind: 'payment_unpaid',
                 targetType: NotificationTargetType.PAYMENT,
@@ -62,15 +62,15 @@ export class PaymentEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.PAYMENT_PAID,
-                'Оплата подтверждена',
-                `Платеж на сумму ${data.amount} ${data.currency} подтвержден`,
-                NotificationTargetType.PAYMENT,
-                data.paymentId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.PAYMENT_PAID,
+                title: 'Оплата подтверждена',
+                body: `Платеж на сумму ${data.amount} ${data.currency} подтвержден`,
+                targetType: NotificationTargetType.PAYMENT,
+                targetId: data.paymentId,
+                metadata: data,
+            });
             await this.reminderService.cancelReminder(
                 NotificationTargetType.PAYMENT,
                 data.paymentId,
@@ -90,15 +90,16 @@ export class PaymentEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.PAYMENT_FAILED,
-                'Ошибка оплаты',
-                `Платеж на сумму ${data.amount} ${data.currency} не прошел`,
-                NotificationTargetType.PAYMENT,
-                data.paymentId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.PAYMENT_FAILED,
+                title: 'Ошибка оплаты',
+                body: `Платеж на сумму ${data.amount} ${data.currency} не прошел`,
+                targetType: NotificationTargetType.PAYMENT,
+                targetId: data.paymentId,
+                metadata: data,
+                urgency: NotificationUrgency.CRITICAL,
+            });
             await this.reminderService.cancelReminder(
                 NotificationTargetType.PAYMENT,
                 data.paymentId,
@@ -118,15 +119,15 @@ export class PaymentEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.PAYMENT_REFUNDED,
-                'Возврат средств',
-                `Возврат на сумму ${data.amount} ${data.currency} выполнен`,
-                NotificationTargetType.PAYMENT,
-                data.paymentId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.PAYMENT_REFUNDED,
+                title: 'Возврат средств',
+                body: `Возврат на сумму ${data.amount} ${data.currency} выполнен`,
+                targetType: NotificationTargetType.PAYMENT,
+                targetId: data.paymentId,
+                metadata: data,
+            });
             await this.reminderService.cancelReminder(
                 NotificationTargetType.PAYMENT,
                 data.paymentId,

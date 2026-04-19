@@ -10,6 +10,7 @@ export interface CreateNotificationRequest {
     targetType: string;
     targetId: string;
     metadata: string;
+    urgency: string;
 }
 
 export interface ListUserNotificationsRequest {
@@ -55,6 +56,7 @@ export interface NotificationRecord {
     isRead: boolean;
     readAt: string;
     createdAt: string;
+    urgency: string;
 }
 
 export interface NotificationResponse {

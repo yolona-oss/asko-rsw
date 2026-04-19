@@ -4,7 +4,7 @@ import { NotificationService } from 'services/notification.service';
 import { ReminderService } from 'services/reminder.service';
 import { AudienceProjectionService, AudienceKey } from 'services/audience-projection.service';
 import { AppConfig } from '../app.config';
-import { NotificationType, NotificationTargetType, Role } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency, Role } from '@asko/shared';
 
 const STAFF_AUDIENCE_KEYS = [
     AudienceKey.role(Role.ADMIN),
@@ -32,15 +32,15 @@ export class RepairEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.REPAIR_STATUS_CHANGED,
-                'Статус ремонта обновлен',
-                `Статус заявки №${data.repairId} изменен: ${data.oldStatus} → ${data.newStatus}`,
-                NotificationTargetType.REPAIR_REQUEST,
-                data.repairId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.REPAIR_STATUS_CHANGED,
+                title: 'Статус ремонта обновлен',
+                body: `Статус заявки №${data.repairId} изменен: ${data.oldStatus} → ${data.newStatus}`,
+                targetType: NotificationTargetType.REPAIR_REQUEST,
+                targetId: data.repairId,
+                metadata: data,
+            });
 
             if (data.oldStatus === 'assigned') {
                 await this.reminderService.cancelReminder(
@@ -95,15 +95,15 @@ export class RepairEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.REPAIR_ASSIGNED,
-                'Мастер назначен',
-                `На заявку №${data.repairId} назначен мастер`,
-                NotificationTargetType.REPAIR_REQUEST,
-                data.repairId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.REPAIR_ASSIGNED,
+                title: 'Мастер назначен',
+                body: `На заявку №${data.repairId} назначен мастер`,
+                targetType: NotificationTargetType.REPAIR_REQUEST,
+                targetId: data.repairId,
+                metadata: data,
+            });
 
             if (data.repairerUserId) {
                 await this.reminderService.scheduleReminder({
@@ -136,15 +136,15 @@ export class RepairEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.REPAIR_COMPLETED,
-                'Ремонт завершен',
-                `Заявка №${data.repairId} успешно завершена`,
-                NotificationTargetType.REPAIR_REQUEST,
-                data.repairId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.REPAIR_COMPLETED,
+                title: 'Ремонт завершен',
+                body: `Заявка №${data.repairId} успешно завершена`,
+                targetType: NotificationTargetType.REPAIR_REQUEST,
+                targetId: data.repairId,
+                metadata: data,
+            });
             await this.reminderService.cancelReminder(
                 NotificationTargetType.REPAIR_REQUEST,
                 data.repairId,
@@ -167,39 +167,39 @@ export class RepairEventConsumer {
 
         try {
             if (data.oldRepairerUserId) {
-                await this.notificationService.createNotification(
-                    data.oldRepairerUserId,
-                    NotificationType.REPAIR_TRANSFERRED_FROM_REPAIRER,
-                    'Заявка передана другому мастеру',
-                    `Заявка №${shortId} передана другому мастеру`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.oldRepairerUserId,
+                    type: NotificationType.REPAIR_TRANSFERRED_FROM_REPAIRER,
+                    title: 'Заявка передана другому мастеру',
+                    body: `Заявка №${shortId} передана другому мастеру`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                });
             }
 
             if (data.newRepairerUserId) {
-                await this.notificationService.createNotification(
-                    data.newRepairerUserId,
-                    NotificationType.REPAIR_TRANSFERRED_TO_REPAIRER,
-                    'Вам передана заявка',
-                    `Вам передана заявка №${shortId} от другого мастера`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.newRepairerUserId,
+                    type: NotificationType.REPAIR_TRANSFERRED_TO_REPAIRER,
+                    title: 'Вам передана заявка',
+                    body: `Вам передана заявка №${shortId} от другого мастера`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                });
             }
 
             if (data.userId) {
-                await this.notificationService.createNotification(
-                    data.userId,
-                    NotificationType.REPAIR_TRANSFERRED_CLIENT,
-                    'Назначен новый мастер',
-                    `По вашей заявке №${shortId} назначен новый мастер`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.userId,
+                    type: NotificationType.REPAIR_TRANSFERRED_CLIENT,
+                    title: 'Назначен новый мастер',
+                    body: `По вашей заявке №${shortId} назначен новый мастер`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                });
             }
 
             await this.reminderService.cancelReminder(
@@ -242,15 +242,16 @@ export class RepairEventConsumer {
         const shortId = String(data.repairId ?? '').slice(0, 8);
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.REPAIR_DIAGNOSTICS_DECLINED,
-                'Требуется повторная диагностика',
-                `Новый мастер отклонил диагностику по заявке №${shortId}${data.reason ? `: ${data.reason}` : ''}`,
-                NotificationTargetType.REPAIR_REQUEST,
-                data.repairId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.REPAIR_DIAGNOSTICS_DECLINED,
+                title: 'Требуется повторная диагностика',
+                body: `Новый мастер отклонил диагностику по заявке №${shortId}${data.reason ? `: ${data.reason}` : ''}`,
+                targetType: NotificationTargetType.REPAIR_REQUEST,
+                targetId: data.repairId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] repair.diagnostics_declined error:', e);
@@ -275,15 +276,16 @@ export class RepairEventConsumer {
         const shortNumber = String(data.certificateNumber ?? '').slice(0, 12);
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.CERTIFICATE_EXPIRING_SOON,
-                'Сертификат скоро истечёт',
-                `Сертификат №${shortNumber} истекает через ${days} ${days === 1 ? 'день' : 'дней'}. Продлите его, чтобы сохранить защиту устройства.`,
-                NotificationTargetType.CERTIFICATE,
-                data.certificateId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.CERTIFICATE_EXPIRING_SOON,
+                title: 'Сертификат скоро истечёт',
+                body: `Сертификат №${shortNumber} истекает через ${days} ${days === 1 ? 'день' : 'дней'}. Продлите его, чтобы сохранить защиту устройства.`,
+                targetType: NotificationTargetType.CERTIFICATE,
+                targetId: data.certificateId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] certificate.expiring_soon error:', e);
@@ -299,15 +301,16 @@ export class RepairEventConsumer {
         const shortNumber = String(data.certificateNumber ?? '').slice(0, 12);
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.CERTIFICATE_EXPIRED,
-                'Сертификат истёк',
-                `Сертификат №${shortNumber} истёк. Вы можете оформить новый сертификат для этого устройства в любое время.`,
-                NotificationTargetType.CERTIFICATE,
-                data.certificateId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.CERTIFICATE_EXPIRED,
+                title: 'Сертификат истёк',
+                body: `Сертификат №${shortNumber} истёк. Вы можете оформить новый сертификат для этого устройства в любое время.`,
+                targetType: NotificationTargetType.CERTIFICATE,
+                targetId: data.certificateId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] certificate.expired error:', e);
@@ -325,15 +328,16 @@ export class RepairEventConsumer {
         const addr = [data.city, data.street, data.house].filter(Boolean).join(', ');
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.ADDRESS_VALIDATED,
-                'Адрес подтверждён',
-                `Адрес ${addr} успешно прошёл проверку.`,
-                NotificationTargetType.ADDRESS,
-                data.addressId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.ADDRESS_VALIDATED,
+                title: 'Адрес подтверждён',
+                body: `Адрес ${addr} успешно прошёл проверку.`,
+                targetType: NotificationTargetType.ADDRESS,
+                targetId: data.addressId,
+                metadata: data,
+                urgency: NotificationUrgency.LOW,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] address.validated error:', e);
@@ -350,15 +354,16 @@ export class RepairEventConsumer {
         const reason = data.validationError ? `: ${data.validationError}` : '';
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.ADDRESS_VALIDATION_FAILED,
-                'Адрес не прошёл проверку',
-                `Адрес ${addr} не прошёл проверку${reason}. Обновите адрес в разделе «Адреса».`,
-                NotificationTargetType.ADDRESS,
-                data.addressId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.ADDRESS_VALIDATION_FAILED,
+                title: 'Адрес не прошёл проверку',
+                body: `Адрес ${addr} не прошёл проверку${reason}. Обновите адрес в разделе «Адреса».`,
+                targetType: NotificationTargetType.ADDRESS,
+                targetId: data.addressId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] address.validation_failed error:', e);
@@ -378,15 +383,16 @@ export class RepairEventConsumer {
             : data.serialNumber;
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.USER_DEVICE_VALIDATED,
-                'Устройство подтверждено',
-                `Устройство ${label} успешно прошло проверку. Теперь вы можете создать заявку на ремонт.`,
-                NotificationTargetType.USER_DEVICE,
-                data.userDeviceId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.USER_DEVICE_VALIDATED,
+                title: 'Устройство подтверждено',
+                body: `Устройство ${label} успешно прошло проверку. Теперь вы можете создать заявку на ремонт.`,
+                targetType: NotificationTargetType.USER_DEVICE,
+                targetId: data.userDeviceId,
+                metadata: data,
+                urgency: NotificationUrgency.LOW,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] user_device.validated error:', e);
@@ -405,15 +411,16 @@ export class RepairEventConsumer {
         const reason = data.validationError ? `: ${data.validationError}` : '';
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.USER_DEVICE_VALIDATION_FAILED,
-                'Устройство не прошло проверку',
-                `Устройство ${label} не прошло проверку${reason}.`,
-                NotificationTargetType.USER_DEVICE,
-                data.userDeviceId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.USER_DEVICE_VALIDATION_FAILED,
+                title: 'Устройство не прошло проверку',
+                body: `Устройство ${label} не прошло проверку${reason}.`,
+                targetType: NotificationTargetType.USER_DEVICE,
+                targetId: data.userDeviceId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] user_device.validation_failed error:', e);
@@ -439,15 +446,16 @@ export class RepairEventConsumer {
         const reason = reasonMessages[data.failReason] || data.failReason || 'неизвестная ошибка';
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.CERTIFICATE_INTEGRITY_FAILED,
-                'Сертификат не прошёл проверку',
-                `Сертификат ${certLabel} не прошёл проверку: ${reason}.`,
-                NotificationTargetType.CERTIFICATE,
-                data.certificateId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.CERTIFICATE_INTEGRITY_FAILED,
+                title: 'Сертификат не прошёл проверку',
+                body: `Сертификат ${certLabel} не прошёл проверку: ${reason}.`,
+                targetType: NotificationTargetType.CERTIFICATE,
+                targetId: data.certificateId,
+                metadata: data,
+                urgency: NotificationUrgency.CRITICAL,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] certificate.integrity_failed error:', e);
@@ -466,15 +474,16 @@ export class RepairEventConsumer {
 
         try {
             if (data.repairerUserId) {
-                await this.notificationService.createNotification(
-                    data.repairerUserId,
-                    NotificationType.REPAIR_SCHEDULE_ENDING,
-                    'Рабочий день заканчивается',
-                    `Ваша смена подходит к концу. Если вы продолжаете работу по заявке №${shortId}, подтвердите присутствие. Без подтверждения заявка будет приостановлена через 30 минут.`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.repairerUserId,
+                    type: NotificationType.REPAIR_SCHEDULE_ENDING,
+                    title: 'Рабочий день заканчивается',
+                    body: `Ваша смена подходит к концу. Если вы продолжаете работу по заявке №${shortId}, подтвердите присутствие. Без подтверждения заявка будет приостановлена через 30 минут.`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                    urgency: NotificationUrgency.HIGH,
+                });
             }
             channel.ack(msg);
         } catch (e) {
@@ -492,27 +501,29 @@ export class RepairEventConsumer {
 
         try {
             if (data.repairerUserId) {
-                await this.notificationService.createNotification(
-                    data.repairerUserId,
-                    NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
-                    'Заявка приостановлена',
-                    `Заявка №${shortId} автоматически приостановлена — подтверждение присутствия не получено. Возобновите работу, когда будете готовы.`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.repairerUserId,
+                    type: NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
+                    title: 'Заявка приостановлена',
+                    body: `Заявка №${shortId} автоматически приостановлена — подтверждение присутствия не получено. Возобновите работу, когда будете готовы.`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                    urgency: NotificationUrgency.CRITICAL,
+                });
             }
 
             if (data.userId) {
-                await this.notificationService.createNotification(
-                    data.userId,
-                    NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
-                    'Ремонт приостановлен',
-                    `Заявка №${shortId} приостановлена — рабочий день мастера завершён.`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.userId,
+                    type: NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED,
+                    title: 'Ремонт приостановлен',
+                    body: `Заявка №${shortId} приостановлена — рабочий день мастера завершён.`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                    urgency: NotificationUrgency.CRITICAL,
+                });
             }
 
             // Cancel any in-progress-stuck reminders since we're pausing
@@ -541,15 +552,16 @@ export class RepairEventConsumer {
 
         try {
             if (data.repairerUserId) {
-                await this.notificationService.createNotification(
-                    data.repairerUserId,
-                    NotificationType.REPAIR_PART_SHIPPED,
-                    'Запчасть доставлена',
-                    `Запчасть «${data.partName}» для заявки №${shortId} доставлена. Можно продолжить ремонт.`,
-                    NotificationTargetType.REPAIR_REQUEST,
-                    data.repairId,
-                    data,
-                );
+                await this.notificationService.createNotification({
+                    userId: data.repairerUserId,
+                    type: NotificationType.REPAIR_PART_SHIPPED,
+                    title: 'Запчасть доставлена',
+                    body: `Запчасть «${data.partName}» для заявки №${shortId} доставлена. Можно продолжить ремонт.`,
+                    targetType: NotificationTargetType.REPAIR_REQUEST,
+                    targetId: data.repairId,
+                    metadata: data,
+                    urgency: NotificationUrgency.LOW,
+                });
             }
             channel.ack(msg);
         } catch (e) {
@@ -566,15 +578,16 @@ export class RepairEventConsumer {
         const msg = context.getMessage();
 
         try {
-            await this.notificationService.createNotification(
-                data.userId,
-                NotificationType.AVR_SIGNING_REQUESTED,
-                'Акт выполненных работ',
-                'Мастер подготовил акт выполненных работ. Подпишите его в личном кабинете для завершения ремонта.',
-                NotificationTargetType.REPAIR_REQUEST,
-                data.repairId,
-                data,
-            );
+            await this.notificationService.createNotification({
+                userId: data.userId,
+                type: NotificationType.AVR_SIGNING_REQUESTED,
+                title: 'Акт выполненных работ',
+                body: 'Мастер подготовил акт выполненных работ. Подпишите его в личном кабинете для завершения ремонта.',
+                targetType: NotificationTargetType.REPAIR_REQUEST,
+                targetId: data.repairId,
+                metadata: data,
+                urgency: NotificationUrgency.HIGH,
+            });
             channel.ack(msg);
         } catch (e) {
             console.error('[RepairEventConsumer] repair.avr_signing_requested error:', e);

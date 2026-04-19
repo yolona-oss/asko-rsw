@@ -47,6 +47,13 @@ export enum NotificationType {
     REPAIR_PART_SHIPPED = 'repair_part_shipped',
 }
 
+export enum NotificationUrgency {
+    LOW = 'low',
+    NORMAL = 'normal',
+    HIGH = 'high',
+    CRITICAL = 'critical',
+}
+
 export enum NotificationTargetType {
     REPAIR_REQUEST = 'repairRequest',
     PAYMENT = 'payment',

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationTargetType, NotificationType } from '@asko/shared';
+import { NotificationTargetType, NotificationType, NotificationUrgency } from '@asko/shared';
 
 export class NotificationRecordDto {
     id: string;
@@ -12,6 +12,8 @@ export class NotificationRecordDto {
     targetType?: NotificationTargetType;
     targetId?: string;
     metadata?: string;
+    @ApiProperty({ enum: NotificationUrgency, enumName: 'NotificationUrgency', default: NotificationUrgency.NORMAL })
+    urgency: NotificationUrgency;
     isRead: boolean;
     readAt?: string;
     createdAt: string;

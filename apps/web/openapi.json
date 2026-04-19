@@ -9783,6 +9783,15 @@
           "system"
         ]
       },
+      "NotificationUrgency": {
+        "type": "string",
+        "enum": [
+          "low",
+          "normal",
+          "high",
+          "critical"
+        ]
+      },
       "NotificationRecordDto": {
         "type": "object",
         "properties": {
@@ -9797,6 +9806,14 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/NotificationTargetType"
+              }
+            ]
+          },
+          "urgency": {
+            "default": "normal",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationUrgency"
               }
             ]
           },
@@ -9830,6 +9847,7 @@
         },
         "required": [
           "type",
+          "urgency",
           "id",
           "userId",
           "title",

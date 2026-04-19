@@ -32,6 +32,7 @@ export class NotificationClientService implements OnModuleInit {
         targetType?: string,
         targetId?: string,
         metadata?: Record<string, any>,
+        urgency?: string,
     ): Promise<NotificationResponse> {
         return grpcCall(this.notificationService.createNotification({
             userId,
@@ -41,6 +42,7 @@ export class NotificationClientService implements OnModuleInit {
             targetType: targetType ?? '',
             targetId: targetId ?? '',
             metadata: metadata ? JSON.stringify(metadata) : '',
+            urgency: urgency ?? '',
         }));
     }
 

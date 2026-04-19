@@ -85,7 +85,7 @@ export {
 } from './chat/chat.type.js';
 
 // Notification
-export { NotificationType, NotificationTargetType } from './notification/notification.type.js';
+export { NotificationType, NotificationTargetType, NotificationUrgency } from './notification/notification.type.js';
 
 // Address
 export { AddressValidationStatus } from './address/address-validation-status.enum.js';
