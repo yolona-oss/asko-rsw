@@ -1,5 +1,4 @@
-import { IsOptional, IsBoolean, IsArray, IsString, ValidateNested, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsBoolean, IsArray, IsString, IsEnum } from 'class-validator';
 import { NotificationGroup } from './notification-group.js';
 
 export class NotificationGroupPreferenceDto {
@@ -23,8 +22,6 @@ export class UpdateNotificationPreferencesDto {
 
     @IsOptional()
     @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => NotificationGroupPreferenceDto)
     groups?: NotificationGroupPreferenceDto[];
 }
 
