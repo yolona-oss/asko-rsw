@@ -121,9 +121,9 @@ export function RepairerRequests() {
   useEffect(() => {
     repairRequestApi.getActive()
       .then(({ data }) => {
-        if (data?.id) setActiveRequest(data as unknown as RepairRequest);
+        if (data?.id) setActiveRequest(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Fetch list based on tab
@@ -147,7 +147,7 @@ export function RepairerRequests() {
         result = await repairRequestApi.getAssigned(params);
       }
 
-      const items = (result.data.data ?? []) as unknown as RepairRequest[];
+      const items = result.data.data ?? [];
       setRequests(items);
       setTotal(result.data.overallCount ?? 0);
 

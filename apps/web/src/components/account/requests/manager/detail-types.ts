@@ -1,56 +1,12 @@
-import { RepairRequestStatus, ScheduleEntryType } from '@asko/shared/client';
-import type { IStatusTimestampEntry } from '@asko/shared/client';
+import type { RepairRequestRecord, RepairerRecord } from '@/lib/api/types';
 
-export interface RepairRequestDetail {
-  id: string;
-  status: RepairRequestStatus;
-  description: string;
-  createdAt: Date | string;
-  refuseReason?: string;
+export type RepairRequestDetail = RepairRequestRecord & {
   conversationId?: string;
-  certificateValid?: boolean;
-  certificate?: { id: string; expiresAt?: string };
-  certificateSnapshot?: {
-    id: string;
-    certificateNumber: string;
-    status: string;
-    issuedAt: string;
-    expiresAt: string;
-    frozenAt: string;
-  } | null;
-  user?: { firstName?: string; lastName?: string; phone?: string };
-  userDevice?: { device?: { id?: string; name?: string } };
-  address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number; timezone?: string };
-  statusTimestamps?: IStatusTimestampEntry[];
-  repairer?: {
-    id: string;
-    city: string;
-    latitude?: number;
-    longitude?: number;
-    lastLocationUpdate?: string;
-    user?: { firstName?: string; lastName?: string };
-  };
   isCrossCity?: boolean;
   timezoneOffsetHours?: number;
-  totalCost?: number;
-  avrStatus?: string;
-  avrDocumentId?: string;
-  avrSignedDocumentId?: string;
-  avrSigningMethod?: string;
-  avrSignedAt?: string;
-}
+};
 
-export interface RepairerOption {
-  id: string;
-  userId: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
-  completedRepairs?: number;
-  activeRequestCount?: number;
-  currentRequestStatus?: string;
-  user?: { firstName?: string; lastName?: string };
-}
+export type RepairerOption = RepairerRecord;
 
 export type RepairerScheduleStatus = "vacation" | "sick_leave" | "overtime" | "schedule_override" | "off" | "working" | "unknown";
 

@@ -23,12 +23,13 @@ import { RepairRequestStatus, AvrStatus } from '@asko/shared/client';
 import { SigningOtpForm } from '@/components/account/requests/shared/signing-otp-form';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
 import {
-  TERMINAL_STATUSES,
   STEPS,
   STATUS_DESCRIPTIONS,
   STATUS_TITLES,
+  WORK_PHASE_STATUSES,
   getStepIndex,
 } from './detail-constants';
+import { isTerminalStatus } from '@/components/account/requests/shared/status-constants';
 import { formatTimestamp } from '@asko/shared/client';
 import type { RepairRequest, WorkStep } from './detail-types';
 import { StepCircle } from './step-circle';
@@ -69,12 +70,12 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
     try {
       const [reqRes, stepsRes, partsRes] = await Promise.all([
         repairRequestApi.getOne(requestId),
-        repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
+        repairRequestApi.getSteps(requestId).catch(() => ({ data: { steps: [] as WorkStep[] } })),
         repairRequestApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
-      setRequest(reqRes.data.request as unknown as RepairRequest);
-      const steps = (stepsRes.data ?? []) as unknown as WorkStep[];
-      setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
+      setRequest(reqRes.data.request);
+      const stepsData = stepsRes.data.steps;
+      setWorkSteps(stepsData.sort((a, b) => a.order - b.order));
       const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
       setBrokenParts(parts);
 
@@ -179,7 +180,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
 
   const currentStepIdx = getStepIndex(request.status);
   const description = STATUS_DESCRIPTIONS[request.status] ?? '';
-  const isTerminal = TERMINAL_STATUSES.includes(request.status);
+  const isTerminal = isTerminalStatus(request.status);
   const statusTitle = STATUS_TITLES[request.status] ?? request.status;
   const isPaused = request.status === RepairRequestStatus.PAUSED;
 
@@ -340,7 +341,7 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
               ))}
             </div>
           </div>
-        ) : !isTerminal && [RepairRequestStatus.ACCEPTED, RepairRequestStatus.EN_ROUTE, RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.PAUSED, RepairRequestStatus.AWAITING_COMPLETION].includes(request.status) && (
+        ) : !isTerminal && WORK_PHASE_STATUSES.has(request.status) && (
           <div className="flex flex-col gap-3 max-w-lg mt-2">
             <h3 className="text-lg font-medium text-text-main">Этапы работы</h3>
             <div className="p-3 sm:p-4 border border-info-border bg-info-bg/50 flex flex-col gap-2">

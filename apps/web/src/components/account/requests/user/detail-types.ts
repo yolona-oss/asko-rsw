@@ -1,46 +1,5 @@
-import type { RepairRequestStatus, IStatusTimestampEntry } from '@asko/shared/client';
+import type { RepairRequestRecord, WorkStepRecord } from '@/lib/api/types';
 
-export interface WorkStep {
-  id: string;
-  title: string;
-  description?: string;
-  comment?: string;
-  status: string;
-  order: number;
-  isFinal?: boolean;
-  isMandatory?: boolean;
-  declinedAt?: Date | string;
-  declinedByRepairerId?: string;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
+export type WorkStep = WorkStepRecord;
 
-export interface RepairRequest {
-  id: string;
-  status: RepairRequestStatus;
-  description: string;
-  statusTimestamps?: IStatusTimestampEntry[];
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  totalCost?: number;
-  certificateValid?: boolean;
-  certificateId?: string;
-  certificate?: { id: string; expiresAt?: string; paid?: boolean; status?: string };
-  certificateSnapshot?: {
-    id: string;
-    certificateNumber: string;
-    status: string;
-    issuedAt: string;
-    expiresAt: string;
-    frozenAt: string;
-  } | null;
-  userDevice?: { id: string };
-  repairer?: {
-    user?: { firstName?: string; lastName?: string };
-  };
-  avrStatus?: string;
-  avrDocumentId?: string;
-  avrSignedDocumentId?: string;
-  avrSigningMethod?: string;
-  avrSignedAt?: string;
-}
+export type RepairRequest = RepairRequestRecord;

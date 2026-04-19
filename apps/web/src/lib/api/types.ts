@@ -120,9 +120,7 @@ export type EmptyResponse = components['schemas']['EmptyResponseDto'];
 export type CloudinaryImage = components['schemas']['CloudinaryImageDto'];
 export type ImageObj = components['schemas']['ImageObjDto'];
 
-// ── Backward-compatible aliases ──
-// These map old @asko/shared/client names to generated types.
-// Components can import these during migration.
+// ── Backward-compatible aliases (still used across consumers) ──
 export type IAuthUser = AuthUser;
 export type IAuthSession = AuthSession;
 export type IAccessToken = AccessToken;
@@ -131,12 +129,8 @@ export type IDevicePart = DevicePartRecord;
 export type IUserDevice = UserDeviceRecord;
 export type IArticle = ArticleResponse;
 export type ICertificate = CertificateRecord;
-export type IRepairRequest = RepairRequestRecord;
-export type IWorkStep = WorkStepRecord;
-export type IBrokenPart = BrokenPartRecord;
 export type IRepairer = RepairerRecord;
 export type IReview = ReviewRecord;
-export type IImage = ImageRecord;
 export type IImageAttachment = ImageRecord;
 export type IInvitationLink = InviteLinkResponse;
 export type IRepairPayment = PaymentRecord;
@@ -144,12 +138,6 @@ export type IDealerProfile = DealerProfileRecord;
 export type IDealerClient = DealerClientRecord;
 export type IPointsTransaction = PointsTransactionRecord;
 export type IPointsWithdrawal = WithdrawalRecord;
-export type IAddressBook = AddressRecord;
-
-/** @deprecated Use specific paginated type (PaginatedDevices, PaginatedCertificates, etc.) */
-export type ListResponseDto<T> = { data: T[]; total: number };
-/** @deprecated Use specific paginated type */
-export type PaginatedResponseDto<T> = { data: T[]; overallCount: number; pagination: { page?: number; limit?: number } };
 
 export type ProcessInvoiceResult = ProcessInvoice;
 export type PaymentOptionsDto = PaymentOptions;

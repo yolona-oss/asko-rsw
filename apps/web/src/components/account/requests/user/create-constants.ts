@@ -1,1 +1,1 @@
-export const TERMINAL_STATUSES = ['completed', 'cancelled', 'refunded', 'refused'];
+export { TERMINAL_STATUSES, isTerminalStatus } from '../shared/status-constants';

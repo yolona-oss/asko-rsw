@@ -66,7 +66,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     async function fetchData() {
       try {
         const { data: res } = await repairRequestApi.getOne(requestId);
-        const req = res.request as unknown as RepairRequestDetailType;
+        const req: RepairRequestDetailType = res.request;
         setRequest(req);
         setSelectedRepairer(req.repairer?.id ?? '');
 
@@ -172,7 +172,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         await repairRequestApi.assign(request.id, repairerId, allowCrossCity);
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
-      setRequest(updatedRes.request as unknown as RepairRequestDetailType);
+      setRequest(updatedRes.request);
       setAssigning(false);
       setAssignSuccess(true);
     } catch (e) {
@@ -446,7 +446,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             onRemove={!isTerminal ? async () => {
               await repairRequestApi.removeAvrByManager(request.id);
               const { data: updatedRes } = await repairRequestApi.getOne(requestId);
-              setRequest(updatedRes.request as unknown as RepairRequestDetailType);
+              setRequest(updatedRes.request);
             } : undefined}
           />
 

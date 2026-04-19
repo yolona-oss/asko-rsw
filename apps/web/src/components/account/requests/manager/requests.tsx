@@ -57,7 +57,7 @@ export function ManagerRequests() {
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
       });
-      const items = (data.data ?? []) as unknown as RepairRequest[];
+      const items = (data.data ?? []) as RepairRequest[];
       setRequests(items);
       setTotal(data.overallCount ?? 0);
 

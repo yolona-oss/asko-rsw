@@ -2,12 +2,6 @@ import { RepairRequestStatus } from '@asko/shared/client';
 
 export const POLL_INTERVAL = 15_000;
 
-export const TERMINAL_STATUSES = [
-  RepairRequestStatus.COMPLETED,
-  RepairRequestStatus.CANCELLED,
-  RepairRequestStatus.REFUNDED,
-];
-
 export const STEPS = [
   { key: 'created', label: 'Заявка\nсоздана', statuses: [RepairRequestStatus.PENDING] },
   { key: 'choosing', label: 'Назначение\nмастера', statuses: [RepairRequestStatus.ASSIGNED] },
@@ -35,7 +29,15 @@ export const STATUS_DESCRIPTIONS: Record<string, string> = {
 
 export { STATUS_TITLES } from '../shared/status-constants';
 
-export function getStepIndex(status: RepairRequestStatus): number {
+export const WORK_PHASE_STATUSES = new Set<string>([
+  RepairRequestStatus.ACCEPTED,
+  RepairRequestStatus.EN_ROUTE,
+  RepairRequestStatus.IN_PROGRESS,
+  RepairRequestStatus.PAUSED,
+  RepairRequestStatus.AWAITING_COMPLETION,
+]);
+
+export function getStepIndex(status: string): number {
   const idx = STEPS.findIndex((s) => (s.statuses as readonly string[]).includes(status));
   return idx >= 0 ? idx : 0;
 }

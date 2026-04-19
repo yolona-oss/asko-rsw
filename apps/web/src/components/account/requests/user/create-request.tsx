@@ -22,7 +22,7 @@ import {
   type CatalogPart,
 } from '@/components/account/requests/shared/broken-parts/draft-editor';
 import { CreateCertificateModal } from './create-certificate-modal';
-import { TERMINAL_STATUSES } from './create-constants';
+import { isTerminalStatus } from './create-constants';
 import type { UserDevice, Certificate, UploadedImage } from './create-types';
 
 type AppliedCert = { cert: Certificate; list: Certificate[] } | null;
@@ -110,7 +110,7 @@ export function CreateRequest() {
       const reqList = reqRes.data.data ?? [];
       const activeDeviceIds = new Set<string>();
       for (const req of reqList) {
-        if (!TERMINAL_STATUSES.includes(req.status) && req.userDevice?.id) {
+        if (!isTerminalStatus(req.status) && req.userDevice?.id) {
           activeDeviceIds.add(req.userDevice.id);
         }
       }

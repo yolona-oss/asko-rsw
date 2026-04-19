@@ -40,6 +40,17 @@ export function statusColor(status: string, isCurrent: boolean): StatusColorCate
   }
 }
 
+export const TERMINAL_STATUSES = new Set<string>([
+  RepairRequestStatus.COMPLETED,
+  RepairRequestStatus.CANCELLED,
+  RepairRequestStatus.REFUSED,
+  RepairRequestStatus.REFUNDED,
+]);
+
+export function isTerminalStatus(status: string): boolean {
+  return TERMINAL_STATUSES.has(status);
+}
+
 const ACTIVE_STATUSES = new Set<string>([
   RepairRequestStatus.EN_ROUTE,
   RepairRequestStatus.IN_PROGRESS,
