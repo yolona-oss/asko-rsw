@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { useState, useEffect, createContext, type ReactNode } from 'react';
 import { store, useAppDispatch, useAppSelector } from './index';
 import { setCredentials } from './auth-slice';
+import { fetchNotificationPreferences, selectTheme } from './preferences-slice';
 import { authApi } from '@/lib/api/auth';
 import { ErrorModal } from '@/components/error-modal';
 
@@ -53,6 +54,29 @@ function AuthGate({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Applies theme class and fetches notification preferences once auth is ready.
+ */
+function PreferencesInit() {
+  const dispatch = useAppDispatch();
+  const theme = useAppSelector(selectTheme);
+  const accessToken = useAppSelector((s) => s.auth.accessToken);
+
+  // Apply theme class on mount and when theme changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  // Fetch notification preferences once authenticated
+  useEffect(() => {
+    if (accessToken) {
+      dispatch(fetchNotificationPreferences());
+    }
+  }, [accessToken, dispatch]);
+
+  return null;
+}
+
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -70,6 +94,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <AuthGate>{children}</AuthGate>
+        <PreferencesInit />
         <ErrorModal />
       </QueryClientProvider>
     </Provider>

@@ -94,6 +94,8 @@ export {
     NOTIFICATION_TYPE_TO_GROUP,
     NOTIFICATION_GROUP_MSG_KEYS,
     NOTIFICATION_CHANNEL_MSG_KEYS,
+    ESSENTIAL_GROUPS,
+    ADDITIONAL_GROUPS,
 } from './notification/notification-group.js';
 export type {
     INotificationGroupChannels,

@@ -10,7 +10,15 @@ import { AvatarCropModal } from '../layout/avatar-crop-modal';
 import { Button, FormField, PhoneInput, EmailInput, NameInput, Card } from '@asko/ui';
 import type { PrivacyRules } from '@asko/shared/client';
 import { useFormGuard } from '@/hooks/use-form-guard';
-import { useLanguage } from '@/lib/language';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import {
+    selectUserSettings,
+    setLanguage as setLanguageAction,
+    setUserSettings,
+    setChatAcceptConversations as setChatAcceptAction,
+    setChatSearchable as setChatSearchAction,
+    setPrivacyRules as setPrivacyAction,
+} from '@/store/preferences-slice';
 import { PageContainer } from '../layout/page-container';
 import { PageHeader } from '../layout/page-header';
 import { EditedMark } from '@/components/shared/edited-mark';
@@ -38,7 +46,9 @@ export function ProfileForm() {
   const { user } = useAccount();
   const { user: authUser } = useAuth();
   const queryClient = useQueryClient();
-  const { setLanguage } = useLanguage();
+  const setLanguage = (lang: string) => reduxDispatch(setLanguageAction(lang as any));
+  const reduxDispatch = useAppDispatch();
+  const userSettings = useAppSelector(selectUserSettings);
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -61,12 +71,13 @@ export function ProfileForm() {
   const [resendingEmail, setResendingEmail] = useState(false);
   const [emailResendCooldown, setEmailResendCooldown] = useState(0);
 
-  // Chat preferences
-  const [chatAcceptConversations, setChatAcceptConversations] = useState(false);
-  const [chatSearchable, setChatSearchable] = useState(false);
-
-  // Privacy
-  const [privacyRules, setPrivacyRules] = useState<PrivacyRules | null>(null);
+  // Chat preferences + Privacy — backed by Redux
+  const chatAcceptConversations = userSettings.chatAcceptConversations;
+  const chatSearchable = userSettings.chatSearchable;
+  const privacyRules = userSettings.privacyRules;
+  const setChatAcceptConversations = useCallback((v: boolean) => reduxDispatch(setChatAcceptAction(v)), [reduxDispatch]);
+  const setChatSearchable = useCallback((v: boolean) => reduxDispatch(setChatSearchAction(v)), [reduxDispatch]);
+  const setPrivacyRules = useCallback((v: PrivacyRules | null) => reduxDispatch(setPrivacyAction(v)), [reduxDispatch]);
 
   // Form guard
   type ProfileSnapshot = { fullName: string; email: string; phone: string; chatAcceptConversations: boolean; chatSearchable: boolean; privacyRules: PrivacyRules | null };
@@ -109,9 +120,11 @@ export function ProfileForm() {
           ? (() => { try { return JSON.parse(settings.privacyRulesJson); } catch { return null; } })()
           : null;
         if (settings) {
-          setChatAcceptConversations(chatAccept);
-          setChatSearchable(chatSearch);
-          setPrivacyRules(privRules);
+          reduxDispatch(setUserSettings({
+            chatAcceptConversations: chatAccept,
+            chatSearchable: chatSearch,
+            privacyRules: privRules,
+          }));
           if (settings.language) setLanguage(settings.language);
         }
         setInitialState({
@@ -133,10 +146,12 @@ export function ProfileForm() {
     setFullName(data.fullName);
     setEmail(data.email);
     setPhone(data.phone);
-    setChatAcceptConversations(data.chatAcceptConversations);
-    setChatSearchable(data.chatSearchable);
-    setPrivacyRules(data.privacyRules);
-  }, []);
+    reduxDispatch(setUserSettings({
+      chatAcceptConversations: data.chatAcceptConversations,
+      chatSearchable: data.chatSearchable,
+      privacyRules: data.privacyRules,
+    }));
+  }, [reduxDispatch]);
 
   const guard = useFormGuard<ProfileSnapshot>({
     storageKey: 'profile',

@@ -8,7 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Container } from '@asko/ui';
 import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/api/use-auth';
-import { useTheme } from '@/lib/theme';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectTheme, toggleTheme as toggleThemeAction } from '@/store/preferences-slice';
 import { notificationApi } from '@/lib/api/notification';
 
 const navLinks = [
@@ -23,7 +24,9 @@ export function LandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeHash, setActiveHash] = useState('');
   const { isAuthenticated, authReady } = useAuth();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const dispatch = useAppDispatch();
+  const theme = useAppSelector(selectTheme);
+  const handleToggleTheme = () => dispatch(toggleThemeAction());
   const pathname = usePathname();
   const accountHref = isAuthenticated ? '/account' : '/auth';
   const menuRef = useRef<HTMLDivElement>(null);
@@ -127,7 +130,7 @@ export function LandingHeader() {
           <div className="hidden md:flex items-center gap-3">
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={handleToggleTheme}
               className="p-2 text-text-sub hover:text-text-main transition-colors cursor-pointer"
               title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
             >
@@ -181,7 +184,7 @@ export function LandingHeader() {
               <hr className="border-border-light my-2" />
               <button
                 type="button"
-                onClick={toggleTheme}
+                onClick={handleToggleTheme}
                 className="flex items-center gap-2 px-2 py-1 text-base font-medium text-text-main cursor-pointer"
               >
                 {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}

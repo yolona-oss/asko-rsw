@@ -7,9 +7,12 @@ import { usePathname } from 'next/navigation';
 import { Dialog } from '@asko/ui';
 import { ArrowLeft, LogOut, PanelLeftClose, PanelLeft, Sun, Moon } from 'lucide-react';
 import { useAccount } from './provider';
-import { useSidebar } from './sidebar-context';
 import { GuardedLink } from './guarded-link';
-import { useTheme } from '@/lib/theme';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import {
+    selectTheme, toggleTheme as toggleThemeAction,
+    selectLayout, toggleSidebarCollapsed, setMobileMenuOpen,
+} from '@/store/preferences-slice';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { useMenuBadges } from '@/lib/hooks/use-menu-badges';
@@ -27,8 +30,11 @@ const POSITION_THRESHOLD = 0.35;
 export function AccountSidebar() {
   const pathname = usePathname();
   const { user } = useAccount();
-  const { collapsed, toggleCollapsed } = useSidebar();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const dispatch = useAppDispatch();
+  const { sidebarCollapsed: collapsed } = useAppSelector(selectLayout);
+  const theme = useAppSelector(selectTheme);
+  const toggleCollapsed = () => dispatch(toggleSidebarCollapsed());
+  const handleToggleTheme = () => dispatch(toggleThemeAction());
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
   const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
@@ -153,7 +159,7 @@ export function AccountSidebar() {
             )}
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={handleToggleTheme}
               title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
               className={`flex items-center gap-1 text-sm text-text-sub hover:text-text-main transition-colors cursor-pointer ${collapsed ? 'justify-center' : ''}`}
             >
@@ -197,8 +203,11 @@ export function AccountSidebar() {
 export function MobileSidebar() {
   const pathname = usePathname();
   const { user } = useAccount();
-  const { mobileOpen, setMobileOpen } = useSidebar();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const mobileDispatch = useAppDispatch();
+  const { mobileMenuOpen: mobileOpen } = useAppSelector(selectLayout);
+  const mobileTheme = useAppSelector(selectTheme);
+  const setMobileOpen = (open: boolean) => mobileDispatch(setMobileMenuOpen(open));
+  const handleMobileToggleTheme = () => mobileDispatch(toggleThemeAction());
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
   const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
   const badgeHrefs = useMenuBadges();
@@ -396,11 +405,11 @@ export function MobileSidebar() {
           </Link>
           <button
             type="button"
-            onClick={toggleTheme}
+            onClick={handleMobileToggleTheme}
             className="flex items-center gap-1 text-sm text-text-main cursor-pointer"
           >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            {theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+            {mobileTheme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {mobileTheme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
           </button>
           <button
             type="button"

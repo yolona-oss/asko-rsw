@@ -7,10 +7,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, X, ChevronDown, CheckCheck, PanelRightOpen, PanelRightClose, BellOff } from 'lucide-react';
 import { notificationApi } from '@/lib/api/notification';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
-import { useSoundMute } from '@/lib/hooks/use-sound-mute';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectSound, selectLayout, setNotifPanelOpen, setNotifPanelMode } from '@/store/preferences-slice';
+import type { NotifPanelMode } from '@/store/preferences-slice';
 import { playSound, isReminderEnabled } from '@/lib/sound';
 import { getActiveConversation } from '@/lib/active-conversation';
-import { useSidebar } from '@/components/account/layout/sidebar-context';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
@@ -94,8 +95,11 @@ export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const [soundMuted] = useSoundMute('notification');
-  const { notifOpen: open, notifMode, setNotifOpen, setNotifMode } = useSidebar();
+  const soundMuted = useAppSelector(selectSound).notificationMuted;
+  const bellDispatch = useAppDispatch();
+  const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
+  const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
+  const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
   const [closing, setClosing] = useState(false);
 
   // ── Queries ──────────────────────────────────────────────────
@@ -391,7 +395,10 @@ export function NotificationBell() {
 export function NotificationDockPanel() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { notifOpen: open, notifMode, setNotifOpen, setNotifMode } = useSidebar();
+  const bellDispatch = useAppDispatch();
+  const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
+  const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
+  const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
 
   const { data: listData } = useQuery({
     queryKey: ['notifications-unread-list'],

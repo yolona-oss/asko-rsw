@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { Dialog, DropdownMenu, SkeletonCircle } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useAccount } from './provider';
-import { useSidebar } from './sidebar-context';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectLayout, setMobileMenuOpen } from '@/store/preferences-slice';
 import { useFormGuardContext } from './form-guard-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,9 @@ import { SessionsDialog } from './sessions-dialog';
 
 export function AccountHeader() {
   const { user } = useAccount();
-  const { mobileOpen, setMobileOpen } = useSidebar();
+  const headerDispatch = useAppDispatch();
+  const { mobileMenuOpen: mobileOpen } = useAppSelector(selectLayout);
+  const setMobileOpen = (open: boolean) => headerDispatch(setMobileMenuOpen(open));
   const { getGuard } = useFormGuardContext();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);

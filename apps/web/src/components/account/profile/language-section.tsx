@@ -1,6 +1,7 @@
 'use client';
 
-import { useLanguage } from '@/lib/language';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectLanguage, setLanguage } from '@/store/preferences-slice';
 import { usersApi } from '@/lib/api/users';
 import type { Locale } from '@asko/shared/client';
 import { SUPPORTED_LOCALES } from '@asko/shared/client';
@@ -12,11 +13,11 @@ const LANGUAGE_LABELS: Record<Locale, string> = {
 };
 
 export function LanguageSection() {
-    const { language, setLanguage } = useLanguage();
+    const dispatch = useAppDispatch();
+    const language = useAppSelector(selectLanguage);
 
     const handleChange = (lang: Locale) => {
-        setLanguage(lang);
-        // Persist to backend (fire-and-forget)
+        dispatch(setLanguage(lang));
         usersApi.updateProfile({ settings: { language: lang } } as any).catch(() => {});
     };
 

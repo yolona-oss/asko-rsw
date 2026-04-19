@@ -90,6 +90,19 @@ export const NOTIFICATION_GROUP_MSG_KEYS: Record<NotificationGroup, MsgKey> = {
     [NotificationGroup.SYSTEM]: 'notify.group.system',
 };
 
+export const ESSENTIAL_GROUPS: readonly NotificationGroup[] = [
+    NotificationGroup.REPAIR,
+    NotificationGroup.PAYMENT,
+    NotificationGroup.CERTIFICATE,
+];
+
+export const ADDITIONAL_GROUPS: readonly NotificationGroup[] = [
+    NotificationGroup.SCHEDULE,
+    NotificationGroup.CHAT,
+    NotificationGroup.VALIDATION,
+    NotificationGroup.SYSTEM,
+];
+
 export const NOTIFICATION_CHANNEL_MSG_KEYS: Record<NotificationChannel, MsgKey> = {
     [NotificationChannel.IN_APP]: 'notify.channel.inApp',
     [NotificationChannel.PUSH]: 'notify.channel.push',

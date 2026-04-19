@@ -5,12 +5,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import authReducer from './auth-slice';
 import paymentReducer from './payment-slice';
 import withdrawReducer from './withdraw-slice';
+import preferencesReducer from './preferences-slice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     payment: paymentReducer,
     withdraw: withdrawReducer,
+    preferences: preferencesReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });

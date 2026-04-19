@@ -1,5 +1,4 @@
 import { AccountProvider } from '@/components/account/layout/provider';
-import { SidebarProvider } from '@/components/account/layout/sidebar-context';
 import { FormGuardProvider } from '@/components/account/layout/form-guard-context';
 import { AccountSidebar, MobileSidebar } from '@/components/account/layout/sidebar';
 import { AccountHeader } from '@/components/account/layout/header';
@@ -14,21 +13,19 @@ export default function AccountLayout({
   return (
     <AccountProvider>
       <AuthGuard>
-        <SidebarProvider>
-          <FormGuardProvider>
-            <div className="flex min-h-screen bg-page-bg min-w-[390px]">
-              <AccountSidebar />
-              <div className="relative flex-1 min-w-0 flex flex-col">
-                <AccountHeader />
-                <main className="flex-1 min-w-0 overflow-x-hidden flex flex-col">
-                  {children}
-                </main>
-              </div>
-              <NotificationDockPanel />
+        <FormGuardProvider>
+          <div className="flex min-h-screen bg-page-bg min-w-[390px]">
+            <AccountSidebar />
+            <div className="relative flex-1 min-w-0 flex flex-col">
+              <AccountHeader />
+              <main className="flex-1 min-w-0 overflow-x-hidden flex flex-col">
+                {children}
+              </main>
             </div>
-            <MobileSidebar />
-          </FormGuardProvider>
-        </SidebarProvider>
+            <NotificationDockPanel />
+          </div>
+          <MobileSidebar />
+        </FormGuardProvider>
       </AuthGuard>
     </AccountProvider>
   );
