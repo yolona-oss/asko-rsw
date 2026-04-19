@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Delete, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { NotificationClientService } from 'modules/notification-client/notification-client.service';
 import { NotificationService } from '../services/common-notification.service';
 import { JwtAuthUser } from '@asko/gateway-common';
-import { JwtPayload } from '@asko/shared';
+import { JwtPayload, UpdateNotificationPreferencesDto, RegisterPushSubscriptionDto } from '@asko/shared';
 import {
     PaginatedNotificationsResponseDto,
     UnreadCountResponseDto,
     EmptyResponseDto,
+    NotificationPreferencesResponseDto,
+    PushSubscriptionResponseDto,
+    PushSubscriptionListResponseDto,
 } from 'common/dto/responses';
 
 @ApiTags('Notifications')
@@ -56,5 +59,65 @@ export class NotificationController {
     @Delete(':id')
     async delete(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
         return this.notificationClient.deleteNotification(id, user.id);
+    }
+
+    // ─── Preferences ────────────────────────────────────────────────────
+
+    @ApiOkResponse({ type: NotificationPreferencesResponseDto })
+    @Get('preferences')
+    async getPreferences(@JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.getNotificationPreferences(user.id);
+    }
+
+    @ApiOkResponse({ type: NotificationPreferencesResponseDto })
+    @Put('preferences')
+    async updatePreferences(
+        @JwtAuthUser() user: JwtPayload,
+        @Body() dto: UpdateNotificationPreferencesDto,
+    ) {
+        const groups = (dto.groups ?? []).map(g => ({
+            group: g.group,
+            inApp: g.in_app,
+            push: g.push,
+            email: g.email,
+        }));
+        return this.notificationClient.updateNotificationPreferences(
+            user.id,
+            dto.globalMute,
+            groups,
+            dto.globalMute !== undefined,
+        );
+    }
+
+    // ─── Push Subscriptions ─────────────────────────────────────────────
+
+    @ApiOkResponse({ type: PushSubscriptionResponseDto })
+    @Post('push-subscriptions')
+    async registerPushSubscription(
+        @JwtAuthUser() user: JwtPayload,
+        @Body() dto: RegisterPushSubscriptionDto,
+    ) {
+        return this.notificationClient.registerPushSubscription(
+            user.id,
+            dto.endpoint,
+            dto.p256dh,
+            dto.auth,
+            dto.userAgent,
+        );
+    }
+
+    @ApiOkResponse({ type: EmptyResponseDto })
+    @Delete('push-subscriptions')
+    async unregisterPushSubscription(
+        @JwtAuthUser() user: JwtPayload,
+        @Body() dto: { endpoint: string },
+    ) {
+        return this.notificationClient.unregisterPushSubscription(user.id, dto.endpoint);
+    }
+
+    @ApiOkResponse({ type: PushSubscriptionListResponseDto })
+    @Get('push-subscriptions')
+    async listPushSubscriptions(@JwtAuthUser() user: JwtPayload) {
+        return this.notificationClient.listPushSubscriptions(user.id);
     }
 }

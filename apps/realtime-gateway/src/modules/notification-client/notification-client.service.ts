@@ -8,6 +8,10 @@ import type {
     PaginatedNotificationsResponse,
     UnreadCountResponse,
     EmptyNotificationResponse,
+    NotificationPreferencesResponse,
+    PushSubscriptionResponse,
+    PushSubscriptionListResponse,
+    GroupPreference,
 } from '@asko/proto';
 
 @Injectable()
@@ -83,5 +87,51 @@ export class NotificationClientService implements OnModuleInit {
 
     deleteNotification(notificationId: string, userId: string): Promise<EmptyNotificationResponse> {
         return grpcCall(this.notificationService.deleteNotification({ notificationId, userId }));
+    }
+
+    // ─── Preferences ────────────────────────────────────────────────────
+
+    getNotificationPreferences(userId: string): Promise<NotificationPreferencesResponse> {
+        return grpcCall(this.notificationService.getNotificationPreferences({ userId }));
+    }
+
+    updateNotificationPreferences(
+        userId: string,
+        globalMute: boolean | undefined,
+        groups: GroupPreference[],
+        hasGlobalMute: boolean,
+    ): Promise<NotificationPreferencesResponse> {
+        return grpcCall(this.notificationService.updateNotificationPreferences({
+            userId,
+            globalMute: globalMute ?? false,
+            groups,
+            hasGlobalMute,
+        }));
+    }
+
+    // ─── Push Subscriptions ─────────────────────────────────────────────
+
+    registerPushSubscription(
+        userId: string,
+        endpoint: string,
+        p256dh: string,
+        auth: string,
+        userAgent?: string,
+    ): Promise<PushSubscriptionResponse> {
+        return grpcCall(this.notificationService.registerPushSubscription({
+            userId,
+            endpoint,
+            p256dh,
+            auth,
+            userAgent: userAgent ?? '',
+        }));
+    }
+
+    unregisterPushSubscription(userId: string, endpoint: string): Promise<EmptyNotificationResponse> {
+        return grpcCall(this.notificationService.unregisterPushSubscription({ userId, endpoint }));
+    }
+
+    listPushSubscriptions(userId: string): Promise<PushSubscriptionListResponse> {
+        return grpcCall(this.notificationService.listPushSubscriptions({ userId }));
     }
 }

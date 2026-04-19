@@ -136,19 +136,21 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, {
   system: { icon: 'system' },
 };
 
-export const GROUP_LABELS: Record<string, string> = {
-  repair: 'Ремонт',
-  payment: 'Оплата',
-  certificate: 'Сертификаты',
-  chat: 'Чат',
-  schedule: 'Расписание',
-  address: 'Адрес',
-  device: 'Устройство',
-  message: 'Сообщение',
-  system: 'Система',
-};
+import {
+  NotificationGroup,
+  NOTIFICATION_TYPE_TO_GROUP,
+  NOTIFICATION_GROUP_MSG_KEYS,
+  t,
+} from '@asko/shared/client';
+import type { NotificationType } from '@asko/shared/client';
+
+export const GROUP_LABELS: Record<string, string> = Object.fromEntries(
+  Object.values(NotificationGroup).map(g => [g, t(NOTIFICATION_GROUP_MSG_KEYS[g])]),
+);
 
 export function getNotificationGroup(type: string): string {
+  const group = NOTIFICATION_TYPE_TO_GROUP[type as NotificationType];
+  if (group) return group;
   return NOTIFICATION_TYPE_CONFIG[type]?.icon ?? 'system';
 }
 

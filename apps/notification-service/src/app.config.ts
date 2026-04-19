@@ -34,6 +34,14 @@ export class AppConfig {
         return this.configService.get<string>('USER_SERVICE_ADDR') ?? 'localhost:5000';
     }
 
+    get push() {
+        return {
+            publicKey: this.configService.get<string>('VAPID_PUBLIC_KEY') ?? '',
+            privateKey: this.configService.get<string>('VAPID_PRIVATE_KEY') ?? '',
+            subject: this.configService.get<string>('VAPID_SUBJECT') ?? 'mailto:noreply@asko.com',
+        };
+    }
+
     get email() {
         return {
             host: this.configService.get<string>('EMAIL_HOST') ?? 'smtp.gmail.com',

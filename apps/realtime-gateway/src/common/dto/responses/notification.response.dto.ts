@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationTargetType, NotificationType, NotificationUrgency } from '@asko/shared';
+import { NotificationTargetType, NotificationType, NotificationUrgency, NotificationGroup, NotificationChannel } from '@asko/shared';
 
 export class NotificationRecordDto {
     id: string;
@@ -29,4 +29,34 @@ export class PaginatedNotificationsResponseDto {
 
 export class UnreadCountResponseDto {
     count: number;
+}
+
+// ─── Preferences ────────────────────────────────────────────────────────
+
+export class GroupPreferenceDto {
+    @ApiProperty({ enum: NotificationGroup, enumName: 'NotificationGroup' })
+    group: string;
+    @ApiProperty({ name: 'in_app' })
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+}
+
+export class NotificationPreferencesResponseDto {
+    globalMute: boolean;
+    @ApiProperty({ type: [GroupPreferenceDto] })
+    groups: GroupPreferenceDto[];
+}
+
+// ─── Push Subscriptions ─────────────────────────────────────────────────
+
+export class PushSubscriptionResponseDto {
+    id: string;
+    endpoint: string;
+    createdAt: string;
+}
+
+export class PushSubscriptionListResponseDto {
+    @ApiProperty({ type: [PushSubscriptionResponseDto] })
+    subscriptions: PushSubscriptionResponseDto[];
 }

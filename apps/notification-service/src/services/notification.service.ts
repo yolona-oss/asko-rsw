@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRequestContext, EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { NotificationEntity } from 'entities/notification.entity';
-import { NotificationUrgency } from '@asko/shared';
+import {
+    NotificationUrgency,
+    NotificationChannel,
+    NOTIFICATION_TYPE_TO_GROUP,
+    NotificationType,
+} from '@asko/shared';
 import { AppErrors } from 'common/error';
-import { NotificationPushService } from './notification-push.service';
-import { NotificationEventPublisher } from './notification-event.publisher';
+import { ChannelRegistry } from 'channels/channel-registry';
+import { NotificationPreferencesService } from './notification-preferences.service';
+import { UserInfoService } from './user-info.service';
+import type { NotificationPayload, ChannelContext } from 'channels/notification-channel.interface';
 
 export interface CreateNotificationParams {
     userId: string;
@@ -23,8 +30,9 @@ const NOTIFICATION_SORTABLE_FIELDS = ['createdAt', 'isRead'] as const;
 export class NotificationService {
     constructor(
         private readonly em: EntityManager,
-        private readonly pushService: NotificationPushService,
-        private readonly eventPublisher: NotificationEventPublisher,
+        private readonly channelRegistry: ChannelRegistry,
+        private readonly preferencesService: NotificationPreferencesService,
+        private readonly userInfoService: UserInfoService,
     ) {}
 
     @CreateRequestContext()
@@ -42,7 +50,7 @@ export class NotificationService {
         });
         await this.em.persistAndFlush(notification);
 
-        const notificationPayload = {
+        const payload: NotificationPayload = {
             id: notification.id,
             userId: notification.userId,
             type: notification.type,
@@ -56,15 +64,41 @@ export class NotificationService {
             urgency: notification.urgency,
         };
 
-        // Push real-time to frontend via Redis → API gateway WebSocket
-        this.pushService.pushToUser(userId, notificationPayload)
-            .catch(e => console.error('[NotificationService] Push failed:', e));
-
-        // Forward to chat-service via RabbitMQ
-        this.eventPublisher.publishCreated(notificationPayload)
-            .catch(e => console.error('[NotificationService] Event publish failed:', e));
+        // Dispatch to channels based on user preferences
+        this.dispatchToChannels(userId, payload, notification.urgency)
+            .catch(e => console.error('[NotificationService] Channel dispatch failed:', e));
 
         return notification;
+    }
+
+    private async dispatchToChannels(
+        userId: string,
+        payload: NotificationPayload,
+        urgency: NotificationUrgency,
+    ): Promise<void> {
+        const group = NOTIFICATION_TYPE_TO_GROUP[payload.type as NotificationType];
+        const prefs = await this.preferencesService.getPreferences(userId);
+
+        let context: ChannelContext = {};
+
+        for (const channel of this.channelRegistry.all()) {
+            const shouldDeliver = group
+                ? this.preferencesService.shouldDeliver(prefs, group, channel.channelName, urgency)
+                : true;
+
+            if (!shouldDeliver) continue;
+
+            // Lazily fetch email info only when needed
+            if (channel.channelName === NotificationChannel.EMAIL && !context.userEmail) {
+                const emailInfo = await this.userInfoService.getEmailInfo(userId);
+                if (emailInfo) {
+                    context = { userEmail: emailInfo.email, emailVerified: emailInfo.emailVerified };
+                }
+            }
+
+            channel.deliver(userId, payload, context)
+                .catch(e => console.error(`[NotificationService] ${channel.channelName} delivery failed:`, e));
+        }
     }
 
     @CreateRequestContext()

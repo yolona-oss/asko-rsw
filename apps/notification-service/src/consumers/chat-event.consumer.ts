@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
-import { NotificationType, NotificationTargetType, NotificationUrgency } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency, t, msg } from '@asko/shared';
 
 @Controller()
 export class ChatEventConsumer {
@@ -10,18 +10,17 @@ export class ChatEventConsumer {
     @EventPattern('chat.message')
     async handleChatMessage(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const title = data.conversationName
-                ? `Новое сообщение в "${data.conversationName}"`
-                : 'Новое сообщение';
+                ? t(msg.notify.title.chatMessageNamed, undefined, { name: data.conversationName })
+                : t(msg.notify.title.chatMessage);
 
             const body = data.messageText
                 ? data.messageText.substring(0, 200)
                 : this.getMessageTypeLabel(data.messageType);
 
-            // Create a notification for each recipient
             for (const recipientId of data.recipientIds ?? []) {
                 await this.notificationService.createNotification({
                     userId: recipientId,
@@ -39,26 +38,26 @@ export class ChatEventConsumer {
                 });
             }
 
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ChatEventConsumer] chat.message error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('chat.conversation_created')
     async handleConversationCreated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const title = data.conversationName
-                ? `Новый чат "${data.conversationName}"`
-                : 'Новый чат';
+                ? t(msg.notify.title.chatConversationCreatedNamed, undefined, { name: data.conversationName })
+                : t(msg.notify.title.chatConversationCreated);
 
             const body = data.conversationType === 'group'
-                ? 'Вас добавили в групповой чат'
-                : 'Начат новый диалог';
+                ? t(msg.notify.body.chatGroupCreated)
+                : t(msg.notify.body.chatDirectCreated);
 
             for (const recipientId of data.recipientIds ?? []) {
                 await this.notificationService.createNotification({
@@ -76,28 +75,28 @@ export class ChatEventConsumer {
                 });
             }
 
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ChatEventConsumer] chat.conversation_created error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('chat.participant_added')
     async handleParticipantAdded(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const title = data.conversationName
-                ? `Добавлены в "${data.conversationName}"`
-                : 'Добавлены в чат';
+                ? t(msg.notify.title.chatParticipantAddedNamed, undefined, { name: data.conversationName })
+                : t(msg.notify.title.chatParticipantAdded);
 
             await this.notificationService.createNotification({
                 userId: data.targetUserId,
                 type: NotificationType.CHAT_PARTICIPANT_ADDED,
                 title,
-                body: 'Вас добавили в чат',
+                body: t(msg.notify.body.chatParticipantAdded),
                 targetType: NotificationTargetType.CONVERSATION,
                 targetId: data.conversationId,
                 metadata: {
@@ -107,28 +106,28 @@ export class ChatEventConsumer {
                 urgency: NotificationUrgency.LOW,
             });
 
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ChatEventConsumer] chat.participant_added error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('chat.participant_removed')
     async handleParticipantRemoved(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const title = data.conversationName
-                ? `Удалены из "${data.conversationName}"`
-                : 'Удалены из чата';
+                ? t(msg.notify.title.chatParticipantRemovedNamed, undefined, { name: data.conversationName })
+                : t(msg.notify.title.chatParticipantRemoved);
 
             await this.notificationService.createNotification({
                 userId: data.targetUserId,
                 type: NotificationType.CHAT_PARTICIPANT_REMOVED,
                 title,
-                body: 'Вас удалили из чата',
+                body: t(msg.notify.body.chatParticipantRemoved),
                 targetType: NotificationTargetType.CONVERSATION,
                 targetId: data.conversationId,
                 metadata: {
@@ -138,18 +137,18 @@ export class ChatEventConsumer {
                 urgency: NotificationUrgency.LOW,
             });
 
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ChatEventConsumer] chat.participant_removed error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     private getMessageTypeLabel(type: string): string {
         switch (type) {
-            case 'image': return 'Изображение';
-            case 'video': return 'Видео';
-            default: return 'Сообщение';
+            case 'image': return t(msg.notify.body.chatMessageImage);
+            case 'video': return t(msg.notify.body.chatMessageVideo);
+            default: return t(msg.notify.body.chatMessageDefault);
         }
     }
 }

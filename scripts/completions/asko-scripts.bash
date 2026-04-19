@@ -9,14 +9,18 @@
 #   source scripts/completions/asko-scripts.bash
 #
 # Completion sources (kept in sync by convention, not runtime discovery):
-#   _asko_services      — services that own a Postgres DB + migrations
-#   _asko_apps          — every app (gateways + services + web)
-#   _asko_event_groups  — EVENT_SIGNING_GROUPS group names
-#   _asko_jwt_keys      — JWT keypair names
-#   _asko_env_flavors   — env flavor names
+#   _asko_services       — full service dir names (drop-/migrate-/seed-)
+#   _asko_service_names  — short names without -service (inject-)
+#   _asko_apps           — every app (gateways + services + web)
+#   _asko_event_groups   — EVENT_SIGNING_GROUPS group names
+#   _asko_jwt_keys       — JWT keypair names
+#   _asko_env_flavors    — env flavor names
 
-# Back-service names (singular, used as positional args to drop-/migrate-/seed-/inject-).
-_ASKO_SERVICES="chat content file notification payment repair user"
+# Full service directory names (used by drop-/migrate-/seed- scripts).
+_ASKO_SERVICES="chat-service content-service file-service notification-service payment-service repair-service user-service"
+
+# Short service names without -service suffix (used by inject-event-signing-keys.sh).
+_ASKO_SERVICE_NAMES="chat content file notification payment repair user"
 
 # Every app path under apps/ — used by env-push.sh.
 _ASKO_APPS="auth-gateway chat-service content-gateway content-service file-service media-gateway notification-service payment-service realtime-gateway repair-gateway repair-service user-service web"
@@ -115,7 +119,7 @@ _asko_inject_event_signing_keys() {
         _asko__words_to_comp "--env --dry-run --help"
         return
     fi
-    _asko__words_to_comp "$_ASKO_SERVICES"
+    _asko__words_to_comp "$_ASKO_SERVICE_NAMES"
 }
 
 _asko_openapi() {

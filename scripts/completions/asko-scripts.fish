@@ -11,7 +11,8 @@
 # three times so all invocation shapes are covered.
 
 # ── Source lists ───────────────────────────────────────────────────
-set -l __asko_services       chat content file notification payment repair user
+set -l __asko_services       chat-service content-service file-service notification-service payment-service repair-service user-service
+set -l __asko_service_names  chat content file notification payment repair user
 set -l __asko_apps           auth-gateway chat-service content-gateway content-service file-service media-gateway notification-service payment-service realtime-gateway repair-gateway repair-service user-service web
 set -l __asko_event_groups   payment default repair user chat schedule certificate address user_device
 set -l __asko_jwt_keys       access refresh email_confirm
@@ -81,7 +82,7 @@ end
 __asko_register inject-event-signing-keys.sh "-l env -r -a '$__asko_env_flavors' -d 'env flavor (prod|dev|example)'"
 __asko_register inject-event-signing-keys.sh "-l dry-run -d 'Print changes without writing'"
 __asko_register inject-event-signing-keys.sh "-l help -d 'Show usage'"
-for s in $__asko_services
+for s in $__asko_service_names
     __asko_register inject-event-signing-keys.sh "-f -a $s -d service"
 end
 

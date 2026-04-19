@@ -5,6 +5,8 @@ import { AppConfig } from '../app.config';
 import { NotificationEntity } from 'entities/notification.entity';
 import { ReminderJobEntity } from 'entities/reminder-job.entity';
 import { AudienceMembershipEntity } from 'entities/audience-membership.entity';
+import { NotificationPreferencesEntity } from 'entities/notification-preferences.entity';
+import { PushSubscriptionEntity } from 'entities/push-subscription.entity';
 import { isProdEnv } from '@asko/shared';
 
 @Module({
@@ -18,7 +20,7 @@ import { isProdEnv } from '@asko/shared';
                     dbName: config.database.name,
                     host: config.database.host,
                     port: parseInt(config.database.port),
-                    entities: [NotificationEntity, ReminderJobEntity, AudienceMembershipEntity],
+                    entities: [NotificationEntity, ReminderJobEntity, AudienceMembershipEntity, NotificationPreferencesEntity, PushSubscriptionEntity],
                     debug: !isProdEnv(),
                 };
             },

@@ -661,16 +661,6 @@
       "indexes": [
         {
           "columnNames": [
-            "settings_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "idx_user_settings_id",
-          "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "email"
           ],
           "composite": false,

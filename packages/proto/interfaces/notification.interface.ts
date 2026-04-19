@@ -76,6 +76,60 @@ export interface UnreadCountResponse {
     count: number;
 }
 
+// ─── Preferences ──────────────────────────────────────────────────────
+
+export interface GetPreferencesRequest {
+    userId: string;
+}
+
+export interface GroupPreference {
+    group: string;
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+}
+
+export interface NotificationPreferencesResponse {
+    globalMute: boolean;
+    groups: GroupPreference[];
+}
+
+export interface UpdatePreferencesRequest {
+    userId: string;
+    globalMute: boolean;
+    groups: GroupPreference[];
+    hasGlobalMute: boolean;
+}
+
+// ─── Push Subscriptions ───────────────────────────────────────────────
+
+export interface RegisterPushSubscriptionRequest {
+    userId: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    userAgent: string;
+}
+
+export interface PushSubscriptionResponse {
+    id: string;
+    endpoint: string;
+    createdAt: string;
+}
+
+export interface UnregisterPushSubscriptionRequest {
+    userId: string;
+    endpoint: string;
+}
+
+export interface ListPushSubscriptionsRequest {
+    userId: string;
+}
+
+export interface PushSubscriptionListResponse {
+    subscriptions: PushSubscriptionResponse[];
+}
+
 // ─── gRPC Service Interface ────────────────────────────────────────────
 
 export interface NotificationServiceClient {
@@ -85,4 +139,9 @@ export interface NotificationServiceClient {
     markAllAsRead(request: MarkAllAsReadRequest): Observable<EmptyNotificationResponse>;
     getUnreadCount(request: GetUnreadCountRequest): Observable<UnreadCountResponse>;
     deleteNotification(request: DeleteNotificationRequest): Observable<EmptyNotificationResponse>;
+    getNotificationPreferences(request: GetPreferencesRequest): Observable<NotificationPreferencesResponse>;
+    updateNotificationPreferences(request: UpdatePreferencesRequest): Observable<NotificationPreferencesResponse>;
+    registerPushSubscription(request: RegisterPushSubscriptionRequest): Observable<PushSubscriptionResponse>;
+    unregisterPushSubscription(request: UnregisterPushSubscriptionRequest): Observable<EmptyNotificationResponse>;
+    listPushSubscriptions(request: ListPushSubscriptionsRequest): Observable<PushSubscriptionListResponse>;
 }

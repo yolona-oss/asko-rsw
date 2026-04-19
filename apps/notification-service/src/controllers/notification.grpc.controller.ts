@@ -1,6 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
+import { NotificationPreferencesService } from 'services/notification-preferences.service';
+import { PushSubscriptionService } from 'services/push-subscription.service';
 import { appErrorToGrpcPayload, NotificationUrgency } from '@asko/shared';
 import type {
     CreateNotificationRequest,
@@ -9,6 +11,11 @@ import type {
     MarkAllAsReadRequest,
     GetUnreadCountRequest,
     DeleteNotificationRequest,
+    GetPreferencesRequest,
+    UpdatePreferencesRequest,
+    RegisterPushSubscriptionRequest,
+    UnregisterPushSubscriptionRequest,
+    ListPushSubscriptionsRequest,
 } from '@asko/proto';
 import type { NotificationEntity } from 'entities/notification.entity';
 
@@ -35,7 +42,11 @@ function entityToRecord(entity: NotificationEntity) {
 
 @Controller()
 export class NotificationGrpcController {
-    constructor(private readonly notificationService: NotificationService) {}
+    constructor(
+        private readonly notificationService: NotificationService,
+        private readonly preferencesService: NotificationPreferencesService,
+        private readonly pushSubscriptionService: PushSubscriptionService,
+    ) {}
 
     @GrpcMethod('NotificationService', 'CreateNotification')
     async createNotification(data: CreateNotificationRequest) {
@@ -107,6 +118,71 @@ export class NotificationGrpcController {
         try {
             await this.notificationService.deleteNotification(data.notificationId, data.userId);
             return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Preferences ────────────────────────────────────────────────────
+
+    @GrpcMethod('NotificationService', 'GetNotificationPreferences')
+    async getNotificationPreferences(data: GetPreferencesRequest) {
+        try {
+            const prefs = await this.preferencesService.getPreferences(data.userId);
+            return this.preferencesService.toProtoResponse(prefs);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('NotificationService', 'UpdateNotificationPreferences')
+    async updateNotificationPreferences(data: UpdatePreferencesRequest) {
+        try {
+            const prefs = await this.preferencesService.updatePreferences(
+                data.userId,
+                data.globalMute,
+                data.groups ?? [],
+                data.hasGlobalMute,
+            );
+            return this.preferencesService.toProtoResponse(prefs);
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    // ─── Push Subscriptions ─────────────────────────────────────────────
+
+    @GrpcMethod('NotificationService', 'RegisterPushSubscription')
+    async registerPushSubscription(data: RegisterPushSubscriptionRequest) {
+        try {
+            const sub = await this.pushSubscriptionService.register(
+                data.userId,
+                data.endpoint,
+                data.p256dh,
+                data.auth,
+                data.userAgent || undefined,
+            );
+            return {
+                id: sub.id,
+                endpoint: sub.endpoint,
+                createdAt: sub.createdAt.toISOString(),
+            };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('NotificationService', 'UnregisterPushSubscription')
+    async unregisterPushSubscription(data: UnregisterPushSubscriptionRequest) {
+        try {
+            await this.pushSubscriptionService.unregister(data.userId, data.endpoint);
+            return {};
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('NotificationService', 'ListPushSubscriptions')
+    async listPushSubscriptions(data: ListPushSubscriptionsRequest) {
+        try {
+            const subs = await this.pushSubscriptionService.listForUser(data.userId);
+            return {
+                subscriptions: subs.map(s => ({
+                    id: s.id,
+                    endpoint: s.endpoint,
+                    createdAt: s.createdAt.toISOString(),
+                })),
+            };
         } catch (e) { throw toGrpcError(e); }
     }
 }

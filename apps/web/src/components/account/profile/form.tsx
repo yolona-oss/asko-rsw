@@ -22,7 +22,6 @@ import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
 import { PasswordSection } from './password-section';
 import { SessionsSection } from './sessions-section';
-import { SoundSettingsSection } from './sound-settings-section';
 import { LanguageSection } from './language-section';
 import { AddressesSection } from './addresses-section';
 
@@ -377,10 +376,6 @@ export function ProfileForm() {
         {/* Language */}
         <div className="h-px bg-border-light" />
         <LanguageSection />
-
-        {/* Sounds */}
-        <div className="h-px bg-border-light" />
-        <SoundSettingsSection />
 
         {/* MFA */}
         <div className="h-px bg-border-light" />

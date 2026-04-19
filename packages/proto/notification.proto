@@ -9,6 +9,15 @@ service NotificationService {
     rpc MarkAllAsRead(MarkAllAsReadRequest) returns (EmptyNotificationResponse);
     rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse);
     rpc DeleteNotification(DeleteNotificationRequest) returns (EmptyNotificationResponse);
+
+    // Notification preferences
+    rpc GetNotificationPreferences(GetPreferencesRequest) returns (NotificationPreferencesResponse);
+    rpc UpdateNotificationPreferences(UpdatePreferencesRequest) returns (NotificationPreferencesResponse);
+
+    // Push subscriptions
+    rpc RegisterPushSubscription(RegisterPushSubscriptionRequest) returns (PushSubscriptionResponse);
+    rpc UnregisterPushSubscription(UnregisterPushSubscriptionRequest) returns (EmptyNotificationResponse);
+    rpc ListPushSubscriptions(ListPushSubscriptionsRequest) returns (PushSubscriptionListResponse);
 }
 
 // ─── Requests ───────────────────────────────────────────────────────────
@@ -83,4 +92,58 @@ message PaginatedNotificationsResponse {
 
 message UnreadCountResponse {
     int32 count = 1;
+}
+
+// ─── Preferences ───────────────────────────────────────────────────────
+
+message GetPreferencesRequest {
+    string userId = 1;
+}
+
+message GroupPreference {
+    string group = 1;
+    bool in_app = 2;
+    bool push = 3;
+    bool email = 4;
+}
+
+message NotificationPreferencesResponse {
+    bool globalMute = 1;
+    repeated GroupPreference groups = 2;
+}
+
+message UpdatePreferencesRequest {
+    string userId = 1;
+    bool globalMute = 2;
+    repeated GroupPreference groups = 3;
+    bool hasGlobalMute = 4;
+}
+
+// ─── Push Subscriptions ────────────────────────────────────────────────
+
+message RegisterPushSubscriptionRequest {
+    string userId = 1;
+    string endpoint = 2;
+    string p256dh = 3;
+    string auth = 4;
+    string userAgent = 5;
+}
+
+message PushSubscriptionResponse {
+    string id = 1;
+    string endpoint = 2;
+    string createdAt = 3;
+}
+
+message UnregisterPushSubscriptionRequest {
+    string userId = 1;
+    string endpoint = 2;
+}
+
+message ListPushSubscriptionsRequest {
+    string userId = 1;
+}
+
+message PushSubscriptionListResponse {
+    repeated PushSubscriptionResponse subscriptions = 1;
 }

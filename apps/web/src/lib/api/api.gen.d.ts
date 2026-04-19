@@ -1460,6 +1460,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationController_getPreferences"];
+        put: operations["NotificationController_updatePreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationController_listPushSubscriptions"];
+        put?: never;
+        post: operations["NotificationController_registerPushSubscription"];
+        delete: operations["NotificationController_unregisterPushSubscription"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/metrics/completion": {
         parameters: {
             query?: never;
@@ -4247,6 +4279,28 @@ export interface components {
         };
         UnreadCountResponseDto: {
             count: number;
+        };
+        /** @enum {string} */
+        NotificationGroup: "repair" | "payment" | "schedule" | "chat" | "certificate" | "validation" | "system";
+        GroupPreferenceDto: {
+            group: components["schemas"]["NotificationGroup"];
+            in_app: boolean;
+            push: boolean;
+            email: boolean;
+        };
+        NotificationPreferencesResponseDto: {
+            groups: components["schemas"]["GroupPreferenceDto"][];
+            globalMute: boolean;
+        };
+        UpdateNotificationPreferencesDto: Record<string, never>;
+        RegisterPushSubscriptionDto: Record<string, never>;
+        PushSubscriptionResponseDto: {
+            id: string;
+            endpoint: string;
+            createdAt: string;
+        };
+        PushSubscriptionListResponseDto: {
+            subscriptions: components["schemas"]["PushSubscriptionResponseDto"][];
         };
         CreateRepairRequestDto: Record<string, never>;
         /** @enum {string} */
@@ -7072,6 +7126,117 @@ export interface operations {
             path: {
                 id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmptyResponseDto"];
+                };
+            };
+        };
+    };
+    NotificationController_getPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferencesResponseDto"];
+                };
+            };
+        };
+    };
+    NotificationController_updatePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferencesResponseDto"];
+                };
+            };
+        };
+    };
+    NotificationController_listPushSubscriptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionListResponseDto"];
+                };
+            };
+        };
+    };
+    NotificationController_registerPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPushSubscriptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionResponseDto"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    NotificationController_unregisterPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

@@ -4,7 +4,7 @@ import { SignedEvent } from '@asko/observability';
 import { NotificationService } from 'services/notification.service';
 import { ReminderService } from 'services/reminder.service';
 import { AppConfig } from '../app.config';
-import { NotificationType, NotificationTargetType, NotificationUrgency } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency, t, msg } from '@asko/shared';
 
 @Controller()
 export class PaymentEventConsumer {
@@ -17,18 +17,18 @@ export class PaymentEventConsumer {
     @SignedEvent('payment.created')
     async handleInvoiceCreated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             if (!data.userId) {
-                channel.ack(msg);
+                channel.ack(rmqMsg);
                 return;
             }
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.INVOICE_CREATED,
-                title: 'Новый счёт на оплату',
-                body: `Создан счёт на сумму ${data.amount} ${data.currency}`,
+                title: t(msg.notify.title.invoiceCreated),
+                body: t(msg.notify.body.invoiceCreated, undefined, { amount: data.amount, currency: data.currency }),
                 targetType: NotificationTargetType.PAYMENT,
                 targetId: data.paymentId,
                 metadata: data,
@@ -39,8 +39,8 @@ export class PaymentEventConsumer {
                 targetId: data.paymentId,
                 recipientUserIds: [data.userId],
                 notificationType: NotificationType.INVOICE_UNPAID_REMINDER,
-                title: 'Счёт ещё не оплачен',
-                body: `Счёт на сумму ${data.amount} ${data.currency} ещё не оплачен. Пожалуйста, завершите оплату.`,
+                title: t(msg.notify.title.invoiceUnpaidReminder),
+                body: t(msg.notify.body.invoiceUnpaidReminder, undefined, { amount: data.amount, currency: data.currency }),
                 metadata: {
                     paymentId: data.paymentId,
                     amount: data.amount,
@@ -49,24 +49,24 @@ export class PaymentEventConsumer {
                 intervalMs: this.config.reminders.paymentIntervalMs,
                 maxFires: this.config.reminders.paymentMaxFires,
             });
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.created error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @SignedEvent('payment.paid')
     async handlePaymentPaid(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.PAYMENT_PAID,
-                title: 'Оплата подтверждена',
-                body: `Платеж на сумму ${data.amount} ${data.currency} подтвержден`,
+                title: t(msg.notify.title.paymentPaid),
+                body: t(msg.notify.body.paymentPaid, undefined, { amount: data.amount, currency: data.currency }),
                 targetType: NotificationTargetType.PAYMENT,
                 targetId: data.paymentId,
                 metadata: data,
@@ -77,24 +77,24 @@ export class PaymentEventConsumer {
                 'payment.paid',
                 ['payment_unpaid'],
             );
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.paid error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @SignedEvent('payment.failed')
     async handlePaymentFailed(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.PAYMENT_FAILED,
-                title: 'Ошибка оплаты',
-                body: `Платеж на сумму ${data.amount} ${data.currency} не прошел`,
+                title: t(msg.notify.title.paymentFailed),
+                body: t(msg.notify.body.paymentFailed, undefined, { amount: data.amount, currency: data.currency }),
                 targetType: NotificationTargetType.PAYMENT,
                 targetId: data.paymentId,
                 metadata: data,
@@ -106,24 +106,24 @@ export class PaymentEventConsumer {
                 'payment.failed',
                 ['payment_unpaid'],
             );
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.failed error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @SignedEvent('payment.refunded')
     async handlePaymentRefunded(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.PAYMENT_REFUNDED,
-                title: 'Возврат средств',
-                body: `Возврат на сумму ${data.amount} ${data.currency} выполнен`,
+                title: t(msg.notify.title.paymentRefunded),
+                body: t(msg.notify.body.paymentRefunded, undefined, { amount: data.amount, currency: data.currency }),
                 targetType: NotificationTargetType.PAYMENT,
                 targetId: data.paymentId,
                 metadata: data,
@@ -134,10 +134,10 @@ export class PaymentEventConsumer {
                 'payment.refunded',
                 ['payment_unpaid'],
             );
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[PaymentEventConsumer] payment.refunded error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 }

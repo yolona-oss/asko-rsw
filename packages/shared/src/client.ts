@@ -86,6 +86,19 @@ export {
 
 // Notification
 export { NotificationType, NotificationTargetType, NotificationUrgency } from './notification/notification.type.js';
+export {
+    NotificationGroup,
+    NotificationChannel,
+    NOTIFICATION_TYPE_TO_GROUP,
+    NOTIFICATION_GROUP_MSG_KEYS,
+    NOTIFICATION_CHANNEL_MSG_KEYS,
+} from './notification/notification-group.js';
+export type {
+    INotificationGroupChannels,
+    INotificationPreferences,
+    UpdateNotificationPreferencesDto,
+    RegisterPushSubscriptionDto,
+} from './notification/notification-preferences.dto.js';
 
 // Address
 export { AddressValidationStatus } from './address/address-validation-status.enum.js';

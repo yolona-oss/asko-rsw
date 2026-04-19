@@ -33,6 +33,10 @@
     "overrides": {
       "axios": "^1.15.0",
       "@mikro-orm/core": "^6.6.13",
+      "@mikro-orm/migrations": "^6.6.13",
+      "@mikro-orm/postgresql": "^6.6.13",
+      "@mikro-orm/cli": "^6.6.13",
+      "@mikro-orm/seeder": "^6.6.13",
       "next": "^16.2.4",
       "@nestjs/core": "^11.1.19",
       "handlebars": "^4.7.9",

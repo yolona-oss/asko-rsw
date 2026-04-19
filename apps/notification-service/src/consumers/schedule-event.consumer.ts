@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { NotificationService } from 'services/notification.service';
 import { AudienceProjectionService, AudienceKey } from 'services/audience-projection.service';
-import { NotificationType, NotificationTargetType, NotificationUrgency, Role } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency, Role, t, msg } from '@asko/shared';
 
 const STAFF_AUDIENCE_KEYS = [
     AudienceKey.role(Role.ADMIN),
@@ -36,34 +36,30 @@ export class ScheduleEventConsumer {
     @EventPattern('schedule.created')
     async handleScheduleCreated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const staffActed = data.actorId && data.actorId !== data.userId;
             if (staffActed && data.scheduleType === 'extra_day') {
-                // Manager proposed an extra work day during the repairer's vacation — the
-                // repairer must accept or decline it before assignment is unblocked for that day.
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_EXTRA_DAY_REQUESTED,
-                    title: 'Запрос на доп. рабочий день',
-                    body: 'Менеджер предложил вам дополнительный рабочий день — подтвердите или отклоните',
+                    title: t(msg.notify.title.scheduleExtraDayRequested),
+                    body: t(msg.notify.body.scheduleExtraDayRequested),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.scheduleId,
                     metadata: data,
                     urgency: NotificationUrgency.HIGH,
                 });
             } else {
-                // Default: repairer (or staff on their own behalf) submitted a request that
-                // still needs staff approval — notify the staff roster.
                 const recipients = await this.getStaffRecipients(data.userId);
                 await Promise.all(
                     recipients.map((recipientId) =>
                         this.notificationService.createNotification({
                             userId: recipientId,
                             type: NotificationType.SCHEDULE_CREATED,
-                            title: 'Новый запрос расписания',
-                            body: `Создан новый запрос расписания (${data.scheduleType})`,
+                            title: t(msg.notify.title.scheduleCreated),
+                            body: t(msg.notify.body.scheduleCreated, undefined, { scheduleType: data.scheduleType }),
                             targetType: NotificationTargetType.SCHEDULE,
                             targetId: data.scheduleId,
                             metadata: data,
@@ -71,31 +67,29 @@ export class ScheduleEventConsumer {
                     ),
                 );
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.created error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.approved')
     async handleScheduleApproved(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const repairerSelfActed = data.actorId && data.actorId === data.userId;
             if (repairerSelfActed && data.scheduleType === 'extra_day') {
-                // Repairer accepted a staff-proposed extra day — notify staff so they know
-                // assignment for that day is now unblocked.
                 const recipients = await this.getStaffRecipients(data.userId);
                 await Promise.all(
                     recipients.map((recipientId) =>
                         this.notificationService.createNotification({
                             userId: recipientId,
                             type: NotificationType.SCHEDULE_EXTRA_DAY_ACCEPTED,
-                            title: 'Доп. день подтверждён',
-                            body: 'Репейрер согласился выйти на дополнительный рабочий день',
+                            title: t(msg.notify.title.scheduleExtraDayAccepted),
+                            body: t(msg.notify.body.scheduleExtraDayAccepted),
                             targetType: NotificationTargetType.SCHEDULE,
                             targetId: data.scheduleId,
                             metadata: data,
@@ -106,37 +100,36 @@ export class ScheduleEventConsumer {
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_APPROVED,
-                    title: 'Расписание одобрено',
-                    body: 'Ваш запрос расписания был одобрен',
+                    title: t(msg.notify.title.scheduleApproved),
+                    body: t(msg.notify.body.scheduleApproved),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.scheduleId,
                     metadata: data,
                 });
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.approved error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.rejected')
     async handleScheduleRejected(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const repairerSelfActed = data.actorId && data.actorId === data.userId;
             if (repairerSelfActed && data.scheduleType === 'extra_day') {
-                // Repairer declined a staff-proposed extra day — notify staff.
                 const recipients = await this.getStaffRecipients(data.userId);
                 await Promise.all(
                     recipients.map((recipientId) =>
                         this.notificationService.createNotification({
                             userId: recipientId,
                             type: NotificationType.SCHEDULE_EXTRA_DAY_REJECTED,
-                            title: 'Доп. день отклонён',
-                            body: 'Репейрер отказался выйти на дополнительный рабочий день',
+                            title: t(msg.notify.title.scheduleExtraDayRejected),
+                            body: t(msg.notify.body.scheduleExtraDayRejected),
                             targetType: NotificationTargetType.SCHEDULE,
                             targetId: data.scheduleId,
                             metadata: data,
@@ -148,50 +141,48 @@ export class ScheduleEventConsumer {
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_REJECTED,
-                    title: 'Расписание отклонено',
-                    body: 'Ваш запрос расписания был отклонён',
+                    title: t(msg.notify.title.scheduleRejected),
+                    body: t(msg.notify.body.scheduleRejected),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.scheduleId,
                     metadata: data,
                     urgency: NotificationUrgency.HIGH,
                 });
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.rejected error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.updated')
     async handleScheduleUpdated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const label = scheduleLabel(data.scheduleType);
             const staffActed = data.actorId && data.actorId !== data.userId;
             if (staffActed) {
-                // Manager/admin changed a repairer's schedule — tell the repairer.
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_UPDATED,
-                    title: `${label.nominative} изменён`,
-                    body: `Менеджер изменил ${label.accusative} в вашем расписании`,
+                    title: t(msg.notify.title.scheduleUpdatedByStaff, undefined, { type: label.nominative }),
+                    body: t(msg.notify.body.scheduleUpdatedByStaff, undefined, { type: label.accusative }),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.scheduleId,
                     metadata: data,
                 });
             } else {
-                // Self-edit by the repairer — notify staff so they can review.
                 const recipients = await this.getStaffRecipients(data.userId);
                 await Promise.all(
                     recipients.map((recipientId) =>
                         this.notificationService.createNotification({
                             userId: recipientId,
                             type: NotificationType.SCHEDULE_UPDATED,
-                            title: 'Расписание изменено',
-                            body: `Запрос расписания был обновлён (${label.nominative.toLowerCase()})`,
+                            title: t(msg.notify.title.scheduleUpdatedByRepairer),
+                            body: t(msg.notify.body.scheduleUpdatedByRepairer, undefined, { type: label.nominative.toLowerCase() }),
                             targetType: NotificationTargetType.SCHEDULE,
                             targetId: data.scheduleId,
                             metadata: data,
@@ -199,46 +190,44 @@ export class ScheduleEventConsumer {
                     ),
                 );
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.updated error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.deleted')
     async handleScheduleDeleted(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const label = scheduleLabel(data.scheduleType);
             const staffActed = data.actorId && data.actorId !== data.userId;
             if (staffActed) {
-                // Manager/admin removed a repairer's schedule entry — tell the repairer.
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_DELETED,
-                    title: `${label.nominative} удалён`,
-                    body: `Менеджер удалил ${label.accusative} из вашего расписания`,
+                    title: t(msg.notify.title.scheduleDeletedByStaff, undefined, { type: label.nominative }),
+                    body: t(msg.notify.body.scheduleDeletedByStaff, undefined, { type: label.accusative }),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.scheduleId,
                     metadata: data,
                     urgency: NotificationUrgency.HIGH,
                 });
             }
-            // If the repairer deleted their own pending entry, no notification is emitted.
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.deleted error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.pattern_created')
     async handlePatternCreated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const recipients = await this.getStaffRecipients(data.userId);
@@ -247,51 +236,49 @@ export class ScheduleEventConsumer {
                     this.notificationService.createNotification({
                         userId: recipientId,
                         type: NotificationType.SCHEDULE_PATTERN_CREATED,
-                        title: 'Новый график работы',
-                        body: 'Репейрер прислал свой первый график работы',
+                        title: t(msg.notify.title.patternCreated),
+                        body: t(msg.notify.body.patternCreated),
                         targetType: NotificationTargetType.SCHEDULE,
                         targetId: data.patternId,
                         metadata: data,
                     }),
                 ),
             );
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_created error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.pattern_updated')
     async handlePatternUpdated(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const staffActed = data.actorId && data.actorId !== data.userId;
             if (staffActed) {
-                // Manager/admin edited a repairer's pattern — tell the repairer.
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_PATTERN_UPDATED,
-                    title: 'График работы изменён',
-                    body: 'Менеджер изменил ваш график работы',
+                    title: t(msg.notify.title.patternUpdatedByStaff),
+                    body: t(msg.notify.body.patternUpdatedByStaff),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.patternId,
                     metadata: data,
                 });
             } else {
-                // Repairer proposed a change themselves — notify staff so they can approve.
                 const recipients = await this.getStaffRecipients(data.userId);
                 const body = data.staged
-                    ? 'Предложено изменение графика работы — требуется подтверждение'
-                    : 'График работы был обновлён';
+                    ? t(msg.notify.body.patternUpdatedByRepairerStaged)
+                    : t(msg.notify.body.patternUpdatedByRepairer);
                 await Promise.all(
                     recipients.map((recipientId) =>
                         this.notificationService.createNotification({
                             userId: recipientId,
                             type: NotificationType.SCHEDULE_PATTERN_UPDATED,
-                            title: 'Изменение графика работы',
+                            title: t(msg.notify.title.patternUpdatedByRepairer),
                             body,
                             targetType: NotificationTargetType.SCHEDULE,
                             targetId: data.patternId,
@@ -300,82 +287,81 @@ export class ScheduleEventConsumer {
                     ),
                 );
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_updated error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.pattern_deleted')
     async handlePatternDeleted(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             const staffActed = data.actorId && data.actorId !== data.userId;
             if (staffActed) {
-                // Manager/admin removed a repairer's pattern — tell the repairer.
                 await this.notificationService.createNotification({
                     userId: data.userId,
                     type: NotificationType.SCHEDULE_PATTERN_DELETED,
-                    title: 'График работы удалён',
-                    body: 'Менеджер удалил ваш график работы',
+                    title: t(msg.notify.title.patternDeleted),
+                    body: t(msg.notify.body.patternDeleted),
                     targetType: NotificationTargetType.SCHEDULE,
                     targetId: data.patternId,
                     metadata: data,
                     urgency: NotificationUrgency.HIGH,
                 });
             }
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_deleted error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.pattern_approved')
     async handlePatternApproved(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.SCHEDULE_PATTERN_APPROVED,
-                title: 'График работы одобрен',
-                body: 'Ваш график работы был одобрен',
+                title: t(msg.notify.title.patternApproved),
+                body: t(msg.notify.body.patternApproved),
                 targetType: NotificationTargetType.SCHEDULE,
                 targetId: data.patternId,
                 metadata: data,
             });
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_approved error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 
     @EventPattern('schedule.pattern_rejected')
     async handlePatternRejected(@Payload() data: any, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
-        const msg = context.getMessage();
+        const rmqMsg = context.getMessage();
 
         try {
             await this.notificationService.createNotification({
                 userId: data.userId,
                 type: NotificationType.SCHEDULE_PATTERN_REJECTED,
-                title: 'График работы отклонён',
-                body: 'Ваш график работы был отклонён',
+                title: t(msg.notify.title.patternRejected),
+                body: t(msg.notify.body.patternRejected),
                 targetType: NotificationTargetType.SCHEDULE,
                 targetId: data.patternId,
                 metadata: data,
                 urgency: NotificationUrgency.HIGH,
             });
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         } catch (e) {
             console.error('[ScheduleEventConsumer] schedule.pattern_rejected error:', e);
-            channel.ack(msg);
+            channel.ack(rmqMsg);
         }
     }
 }
