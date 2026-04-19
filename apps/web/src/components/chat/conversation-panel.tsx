@@ -135,7 +135,7 @@ export function ConversationPanel({
   // Current user info for participant list
   const { user: currentUser } = useAccount();
   const currentUserName = currentUser ? buildDisplayName(currentUser) : '';
-  const currentUserRole = currentUser?.roles.find(r => r !== 'user') ?? currentUser?.roles[0] ?? '';
+  const currentUserRole = currentUser?.roles?.find(r => r !== 'user') ?? currentUser?.roles?.[0] ?? '';
 
   // Fetch avatars for other participants (self avatar comes from useAccount)
   const allParticipantIds = useMemo(

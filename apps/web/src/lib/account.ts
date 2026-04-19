@@ -24,7 +24,7 @@ const ROLE_MAP: Partial<Record<Role, UserRole>> = {
 };
 
 export function primaryRole(user: AccountUser): UserRole {
-  for (const role of user.roles) {
+  for (const role of user.roles ?? []) {
     const mapped = ROLE_MAP[role as Role];
     if (mapped) return mapped;
   }

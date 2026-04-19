@@ -51,7 +51,7 @@ export function UserCard({
         <div className="flex flex-col gap-1 text-sm text-text-main tracking-[-0.14px]">
           <div className="flex justify-between">
             <span className="text-text-sub">Роль:</span>
-            <span>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}</span>
+            <span>{(user.roles ?? []).map((r) => ROLE_LABELS[r] ?? r).join(', ')}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-sub">Район:</span>
