@@ -7,11 +7,14 @@ import type {
   UpdateWorkStepDto,
 } from '@asko/shared/client';
 import type {
-  IRepairRequest,
-  IRepairPayment,
+  PaymentList,
   PaginatedRepairRequests,
   ProcessInvoiceResult,
+  RepairRequestRecord,
   RepairRequestResponse,
+  BrokenPartResponse,
+  BrokenPartList,
+  ImageList,
   WorkStepList,
   WorkStepResponse,
   CompleteStep,
@@ -33,11 +36,11 @@ export const repairRequestApi = {
   },
 
   getActive() {
-    return api.get<IRepairRequest | null>('/repair-requests/active');
+    return api.get<RepairRequestRecord | null>('/repair-requests/active');
   },
 
   getOne(id: string) {
-    return api.get<IRepairRequest>(`/repair-requests/${id}`);
+    return api.get<RepairRequestResponse>(`/repair-requests/${id}`);
   },
 
   create(data: CreateRepairRequestDto) {
@@ -46,23 +49,23 @@ export const repairRequestApi = {
 
   // Status changes
   assign(requestId: string, repairerId: string, allowCrossCity?: boolean) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/assign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/assign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
   },
 
   accept(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/accept`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/accept`);
   },
 
   depart(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/depart`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/depart`);
   },
 
   start(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/start`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/start`);
   },
 
   reassign(requestId: string, repairerId: string, allowCrossCity?: boolean) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/reassign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/reassign`, { repairerId, allowCrossCity } satisfies AssignRepairerDto);
   },
 
   acceptChat(requestId: string) {
@@ -78,28 +81,28 @@ export const repairRequestApi = {
   },
 
   pause(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/pause`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/pause`);
   },
 
   resume(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/resume`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/resume`);
   },
 
   refuse(requestId: string, reason: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/refuse`, { reason } satisfies RefuseRequestDto);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/refuse`, { reason } satisfies RefuseRequestDto);
   },
 
   setPrice(requestId: string, data: SetRepairPriceDto) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/set-price`, data);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/set-price`, data);
   },
 
   // AVR (Work Completion Act)
   generateAvr(requestId: string, data?: { completionNote?: string }) {
-    return api.post<{ request: any; avrDocumentId: string }>(`/repair-requests/${requestId}/avr/generate`, data ?? {});
+    return api.post<{ request: RepairRequestRecord; avrDocumentId: string }>(`/repair-requests/${requestId}/avr/generate`, data ?? {});
   },
 
   resetAvr(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/reset`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/avr/reset`);
   },
 
   initiateAvrSigning(requestId: string) {
@@ -111,21 +114,21 @@ export const repairRequestApi = {
   },
 
   verifyAvrSigning(requestId: string, data: { code?: string; password?: string }) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/sign/verify`, data);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/avr/sign/verify`, data);
   },
 
   confirmAvrOffline(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/offline/confirm`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/avr/offline/confirm`);
   },
 
   removeAvrByManager(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/remove`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/avr/remove`);
   },
 
   uploadAvrScan(requestId: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/avr/scan/upload`, form, {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/avr/scan/upload`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
@@ -140,7 +143,7 @@ export const repairRequestApi = {
   },
 
   getPayments(requestId: string) {
-    return api.get<IRepairPayment[]>(`/repair-requests/${requestId}/payments`);
+    return api.get<PaymentList>(`/repair-requests/${requestId}/payments`);
   },
 
   // Work steps
@@ -165,7 +168,7 @@ export const repairRequestApi = {
   },
 
   lockSteps(requestId: string) {
-    return api.post<IRepairRequest>(`/repair-requests/${requestId}/steps/lock`);
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/steps/lock`);
   },
 
   approveDiagnostics(requestId: string) {
@@ -178,23 +181,23 @@ export const repairRequestApi = {
 
   // Broken parts
   getBrokenParts(requestId: string) {
-    return api.get<{ parts: any[] }>(`/repair-requests/${requestId}/broken-parts`);
+    return api.get<BrokenPartList>(`/repair-requests/${requestId}/broken-parts`);
   },
 
   addBrokenPart(requestId: string, data: { devicePartId?: string; name?: string; note?: string }) {
-    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts`, data);
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts`, data);
   },
 
   suggestBrokenPart(requestId: string, data: { name?: string; note?: string }) {
-    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/suggest`, data);
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/suggest`, data);
   },
 
   updateBrokenPart(requestId: string, partId: string, data: { name?: string; note?: string }) {
-    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
   },
 
   updateBrokenPartStatus(requestId: string, partId: string, status: string) {
-    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/status`, { status });
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/status`, { status });
   },
 
   deleteBrokenPart(requestId: string, partId: string) {
@@ -202,11 +205,11 @@ export const repairRequestApi = {
   },
 
   getBrokenPartImages(requestId: string, partId: string) {
-    return api.get<{ images: any[] }>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
+    return api.get<ImageList>(`/repair-requests/${requestId}/broken-parts/${partId}/images`);
   },
 
   orderBrokenPart(requestId: string, partId: string, data?: { supplier?: string }) {
-    return api.post<{ part: any }>(`/repair-requests/${requestId}/broken-parts/${partId}/order`, data ?? {});
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/order`, data ?? {});
   },
 
   // Stats

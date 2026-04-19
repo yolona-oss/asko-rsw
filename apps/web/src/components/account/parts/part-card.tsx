@@ -4,12 +4,12 @@ import { Card, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { Package, Wrench } from 'lucide-react';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import type { DevicePartFull } from '@/lib/api/types';
+import type { DevicePartRecord } from '@/lib/api/types';
 
 export function PartCard({ part, isAdmin, onEdit, onDelete, onClick }: {
-  part: DevicePartFull;
+  part: DevicePartRecord;
   isAdmin: boolean;
-  onEdit?: (part: DevicePartFull) => void;
+  onEdit?: (part: DevicePartRecord) => void;
   onDelete?: (id: string) => void;
   onClick?: () => void;
 }) {

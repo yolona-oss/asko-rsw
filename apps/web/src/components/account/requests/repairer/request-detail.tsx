@@ -26,6 +26,9 @@ import { Trash2 } from 'lucide-react';
 import { formatDateTime } from '@asko/shared/client';
 import { STEP_STATUS_LABEL, STEP_STATUS_BADGE_VARIANT, STEP_BLOCK_CLASS, STATUS_BADGE_VARIANT, STATUS_LABELS } from './detail-constants';
 import { AvrModal } from './avr-modal';
+import type { RepairRequestRecord, WorkStepRecord, PaymentRecord } from '@/lib/api/types';
+
+type RequestState = RepairRequestRecord & { conversationId?: string; statusBeforePause?: string };
 
 // ── Main Component ──
 
@@ -33,8 +36,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
-  const [request, setRequest] = useState<any | null>(null);
-  const [steps, setSteps] = useState<any[]>([]);
+  const [request, setRequest] = useState<RequestState | null>(null);
+  const [steps, setSteps] = useState<WorkStepRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -72,8 +75,8 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   const [declineDiagError, setDeclineDiagError] = useState('');
 
   // Cash payment confirmation & payment summary
-  const [pendingCashPayment, setPendingCashPayment] = useState<any>(null);
-  const [allPayments, setAllPayments] = useState<any[]>([]);
+  const [pendingCashPayment, setPendingCashPayment] = useState<PaymentRecord | null>(null);
+  const [allPayments, setAllPayments] = useState<PaymentRecord[]>([]);
   const [cashConfirming, setCashConfirming] = useState(false);
   const [cashConfirmError, setCashConfirmError] = useState('');
   const [cashConfirmCode, setCashConfirmCode] = useState('');
@@ -100,7 +103,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     async function load() {
       try {
         const { data: res } = await repairRequestApi.getOne(requestId);
-        const data = (res as any).request ?? res;
+        const data = res.request;
         setRequest(data);
         if (data.totalCost) setPriceValue(String(data.totalCost));
 
@@ -113,9 +116,9 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
             setPhotos(urls);
           }).catch(() => {}),
           repairRequestApi.getPayments(requestId).then(({ data }) => {
-            const payments = Array.isArray(data) ? data : (data as any).payments ?? [];
+            const payments = data.payments;
             setAllPayments(payments);
-            const cashPending = payments.find((p: any) => p.provider === 'cash' && p.status === 'pending');
+            const cashPending = payments.find((p) => p.provider === 'cash' && p.status === 'pending');
             setPendingCashPayment(cashPending ?? null);
           }).catch(() => {}),
         ]);
@@ -132,7 +135,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     const deviceId = request?.userDevice?.device?.id;
     if (!deviceId) return;
     deviceApi.getParts(deviceId).then(({ data }) => {
-      setCatalogParts((data.parts ?? []).map((p: any) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
+      setCatalogParts((data.parts ?? []).map((p) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
     }).catch(() => {});
   }, [request?.userDevice?.device?.id]);
 
@@ -181,7 +184,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
     setActionLoading(true);
     try {
       const { data } = await repairRequestApi.resume(request.id);
-      setRequest((data as any).request ?? data);
+      setRequest(data.request);
     } catch {} finally { setActionLoading(false); }
   };
 
@@ -323,7 +326,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
   // ── Comment editor ──
 
-  const startEditComment = (step: any) => {
+  const startEditComment = (step: WorkStepRecord) => {
     setCommentEditId(step.id);
     setCommentDraft(step.comment ?? '');
   };
@@ -365,7 +368,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
 
   // Post-transfer diagnostics review — per-step ownership check
   const currentRepairerId = request.repairer?.id;
-  const hasUnownedMandatoryStep = steps.some((s: any) =>
+  const hasUnownedMandatoryStep = steps.some((s) =>
     s.isMandatory
     && s.status === WorkStepStatus.COMPLETED
     && s.completedByRepairerId
@@ -383,7 +386,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
         <Badge variant={STATUS_BADGE_VARIANT[status] ?? 'neutral'} className="px-4 py-1.5 text-sm">
           {STATUS_LABELS[status] ?? status}
         </Badge>
-        <span className="text-sm text-text-sub">{formatDateTime((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find((e: any) => e.status === status)?.timestamp ?? request.createdAt)}</span>
+        <span className="text-sm text-text-sub">{formatDateTime((Array.isArray(request.statusTimestamps) ? request.statusTimestamps : []).slice().reverse().find((e) => e.status === status)?.timestamp ?? request.createdAt)}</span>
         <Link href="/account/requests" className="ml-auto text-sm text-text-sub hover:text-brand-red transition-colors flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" />
           Назад
@@ -883,7 +886,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
                 setCashConfirmCode('');
                 setCashConfirmAmount('');
                 const { data: res } = await repairRequestApi.getOne(requestId);
-                setRequest((res as any).request ?? res);
+                setRequest(res.request);
               } catch (e: any) {
                 setCashConfirmError(e?.response?.data?.message ?? 'Ошибка подтверждения');
               } finally {

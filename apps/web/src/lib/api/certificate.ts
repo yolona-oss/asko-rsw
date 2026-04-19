@@ -6,6 +6,7 @@ import type {
 } from '@asko/shared/client';
 import type {
   ICertificate,
+  CertificateResponse,
   PaginatedCertificates,
   ProcessInvoiceResult,
 } from './types';
@@ -26,7 +27,7 @@ export const certificateApi = {
   },
 
   getOne(id: string) {
-    return api.get<ICertificate>(`/certificates/${id}`);
+    return api.get<CertificateResponse>(`/certificates/${id}`);
   },
 
   add(data: AddCertificateDto) {

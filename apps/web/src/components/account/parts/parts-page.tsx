@@ -21,7 +21,7 @@ import { primaryRole } from '@/lib/account';
 import { partsApi } from '@/lib/api/parts';
 import { deviceApi } from '@/lib/api/device';
 import { useDeviceCategories } from '@/hooks/use-device-categories';
-import type { DevicePartFull } from '@/lib/api/types';
+import type { DevicePartRecord } from '@/lib/api/types';
 import { Loader2, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
 import { PartCard } from './part-card';
 import { PartFormModal } from './part-form-modal';
@@ -63,7 +63,7 @@ interface ParentGroup {
 interface SubGroup {
   key: string;
   label: string;
-  parts: DevicePartFull[];
+  parts: DevicePartRecord[];
 }
 
 export function PartsPage() {
@@ -71,7 +71,7 @@ export function PartsPage() {
   const role = user ? primaryRole(user) : null;
   const isAdmin = role === 'admin';
 
-  const [parts, setParts] = useState<DevicePartFull[]>([]);
+  const [parts, setParts] = useState<DevicePartRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -83,7 +83,7 @@ export function PartsPage() {
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [editPart, setEditPart] = useState<DevicePartFull | null>(null);
+  const [editPart, setEditPart] = useState<DevicePartRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Import state
@@ -164,7 +164,7 @@ export function PartsPage() {
 
   // 2-level grouping: parent (device or generic+category) → sub-group (group field)
   const grouped = useMemo((): ParentGroup[] => {
-    const parents: Record<string, { label: string; subs: Record<string, { label: string; parts: DevicePartFull[] }> }> = {};
+    const parents: Record<string, { label: string; subs: Record<string, { label: string; parts: DevicePartRecord[] }> }> = {};
 
     for (const part of parts) {
       // Parent key: device-specific parts group by deviceId, generic by categoryId (or __all)
@@ -281,7 +281,7 @@ export function PartsPage() {
     setModalOpen(true);
   };
 
-  const handleEdit = (part: DevicePartFull) => {
+  const handleEdit = (part: DevicePartRecord) => {
     setEditPart(part);
     setModalOpen(true);
   };
@@ -323,7 +323,7 @@ export function PartsPage() {
   };
 
   // Table columns
-  const columns: DataGridColumn<DevicePartFull>[] = useMemo(() => [
+  const columns: DataGridColumn<DevicePartRecord>[] = useMemo(() => [
     {
       key: 'name',
       header: 'Название',
@@ -369,7 +369,7 @@ export function PartsPage() {
   ], []);
 
   const rowMenu = isAdmin
-    ? (part: DevicePartFull): DropdownMenuEntry[] => [
+    ? (part: DevicePartRecord): DropdownMenuEntry[] => [
         { key: 'edit', label: 'Редактировать', onClick: () => handleEdit(part) },
         { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(part.id) },
       ]

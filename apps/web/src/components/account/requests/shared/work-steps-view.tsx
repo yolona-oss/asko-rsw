@@ -15,7 +15,7 @@ export function WorkStepsView({ requestId }: WorkStepsViewProps) {
 
   useEffect(() => {
     repairRequestApi.getSteps(requestId)
-      .then(({ data }) => setSteps((data as any).steps ?? []))
+      .then(({ data }) => setSteps(data.steps))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [requestId]);

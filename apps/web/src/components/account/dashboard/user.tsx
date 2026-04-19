@@ -82,18 +82,18 @@ export function UserDashboard() {
         setRequestsCount(reqData.overallCount ?? 0);
         if (reqData.data?.length > 0) {
           const r = reqData.data[0];
-          const addr = (r as any).address;
+          const addr = r.address;
           const addrStr = addr ? [addr.city, addr.street, addr.house].filter(Boolean).join(', ') : '';
           setLastRequest({
             id: r.id,
             status: r.status as RepairRequestStatus,
-            deviceName: (r as any).userDevice?.device?.name ?? 'Устройство',
+            deviceName: r.userDevice?.device?.name ?? 'Устройство',
             address: addrStr,
           });
         }
 
         const certs = certRes.data ?? [];
-        setCertsCount(certs.filter((c: any) => c.status === 'active').length);
+        setCertsCount(certs.filter((c) => c.status === 'active').length);
       } catch {
       } finally {
         setLoading(false);

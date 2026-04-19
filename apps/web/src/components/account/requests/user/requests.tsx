@@ -68,7 +68,7 @@ export function UserRequests() {
         await Promise.all(withCost.map(async (r) => {
           try {
             const { data: payments } = await repairRequestApi.getPayments(r.id);
-            map[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+            map[r.id] = payments.payments;
           } catch { /* skip */ }
         }));
         setPaymentsMap(map);

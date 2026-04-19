@@ -17,8 +17,8 @@ export function UserCard({
   onDelete: (id: string) => void;
   loading: boolean;
 }) {
-  const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
-  const isActive = (user as any).isActive !== false;
+  const name = [user.lastName, user.firstName, user.middleName].filter(Boolean).join(' ') || 'Без имени';
+  const isActive = user.isActive !== false;
 
   const customItems: DropdownMenuEntry[] = [
     {

@@ -15,7 +15,7 @@ export function SettingsDropdown({
   onDelete: (id: string) => void;
   loading: boolean;
 }) {
-  const isActive = (user as any).isActive !== false;
+  const isActive = user.isActive !== false;
 
   const items: DropdownMenuEntry[] = [
     {

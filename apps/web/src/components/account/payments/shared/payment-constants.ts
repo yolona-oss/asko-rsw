@@ -1,4 +1,5 @@
 import type { BadgeVariant } from '@asko/ui';
+import type { PaymentRecord } from '@/lib/api/types';
 
 // ── Payment status badge variants (shared across all roles) ──
 
@@ -66,15 +67,15 @@ export interface PaymentTotals {
   effectivePaid: number;
 }
 
-export function computePaymentTotals(payments: any[]): PaymentTotals {
+export function computePaymentTotals(payments: PaymentRecord[]): PaymentTotals {
   const paid = payments.reduce(
-    (s: number, p: any) => s + (p.status === 'paid' || p.status === 'partially_refunded' ? Number(p.amount) : 0), 0,
+    (s, p) => s + (p.status === 'paid' || p.status === 'partially_refunded' ? Number(p.amount) : 0), 0,
   );
   const refunded = payments.reduce(
-    (s: number, p: any) => s + Number(p.refundedAmount ?? 0), 0,
+    (s, p) => s + Number(p.refundedAmount ?? 0), 0,
   );
   const pending = payments.reduce(
-    (s: number, p: any) => s + (p.status === 'pending' ? Number(p.amount) : 0), 0,
+    (s, p) => s + (p.status === 'pending' ? Number(p.amount) : 0), 0,
   );
   return { paid, refunded, pending, effectivePaid: paid - refunded };
 }

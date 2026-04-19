@@ -19,7 +19,7 @@ export interface RepairRequestDetail {
     frozenAt: string;
   } | null;
   user?: { firstName?: string; lastName?: string; phone?: string };
-  userDevice?: { device?: { name?: string } };
+  userDevice?: { device?: { id?: string; name?: string } };
   address?: { city?: string; street?: string; building?: number; apartment?: string; latitude?: number; longitude?: number; timezone?: string };
   statusTimestamps?: IStatusTimestampEntry[];
   repairer?: {
@@ -32,6 +32,12 @@ export interface RepairRequestDetail {
   };
   isCrossCity?: boolean;
   timezoneOffsetHours?: number;
+  totalCost?: number;
+  avrStatus?: string;
+  avrDocumentId?: string;
+  avrSignedDocumentId?: string;
+  avrSigningMethod?: string;
+  avrSignedAt?: string;
 }
 
 export interface RepairerOption {

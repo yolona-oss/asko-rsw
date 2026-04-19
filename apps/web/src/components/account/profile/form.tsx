@@ -87,7 +87,7 @@ export function ProfileForm() {
     profileLoaded.current = true;
     Promise.all([
       usersApi.getProfile().then(({ data }) => {
-        setFullName([data.lastName, data.firstName, (data as any).middleName].filter(Boolean).join(' '));
+        setFullName([data.lastName, data.firstName, data.middleName].filter(Boolean).join(' '));
         setEmail(data.email ?? '');
         setPhone(data.phone ?? '');
         setEmailVerified(data.emailVerified ?? false);
@@ -106,7 +106,7 @@ export function ProfileForm() {
           if (settings.language) setLanguage(settings.language);
         }
         setInitialState({
-          fullName: [data.lastName, data.firstName, (data as any).middleName].filter(Boolean).join(' '),
+          fullName: [data.lastName, data.firstName, data.middleName].filter(Boolean).join(' '),
           email: data.email ?? '',
           phone: data.phone ?? '',
           chatAcceptConversations: chatAccept,

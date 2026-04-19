@@ -14,9 +14,7 @@ export type AccessToken = components['schemas']['AccessTokenResponseDto'];
 
 // ── Users ──
 export type UserResponse = components['schemas']['UserResponseDto'];
-// PaginatedUsersResponseDto will appear in the generated spec after running ./scripts/openapi.sh
-// with auth-gateway running. Until then, use inline type matching the backend shape.
-export interface PaginatedUsers { data: UserResponse[]; overallCount: number; page: number; limit: number; }
+export type PaginatedUsers = components['schemas']['PaginatedUsersResponseDto'];
 
 // ── Devices ──
 export type DeviceRecord = components['schemas']['DeviceRecordDto'];
@@ -24,23 +22,7 @@ export type PaginatedDevices = components['schemas']['PaginatedDevicesResponseDt
 export type DevicePartRecord = components['schemas']['DevicePartRecordDto'];
 export type DevicePartResponse = components['schemas']['DevicePartResponseDto'];
 export type DevicePartList = components['schemas']['DevicePartListResponseDto'];
-
-/** Full device part record including fields not yet in OpenAPI gen */
-export interface DevicePartFull {
-  id: string;
-  deviceId?: string;
-  deviceName?: string;
-  categoryId?: string;
-  categoryName?: string;
-  group?: string;
-  name: string;
-  partNumber?: string;
-  price?: number;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-export type PaginatedDeviceParts = { parts: DevicePartFull[]; overallCount: number; page: number; limit: number };
+export type PaginatedDeviceParts = components['schemas']['PaginatedDevicePartsResponseDto'];
 export type UserDeviceRecord = components['schemas']['UserDeviceRecordDto'];
 export type UserDeviceList = components['schemas']['UserDeviceListResponseDto'];
 export type ImportDevices = components['schemas']['ImportDevicesResponseDto'];
@@ -58,26 +40,15 @@ export type PaginatedCertificates = components['schemas']['PaginatedCertificates
 export type CertPrice = components['schemas']['CertPriceResponseDto'];
 
 // ── Repair Requests ──
-// TODO: Remove override after running ./scripts/openapi.sh
-export type RepairRequestRecord = components['schemas']['RepairRequestRecordDto'] & {
-  certificateValid?: boolean;
-};
+export type RepairRequestRecord = components['schemas']['RepairRequestRecordDto'];
 export type RepairRequestResponse = components['schemas']['RepairRequestResponseDto'];
 export type PaginatedRepairRequests = components['schemas']['PaginatedRepairRequestsResponseDto'];
 
 // ── Work Steps ──
-// TODO: Remove overrides after running ./scripts/openapi.sh
-export type WorkStepRecord = components['schemas']['WorkStepRecordDto'] & {
-  comment?: string;
-  isMandatory?: boolean;
-  isFinal?: boolean;
-  declinedAt?: string;
-  declinedByRepairerId?: string;
-  completedByRepairerId?: string;
-};
-export type WorkStepResponse = { step: WorkStepRecord };
-export type WorkStepList = { steps: WorkStepRecord[] };
-export type CompleteStep = { step: WorkStepRecord; requestCompleted: boolean };
+export type WorkStepRecord = components['schemas']['WorkStepRecordDto'];
+export type WorkStepResponse = components['schemas']['WorkStepResponseDto'];
+export type WorkStepList = components['schemas']['WorkStepListResponseDto'];
+export type CompleteStep = components['schemas']['CompleteStepResponseDto'];
 
 // ── Broken Parts ──
 export type BrokenPartRecord = components['schemas']['BrokenPartRecordDto'];
@@ -114,10 +85,10 @@ export type WithdrawalList = components['schemas']['WithdrawalListResponseDto'];
 export type PaginatedWithdrawals = components['schemas']['PaginatedWithdrawalsResponseDto'];
 
 // ── Payments ──
-export type PaymentRecord = components['schemas']['PaymentRecordDto'] & { refundedAmount?: number };
+export type PaymentRecord = components['schemas']['PaymentRecordDto'];
 export type PaymentList = components['schemas']['PaymentListResponseDto'];
 export type PaginatedPayments = components['schemas']['PaginatedPaymentsResponseDto'];
-export type ProcessInvoice = components['schemas']['ProcessInvoiceResponseDto'] & { cashConfirmCode?: string };
+export type ProcessInvoice = components['schemas']['ProcessInvoiceResponseDto'];
 export type PaymentOptions = components['schemas']['PaymentOptionsResponseDto'];
 export type PaymentStats = components['schemas']['PaymentStatsResponseDto'];
 export type Payout = components['schemas']['PayoutResponseDto'];
@@ -133,11 +104,7 @@ export type PaginatedNotifications = components['schemas']['PaginatedNotificatio
 export type UnreadCount = components['schemas']['UnreadCountResponseDto'];
 
 // ── Articles ──
-// TODO: Remove overrides after running ./scripts/openapi.sh
-export type ArticleResponse = components['schemas']['ArticleResponseDto'] & {
-  content?: Record<string, any>;
-  viewCount?: number;
-};
+export type ArticleResponse = components['schemas']['ArticleResponseDto'];
 export type PaginatedArticles = components['schemas']['PaginatedArticlesResponseDto'];
 
 // ── Invitations ──

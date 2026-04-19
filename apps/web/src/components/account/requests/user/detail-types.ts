@@ -38,4 +38,9 @@ export interface RepairRequest {
   repairer?: {
     user?: { firstName?: string; lastName?: string };
   };
+  avrStatus?: string;
+  avrDocumentId?: string;
+  avrSignedDocumentId?: string;
+  avrSigningMethod?: string;
+  avrSignedAt?: string;
 }

@@ -15,6 +15,7 @@ import { RepairRequestDocuments } from '@/components/account/requests/shared/rep
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/certificates/shared/certificate-applied-badge';
 import { repairRequestApi } from '@/lib/api/repair-request';
+import type { BrokenPart } from '@/components/account/requests/shared/broken-parts/types';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
@@ -39,7 +40,7 @@ import { WorkStepCard } from './work-step-card';
 export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequest | null>(null);
   const [workSteps, setWorkSteps] = useState<WorkStep[]>([]);
-  const [brokenParts, setBrokenParts] = useState<any[]>([]);
+  const [brokenParts, setBrokenParts] = useState<BrokenPart[]>([]);
   const [partImages, setPartImages] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
 
@@ -71,14 +72,14 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         repairRequestApi.getSteps(requestId).catch(() => ({ data: [] })),
         repairRequestApi.getBrokenParts(requestId).catch(() => ({ data: { parts: [] } })),
       ]);
-      setRequest(((reqRes.data as any).request ?? reqRes.data) as unknown as RepairRequest);
+      setRequest(reqRes.data.request as unknown as RepairRequest);
       const steps = (stepsRes.data ?? []) as unknown as WorkStep[];
       setWorkSteps(steps.sort((a: WorkStep, b: WorkStep) => a.order - b.order));
       const parts = Array.isArray(partsRes.data?.parts) ? partsRes.data.parts : Array.isArray(partsRes.data) ? partsRes.data : [];
       setBrokenParts(parts);
 
       if (parts.length > 0) {
-        const imgResults = await Promise.all(parts.map((p: any) =>
+        const imgResults = await Promise.all(parts.map((p) =>
           repairRequestApi.getBrokenPartImages(requestId, p.id)
             .then(({ data: imgs }) => ({ id: p.id, images: imgs.images ?? [] }))
             .catch(() => ({ id: p.id, images: [] })),
@@ -91,11 +92,11 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       // Fetch payments
       try {
         const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
-        setAllPayments(Array.isArray(paymentsData) ? paymentsData : (paymentsData as any).payments ?? []);
+        setAllPayments(paymentsData.payments);
       } catch { setAllPayments([]); }
 
       // Check if already reviewed
-      if (reqRes.data.status === RepairRequestStatus.COMPLETED) {
+      if (reqRes.data.request.status === RepairRequestStatus.COMPLETED) {
         try {
           const { data: myReviews } = await reviewApi.getMy();
           const reviews = Array.isArray(myReviews) ? myReviews : [];
@@ -357,16 +358,16 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         {/* AVR status */}
         <div className="max-w-lg mt-6">
           <AvrStatusCard
-            avrStatus={(request as any).avrStatus}
-            avrDocumentId={(request as any).avrDocumentId}
-            avrSignedDocumentId={(request as any).avrSignedDocumentId}
-            avrSigningMethod={(request as any).avrSigningMethod}
-            avrSignedAt={(request as any).avrSignedAt}
+            avrStatus={request.avrStatus}
+            avrDocumentId={request.avrDocumentId}
+            avrSignedDocumentId={request.avrSignedDocumentId}
+            avrSigningMethod={request.avrSigningMethod}
+            avrSignedAt={request.avrSignedAt}
           />
         </div>
 
         {/* AVR — Pending signature (user needs to sign) */}
-        {(request as any).avrStatus === AvrStatus.PENDING_SIGNATURE && (
+        {request.avrStatus === AvrStatus.PENDING_SIGNATURE && (
           <div className="flex flex-col gap-4 max-w-lg p-4 sm:p-6 border border-warning-border bg-warning-bg">
             <h3 className="text-base font-medium text-warning-deep">Подписание акта</h3>
             <p className="text-[13px] sm:text-sm text-text-main">
@@ -403,9 +404,9 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         )}
 
         {/* Broken parts (real — added by staff) */}
-        {brokenParts.filter((p: any) => !p.isSuggestion).length > 0 && (
+        {brokenParts.filter((p) => !p.isSuggestion).length > 0 && (
           <div className="max-w-lg mt-6">
-            <BrokenPartsView parts={brokenParts.filter((p: any) => !p.isSuggestion)} partImages={partImages} />
+            <BrokenPartsView parts={brokenParts.filter((p) => !p.isSuggestion)} partImages={partImages} />
           </div>
         )}
 
@@ -414,15 +415,15 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           <div className="max-w-lg mt-6">
             <BrokenPartSuggestSection
               requestId={requestId}
-              suggestions={brokenParts.filter((p: any) => p.isSuggestion)}
+              suggestions={brokenParts.filter((p) => p.isSuggestion)}
               onSuggestionAdded={(part) => setBrokenParts((prev) => [...prev, part])}
             />
           </div>
         )}
-        {isTerminal && brokenParts.filter((p: any) => p.isSuggestion).length > 0 && (
+        {isTerminal && brokenParts.filter((p) => p.isSuggestion).length > 0 && (
           <div className="max-w-lg mt-6">
             <h3 className="text-sm font-medium text-text-main mb-2">Ваши предположения</h3>
-            {brokenParts.filter((p: any) => p.isSuggestion).map((s: any) => (
+            {brokenParts.filter((p) => p.isSuggestion).map((s) => (
               <div key={s.id} className="text-sm text-text-sub">{s.name}{s.note ? ` — ${s.note}` : ''}</div>
             ))}
           </div>

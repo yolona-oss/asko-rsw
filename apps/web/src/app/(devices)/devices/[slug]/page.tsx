@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Product, SpecRow } from '@/lib/devices';
+import type { DeviceRecord } from '@/lib/api/types';
 import { Container, SkeletonBlock } from '@asko/ui';
 import { ProductGallery } from '@/components/devices/product-gallery';
 import { ProductInfo } from '@/components/devices/product-info';
@@ -29,7 +30,7 @@ export async function generateMetadata({
   if (!device) return {};
 
   const description = device.description?.slice(0, 160).trim() || `${device.name} — характеристики, цена, сервис ASKO`;
-  const previewImage = images.sort((a: any, b: any) => a.order - b.order)[0];
+  const previewImage = images.sort((a, b) => a.order - b.order)[0];
   const ogImage = getImageUrl(previewImage, 'medium');
 
   return {
@@ -58,7 +59,7 @@ function kvToSpecs(obj?: Record<string, any> | null): SpecRow[] {
   }));
 }
 
-function deviceToProduct(device: any, images: string[], typeLabels: Record<string, string>): Product {
+function deviceToProduct(device: DeviceRecord, images: string[], typeLabels: Record<string, string>): Product {
   const specs = kvToSpecs(device.specifications);
   const features = kvToSpecs(device.features);
   const allSpecs = [...specs, ...features];

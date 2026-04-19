@@ -93,7 +93,7 @@ export function ManagerRequests() {
         await Promise.all(withCost.map(async (r) => {
           try {
             const { data: payments } = await repairRequestApi.getPayments(r.id);
-            pMap[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+            pMap[r.id] = payments.payments;
           } catch { /* skip */ }
         }));
         setPaymentsMap(pMap);

@@ -2,6 +2,7 @@
 
 import { Badge } from '@asko/ui';
 import { formatDateTime, formatAmount } from '@asko/shared/client';
+import type { PaymentRecord } from '@/lib/api/types';
 import {
   PAYMENT_STATUS_VARIANT,
   PAYMENT_STATUS_LABELS_USER,
@@ -17,15 +18,15 @@ export function PaymentTransactionList({
   statusLabels,
   onPaymentClick,
 }: {
-  payments: any[];
+  payments: PaymentRecord[];
   statusLabels?: Record<string, string>;
-  onPaymentClick?: (payment: any) => void;
+  onPaymentClick?: (payment: PaymentRecord) => void;
 }) {
   const labels = statusLabels ?? PAYMENT_STATUS_LABELS_USER;
 
   return (
     <div className="flex flex-col gap-1">
-      {payments.map((p: any) => (
+      {payments.map((p) => (
         <div
           key={p.id}
           onClick={onPaymentClick ? () => onPaymentClick(p) : undefined}
@@ -37,9 +38,9 @@ export function PaymentTransactionList({
             <span className="text-sm text-text-main">
               {formatDateTime(p.paidAt || p.createdAt)}
             </span>
-            {p.refundedAmount > 0 && (
+            {(p.refundedAmount ?? 0) > 0 && (
               <span className="text-xs text-error">
-                возврат {formatAmount(p.refundedAmount)} ₽
+                возврат {formatAmount(p.refundedAmount!)} ₽
               </span>
             )}
           </div>

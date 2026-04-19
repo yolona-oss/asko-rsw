@@ -170,8 +170,8 @@ export function DealerPayments() {
 
   // Chart data — withdrawals
   const withdrawalBuckets = useMemo(() => bucketWithdrawals(withdrawals, dateRange), [withdrawals, dateRange]);
-  const withdrawalTotal = useMemo(() => withdrawals.filter((w: any) => inRange(new Date(w.requestedAt ?? w.createdAt).getTime())).reduce((s: number, w: any) => s + w.amount, 0), [withdrawals, inRange]);
-  const prevWithdrawal = useMemo(() => withdrawals.filter((w: any) => inPrev(new Date(w.requestedAt ?? w.createdAt).getTime())).reduce((s: number, w: any) => s + w.amount, 0), [withdrawals, inPrev]);
+  const withdrawalTotal = useMemo(() => withdrawals.filter((w) => inRange(new Date(w.requestedAt).getTime())).reduce((s, w) => s + w.amount, 0), [withdrawals, inRange]);
+  const prevWithdrawal = useMemo(() => withdrawals.filter((w) => inPrev(new Date(w.requestedAt).getTime())).reduce((s, w) => s + w.amount, 0), [withdrawals, inPrev]);
 
   const rangeLabel = formatRangeLabel(dateRange);
   const toggleStyle = useCallback(() => setChartStyle(s => s === 'bar' ? 'line' : 'bar'), []);

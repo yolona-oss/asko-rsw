@@ -74,7 +74,7 @@ export function AdminUsers() {
         await usersApi.disable(id);
       }
       setUsers((prev) =>
-        prev.map((u) => u.id === id ? { ...u, isActive: active } as any : u),
+        prev.map((u) => u.id === id ? { ...u, isActive: active } : u),
       );
     } catch {
     } finally {
@@ -112,7 +112,7 @@ export function AdminUsers() {
       header: 'Пользователь',
       sortField: 'lastName',
       render: (user) => {
-        const name = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ') || 'Без имени';
+        const name = [user.lastName, user.firstName, user.middleName].filter(Boolean).join(' ') || 'Без имени';
         return (
           <div className="flex items-center gap-3">
             <UserAvatar />
@@ -155,14 +155,14 @@ export function AdminUsers() {
       width: 100,
       mobileLabel: 'Статус:',
       render: (user) => {
-        const isActive = (user as any).isActive !== false;
+        const isActive = user.isActive !== false;
         return <StatusBadge active={isActive} />;
       },
     },
   ], [actionLoading]);
 
   const rowMenu = (user: IAuthUser): DropdownMenuEntry[] => {
-    const isActive = (user as any).isActive !== false;
+    const isActive = user.isActive !== false;
     return [
       {
         key: 'toggle-active',
@@ -204,7 +204,7 @@ export function AdminUsers() {
           sortOrder={sortOrder ?? undefined}
           onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
           onRowClick={detail.onRowClick}
-          rowClassName={(user) => (user as any).isActive === false ? 'opacity-50' : undefined}
+          rowClassName={(user) => user.isActive === false ? 'opacity-50' : undefined}
           rowMenu={rowMenu}
           footer={users.length > 0 ? (
             <div className="flex items-center justify-between w-full">

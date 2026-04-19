@@ -253,10 +253,10 @@ export function UserPayments() {
                 </Badge>
               }
             />
-            {(item as any).refundedAmount > 0 && (
+            {(item.refundedAmount ?? 0) > 0 && (
               <DetailRow
                 label="Возвращено"
-                value={<span className="text-sm font-medium text-error">{formatAmount((item as any).refundedAmount)} ₽</span>}
+                value={<span className="text-sm font-medium text-error">{formatAmount(item.refundedAmount!)} ₽</span>}
               />
             )}
             <DetailRow label="Провайдер" value={item.provider ?? '-'} />

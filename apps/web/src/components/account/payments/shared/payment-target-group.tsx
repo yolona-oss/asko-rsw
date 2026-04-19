@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Card, Badge } from '@asko/ui';
+import type { PaymentRecord } from '@/lib/api/types';
 import { PAYMENT_TARGET_LABELS } from './payment-constants';
 import { PaymentSummary } from './payment-summary';
 import { PaymentTransactionList } from './payment-transaction-list';
 
 interface PaymentTargetGroupProps {
   groupKey: string;
-  payments: any[];
+  payments: PaymentRecord[];
   statusLabels?: Record<string, string>;
-  onPaymentClick?: (payment: any, allGroupPayments: any[]) => void;
+  onPaymentClick?: (payment: PaymentRecord, allGroupPayments: PaymentRecord[]) => void;
 }
 
 export function PaymentTargetGroup({

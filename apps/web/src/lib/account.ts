@@ -32,7 +32,7 @@ export function primaryRole(user: AccountUser): UserRole {
 }
 
 export function displayName(user: AccountUser): string {
-  const full = [user.lastName, user.firstName, (user as any).middleName].filter(Boolean).join(' ');
+  const full = [user.lastName, user.firstName, user.middleName].filter(Boolean).join(' ');
   return full || user.email?.split('@')[0] || '';
 }
 

@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { Modal, Button, Input, FormField, Select } from '@asko/ui';
 import { useFormGuard } from '@/hooks/use-form-guard';
 import { EditedMark } from '@/components/shared/edited-mark';
-import type { DevicePartFull } from '@/lib/api/types';
+import type { DevicePartRecord } from '@/lib/api/types';
 import type { PartFormData } from './types';
 import { EMPTY_PART_FORM } from './types';
 
@@ -25,7 +25,7 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, cate
   open: boolean;
   onClose: () => void;
   onSubmit: (data: PartFormData) => Promise<void>;
-  editPart?: DevicePartFull | null;
+  editPart?: DevicePartRecord | null;
   devices: Device[];
   categories: Category[];
   submitting: boolean;
@@ -47,7 +47,7 @@ export function PartFormModal({ open, onClose, onSubmit, editPart, devices, cate
 }
 
 function PartFormContent({ editPart, devices, categories, submitting, onClose, onSubmit }: {
-  editPart?: DevicePartFull | null;
+  editPart?: DevicePartRecord | null;
   devices: Device[];
   categories: Category[];
   submitting: boolean;

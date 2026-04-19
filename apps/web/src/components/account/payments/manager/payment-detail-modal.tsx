@@ -45,12 +45,12 @@ export function PaymentDetailModal({
 
     if (payment.targetType === 'repairRequest') {
       repairRequestApi.getOne(payment.targetId)
-        .then(({ data }) => setTarget((data as any)?.request ?? data))
+        .then(({ data }) => setTarget(data.request))
         .catch(() => {})
         .finally(() => setTargetLoading(false));
     } else if (payment.targetType === 'certificate') {
       certificateApi.getOne(payment.targetId)
-        .then(({ data }) => setTarget((data as any)?.certificate ?? data))
+        .then(({ data }) => setTarget(data.certificate))
         .catch(() => {})
         .finally(() => setTargetLoading(false));
     } else {
@@ -84,11 +84,11 @@ export function PaymentDetailModal({
               </Badge>
             }
           />
-          {(payment as any).refundedAmount > 0 && (
+          {(payment.refundedAmount ?? 0) > 0 && (
             <DetailRow
               label="Возвращено"
               value={
-                <span className="text-sm font-medium text-error">{formatAmount((payment as any).refundedAmount)} ₽</span>
+                <span className="text-sm font-medium text-error">{formatAmount(payment.refundedAmount!)} ₽</span>
               }
             />
           )}

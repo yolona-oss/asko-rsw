@@ -11,6 +11,7 @@ import { formatAmount, formatDate } from '@asko/shared/client';
 import type { BadgeVariant } from '@asko/ui';
 import { api } from '@/lib/api/client';
 import { reviewApi } from '@/lib/api/review';
+import type { RepairRequestRecord, RepairRequestResponse } from '@/lib/api/types';
 
 const statusVariant = (s: string): BadgeVariant => {
   switch (s) {
@@ -22,9 +23,9 @@ const statusVariant = (s: string): BadgeVariant => {
 };
 
 
-export async function fetchRepairRequestOne(item: any): Promise<any> {
-  const { data } = await api.get(`/repair-requests/${item.id}`, { _silent: true } as any);
-  return (data as any)?.request ?? data;
+export async function fetchRepairRequestOne(item: { id: string }): Promise<RepairRequestRecord> {
+  const { data } = await api.get<RepairRequestResponse>(`/repair-requests/${item.id}`, { _silent: true } as any);
+  return data.request;
 }
 
 export function RepairRequestDetail({ item, loading }: { item: any; loading: boolean }) {

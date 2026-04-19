@@ -66,15 +66,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     async function fetchData() {
       try {
         const { data: res } = await repairRequestApi.getOne(requestId);
-        const req = (res as any).request ?? res;
-        setRequest(req as unknown as RepairRequestDetailType);
+        const req = res.request as unknown as RepairRequestDetailType;
+        setRequest(req);
         setSelectedRepairer(req.repairer?.id ?? '');
 
         // Check if manager is attached to chat
         if (req.conversationId) {
           try {
             const { data: conv } = await chatApi.getConversation(req.conversationId, true);
-            setChatAttached(conv.conversation.participants.some((p: any) => p.userId === authUser?.id));
+            setChatAttached(conv.conversation.participants.some((p) => p.userId === authUser?.id));
           } catch { /* not a participant */ }
         }
 
@@ -120,7 +120,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         // Fetch payments
         try {
           const { data: paymentsData } = await repairRequestApi.getPayments(requestId);
-          setAllPayments(Array.isArray(paymentsData) ? paymentsData : (paymentsData as any).payments ?? []);
+          setAllPayments(paymentsData.payments);
         } catch { setAllPayments([]); }
 
       } catch { } finally {
@@ -132,12 +132,12 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
   // Fetch catalog parts when device is known
   useEffect(() => {
-    const deviceId = (request as any)?.userDevice?.device?.id;
+    const deviceId = request?.userDevice?.device?.id;
     if (!deviceId) return;
     deviceApi.getParts(deviceId).then(({ data }) => {
-      setCatalogParts((data.parts ?? []).map((p: any) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
+      setCatalogParts((data.parts ?? []).map((p) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
     }).catch(() => {});
-  }, [(request as any)?.userDevice?.device?.id]);
+  }, [request?.userDevice?.device?.id]);
 
   const scheduleInfoByRepairer = useMemo(() => {
     const map: Record<string, RepairerScheduleInfo> = {};
@@ -172,7 +172,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
         await repairRequestApi.assign(request.id, repairerId, allowCrossCity);
       }
       const { data: updatedRes } = await repairRequestApi.getOne(requestId);
-      setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
+      setRequest(updatedRes.request as unknown as RepairRequestDetailType);
       setAssigning(false);
       setAssignSuccess(true);
     } catch (e) {
@@ -438,15 +438,15 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
           {/* AVR status */}
           <AvrStatusCard
-            avrStatus={(request as any).avrStatus}
-            avrDocumentId={(request as any).avrDocumentId}
-            avrSignedDocumentId={(request as any).avrSignedDocumentId}
-            avrSigningMethod={(request as any).avrSigningMethod}
-            avrSignedAt={(request as any).avrSignedAt}
+            avrStatus={request.avrStatus}
+            avrDocumentId={request.avrDocumentId}
+            avrSignedDocumentId={request.avrSignedDocumentId}
+            avrSigningMethod={request.avrSigningMethod}
+            avrSignedAt={request.avrSignedAt}
             onRemove={!isTerminal ? async () => {
               await repairRequestApi.removeAvrByManager(request.id);
               const { data: updatedRes } = await repairRequestApi.getOne(requestId);
-              setRequest(((updatedRes as any).request ?? updatedRes) as unknown as RepairRequestDetailType);
+              setRequest(updatedRes.request as unknown as RepairRequestDetailType);
             } : undefined}
           />
 

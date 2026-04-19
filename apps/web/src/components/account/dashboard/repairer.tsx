@@ -83,7 +83,7 @@ export function RepairerDashboard() {
   useEffect(() => {
     repairRequestApi.getActive()
       .then(({ data }) => {
-        const req = (data as any)?.request ?? data;
+        const req = data;
         setActiveRequest(req?.id ? req : null);
       })
       .catch(() => setActiveRequest(null));

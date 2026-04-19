@@ -26,7 +26,7 @@ export function InviteCreatePopup({ onClose }: { onClose: () => void }) {
         role: role as Role,
         ttl: ttl !== '' ? ttl : undefined,
       });
-      setCreatedLink((data as any).link);
+      setCreatedLink(data.link);
     } catch {
       setError('Не удалось создать приглашение');
     } finally {

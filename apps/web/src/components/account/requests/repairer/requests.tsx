@@ -121,8 +121,7 @@ export function RepairerRequests() {
   useEffect(() => {
     repairRequestApi.getActive()
       .then(({ data }) => {
-        const req = (data as any)?.request ?? data;
-        if (req?.id) setActiveRequest(req as unknown as RepairRequest);
+        if (data?.id) setActiveRequest(data as unknown as RepairRequest);
       })
       .catch(() => {});
   }, []);
@@ -159,7 +158,7 @@ export function RepairerRequests() {
         await Promise.all(withCost.map(async (r) => {
           try {
             const { data: payments } = await repairRequestApi.getPayments(r.id);
-            pMap[r.id] = Array.isArray(payments) ? payments : (payments as any).payments ?? [];
+            pMap[r.id] = payments.payments;
           } catch { /* skip */ }
         }));
         setPaymentsMap(pMap);
