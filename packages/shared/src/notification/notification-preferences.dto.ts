@@ -1,17 +1,6 @@
 import { IsOptional, IsBoolean, IsArray, IsString, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { NotificationGroup, NotificationChannel } from './notification-group.js';
-
-export interface INotificationGroupChannels {
-    [NotificationChannel.IN_APP]: boolean;
-    [NotificationChannel.PUSH]: boolean;
-    [NotificationChannel.EMAIL]: boolean;
-}
-
-export interface INotificationPreferences {
-    globalMute: boolean;
-    groups: Record<NotificationGroup, INotificationGroupChannels>;
-}
+import { NotificationGroup } from './notification-group.js';
 
 export class NotificationGroupPreferenceDto {
     @IsEnum(NotificationGroup)

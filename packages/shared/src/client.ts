@@ -96,6 +96,8 @@ export {
 export type {
     INotificationGroupChannels,
     INotificationPreferences,
+} from './notification/notification-preferences.type.js';
+export type {
     UpdateNotificationPreferencesDto,
     RegisterPushSubscriptionDto,
 } from './notification/notification-preferences.dto.js';
