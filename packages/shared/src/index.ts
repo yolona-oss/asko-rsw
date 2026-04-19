@@ -9,6 +9,7 @@ export * from './dealer/index.js';
 export * from './device/index.js';
 export * from './image/index.js';
 export * from './notification/index.js';
+export * from './notification/notification-preferences.dto.js';
 export * from './payment/index.js';
 export * from './repair/index.js';
 export * from './repairer/index.js';
