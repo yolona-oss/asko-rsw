@@ -46,9 +46,10 @@ const nextConfig: NextConfig = {
       { source: '/api/chat/:path*', destination: 'http://localhost:4004/chat/:path*' },
       { source: '/api/notifications/:path*', destination: 'http://localhost:4004/notifications/:path*' },
       { source: '/api/socket.io/:path*', destination: 'http://localhost:4004/socket.io/:path*' },
+      // Auth Gateway (:4001) — users
+      { source: '/api/users/:path*', destination: 'http://localhost:4001/users/:path*' },
       // Content Gateway (:4005)
       { source: '/api/articles/:path*', destination: 'http://localhost:4005/articles/:path*' },
-      { source: '/api/users/:path*', destination: 'http://localhost:4005/users/:path*' },
       // Health
       { source: '/api/health', destination: 'http://localhost:4001/health' },
     ],
