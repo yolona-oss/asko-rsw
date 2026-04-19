@@ -81,7 +81,7 @@ export function ProfileForm() {
   // Form guard
   type ProfileSnapshot = { fullName: string; email: string; phone: string; chatAcceptConversations: boolean; chatSearchable: boolean; privacyRules: PrivacyRules | null };
   const formState = useMemo<ProfileSnapshot>(
-    () => ({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules }),
+    () => ({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules: privacyRules ? JSON.parse(JSON.stringify(privacyRules)) : null }),
     [fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules],
   );
   const [initialState, setInitialState] = useState<ProfileSnapshot | undefined>(undefined);
@@ -266,7 +266,7 @@ export function ProfileForm() {
         text: messages.length > 0 ? messages.join('. ') : 'Профиль сохранён',
       });
       guard.markSaved();
-      setInitialState({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules });
+      setInitialState({ fullName, email, phone, chatAcceptConversations, chatSearchable, privacyRules: privacyRules ? JSON.parse(JSON.stringify(privacyRules)) : null });
     } catch {
       setMessage({ type: 'error', text: 'Не удалось сохранить профиль' });
     } finally {
