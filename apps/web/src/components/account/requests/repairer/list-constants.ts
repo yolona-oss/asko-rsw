@@ -1,17 +1,15 @@
 import { RepairRequestStatus } from '@asko/shared/client';
 import type { BadgeVariant, FilterDefinition } from '@asko/ui';
 
-export type TabKey = 'active' | 'all' | 'paused' | 'completed';
+export type TabKey = 'active' | 'completed';
 
 export const TAB_FILTER: FilterDefinition = {
   key: 'tab',
   label: 'Заявки',
   type: 'tabs',
   options: [
-    { value: 'active', label: 'Активная' },
-    { value: 'paused', label: 'Приостановленные' },
-    { value: 'all', label: 'Все' },
-    { value: 'completed', label: 'Завершенные' },
+    { value: 'active', label: 'Активные' },
+    { value: 'completed', label: 'Завершённые' },
   ],
 };
 

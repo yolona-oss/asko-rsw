@@ -10,6 +10,7 @@ import { scheduleApi } from '@/lib/api/schedule';
 import type { ScheduleEntryRecord } from '@/lib/api/schedule';
 import { computeStats } from '@/components/account/schedule/stats';
 import { Card, Button, Badge } from '@asko/ui';
+import type { BadgeVariant } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { RepairRequestStatus } from '@asko/shared/client';
@@ -23,8 +24,19 @@ function formatTime(date: Date): string {
 const STATUS_LABEL: Partial<Record<RepairRequestStatus, string>> = {
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
+  [RepairRequestStatus.EN_ROUTE]: 'В пути',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
+  [RepairRequestStatus.PAUSED]: 'Приостановлена',
   [RepairRequestStatus.AWAITING_COMPLETION]: 'Ожидает завершения',
+};
+
+const STATUS_BADGE_VARIANT: Partial<Record<RepairRequestStatus, BadgeVariant>> = {
+  [RepairRequestStatus.ASSIGNED]: 'warning',
+  [RepairRequestStatus.ACCEPTED]: 'warning',
+  [RepairRequestStatus.EN_ROUTE]: 'info',
+  [RepairRequestStatus.IN_PROGRESS]: 'info',
+  [RepairRequestStatus.PAUSED]: 'warning',
+  [RepairRequestStatus.AWAITING_COMPLETION]: 'info',
 };
 
 export function RepairerDashboard() {
@@ -34,7 +46,8 @@ export function RepairerDashboard() {
   const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [detectedAddress, setDetectedAddress] = useState<string | null>(null);
-  const [activeRequest, setActiveRequest] = useState<any | null>(null);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+  const [assignedRequests, setAssignedRequests] = useState<any[]>([]);
   const [completedCount, setCompletedCount] = useState<number | null>(null);
   const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntryRecord[]>([]);
 
@@ -83,10 +96,13 @@ export function RepairerDashboard() {
   useEffect(() => {
     repairRequestApi.getActive()
       .then(({ data }) => {
-        const req = data;
-        setActiveRequest(req?.id ? req : null);
+        if (data?.id) setActiveRequestId(data.id);
       })
-      .catch(() => setActiveRequest(null));
+      .catch(() => {});
+
+    repairRequestApi.getAssigned({ limit: 20 })
+      .then(({ data }) => setAssignedRequests(data?.data ?? []))
+      .catch(() => setAssignedRequests([]));
 
     repairRequestApi.getAssigned({ status: 'completed', limit: 1 })
       .then(({ data }) => setCompletedCount(data?.overallCount ?? 0))
@@ -155,27 +171,28 @@ export function RepairerDashboard() {
         </Card>
       )}
 
-      {/* Active request card */}
-      {activeRequest ? (
-        <Card className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[24px] font-medium leading-[28px] text-text-main">Текущая заявка</span>
-            <Badge variant="warning">
-              {STATUS_LABEL[activeRequest.status as RepairRequestStatus] ?? activeRequest.status}
-            </Badge>
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="text-[14px] leading-[18px] font-medium text-text-main">
-              {activeRequest.device?.name ?? activeRequest.userDeviceId}
-            </p>
-            <p className="text-[14px] leading-[18px] text-text-sub line-clamp-2">{activeRequest.description}</p>
-          </div>
-          <Link href="/account/requests">
-            <Button variant="primary" className="w-full lg:w-fit">
-              Открыть заявку
-            </Button>
-          </Link>
-        </Card>
+      {/* Assigned requests */}
+      {assignedRequests.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <span className="text-[24px] font-medium leading-[28px] text-text-main">Мои заявки</span>
+          {assignedRequests.map((req) => (
+            <Link key={req.id} href={`/account/requests/${req.id}`}>
+              <Card className={`flex flex-col gap-3 cursor-pointer hover:bg-surface-hover transition-colors${req.id === activeRequestId ? ' ring-2 ring-brand-red' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <p className="text-[14px] leading-[18px] font-medium text-text-main">
+                    {req.userDevice?.device?.name ?? req.description}
+                  </p>
+                  <Badge variant={STATUS_BADGE_VARIANT[req.status as RepairRequestStatus] ?? 'neutral'}>
+                    {STATUS_LABEL[req.status as RepairRequestStatus] ?? req.status}
+                  </Badge>
+                </div>
+                {req.address?.city && (
+                  <p className="text-[14px] leading-[18px] text-text-sub">{req.address.city}</p>
+                )}
+              </Card>
+            </Link>
+          ))}
+        </div>
       ) : (
         <Card className="text-text-sub text-[14px] leading-[18px]">Нет активных заявок</Card>
       )}

@@ -6,7 +6,6 @@ import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/_shared/entity-detail-modal';
 import { RepairRequestDetail, fetchRepairRequestOne } from '@/components/account/requests/shared/repair-request-detail';
 import {
-  Card,
   Badge,
   DataToolbar,
   DataGrid,
@@ -139,9 +138,7 @@ export function RepairerRequests() {
       };
 
       let result;
-      if (activeTab === 'paused') {
-        result = await repairRequestApi.getPaused(params);
-      } else if (activeTab === 'completed') {
+      if (activeTab === 'completed') {
         result = await repairRequestApi.getAssigned({ ...params, status: RepairRequestStatus.COMPLETED });
       } else {
         result = await repairRequestApi.getAssigned(params);
@@ -175,7 +172,7 @@ export function RepairerRequests() {
     fetchRequests();
   }, [fetchRequests]);
 
-  const showActiveHighlight = activeTab === 'active' || activeTab === 'all';
+  const showActiveHighlight = activeTab === 'active';
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
@@ -202,82 +199,49 @@ export function RepairerRequests() {
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={view} onViewChange={setView} />}
       />
 
-      {/* Active request highlight */}
-      {activeTab === 'active' && activeRequest && (
-        <div className="mb-2">
-          <p className="text-sm font-bold text-text-main mb-2">Текущая активная заявка</p>
-          {view === 'card' ? (
+      {/* List */}
+      {view === 'table' ? (
+        <DataGrid
+          loading={loading}
+          columns={columns}
+          data={requests}
+          keyExtractor={(req) => req.id}
+          emptyContent="Нет заявок"
+          sortKey={sortBy ?? undefined}
+          sortOrder={sortOrder ?? undefined}
+          onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
+          onRowClick={detail.onRowClick}
+          onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
+          rowClassName={(req) =>
+            showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <span>Показано {requests.length} из {total}</span>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          }
+        />
+      ) : loading ? (
+        <p className="text-sm text-text-sub">Загрузка...</p>
+      ) : requests.length === 0 ? (
+        <p className="text-sm text-text-sub">Нет заявок</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {requests.map((req) => (
             <RequestCard
-              request={activeRequest}
-              payments={paymentsMap[activeRequest.id]}
-              highlight
-              onClick={() => detail.onRowClick(activeRequest)}
-              onDoubleClick={() => router.push(`/account/requests/${activeRequest.id}`)}
+              key={req.id}
+              request={req}
+              payments={paymentsMap[req.id]}
+              highlight={showActiveHighlight && activeRequest?.id === req.id}
+              onClick={() => detail.onRowClick(req)}
+              onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
             />
-          ) : (
-            <DataGrid
-              columns={columns}
-              data={[activeRequest]}
-              keyExtractor={(req) => req.id}
-              rowClassName={() => 'bg-brand-red/5'}
-              onRowClick={detail.onRowClick}
-              onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
-            />
-          )}
+          ))}
         </div>
       )}
 
-      {activeTab === 'active' && !activeRequest && !loading && (
-        <Card className="text-text-sub text-sm">Нет активных заявок</Card>
-      )}
-
-      {/* List */}
-      {activeTab !== 'active' && (
-        <>
-          {view === 'table' ? (
-            <DataGrid
-              loading={loading}
-              columns={columns}
-              data={requests}
-              keyExtractor={(req) => req.id}
-              emptyContent="Нет заявок"
-              sortKey={sortBy ?? undefined}
-              sortOrder={sortOrder ?? undefined}
-              onSort={(key, order) => { setSortBy(key); setSortOrder(order); setPage(1); }}
-              onRowClick={detail.onRowClick}
-              onRowDoubleClick={(req) => router.push(`/account/requests/${req.id}`)}
-              rowClassName={(req) =>
-                showActiveHighlight && activeRequest?.id === req.id ? 'bg-brand-red/5' : undefined
-              }
-              footer={
-                <div className="flex items-center justify-between w-full">
-                  <span>Показано {requests.length} из {total}</span>
-                  <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                </div>
-              }
-            />
-          ) : loading ? (
-            <p className="text-sm text-text-sub">Загрузка...</p>
-          ) : requests.length === 0 ? (
-            <p className="text-sm text-text-sub">Нет заявок</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {requests.map((req) => (
-                <RequestCard
-                  key={req.id}
-                  request={req}
-                  payments={paymentsMap[req.id]}
-                  highlight={showActiveHighlight && activeRequest?.id === req.id}
-                  onClick={() => detail.onRowClick(req)}
-                  onDoubleClick={() => router.push(`/account/requests/${req.id}`)}
-                />
-              ))}
-            </div>
-          )}
-
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
-        </>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="justify-center mt-6" />
       <EntityDetailModal
         open={detail.open}
         onClose={detail.onClose}

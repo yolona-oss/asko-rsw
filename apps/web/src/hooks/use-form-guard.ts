@@ -85,12 +85,18 @@ export function useFormGuard<T>(
   const onSaveRef = useRef(onSave);
   const onApplyDraftRef = useRef(onApplyDraft);
   const fieldLabelsRef = useRef(fieldLabels);
+  const initialStateRef = useRef(initialState);
+  const enabledRef = useRef(enabled);
+  const externalDirtyRef = useRef(externalDirty);
 
   currentStateRef.current = currentState;
   dirtyRef.current = dirty;
   onSaveRef.current = onSave;
   onApplyDraftRef.current = onApplyDraft;
   fieldLabelsRef.current = fieldLabels;
+  initialStateRef.current = initialState;
+  enabledRef.current = enabled;
+  externalDirtyRef.current = externalDirty;
 
   // --- localStorage draft ---
   const fullKey = STORAGE_KEYS.draft(storageKey);
@@ -108,14 +114,6 @@ export function useFormGuard<T>(
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
-  const saveDraft = useCallback(() => {
-    const entry: DraftEntry<T> = {
-      data: currentStateRef.current,
-      savedAt: Date.now(),
-    };
-    storage.setJSON(fullKey, entry);
-  }, [fullKey]);
-
   const removeDraft = useCallback(() => {
     storage.remove(fullKey);
     setDraft(null);
@@ -124,31 +122,40 @@ export function useFormGuard<T>(
   // --- Guard dialog logic ---
   const stayResolverRef = useRef<((v: boolean) => void) | null>(null);
 
+  /** Fresh dirty computation from refs — immune to stale render state. */
+  const isDirtyNow = useCallback((): boolean => {
+    if (!enabledRef.current) return false;
+    if (externalDirtyRef.current !== undefined) return externalDirtyRef.current;
+    const ini = initialStateRef.current;
+    return ini !== undefined && !deepEqual(currentStateRef.current, ini);
+  }, []);
+
   const snapshotChanges = useCallback(() => {
     const labels = fieldLabelsRef.current;
-    if (!labels || initialState === undefined) { setChanges(undefined); return; }
+    const ini = initialStateRef.current;
+    if (!labels || ini === undefined) { setChanges(undefined); return; }
     const cur = currentStateRef.current as Record<string, unknown>;
-    const ini = initialState as Record<string, unknown>;
+    const iniRec = ini as Record<string, unknown>;
     const result: string[] = [];
     for (const key of Object.keys(labels)) {
-      if (!deepEqual(cur[key], ini[key])) result.push(labels[key]);
+      if (!deepEqual(cur[key], iniRec[key])) result.push(labels[key]);
     }
     setChanges(result.length > 0 ? result : undefined);
-  }, [initialState]);
+  }, []);
 
   const requestLeave = useCallback((action: () => void) => {
-    if (!dirtyRef.current) {
+    if (!isDirtyNow()) {
       action();
       return;
     }
     pendingActionRef.current = action;
     snapshotChanges();
     setShowGuard(true);
-  }, [snapshotChanges]);
+  }, [isDirtyNow, snapshotChanges]);
 
   const confirmLeaveForContext = useCallback((): Promise<boolean> => {
     return new Promise((resolve) => {
-      if (!dirtyRef.current) {
+      if (!isDirtyNow()) {
         resolve(true);
         return;
       }
@@ -157,7 +164,7 @@ export function useFormGuard<T>(
       snapshotChanges();
       setShowGuard(true);
     });
-  }, [snapshotChanges]);
+  }, [isDirtyNow, snapshotChanges]);
 
   const handleSave = useCallback(async () => {
     const save = onSaveRef.current;
@@ -178,13 +185,12 @@ export function useFormGuard<T>(
   }, [removeDraft]);
 
   const handleDismiss = useCallback(() => {
-    saveDraft();
     setShowGuard(false);
     const action = pendingActionRef.current;
     pendingActionRef.current = null;
     stayResolverRef.current = null;
     action?.();
-  }, [saveDraft]);
+  }, []);
 
   const handleStay = useCallback(() => {
     setShowGuard(false);
@@ -241,13 +247,13 @@ export function useFormGuard<T>(
   useEffect(() => {
     const state = {
       get dirty() {
-        return dirtyRef.current;
+        return isDirtyNow();
       },
       confirmLeave: confirmLeaveForContext,
     };
     const unregister = register(state);
     return unregister;
-  }, [register, confirmLeaveForContext]);
+  }, [register, confirmLeaveForContext, isDirtyNow]);
 
   // --- beforeunload ---
   useEffect(() => {
@@ -266,7 +272,7 @@ export function useFormGuard<T>(
     window.history.pushState({ __formGuard: true }, '');
 
     const handler = () => {
-      if (!dirtyRef.current) return;
+      if (!isDirtyNow()) return;
       window.history.pushState({ __formGuard: true }, '');
       requestLeave(() => {
         window.history.go(-2);
@@ -280,7 +286,7 @@ export function useFormGuard<T>(
         window.history.back();
       }
     };
-  }, [dirty, enabled, requestLeave]);
+  }, [dirty, enabled, requestLeave, isDirtyNow]);
 
   // --- Render dialogs ---
   const guardDialog = useMemo(
