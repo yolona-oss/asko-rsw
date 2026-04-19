@@ -13,9 +13,9 @@ import {
 
 const VISIBILITY_LEVELS: { value: FieldVisibility; label: string; short: string }[] = [
     { value: FieldVisibility.PUBLIC, label: 'Все пользователи', short: 'Все' },
-    { value: FieldVisibility.AUTHENTICATED, label: 'Авторизованные пользователи', short: 'Авториз.' },
-    { value: FieldVisibility.SPECIFIC_ROLES, label: 'Только персонал (администраторы, менеджеры)', short: 'Персонал' },
-    { value: FieldVisibility.CONTACTS_ONLY, label: 'Только контакты', short: 'Контакты' },
+    { value: FieldVisibility.AUTHENTICATED, label: 'Зарегистрированные пользователи', short: 'Пользователи' },
+    { value: FieldVisibility.SPECIFIC_ROLES, label: 'Только сотрудники (администраторы, менеджеры)', short: 'Сотрудники' },
+    { value: FieldVisibility.CONTACTS_ONLY, label: 'Только ваши контакты', short: 'Контакты' },
     { value: FieldVisibility.PRIVATE, label: 'Только я', short: 'Скрыто' },
 ];
 
@@ -76,7 +76,7 @@ export function PrivacySection({
                     <Lock className="w-4 h-4 text-icon" />
                     <p className="text-sm font-medium text-text-main">Конфиденциальность</p>
                 </div>
-                <p className="text-xs text-text-sub/60 mt-1">Кто может видеть ваши данные. Администраторы видят всё.</p>
+                <p className="text-xs text-text-sub/60 mt-1">Кто может видеть ваши данные при просмотре профиля и в поиске. Участники ваших заявок на ремонт и сотрудники всегда видят необходимые данные.</p>
             </div>
 
             {/* Visibility controls */}
