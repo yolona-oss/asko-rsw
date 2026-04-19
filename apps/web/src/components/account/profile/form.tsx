@@ -222,7 +222,7 @@ export function ProfileForm() {
         settings: {
           chatAcceptConversations,
           chatSearchable,
-          privacyRules: privacyRules ?? undefined,
+          privacyRules: privacyRules ? JSON.parse(JSON.stringify(privacyRules)) : undefined,
         },
       } as any);
       queryClient.invalidateQueries({ queryKey: ['session'] });
