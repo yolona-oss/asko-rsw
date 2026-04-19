@@ -105,6 +105,26 @@ export const updateNotificationPreferences = createAsyncThunk(
     },
 );
 
+export const enableGroups = createAsyncThunk(
+    'preferences/enableGroups',
+    async (groups: readonly string[], { dispatch }) => {
+        const updates = groups.map(g => ({ group: g, in_app: true, push: false, email: false }));
+        dispatch(bulkSetGroups(updates));
+        const { data } = await notificationApi.updatePreferences({ groups: updates });
+        return data;
+    },
+);
+
+export const disableGroups = createAsyncThunk(
+    'preferences/disableGroups',
+    async (groups: readonly string[], { dispatch }) => {
+        const updates = groups.map(g => ({ group: g, in_app: false, push: false, email: false }));
+        dispatch(bulkSetGroups(updates));
+        const { data } = await notificationApi.updatePreferences({ groups: updates });
+        return data;
+    },
+);
+
 // ─── Slice ──────────────────────────────────────────────────────────
 
 const preferencesSlice = createSlice({

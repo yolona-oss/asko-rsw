@@ -45,9 +45,9 @@ export function ProfileForm() {
   const { user } = useAccount();
   const { user: authUser } = useAuth();
   const queryClient = useQueryClient();
-  const setLanguage = (lang: string) => reduxDispatch(setLanguageAction(lang as any));
   const reduxDispatch = useAppDispatch();
   const userSettings = useAppSelector(selectUserSettings);
+  const setLanguage = (lang: string) => reduxDispatch(setLanguageAction(lang as any));
 
   // Form state
   const [fullName, setFullName] = useState('');

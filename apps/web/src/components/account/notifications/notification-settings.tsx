@@ -22,14 +22,14 @@ import {
     selectAreEssentialsEnabled,
     selectAreAdditionalsEnabled,
     setGlobalMute,
-    bulkSetGroups,
     setGroupChannels,
     setSoundMuted,
     setReminderEnabled as setReminderAction,
     updateNotificationPreferences,
+    enableGroups as enableGroupsThunk,
+    disableGroups as disableGroupsThunk,
 } from '@/store/preferences-slice';
 import { usePushNotifications } from '@/lib/hooks/use-push-notifications';
-import type { AppDispatch } from '@/store/index';
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -43,28 +43,6 @@ function channelLabel(ch: NotificationChannel): string {
 
 function groupListLabel(groups: readonly NotificationGroup[]): string {
     return groups.map(g => groupLabel(g)).join(', ');
-}
-
-function enableGroups(dispatch: AppDispatch, groups: readonly NotificationGroup[]) {
-    const updates = groups.map(g => ({
-        group: g,
-        in_app: true,
-        push: false,
-        email: false,
-    }));
-    dispatch(bulkSetGroups(updates));
-    dispatch(updateNotificationPreferences({ groups: updates }));
-}
-
-function disableGroups(dispatch: AppDispatch, groups: readonly NotificationGroup[]) {
-    const updates = groups.map(g => ({
-        group: g,
-        in_app: false,
-        push: false,
-        email: false,
-    }));
-    dispatch(bulkSetGroups(updates));
-    dispatch(updateNotificationPreferences({ groups: updates }));
 }
 
 // ─── Compact: Essential/Additional toggles + sound ──────────────────
@@ -84,23 +62,23 @@ export function NotificationSettingsCompact() {
     const handleAllToggle = useCallback((enabled: boolean) => {
         if (enabled) {
             dispatch(setGlobalMute(false));
-            enableGroups(dispatch, [...ESSENTIAL_GROUPS, ...ADDITIONAL_GROUPS]);
+            dispatch(enableGroupsThunk([...ESSENTIAL_GROUPS, ...ADDITIONAL_GROUPS]));
         } else {
             dispatch(setGlobalMute(true));
-            enableGroups(dispatch, ESSENTIAL_GROUPS);
-            disableGroups(dispatch, ADDITIONAL_GROUPS);
+            dispatch(enableGroupsThunk(ESSENTIAL_GROUPS));
+            dispatch(disableGroupsThunk(ADDITIONAL_GROUPS));
             dispatch(updateNotificationPreferences({ globalMute: true }));
         }
     }, [dispatch]);
 
     const handleEssentialToggle = useCallback((enabled: boolean) => {
-        if (enabled) enableGroups(dispatch, ESSENTIAL_GROUPS);
-        else disableGroups(dispatch, ESSENTIAL_GROUPS);
+        if (enabled) dispatch(enableGroupsThunk(ESSENTIAL_GROUPS));
+        else dispatch(disableGroupsThunk(ESSENTIAL_GROUPS));
     }, [dispatch]);
 
     const handleAdditionalToggle = useCallback((enabled: boolean) => {
-        if (enabled) enableGroups(dispatch, ADDITIONAL_GROUPS);
-        else disableGroups(dispatch, ADDITIONAL_GROUPS);
+        if (enabled) dispatch(enableGroupsThunk(ADDITIONAL_GROUPS));
+        else dispatch(disableGroupsThunk(ADDITIONAL_GROUPS));
     }, [dispatch]);
 
     return (
@@ -224,8 +202,8 @@ export function NotificationSettingsExtended() {
         dispatch(setGlobalMute(muted));
         dispatch(updateNotificationPreferences({ globalMute: muted }));
         if (muted) {
-            enableGroups(dispatch, ESSENTIAL_GROUPS);
-            disableGroups(dispatch, ADDITIONAL_GROUPS);
+            dispatch(enableGroupsThunk(ESSENTIAL_GROUPS));
+            dispatch(disableGroupsThunk(ADDITIONAL_GROUPS));
         }
     };
 
