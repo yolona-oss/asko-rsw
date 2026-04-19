@@ -644,7 +644,7 @@ function NotificationList({
 }) {
   if (notifications.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 px-6">
+      <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 animate-[empty-state-in_400ms_ease-out]">
         <BellOff className="w-10 h-10 text-text-sub/30" />
         <p className="text-sm text-text-sub text-center">Нет новых уведомлений</p>
       </div>
@@ -689,7 +689,7 @@ function NotificationList({
 
             {/* Group items */}
             {isGroupOpen && (
-              <div className="border-t border-border-light/30">
+              <div className="border-t border-border-light/30 animate-[group-expand_250ms_ease-out] overflow-hidden">
                 {group.items.map((n, i) => (
                   <NotificationItem
                     key={n.id}
@@ -749,7 +749,7 @@ function NotificationItem({
         className="w-full flex items-start gap-3 text-left cursor-pointer pl-11 pr-4 py-2.5 hover:bg-surface-hover transition-colors"
       >
         {/* Unread dot */}
-        <span className="w-2 h-2 rounded-full bg-brand-red flex-shrink-0 mt-1.5 -ml-5" />
+        <span className="w-2 h-2 rounded-full bg-brand-red flex-shrink-0 mt-1.5 -ml-5 animate-[unread-pulse_2s_ease-in-out_infinite]" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-medium text-text-main leading-tight">
             {n.title}

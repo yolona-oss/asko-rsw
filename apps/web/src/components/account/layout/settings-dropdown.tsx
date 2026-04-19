@@ -27,6 +27,7 @@ export function SettingsDropdown() {
   const { theme, toggle: toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { getGuard } = useFormGuardContext();
+  const [isOpen, setIsOpen] = useState(false);
 
   const [notifMuted, toggleNotifMute] = useSoundMute('notification');
   const [chatMuted, toggleChatMute] = useSoundMute('chat');
@@ -67,13 +68,15 @@ export function SettingsDropdown() {
           title="Настройки"
           aria-label="Настройки"
         >
-          <Settings className="w-5 h-5" />
+          <Settings className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
         </button>
       }
       placement="bottom-end"
       contentClassName="w-[280px]"
+      open={isOpen}
+      onOpenChange={setIsOpen}
     >
-      <div className="bg-surface border border-border-light shadow-lg">
+      <div className="bg-surface border border-border-light shadow-lg animate-[dropdown-in_200ms_ease-out]">
         {/* Theme + Language */}
         <div className="px-3 py-2 flex flex-col gap-2">
           <button
