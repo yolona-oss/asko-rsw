@@ -3,10 +3,11 @@
 import { lazy, Suspense } from 'react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
+import { SoundSettingsSection } from '@/components/account/profile/sound-settings-section';
 
-const NotificationSettings = lazy(() =>
+const NotificationSettingsExtended = lazy(() =>
   import('@/components/account/notifications/notification-settings').then(m => ({
-    default: m.NotificationSettings,
+    default: m.NotificationSettingsExtended,
   })),
 );
 
@@ -20,8 +21,11 @@ export default function SettingsPage() {
           <div className="h-64 bg-skeleton animate-pulse" />
         </div>
       }>
-        <NotificationSettings />
+        <NotificationSettingsExtended />
       </Suspense>
+      <div className="border-t border-border-divider pt-6">
+        <SoundSettingsSection />
+      </div>
     </PageContainer>
   );
 }

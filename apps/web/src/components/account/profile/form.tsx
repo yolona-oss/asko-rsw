@@ -24,6 +24,7 @@ import { PasswordSection } from './password-section';
 import { SessionsSection } from './sessions-section';
 import { LanguageSection } from './language-section';
 import { AddressesSection } from './addresses-section';
+import { NotificationSettingsSection } from './notification-settings-section';
 
 import {
   RUSSIAN_NAMES,
@@ -363,6 +364,10 @@ export function ProfileForm() {
             } catch { /* handled by interceptor */ }
           }}
         />
+
+        {/* Notifications & Sound */}
+        <div className="h-px bg-border-light" />
+        <NotificationSettingsSection />
 
         {/* Chat privacy */}
         <div className="h-px bg-border-light" />

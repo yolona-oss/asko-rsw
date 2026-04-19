@@ -20,6 +20,7 @@ import { useSoundMute } from '@/lib/hooks/use-sound-mute';
 import { isReminderEnabled, setReminderEnabled, MUTE_CHANGE_EVENT } from '@/lib/sound';
 import { usersApi } from '@/lib/api/users';
 import { useFormGuardContext } from './form-guard-context';
+import { NotificationSettingsCompact } from '../notifications/notification-settings';
 import type { Locale } from '@asko/shared/client';
 
 export function SettingsDropdown() {
@@ -105,10 +106,21 @@ export function SettingsDropdown() {
 
         <div className="border-t border-border-divider" />
 
+        {/* Notification channel preferences (compact) */}
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-2 py-1 mb-1">
+            <Bell className="w-3.5 h-3.5 text-icon" />
+            <span className="text-xs font-medium text-text-sub uppercase tracking-wide">Уведомления</span>
+          </div>
+          <NotificationSettingsCompact />
+        </div>
+
+        <div className="border-t border-border-divider" />
+
         {/* Sound settings */}
         <div className="px-3 py-2 flex flex-col gap-2">
           <div className="flex items-center gap-2 py-1">
-            <Bell className="w-3.5 h-3.5 text-icon" />
+            <Volume2 className="w-3.5 h-3.5 text-icon" />
             <span className="text-xs font-medium text-text-sub uppercase tracking-wide">Звук</span>
           </div>
           <div className="flex items-center justify-between gap-3 py-1">
@@ -142,10 +154,10 @@ export function SettingsDropdown() {
         {/* All settings link */}
         <button
           type="button"
-          onClick={() => guardedPush('/account/profile')}
+          onClick={() => { setIsOpen(false); guardedPush('/account/settings'); }}
           className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-text-sub hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
         >
-          <span>Все настройки</span>
+          <span>Подробные настройки</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>

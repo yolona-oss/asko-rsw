@@ -15,7 +15,6 @@ import {
 import { notificationApi } from '@/lib/api/notification';
 import type { NotificationPreferencesResponse } from '@/lib/api/notification';
 import { usePushNotifications } from '@/lib/hooks/use-push-notifications';
-import { SoundSettingsSection } from '../profile/sound-settings-section';
 
 const GROUPS = Object.values(NotificationGroup);
 const CHANNELS = Object.values(NotificationChannel);
@@ -28,11 +27,12 @@ function groupLabel(group: NotificationGroup): string {
     return t(NOTIFICATION_GROUP_MSG_KEYS[group]);
 }
 
-export function NotificationSettings() {
-    const queryClient = useQueryClient();
-    const push = usePushNotifications();
+// ─── Shared hook for preferences query + mutation ───────────────────
 
-    const { data: prefsData, isLoading } = useQuery({
+export function useNotificationPreferences() {
+    const queryClient = useQueryClient();
+
+    const { data: prefs, isLoading } = useQuery({
         queryKey: ['notification-preferences'],
         queryFn: () => notificationApi.getPreferences().then(r => r.data),
     });
@@ -66,8 +66,6 @@ export function NotificationSettings() {
         },
     });
 
-    const prefs = prefsData as NotificationPreferencesResponse | undefined;
-
     const getGroupChannel = useCallback((group: string, channel: NotificationChannel): boolean => {
         if (!prefs) return true;
         const g = prefs.groups.find(g => g.group === group);
@@ -77,21 +75,87 @@ export function NotificationSettings() {
         return g.email;
     }, [prefs]);
 
-    const handleGlobalMuteToggle = useCallback((checked: boolean) => {
-        mutation.mutate({ globalMute: checked });
+    const isGroupFullyEnabled = useCallback((group: string): boolean => {
+        if (!prefs) return true;
+        const g = prefs.groups.find(g => g.group === group);
+        if (!g) return true;
+        return g.in_app && g.push;
+    }, [prefs]);
+
+    const toggleGroup = useCallback((group: string, enabled: boolean) => {
+        mutation.mutate({
+            groups: [{ group, in_app: enabled, push: enabled, email: false }],
+        });
     }, [mutation]);
 
-    const handleGroupChannelToggle = useCallback((group: string, channel: NotificationChannel, value: boolean) => {
+    const toggleGroupChannel = useCallback((group: string, channel: NotificationChannel, value: boolean) => {
         const current = prefs?.groups.find(g => g.group === group);
-        const base = current ?? { group, in_app: true, push: true, email: true };
-        const updated = {
-            group,
-            in_app: channel === NotificationChannel.IN_APP ? value : base.in_app,
-            push: channel === NotificationChannel.PUSH ? value : base.push,
-            email: channel === NotificationChannel.EMAIL ? value : base.email,
-        };
-        mutation.mutate({ groups: [updated] });
+        const base = current ?? { group, in_app: true, push: true, email: false };
+        mutation.mutate({
+            groups: [{
+                group,
+                in_app: channel === NotificationChannel.IN_APP ? value : base.in_app,
+                push: channel === NotificationChannel.PUSH ? value : base.push,
+                email: channel === NotificationChannel.EMAIL ? value : base.email,
+            }],
+        });
     }, [mutation, prefs]);
+
+    const toggleGlobalMute = useCallback((muted: boolean) => {
+        mutation.mutate({ globalMute: muted });
+    }, [mutation]);
+
+    return {
+        prefs,
+        isLoading,
+        getGroupChannel,
+        isGroupFullyEnabled,
+        toggleGroup,
+        toggleGroupChannel,
+        toggleGlobalMute,
+    };
+}
+
+// ─── Compact view: simple per-group toggles ─────────────────────────
+
+export function NotificationSettingsCompact() {
+    const { prefs, isLoading, isGroupFullyEnabled, toggleGroup, toggleGlobalMute } = useNotificationPreferences();
+
+    if (isLoading) return null;
+
+    const globalMuted = prefs?.globalMute ?? false;
+
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3 py-1">
+                <span className="text-sm text-text-main flex items-center gap-2.5">
+                    {globalMuted
+                        ? <BellOff className="w-4 h-4 text-icon" />
+                        : <Bell className="w-4 h-4 text-icon" />}
+                    {t(msg.notify.settings.globalMute)}
+                </span>
+                <Toggle checked={globalMuted} onChange={toggleGlobalMute} />
+            </div>
+            <div className={`flex flex-col gap-1.5 pl-[26px] transition-opacity ${globalMuted ? 'opacity-40 pointer-events-none' : ''}`}>
+                {GROUPS.map(group => (
+                    <div key={group} className="flex items-center justify-between gap-3 py-0.5">
+                        <span className="text-sm text-text-main">{groupLabel(group)}</span>
+                        <Toggle
+                            checked={isGroupFullyEnabled(group)}
+                            onChange={(v) => toggleGroup(group, v)}
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─── Extended view: full channel matrix ──────────────────────────────
+
+export function NotificationSettingsExtended() {
+    const push = usePushNotifications();
+    const { prefs, isLoading, getGroupChannel, toggleGroupChannel, toggleGlobalMute } = useNotificationPreferences();
 
     if (isLoading) {
         return (
@@ -105,7 +169,7 @@ export function NotificationSettings() {
     const globalMuted = prefs?.globalMute ?? false;
 
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
             {/* Global mute */}
             <div className="flex items-center justify-between gap-4 p-4 bg-surface border border-border">
                 <div className="flex items-center gap-3">
@@ -123,7 +187,7 @@ export function NotificationSettings() {
                         </p>
                     </div>
                 </div>
-                <Toggle checked={globalMuted} onChange={handleGlobalMuteToggle} />
+                <Toggle checked={globalMuted} onChange={toggleGlobalMute} />
             </div>
 
             {/* Channel matrix */}
@@ -168,7 +232,7 @@ export function NotificationSettings() {
                                                 <div className="flex justify-center">
                                                     <Toggle
                                                         checked={getGroupChannel(group, ch)}
-                                                        onChange={(v) => handleGroupChannelToggle(group, ch, v)}
+                                                        onChange={(v) => toggleGroupChannel(group, ch, v)}
                                                     />
                                                 </div>
                                             )}
@@ -179,11 +243,6 @@ export function NotificationSettings() {
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            {/* Sound settings */}
-            <div className="border-t border-border-divider pt-6">
-                <SoundSettingsSection />
             </div>
         </div>
     );
