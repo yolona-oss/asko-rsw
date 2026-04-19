@@ -26,7 +26,6 @@ import { useAutoReset } from '@/lib/hooks/use-auto-reset';
 import type { StatusMessage } from './types';
 import { ProfileFormSkeleton } from '@/components/skeleton';
 import { AvatarSection } from './avatar-section';
-import { ChatPreferencesSection } from './chat-preferences-section';
 import { PrivacySection } from './privacy-section';
 import { MfaSection } from './mfa-section';
 import { LoginMethodsSection } from './login-methods-section';
@@ -397,35 +396,28 @@ export function ProfileForm() {
         <div className="h-px bg-border-light" />
         <NotificationSettingsSection />
 
-        {/* Chat privacy */}
+        {/* Privacy & Chat */}
         <div className="h-px bg-border-light" />
-        <ChatPreferencesSection
+        <PrivacySection
+          privacyRules={privacyRules}
+          setPrivacyRules={setPrivacyRules}
           chatAcceptConversations={chatAcceptConversations}
           setChatAcceptConversations={setChatAcceptConversations}
           chatSearchable={chatSearchable}
           setChatSearchable={setChatSearchable}
         />
 
-        {/* Privacy settings */}
-        <div className="h-px bg-border-light" />
-        <PrivacySection
-          privacyRules={privacyRules}
-          setPrivacyRules={setPrivacyRules}
-        />
-
         {/* Language */}
         <div className="h-px bg-border-light" />
         <LanguageSection />
 
-        {/* MFA */}
+        {/* Security */}
         <div className="h-px bg-border-light" />
         <MfaSection emailVerified={emailVerified} />
-
-        {/* Change password */}
         <div className="h-px bg-border-light" />
         <PasswordSection />
 
-        {/* Active sessions */}
+        {/* Sessions */}
         <div className="h-px bg-border-light" />
         <SessionsSection />
 
