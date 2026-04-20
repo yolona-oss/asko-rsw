@@ -106,7 +106,7 @@ export function LoginMethodsSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-base font-medium text-text-main">Способы входа</h3>
+      <p className="text-sm font-medium text-text-main">Способы входа</p>
 
       <div className="flex flex-col gap-1">
         {/* Email + Password */}

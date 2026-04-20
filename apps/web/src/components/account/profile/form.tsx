@@ -301,9 +301,7 @@ export function ProfileForm() {
     return (
       <PageContainer>
         <PageHeader>Профиль</PageHeader>
-        <Card>
-          <ProfileFormSkeleton />
-        </Card>
+        <ProfileFormSkeleton />
       </PageContainer>
     );
   }
@@ -314,126 +312,129 @@ export function ProfileForm() {
     <>
       <PageContainer>
         <PageHeader>Профиль</PageHeader>
+
+        {/* Personal info */}
         <Card>
           <div className="flex flex-col gap-6 lg:gap-8">
-        {/* Avatar section */}
-        <AvatarSection
-          displayAvatar={displayAvatar}
-          firstName={fullName.split(/\s+/)[1] ?? fullName.split(/\s+/)[0] ?? ''}
-          userFirstName={user?.firstName}
-          uploadingAvatar={uploadingAvatar}
-          dragOver={dragOver}
-          setDragOver={setDragOver}
-          onFile={handleFile}
-        />
-
-        {/* Separator */}
-        <div className="h-px bg-border-light" />
-
-        {/* Form fields */}
-        <div className="flex flex-col gap-6">
-          <FormField label="ФИО">
-            <NameInput
-              type="text"
-              names={RUSSIAN_NAMES}
-              surnames={RUSSIAN_SURNAMES}
-              patronymics={RUSSIAN_PATRONYMICS}
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Фамилия Имя Отчество"
+            <AvatarSection
+              displayAvatar={displayAvatar}
+              firstName={fullName.split(/\s+/)[1] ?? fullName.split(/\s+/)[0] ?? ''}
+              userFirstName={user?.firstName}
+              uploadingAvatar={uploadingAvatar}
+              dragOver={dragOver}
+              setDragOver={setDragOver}
+              onFile={handleFile}
             />
-          </FormField>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FormField label="Email">
-              <EmailInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@mail.com" />
-            </FormField>
-            <FormField label="Телефон">
-              <PhoneInput value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 (999) 123-45-67" />
-            </FormField>
-          </div>
-        </div>
-
-        {/* Addresses */}
-        <div className="h-px bg-border-light" />
-        <AddressesSection />
-
-        {/* Login methods */}
-        <div className="h-px bg-border-light" />
-        <LoginMethodsSection
-          providers={providers}
-          email={email}
-          emailVerified={emailVerified}
-          phone={phone}
-          onPhoneVerified={() => {
-            usersApi.getProfile().then(({ data }) => {
-              setProviders(data.providers ?? []);
-              originalPhoneVerified.current = data.phoneVerified ?? false;
-            });
-          }}
-          onResendEmailConfirmation={handleResendConfirmation}
-          resendingEmail={resendingEmail}
-          emailResendCooldown={emailResendCooldown}
-          phoneChangePending={phoneChangePending}
-          onPhoneChangeConfirmed={() => {
-            setPhoneChangePending(false);
-            // Reload profile to get the new phone + providers
-            usersApi.getProfile().then(({ data }) => {
-              setPhone(data.phone ?? '');
-              setProviders(data.providers ?? []);
-              originalPhone.current = data.phone ?? '';
-              originalPhoneVerified.current = data.phoneVerified ?? false;
-            });
-          }}
-          onUnlinkOAuth={async (provider) => {
-            try {
-              await authApi.unlinkOAuth(provider);
-              setProviders((prev) => prev.filter((p) => p !== provider.toUpperCase()));
-            } catch { /* handled by interceptor */ }
-          }}
-        />
-
-        {/* Notifications & Sound */}
-        <div className="h-px bg-border-light" />
-        <NotificationSettingsSection />
-
-        {/* Privacy & Chat */}
-        <div className="h-px bg-border-light" />
-        <PrivacySection
-          privacyRules={privacyRules}
-          setPrivacyRules={setPrivacyRules}
-          chatAcceptConversations={chatAcceptConversations}
-          setChatAcceptConversations={setChatAcceptConversations}
-          chatSearchable={chatSearchable}
-          setChatSearchable={setChatSearchable}
-        />
-
-        {/* Language */}
-        <div className="h-px bg-border-light" />
-        <LanguageSection />
-
-        {/* Security */}
-        <div className="h-px bg-border-light" />
-        <MfaSection emailVerified={emailVerified} />
-        <div className="h-px bg-border-light" />
-        <PasswordSection />
-
-        {/* Sessions */}
-        <div className="h-px bg-border-light" />
-        <SessionsSection />
-
-        {/* Message + Save */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? 'Сохранение...' : 'Сохранить'}
-          </Button>
-          <EditedMark visible={guard.dirty} />
-          {message && (
-            <p className={`text-sm ${message.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
-              {message.text}
-            </p>
-          )}
+            <div className="h-px bg-border-light" />
+            <div className="flex flex-col gap-6">
+              <FormField label="ФИО">
+                <NameInput
+                  type="text"
+                  names={RUSSIAN_NAMES}
+                  surnames={RUSSIAN_SURNAMES}
+                  patronymics={RUSSIAN_PATRONYMICS}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Фамилия Имя Отчество"
+                />
+              </FormField>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <FormField label="Email">
+                  <EmailInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@mail.com" />
+                </FormField>
+                <FormField label="Телефон">
+                  <PhoneInput value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 (999) 123-45-67" />
+                </FormField>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <Button onClick={handleSave} disabled={saving} size="lg">
+                {saving ? 'Сохранение...' : 'Сохранить'}
+              </Button>
+              <EditedMark visible={guard.dirty} />
+              {message && (
+                <p className={`text-sm ${message.type === 'success' ? 'text-success' : 'text-brand-red'}`}>
+                  {message.text}
+                </p>
+              )}
             </div>
           </div>
+        </Card>
+
+        {/* Addresses */}
+        <Card>
+          <AddressesSection />
+        </Card>
+
+        {/* Login methods */}
+        <Card>
+          <LoginMethodsSection
+            providers={providers}
+            email={email}
+            emailVerified={emailVerified}
+            phone={phone}
+            onPhoneVerified={() => {
+              usersApi.getProfile().then(({ data }) => {
+                setProviders(data.providers ?? []);
+                originalPhoneVerified.current = data.phoneVerified ?? false;
+              });
+            }}
+            onResendEmailConfirmation={handleResendConfirmation}
+            resendingEmail={resendingEmail}
+            emailResendCooldown={emailResendCooldown}
+            phoneChangePending={phoneChangePending}
+            onPhoneChangeConfirmed={() => {
+              setPhoneChangePending(false);
+              usersApi.getProfile().then(({ data }) => {
+                setPhone(data.phone ?? '');
+                setProviders(data.providers ?? []);
+                originalPhone.current = data.phone ?? '';
+                originalPhoneVerified.current = data.phoneVerified ?? false;
+              });
+            }}
+            onUnlinkOAuth={async (provider) => {
+              try {
+                await authApi.unlinkOAuth(provider);
+                setProviders((prev) => prev.filter((p) => p !== provider.toUpperCase()));
+              } catch { /* handled by interceptor */ }
+            }}
+          />
+        </Card>
+
+        {/* Notifications & Sound */}
+        <Card>
+          <NotificationSettingsSection />
+        </Card>
+
+        {/* Privacy & Chat */}
+        <Card>
+          <PrivacySection
+            privacyRules={privacyRules}
+            setPrivacyRules={setPrivacyRules}
+            chatAcceptConversations={chatAcceptConversations}
+            setChatAcceptConversations={setChatAcceptConversations}
+            chatSearchable={chatSearchable}
+            setChatSearchable={setChatSearchable}
+          />
+        </Card>
+
+        {/* Language */}
+        <Card>
+          <LanguageSection />
+        </Card>
+
+        {/* Security */}
+        <Card>
+          <div className="flex flex-col gap-6 lg:gap-8">
+            <MfaSection emailVerified={emailVerified} />
+            <div className="h-px bg-border-light" />
+            <PasswordSection />
+          </div>
+        </Card>
+
+        {/* Sessions */}
+        <Card>
+          <SessionsSection />
         </Card>
       </PageContainer>
 
