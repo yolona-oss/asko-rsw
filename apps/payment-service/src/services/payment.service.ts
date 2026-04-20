@@ -42,6 +42,10 @@ export class PaymentService {
         return new Date(Date.now() + this.appConfig.payment.expirationMinutes * 60 * 1000);
     }
 
+    private getWebhookUrl(providerType: string): string {
+        return `${this.appConfig.payment.webhookBaseUrl}/${providerType}`;
+    }
+
     /** Return enabled providers to frontend */
     getOptions() {
         return this.providerService.getOptions();
@@ -126,7 +130,7 @@ export class PaymentService {
                         if (paid.provider && paid.providerPaymentId) {
                             const provider = this.providerService.getProvider(paid.provider);
                             if (provider) {
-                                await provider.refund(paid.providerPaymentId, refundAmount);
+                                await provider.refund(paid.providerPaymentId, refundAmount, paid.currency);
                             }
                         }
 
@@ -227,6 +231,8 @@ export class PaymentService {
             amount: invoice.amount,
             currency: invoice.currency,
             description: `Payment for ${targetType} ${targetId}`,
+            returnUrl: this.appConfig.payment.returnUrl,
+            webhookUrl: this.getWebhookUrl(providerType),
         });
 
         invoice.providerPaymentId = result.externalId;
@@ -322,6 +328,8 @@ export class PaymentService {
                 amount: dto.amount,
                 currency: dto.currency ?? CurrencyEnum.DEFAULT,
                 description: `Payout for ${dto.targetType} ${dto.targetId}`,
+                returnUrl: this.appConfig.payment.returnUrl,
+                webhookUrl: this.getWebhookUrl(providerType),
             });
 
             paymentRecord.providerPaymentId = result.externalId;
@@ -416,6 +424,8 @@ export class PaymentService {
                 amount: dto.amount,
                 currency: dto.currency ?? CurrencyEnum.DEFAULT,
                 description: `Payment for ${dto.targetType} ${dto.targetId}`,
+                returnUrl: this.appConfig.payment.returnUrl,
+                webhookUrl: this.getWebhookUrl(providerType),
             });
 
             paymentRecord.providerPaymentId = result.externalId;
@@ -535,7 +545,7 @@ export class PaymentService {
         if (payment.provider && payment.providerPaymentId) {
             const provider = this.providerService.getProvider(payment.provider);
             if (provider) {
-                await provider.refund(payment.providerPaymentId, refundAmount);
+                await provider.refund(payment.providerPaymentId, refundAmount, payment.currency);
             }
         }
 

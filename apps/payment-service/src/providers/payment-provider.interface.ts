@@ -3,6 +3,8 @@ export interface CreateProviderPaymentInput {
     currency: string;
     description?: string;
     metadata?: Record<string, string>;
+    returnUrl: string;
+    webhookUrl: string;
 }
 
 export interface ProviderPaymentResult {
@@ -35,5 +37,5 @@ export interface PaymentProvider {
     createPayout(input: CreateProviderPaymentInput): Promise<PayoutResult>;
     verifyWebhook(body: any, headers?: Record<string, string>): boolean;
     handleWebhook(body: any, headers?: Record<string, string>): Promise<WebhookResult>;
-    refund(externalId: string, amount?: number): Promise<RefundResult>;
+    refund(externalId: string, amount: number, currency: string): Promise<RefundResult>;
 }

@@ -35,7 +35,7 @@ export class CashProvider implements PaymentProvider {
         return { externalId: '', paid: false, failed: false };
     }
 
-    async refund(externalId: string): Promise<RefundResult> {
+    async refund(externalId: string, _amount: number, _currency: string): Promise<RefundResult> {
         return { success: true, externalId };
     }
 }

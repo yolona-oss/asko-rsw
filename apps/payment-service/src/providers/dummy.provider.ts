@@ -39,7 +39,7 @@ export class DummyProvider implements PaymentProvider {
         private readonly paymentService: PaymentService,
     ) {}
 
-    async createPayment(_input: CreateProviderPaymentInput): Promise<ProviderPaymentResult> {
+    async createPayment(input: CreateProviderPaymentInput): Promise<ProviderPaymentResult> {
         await sleep(
             DummyProvider.randomLatency(
                 DummyProvider.CREATE_LATENCY_MIN,
@@ -56,7 +56,7 @@ export class DummyProvider implements PaymentProvider {
         return {
             externalId,
             paid: false,
-            redirectUrl: `dummy-checkout://confirm?externalId=${externalId}`,
+            redirectUrl: input.returnUrl || `dummy-checkout://confirm?externalId=${externalId}`,
         };
     }
 
@@ -88,7 +88,7 @@ export class DummyProvider implements PaymentProvider {
         };
     }
 
-    async refund(externalId: string): Promise<RefundResult> {
+    async refund(externalId: string, _amount: number, _currency: string): Promise<RefundResult> {
         await sleep(
             DummyProvider.randomLatency(
                 DummyProvider.REFUND_LATENCY_MIN,

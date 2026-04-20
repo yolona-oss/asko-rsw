@@ -3,14 +3,14 @@ import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { Public } from '@asko/gateway-common';
 
-@ApiTags('Webhooks')
-@Controller('webhook')
+@ApiTags('Payment Webhooks')
+@Controller('payment/webhook')
 export class WebhookController {
     constructor(private readonly paymentService: PaymentClientService) {}
 
     @Public()
     @ApiOkResponse({ description: 'Webhook acknowledged' })
-    @Post('payment/:provider')
+    @Post(':provider')
     async handlePaymentWebhook(
         @Param('provider') provider: string,
         @Body() body: any,
