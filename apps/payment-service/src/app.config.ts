@@ -38,7 +38,7 @@ export class AppConfig {
             expirationMinutes: parseInt(this.configService.get<string>('PAYMENT_EXPIRATION_MINUTES') || '') || 30,
             enableDummy: this.configService.get<string>('PAYMENT_ENABLE_DUMMY') === 'true',
             webhookBaseUrl: this.configService.get<string>('PAYMENT_WEBHOOK_BASE_URL') ?? 'http://localhost:4002/payment/webhook',
-            returnUrl: this.configService.get<string>('PAYMENT_RETURN_URL') ?? 'http://localhost:3000',
+            returnUrl: this.configService.get<string>('PAYMENT_RETURN_URL') ?? 'http://localhost:3000/account/payments/result',
             yookassa: {
                 shopId: this.configService.get<string>('YOOKASSA_SHOP_ID'),
                 secret: this.configService.get<string>('YOOKASSA_SECRET'),

@@ -74,14 +74,10 @@ export function PaymentModal({
     }
   }, [options, selectedProvider]);
 
-  // Handle payment result.
-  // - Real providers: redirectUrl → navigate to hosted checkout.
-  // - Dummy provider: returns { status: 'pending', redirectUrl: dummy-checkout://... }
-  //   and asynchronously confirms via a simulated webhook ~2-4s later. Show a
-  //   waiting state and auto-close once the webhook is expected to have fired.
   useEffect(() => {
     if (!result) return;
     if (result.redirectUrl && !result.redirectUrl.startsWith('dummy-checkout://')) {
+      sessionStorage.setItem('payment_return_url', window.location.href);
       window.location.assign(result.redirectUrl);
       return;
     }
