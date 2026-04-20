@@ -21,14 +21,14 @@ import { PaymentSummary } from '@/components/account/payments/shared/payment-sum
 import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/certificates/shared/certificate-applied-badge';
-import { RequestChat } from '@/components/account/requests/manager/request-chat';
+import { SingleConversation } from '@/components/chat/single-conversation';
 import { Trash2 } from 'lucide-react';
 import { formatDateTime } from '@asko/shared/client';
 import { STEP_STATUS_LABEL, STEP_STATUS_BADGE_VARIANT, STEP_BLOCK_CLASS, STATUS_BADGE_VARIANT, STATUS_LABELS } from './detail-constants';
 import { AvrModal } from './avr-modal';
 import type { RepairRequestRecord, WorkStepRecord, PaymentRecord } from '@/lib/api/types';
 
-type RequestState = RepairRequestRecord & { conversationId?: string; statusBeforePause?: string };
+type RequestState = RepairRequestRecord & { statusBeforePause?: string };
 
 // ── Main Component ──
 
@@ -596,7 +596,7 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
           </div>
           {chatOpen && (
             <div className="border border-border-main overflow-hidden">
-              <RequestChat conversationId={request.conversationId} currentUserId={currentUserId} />
+              <SingleConversation conversationId={request.conversationId} currentUserId={currentUserId} />
             </div>
           )}
         </Card>

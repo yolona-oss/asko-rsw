@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
-import { chatApi } from '@/lib/api/chat';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectMessagesForConversation, selectMessagePagination, fetchMessages } from '@/store/chat';
 import { MessageBubble } from './message-bubble';
-import type { ChatMessageRecord, ChatParticipantRecord } from '@/lib/api/types';
+import type { ChatParticipantRecord } from '@/lib/api/types';
 
 interface MessageListProps {
   conversationId: string;
   currentUserId: string;
   isGroup: boolean;
-  realtimeMessages: ChatMessageRecord[];
   participantNames: Record<string, string>;
   participantRoles: Record<string, string>;
   readPositions: Record<string, string>;
@@ -22,77 +21,52 @@ export function MessageList({
   conversationId,
   currentUserId,
   isGroup,
-  realtimeMessages,
   participantNames,
   participantRoles,
   readPositions,
   participants,
 }: MessageListProps) {
+  const dispatch = useAppDispatch();
   const bottomRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initialScrollDone = useRef(false);
   const loadingOlder = useRef(false);
-  const [olderMessages, setOlderMessages] = useState<ChatMessageRecord[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  const MESSAGES_LIMIT = 50;
+  const allMessages = useAppSelector(state => selectMessagesForConversation(state, conversationId));
+  const pagination = useAppSelector(state => selectMessagePagination(state, conversationId));
+  const { hasMore, loading: loadingMore } = pagination;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['chat-messages', conversationId],
-    queryFn: async () => {
-      const { data } = await chatApi.listMessages(conversationId, { limit: MESSAGES_LIMIT });
-      return data;
-    },
-  });
-
-  const fetchedMessages = data?.data ?? [];
-
-  // If the initial fetch returned fewer than the limit, all messages are already loaded
+  // Fetch initial messages
   useEffect(() => {
-    if (data && (data.data?.length ?? 0) < MESSAGES_LIMIT) {
-      setHasMore(false);
-    }
-  }, [data]);
+    dispatch(fetchMessages({ conversationId }));
+  }, [conversationId, dispatch]);
 
-  // Combine all messages: older loaded + initial fetch + realtime
-  const allMessages = useMemo(() => {
-    const seen = new Set<string>();
-    return [...olderMessages, ...fetchedMessages, ...realtimeMessages]
-      .filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; })
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  }, [olderMessages, fetchedMessages, realtimeMessages]);
-
-  // Reset state when conversation changes
+  // Reset scroll state when conversation changes
   useEffect(() => {
     initialScrollDone.current = false;
     loadingOlder.current = false;
-    setOlderMessages([]);
-    setHasMore(true);
-    setLoadingMore(false);
   }, [conversationId]);
 
   // Instant scroll to bottom on first load
   useEffect(() => {
-    if (!isLoading && allMessages.length > 0 && !initialScrollDone.current) {
+    if (!loadingMore && allMessages.length > 0 && !initialScrollDone.current) {
       initialScrollDone.current = true;
-      // Use requestAnimationFrame to ensure DOM has rendered
       requestAnimationFrame(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'auto' });
       });
     }
-  }, [isLoading, allMessages.length]);
+  }, [loadingMore, allMessages.length]);
 
-  // Smooth scroll on new realtime messages — only if near bottom
-  const prevRealtimeLen = useRef(realtimeMessages.length);
+  // Smooth scroll on new messages — only if near bottom
+  const prevMessageCount = useRef(allMessages.length);
   useEffect(() => {
     if (!initialScrollDone.current) return;
-    if (realtimeMessages.length <= prevRealtimeLen.current) {
-      prevRealtimeLen.current = realtimeMessages.length;
+    if (allMessages.length <= prevMessageCount.current) {
+      prevMessageCount.current = allMessages.length;
       return;
     }
-    prevRealtimeLen.current = realtimeMessages.length;
+    prevMessageCount.current = allMessages.length;
 
     const container = containerRef.current;
     if (!container) return;
@@ -100,43 +74,28 @@ export function MessageList({
     if (nearBottom) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [realtimeMessages.length]);
+  }, [allMessages.length]);
 
   // Load older messages with scroll position preservation
-  const loadOlderMessages = useCallback(async () => {
+  const loadOlderMessages = useCallback(() => {
     if (!hasMore || allMessages.length === 0 || loadingOlder.current) return;
     loadingOlder.current = true;
-    setLoadingMore(true);
 
     const container = containerRef.current;
     const prevScrollHeight = container?.scrollHeight ?? 0;
 
     const oldest = allMessages[0];
-    try {
-      const { data: older } = await chatApi.listMessages(conversationId, {
-        limit: MESSAGES_LIMIT,
-        beforeId: oldest.id,
-      });
-      const olderData = older.data ?? [];
-      if (olderData.length < MESSAGES_LIMIT) {
-        setHasMore(false);
-      }
-      if (olderData.length > 0) {
-        setOlderMessages(prev => [...olderData, ...prev]);
+    dispatch(fetchMessages({ conversationId, beforeId: oldest.id }))
+      .finally(() => {
+        loadingOlder.current = false;
         // Preserve scroll position after prepend
         requestAnimationFrame(() => {
           if (container) {
             container.scrollTop += container.scrollHeight - prevScrollHeight;
           }
         });
-      }
-    } catch {
-      // Ignore fetch errors
-    } finally {
-      loadingOlder.current = false;
-      setLoadingMore(false);
-    }
-  }, [hasMore, allMessages, conversationId]);
+      });
+  }, [hasMore, allMessages, conversationId, dispatch]);
 
   // IntersectionObserver to auto-load older messages on scroll to top
   useEffect(() => {
@@ -170,7 +129,7 @@ export function MessageList({
 
   // Build date separators as part of the message list without mutable variables
   const messagesWithSeparators = useMemo(() => {
-    return allMessages.reduce<Array<{ msg: ChatMessageRecord; showSeparator: boolean; dateLabel: string }>>((acc, msg) => {
+    return allMessages.reduce<Array<{ msg: typeof allMessages[number]; showSeparator: boolean; dateLabel: string }>>((acc, msg) => {
       const msgDate = new Date(msg.createdAt).toDateString();
       const prevDate = acc.length > 0 ? new Date(acc[acc.length - 1].msg.createdAt).toDateString() : '';
       const showSeparator = msgDate !== prevDate;
@@ -207,7 +166,7 @@ export function MessageList({
     return map;
   }, [allMessages, participants, currentUserId, readPositions]);
 
-  if (isLoading) {
+  if (loadingMore && allMessages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <p className="text-sm text-text-sub">Загрузка...</p>

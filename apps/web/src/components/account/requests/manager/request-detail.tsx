@@ -30,7 +30,7 @@ import { RepairRequestStatus } from '@asko/shared/client';
 import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption, RepairerScheduleInfo } from './detail-types';
 import { formatDateTime } from '@asko/shared/client';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './detail-constants';
-import { RequestChat } from './request-chat';
+import { SingleConversation } from '@/components/chat/single-conversation';
 import { RepairerSelector } from './repairer-selector';
 import { resolveScheduleForToday, compareBySchedule } from './schedule-resolver';
 
@@ -427,7 +427,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               </div>
               {chatOpen && chatAttached && request.conversationId && (
                 <div className="border border-border-main overflow-hidden">
-                  <RequestChat conversationId={request.conversationId} currentUserId={currentUserId} />
+                  <SingleConversation conversationId={request.conversationId} currentUserId={currentUserId} notParticipantMessage="Вы не подключены к этому чату. Нажмите «Принять чат» чтобы присоединиться." />
                 </div>
               )}
             </div>

@@ -1,7 +1,6 @@
 import type { RepairRequestRecord, RepairerRecord } from '@/lib/api/types';
 
 export type RepairRequestDetail = RepairRequestRecord & {
-  conversationId?: string;
   isCrossCity?: boolean;
   timezoneOffsetHours?: number;
 };

@@ -24,6 +24,7 @@ export class RepairRequestRecordDto {
     managerId?: string;
     certificateId?: string;
     addressId?: string;
+    conversationId?: string;
     @ApiProperty({ enum: RepairRequestStatus, enumName: 'RepairRequestStatus' })
     status: RepairRequestStatus;
     description: string;

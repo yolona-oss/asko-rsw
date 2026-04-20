@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { chatApi } from '@/lib/api/chat';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { selectAllConversations, selectPresenceMap, selectParticipantNames, fetchParticipantProfiles } from '@/store/chat';
 import { ConversationItem } from './conversation-item';
 import { Input, Button } from '@asko/ui';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
@@ -11,9 +11,6 @@ import type { ConversationRecord } from '@/lib/api/types';
 interface ConversationListProps {
   activeId: string | null;
   currentUserId: string;
-  presenceMap: Record<string, boolean>;
-  participantNames: Record<string, string>;
-  onRegisterParticipants: (ids: string[]) => void;
   onSelect: (conversation: ConversationRecord) => void;
   onNewChat: () => void;
 }
@@ -21,54 +18,45 @@ interface ConversationListProps {
 export function ConversationList({
   activeId,
   currentUserId,
-  presenceMap,
-  participantNames,
-  onRegisterParticipants,
   onSelect,
   onNewChat,
 }: ConversationListProps) {
+  const dispatch = useAppDispatch();
   const [search, setSearch] = useState('');
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['chat-conversations'],
-    queryFn: async () => {
-      const { data } = await chatApi.listConversations({ limit: 50 });
-      return data;
-    },
-    refetchInterval: 30_000,
-  });
+  const allConversations = useAppSelector(selectAllConversations);
+  const presenceMap = useAppSelector(selectPresenceMap);
+  const participantNames = useAppSelector(selectParticipantNames);
 
-  const conversations = (data?.data ?? [])
-    .filter((c) => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        c.name?.toLowerCase().includes(q) ||
-        c.participants.some(p => {
-          const name = participantNames[p.userId];
-          return name?.toLowerCase().includes(q) || p.userId.toLowerCase().includes(q);
-        })
-      );
-    })
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const conversations = allConversations.filter((c) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(q) ||
+      c.participants.some(p => {
+        const name = participantNames[p.userId];
+        return name?.toLowerCase().includes(q) || p.userId.toLowerCase().includes(q);
+      })
+    );
+  });
 
   // Collect other participant IDs for avatar fetching and name resolution
   const otherUserIds = useMemo(() => {
     const ids = new Set<string>();
-    (data?.data ?? []).forEach(c => {
+    allConversations.forEach(c => {
       c.participants.forEach(p => {
         if (p.userId !== currentUserId) ids.add(p.userId);
       });
     });
     return Array.from(ids);
-  }, [data?.data, currentUserId]);
+  }, [allConversations, currentUserId]);
 
   // Register participant IDs for name fetching
   useEffect(() => {
     if (otherUserIds.length > 0) {
-      onRegisterParticipants(otherUserIds);
+      dispatch(fetchParticipantProfiles(otherUserIds));
     }
-  }, [otherUserIds.join(',')]);
+  }, [otherUserIds.join(','), dispatch]);
 
   const avatarMap = useUserAvatars(otherUserIds);
 
@@ -87,8 +75,10 @@ export function ConversationList({
         />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="px-4 py-8 text-center text-sm text-text-sub">Загрузка...</div>
+        {allConversations.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-text-sub">
+            {search ? 'Ничего не найдено' : 'Нет чатов'}
+          </div>
         ) : conversations.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-text-sub">
             {search ? 'Ничего не найдено' : 'Нет чатов'}

@@ -1,37 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { usersApi } from '@/lib/api/users';
+import { useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '@/store/index';
+import { fetchAvatars, selectAvatarUrls } from '@/store/avatars';
 
 /**
- * Caches avatar URLs for a set of user IDs.
- * Fetches on mount and when new userIds are added.
+ * Returns cached avatar URLs for given user IDs.
+ * Dispatches fetch for any IDs not yet in the store.
  */
 export function useUserAvatars(userIds: string[]): Record<string, string | null> {
-  const [avatars, setAvatars] = useState<Record<string, string | null>>({});
-  const fetchedRef = useRef<Set<string>>(new Set());
+    const dispatch = useAppDispatch();
+    const urls = useAppSelector(selectAvatarUrls);
 
-  useEffect(() => {
-    const toFetch = userIds.filter((id) => id && !fetchedRef.current.has(id));
-    if (toFetch.length === 0) return;
+    useEffect(() => {
+        const missing = userIds.filter((id) => id && !(id in urls));
+        if (missing.length > 0) dispatch(fetchAvatars(missing));
+    }, [userIds.join(','), dispatch]);
 
-    toFetch.forEach((id) => fetchedRef.current.add(id));
-
-    Promise.all(
-      toFetch.map(async (id) => {
-        const url = await usersApi.getAvatarUrl(id);
-        return { id, url };
-      }),
-    ).then((results) => {
-      setAvatars((prev) => {
-        const next = { ...prev };
-        for (const { id, url } of results) {
-          next[id] = url;
-        }
-        return next;
-      });
-    });
-  }, [userIds.join(',')]);
-
-  return avatars;
+    return urls;
 }

@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback, type KeyboardEvent, type ChangeEvent } from 'react';
 import { FileText } from 'lucide-react';
 import { UPLOAD_LIMITS } from '@asko/shared/client';
-import { chatApi } from '@/lib/api/chat';
+import { useAppDispatch } from '@/store/index';
+import { sendMessage, emitTyping, emitStopTyping, emitUploadingImage, emitUploadingVideo, emitUploadingDocument, emitStopUploading } from '@/store/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 
@@ -45,14 +46,10 @@ interface AttachedFile {
 
 interface MessageInputProps {
   conversationId: string;
-  onMessageSent: () => void;
-  onTyping: () => void;
-  onStopTyping: () => void;
-  onUploadingStart?: (type: 'image' | 'video' | 'document') => void;
-  onUploadingStop?: () => void;
 }
 
-export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTyping, onUploadingStart, onUploadingStop }: MessageInputProps) {
+export function MessageInput({ conversationId }: MessageInputProps) {
+  const dispatch = useAppDispatch();
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState<AttachedFile | null>(null);
@@ -64,14 +61,14 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
   const handleTyping = useCallback(() => {
     if (!isTyping.current) {
       isTyping.current = true;
-      onTyping();
+      dispatch(emitTyping(conversationId));
     }
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       isTyping.current = false;
-      onStopTyping();
+      dispatch(emitStopTyping(conversationId));
     }, 2000);
-  }, [onTyping, onStopTyping]);
+  }, [conversationId, dispatch]);
 
   const clearAttachment = useCallback(() => {
     if (attachment) {
@@ -79,9 +76,9 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
     }
     setAttachment(null);
     setUploadError(null);
-    onUploadingStop?.();
+    dispatch(emitStopUploading(conversationId));
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [attachment, onUploadingStop]);
+  }, [attachment, conversationId, dispatch]);
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,17 +131,21 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
     setUploadError(null);
     if (isTyping.current) {
       isTyping.current = false;
-      onStopTyping();
+      dispatch(emitStopTyping(conversationId));
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
     }
 
     try {
       if (attachment) {
-        onUploadingStart?.(attachment.type);
+        switch (attachment.type) {
+          case 'image': dispatch(emitUploadingImage(conversationId)); break;
+          case 'video': dispatch(emitUploadingVideo(conversationId)); break;
+          case 'document': dispatch(emitUploadingDocument(conversationId)); break;
+        }
         if (attachment.type === 'image') {
           const { data: uploaded } = await fileUploadApi.uploadImage(attachment.file);
           const img = uploaded.image;
-          await chatApi.sendMessage(conversationId, {
+          await dispatch(sendMessage({ conversationId, body: {
             type: 'image',
             text: trimmed || undefined,
             attachment: {
@@ -155,11 +156,11 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
               width: img.imageJson?.original?.width,
               height: img.imageJson?.original?.height,
             },
-          });
+          }})).unwrap();
         } else if (attachment.type === 'video') {
           const { data: uploaded } = await fileUploadApi.uploadVideo(attachment.file);
           const vid = uploaded.video;
-          await chatApi.sendMessage(conversationId, {
+          await dispatch(sendMessage({ conversationId, body: {
             type: 'video',
             text: trimmed || undefined,
             attachment: {
@@ -169,11 +170,11 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
               duration: vid.videoJson?.duration,
               originalFilename: vid.videoJson?.original_filename,
             },
-          });
+          }})).unwrap();
         } else {
           const { data: uploaded } = await fileUploadApi.uploadDocument(attachment.file);
           const doc = uploaded.document;
-          await chatApi.sendMessage(conversationId, {
+          await dispatch(sendMessage({ conversationId, body: {
             type: 'document',
             text: trimmed || undefined,
             attachment: {
@@ -182,18 +183,17 @@ export function MessageInput({ conversationId, onMessageSent, onTyping, onStopTy
               mimeType: doc.mimeType || attachment.file.type,
               sizeBytes: doc.sizeBytes || attachment.file.size,
             },
-          });
+          }})).unwrap();
         }
         clearAttachment();
       } else {
-        await chatApi.sendMessage(conversationId, { type: 'text', text: trimmed });
+        await dispatch(sendMessage({ conversationId, body: { type: 'text', text: trimmed } })).unwrap();
       }
       setText('');
-      onUploadingStop?.();
-      onMessageSent();
+      dispatch(emitStopUploading(conversationId));
     } catch {
       setUploadError('Ошибка отправки');
-      onUploadingStop?.();
+      dispatch(emitStopUploading(conversationId));
     } finally {
       setSending(false);
     }

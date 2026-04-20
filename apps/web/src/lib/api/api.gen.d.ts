@@ -4502,6 +4502,7 @@ export interface components {
             managerId?: string;
             certificateId?: string;
             addressId?: string;
+            conversationId?: string;
             description: string;
             preferredDate?: string;
             totalCost?: number;

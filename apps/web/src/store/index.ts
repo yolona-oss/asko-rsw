@@ -7,6 +7,9 @@ import { paymentReducer } from './payment';
 import { withdrawReducer } from './withdraw';
 import { preferencesReducer } from './preferences';
 import { notificationReducer, notificationSocketMiddleware } from './notifications';
+import { errorsReducer } from './errors';
+import { avatarsReducer } from './avatars';
+import { chatReducer, chatSocketMiddleware, chatTimerListenerMiddleware } from './chat';
 import { soundListenerMiddleware } from './sound';
 
 export const store = configureStore({
@@ -16,11 +19,16 @@ export const store = configureStore({
     withdraw: withdrawReducer,
     preferences: preferencesReducer,
     notifications: notificationReducer,
+    errors: errorsReducer,
+    avatars: avatarsReducer,
+    chat: chatReducer,
   },
   middleware: (getDefault) =>
     getDefault()
       .prepend(soundListenerMiddleware.middleware)
-      .concat(notificationSocketMiddleware),
+      .prepend(chatTimerListenerMiddleware.middleware)
+      .concat(notificationSocketMiddleware)
+      .concat(chatSocketMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

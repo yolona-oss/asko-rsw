@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Avatar } from '@asko/ui';
 import { cn } from '@asko/ui';
@@ -13,14 +12,21 @@ import { UploadingIndicator } from './uploading-indicator';
 import type { UploadingEntry } from './uploading-indicator';
 import { selectUnreadNotifications, markAsRead as markAsReadThunk } from '@/store/notifications';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { setActiveConversation } from '@/lib/active-conversation';
+import {
+  selectPresenceMap,
+  selectTypingUsersForConversation,
+  selectUploadingUsersForConversation,
+  selectReadPositions,
+  selectParticipantNames,
+  selectParticipantRoles,
+  selectMessagesForConversation,
+  emitMarkAsRead,
+} from '@/store/chat';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
 import { useAccount } from '@/components/account/layout/provider';
 import { displayName as buildDisplayName } from '@/lib/account';
-import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
-import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
-
-const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
+import type { ConversationRecord } from '@/lib/api/types';
+import { CHAT_NOTIFICATION_TYPES } from '@/components/account/notifications/constants';
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Суперадмин',
@@ -33,32 +39,23 @@ const ROLE_LABELS: Record<string, string> = {
 interface ConversationPanelProps {
   conversation: ConversationRecord;
   currentUserId: string;
-  presenceMap: Record<string, boolean>;
-  socketActions: ChatSocketActions;
-  typingUsers: Map<string, string>;
-  uploadingUsers: Map<string, { conversationId: string; type: string }>;
-  realtimeMessages: ChatMessageRecord[];
-  readPositions: Record<string, string>;
   onBack?: () => void;
-  participantNames: Record<string, string>;
-  participantRoles: Record<string, string>;
 }
 
 export function ConversationPanel({
   conversation,
   currentUserId,
-  presenceMap,
-  socketActions,
-  typingUsers,
-  uploadingUsers,
-  realtimeMessages,
-  readPositions,
   onBack,
-  participantNames,
-  participantRoles,
 }: ConversationPanelProps) {
-  const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+
+  const presenceMap = useAppSelector(selectPresenceMap);
+  const typingUserIds = useAppSelector(state => selectTypingUsersForConversation(state, conversation.id, currentUserId));
+  const uploadingUserEntries = useAppSelector(state => selectUploadingUsersForConversation(state, conversation.id, currentUserId));
+  const readPositions = useAppSelector(selectReadPositions);
+  const participantNames = useAppSelector(selectParticipantNames);
+  const participantRoles = useAppSelector(selectParticipantRoles);
 
   // Close info panel when switching conversations
   useEffect(() => {
@@ -66,40 +63,30 @@ export function ConversationPanel({
     setInfoPanelOpen(false);
   }, [conversation.id]);
 
-  // Join/leave conversation room + mark messages as read + track active conversation
+  // Mark last message as read on mount
   useEffect(() => {
-    setActiveConversation(conversation.id);
-    socketActions.joinConversation(conversation.id);
-
     const lastMsg = conversation.lastMessage;
     if (lastMsg && lastMsg.senderId !== currentUserId) {
-      socketActions.emitMarkAsRead(conversation.id, lastMsg.id);
-      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+      dispatch(emitMarkAsRead({ conversationId: conversation.id, messageId: lastMsg.id }));
     }
+  }, [conversation.id, conversation.lastMessage, currentUserId, dispatch]);
 
-    return () => {
-      socketActions.leaveConversation(conversation.id);
-      setActiveConversation(null);
-    };
-  }, [conversation.id, socketActions, currentUserId, queryClient]);
-
-  // Mark incoming realtime messages as read while viewing
+  // Mark incoming messages as read while viewing
+  const messages = useAppSelector(state => selectMessagesForConversation(state, conversation.id));
   const lastMarkedRef = useRef<string | null>(null);
   useEffect(() => {
-    const incoming = realtimeMessages.filter(
-      (m) => m.conversationId === conversation.id && m.senderId !== currentUserId,
+    const incoming = messages.filter(
+      (m) => m.senderId !== currentUserId,
     );
     const last = incoming[incoming.length - 1];
     if (last && last.id !== lastMarkedRef.current) {
       lastMarkedRef.current = last.id;
-      socketActions.emitMarkAsRead(conversation.id, last.id);
-      queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
+      dispatch(emitMarkAsRead({ conversationId: conversation.id, messageId: last.id }));
     }
-  }, [realtimeMessages, conversation.id, currentUserId, socketActions, queryClient]);
+  }, [messages, conversation.id, currentUserId, dispatch]);
 
   // Dismiss notification-bell entries for this conversation
   const unreadNotifications = useAppSelector(selectUnreadNotifications);
-  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const toMark = unreadNotifications.filter(
@@ -133,52 +120,15 @@ export function ConversationPanel({
   const isOnline = otherParticipant ? (presenceMap[otherParticipant.userId] ?? false) : false;
 
   // Typing indicator names for this conversation
-  const typingNames: string[] = [];
-  typingUsers.forEach((convId, userId) => {
-    if (convId === conversation.id && userId !== currentUserId) {
-      typingNames.push(participantNames[userId] ?? 'Пользователь');
-    }
-  });
+  const typingNames: string[] = typingUserIds.map(
+    userId => participantNames[userId] ?? 'Пользователь',
+  );
 
   // Uploading indicator entries for this conversation
-  const uploadingEntries: UploadingEntry[] = [];
-  uploadingUsers.forEach(({ conversationId: convId, type }, userId) => {
-    if (convId === conversation.id && userId !== currentUserId) {
-      uploadingEntries.push({
-        name: participantNames[userId] ?? 'Пользователь',
-        type,
-      });
-    }
-  });
-
-  const handleMessageSent = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['chat-messages', conversation.id] });
-    queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
-  }, [queryClient, conversation.id]);
-
-  const handleTyping = useCallback(() => {
-    socketActions.emitTyping(conversation.id);
-  }, [socketActions, conversation.id]);
-
-  const handleStopTyping = useCallback(() => {
-    socketActions.emitStopTyping(conversation.id);
-  }, [socketActions, conversation.id]);
-
-  const handleUploadingStart = useCallback((type: 'image' | 'video' | 'document') => {
-    switch (type) {
-      case 'image': socketActions.emitUploadingImage(conversation.id); break;
-      case 'video': socketActions.emitUploadingVideo(conversation.id); break;
-      case 'document': socketActions.emitUploadingDocument(conversation.id); break;
-    }
-  }, [socketActions, conversation.id]);
-
-  const handleUploadingStop = useCallback(() => {
-    socketActions.emitStopUploading(conversation.id);
-  }, [socketActions, conversation.id]);
-
-  const conversationRealtimeMessages = realtimeMessages.filter(
-    m => m.conversationId === conversation.id,
-  );
+  const uploadingEntries: UploadingEntry[] = uploadingUserEntries.map(({ userId, type }) => ({
+    name: participantNames[userId] ?? 'Пользователь',
+    type,
+  }));
 
   return (
     <div className="flex flex-col h-full">
@@ -269,7 +219,6 @@ export function ConversationPanel({
         conversationId={conversation.id}
         currentUserId={currentUserId}
         isGroup={isGroup}
-        realtimeMessages={conversationRealtimeMessages}
         participantNames={participantNames}
         participantRoles={participantRoles}
         readPositions={readPositions}
@@ -283,11 +232,6 @@ export function ConversationPanel({
       {/* Input */}
       <MessageInput
         conversationId={conversation.id}
-        onMessageSent={handleMessageSent}
-        onTyping={handleTyping}
-        onStopTyping={handleStopTyping}
-        onUploadingStart={handleUploadingStart}
-        onUploadingStop={handleUploadingStop}
       />
     </div>
   );

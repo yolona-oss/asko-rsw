@@ -8,30 +8,16 @@ import {
     resetNotifications,
     fetchUnreadNotifications,
     fetchUnreadCount,
+    markAsRead,
 } from './notification-slice';
 import { playSound, startReminder } from '../sound';
-import { notificationApi } from '@/lib/api/notification';
-import { getActiveConversation } from '@/lib/active-conversation';
 import { CHAT_NOTIFICATION_TYPES } from '@/components/account/notifications/constants';
 import type { NotificationRecord } from '@/lib/api/types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-const { SOCKET_ORIGIN, SOCKET_PATH } = (() => {
-    try {
-        const url = new URL(API_URL);
-        const p = url.pathname.replace(/\/$/, '');
-        return {
-            SOCKET_ORIGIN: url.origin,
-            SOCKET_PATH: p === '' ? '/socket.io' : `${p}/socket.io`,
-        };
-    } catch {
-        return { SOCKET_ORIGIN: API_URL, SOCKET_PATH: '/socket.io' };
-    }
-})();
+import { SOCKET_ORIGIN, SOCKET_PATH } from '@/lib/socket-url';
 
 let socket: Socket | null = null;
 
-function connectSocket(token: string, dispatch: any) {
+function connectSocket(token: string, dispatch: any, getState: () => any) {
     if (socket) {
         socket.disconnect();
         socket.removeAllListeners();
@@ -70,9 +56,9 @@ function connectSocket(token: string, dispatch: any) {
         // Auto-mark chat notifications for the active conversation
         if (
             CHAT_NOTIFICATION_TYPES.has(data.type) &&
-            data.targetId === getActiveConversation()
+            data.targetId === getState().chat?.activeConversationId
         ) {
-            notificationApi.markAsRead(data.id);
+            dispatch(markAsRead(data.id));
             return;
         }
 
@@ -99,10 +85,10 @@ export const notificationSocketMiddleware: Middleware = (storeApi) => (next) => 
     const result = next(action);
 
     if (setCredentials.match(action)) {
-        connectSocket(action.payload.accessToken, storeApi.dispatch);
+        connectSocket(action.payload.accessToken, storeApi.dispatch, storeApi.getState);
     } else if (setAccessToken.match(action)) {
         // Token refreshed — reconnect with new token
-        connectSocket(action.payload, storeApi.dispatch);
+        connectSocket(action.payload, storeApi.dispatch, storeApi.getState);
     } else if (logout.match(action)) {
         disconnectSocket(storeApi.dispatch);
     }

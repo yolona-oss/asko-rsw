@@ -40,12 +40,15 @@ export const selectGroupedUnread = createSelector(
 export const selectPagination = (state: RootWithNotifications) =>
     state.notifications.pagination;
 
+export const selectActiveGroup = (state: RootWithNotifications) =>
+    state.notifications.pagination.activeGroup;
+
 export const selectHistoryNotifications = createSelector(
     selectAllNotifications,
-    selectPagination,
-    (all, pagination) => {
-        if (!pagination.activeGroup) return all;
-        return all.filter((n) => getNotificationGroup(n.type) === pagination.activeGroup);
+    selectActiveGroup,
+    (all, activeGroup) => {
+        if (!activeGroup) return all;
+        return all.filter((n) => getNotificationGroup(n.type) === activeGroup);
     },
 );
 

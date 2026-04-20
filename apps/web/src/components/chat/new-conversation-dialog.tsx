@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { Modal, Input, Button, Avatar } from '@asko/ui';
+import { useAppDispatch } from '@/store/index';
+import { createConversation } from '@/store/chat';
 import { chatApi } from '@/lib/api/chat';
 import type { ConversationRecord } from '@/lib/api/types';
 import type { ChatUserSearchResult } from '@/lib/api/chat';
@@ -12,6 +14,7 @@ interface NewConversationDialogProps {
 }
 
 export function NewConversationDialog({ onClose, onCreated }: NewConversationDialogProps) {
+  const dispatch = useAppDispatch();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ChatUserSearchResult[]>([]);
   const [selected, setSelected] = useState<ChatUserSearchResult | null>(null);
@@ -46,13 +49,13 @@ export function NewConversationDialog({ onClose, onCreated }: NewConversationDia
     setCreating(true);
     setError(null);
     try {
-      const { data } = await chatApi.createConversation({
+      const conversation = await dispatch(createConversation({
         type: 'direct',
         participantIds: [selected.id],
-      });
-      onCreated(data.conversation);
+      })).unwrap();
+      onCreated(conversation);
     } catch (e: any) {
-      const msg = e?.response?.data?.message || 'Не удалось создать чат';
+      const msg = e?.message || 'Не удалось создать чат';
       setError(msg);
     } finally {
       setCreating(false);

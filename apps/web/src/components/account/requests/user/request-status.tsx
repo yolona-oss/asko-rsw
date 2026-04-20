@@ -38,6 +38,8 @@ import { StepLine } from './step-line';
 import { StatusHistoryInline } from '@/components/account/requests/shared/status-history-inline';
 import { StarRating } from './star-rating';
 import { WorkStepCard } from './work-step-card';
+import { SingleConversation } from '@/components/chat/single-conversation';
+import { MessageCircle } from 'lucide-react';
 
 export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<RepairRequest | null>(null);
@@ -45,6 +47,8 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [brokenParts, setBrokenParts] = useState<BrokenPart[]>([]);
   const [partImages, setPartImages] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const currentUserId = useAppSelector((s) => s.auth.user?.id);
 
   // AVR signing state
   const [signingChannel, setSigningChannel] = useState('');
@@ -439,6 +443,29 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         <div className="max-w-lg mt-6">
           <RepairRequestDocuments requestId={requestId} readOnly />
         </div>
+
+        {/* Chat with repairer */}
+        {request.conversationId && currentUserId && !isTerminal && (
+          <div className="max-w-lg mt-6 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setChatOpen(!chatOpen)}
+              className="flex items-center gap-2 text-sm font-medium text-text-main cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4 text-icon" />
+              Чат с мастером
+              <span className="text-xs text-text-sub">{chatOpen ? 'Свернуть' : 'Развернуть'}</span>
+            </button>
+            {chatOpen && (
+              <div className="border border-border-light overflow-hidden">
+                <SingleConversation
+                  conversationId={request.conversationId}
+                  currentUserId={currentUserId}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Review form (COMPLETED status) */}
         {request.status === RepairRequestStatus.COMPLETED && !reviewSubmitted && (
