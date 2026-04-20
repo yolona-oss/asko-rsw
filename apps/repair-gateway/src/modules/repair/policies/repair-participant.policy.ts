@@ -25,7 +25,7 @@ export class RepairParticipantPolicy implements Policy {
         if (!request) throw AppErrors.notFound({ key: msg.access.requestNotFound });
 
         if (ctx.user.roles.includes(Role.USER) && request.userId === ctx.user.sub) return true;
-        if (ctx.user.roles.includes(Role.MANAGER) && request.managerId === ctx.user.sub) return true;
+        if (ctx.user.roles.includes(Role.MANAGER)) return true;
         if (ctx.user.roles.includes(Role.REPAIRER) && request.repairerId) {
             const { repairer } = await this.repairerClient.findByUserId(ctx.user.sub);
             if (repairer?.id === request.repairerId) return true;

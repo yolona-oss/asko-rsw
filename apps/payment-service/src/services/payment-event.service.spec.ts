@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { of } from 'rxjs';
 import { EntityManager } from '@mikro-orm/postgresql';
+import { SignedEventPublisher } from '@asko/observability';
 import { PaymentEventService, PaymentEventType, PaymentEvent } from './payment-event.service';
 
 describe('PaymentEventService', () => {
@@ -8,6 +9,7 @@ describe('PaymentEventService', () => {
     let notificationClient: { connect: jest.Mock; emit: jest.Mock };
     let repairClient: { connect: jest.Mock; emit: jest.Mock };
     let emMock: Partial<EntityManager>;
+    let publisherMock: { emit: jest.Mock };
 
     beforeEach(async () => {
         notificationClient = {
@@ -22,6 +24,9 @@ describe('PaymentEventService', () => {
             create: jest.fn().mockReturnValue({}),
             persistAndFlush: jest.fn().mockResolvedValue(undefined),
         };
+        publisherMock = {
+            emit: jest.fn().mockReturnValue(of(undefined)),
+        };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -29,6 +34,7 @@ describe('PaymentEventService', () => {
                 { provide: EntityManager, useValue: emMock },
                 { provide: 'EVENTS_SERVICE', useValue: notificationClient },
                 { provide: 'REPAIR_EVENTS_SERVICE', useValue: repairClient },
+                { provide: SignedEventPublisher, useValue: publisherMock },
             ],
         }).compile();
 
@@ -85,11 +91,9 @@ describe('PaymentEventService', () => {
         it('should emit event to both clients with correct event type and data', async () => {
             await service.emit(mockEvent);
 
-            expect(notificationClient.emit).toHaveBeenCalledTimes(1);
-            expect(notificationClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_PAID, mockEvent);
-
-            expect(repairClient.emit).toHaveBeenCalledTimes(1);
-            expect(repairClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_PAID, mockEvent);
+            expect(publisherMock.emit).toHaveBeenCalledTimes(2);
+            expect(publisherMock.emit).toHaveBeenCalledWith(notificationClient, PaymentEventType.PAYMENT_PAID, mockEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(repairClient, PaymentEventType.PAYMENT_PAID, mockEvent);
         });
 
         it('should emit payment.created event to both clients', async () => {
@@ -100,8 +104,8 @@ describe('PaymentEventService', () => {
 
             await service.emit(createdEvent);
 
-            expect(notificationClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_CREATED, createdEvent);
-            expect(repairClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_CREATED, createdEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(notificationClient, PaymentEventType.PAYMENT_CREATED, createdEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(repairClient, PaymentEventType.PAYMENT_CREATED, createdEvent);
         });
 
         it('should emit payment.failed event to both clients', async () => {
@@ -112,8 +116,8 @@ describe('PaymentEventService', () => {
 
             await service.emit(failedEvent);
 
-            expect(notificationClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_FAILED, failedEvent);
-            expect(repairClient.emit).toHaveBeenCalledWith(PaymentEventType.PAYMENT_FAILED, failedEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(notificationClient, PaymentEventType.PAYMENT_FAILED, failedEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(repairClient, PaymentEventType.PAYMENT_FAILED, failedEvent);
         });
 
         it('should emit event with minimal fields', async () => {
@@ -127,8 +131,8 @@ describe('PaymentEventService', () => {
 
             await service.emit(minimalEvent);
 
-            expect(notificationClient.emit).toHaveBeenCalledWith(PaymentEventType.WITHDRAW_CREATED, minimalEvent);
-            expect(repairClient.emit).toHaveBeenCalledWith(PaymentEventType.WITHDRAW_CREATED, minimalEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(notificationClient, PaymentEventType.WITHDRAW_CREATED, minimalEvent);
+            expect(publisherMock.emit).toHaveBeenCalledWith(repairClient, PaymentEventType.WITHDRAW_CREATED, minimalEvent);
         });
     });
 });

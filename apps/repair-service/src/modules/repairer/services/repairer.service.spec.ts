@@ -4,6 +4,7 @@ jest.mock('@mikro-orm/postgresql', () => ({
 }));
 
 jest.mock('common/error', () => {
+    const { t } = jest.requireActual('@asko/shared');
     class MockAppError extends Error {
         public errorCode: number;
         constructor(type: number, options?: { message?: string }) {
@@ -11,10 +12,16 @@ jest.mock('common/error', () => {
             this.errorCode = type;
         }
     }
+    function resolve(msg?: string | { key: string; params?: Record<string, any> }): string | undefined {
+        if (!msg) return undefined;
+        if (typeof msg === 'string') return msg;
+        if ('key' in msg) return t(msg.key, 'en', msg.params);
+        return String(msg);
+    }
     return {
         AppErrors: {
-            dbEntityExists: (msg?: string) => new MockAppError(604, { message: msg }),
-            dbEntityNotFound: (msg?: string) => new MockAppError(605, { message: msg }),
+            dbEntityExists: (msg?: any) => new MockAppError(604, { message: resolve(msg) }),
+            dbEntityNotFound: (msg?: any) => new MockAppError(605, { message: resolve(msg) }),
         },
     };
 });

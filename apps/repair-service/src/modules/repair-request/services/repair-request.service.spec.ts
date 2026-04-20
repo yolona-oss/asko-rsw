@@ -4,6 +4,7 @@ jest.mock('@mikro-orm/postgresql', () => ({
 }));
 
 jest.mock('common/error', () => {
+    const { t } = jest.requireActual('@asko/shared');
     class MockAppError extends Error {
         public errorCode: number;
         constructor(type: number, options?: { message?: string }) {
@@ -11,12 +12,18 @@ jest.mock('common/error', () => {
             this.errorCode = type;
         }
     }
+    function resolve(msg?: string | { key: string; params?: Record<string, any> }): string | undefined {
+        if (!msg) return undefined;
+        if (typeof msg === 'string') return msg;
+        if ('key' in msg) return t(msg.key, 'en', msg.params);
+        return String(msg);
+    }
     return {
         AppErrors: {
-            dbEntityNotFound: (msg?: string) => new MockAppError(605, { message: msg }),
-            badRequest: (msg?: string) => new MockAppError(400, { message: msg }),
-            conflict: (msg?: string) => new MockAppError(409, { message: msg }),
-            repairInvalidStatus: (msg?: string) => new MockAppError(1001, { message: msg }),
+            dbEntityNotFound: (msg?: any) => new MockAppError(605, { message: resolve(msg) }),
+            badRequest: (msg?: any) => new MockAppError(400, { message: resolve(msg) }),
+            conflict: (msg?: any) => new MockAppError(409, { message: resolve(msg) }),
+            repairInvalidStatus: (msg?: any) => new MockAppError(1001, { message: resolve(msg) }),
         },
     };
 });
@@ -190,7 +197,7 @@ describe('RepairRequestService', () => {
 
         it('creates a repair request in PENDING status', async () => {
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined }) // userDevice
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined }) // userDevice
                 .mockResolvedValueOnce(null); // no active request
             mockEm.persistAndFlush.mockResolvedValue(undefined);
 
@@ -220,11 +227,11 @@ describe('RepairRequestService', () => {
 
         it('throws if device already has active repair', async () => {
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined })
                 .mockResolvedValueOnce({ id: 'existing-req' });
 
             await expect(service.create('user-1', dto)).rejects.toThrow(
-                'Для этого устройства уже существует активная заявка на ремонт',
+                'An active repair request already exists for this device',
             );
         });
 
@@ -234,7 +241,7 @@ describe('RepairRequestService', () => {
                 brokenParts: [{ name: 'Screen' }],
             };
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined })
                 .mockResolvedValueOnce(null);
             mockEm.persistAndFlush.mockResolvedValue(undefined);
 
@@ -251,7 +258,7 @@ describe('RepairRequestService', () => {
             const fakeCert = { id: 'cert-1' };
 
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined })
                 .mockResolvedValueOnce(null);
             deps.certificateService.validateCertificateForRequest.mockResolvedValue({
                 ok: false,
@@ -271,7 +278,7 @@ describe('RepairRequestService', () => {
         it('throws on hard cert validation error (not_found)', async () => {
             const dtoWithCert = { ...dto, certificateId: 'cert-1' };
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined })
                 .mockResolvedValueOnce(null);
             deps.certificateService.validateCertificateForRequest.mockResolvedValue({
                 ok: false,
@@ -284,7 +291,7 @@ describe('RepairRequestService', () => {
         it('throws on hard cert validation error (wrong_device)', async () => {
             const dtoWithCert = { ...dto, certificateId: 'cert-1' };
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: undefined })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: undefined })
                 .mockResolvedValueOnce(null);
             deps.certificateService.validateCertificateForRequest.mockResolvedValue({
                 ok: false,
@@ -299,19 +306,19 @@ describe('RepairRequestService', () => {
         it('throws on invalid address', async () => {
             const addressObj = { id: 'addr-1', validationStatus: 'invalid', validationError: 'bad addr' };
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: addressObj })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: addressObj })
                 .mockResolvedValueOnce(null);
 
-            await expect(service.create('user-1', dto)).rejects.toThrow('Адрес не прошёл проверку');
+            await expect(service.create('user-1', dto)).rejects.toThrow('failed validation');
         });
 
         it('throws on pending address', async () => {
             const addressObj = { id: 'addr-1', validationStatus: 'pending' };
             mockEm.findOne
-                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', address: addressObj })
+                .mockResolvedValueOnce({ id: 'ud-1', userId: 'user-1', validationStatus: 'valid', address: addressObj })
                 .mockResolvedValueOnce(null);
 
-            await expect(service.create('user-1', dto)).rejects.toThrow('Адрес ещё проходит проверку');
+            await expect(service.create('user-1', dto)).rejects.toThrow('still being validated');
         });
     });
 
@@ -493,7 +500,7 @@ describe('RepairRequestService', () => {
             mockEm.count.mockResolvedValueOnce(3); // at concurrent limit
 
             await expect(service.assignRepairer('manager-1', 'req-1', 'rep-1'))
-                .rejects.toThrow('активных заявок');
+                .rejects.toThrow('active requests (limit:');
         });
 
         it('throws if repairer is on a rest day', async () => {
@@ -736,7 +743,7 @@ describe('RepairRequestService', () => {
             mockEm.findOne.mockResolvedValue(request);
 
             await expect(service.complete('req-1')).rejects.toThrow(
-                'Необходимо указать стоимость ремонта перед завершением',
+                'Repair price must be set before completing',
             );
         });
 
@@ -974,7 +981,7 @@ describe('RepairRequestService', () => {
             mockEm.findOne.mockResolvedValueOnce(request);
 
             await expect(service.reassign('manager-1', 'req-1', 'rep-1'))
-                .rejects.toThrow('Нельзя передать заявку текущему мастеру');
+                .rejects.toThrow('Cannot transfer request to the current repairer');
         });
 
         it('throws if request has no current repairer', async () => {
@@ -985,7 +992,7 @@ describe('RepairRequestService', () => {
             mockEm.findOne.mockResolvedValueOnce(request);
 
             await expect(service.reassign('manager-1', 'req-1', 'rep-new'))
-                .rejects.toThrow('Нельзя передать заявку без текущего мастера');
+                .rejects.toThrow('Cannot transfer request without a current repairer');
         });
 
         it('throws if new repairer not active', async () => {

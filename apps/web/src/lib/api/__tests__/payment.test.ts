@@ -76,7 +76,7 @@ describe('getMyPayments', () => {
 describe('getStats', () => {
   it('sends GET to /payment/stats', async () => {
     await paymentApi.getStats();
-    expect(mockApi.get).toHaveBeenCalledWith('/payment/stats');
+    expect(mockApi.get).toHaveBeenCalledWith('/payment/stats', { params: undefined });
   });
 });
 
@@ -85,7 +85,7 @@ describe('getStats', () => {
 describe('getMyStats', () => {
   it('sends GET to /payment/my/stats', async () => {
     await paymentApi.getMyStats();
-    expect(mockApi.get).toHaveBeenCalledWith('/payment/my/stats');
+    expect(mockApi.get).toHaveBeenCalledWith('/payment/my/stats', { params: undefined });
   });
 });
 

@@ -25,7 +25,7 @@ function set(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // localStorage full or unavailable
+    console.error("localStorage is full")
   }
 }
 

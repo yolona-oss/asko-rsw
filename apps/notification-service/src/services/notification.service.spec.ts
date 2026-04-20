@@ -14,6 +14,18 @@ jest.mock('entities/notification.entity', () => ({
     NotificationEntity: class NotificationEntity {},
 }));
 
+jest.mock('channels/channel-registry', () => ({
+    ChannelRegistry: jest.fn(),
+}));
+
+jest.mock('./notification-preferences.service', () => ({
+    NotificationPreferencesService: jest.fn(),
+}));
+
+jest.mock('./user-info.service', () => ({
+    UserInfoService: jest.fn(),
+}));
+
 import { NotificationService } from './notification.service';
 import { NotificationEntity } from 'entities/notification.entity';
 
@@ -30,8 +42,9 @@ describe('NotificationService', () => {
         flush: jest.Mock;
         removeAndFlush: jest.Mock;
     };
-    let mockPushService: { pushToUser: jest.Mock };
-    let mockEventPublisher: { publishCreated: jest.Mock };
+    let mockChannelRegistry: { all: jest.Mock };
+    let mockPreferencesService: { getPreferences: jest.Mock; shouldDeliver: jest.Mock };
+    let mockUserInfoService: { getEmailInfo: jest.Mock };
 
     beforeEach(() => {
         mockEm = {
@@ -45,17 +58,22 @@ describe('NotificationService', () => {
             flush: jest.fn().mockResolvedValue(undefined),
             removeAndFlush: jest.fn().mockResolvedValue(undefined),
         };
-        mockPushService = {
-            pushToUser: jest.fn().mockResolvedValue(undefined),
+        mockChannelRegistry = {
+            all: jest.fn().mockReturnValue([]),
         };
-        mockEventPublisher = {
-            publishCreated: jest.fn().mockResolvedValue(undefined),
+        mockPreferencesService = {
+            getPreferences: jest.fn().mockResolvedValue({}),
+            shouldDeliver: jest.fn().mockReturnValue(true),
+        };
+        mockUserInfoService = {
+            getEmailInfo: jest.fn().mockResolvedValue(null),
         };
 
         service = new NotificationService(
             mockEm as any,
-            mockPushService as any,
-            mockEventPublisher as any,
+            mockChannelRegistry as any,
+            mockPreferencesService as any,
+            mockUserInfoService as any,
         );
     });
 
@@ -73,6 +91,7 @@ describe('NotificationService', () => {
             targetType: undefined,
             targetId: undefined,
             metadata: undefined,
+            urgency: undefined,
             isRead: false,
             createdAt: new Date('2026-03-20T12:00:00Z'),
         };
@@ -82,9 +101,12 @@ describe('NotificationService', () => {
         });
 
         it('should create and persist a notification', async () => {
-            const result = await service.createNotification(
-                'u1', 'payment', 'Payment received', 'You received a payment of 500 RUB',
-            );
+            const result = await service.createNotification({
+                userId: 'u1',
+                type: 'payment',
+                title: 'Payment received',
+                body: 'You received a payment of 500 RUB',
+            });
 
             expect(mockEm.create).toHaveBeenCalledWith(NotificationEntity, {
                 userId: 'u1',
@@ -94,6 +116,7 @@ describe('NotificationService', () => {
                 targetType: undefined,
                 targetId: undefined,
                 metadata: undefined,
+                urgency: undefined,
             });
             expect(mockEm.persistAndFlush).toHaveBeenCalledWith(mockNotification);
             expect(result).toBe(mockNotification);
@@ -108,10 +131,15 @@ describe('NotificationService', () => {
             };
             mockEm.create.mockReturnValue(notificationWithOptionals);
 
-            const result = await service.createNotification(
-                'u1', 'payment', 'Payment received', 'You received a payment of 500 RUB',
-                'repair', 'r123', { amount: 500 },
-            );
+            const result = await service.createNotification({
+                userId: 'u1',
+                type: 'payment',
+                title: 'Payment received',
+                body: 'You received a payment of 500 RUB',
+                targetType: 'repair',
+                targetId: 'r123',
+                metadata: { amount: 500 },
+            });
 
             expect(mockEm.create).toHaveBeenCalledWith(NotificationEntity, {
                 userId: 'u1',
@@ -121,81 +149,45 @@ describe('NotificationService', () => {
                 targetType: 'repair',
                 targetId: 'r123',
                 metadata: { amount: 500 },
+                urgency: undefined,
             });
             expect(result).toBe(notificationWithOptionals);
         });
 
-        it('should push notification to user via push service', async () => {
-            await service.createNotification(
-                'u1', 'payment', 'Payment received', 'You received a payment of 500 RUB',
-            );
-
-            expect(mockPushService.pushToUser).toHaveBeenCalledWith('u1', {
-                id: 'n1',
-                userId: 'u1',
-                type: 'payment',
-                title: 'Payment received',
-                body: 'You received a payment of 500 RUB',
-                targetType: '',
-                targetId: '',
-                metadata: '',
-                isRead: false,
-                createdAt: '2026-03-20T12:00:00.000Z',
-            });
-        });
-
-        it('should publish created event via event publisher', async () => {
-            await service.createNotification(
-                'u1', 'payment', 'Payment received', 'You received a payment of 500 RUB',
-            );
-
-            expect(mockEventPublisher.publishCreated).toHaveBeenCalledWith({
-                id: 'n1',
-                userId: 'u1',
-                type: 'payment',
-                title: 'Payment received',
-                body: 'You received a payment of 500 RUB',
-                targetType: '',
-                targetId: '',
-                metadata: '',
-                isRead: false,
-                createdAt: '2026-03-20T12:00:00.000Z',
-            });
-        });
-
-        it('should handle metadata serialization in the payload', async () => {
-            const notificationWithMeta = {
-                ...mockNotification,
-                metadata: { amount: 500, currency: 'RUB' },
+        it('should dispatch to channels after creating notification', async () => {
+            const mockChannel = {
+                channelName: 'in_app',
+                deliver: jest.fn().mockResolvedValue(undefined),
             };
-            mockEm.create.mockReturnValue(notificationWithMeta);
+            mockChannelRegistry.all.mockReturnValue([mockChannel]);
 
-            await service.createNotification(
-                'u1', 'payment', 'Payment received', 'Body',
-                undefined, undefined, { amount: 500, currency: 'RUB' },
-            );
+            await service.createNotification({
+                userId: 'u1',
+                type: 'payment',
+                title: 'Payment received',
+                body: 'You received a payment of 500 RUB',
+            });
 
-            expect(mockEventPublisher.publishCreated).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    metadata: JSON.stringify({ amount: 500, currency: 'RUB' }),
+            // dispatchToChannels is fire-and-forget, give it a tick
+            await new Promise(r => setTimeout(r, 10));
+
+            expect(mockChannelRegistry.all).toHaveBeenCalled();
+        });
+
+        it('should not reject if channel dispatch fails', async () => {
+            const mockChannel = {
+                channelName: 'in_app',
+                deliver: jest.fn().mockRejectedValue(new Error('Channel down')),
+            };
+            mockChannelRegistry.all.mockReturnValue([mockChannel]);
+
+            await expect(
+                service.createNotification({
+                    userId: 'u1',
+                    type: 'payment',
+                    title: 'Title',
+                    body: 'Body',
                 }),
-            );
-        });
-
-        it('should not reject if push service fails', async () => {
-            mockPushService.pushToUser.mockRejectedValue(new Error('Redis down'));
-
-            // The service catches the error via .catch(), so it should not throw
-            await expect(
-                service.createNotification('u1', 'payment', 'Title', 'Body'),
-            ).resolves.toBe(mockNotification);
-        });
-
-        it('should not reject if event publisher fails', async () => {
-            mockEventPublisher.publishCreated.mockRejectedValue(new Error('RabbitMQ down'));
-
-            await expect(
-                service.createNotification('u1', 'payment', 'Title', 'Body'),
             ).resolves.toBe(mockNotification);
         });
     });
@@ -208,7 +200,7 @@ describe('NotificationService', () => {
             ];
             mockEm.findAndCount.mockResolvedValue([notifications, 5]);
 
-            const result = await service.listUserNotifications('u1', 0, 10, false);
+            const result = await service.listUserNotifications('u1', { offset: 0, limit: 10 });
 
             expect(result).toEqual({ data: notifications, overallCount: 5 });
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
@@ -221,7 +213,7 @@ describe('NotificationService', () => {
         it('should filter by unreadOnly when true', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
-            await service.listUserNotifications('u1', 0, 10, true);
+            await service.listUserNotifications('u1', { offset: 0, limit: 10, unreadOnly: true });
 
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
                 NotificationEntity,
@@ -233,7 +225,7 @@ describe('NotificationService', () => {
         it('should not add isRead filter when unreadOnly is false', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
-            await service.listUserNotifications('u1', 5, 20, false);
+            await service.listUserNotifications('u1', { offset: 5, limit: 20 });
 
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
                 NotificationEntity,
@@ -245,7 +237,7 @@ describe('NotificationService', () => {
         it('should return empty data when no notifications exist', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
-            const result = await service.listUserNotifications('u1', 0, 10, false);
+            const result = await service.listUserNotifications('u1', { offset: 0, limit: 10 });
 
             expect(result).toEqual({ data: [], overallCount: 0 });
         });

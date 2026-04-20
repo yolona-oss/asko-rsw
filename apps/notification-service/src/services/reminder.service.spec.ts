@@ -207,13 +207,15 @@ describe('ReminderService', () => {
             await service.fireDueReminders();
 
             expect(mockNotificationService.createNotification).toHaveBeenCalledWith(
-                'u1',
-                'invoice_unpaid_reminder',
-                'T',
-                'B',
-                'payment',
-                'p1',
-                expect.objectContaining({ paymentId: 'p1', reminderAttempt: 1 }),
+                expect.objectContaining({
+                    userId: 'u1',
+                    type: 'invoice_unpaid_reminder',
+                    title: 'T',
+                    body: 'B',
+                    targetType: 'payment',
+                    targetId: 'p1',
+                    metadata: expect.objectContaining({ paymentId: 'p1', reminderAttempt: 1 }),
+                }),
             );
             expect(job.fireCount).toBe(1);
             expect(job.nextFireAt.getTime()).toBeGreaterThanOrEqual(before + job.intervalMs - 50);
@@ -244,13 +246,10 @@ describe('ReminderService', () => {
 
             expect(mockNotificationService.createNotification).toHaveBeenCalledTimes(1);
             expect(mockNotificationService.createNotification).toHaveBeenCalledWith(
-                'u2',
-                expect.anything(),
-                expect.anything(),
-                expect.anything(),
-                expect.anything(),
-                expect.anything(),
-                expect.objectContaining({ reminderAttempt: 1 }),
+                expect.objectContaining({
+                    userId: 'u2',
+                    metadata: expect.objectContaining({ reminderAttempt: 1 }),
+                }),
             );
             expect(job.fireCount).toBe(1);
         });

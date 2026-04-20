@@ -34,7 +34,9 @@ export const msg = {
         // errors
         userNotFound: 'auth.userNotFound',
         userNotFoundByPhone: 'auth.userNotFoundByPhone',
+        userAlreadyExists: 'auth.userAlreadyExists',
         invalidCredentials: 'auth.invalidCredentials',
+        invalidPassword: 'auth.invalidPassword',
         tokenNotFound: 'auth.tokenNotFound',
         tokenValidationFailed: 'auth.tokenValidationFailed',
         tokenExpired: 'auth.tokenExpired',
@@ -69,10 +71,32 @@ export const msg = {
         phoneChangeRequestExpired: 'auth.phoneChangeRequestExpired',
         phoneAlreadyUsedByOther: 'auth.phoneAlreadyUsedByOther',
         sessionNotFound: 'auth.sessionNotFound',
+        sessionAlreadyExists: 'auth.sessionAlreadyExists',
         oauthAccountLinkedToOther: 'auth.oauthAccountLinkedToOther',
+        oauthLinkNotFound: 'auth.oauthLinkNotFound',
+        oauthProviderNotConfigured: 'auth.oauthProviderNotConfigured',
         cannotUnlinkLastLogin: 'auth.cannotUnlinkLastLogin',
         tokenExchangeFailed: 'auth.tokenExchangeFailed',
         profileFetchFailed: 'auth.profileFetchFailed',
+        passwordRequired: 'auth.passwordRequired',
+        passwordOrCodeRequired: 'auth.passwordOrCodeRequired',
+        passwordTooShort: 'auth.passwordTooShort',
+        passwordTooLong: 'auth.passwordTooLong',
+        passwordLowEntropy: 'auth.passwordLowEntropy',
+        emailOrPhoneRequired: 'auth.emailOrPhoneRequired',
+        nothingToUpdate: 'auth.nothingToUpdate',
+        userAddressNotFound: 'auth.userAddressNotFound',
+        alreadyHasRole: 'auth.alreadyHasRole',
+        doesNotHaveRole: 'auth.doesNotHaveRole',
+        multipleSuperAdmins: 'auth.multipleSuperAdmins',
+        internalEmailMissing: 'auth.internalEmailMissing',
+        signingPasswordOnly: 'auth.signingPasswordOnly',
+        signingInvalidPurpose: 'auth.signingInvalidPurpose',
+        signingInvalidOrExpired: 'auth.signingInvalidOrExpired',
+        inviteCreatorNotFound: 'auth.inviteCreatorNotFound',
+        inviteNotFound: 'auth.inviteNotFound',
+        inviteAlreadyUsed: 'auth.inviteAlreadyUsed',
+        inviteExpired: 'auth.inviteExpired',
         // success / info
         emailAlreadySent: 'auth.emailAlreadySent',
         emailSentIfAccountExists: 'auth.emailSentIfAccountExists',
@@ -107,6 +131,7 @@ export const msg = {
     // ── OTP ───────────────────────────────────────────────────────────────
     otp: {
         tooManyAttempts: 'otp.tooManyAttempts',
+        smsNotConfigured: 'otp.smsNotConfigured',
     },
 
     // ── Repair requests ──────────────────────────────────────────────────
@@ -204,6 +229,23 @@ export const msg = {
         notEnoughTime: 'schedule.notEnoughTime',
         overtimeOverlap: 'schedule.overtimeOverlap',
         repairerDayOff: 'schedule.repairerDayOff',
+        noConfirmedAddress: 'schedule.noConfirmedAddress',
+        vacationNotFound: 'schedule.vacationNotFound',
+        sickLeaveNotFound: 'schedule.sickLeaveNotFound',
+        overtimeNotFound: 'schedule.overtimeNotFound',
+        overrideNotFound: 'schedule.overrideNotFound',
+        entryNotFound: 'schedule.entryNotFound',
+        noAccessOtherUser: 'schedule.noAccessOtherUser',
+        cannotChangeAfterStart: 'schedule.cannotChangeAfterStart',
+        endBeforeStart: 'schedule.endBeforeStart',
+        canOnlyEndToday: 'schedule.canOnlyEndToday',
+        overrideOnlyToday: 'schedule.overrideOnlyToday',
+        onlyPending: 'schedule.onlyPending',
+        datesRequired: 'schedule.datesRequired',
+        cannotSelfApprove: 'schedule.cannotSelfApprove',
+        mustBeApprovedByEmployee: 'schedule.mustBeApprovedByEmployee',
+        mustBeApprovedByTarget: 'schedule.mustBeApprovedByTarget',
+        alreadyHasActive: 'schedule.alreadyHasActive',
     },
 
     // ── Validation (address / device) ────────────────────────────────────
@@ -227,6 +269,7 @@ export const msg = {
         otherManagerOwns: 'access.otherManagerOwns',
         partNotFound: 'access.partNotFound',
         noAccessToSchedule: 'access.noAccessToSchedule',
+        noDeletePermission: 'access.noDeletePermission',
     },
 
     // ── Payment ──────────────────────────────────────────────────────────
@@ -247,6 +290,13 @@ export const msg = {
         refundRange: 'payment.refundRange',
         onlyCashCanConfirm: 'payment.onlyCashCanConfirm',
         notPending: 'payment.notPending',
+        cashConfirmationLocked: 'payment.cashConfirmationLocked',
+        invalidConfirmCode: 'payment.invalidConfirmCode',
+        cashConfirmationInProgress: 'payment.cashConfirmationInProgress',
+        confirmCodeRequired: 'payment.confirmCodeRequired',
+        amountVerificationRequired: 'payment.amountVerificationRequired',
+        repairerOnlyRepairCash: 'payment.repairerOnlyRepairCash',
+        notAssignedToRepair: 'payment.notAssignedToRepair',
     },
 
     // ── Certificate ──────────────────────────────────────────────────────
@@ -293,10 +343,12 @@ export const msg = {
         directRequiresOneParticipant: 'chat.directRequiresOneParticipant',
         editOwnOnly: 'chat.editOwnOnly',
         deleteOwnOnly: 'chat.deleteOwnOnly',
+        userNotAcceptingChats: 'chat.userNotAcceptingChats',
     },
 
     // ── File / upload ────────────────────────────────────────────────────
     file: {
+        notFound: 'file.notFound',
         imageNotFound: 'file.imageNotFound',
         imageNotAttached: 'file.imageNotAttached',
         videoNotFound: 'file.videoNotFound',
@@ -307,6 +359,10 @@ export const msg = {
         noFilePart: 'file.noFilePart',
         missingUploadStart: 'file.missingUploadStart',
         uploadFailed: 'file.uploadFailed',
+        authRequired: 'file.authRequired',
+        accessDenied: 'file.accessDenied',
+        urlNotAvailable: 'file.urlNotAvailable',
+        notFoundOnDisk: 'file.notFoundOnDisk',
     },
 
     // ── Article / content ────────────────────────────────────────────────

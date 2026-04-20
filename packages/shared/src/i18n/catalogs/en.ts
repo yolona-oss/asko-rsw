@@ -22,7 +22,9 @@ export const en = {
     // ── Auth ─────────────────────────────────────────────────────────────
     'auth.userNotFound': 'User not found',
     'auth.userNotFoundByPhone': 'No user found with this phone number',
+    'auth.userAlreadyExists': 'User already exists',
     'auth.invalidCredentials': 'Invalid credentials',
+    'auth.invalidPassword': 'Invalid password',
     'auth.tokenNotFound': 'Authentication token not found',
     'auth.tokenValidationFailed': 'Token validation failed. {error}',
     'auth.tokenExpired': 'Token expired',
@@ -57,10 +59,32 @@ export const en = {
     'auth.phoneChangeRequestExpired': 'Phone change request not found or expired',
     'auth.phoneAlreadyUsedByOther': 'This phone number is already used by another account',
     'auth.sessionNotFound': 'Session not found',
+    'auth.sessionAlreadyExists': 'Session already exists',
     'auth.oauthAccountLinkedToOther': 'This account is already linked to another user',
+    'auth.oauthLinkNotFound': 'OAuth link not found',
+    'auth.oauthProviderNotConfigured': 'OAuth provider "{provider}" is not configured',
     'auth.cannotUnlinkLastLogin': 'Cannot unlink the only login method',
     'auth.tokenExchangeFailed': 'Token exchange failed: {details}',
     'auth.profileFetchFailed': 'Profile fetch failed: {details}',
+    'auth.passwordRequired': 'Password is required',
+    'auth.passwordOrCodeRequired': 'Password or code is required',
+    'auth.passwordTooShort': 'Password must be at least {min} characters',
+    'auth.passwordTooLong': 'Password must be less than {max} characters',
+    'auth.passwordLowEntropy': 'Password entropy too low (minimum {min} bits)',
+    'auth.emailOrPhoneRequired': 'Email or phone is required',
+    'auth.nothingToUpdate': 'Nothing to update',
+    'auth.userAddressNotFound': 'User address not found',
+    'auth.alreadyHasRole': 'User already has this role',
+    'auth.doesNotHaveRole': 'User does not have this role',
+    'auth.multipleSuperAdmins': 'Multiple super admins found',
+    'auth.internalEmailMissing': 'User has no email but has password',
+    'auth.signingPasswordOnly': 'Only password verification is available for this user',
+    'auth.signingInvalidPurpose': 'Invalid signing token purpose',
+    'auth.signingInvalidOrExpired': 'Invalid or expired signing token',
+    'auth.inviteCreatorNotFound': 'Invitation creator not found',
+    'auth.inviteNotFound': 'Invitation not found',
+    'auth.inviteAlreadyUsed': 'Invitation already used',
+    'auth.inviteExpired': 'Invitation expired',
     // success / info
     'auth.emailAlreadySent': 'Email already sent. Try again later.',
     'auth.emailSentIfAccountExists': 'If an account exists, an email has been sent.',
@@ -91,6 +115,7 @@ export const en = {
 
     // ── OTP ──────────────────────────────────────────────────────────────
     'otp.tooManyAttempts': 'Too many attempts. Request a new code.',
+    'otp.smsNotConfigured': 'SMS service is not configured',
 
     // ── Repair ───────────────────────────────────────────────────────────
     'repair.notFound': 'Repair request not found',
@@ -174,6 +199,23 @@ export const en = {
     'schedule.notEnoughTime': 'Less than {minutes} min. remaining in the work day. Assignment not possible',
     'schedule.overtimeOverlap': 'Overtime overlaps with an existing entry ({start}–{end})',
     'schedule.repairerDayOff': 'Today is the repairer\'s day off{suffix}. {action} not possible',
+    'schedule.noConfirmedAddress': 'Recipient has no confirmed address. Schedule is tied to a timezone — add and verify an address first.',
+    'schedule.vacationNotFound': 'Vacation not found',
+    'schedule.sickLeaveNotFound': 'Sick leave not found',
+    'schedule.overtimeNotFound': 'Overtime not found',
+    'schedule.overrideNotFound': 'Schedule override not found',
+    'schedule.entryNotFound': 'Schedule entry not found',
+    'schedule.noAccessOtherUser': 'No access to another user\'s schedule',
+    'schedule.cannotChangeAfterStart': 'Cannot change vacation after it has started',
+    'schedule.endBeforeStart': 'End date cannot be before start date',
+    'schedule.canOnlyEndToday': 'Can only end sick leave today or earlier',
+    'schedule.overrideOnlyToday': 'Schedule override can only be changed on the day it was created for',
+    'schedule.onlyPending': 'Can only approve/reject pending entries',
+    'schedule.datesRequired': 'dateFrom and dateTo are required',
+    'schedule.cannotSelfApprove': 'Cannot approve own request — a second person is required',
+    'schedule.mustBeApprovedByEmployee': 'Entry must be approved by an employee',
+    'schedule.mustBeApprovedByTarget': 'Entry must be approved by the target user',
+    'schedule.alreadyHasActive': 'User already has an active {label}',
 
     // ── Validation ───────────────────────────────────────────────────────
     'validation.addressNotFound': 'Address not found in OpenStreetMap database',
@@ -193,6 +235,7 @@ export const en = {
     'access.otherManagerOwns': 'This request is managed by another manager',
     'access.partNotFound': 'Part not found',
     'access.noAccessToSchedule': 'No access to another user\'s schedule',
+    'access.noDeletePermission': 'No permission to delete this document',
 
     // ── Payment ──────────────────────────────────────────────────────────
     'payment.notFound': 'Payment not found',
@@ -211,6 +254,13 @@ export const en = {
     'payment.refundRange': 'Refund amount must be between 0.01 and {remaining}',
     'payment.onlyCashCanConfirm': 'Only cash payments can be confirmed manually',
     'payment.notPending': 'Payment is not pending (current: {status})',
+    'payment.cashConfirmationLocked': 'Confirmation locked: too many attempts. Contact administrator.',
+    'payment.invalidConfirmCode': 'Invalid confirmation code. Attempts remaining: {remaining}',
+    'payment.cashConfirmationInProgress': 'Cash confirmation already being processed',
+    'payment.confirmCodeRequired': 'Confirmation code is required',
+    'payment.amountVerificationRequired': 'Amount verification is required',
+    'payment.repairerOnlyRepairCash': 'Repairers can only confirm repair request cash payments',
+    'payment.notAssignedToRepair': 'You are not assigned to this repair',
 
     // ── Certificate ──────────────────────────────────────────────────────
     'certificate.notFound': 'Certificate not found',
@@ -249,8 +299,10 @@ export const en = {
     'chat.directRequiresOneParticipant': 'Direct conversations require exactly one other participant',
     'chat.editOwnOnly': 'Can only edit own messages',
     'chat.deleteOwnOnly': 'Can only delete own messages',
+    'chat.userNotAcceptingChats': 'User is not accepting new chats',
 
     // ── File ─────────────────────────────────────────────────────────────
+    'file.notFound': 'File not found',
     'file.imageNotFound': 'Image not found',
     'file.imageNotAttached': 'Image is not attached',
     'file.videoNotFound': 'Video not found',
@@ -261,6 +313,10 @@ export const en = {
     'file.noFilePart': 'No file part in request',
     'file.missingUploadStart': 'Missing upload start command',
     'file.uploadFailed': 'File upload failed',
+    'file.authRequired': 'Authentication required',
+    'file.accessDenied': 'Access denied',
+    'file.urlNotAvailable': 'File URL not available',
+    'file.notFoundOnDisk': 'File not found on disk',
 
     // ── Article ──────────────────────────────────────────────────────────
     'article.notFound': 'Article not found',

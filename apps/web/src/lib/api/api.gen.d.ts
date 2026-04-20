@@ -7112,6 +7112,8 @@ export interface operations {
                 page: string;
                 limit: string;
                 unreadOnly: string;
+                group: string;
+                readStatus: string;
             };
             header?: never;
             path?: never;

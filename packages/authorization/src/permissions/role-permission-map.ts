@@ -31,6 +31,7 @@ export const ROLE_PERMISSIONS: ReadonlyMap<Role, ReadonlySet<Permission>> = new 
         Permission.SCHEDULE_CREATE,
         Permission.SCHEDULE_UPDATE_OWN,
         Permission.SCHEDULE_UPDATE_ANY,
+        Permission.SCHEDULE_VIEW_OWN,
         Permission.SCHEDULE_VIEW_ALL,
         Permission.SCHEDULE_APPROVE,
         Permission.SCHEDULE_PATTERN_MANAGE,

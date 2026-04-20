@@ -62,7 +62,9 @@
             "^modules/(.*)$": "<rootDir>/modules/$1",
             "^services/(.*)$": "<rootDir>/services/$1",
             "^consumers/(.*)$": "<rootDir>/consumers/$1",
-            "^controllers/(.*)$": "<rootDir>/controllers/$1"
+            "^controllers/(.*)$": "<rootDir>/controllers/$1",
+            "^channels$": "<rootDir>/channels",
+            "^channels/(.*)$": "<rootDir>/channels/$1"
         },
         "transformIgnorePatterns": [
             "node_modules/(?!uuid)"

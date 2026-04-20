@@ -22,7 +22,9 @@ export const ru = {
     // ── Auth ─────────────────────────────────────────────────────────────
     'auth.userNotFound': 'Пользователь не найден',
     'auth.userNotFoundByPhone': 'Пользователь с этим номером не найден',
+    'auth.userAlreadyExists': 'Пользователь уже существует',
     'auth.invalidCredentials': 'Неверные учётные данные',
+    'auth.invalidPassword': 'Неверный пароль',
     'auth.tokenNotFound': 'Токен авторизации не найден',
     'auth.tokenValidationFailed': 'Ошибка проверки токена. {error}',
     'auth.tokenExpired': 'Токен истёк',
@@ -57,10 +59,32 @@ export const ru = {
     'auth.phoneChangeRequestExpired': 'Запрос на смену номера не найден или истёк',
     'auth.phoneAlreadyUsedByOther': 'Этот номер уже используется другим аккаунтом',
     'auth.sessionNotFound': 'Сессия не найдена',
+    'auth.sessionAlreadyExists': 'Сессия уже существует',
     'auth.oauthAccountLinkedToOther': 'Этот аккаунт уже привязан к другому пользователю',
+    'auth.oauthLinkNotFound': 'Связка OAuth не найдена',
+    'auth.oauthProviderNotConfigured': 'OAuth-провайдер «{provider}» не настроен',
     'auth.cannotUnlinkLastLogin': 'Нельзя отключить единственный способ входа',
     'auth.tokenExchangeFailed': 'Ошибка обмена токенов: {details}',
     'auth.profileFetchFailed': 'Ошибка получения профиля: {details}',
+    'auth.passwordRequired': 'Необходимо указать пароль',
+    'auth.passwordOrCodeRequired': 'Необходимо указать код или пароль',
+    'auth.passwordTooShort': 'Пароль должен содержать не менее {min} символов',
+    'auth.passwordTooLong': 'Пароль должен содержать не более {max} символов',
+    'auth.passwordLowEntropy': 'Слишком простой пароль (минимум {min} бит энтропии)',
+    'auth.emailOrPhoneRequired': 'Необходимо указать email или телефон',
+    'auth.nothingToUpdate': 'Нечего обновлять',
+    'auth.userAddressNotFound': 'Адрес пользователя не найден',
+    'auth.alreadyHasRole': 'У пользователя уже есть эта роль',
+    'auth.doesNotHaveRole': 'У пользователя нет этой роли',
+    'auth.multipleSuperAdmins': 'Найдено несколько суперадминистраторов',
+    'auth.internalEmailMissing': 'У пользователя нет email, но есть пароль',
+    'auth.signingPasswordOnly': 'Для данного пользователя доступна только проверка паролем',
+    'auth.signingInvalidPurpose': 'Недопустимое назначение токена подписи',
+    'auth.signingInvalidOrExpired': 'Недействительный или просроченный токен подписи',
+    'auth.inviteCreatorNotFound': 'Создатель приглашения не найден',
+    'auth.inviteNotFound': 'Приглашение не найдено',
+    'auth.inviteAlreadyUsed': 'Приглашение уже использовано',
+    'auth.inviteExpired': 'Приглашение истекло',
     // success / info
     'auth.emailAlreadySent': 'Письмо уже отправлено. Попробуйте позже.',
     'auth.emailSentIfAccountExists': 'Если аккаунт существует, письмо отправлено.',
@@ -91,6 +115,7 @@ export const ru = {
 
     // ── OTP ──────────────────────────────────────────────────────────────
     'otp.tooManyAttempts': 'Слишком много попыток. Запросите новый код.',
+    'otp.smsNotConfigured': 'SMS-сервис не настроен',
 
     // ── Repair ───────────────────────────────────────────────────────────
     'repair.notFound': 'Заявка на ремонт не найдена',
@@ -174,6 +199,23 @@ export const ru = {
     'schedule.notEnoughTime': 'До конца рабочего дня осталось менее {minutes} мин. Назначение невозможно',
     'schedule.overtimeOverlap': 'Переработка пересекается с существующей записью ({start}–{end})',
     'schedule.repairerDayOff': 'Сегодня выходной день мастера{suffix}. {action} невозможно',
+    'schedule.noConfirmedAddress': 'У адресата нет подтверждённого адреса. Расписание привязано к часовому поясу — сначала добавьте и подтвердите адрес.',
+    'schedule.vacationNotFound': 'Отпуск не найден',
+    'schedule.sickLeaveNotFound': 'Больничный не найден',
+    'schedule.overtimeNotFound': 'Переработка не найдена',
+    'schedule.overrideNotFound': 'Замена выходного не найдена',
+    'schedule.entryNotFound': 'Запись расписания не найдена',
+    'schedule.noAccessOtherUser': 'Нет доступа к расписанию другого пользователя',
+    'schedule.cannotChangeAfterStart': 'Нельзя изменить отпуск после его начала',
+    'schedule.endBeforeStart': 'Дата завершения не может быть раньше даты начала',
+    'schedule.canOnlyEndToday': 'Можно завершить больничный только сегодняшним днём или раньше',
+    'schedule.overrideOnlyToday': 'Замену выходного можно изменить только в тот день, на который она создана',
+    'schedule.onlyPending': 'Можно подтверждать/отклонять только ожидающие записи',
+    'schedule.datesRequired': 'dateFrom и dateTo обязательны',
+    'schedule.cannotSelfApprove': 'Нельзя подтвердить собственный запрос — требуется второе лицо',
+    'schedule.mustBeApprovedByEmployee': 'Запись должна быть подтверждена сотрудником',
+    'schedule.mustBeApprovedByTarget': 'Запись должна быть подтверждена адресатом',
+    'schedule.alreadyHasActive': 'У пользователя уже есть активный {label}',
 
     // ── Validation ───────────────────────────────────────────────────────
     'validation.addressNotFound': 'Адрес не найден в базе OpenStreetMap',
@@ -193,6 +235,7 @@ export const ru = {
     'access.otherManagerOwns': 'Этой заявкой управляет другой менеджер',
     'access.partNotFound': 'Запчасть не найдена',
     'access.noAccessToSchedule': 'Нет доступа к расписанию другого пользователя',
+    'access.noDeletePermission': 'Нет прав на удаление документа',
 
     // ── Payment ──────────────────────────────────────────────────────────
     'payment.notFound': 'Платёж не найден',
@@ -211,6 +254,13 @@ export const ru = {
     'payment.refundRange': 'Сумма возврата должна быть от 0.01 до {remaining}',
     'payment.onlyCashCanConfirm': 'Подтвердить вручную можно только наличный платёж',
     'payment.notPending': 'Платёж не в статусе ожидания (текущий: {status})',
+    'payment.cashConfirmationLocked': 'Подтверждение заблокировано: превышено количество попыток. Обратитесь к администратору.',
+    'payment.invalidConfirmCode': 'Неверный код подтверждения. Осталось попыток: {remaining}',
+    'payment.cashConfirmationInProgress': 'Подтверждение наличного платежа уже обрабатывается',
+    'payment.confirmCodeRequired': 'Код подтверждения обязателен',
+    'payment.amountVerificationRequired': 'Требуется подтверждение суммы',
+    'payment.repairerOnlyRepairCash': 'Мастера могут подтверждать только наличные платежи за заявки на ремонт',
+    'payment.notAssignedToRepair': 'Вы не назначены на эту заявку',
 
     // ── Certificate ──────────────────────────────────────────────────────
     'certificate.notFound': 'Сертификат не найден',
@@ -249,8 +299,10 @@ export const ru = {
     'chat.directRequiresOneParticipant': 'Прямой диалог требует ровно одного собеседника',
     'chat.editOwnOnly': 'Можно редактировать только свои сообщения',
     'chat.deleteOwnOnly': 'Можно удалять только свои сообщения',
+    'chat.userNotAcceptingChats': 'Пользователь не принимает новые чаты',
 
     // ── File ─────────────────────────────────────────────────────────────
+    'file.notFound': 'Файл не найден',
     'file.imageNotFound': 'Изображение не найдено',
     'file.imageNotAttached': 'Изображение не прикреплено',
     'file.videoNotFound': 'Видео не найдено',
@@ -261,6 +313,10 @@ export const ru = {
     'file.noFilePart': 'В запросе отсутствует файл',
     'file.missingUploadStart': 'Отсутствует команда начала загрузки',
     'file.uploadFailed': 'Ошибка загрузки файла',
+    'file.authRequired': 'Требуется авторизация',
+    'file.accessDenied': 'Доступ запрещён',
+    'file.urlNotAvailable': 'URL файла недоступен',
+    'file.notFoundOnDisk': 'Файл не найден на диске',
 
     // ── Article ──────────────────────────────────────────────────────────
     'article.notFound': 'Статья не найдена',
