@@ -54,19 +54,22 @@ export class NotificationClientService implements OnModuleInit {
 
     async listUserNotifications(
         userId: string,
-        page?: number,
-        limit?: number,
-        unreadOnly?: boolean,
-        sortBy?: string,
-        sortOrder?: string,
+        params?: {
+            page?: number;
+            limit?: number;
+            group?: string;
+            readStatus?: string;
+        },
     ): Promise<PaginatedNotificationsResponse> {
         const res = await grpcCall(this.notificationService.listUserNotifications({
             userId,
-            page: page ?? 0,
-            limit: limit ?? 20,
-            unreadOnly: unreadOnly ?? false,
-            sortBy: sortBy ?? '',
-            sortOrder: sortOrder ?? '',
+            page: params?.page ?? 0,
+            limit: params?.limit ?? 20,
+            unreadOnly: false,
+            sortBy: '',
+            sortOrder: '',
+            group: params?.group ?? '',
+            readStatus: params?.readStatus ?? '',
         }));
         return { ...res, data: res.data ?? [] };
     }

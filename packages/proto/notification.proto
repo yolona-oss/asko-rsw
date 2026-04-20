@@ -40,6 +40,8 @@ message ListUserNotificationsRequest {
     bool unreadOnly = 4;
     string sort_by = 5;
     string sort_order = 6;
+    string group = 7;
+    string read_status = 8;
 }
 
 message MarkAsReadRequest {

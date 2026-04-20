@@ -20,6 +20,8 @@ export interface ListUserNotificationsRequest {
     unreadOnly: boolean;
     sortBy: string;
     sortOrder: string;
+    group: string;
+    readStatus: string;
 }
 
 export interface MarkAsReadRequest {

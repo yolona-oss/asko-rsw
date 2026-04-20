@@ -15,11 +15,78 @@ import { getActiveConversation } from '@/lib/active-conversation';
 import type { NotificationRecord } from '@/lib/api/types';
 import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
+import { NotificationGroup } from '@asko/shared/client';
 import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup, URGENCY_BORDER, URGENCY_BORDER_DEFAULT, URGENCY_LABEL } from './constants';
 import { NotificationIcon } from './icon';
 
+type ViewMode = 'unread' | 'all';
+const HISTORY_PAGE_SIZE = 20;
+
+const GROUP_OPTIONS = [
+  { value: '', label: 'Все' },
+  ...Object.values(NotificationGroup).map(g => ({ value: g, label: GROUP_LABELS[g] ?? g })),
+];
+
 const REMINDER_MS = 5 * 60 * 1000;
 const PANEL_WIDTH = 350;
+
+async function markReadAndInvalidate(queryClient: ReturnType<typeof useQueryClient>, id: string) {
+  await notificationApi.markAsRead(id);
+  queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
+  queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+  queryClient.invalidateQueries({ queryKey: ['notifications-unread-list'] });
+}
+
+function navigateToNotification(
+  n: NotificationRecord,
+  markRead: (id: string) => void,
+  router: ReturnType<typeof useRouter>,
+  onAfter?: () => void,
+) {
+  const config = NOTIFICATION_TYPE_CONFIG[n.type];
+  const href = config?.href?.(n);
+  if (!n.isRead) markRead(n.id);
+  if (href) { router.push(href); onAfter?.(); }
+}
+
+function NotificationViewTabs({
+  viewMode,
+  unreadCount,
+  onSelectUnread,
+  onSelectAll,
+}: {
+  viewMode: ViewMode;
+  unreadCount: number;
+  onSelectUnread: () => void;
+  onSelectAll: () => void;
+}) {
+  return (
+    <div className="flex px-4 gap-4">
+      <button
+        type="button"
+        onClick={onSelectUnread}
+        className={`pb-2 text-[12px] font-medium border-b-2 transition-colors cursor-pointer ${
+          viewMode === 'unread'
+            ? 'border-brand-red text-brand-red'
+            : 'border-transparent text-text-sub hover:text-text-main'
+        }`}
+      >
+        Непрочитанные{unreadCount > 0 ? ` (${unreadCount})` : ''}
+      </button>
+      <button
+        type="button"
+        onClick={onSelectAll}
+        className={`pb-2 text-[12px] font-medium border-b-2 transition-colors cursor-pointer ${
+          viewMode === 'all'
+            ? 'border-brand-red text-brand-red'
+            : 'border-transparent text-text-sub hover:text-text-main'
+        }`}
+      >
+        Все
+      </button>
+    </div>
+  );
+}
 
 /** Minimum mobile sheet height: header(52) + one item(~72) + footer(48) */
 const MOBILE_MIN_H = 172;
@@ -101,6 +168,9 @@ export function NotificationBell() {
   const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
   const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
   const [closing, setClosing] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('unread');
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyGroup, setHistoryGroup] = useState('');
 
   // ── Queries ──────────────────────────────────────────────────
   const { data: countData } = useQuery({
@@ -118,12 +188,28 @@ export function NotificationBell() {
       const { data } = await notificationApi.list({ limit: 20, unreadOnly: true });
       return data;
     },
-    enabled: open,
+    enabled: open && viewMode === 'unread',
+    staleTime: 0,
+  });
+
+  const { data: historyData } = useQuery({
+    queryKey: ['notifications-history', historyPage, historyGroup],
+    queryFn: async () => {
+      const { data } = await notificationApi.list({
+        page: historyPage,
+        limit: HISTORY_PAGE_SIZE,
+        group: historyGroup || undefined,
+      });
+      return data;
+    },
+    enabled: open && viewMode === 'all',
     staleTime: 0,
   });
 
   const unreadCount = countData?.count ?? 0;
   const notifications = listData?.data ?? [];
+  const historyNotifications = historyData?.data ?? [];
+  const historyTotalPages = Math.ceil((historyData?.overallCount ?? 0) / HISTORY_PAGE_SIZE);
 
   // ── Sound reminder (re-ping every 5 min while unread) ────────
   const reminderRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,10 +277,13 @@ export function NotificationBell() {
     if (notifMode === 'dock') {
       setNotifOpen(false);
       actions.clearAll();
+      setViewMode('unread');
+      setHistoryPage(1);
+      setHistoryGroup('');
       return;
     }
     setClosing(true);
-    setTimeout(() => { setNotifOpen(false); setClosing(false); actions.clearAll(); }, 250);
+    setTimeout(() => { setNotifOpen(false); setClosing(false); actions.clearAll(); setViewMode('unread'); setHistoryPage(1); setHistoryGroup(''); }, 250);
   }, [notifMode, setNotifOpen, actions]);
 
   const handleToggle = useCallback(() => {
@@ -256,30 +345,42 @@ export function NotificationBell() {
     setNotifMode(notifMode === 'overlay' ? 'dock' : 'overlay');
   }, [notifMode, setNotifMode]);
 
+  // ── History view handlers ────────────────────────────────────
+  const handleHistoryMarkRead = useCallback((id: string) => markReadAndInvalidate(queryClient, id), [queryClient]);
+  const handleHistoryNavigate = useCallback((n: NotificationRecord) => navigateToNotification(n, handleHistoryMarkRead, router, handleClose), [handleHistoryMarkRead, router, handleClose]);
+
   // ── Shared panel header ──────────────────────────────────────
   const panelHeader = (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
-      <span className="text-sm font-medium text-text-main">Уведомления</span>
-      <div className="flex items-center gap-2">
-        {unreadCount > 0 && (
+    <div className="flex flex-col border-b border-border-light flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3">
+        <span className="text-sm font-medium text-text-main">Уведомления</span>
+        <div className="flex items-center gap-2">
+          {viewMode === 'unread' && unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllRead}
+              disabled={markingAll}
+              className="text-[11px] text-brand-red hover:underline cursor-pointer disabled:opacity-50"
+            >
+              Прочитать все
+            </button>
+          )}
           <button
             type="button"
-            onClick={markAllRead}
-            disabled={markingAll}
-            className="text-[11px] text-brand-red hover:underline cursor-pointer disabled:opacity-50"
+            onClick={handleClose}
+            className="text-text-sub hover:text-text-main cursor-pointer p-1"
+            aria-label="Закрыть"
           >
-            Прочитать все
+            <X className="w-3.5 h-3.5" />
           </button>
-        )}
-        <button
-          type="button"
-          onClick={handleClose}
-          className="text-text-sub hover:text-text-main cursor-pointer p-1"
-          aria-label="Закрыть"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
+        </div>
       </div>
+      <NotificationViewTabs
+        viewMode={viewMode}
+        unreadCount={unreadCount}
+        onSelectUnread={() => setViewMode('unread')}
+        onSelectAll={() => { setViewMode('all'); setHistoryPage(1); }}
+      />
     </div>
   );
 
@@ -316,7 +417,7 @@ export function NotificationBell() {
     </div>
   );
 
-  const notificationList = (
+  const notificationList = viewMode === 'unread' ? (
     <NotificationList
       notifications={notifications}
       removingIds={removingIds}
@@ -327,6 +428,17 @@ export function NotificationBell() {
       onToggleGroup={toggleGroup}
       onMarkRead={markRead}
       onNavigate={handleNavigate}
+    />
+  ) : (
+    <HistoryList
+      notifications={historyNotifications}
+      page={historyPage}
+      totalPages={historyTotalPages}
+      group={historyGroup}
+      onPageChange={setHistoryPage}
+      onGroupChange={setHistoryGroup}
+      onMarkRead={handleHistoryMarkRead}
+      onNavigate={handleHistoryNavigate}
     />
   );
 
@@ -399,6 +511,9 @@ export function NotificationDockPanel() {
   const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
   const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
   const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
+  const [dockViewMode, setDockViewMode] = useState<ViewMode>('unread');
+  const [dockHistoryPage, setDockHistoryPage] = useState(1);
+  const [dockHistoryGroup, setDockHistoryGroup] = useState('');
 
   const { data: listData } = useQuery({
     queryKey: ['notifications-unread-list'],
@@ -406,7 +521,21 @@ export function NotificationDockPanel() {
       const { data } = await notificationApi.list({ limit: 20, unreadOnly: true });
       return data;
     },
-    enabled: open && notifMode === 'dock',
+    enabled: open && notifMode === 'dock' && dockViewMode === 'unread',
+    staleTime: 0,
+  });
+
+  const { data: dockHistoryData } = useQuery({
+    queryKey: ['notifications-history', 'dock', dockHistoryPage, dockHistoryGroup],
+    queryFn: async () => {
+      const { data } = await notificationApi.list({
+        page: dockHistoryPage,
+        limit: HISTORY_PAGE_SIZE,
+        group: dockHistoryGroup || undefined,
+      });
+      return data;
+    },
+    enabled: open && notifMode === 'dock' && dockViewMode === 'all',
     staleTime: 0,
   });
 
@@ -421,8 +550,13 @@ export function NotificationDockPanel() {
 
   const unreadCount = countData?.count ?? 0;
   const notifications = listData?.data ?? [];
+  const dockHistoryNotifications = dockHistoryData?.data ?? [];
+  const dockHistoryTotalPages = Math.ceil((dockHistoryData?.overallCount ?? 0) / HISTORY_PAGE_SIZE);
 
   const { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead, handleNavigate } = useNotificationActions(queryClient, notifications, router);
+
+  const handleDockHistoryMarkRead = useCallback((id: string) => markReadAndInvalidate(queryClient, id), [queryClient]);
+  const handleDockHistoryNavigate = useCallback((n: NotificationRecord) => navigateToNotification(n, handleDockHistoryMarkRead, router), [handleDockHistoryMarkRead, router]);
 
   if (!open || notifMode !== 'dock') return null;
 
@@ -432,43 +566,64 @@ export function NotificationDockPanel() {
       style={{ width: PANEL_WIDTH }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-light flex-shrink-0">
-        <span className="text-sm font-medium text-text-main">Уведомления</span>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
+      <div className="flex flex-col border-b border-border-light flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="text-sm font-medium text-text-main">Уведомления</span>
+          <div className="flex items-center gap-2">
+            {dockViewMode === 'unread' && unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllRead}
+                disabled={markingAll}
+                className="text-[11px] text-brand-red hover:underline cursor-pointer disabled:opacity-50"
+              >
+                Прочитать все
+              </button>
+            )}
             <button
               type="button"
-              onClick={markAllRead}
-              disabled={markingAll}
-              className="text-[11px] text-brand-red hover:underline cursor-pointer disabled:opacity-50"
+              onClick={() => { setNotifOpen(false); setDockViewMode('unread'); setDockHistoryPage(1); setDockHistoryGroup(''); }}
+              className="text-text-sub hover:text-text-main cursor-pointer p-1"
+              aria-label="Закрыть"
             >
-              Прочитать все
+              <X className="w-3.5 h-3.5" />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setNotifOpen(false)}
-            className="text-text-sub hover:text-text-main cursor-pointer p-1"
-            aria-label="Закрыть"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          </div>
         </div>
+        <NotificationViewTabs
+          viewMode={dockViewMode}
+          unreadCount={unreadCount}
+          onSelectUnread={() => setDockViewMode('unread')}
+          onSelectAll={() => { setDockViewMode('all'); setDockHistoryPage(1); }}
+        />
       </div>
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">
-        <NotificationList
-          notifications={notifications}
-          removingIds={removingIds}
-          markingAll={markingAll}
-          expandedIds={expandedIds}
-          expandedGroups={expandedGroups}
-          onToggleExpand={toggleExpand}
-          onToggleGroup={toggleGroup}
-          onMarkRead={markRead}
-          onNavigate={handleNavigate}
-        />
+        {dockViewMode === 'unread' ? (
+          <NotificationList
+            notifications={notifications}
+            removingIds={removingIds}
+            markingAll={markingAll}
+            expandedIds={expandedIds}
+            expandedGroups={expandedGroups}
+            onToggleExpand={toggleExpand}
+            onToggleGroup={toggleGroup}
+            onMarkRead={markRead}
+            onNavigate={handleNavigate}
+          />
+        ) : (
+          <HistoryList
+            notifications={dockHistoryNotifications}
+            page={dockHistoryPage}
+            totalPages={dockHistoryTotalPages}
+            group={dockHistoryGroup}
+            onPageChange={setDockHistoryPage}
+            onGroupChange={setDockHistoryGroup}
+            onMarkRead={handleDockHistoryMarkRead}
+            onNavigate={handleDockHistoryNavigate}
+          />
+        )}
       </div>
 
       {/* Footer */}
@@ -477,7 +632,7 @@ export function NotificationDockPanel() {
           {unreadCount > 0 ? `${unreadCount} непрочитанных` : 'Нет новых'}
         </span>
         <div className="flex items-center gap-1">
-          {unreadCount > 0 && (
+          {dockViewMode === 'unread' && unreadCount > 0 && (
             <button
               type="button"
               onClick={markAllRead}
@@ -607,13 +762,13 @@ function MobileSheet({
 
 // ─── Notification List (grouped) ────────────────────────────────
 
-interface NotificationGroup {
+interface NotifGroupView {
   key: string;
   label: string;
   items: NotificationRecord[];
 }
 
-function buildGroups(notifications: NotificationRecord[]): NotificationGroup[] {
+function buildGroups(notifications: NotificationRecord[]): NotifGroupView[] {
   const map = new Map<string, NotificationRecord[]>();
   const order: string[] = [];
   for (const n of notifications) {
@@ -649,6 +804,8 @@ function NotificationList({
   onMarkRead: (id: string) => void;
   onNavigate: (n: NotificationRecord) => void;
 }) {
+  const groups = useMemo(() => buildGroups(notifications), [notifications]);
+
   if (notifications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 animate-[empty-state-in_400ms_ease-out]">
@@ -657,8 +814,6 @@ function NotificationList({
       </div>
     );
   }
-
-  const groups = useMemo(() => buildGroups(notifications), [notifications]);
 
   return (
     <>
@@ -804,6 +959,189 @@ function NotificationItem({
         >
           Прочитано
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── History List (all notifications with pagination) ──────────
+
+function HistoryList({
+  notifications,
+  page,
+  totalPages,
+  group,
+  onPageChange,
+  onGroupChange,
+  onMarkRead,
+  onNavigate,
+}: {
+  notifications: NotificationRecord[];
+  page: number;
+  totalPages: number;
+  group: string;
+  onPageChange: (page: number) => void;
+  onGroupChange: (group: string) => void;
+  onMarkRead: (id: string) => void;
+  onNavigate: (n: NotificationRecord) => void;
+}) {
+  const [expandedIds, toggleExpand, clearExpanded] = useToggleSet();
+
+  useEffect(() => { clearExpanded(); }, [page, group, clearExpanded]);
+
+  return (
+    <div className="flex flex-col">
+      {/* Group filter */}
+      <div className="px-4 py-2 border-b border-border-light/50">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          {GROUP_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onGroupChange(opt.value); onPageChange(1); }}
+              className={`text-[11px] px-2 py-1 whitespace-nowrap transition-colors cursor-pointer ${
+                group === opt.value
+                  ? 'bg-brand-red text-text-on-brand font-medium'
+                  : 'bg-surface-secondary text-text-sub hover:text-text-main'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notification items */}
+      {notifications.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 px-6">
+          <BellOff className="w-10 h-10 text-text-sub/30" />
+          <p className="text-sm text-text-sub text-center">Нет уведомлений</p>
+        </div>
+      ) : (
+        <>
+          {notifications.map(n => (
+            <HistoryItem
+              key={n.id}
+              notification={n}
+              isExpanded={expandedIds.has(n.id)}
+              onToggleExpand={toggleExpand}
+              onMarkRead={onMarkRead}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 px-4 py-3 border-t border-border-light">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="text-[12px] text-text-sub hover:text-text-main disabled:opacity-30 cursor-pointer disabled:cursor-default"
+          >
+            Назад
+          </button>
+          <span className="text-[11px] text-text-sub">{page} / {totalPages}</span>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            className="text-[12px] text-text-sub hover:text-text-main disabled:opacity-30 cursor-pointer disabled:cursor-default"
+          >
+            Далее
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HistoryItem({
+  notification: n,
+  isExpanded,
+  onToggleExpand,
+  onMarkRead,
+  onNavigate,
+}: {
+  notification: NotificationRecord;
+  isExpanded: boolean;
+  onToggleExpand: (id: string) => void;
+  onMarkRead: (id: string) => void;
+  onNavigate: (n: NotificationRecord) => void;
+}) {
+  const urgency = n.urgency ?? 'normal';
+  const urgencyBorder = URGENCY_BORDER[urgency] ?? URGENCY_BORDER_DEFAULT;
+  const urgencyLabel = URGENCY_LABEL[urgency];
+  const navigable = isNotificationNavigable(n);
+
+  return (
+    <div className={`border-b border-border-light/30 last:border-b-0 ${urgencyBorder} ${n.isRead ? 'opacity-50' : ''}`}>
+      <button
+        type="button"
+        onClick={() => onToggleExpand(n.id)}
+        className="w-full flex items-start gap-3 text-left cursor-pointer px-4 py-2.5 hover:bg-surface-hover transition-colors"
+      >
+        {/* Read/unread dot */}
+        <span className="flex-shrink-0 mt-1.5 w-2">
+          {!n.isRead && (
+            <span className={`block w-2 h-2 rounded-full ${urgency === 'critical' ? 'bg-error' : 'bg-brand-red'}`} />
+          )}
+        </span>
+
+        {/* Icon */}
+        <span className="flex-shrink-0 mt-0.5">
+          <NotificationIcon type={n.type} />
+        </span>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[13px] font-medium text-text-main leading-tight">{n.title}</p>
+            {urgencyLabel && (
+              <span className={`text-[10px] px-1.5 py-0.5 font-medium flex-shrink-0 ${urgency === 'critical' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
+                {urgencyLabel}
+              </span>
+            )}
+          </div>
+          {n.body && (
+            <p className={`text-[12px] text-text-sub mt-1 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+              {n.body}
+            </p>
+          )}
+          <span className="text-[11px] text-text-sub/50 mt-1 block">
+            {formatTimeAgo(new Date(n.createdAt).getTime())}
+          </span>
+        </div>
+
+        {n.body && n.body.length > 60 && (
+          <ChevronDown
+            className={`w-3.5 h-3.5 text-text-sub/40 flex-shrink-0 mt-1.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-4 px-4 pb-2 -mt-1">
+        {navigable && (
+          <button
+            type="button"
+            onClick={() => onNavigate(n)}
+            className="text-[11px] text-text-sub hover:text-brand-red transition-colors cursor-pointer"
+          >
+            Перейти
+          </button>
+        )}
+        {!n.isRead && (
+          <button
+            type="button"
+            onClick={() => onMarkRead(n.id)}
+            className="text-[11px] text-text-sub hover:text-brand-red transition-colors cursor-pointer"
+          >
+            Прочитано
+          </button>
+        )}
       </div>
     </div>
   );

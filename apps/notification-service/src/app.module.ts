@@ -16,6 +16,7 @@ import { NotificationPushService } from 'services/notification-push.service';
 import { NotificationEventPublisher } from 'services/notification-event.publisher';
 import { ReminderService } from 'services/reminder.service';
 import { ReminderSweepService } from 'services/reminder-sweep.service';
+import { NotificationCleanupService } from 'services/notification-cleanup.service';
 import { AudienceProjectionService } from 'services/audience-projection.service';
 import { NotificationPreferencesService } from 'services/notification-preferences.service';
 import { PushSubscriptionService } from 'services/push-subscription.service';
@@ -90,6 +91,7 @@ import { EmailQueueModule } from 'modules/email-queue.module';
         NotificationEventPublisher,
         ReminderService,
         ReminderSweepService,
+        NotificationCleanupService,
         AudienceProjectionService,
         NotificationPreferencesService,
         PushSubscriptionService,

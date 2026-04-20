@@ -257,58 +257,64 @@ export function FormPageSkeleton() {
   );
 }
 
-/** Profile page skeleton: header + card with avatar + form fields + sections */
+/** Profile page skeleton: header + multi-card sections */
 export function ProfilePageSkeleton() {
   return (
     <PageContainer>
       {/* Page header */}
       <SkeletonBlock className="h-9 w-32" />
 
-      {/* Card body */}
+      {/* Personal info card */}
       <div className="bg-surface border border-border-light p-6 flex flex-col gap-6 lg:gap-8">
-        {/* Avatar section */}
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <SkeletonCircle className="w-24 h-24 flex-shrink-0" />
           <div className="flex flex-col gap-3 w-full">
             <SkeletonBlock className="h-4 w-28" />
-            <SkeletonBlock className="h-[88px] w-full" />
+            <SkeletonBlock className="h-20 w-full" />
           </div>
         </div>
-
-        {/* Divider */}
         <div className="h-px bg-border-light" />
-
-        {/* Name field (full width) */}
-        <div className="flex flex-col gap-2">
-          <SkeletonBlock className="h-4 w-12" />
-          <SkeletonBlock className="h-10 w-full" />
-        </div>
-
-        {/* Email + Phone (2-col) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <SkeletonBlock className="h-4 w-14" />
+            <SkeletonBlock className="h-4 w-16" />
             <SkeletonBlock className="h-10 w-full" />
           </div>
-          <div className="flex flex-col gap-2">
-            <SkeletonBlock className="h-4 w-20" />
-            <SkeletonBlock className="h-10 w-full" />
-          </div>
-        </div>
-
-        {/* Sections: addresses, login methods, chat, sounds */}
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i}>
-            <div className="h-px bg-border-light mb-6 lg:mb-8" />
-            <div className="flex flex-col gap-3">
-              <SkeletonBlock className="h-5 w-40" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-2">
+              <SkeletonBlock className="h-4 w-14" />
+              <SkeletonBlock className="h-10 w-full" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <SkeletonBlock className="h-4 w-20" />
               <SkeletonBlock className="h-10 w-full" />
             </div>
           </div>
-        ))}
-
-        {/* Save button */}
+        </div>
         <SkeletonBlock className="h-10 w-32" />
+      </div>
+
+      {/* Section cards */}
+      {['w-20', 'w-32', 'w-40', 'w-36', 'w-32'].map((w, i) => (
+        <div key={i} className="bg-surface border border-border-light p-6 flex flex-col gap-4">
+          <SkeletonBlock className={`h-5 ${w}`} />
+          <SkeletonBlock className="h-10 w-full" />
+        </div>
+      ))}
+
+      {/* Security card */}
+      <div className="bg-surface border border-border-light p-6 flex flex-col gap-4">
+        <SkeletonBlock className="h-5 w-56" />
+        <SkeletonBlock className="h-8 w-full" />
+        <div className="h-px bg-border-light" />
+        <SkeletonBlock className="h-5 w-28" />
+        <SkeletonBlock className="h-10 w-full" />
+      </div>
+
+      {/* Sessions card */}
+      <div className="bg-surface border border-border-light p-6 flex flex-col gap-4">
+        <SkeletonBlock className="h-5 w-32" />
+        <SkeletonBlock className="h-14 w-full" />
+        <SkeletonBlock className="h-14 w-full" />
       </div>
     </PageContainer>
   );

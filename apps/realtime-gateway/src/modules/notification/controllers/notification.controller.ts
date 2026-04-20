@@ -28,13 +28,16 @@ export class NotificationController {
         @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('unreadOnly') unreadOnly?: string,
+        @Query('group') group?: string,
+        @Query('readStatus') readStatus?: string,
     ) {
-        return this.notificationClient.listUserNotifications(
-            user.id,
-            page ? parseInt(page) : 1,
-            limit ? parseInt(limit) : 20,
-            unreadOnly === 'true',
-        );
+        const effectiveReadStatus = readStatus || (unreadOnly === 'true' ? 'unread' : '');
+        return this.notificationClient.listUserNotifications(user.id, {
+            page: page ? parseInt(page) : 1,
+            limit: limit ? parseInt(limit) : 20,
+            group: group || undefined,
+            readStatus: effectiveReadStatus || undefined,
+        });
     }
 
     @ApiOkResponse({ type: UnreadCountResponseDto })

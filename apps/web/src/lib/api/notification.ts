@@ -14,7 +14,7 @@ export interface PushSubscriptionRecord {
 }
 
 export const notificationApi = {
-  list(params?: { page?: number; limit?: number; unreadOnly?: boolean }) {
+  list(params?: { page?: number; limit?: number; unreadOnly?: boolean; group?: string; readStatus?: string }) {
     return api.get<PaginatedNotifications>('/notifications', { params });
   },
 
@@ -36,15 +36,19 @@ export const notificationApi = {
 
   // ─── Preferences ──────────────────────────────────────────────────
 
-  getPreferences() {
-    return api.get<NotificationPreferencesResponse>('/notifications/preferences');
+  async getPreferences() {
+    const res = await api.get<NotificationPreferencesResponse>('/notifications/preferences');
+    res.data.groups ??= [];
+    return res;
   },
 
-  updatePreferences(data: {
+  async updatePreferences(data: {
     globalMute?: boolean;
     groups?: Array<{ group: string; in_app: boolean; push: boolean; email: boolean }>;
   }) {
-    return api.put<NotificationPreferencesResponse>('/notifications/preferences', data);
+    const res = await api.put<NotificationPreferencesResponse>('/notifications/preferences', data);
+    res.data.groups ??= [];
+    return res;
   },
 
   // ─── Push Subscriptions ───────────────────────────────────────────

@@ -317,6 +317,17 @@
       "indexes": [
         {
           "columnNames": [
+            "read_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "idx_notification_read_cleanup",
+          "unique": false,
+          "primary": false,
+          "expression": "CREATE INDEX idx_notification_read_cleanup ON public.notification USING btree (read_at) WHERE (is_read = true)"
+        },
+        {
+          "columnNames": [
             "target_type",
             "target_id",
             "is_read"
@@ -324,6 +335,29 @@
           "composite": true,
           "constraint": false,
           "keyName": "idx_notification_target_unread",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "created_at",
+            "urgency"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "idx_notification_unread_cleanup",
+          "unique": false,
+          "primary": false,
+          "expression": "CREATE INDEX idx_notification_unread_cleanup ON public.notification USING btree (created_at, urgency) WHERE (is_read = false)"
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "type"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "idx_notification_user_type",
           "unique": false,
           "primary": false
         },

@@ -171,7 +171,7 @@ const preferencesSlice = createSlice({
         setNotificationPreferences(state, action: PayloadAction<NotificationPreferencesResponse>) {
             state.notifications.globalMute = action.payload.globalMute;
             state.notifications.groups = {};
-            for (const g of action.payload.groups ?? []) {
+            for (const g of action.payload.groups) {
                 state.notifications.groups[g.group] = {
                     in_app: g.in_app,
                     push: g.push,
@@ -217,7 +217,7 @@ const preferencesSlice = createSlice({
         builder.addCase(fetchNotificationPreferences.fulfilled, (state, action) => {
             state.notifications.globalMute = action.payload.globalMute;
             state.notifications.groups = {};
-            for (const g of action.payload.groups ?? []) {
+            for (const g of action.payload.groups) {
                 state.notifications.groups[g.group] = {
                     in_app: g.in_app,
                     push: g.push,
@@ -229,7 +229,7 @@ const preferencesSlice = createSlice({
         builder.addCase(updateNotificationPreferences.fulfilled, (state, action) => {
             state.notifications.globalMute = action.payload.globalMute;
             state.notifications.groups = {};
-            for (const g of action.payload.groups ?? []) {
+            for (const g of action.payload.groups) {
                 state.notifications.groups[g.group] = {
                     in_app: g.in_app,
                     push: g.push,

@@ -26,6 +26,29 @@ export interface CreateNotificationParams {
 
 const NOTIFICATION_SORTABLE_FIELDS = ['createdAt', 'isRead'] as const;
 
+const GROUP_TO_TYPES = new Map<string, readonly string[]>();
+{
+    const mutable = new Map<string, string[]>();
+    for (const [type, group] of Object.entries(NOTIFICATION_TYPE_TO_GROUP)) {
+        const list = mutable.get(group) ?? [];
+        list.push(type);
+        mutable.set(group, list);
+    }
+    for (const [group, list] of mutable) {
+        GROUP_TO_TYPES.set(group, Object.freeze(list));
+    }
+}
+
+export interface ListNotificationsParams {
+    offset: number;
+    limit: number;
+    unreadOnly?: boolean;
+    sortBy?: string;
+    sortOrder?: string;
+    group?: string;
+    readStatus?: string;
+}
+
 @Injectable()
 export class NotificationService {
     constructor(
@@ -104,14 +127,21 @@ export class NotificationService {
     @CreateRequestContext()
     async listUserNotifications(
         userId: string,
-        offset: number,
-        limit: number,
-        unreadOnly: boolean,
-        sortBy?: string,
-        sortOrder?: string,
+        params: ListNotificationsParams,
     ): Promise<{ data: NotificationEntity[]; overallCount: number }> {
+        const { offset, limit, unreadOnly, sortBy, sortOrder, group, readStatus } = params;
         const where: FilterQuery<NotificationEntity> = { userId };
-        if (unreadOnly) where.isRead = false;
+
+        if (readStatus === 'unread') where.isRead = false;
+        else if (readStatus === 'read') where.isRead = true;
+        else if (unreadOnly) where.isRead = false;
+
+        if (group) {
+            const typesForGroup = GROUP_TO_TYPES.get(group);
+            if (typesForGroup && typesForGroup.length > 0) {
+                where.type = { $in: typesForGroup };
+            }
+        }
 
         const orderBy: Record<string, 'ASC' | 'DESC'> = sortBy && (NOTIFICATION_SORTABLE_FIELDS as readonly string[]).includes(sortBy)
             ? { [sortBy]: sortOrder === 'asc' ? 'ASC' : 'DESC' }

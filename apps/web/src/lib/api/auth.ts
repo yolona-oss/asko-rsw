@@ -2,21 +2,39 @@ import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
 import type { IAuthSession, IAuthUser } from './types';
 import { api } from './client';
 
+/** Ensure gRPC repeated fields that may arrive as undefined are arrays. */
+function normalizeUser(user: IAuthUser): IAuthUser {
+  user.roles ??= [];
+  user.providers ??= [];
+  return user;
+}
+
+function normalizeSession(session: IAuthSession): IAuthSession {
+  if (session.user) normalizeUser(session.user);
+  return session;
+}
+
 export const authApi = {
-  login(credentials: LoginCredentials) {
-    return api.post<IAuthSession>('/auth/login', credentials);
+  async login(credentials: LoginCredentials) {
+    const res = await api.post<IAuthSession>('/auth/login', credentials);
+    normalizeSession(res.data);
+    return res;
   },
 
-  signup(data: CreateUserDto) {
-    return api.post<IAuthSession>('/auth/signup', data);
+  async signup(data: CreateUserDto) {
+    const res = await api.post<IAuthSession>('/auth/signup', data);
+    normalizeSession(res.data);
+    return res;
   },
 
   logout() {
     return api.post('/auth/logout');
   },
 
-  getSession() {
-    return api.get<IAuthUser>('/auth/session');
+  async getSession() {
+    const res = await api.get<IAuthUser>('/auth/session');
+    normalizeUser(res.data);
+    return res;
   },
 
   refresh() {
@@ -39,8 +57,10 @@ export const authApi = {
   },
 
   // MFA
-  verifyMfaOtp(data: { mfaToken: string; code: string; trustDevice?: boolean }) {
-    return api.post<IAuthSession>('/auth/mfa/verify', data);
+  async verifyMfaOtp(data: { mfaToken: string; code: string; trustDevice?: boolean }) {
+    const res = await api.post<IAuthSession>('/auth/mfa/verify', data);
+    normalizeSession(res.data);
+    return res;
   },
 
   resendMfaOtp(mfaToken: string) {
@@ -80,8 +100,10 @@ export const authApi = {
   },
 
   // Phone register
-  verifyPhoneRegister(data: { pendingToken: string; code: string }) {
-    return api.post<IAuthSession>('/auth/phone-register/verify', data);
+  async verifyPhoneRegister(data: { pendingToken: string; code: string }) {
+    const res = await api.post<IAuthSession>('/auth/phone-register/verify', data);
+    normalizeSession(res.data);
+    return res;
   },
 
   resendPhoneRegisterOtp(pendingToken: string) {

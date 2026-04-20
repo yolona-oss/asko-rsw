@@ -44,7 +44,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
       setParticipantNames(prev => {
         const next = { ...prev };
         for (const u of users) {
-          const roleSet = new Set((u.roles ?? []).map(r => r.toLowerCase()));
+          const roleSet = new Set(u.roles.map(r => r.toLowerCase()));
           next[u.id] = [u.lastName, u.firstName]
             .filter(part => part && !roleSet.has(part.toLowerCase()))
             .join(' ') || u.id.slice(0, 8);
@@ -55,7 +55,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
         const next = { ...prev };
         for (const u of users) {
           // Use the most specific role (first non-'user' role, or 'user')
-          next[u.id] = (u.roles ?? []).find(r => r !== 'user') ?? u.roles?.[0] ?? '';
+          next[u.id] = u.roles.find(r => r !== 'user') ?? u.roles[0] ?? '';
         }
         return next;
       });

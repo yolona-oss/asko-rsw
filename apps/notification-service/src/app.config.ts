@@ -52,6 +52,23 @@ export class AppConfig {
         };
     }
 
+    get cleanup() {
+        return {
+            advisoryLockKey: parseInt(
+                this.configService.get<string>('NOTIFICATION_CLEANUP_ADVISORY_LOCK_KEY') ?? '94118',
+            ),
+            readRetentionMs: parseInt(
+                this.configService.get<string>('NOTIFICATION_CLEANUP_READ_RETENTION_MS') ?? '86400000', // 1 day
+            ),
+            unreadCriticalRetentionMs: parseInt(
+                this.configService.get<string>('NOTIFICATION_CLEANUP_UNREAD_CRITICAL_RETENTION_MS') ?? '31536000000', // 1 year
+            ),
+            unreadCommonRetentionMs: parseInt(
+                this.configService.get<string>('NOTIFICATION_CLEANUP_UNREAD_COMMON_RETENTION_MS') ?? '2592000000', // 30 days
+            ),
+        };
+    }
+
     get reminders() {
         return {
             paymentIntervalMs: parseInt(

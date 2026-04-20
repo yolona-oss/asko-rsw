@@ -136,7 +136,7 @@ export function AdminUsers() {
       mobileLabel: 'Роль:',
       render: (user) => (
         <p className="text-sm text-text-main tracking-[-0.14px]">
-          {(user.roles ?? []).map((r) => ROLE_LABELS[r] ?? r).join(', ')}
+          {user.roles.map((r) => ROLE_LABELS[r] ?? r).join(', ')}
         </p>
       ),
     },

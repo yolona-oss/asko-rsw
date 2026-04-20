@@ -142,13 +142,17 @@ export const repairRequestApi = {
     return api.post<ProcessInvoiceResult>(`/repair-requests/${requestId}/dummy-pay`);
   },
 
-  getPayments(requestId: string) {
-    return api.get<PaymentList>(`/repair-requests/${requestId}/payments`);
+  async getPayments(requestId: string) {
+    const res = await api.get<PaymentList>(`/repair-requests/${requestId}/payments`);
+    res.data.payments ??= [];
+    return res;
   },
 
   // Work steps
-  getSteps(requestId: string) {
-    return api.get<WorkStepList>(`/repair-requests/${requestId}/steps`);
+  async getSteps(requestId: string) {
+    const res = await api.get<WorkStepList>(`/repair-requests/${requestId}/steps`);
+    res.data.steps ??= [];
+    return res;
   },
 
   addStep(requestId: string, data: AddWorkStepDto) {

@@ -74,11 +74,15 @@ export class NotificationGrpcController {
             const offset = (page - 1) * limit;
             const result = await this.notificationService.listUserNotifications(
                 data.userId,
-                offset,
-                limit,
-                data.unreadOnly ?? false,
-                data.sortBy || undefined,
-                data.sortOrder || undefined,
+                {
+                    offset,
+                    limit,
+                    unreadOnly: data.unreadOnly ?? false,
+                    sortBy: data.sortBy || undefined,
+                    sortOrder: data.sortOrder || undefined,
+                    group: data.group || undefined,
+                    readStatus: data.readStatus || undefined,
+                },
             );
             return {
                 data: result.data.map(entityToRecord),
