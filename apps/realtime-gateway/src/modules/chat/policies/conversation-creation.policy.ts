@@ -1,5 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { msg } from '@asko/shared';
 import type { Policy, PolicyContext } from '@asko/authorization';
+import { AppErrors } from 'common/error';
 import { ChatPrivacyService } from '../services/chat-privacy.service';
 
 /**
@@ -19,7 +21,7 @@ export class ConversationCreationPolicy implements Policy {
         const participantIds: string[] = (ctx.body as any)?.participantIds ?? [];
         await Promise.all(participantIds.map(async (id) => {
             const allowed = await this.chatPrivacy.canCreateConversation(ctx.user.roles, id);
-            if (!allowed) throw new ForbiddenException('Пользователь не принимает новые чаты');
+            if (!allowed) throw AppErrors.forbidden({ key: msg.chat.userNotAcceptingChats });
         }));
         return true;
     }

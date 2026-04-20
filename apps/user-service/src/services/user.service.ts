@@ -162,13 +162,13 @@ export class UserService {
     ): Promise<User> {
         const user = await this.findById(userId)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
 
         {
             const session = await this.em.findOne(Session, { token })
             if (session) {
-                throw AppErrors.invalidData('Session already exists')
+                throw AppErrors.invalidData({ key: msg.auth.sessionAlreadyExists })
             }
         }
 
@@ -199,7 +199,7 @@ export class UserService {
     async dropTokens(userId: string) {
         const user = await this.findById(userId)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         user.sessions.removeAll()
         await this.em.persistAndFlush(user)
@@ -237,7 +237,7 @@ export class UserService {
     }): Promise<void> {
         const oldSession = await this.em.findOne(Session, { token: oldTokenHash })
         if (!oldSession) {
-            throw AppErrors.dbEntityNotFound('Session not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.sessionNotFound })
         }
 
         // Mark old session as rotated (enters 30s grace period)
@@ -266,15 +266,15 @@ export class UserService {
         const isEmailDuplicate = userData.email ? Boolean(await this.findByEmail(userData.email)) : false
         const isPhoneDuplicate = userData.phone ? Boolean(await this.findByPhone(userData.phone)) : false
         if (isEmailDuplicate || isPhoneDuplicate) {
-            throw AppErrors.dbEntityExists('User already exists')
+            throw AppErrors.dbEntityExists({ key: msg.auth.userAlreadyExists })
         }
 
         if (userData.email && !userData.password) {
-            throw AppErrors.invalidData('Password is required')
+            throw AppErrors.invalidData({ key: msg.auth.passwordRequired })
         }
 
         if (!userData.email && !userData.phone) {
-            throw AppErrors.invalidData('Email or phone is required')
+            throw AppErrors.invalidData({ key: msg.auth.emailOrPhoneRequired })
         }
 
         const provider = userData.email ? AuthProvider.EMAIL : AuthProvider.PHONE
@@ -316,7 +316,7 @@ export class UserService {
     async remove(id: string) {
         const user = await this.findById(id)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         const userId = user.id
         await this.em.removeAndFlush(user)
@@ -328,12 +328,12 @@ export class UserService {
         const needsSettings = !!((_newUserInfo as any).settings);
         const user = await this.em.findOne(User, { id }, needsSettings ? { populate: ['settings'] } : {})
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
 
         let newUserInfo: DeepPartial<Writeable<UpdateUserDto>> = _newUserInfo
         if (Object.keys(newUserInfo).length == 0) {
-            throw AppErrors.invalidData('Nothing to update')
+            throw AppErrors.invalidData({ key: msg.auth.nothingToUpdate })
         }
 
         if (newUserInfo.password) {
@@ -341,14 +341,14 @@ export class UserService {
                 user.passwordHash = await CryptoService.createPasswordHash(newUserInfo.password)
             } else if (currentPassword && user.passwordHash) {
                 if (!user.email) {
-                    throw AppErrors.internalError('User has no email but have password.\nP.S sorry')
+                    throw AppErrors.internalError({ key: msg.auth.internalEmailMissing })
                 }
                 if (!(await CryptoService.comparePasswords(currentPassword, user.passwordHash))) {
-                    throw AppErrors.invalidData('Invalid credentials')
+                    throw AppErrors.invalidData({ key: msg.auth.invalidCredentials })
                 }
                 user.passwordHash = await CryptoService.createPasswordHash(newUserInfo.password)
             } else {
-                throw AppErrors.badRequest('Password is required')
+                throw AppErrors.badRequest({ key: msg.auth.passwordRequired })
             }
         }
 
@@ -385,7 +385,7 @@ export class UserService {
         if (newUserInfo.addressId) {
             const uaddress = await this.em.findOne(UserAddress, { id: parseInt(newUserInfo.addressId) })
             if (!uaddress) {
-                throw AppErrors.dbEntityNotFound('User address not found')
+                throw AppErrors.dbEntityNotFound({ key: msg.auth.userAddressNotFound })
             }
         }
 
@@ -427,7 +427,7 @@ export class UserService {
     @CreateRequestContext()
     async setEmailConfirmed(id: string) {
         const user = await this.em.findOne(User, { id })
-        if (!user) throw AppErrors.dbEntityNotFound('User not found')
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         user.emailVerified = true
         if (!user.providers.includes(AuthProvider.EMAIL)) {
             user.providers = [...user.providers, AuthProvider.EMAIL]
@@ -438,7 +438,7 @@ export class UserService {
     @CreateRequestContext()
     async setPhoneConfirmed(id: string) {
         const user = await this.em.findOne(User, { id })
-        if (!user) throw AppErrors.dbEntityNotFound('User not found')
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         user.phoneVerified = true
         if (!user.providers.includes(AuthProvider.PHONE)) {
             user.providers = [...user.providers, AuthProvider.PHONE]
@@ -483,7 +483,7 @@ export class UserService {
     async setActive(id: string, isActive: boolean, changedBy?: string) {
         const user = await this.findById(id)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         if (user.isActive !== isActive) {
             const history = new UserStatusHistory();
@@ -518,10 +518,10 @@ export class UserService {
     async addRole(id: string, role: Role) {
         const user = await this.findById(id)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         if (user.roles.includes(role)) {
-            throw AppErrors.badRequest('User already has this role')
+            throw AppErrors.badRequest({ key: msg.auth.alreadyHasRole })
         }
         user.roles.push(role)
         await this.em.persistAndFlush(user)
@@ -532,10 +532,10 @@ export class UserService {
     async removeRole(id: string, role: Role) {
         const user = await this.findById(id)
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found')
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound })
         }
         if (!user.roles.includes(role)) {
-            throw AppErrors.badRequest('User does not have this role')
+            throw AppErrors.badRequest({ key: msg.auth.doesNotHaveRole })
         }
         user.roles = user.roles.filter(r => r !== role)
         await this.em.persistAndFlush(user)
@@ -599,7 +599,7 @@ export class UserService {
     async resetPasswordByToken(userId: string, passwordHash: string) {
         const user = await this.findById(userId);
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         }
         user.passwordHash = passwordHash;
         await this.em.persistAndFlush(user);
@@ -615,7 +615,7 @@ export class UserService {
     async setMfaMethods(userId: string, methods: string[]) {
         const user = await this.em.findOne(User, { id: userId }, { populate: ['settings'] });
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         }
         user.settings.mfaMethods = methods;
         await this.em.persistAndFlush(user);
@@ -625,7 +625,7 @@ export class UserService {
     async changeEmail(userId: string, newEmail: string) {
         const user = await this.findById(userId);
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         }
         user.email = newEmail.toLowerCase();
         user.emailVerified = false;
@@ -636,7 +636,7 @@ export class UserService {
     async changePhone(userId: string, newPhone: string) {
         const user = await this.findById(userId);
         if (!user) {
-            throw AppErrors.dbEntityNotFound('User not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         }
         user.phone = newPhone;
         user.phoneVerified = false;
@@ -715,7 +715,7 @@ export class UserService {
     @CreateRequestContext()
     async unlinkOAuth(userId: string, provider: string): Promise<void> {
         const link = await this.em.findOne(UserOAuthLink, { userId, provider });
-        if (!link) throw AppErrors.dbEntityNotFound('OAuth link not found');
+        if (!link) throw AppErrors.dbEntityNotFound({ key: msg.auth.oauthLinkNotFound });
 
         // Don't allow unlinking if it's the only login method
         const user = await this.em.findOne(User, { id: userId });
@@ -738,11 +738,11 @@ export class UserService {
 
     checkPasswordStrength(password: string) {
         if (password.length < MIN_USER_PASSWORD_LENGTH) {
-            throw AppErrors.badRequest("Insufficient user password length. Must be at least " + MIN_USER_PASSWORD_LENGTH + " characters.")
+            throw AppErrors.badRequest({ key: msg.auth.passwordTooShort, params: { min: MIN_USER_PASSWORD_LENGTH } })
         } else if (password.length >= MAX_USER_PASSWORD_LENGTH) {
-            throw AppErrors.badRequest("Insufficient user password length. Must be less than " + MAX_USER_PASSWORD_LENGTH + " characters.")
+            throw AppErrors.badRequest({ key: msg.auth.passwordTooLong, params: { max: MAX_USER_PASSWORD_LENGTH } })
         } else if (CryptoService.calculateEntropy(password).entropy < MIN_USER_PASSWORD_ENTROPY) {
-            throw AppErrors.badRequest("Insufficient user password entropy. Must be at least " + MIN_USER_PASSWORD_ENTROPY + " bits.")
+            throw AppErrors.badRequest({ key: msg.auth.passwordLowEntropy, params: { min: MIN_USER_PASSWORD_ENTROPY } })
         }
     }
 
@@ -753,7 +753,7 @@ export class UserService {
             console.log('Creating super admin')
             await this.create_roleWrap(user, [Role.SUPER_ADMIN])
         } else if (defaultUser.length > 1) {
-            throw AppErrors.dbEntityExists('Multiple super admins found')
+            throw AppErrors.dbEntityExists({ key: msg.auth.multipleSuperAdmins })
         }
     }
 }

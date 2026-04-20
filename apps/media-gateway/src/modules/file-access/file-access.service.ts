@@ -1,8 +1,9 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException, Optional } from '@nestjs/common';
-import { JwtPayload } from '@asko/shared';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import { JwtPayload, msg } from '@asko/shared';
 import { FileClientService } from '@asko/gateway-common';
 import { MetricsService } from '@asko/observability';
 import type { FileAccessResponse } from '@asko/proto';
+import { AppErrors, AppError } from 'common/error';
 import { FILE_VISIBILITY_HANDLERS, type FileVisibilityHandler } from './handlers/visibility-handler.interface';
 
 /**
@@ -39,7 +40,7 @@ export class FileAccessService {
             access = await this.fileClient.getFileAccess(id, type);
         } catch {
             this.record('file_access.load', 'not_found');
-            throw new NotFoundException('File not found');
+            throw AppErrors.notFound({ key: msg.file.notFound });
         }
 
         const visibility = access.visibility || 'public';
@@ -52,13 +53,13 @@ export class FileAccessService {
 
         if (!user) {
             this.record(assertion, 'deny');
-            throw new ForbiddenException('Authentication required');
+            throw AppErrors.unauthorized({ key: msg.file.authRequired });
         }
 
         const handler = this.handlerMap.get(visibility);
         if (!handler) {
             this.record(assertion, 'deny');
-            throw new ForbiddenException('Access denied');
+            throw AppErrors.forbidden({ key: msg.file.accessDenied });
         }
 
         try {
@@ -66,7 +67,7 @@ export class FileAccessService {
             this.record(assertion, 'allow');
             return access;
         } catch (e) {
-            if (e instanceof ForbiddenException) this.record(assertion, 'deny');
+            if (e instanceof AppError) this.record(assertion, 'deny');
             else this.record(assertion, 'error');
             throw e;
         }

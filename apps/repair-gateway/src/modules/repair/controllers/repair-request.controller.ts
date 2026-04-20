@@ -29,7 +29,9 @@ import {
     PaymentProviderType,
     ImageTypeEnum,
     JwtPayload,
+    msg,
 } from '@asko/shared';
+import { AppErrors } from 'common/error';
 import { IsOptional, IsString } from 'class-validator';
 import { CheckPolicy, Permissions, Permission } from '@asko/authorization';
 import { JwtAuthUser } from '@asko/gateway-common';
@@ -460,12 +462,12 @@ export class RepairRequestController {
 
         if (dto.password) {
             const { valid } = await this.userClient.verifyPasswordForSigning({ userId, password: dto.password });
-            if (!valid) throw new Error('Неверный пароль');
+            if (!valid) throw AppErrors.unauthorized({ key: msg.auth.invalidPassword });
         } else if (dto.code) {
             const { valid } = await this.userClient.verifySigningOtp({ userId, code: dto.code });
-            if (!valid) throw new Error('Неверный код');
+            if (!valid) throw AppErrors.unauthorized({ key: msg.auth.invalidCode });
         } else {
-            throw new Error('Необходимо указать код или пароль');
+            throw AppErrors.badRequest({ key: msg.auth.passwordOrCodeRequired });
         }
 
         return this.repairClient.signAvrDigital(id, userId);

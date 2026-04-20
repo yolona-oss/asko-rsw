@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { SigningOtpChannel, MfaMethod } from '@asko/shared';
+import { SigningOtpChannel, MfaMethod, msg } from '@asko/shared';
 import { User } from 'entities/auth/user.entity';
 import CryptoService from './crypto.service';
 import { OtpService } from './otp.service';
@@ -23,7 +23,7 @@ export class SigningService {
      */
     async getSigningChannel(userId: string): Promise<{ channel: SigningOtpChannel; target: string; masked: string }> {
         const user = await this.em.findOne(User, { id: userId });
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
 
         if (user.phone && user.phoneVerified) {
             return {
@@ -77,7 +77,7 @@ export class SigningService {
     async verifySigningOtp(userId: string, code: string): Promise<{ valid: boolean; signingToken: string }> {
         const { channel } = await this.getSigningChannel(userId);
         if (channel === SigningOtpChannel.PASSWORD) {
-            throw AppErrors.badRequest('Для данного пользователя доступна только проверка паролем');
+            throw AppErrors.badRequest({ key: msg.auth.signingPasswordOnly });
         }
 
         const method = channel === SigningOtpChannel.PHONE ? MfaMethod.PHONE : MfaMethod.EMAIL;
@@ -113,11 +113,11 @@ export class SigningService {
         try {
             const payload = this.jwtService.verify(token);
             if (payload.purpose !== 'avr_signing') {
-                throw AppErrors.unauthorized('Invalid signing token purpose');
+                throw AppErrors.unauthorized({ key: msg.auth.signingInvalidPurpose });
             }
             return { userId: payload.sub };
         } catch {
-            throw AppErrors.unauthorized('Invalid or expired signing token');
+            throw AppErrors.unauthorized({ key: msg.auth.signingInvalidOrExpired });
         }
     }
 

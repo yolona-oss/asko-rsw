@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { appErrorToGrpcPayload } from '@asko/shared';
+import { appErrorToGrpcPayload, msg } from '@asko/shared';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { CertificateService } from 'modules/certificate/services/certificate.service';
 import { RepairRequestService } from 'modules/repair-request/services/repair-request.service';
@@ -330,7 +330,7 @@ export class CertificateGrpcController {
                 }
                 case 'dealerProfile': {
                     const dealer = await this.em.findOne(DealerProfileEntity, { id: data.entityId });
-                    if (!dealer) throw AppErrors.dbEntityNotFound('Dealer profile not found');
+                    if (!dealer) throw AppErrors.dbEntityNotFound({ key: msg.dealer.profileNotFound });
                     signature = dealer.agreementSignature;
                     signedPayload = dealer.agreementSignedPayload;
                     break;

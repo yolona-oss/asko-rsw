@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
 import {
     CreateVacationDto,
@@ -20,9 +20,11 @@ import {
     assertDateNotBeforeToday,
     assertDateIsToday,
     assertDurationRange,
+    AddressValidationStatus,
+    msg,
 } from '@asko/shared';
+import { AppErrors } from 'common/error';
 import { ScheduleClientService } from '../services/schedule-client.service';
-import { AddressValidationStatus } from '@asko/shared';
 import { Permissions, Permission, CheckPolicy, isStaff, isAdmin } from '@asko/authorization';
 import { JwtAuthUser, AddressClientService } from '@asko/gateway-common';
 import { ScheduleSelfOrStaffPolicy } from '../policies/schedule-self-or-staff.policy';
@@ -48,9 +50,7 @@ export class WScheduleController {
         const result = await this.addressClient.findUserAddresses(targetUserId);
         const hasValid = (result.addresses ?? []).some((a) => a.validationStatus === AddressValidationStatus.VALID);
         if (!hasValid) {
-            throw new BadRequestException(
-                'У адресата нет подтверждённого адреса. Расписание привязано к часовому поясу — сначала добавьте и подтвердите адрес.',
-            );
+            throw AppErrors.badRequest({ key: msg.schedule.noConfirmedAddress });
         }
     }
 
@@ -80,17 +80,17 @@ export class WScheduleController {
     @Put('vacation/:id')
     async updateVacation(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateVacationDto) {
         const existing = (await this.scheduleClient.findVacationById(id)).vacation;
-        if (!existing?.id) throw new NotFoundException('Отпуск не найден');
+        if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.vacationNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
 
         if (!isStaff(user) && existing.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+            throw AppErrors.forbidden({ key: msg.schedule.noAccessOtherUser });
         }
 
         if (!isAdmin(user)) {
             const startsAt = parseDateTime(existing.dateFrom, '00:00');
             if (startsAt.getTime() <= Date.now()) {
-                throw new ForbiddenException('Нельзя изменить отпуск после его начала');
+                throw AppErrors.forbidden({ key: msg.schedule.cannotChangeAfterStart });
             }
         }
 
@@ -124,11 +124,11 @@ export class WScheduleController {
     @Put('sick-leave/:id')
     async updateSickLeave(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateSickLeaveDto) {
         const existing = (await this.scheduleClient.findSickLeaveById(id)).sickLeave;
-        if (!existing?.id) throw new NotFoundException('Больничный не найден');
+        if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.sickLeaveNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
 
         if (!isStaff(user) && existing.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+            throw AppErrors.forbidden({ key: msg.schedule.noAccessOtherUser });
         }
 
         if (!isAdmin(user) && dto.dateTo) {
@@ -136,10 +136,10 @@ export class WScheduleController {
             const newTo = startOfDay(parseDateTime(dto.dateTo, '00:00'));
             const from = startOfDay(parseDateTime(existing.dateFrom, '00:00'));
             if (newTo.getTime() < from.getTime()) {
-                throw new BadRequestException('Дата завершения не может быть раньше даты начала');
+                throw AppErrors.badRequest({ key: msg.schedule.endBeforeStart });
             }
             if (newTo.getTime() > today.getTime()) {
-                throw new BadRequestException('Можно завершить больничный только сегодняшним днём или раньше');
+                throw AppErrors.badRequest({ key: msg.schedule.canOnlyEndToday });
             }
         }
 
@@ -172,11 +172,11 @@ export class WScheduleController {
     @Put('overtime/:id')
     async updateOvertime(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateOvertimeDto) {
         const existing = (await this.scheduleClient.findOvertimeById(id)).overtime;
-        if (!existing?.id) throw new NotFoundException('Переработка не найдена');
+        if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.overtimeNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
 
         if (!isStaff(user) && existing.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+            throw AppErrors.forbidden({ key: msg.schedule.noAccessOtherUser });
         }
 
         const result = await this.scheduleClient.updateOvertime({ id, startTime: dto.startTime, endTime: dto.endTime, note: dto.note ?? undefined, actorId: user.sub });
@@ -208,17 +208,17 @@ export class WScheduleController {
     @Put('override/:id')
     async updateScheduleOverride(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateScheduleOverrideDto) {
         const existing = (await this.scheduleClient.findScheduleOverrideById(id)).scheduleOverride;
-        if (!existing?.id) throw new NotFoundException('Замена выходного не найдена');
+        if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.overrideNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
 
         if (!isStaff(user) && existing.userId !== user.sub) {
-            throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+            throw AppErrors.forbidden({ key: msg.schedule.noAccessOtherUser });
         }
 
         const existingDay = startOfDay(parseDateTime(existing.date, '00:00')).getTime();
         const today = startOfDay(new Date()).getTime();
         if (existingDay !== today) {
-            throw new ForbiddenException('Замену выходного можно изменить только в тот день, на который она создана');
+            throw AppErrors.forbidden({ key: msg.schedule.overrideOnlyToday });
         }
 
         const result = await this.scheduleClient.updateScheduleOverride({ id, startTime: dto.startTime, endTime: dto.endTime, note: dto.note ?? undefined, actorId: user.sub });
@@ -258,7 +258,7 @@ export class WScheduleController {
     async approveEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
         if (entry.status !== ScheduleStatus.PENDING) {
-            throw new BadRequestException('Можно подтверждать только ожидающие записи');
+            throw AppErrors.badRequest({ key: msg.schedule.onlyPending });
         }
         await this.assertTargetHasValidAddress(entry.userId);
         this.assertCanApproveOrReject(user, entry);
@@ -276,7 +276,7 @@ export class WScheduleController {
     async rejectEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
         if (entry.status !== ScheduleStatus.PENDING) {
-            throw new BadRequestException('Можно отклонять только ожидающие записи');
+            throw AppErrors.badRequest({ key: msg.schedule.onlyPending });
         }
         await this.assertTargetHasValidAddress(entry.userId);
         this.assertCanApproveOrReject(user, entry);
@@ -386,7 +386,7 @@ export class WScheduleController {
         @Query('dateTo') dateTo: string,
     ) {
         if (!dateFrom || !dateTo) {
-            throw new BadRequestException('dateFrom и dateTo обязательны');
+            throw AppErrors.badRequest({ key: msg.schedule.datesRequired });
         }
         return this.scheduleClient.scheduleReport({ userId, dateFrom, dateTo });
     }
@@ -424,7 +424,7 @@ export class WScheduleController {
             }
         }
 
-        throw new NotFoundException('Запись расписания не найдена');
+        throw AppErrors.notFound({ key: msg.schedule.entryNotFound });
     }
 
     private assertCanApproveOrReject(user: JwtPayload, entry: { userId: string; createdBy: string }): void {
@@ -433,7 +433,7 @@ export class WScheduleController {
         const createdBy = entry.createdBy || '';
 
         if (createdBy && createdBy === user.sub) {
-            throw new ForbiddenException('Нельзя подтвердить собственный запрос — требуется второе лицо');
+            throw AppErrors.forbidden({ key: msg.schedule.cannotSelfApprove });
         }
 
         const createdBySelf = createdBy && createdBy === entry.userId;
@@ -441,15 +441,15 @@ export class WScheduleController {
 
         if (createdBySelf) {
             if (!userIsStaffMember) {
-                throw new ForbiddenException('Запись должна быть подтверждена сотрудником');
+                throw AppErrors.forbidden({ key: msg.schedule.mustBeApprovedByEmployee });
             }
         } else if (createdByStaff) {
             if (!userIsTarget) {
-                throw new ForbiddenException('Запись должна быть подтверждена адресатом');
+                throw AppErrors.forbidden({ key: msg.schedule.mustBeApprovedByTarget });
             }
         } else {
             if (!userIsStaffMember && !userIsTarget) {
-                throw new ForbiddenException('Нет доступа к расписанию другого пользователя');
+                throw AppErrors.forbidden({ key: msg.schedule.noAccessOtherUser });
             }
         }
     }
@@ -464,7 +464,7 @@ export class WScheduleController {
             limit: 1,
         });
         if ((result.data ?? []).length > 0) {
-            throw new BadRequestException(`У пользователя уже есть активный ${label}`);
+            throw AppErrors.conflict({ key: msg.schedule.alreadyHasActive, params: { label } });
         }
     }
 }

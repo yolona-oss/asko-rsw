@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { PaymentClientService } from 'modules/payment-client/payment-client.service';
 import { RepairClientService } from 'modules/repair-client/repair-client.service';
@@ -8,7 +8,9 @@ import {
     CreatePaymentDto,
     JwtPayload,
     PaymentTargetType,
+    msg,
 } from '@asko/shared';
+import { AppErrors } from 'common/error';
 import { Permissions, Permission, isStaff as checkIsStaff } from '@asko/authorization';
 import { JwtAuthUser } from '@asko/gateway-common';
 import {
@@ -59,22 +61,22 @@ export class PaymentController {
         @Body() body: { paymentId: string; confirmCode: string; amount: number },
     ) {
         if (!body.confirmCode || typeof body.confirmCode !== 'string') {
-            throw new ForbiddenException('Confirmation code is required');
+            throw AppErrors.badRequest({ key: msg.payment.confirmCodeRequired });
         }
         if (!body.amount || typeof body.amount !== 'number' || body.amount <= 0) {
-            throw new ForbiddenException('Amount verification is required');
+            throw AppErrors.badRequest({ key: msg.payment.amountVerificationRequired });
         }
 
         if (!checkIsStaff(user)) {
             // Repairer: verify they are assigned to the repair
             const { payment } = await this.paymentService.getPaymentById(body.paymentId);
             if (payment.targetType !== PaymentTargetType.REPAIR_REQUEST) {
-                throw new ForbiddenException('Repairers can only confirm repair request cash payments');
+                throw AppErrors.forbidden({ key: msg.payment.repairerOnlyRepairCash });
             }
             const { request } = await this.repairClient.findById(payment.targetId);
             const { repairer } = await this.repairerClient.findByUserId(user.sub);
             if (!repairer || request.repairerId !== repairer.id) {
-                throw new ForbiddenException('You are not assigned to this repair');
+                throw AppErrors.forbidden({ key: msg.payment.notAssignedToRepair });
             }
         }
 

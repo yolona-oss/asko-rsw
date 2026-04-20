@@ -434,7 +434,7 @@ export class AuthService {
             return { message: 'Email confirmed successfully' };
         } catch (err: any) {
             console.error(err)
-            throw new UnauthorizedException('Invalid email confirm token');
+            throw AppErrors.unauthorized({ key: msg.auth.tokenInvalid });
         }
     }
 

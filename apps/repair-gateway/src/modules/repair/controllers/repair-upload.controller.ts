@@ -6,7 +6,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AppErrors, FileVisibility, ImageTypeEnum, JwtPayload, UPLOAD_LIMITS } from '@asko/shared';
+import { AppErrors, FileVisibility, ImageTypeEnum, JwtPayload, UPLOAD_LIMITS, msg } from '@asko/shared';
 import { CheckPolicy, isAdmin } from '@asko/authorization';
 import {
     JwtAuthUser,
@@ -132,14 +132,14 @@ export class RepairUploadController {
         }
 
         const doc = await this.fileService.getDocument(documentId);
-        if (!doc) throw AppErrors.notFound('Документ не найден');
+        if (!doc) throw AppErrors.notFound({ key: msg.file.documentNotFound });
 
         if (doc.ownerType === ImageTypeEnum.RepairRequest) {
             await this.repairParticipantPolicy.authorize({ user, params: { id: doc.ownerId }, body: undefined, query: {} });
         } else if (doc.ownerType === ImageTypeEnum.BrokenPart) {
             await this.brokenPartAccessPolicy.authorize({ user, params: { partId: doc.ownerId }, body: undefined, query: {} });
         } else {
-            throw AppErrors.forbidden('Нет прав на удаление документа');
+            throw AppErrors.forbidden({ key: msg.access.noDeletePermission });
         }
 
         return this.fileService.deleteDocument(documentId);

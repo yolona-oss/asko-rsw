@@ -7,7 +7,6 @@ import {
     Req,
     Res,
     Logger,
-    BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -220,7 +219,7 @@ export class OAuthController {
     private getProvider(provider: string): OAuthProviderConfig {
         const config = this.providers[provider];
         if (!config) {
-            throw new BadRequestException(`OAuth provider "${provider}" is not configured`);
+            throw AppErrors.badRequest({ key: msg.auth.oauthProviderNotConfigured, params: { provider } });
         }
         return config;
     }

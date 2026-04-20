@@ -95,7 +95,7 @@ export class MfaService {
         try {
             const payload = this.jwtService.verify(token);
             if (payload.purpose !== 'mfa_challenge') {
-                throw AppErrors.unauthorized('Invalid MFA token');
+                throw AppErrors.unauthorized({ key: msg.mfa.tokenInvalid });
             }
             return { userId: payload.sub, method: payload.method ?? MfaMethod.EMAIL };
         } catch (err: any) {
@@ -139,7 +139,7 @@ export class MfaService {
     async resendLoginOtp(mfaToken: string): Promise<{ retryAfter: number }> {
         const { userId, method: tokenMethod } = this.verifyMfaChallengeToken(mfaToken);
         const user = await this.userService.findByIdWithSettings(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
 
         const method = tokenMethod ?? this.getMfaMethods(user)[0] ?? MfaMethod.EMAIL;
         const cooldown = await this.otpService.checkCooldown(userId, method);
@@ -157,7 +157,7 @@ export class MfaService {
 
     async initiateEnableMfa(userId: string): Promise<{ message: string; retryAfter: number }> {
         const user = await this.userService.findByIdWithSettings(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         if (!user.email || !user.emailVerified) {
             throw AppErrors.badRequest({ key: msg.mfa.requireEmailConfirmation });
         }
@@ -188,7 +188,7 @@ export class MfaService {
 
     async initiateDisableMfa(userId: string): Promise<{ message: string; retryAfter: number }> {
         const user = await this.userService.findByIdWithSettings(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         if (!this.isMfaEnabled(user)) {
             throw AppErrors.badRequest({ key: msg.mfa.notEnabled });
         }
@@ -216,7 +216,7 @@ export class MfaService {
 
     async getMfaStatus(userId: string): Promise<{ enabled: boolean; methods: string[] }> {
         const user = await this.userService.findByIdWithSettings(userId);
-        if (!user) throw AppErrors.dbEntityNotFound('User not found');
+        if (!user) throw AppErrors.dbEntityNotFound({ key: msg.auth.userNotFound });
         const methods = this.getMfaMethods(user);
         return { enabled: methods.length > 0, methods };
     }

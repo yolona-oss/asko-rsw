@@ -576,7 +576,7 @@ export class PaymentService {
     ): Promise<{ paymentId: string; status: PaymentStatus }> {
         const lockKey = `payment:cash-confirm:${paymentId}`;
         const acquired = await this.lockService.acquireLock(lockKey, LOCK_TTL_MS);
-        if (!acquired) throw AppErrors.conflict('Cash confirmation already being processed');
+        if (!acquired) throw AppErrors.conflict({ key: msg.payment.cashConfirmationInProgress });
 
         try {
             const payment = await this.em.findOne(PaymentEntity, { id: paymentId });
@@ -601,9 +601,7 @@ export class PaymentService {
                     `cash:${confirmedByUserId}`,
                     `Blocked: max confirm attempts exceeded (${payment.cashConfirmAttempts})`,
                 );
-                throw AppErrors.badRequest(
-                    'Подтверждение заблокировано: превышено количество попыток. Обратитесь к администратору.',
-                );
+                throw AppErrors.badRequest({ key: msg.payment.cashConfirmationLocked });
             }
 
             // Verify confirmation code
@@ -617,13 +615,9 @@ export class PaymentService {
                     `Failed confirm: invalid code (attempt ${payment.cashConfirmAttempts}, ${remaining} remaining)`,
                 );
                 if (remaining <= 0) {
-                    throw AppErrors.badRequest(
-                        'Подтверждение заблокировано: превышено количество попыток. Обратитесь к администратору.',
-                    );
+                    throw AppErrors.badRequest({ key: msg.payment.cashConfirmationLocked });
                 }
-                throw AppErrors.badRequest(
-                    `Неверный код подтверждения. Осталось попыток: ${remaining}`,
-                );
+                throw AppErrors.badRequest({ key: msg.payment.invalidConfirmCode, params: { remaining } });
             }
 
             // Verify amount matches

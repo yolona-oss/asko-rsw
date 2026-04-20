@@ -35,7 +35,7 @@ export class OtpService {
         if (!this.smsClient) {
             const apiKey = this.config.sms.apiKey;
             if (!apiKey) {
-                throw AppErrors.internalError('SMS_RU_API_KEY is not configured');
+                throw AppErrors.internalError({ key: msg.otp.smsNotConfigured });
             }
             this.smsClient = new SmsRu(apiKey);
         }

@@ -1,7 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { FileVisibility } from '@asko/shared';
+import { Injectable } from '@nestjs/common';
+import { FileVisibility, msg } from '@asko/shared';
 import type { JwtPayload } from '@asko/shared';
 import type { FileAccessResponse } from '@asko/proto';
+import { AppErrors, AppError } from 'common/error';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import type { FileVisibilityHandler } from './visibility-handler.interface';
 
@@ -12,15 +13,15 @@ export class ParticipantsOnlyVisibilityHandler implements FileVisibilityHandler 
     constructor(private readonly chatClient: ChatClientService) {}
 
     async authorize(access: FileAccessResponse, user?: JwtPayload): Promise<void> {
-        if (!user) throw new ForbiddenException('Authentication required');
-        if (!access.conversationId) throw new ForbiddenException('Access denied');
+        if (!user) throw AppErrors.unauthorized({ key: msg.file.authRequired });
+        if (!access.conversationId) throw AppErrors.forbidden({ key: msg.file.accessDenied });
         try {
             const { participants } = await this.chatClient.listParticipants(access.conversationId);
             const isParticipant = participants.some((p) => p.userId === user.sub);
-            if (!isParticipant) throw new ForbiddenException('Access denied');
+            if (!isParticipant) throw AppErrors.forbidden({ key: msg.file.accessDenied });
         } catch (e) {
-            if (e instanceof ForbiddenException) throw e;
-            throw new ForbiddenException('Access denied');
+            if (e instanceof AppError) throw e;
+            throw AppErrors.forbidden({ key: msg.file.accessDenied });
         }
     }
 }

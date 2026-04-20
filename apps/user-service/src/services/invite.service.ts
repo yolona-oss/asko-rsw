@@ -7,7 +7,7 @@ import { InvitationLink } from 'entities/auth/invitation-link.entity';
 import { User } from 'entities/auth/user.entity';
 import { AppErrors } from 'common/error';
 import { AppConfig } from '../app.config';
-import { CreateInvitationLinkDto, IInvitationLink, Role } from '@asko/shared';
+import { CreateInvitationLinkDto, IInvitationLink, Role, msg } from '@asko/shared';
 
 const DEFAULT_TTL = 7 * 24 * 60 * 60;
 
@@ -22,7 +22,7 @@ export class InviteService {
     async create(dto: CreateInvitationLinkDto, creatorId: string): Promise<{ invite: IInvitationLink; link: string }> {
         const creator = await this.em.findOne(User, { id: creatorId });
         if (!creator) {
-            throw AppErrors.dbEntityNotFound('Creator user not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.inviteCreatorNotFound });
         }
 
         const token = crypto.randomBytes(32).toString('base64url');
@@ -53,15 +53,15 @@ export class InviteService {
         const invite = await this.em.findOne(InvitationLink, { token });
 
         if (!invite) {
-            throw AppErrors.dbEntityNotFound('Invitation not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.inviteNotFound });
         }
 
         if (invite.used) {
-            throw AppErrors.badRequest('Invitation already used');
+            throw AppErrors.badRequest({ key: msg.auth.inviteAlreadyUsed });
         }
 
         if (invite.expiresAt < new Date()) {
-            throw AppErrors.badRequest('Invitation expired');
+            throw AppErrors.badRequest({ key: msg.auth.inviteExpired });
         }
 
         return this.toDto(invite);
@@ -72,15 +72,15 @@ export class InviteService {
         const invite = await this.em.findOne(InvitationLink, { token });
 
         if (!invite) {
-            throw AppErrors.dbEntityNotFound('Invitation not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.inviteNotFound });
         }
 
         if (invite.used) {
-            throw AppErrors.badRequest('Invitation already used');
+            throw AppErrors.badRequest({ key: msg.auth.inviteAlreadyUsed });
         }
 
         if (invite.expiresAt < new Date()) {
-            throw AppErrors.badRequest('Invitation expired');
+            throw AppErrors.badRequest({ key: msg.auth.inviteExpired });
         }
 
         invite.used = true;
@@ -101,7 +101,7 @@ export class InviteService {
     async remove(id: string): Promise<void> {
         const invite = await this.em.findOne(InvitationLink, { id });
         if (!invite) {
-            throw AppErrors.dbEntityNotFound('Invitation not found');
+            throw AppErrors.dbEntityNotFound({ key: msg.auth.inviteNotFound });
         }
         await this.em.removeAndFlush(invite);
     }
