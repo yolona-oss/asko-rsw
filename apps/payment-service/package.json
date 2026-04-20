@@ -28,7 +28,7 @@
         "@nestjs/common": "^11.1.5",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.5",
-        "@nestjs/microservices": "^11.1.5",
+        "@nestjs/microservices": "^11.1.19",
         "@nestjs/schedule": "^5.0.1",
         "ioredis": "^5.6.1",
         "amqp-connection-manager": "^4.1.14",
