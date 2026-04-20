@@ -18,7 +18,8 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import type { BrokenPart } from '@/components/account/requests/shared/broken-parts/types';
 import { reviewApi } from '@/lib/api/review';
 import { fileUploadApi } from '@/lib/api/file-upload';
-import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
+import { selectAllNotifications } from '@/store/notifications';
+import { useAppSelector } from '@/store/index';
 import { RepairRequestStatus, AvrStatus } from '@asko/shared/client';
 import { SigningOtpForm } from '@/components/account/requests/shared/signing-otp-form';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
@@ -118,14 +119,18 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // Refetch on real-time notification for this request
-  useNotificationSocket(
-    useCallback((n) => {
-      if (n.targetType === 'repairRequest' && n.targetId === requestId) {
-        fetchData();
-      }
-    }, [requestId, fetchData]),
-    useCallback(() => { }, []),
-  );
+  const allNotifications = useAppSelector(selectAllNotifications);
+  const latestMatchRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const match = allNotifications.find(
+      (n) => n.targetType === 'repairRequest' && n.targetId === requestId,
+    );
+    if (match && match.id !== latestMatchRef.current) {
+      latestMatchRef.current = match.id;
+      fetchData();
+    }
+  }, [allNotifications, requestId, fetchData]);
 
   const handleReviewSubmit = async () => {
     if (reviewRating === 0) {

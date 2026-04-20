@@ -3,39 +3,34 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, X, ChevronDown, CheckCheck, PanelRightOpen, PanelRightClose, BellOff } from 'lucide-react';
-import { notificationApi } from '@/lib/api/notification';
-import { useNotificationSocket } from '@/lib/hooks/use-notification-socket';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectSound, selectLayout, setNotifPanelOpen, setNotifPanelMode } from '@/store/preferences-slice';
+import { selectLayout, setNotifPanelOpen, setNotifPanelMode } from '@/store/preferences-slice';
 import type { NotifPanelMode } from '@/store/preferences-slice';
-import { playSound, isReminderEnabled } from '@/lib/sound';
-import { getActiveConversation } from '@/lib/active-conversation';
+import {
+  selectUnreadNotifications,
+  selectUnreadCount,
+  selectHistoryNotifications,
+  selectPagination,
+  fetchNotificationHistory,
+  markAsRead as markAsReadThunk,
+  markAllAsRead as markAllAsReadThunk,
+} from '@/store/notifications';
+import { stopReminder } from '@/store/sound';
 import type { NotificationRecord } from '@/lib/api/types';
-import type { ListCache } from './types';
 import { formatTimeAgo } from '@asko/shared/client';
 import { NotificationGroup } from '@asko/shared/client';
-import { CHAT_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup, URGENCY_BORDER, URGENCY_BORDER_DEFAULT, URGENCY_LABEL } from './constants';
+import { NOTIFICATION_TYPE_CONFIG, GROUP_LABELS, getNotificationGroup, URGENCY_BORDER, URGENCY_BORDER_DEFAULT, URGENCY_LABEL } from './constants';
 import { NotificationIcon } from './icon';
 
 type ViewMode = 'unread' | 'all';
-const HISTORY_PAGE_SIZE = 20;
 
 const GROUP_OPTIONS = [
   { value: '', label: 'Все' },
   ...Object.values(NotificationGroup).map(g => ({ value: g, label: GROUP_LABELS[g] ?? g })),
 ];
 
-const REMINDER_MS = 5 * 60 * 1000;
 const PANEL_WIDTH = 350;
-
-async function markReadAndInvalidate(queryClient: ReturnType<typeof useQueryClient>, id: string) {
-  await notificationApi.markAsRead(id);
-  queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
-  queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-  queryClient.invalidateQueries({ queryKey: ['notifications-unread-list'] });
-}
 
 function navigateToNotification(
   n: NotificationRecord,
@@ -102,29 +97,56 @@ function useToggleSet() {
   return [set, toggle, clear] as const;
 }
 
-function useNotificationActions(queryClient: ReturnType<typeof useQueryClient>, notifications: NotificationRecord[], router: ReturnType<typeof useRouter>) {
+function isNotificationNavigable(n: NotificationRecord): boolean {
+  return !!NOTIFICATION_TYPE_CONFIG[n.type]?.href;
+}
+
+export function NotificationBell() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
+  const setNotifOpen = (v: boolean) => dispatch(setNotifPanelOpen(v));
+  const setNotifMode = (m: NotifPanelMode) => dispatch(setNotifPanelMode(m));
+  const [closing, setClosing] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('unread');
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyGroup, setHistoryGroup] = useState('');
+
+  // ── Redux selectors instead of useQuery ──────────────────────
+  const unreadCount = useAppSelector(selectUnreadCount);
+  const notifications = useAppSelector(selectUnreadNotifications);
+  const historyNotifications = useAppSelector(selectHistoryNotifications);
+  const pagination = useAppSelector(selectPagination);
+  const historyTotalPages = pagination.totalPages;
+
+  // ── Fetch history when switching to "all" view ───────────────
+  useEffect(() => {
+    if (open && viewMode === 'all') {
+      dispatch(fetchNotificationHistory({ page: historyPage, group: historyGroup || undefined }));
+    }
+  }, [open, viewMode, historyPage, historyGroup, dispatch]);
+
+  // ── Stop reminder when panel opens ───────────────────────────
+  useEffect(() => {
+    if (open) dispatch(stopReminder('notification'));
+  }, [open, dispatch]);
+
+  // ── Local UI state for animations ────────────────────────────
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [markingAll, setMarkingAll] = useState(false);
   const [expandedIds, toggleExpand, clearExpanded] = useToggleSet();
   const [expandedGroups, toggleGroup, clearGroups] = useToggleSet();
-
   const clearAll = useCallback(() => { clearExpanded(); clearGroups(); }, [clearExpanded, clearGroups]);
 
+  // ── Actions — dispatch thunks ────────────────────────────────
   const markRead = useCallback((id: string) => {
     setRemovingIds(prev => new Set(prev).add(id));
-    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], old => ({
-      count: Math.max(0, (old?.count ?? 1) - 1),
-    }));
     setTimeout(() => {
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], old => {
-        if (!old) return old;
-        const filtered = old.data.filter(n => n.id !== id);
-        return { ...old, data: filtered, overallCount: Math.max(0, old.overallCount - 1) };
-      });
+      dispatch(markAsReadThunk(id));
       setRemovingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
     }, 400);
-    notificationApi.markAsRead(id);
-  }, [queryClient]);
+  }, [dispatch]);
 
   const markAllRead = useCallback(() => {
     const ids = notifications.map(n => n.id);
@@ -133,158 +155,32 @@ function useNotificationActions(queryClient: ReturnType<typeof useQueryClient>, 
     setRemovingIds(new Set(ids));
     const totalMs = (ids.length - 1) * 50 + 400;
     setTimeout(() => {
-      queryClient.setQueryData(['notifications-unread-count'], { count: 0 });
-      queryClient.setQueryData<ListCache>(['notifications-unread-list'], old => {
-        if (!old) return old;
-        return { ...old, data: [], overallCount: 0 };
-      });
+      dispatch(markAllAsReadThunk());
       setRemovingIds(new Set());
       setMarkingAll(false);
     }, totalMs);
-    notificationApi.markAllAsRead();
-  }, [queryClient, notifications]);
+  }, [dispatch, notifications]);
 
-  const handleNavigate = useCallback((n: NotificationRecord) => {
+  const handleNavigateAction = useCallback((n: NotificationRecord) => {
     const config = NOTIFICATION_TYPE_CONFIG[n.type];
     const href = config?.href?.(n);
-    markRead(n.id);
+    if (!n.isRead) dispatch(markAsReadThunk(n.id));
     if (href) router.push(href);
-  }, [markRead, router]);
-
-  return { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead, handleNavigate, clearAll };
-}
-
-function isNotificationNavigable(n: NotificationRecord): boolean {
-  return !!NOTIFICATION_TYPE_CONFIG[n.type]?.href;
-}
-
-export function NotificationBell() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const soundMuted = useAppSelector(selectSound).notificationMuted;
-  const bellDispatch = useAppDispatch();
-  const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
-  const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
-  const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
-  const [closing, setClosing] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('unread');
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyGroup, setHistoryGroup] = useState('');
-
-  // ── Queries ──────────────────────────────────────────────────
-  const { data: countData } = useQuery({
-    queryKey: ['notifications-unread-count'],
-    queryFn: async () => {
-      const { data } = await notificationApi.unreadCount();
-      return data;
-    },
-    refetchInterval: 30_000,
-  });
-
-  const { data: listData } = useQuery({
-    queryKey: ['notifications-unread-list'],
-    queryFn: async () => {
-      const { data } = await notificationApi.list({ limit: 20, unreadOnly: true });
-      return data;
-    },
-    enabled: open && viewMode === 'unread',
-    staleTime: 0,
-  });
-
-  const { data: historyData } = useQuery({
-    queryKey: ['notifications-history', historyPage, historyGroup],
-    queryFn: async () => {
-      const { data } = await notificationApi.list({
-        page: historyPage,
-        limit: HISTORY_PAGE_SIZE,
-        group: historyGroup || undefined,
-      });
-      return data;
-    },
-    enabled: open && viewMode === 'all',
-    staleTime: 0,
-  });
-
-  const unreadCount = countData?.count ?? 0;
-  const notifications = listData?.data ?? [];
-  const historyNotifications = historyData?.data ?? [];
-  const historyTotalPages = Math.ceil((historyData?.overallCount ?? 0) / HISTORY_PAGE_SIZE);
-
-  // ── Sound reminder (re-ping every 5 min while unread) ────────
-  const reminderRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearReminder = useCallback(() => {
-    if (reminderRef.current) {
-      clearTimeout(reminderRef.current);
-      reminderRef.current = null;
-    }
-  }, []);
-
-  const scheduleReminder = useCallback(() => {
-    clearReminder();
-    reminderRef.current = setTimeout(function remind() {
-      const current = queryClient.getQueryData<{ count: number }>(['notifications-unread-count']);
-      if (current && current.count > 0) {
-        if (isReminderEnabled()) playSound('notification');
-        reminderRef.current = setTimeout(remind, REMINDER_MS);
-      }
-    }, REMINDER_MS);
-  }, [queryClient, clearReminder]);
-
-  const hasUnread = unreadCount > 0;
-  useEffect(() => {
-    if (hasUnread && !soundMuted) scheduleReminder();
-    else clearReminder();
-  }, [hasUnread, soundMuted, scheduleReminder, clearReminder]);
-
-  useEffect(() => clearReminder, [clearReminder]);
-
-  // ── Real-time via WebSocket ──────────────────────────────────
-  useNotificationSocket(
-    useCallback((notification: NotificationRecord) => {
-      if (
-        CHAT_NOTIFICATION_TYPES.has(notification.type) &&
-        notification.targetId === getActiveConversation()
-      ) {
-        notificationApi.markAsRead(notification.id);
-        return;
-      }
-
-      queryClient.setQueryData<ListCache>(
-        ['notifications-unread-list'],
-        (old) => {
-          if (!old) return { data: [notification], overallCount: 1 };
-          return { ...old, data: [notification, ...old.data], overallCount: old.overallCount + 1 };
-        },
-      );
-
-      playSound('notification');
-      scheduleReminder();
-    }, [queryClient, scheduleReminder]),
-    useCallback((delta: number) => {
-      queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
-        count: Math.max(0, (old?.count ?? 0) + delta),
-      }));
-    }, [queryClient]),
-  );
-
-  const actions = useNotificationActions(queryClient, notifications, router);
-  const { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead } = actions;
+  }, [dispatch, router]);
 
   // ── Open / Close panel ───────────────────────────────────────
   const handleClose = useCallback(() => {
     if (notifMode === 'dock') {
       setNotifOpen(false);
-      actions.clearAll();
+      clearAll();
       setViewMode('unread');
       setHistoryPage(1);
       setHistoryGroup('');
       return;
     }
     setClosing(true);
-    setTimeout(() => { setNotifOpen(false); setClosing(false); actions.clearAll(); setViewMode('unread'); setHistoryPage(1); setHistoryGroup(''); }, 250);
-  }, [notifMode, setNotifOpen, actions]);
+    setTimeout(() => { setNotifOpen(false); setClosing(false); clearAll(); setViewMode('unread'); setHistoryPage(1); setHistoryGroup(''); }, 250);
+  }, [notifMode, setNotifOpen, clearAll]);
 
   const handleToggle = useCallback(() => {
     if (open) handleClose();
@@ -293,9 +189,9 @@ export function NotificationBell() {
 
   // ── Navigate to notification target (closes overlay panel) ──
   const handleNavigate = useCallback((n: NotificationRecord) => {
-    actions.handleNavigate(n);
+    handleNavigateAction(n);
     handleClose();
-  }, [actions, handleClose]);
+  }, [handleNavigateAction, handleClose]);
 
   // ── Outside click (overlay mode only) ────────────────────────
   const desktopPanelRef = useRef<HTMLDivElement>(null);
@@ -346,7 +242,9 @@ export function NotificationBell() {
   }, [notifMode, setNotifMode]);
 
   // ── History view handlers ────────────────────────────────────
-  const handleHistoryMarkRead = useCallback((id: string) => markReadAndInvalidate(queryClient, id), [queryClient]);
+  const handleHistoryMarkRead = useCallback((id: string) => {
+    dispatch(markAsReadThunk(id));
+  }, [dispatch]);
   const handleHistoryNavigate = useCallback((n: NotificationRecord) => navigateToNotification(n, handleHistoryMarkRead, router, handleClose), [handleHistoryMarkRead, router, handleClose]);
 
   // ── Shared panel header ──────────────────────────────────────
@@ -506,56 +404,66 @@ export function NotificationBell() {
 
 export function NotificationDockPanel() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const bellDispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const { notifPanelOpen: open, notifPanelMode: notifMode } = useAppSelector(selectLayout);
-  const setNotifOpen = (v: boolean) => bellDispatch(setNotifPanelOpen(v));
-  const setNotifMode = (m: NotifPanelMode) => bellDispatch(setNotifPanelMode(m));
+  const setNotifOpen = (v: boolean) => dispatch(setNotifPanelOpen(v));
+  const setNotifMode = (m: NotifPanelMode) => dispatch(setNotifPanelMode(m));
   const [dockViewMode, setDockViewMode] = useState<ViewMode>('unread');
   const [dockHistoryPage, setDockHistoryPage] = useState(1);
   const [dockHistoryGroup, setDockHistoryGroup] = useState('');
 
-  const { data: listData } = useQuery({
-    queryKey: ['notifications-unread-list'],
-    queryFn: async () => {
-      const { data } = await notificationApi.list({ limit: 20, unreadOnly: true });
-      return data;
-    },
-    enabled: open && notifMode === 'dock' && dockViewMode === 'unread',
-    staleTime: 0,
-  });
+  // ── Redux selectors ──────────────────────────────────────────
+  const unreadCount = useAppSelector(selectUnreadCount);
+  const notifications = useAppSelector(selectUnreadNotifications);
+  const dockHistoryNotifications = useAppSelector(selectHistoryNotifications);
+  const pagination = useAppSelector(selectPagination);
+  const dockHistoryTotalPages = pagination.totalPages;
 
-  const { data: dockHistoryData } = useQuery({
-    queryKey: ['notifications-history', 'dock', dockHistoryPage, dockHistoryGroup],
-    queryFn: async () => {
-      const { data } = await notificationApi.list({
-        page: dockHistoryPage,
-        limit: HISTORY_PAGE_SIZE,
-        group: dockHistoryGroup || undefined,
-      });
-      return data;
-    },
-    enabled: open && notifMode === 'dock' && dockViewMode === 'all',
-    staleTime: 0,
-  });
+  // ── Fetch history when switching to "all" view ───────────────
+  useEffect(() => {
+    if (open && notifMode === 'dock' && dockViewMode === 'all') {
+      dispatch(fetchNotificationHistory({ page: dockHistoryPage, group: dockHistoryGroup || undefined }));
+    }
+  }, [open, notifMode, dockViewMode, dockHistoryPage, dockHistoryGroup, dispatch]);
 
-  const { data: countData } = useQuery({
-    queryKey: ['notifications-unread-count'],
-    queryFn: async () => {
-      const { data } = await notificationApi.unreadCount();
-      return data;
-    },
-    refetchInterval: 30_000,
-  });
+  // ── Local UI state for animations ────────────────────────────
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const [markingAll, setMarkingAll] = useState(false);
+  const [expandedIds, toggleExpand] = useToggleSet();
+  const [expandedGroups, toggleGroup] = useToggleSet();
 
-  const unreadCount = countData?.count ?? 0;
-  const notifications = listData?.data ?? [];
-  const dockHistoryNotifications = dockHistoryData?.data ?? [];
-  const dockHistoryTotalPages = Math.ceil((dockHistoryData?.overallCount ?? 0) / HISTORY_PAGE_SIZE);
+  // ── Actions — dispatch thunks ────────────────────────────────
+  const markRead = useCallback((id: string) => {
+    setRemovingIds(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      dispatch(markAsReadThunk(id));
+      setRemovingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    }, 400);
+  }, [dispatch]);
 
-  const { removingIds, markingAll, expandedIds, expandedGroups, toggleExpand, toggleGroup, markRead, markAllRead, handleNavigate } = useNotificationActions(queryClient, notifications, router);
+  const markAllRead = useCallback(() => {
+    const ids = notifications.map(n => n.id);
+    if (ids.length === 0) return;
+    setMarkingAll(true);
+    setRemovingIds(new Set(ids));
+    const totalMs = (ids.length - 1) * 50 + 400;
+    setTimeout(() => {
+      dispatch(markAllAsReadThunk());
+      setRemovingIds(new Set());
+      setMarkingAll(false);
+    }, totalMs);
+  }, [dispatch, notifications]);
 
-  const handleDockHistoryMarkRead = useCallback((id: string) => markReadAndInvalidate(queryClient, id), [queryClient]);
+  const handleNavigate = useCallback((n: NotificationRecord) => {
+    const config = NOTIFICATION_TYPE_CONFIG[n.type];
+    const href = config?.href?.(n);
+    if (!n.isRead) dispatch(markAsReadThunk(n.id));
+    if (href) router.push(href);
+  }, [dispatch, router]);
+
+  const handleDockHistoryMarkRead = useCallback((id: string) => {
+    dispatch(markAsReadThunk(id));
+  }, [dispatch]);
   const handleDockHistoryNavigate = useCallback((n: NotificationRecord) => navigateToNotification(n, handleDockHistoryMarkRead, router), [handleDockHistoryMarkRead, router]);
 
   if (!open || notifMode !== 'dock') return null;

@@ -15,7 +15,7 @@ import {
 } from '@/store/preferences-slice';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
-import { useMenuBadges } from '@/lib/hooks/use-menu-badges';
+import { selectMenuBadges } from '@/store/notifications';
 import { useResolvedMenu } from '@/lib/hooks/use-resolved-menu';
 import { MenuIcon } from './menu-icon';
 import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
@@ -37,7 +37,7 @@ export function AccountSidebar() {
   const handleToggleTheme = () => dispatch(toggleThemeAction());
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
   const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
-  const badgeHrefs = useMenuBadges();
+  const badgeHrefs = useAppSelector(selectMenuBadges);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
 
@@ -210,7 +210,7 @@ export function MobileSidebar() {
   const handleMobileToggleTheme = () => mobileDispatch(toggleThemeAction());
   const fullMenu = user ? menuByRole[primaryRole(user)] : [];
   const { items: menu, parent: submenuParent, backHref } = useResolvedMenu(fullMenu, pathname);
-  const badgeHrefs = useMenuBadges();
+  const badgeHrefs = useAppSelector(selectMenuBadges);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const logout = useLogout();
 

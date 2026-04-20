@@ -6,6 +6,8 @@ import authReducer from './auth-slice';
 import paymentReducer from './payment-slice';
 import withdrawReducer from './withdraw-slice';
 import preferencesReducer from './preferences-slice';
+import { notificationReducer, notificationSocketMiddleware } from './notifications';
+import { soundListenerMiddleware } from './sound';
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +15,12 @@ export const store = configureStore({
     payment: paymentReducer,
     withdraw: withdrawReducer,
     preferences: preferencesReducer,
+    notifications: notificationReducer,
   },
+  middleware: (getDefault) =>
+    getDefault()
+      .prepend(soundListenerMiddleware.middleware)
+      .concat(notificationSocketMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

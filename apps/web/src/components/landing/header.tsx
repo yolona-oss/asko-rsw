@@ -4,13 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { Container } from '@asko/ui';
 import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/api/use-auth';
 import { useAppSelector, useAppDispatch } from '@/store/index';
 import { selectTheme, toggleTheme as toggleThemeAction } from '@/store/preferences-slice';
-import { notificationApi } from '@/lib/api/notification';
+import { selectUnreadCount } from '@/store/notifications';
 
 const navLinks = [
   { href: '/', label: 'Главная' },
@@ -32,16 +31,8 @@ export function LandingHeader() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuHeight, setMenuHeight] = useState(400);
 
-  const { data: unreadData } = useQuery({
-    queryKey: ['notifications-unread-count'],
-    queryFn: async () => {
-      const { data } = await notificationApi.unreadCount();
-      return data;
-    },
-    enabled: isAuthenticated,
-    refetchInterval: 60_000,
-  });
-  const hasUnread = isAuthenticated && (unreadData?.count ?? 0) > 0;
+  const unreadCount = useAppSelector(selectUnreadCount);
+  const hasUnread = isAuthenticated && unreadCount > 0;
 
   // Track menu scroll height for animation
   useEffect(() => {

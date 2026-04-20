@@ -11,12 +11,12 @@ import { MessageInput } from './message-input';
 import { TypingIndicator } from './typing-indicator';
 import { UploadingIndicator } from './uploading-indicator';
 import type { UploadingEntry } from './uploading-indicator';
-import { notificationApi } from '@/lib/api/notification';
+import { selectUnreadNotifications, markAsRead as markAsReadThunk } from '@/store/notifications';
+import { useAppSelector, useAppDispatch } from '@/store/index';
 import { setActiveConversation } from '@/lib/active-conversation';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
 import { useAccount } from '@/components/account/layout/provider';
 import { displayName as buildDisplayName } from '@/lib/account';
-import type { NotificationRecord } from '@/lib/api/types';
 import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
 import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
 
@@ -98,32 +98,17 @@ export function ConversationPanel({
   }, [realtimeMessages, conversation.id, currentUserId, socketActions, queryClient]);
 
   // Dismiss notification-bell entries for this conversation
-  useEffect(() => {
-    type ListCache = { data: NotificationRecord[]; overallCount: number };
-    const cache = queryClient.getQueryData<ListCache>(['notifications-unread-list']);
-    if (!cache) return;
+  const unreadNotifications = useAppSelector(selectUnreadNotifications);
+  const dispatch = useAppDispatch();
 
-    const toMark = (cache.data ?? []).filter(
+  useEffect(() => {
+    const toMark = unreadNotifications.filter(
       (n) => CHAT_NOTIFICATION_TYPES.has(n.type) && n.targetId === conversation.id,
     );
     if (toMark.length === 0) return;
 
-    const ids = new Set(toMark.map((n) => n.id));
-
-    queryClient.setQueryData<ListCache>(['notifications-unread-list'], (old) => {
-      if (!old) return old;
-      return {
-        ...old,
-        data: (old.data ?? []).filter((n) => !ids.has(n.id)),
-        overallCount: Math.max(0, old.overallCount - toMark.length),
-      };
-    });
-    queryClient.setQueryData<{ count: number }>(['notifications-unread-count'], (old) => ({
-      count: Math.max(0, (old?.count ?? 0) - toMark.length),
-    }));
-
-    toMark.forEach((n) => notificationApi.markAsRead(n.id));
-  }, [conversation.id, queryClient, realtimeMessages.length]);
+    toMark.forEach((n) => dispatch(markAsReadThunk(n.id)));
+  }, [conversation.id, unreadNotifications, dispatch]);
 
   const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
   const displayName = conversation.name || participantNames[otherParticipant?.userId ?? ''] || 'Чат';
