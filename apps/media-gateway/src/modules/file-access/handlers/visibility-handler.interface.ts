@@ -1,4 +1,4 @@
-import type { JwtPayload, FileVisibility } from '@asko/shared';
+import type { AccessTokenPayload, FileVisibility } from '@asko/shared';
 import type { FileAccessResponse } from '@asko/proto';
 
 /**
@@ -8,7 +8,7 @@ import type { FileAccessResponse } from '@asko/proto';
  */
 export interface FileVisibilityHandler {
     readonly visibility: FileVisibility;
-    authorize(access: FileAccessResponse, user?: JwtPayload): Promise<void>;
+    authorize(access: FileAccessResponse, user?: AccessTokenPayload): Promise<void>;
 }
 
 export const FILE_VISIBILITY_HANDLERS = Symbol('FILE_VISIBILITY_HANDLERS');

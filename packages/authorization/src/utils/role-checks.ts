@@ -1,21 +1,21 @@
-import { AppErrors, JwtPayload, STAFF_ROLES, ADMIN_ROLES, Role } from '@asko/shared';
+import { AppErrors, AccessTokenPayload, STAFF_ROLES, ADMIN_ROLES, Role } from '@asko/shared';
 
-const STAFF_ROLE_SET: ReadonlySet<string> = new Set(STAFF_ROLES as readonly string[]);
-const ADMIN_ROLE_SET: ReadonlySet<string> = new Set(ADMIN_ROLES as readonly string[]);
+const STAFF_ROLE_SET: ReadonlySet<Role> = new Set(STAFF_ROLES);
+const ADMIN_ROLE_SET: ReadonlySet<Role> = new Set(ADMIN_ROLES);
 
-export function isStaff(user: JwtPayload): boolean {
+export function isStaff(user: AccessTokenPayload): boolean {
     return (user.roles ?? []).some((r) => STAFF_ROLE_SET.has(r));
 }
 
-export function isAdmin(user: JwtPayload): boolean {
+export function isAdmin(user: AccessTokenPayload): boolean {
     return (user.roles ?? []).some((r) => ADMIN_ROLE_SET.has(r));
 }
 
-export function isSuperAdmin(user: JwtPayload): boolean {
+export function isSuperAdmin(user: AccessTokenPayload): boolean {
     return (user.roles ?? []).includes(Role.SUPER_ADMIN);
 }
 
-export function isSelf(user: JwtPayload, targetUserId: string): boolean {
+export function isSelf(user: AccessTokenPayload, targetUserId: string): boolean {
     return user.sub === targetUserId;
 }
 
@@ -23,7 +23,7 @@ export function isSelf(user: JwtPayload, targetUserId: string): boolean {
  * Staff (admin/manager/dealer/super_admin) may act on any target user.
  * Non-staff callers may only act on their own userId — otherwise throws 403.
  */
-export function assertSelfOrStaff(user: JwtPayload, targetUserId: string, message?: string): void {
+export function assertSelfOrStaff(user: AccessTokenPayload, targetUserId: string, message?: string): void {
     if (isStaff(user)) return;
     if (user.sub !== targetUserId) {
         throw AppErrors.forbidden(message ?? 'Нет доступа к данным другого пользователя');

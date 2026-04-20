@@ -13,7 +13,7 @@ import {
     UpsertPatternDto,
     ScheduleEntryType,
     ScheduleStatus,
-    JwtPayload,
+    AccessTokenPayload,
     parseDateTime,
     startOfDay,
     assertNotInPast,
@@ -60,7 +60,7 @@ export class WScheduleController {
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post('vacation')
-    async createVacation(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateVacationDto) {
+    async createVacation(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateVacationDto) {
         await this.assertTargetHasValidAddress(dto.userId);
         assertNotInPast(dto.dateFrom, '00:00');
         assertDurationRange(dto.durationDays, 1, 365);
@@ -78,7 +78,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: VacationRecordDto })
     @Permissions(Permission.SCHEDULE_CREATE)
     @Put('vacation/:id')
-    async updateVacation(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateVacationDto) {
+    async updateVacation(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateVacationDto) {
         const existing = (await this.scheduleClient.findVacationById(id)).vacation;
         if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.vacationNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
@@ -104,7 +104,7 @@ export class WScheduleController {
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post('sick-leave')
-    async createSickLeave(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateSickLeaveDto) {
+    async createSickLeave(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateSickLeaveDto) {
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateNotBeforeToday(dto.dateFrom);
         assertDurationRange(dto.durationDays, 1, 30);
@@ -122,7 +122,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: SickLeaveRecordDto })
     @Permissions(Permission.SCHEDULE_CREATE)
     @Put('sick-leave/:id')
-    async updateSickLeave(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateSickLeaveDto) {
+    async updateSickLeave(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateSickLeaveDto) {
         const existing = (await this.scheduleClient.findSickLeaveById(id)).sickLeave;
         if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.sickLeaveNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
@@ -153,7 +153,7 @@ export class WScheduleController {
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post('overtime')
-    async createOvertime(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateOvertimeDto) {
+    async createOvertime(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateOvertimeDto) {
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateNotBeforeToday(dto.date);
         const result = await this.scheduleClient.createOvertime({
@@ -170,7 +170,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: OvertimeRecordDto })
     @Permissions(Permission.SCHEDULE_CREATE)
     @Put('overtime/:id')
-    async updateOvertime(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateOvertimeDto) {
+    async updateOvertime(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateOvertimeDto) {
         const existing = (await this.scheduleClient.findOvertimeById(id)).overtime;
         if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.overtimeNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
@@ -189,7 +189,7 @@ export class WScheduleController {
     @CheckPolicy(ScheduleSelfOrStaffPolicy)
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post('override')
-    async createScheduleOverride(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateScheduleOverrideDto) {
+    async createScheduleOverride(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateScheduleOverrideDto) {
         await this.assertTargetHasValidAddress(dto.userId);
         assertDateIsToday(dto.date);
         const result = await this.scheduleClient.createScheduleOverride({
@@ -206,7 +206,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: ScheduleOverrideRecordDto })
     @Permissions(Permission.SCHEDULE_CREATE)
     @Put('override/:id')
-    async updateScheduleOverride(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateScheduleOverrideDto) {
+    async updateScheduleOverride(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateScheduleOverrideDto) {
         const existing = (await this.scheduleClient.findScheduleOverrideById(id)).scheduleOverride;
         if (!existing?.id) throw AppErrors.notFound({ key: msg.schedule.overrideNotFound });
         await this.assertTargetHasValidAddress(existing.userId);
@@ -230,7 +230,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: PaginatedScheduleResponseDto })
     @Permissions(Permission.SCHEDULE_VIEW_OWN)
     @Get()
-    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: QueryScheduleDto) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload, @Query() query: QueryScheduleDto) {
         if (!isStaff(user)) {
             query.userId = user.sub;
         }
@@ -243,7 +243,7 @@ export class WScheduleController {
     @ApiOkResponse()
     @Permissions(Permission.SCHEDULE_DELETE)
     @Delete(':id')
-    async deleteEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string): Promise<void> {
+    async deleteEntry(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string): Promise<void> {
         const entry = await this.findEntryById(id);
         switch (entry.type) {
             case ScheduleEntryType.VACATION: await this.scheduleClient.deleteVacation(id, user.sub); return;
@@ -255,7 +255,7 @@ export class WScheduleController {
 
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post(':id/approve')
-    async approveEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async approveEntry(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
         if (entry.status !== ScheduleStatus.PENDING) {
             throw AppErrors.badRequest({ key: msg.schedule.onlyPending });
@@ -273,7 +273,7 @@ export class WScheduleController {
 
     @Permissions(Permission.SCHEDULE_CREATE)
     @Post(':id/reject')
-    async rejectEntry(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async rejectEntry(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const entry = await this.findEntryById(id);
         if (entry.status !== ScheduleStatus.PENDING) {
             throw AppErrors.badRequest({ key: msg.schedule.onlyPending });
@@ -304,7 +304,7 @@ export class WScheduleController {
     @Permissions(Permission.SCHEDULE_CREATE)
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Put('pattern/:userId')
-    async upsertPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
+    async upsertPattern(@JwtAuthUser() user: AccessTokenPayload, @Param('userId') userId: string, @Body() dto: UpsertPatternDto) {
         await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternUpsert({
             userId,
@@ -327,14 +327,14 @@ export class WScheduleController {
     @Permissions(Permission.SCHEDULE_CREATE)
     @CheckPolicy(ScheduleSelfOrStaffPolicy, { paramKey: 'userId' })
     @Delete('pattern/:userId')
-    async deletePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string): Promise<void> {
+    async deletePattern(@JwtAuthUser() user: AccessTokenPayload, @Param('userId') userId: string): Promise<void> {
         await this.scheduleClient.patternDelete(userId, user.sub);
     }
 
     @ApiOkResponse({ type: SchedulePatternRecordDto })
     @Permissions(Permission.SCHEDULE_PATTERN_APPROVE)
     @Post('pattern/:userId/approve')
-    async approvePattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+    async approvePattern(@JwtAuthUser() user: AccessTokenPayload, @Param('userId') userId: string) {
         await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternApprove(userId, user.sub);
         return result.pattern;
@@ -343,7 +343,7 @@ export class WScheduleController {
     @ApiOkResponse({ type: SchedulePatternRecordDto })
     @Permissions(Permission.SCHEDULE_PATTERN_APPROVE)
     @Post('pattern/:userId/reject')
-    async rejectPattern(@JwtAuthUser() user: JwtPayload, @Param('userId') userId: string) {
+    async rejectPattern(@JwtAuthUser() user: AccessTokenPayload, @Param('userId') userId: string) {
         await this.assertTargetHasValidAddress(userId);
         const result = await this.scheduleClient.patternReject(userId, user.sub);
         return result.pattern;
@@ -427,7 +427,7 @@ export class WScheduleController {
         throw AppErrors.notFound({ key: msg.schedule.entryNotFound });
     }
 
-    private assertCanApproveOrReject(user: JwtPayload, entry: { userId: string; createdBy: string }): void {
+    private assertCanApproveOrReject(user: AccessTokenPayload, entry: { userId: string; createdBy: string }): void {
         const userIsStaffMember = isStaff(user);
         const userIsTarget = entry.userId === user.sub;
         const createdBy = entry.createdBy || '';

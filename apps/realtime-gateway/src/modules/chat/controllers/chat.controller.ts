@@ -5,7 +5,7 @@ import { UserClientService, JwtAuthUser } from '@asko/gateway-common';
 import { CheckPolicy } from '@asko/authorization';
 import { ChatGateway } from '../gateways/chat.gateway';
 import { ConversationCreationPolicy } from '../policies/conversation-creation.policy';
-import { JwtPayload } from '@asko/shared';
+import { AccessTokenPayload } from '@asko/shared';
 import {
     ConversationResponseDto,
     PaginatedConversationsResponseDto,
@@ -33,15 +33,15 @@ export class ChatController {
     @CheckPolicy(ConversationCreationPolicy)
     @Post('conversations')
     async createConversation(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() body: { type: string; name?: string; participantIds: string[]; avatarUrl?: string },
     ) {
         const result = await this.chatClient.createConversation(
-            user.id, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
+            user.sub, body.type, body.name ?? '', body.participantIds, body.avatarUrl,
         );
 
         // Emit to other participants via WebSocket
-        const recipientIds = body.participantIds.filter(id => id !== user.id);
+        const recipientIds = body.participantIds.filter(id => id !== user.sub);
         if (recipientIds.length > 0 && result.conversation) {
             this.chatGateway.emitConversationCreated(recipientIds, result.conversation);
         }
@@ -52,12 +52,12 @@ export class ChatController {
     @ApiOkResponse({ type: PaginatedConversationsResponseDto })
     @Get('conversations')
     async listConversations(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
     ) {
         return this.chatClient.listUserConversations(
-            user.id,
+            user.sub,
             page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 20,
         );
@@ -65,22 +65,22 @@ export class ChatController {
 
     @ApiOkResponse({ type: ConversationResponseDto })
     @Get('conversations/:id')
-    async getConversation(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
-        return this.chatClient.getConversation(id, user.id);
+    async getConversation(@Param('id') id: string, @JwtAuthUser() user: AccessTokenPayload) {
+        return this.chatClient.getConversation(id, user.sub);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('conversations/:id')
-    async deleteConversation(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
-        return this.chatClient.deleteConversation(id, user.id);
+    async deleteConversation(@Param('id') id: string, @JwtAuthUser() user: AccessTokenPayload) {
+        return this.chatClient.deleteConversation(id, user.sub);
     }
 
     // ─── Participants ─────────────────────────────────────────────────
 
     @ApiOkResponse({ type: ParticipantListResponseDto })
     @Get('conversations/:id/participants')
-    async listParticipants(@Param('id') id: string, @JwtAuthUser() user: JwtPayload) {
-        return this.chatClient.listParticipants(id, user.id);
+    async listParticipants(@Param('id') id: string, @JwtAuthUser() user: AccessTokenPayload) {
+        return this.chatClient.listParticipants(id, user.sub);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
@@ -88,9 +88,9 @@ export class ChatController {
     async addParticipant(
         @Param('id') id: string,
         @Body() body: { userId: string },
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
     ) {
-        return this.chatClient.addParticipant(id, body.userId, user.id);
+        return this.chatClient.addParticipant(id, body.userId, user.sub);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
@@ -98,9 +98,9 @@ export class ChatController {
     async removeParticipant(
         @Param('id') id: string,
         @Param('userId') targetUserId: string,
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
     ) {
-        return this.chatClient.removeParticipant(id, targetUserId, user.id);
+        return this.chatClient.removeParticipant(id, targetUserId, user.sub);
     }
 
     // ─── Messages ─────────────────────────────────────────────────────
@@ -109,11 +109,11 @@ export class ChatController {
     @Post('conversations/:id/messages')
     async sendMessage(
         @Param('id') conversationId: string,
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() body: { type: string; text?: string; attachment?: Record<string, any> },
     ) {
         const result = await this.chatClient.sendMessage(
-            conversationId, user.id, body.type, body.text ?? '', body.attachment,
+            conversationId, user.sub, body.type, body.text ?? '', body.attachment,
         );
 
         // Emit via WebSocket
@@ -126,13 +126,13 @@ export class ChatController {
     @Get('conversations/:id/messages')
     async listMessages(
         @Param('id') conversationId: string,
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('beforeId') beforeId?: string,
     ) {
         return this.chatClient.listMessages(
-            conversationId, user.id,
+            conversationId, user.sub,
             page ? parseInt(page) : 1,
             limit ? parseInt(limit) : 50,
             beforeId,
@@ -144,9 +144,9 @@ export class ChatController {
     async updateMessage(
         @Param('id') messageId: string,
         @Body() body: { text: string },
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
     ) {
-        const result = await this.chatClient.updateMessage(messageId, user.id, body.text);
+        const result = await this.chatClient.updateMessage(messageId, user.sub, body.text);
 
         // Emit via WebSocket
         if (result.message) {
@@ -158,15 +158,15 @@ export class ChatController {
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('messages/:id')
-    async deleteMessage(@Param('id') messageId: string, @JwtAuthUser() user: JwtPayload) {
-        const result = await this.chatClient.deleteMessage(messageId, user.id);
+    async deleteMessage(@Param('id') messageId: string, @JwtAuthUser() user: AccessTokenPayload) {
+        const result = await this.chatClient.deleteMessage(messageId, user.sub);
         return result;
     }
 
     @ApiOkResponse({ type: ChatUnreadCountResponseDto })
     @Get('unread-count')
-    async getUnreadCount(@JwtAuthUser() user: JwtPayload) {
-        return this.chatClient.getUnreadCount(user.id);
+    async getUnreadCount(@JwtAuthUser() user: AccessTokenPayload) {
+        return this.chatClient.getUnreadCount(user.sub);
     }
 
     // ─── Presence ─────────────────────────────────────────────────────
@@ -188,13 +188,13 @@ export class ChatController {
     @ApiOkResponse()
     @Get('search-users')
     async searchUsers(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('q') query: string,
         @Query('limit') limit?: string,
     ) {
         const result = await this.userClient.searchUsersForChat({
             query: query || '',
-            requesterId: user.id,
+            requesterId: user.sub,
             requesterRoles: user.roles,
             limit: limit ? parseInt(limit) : 20,
         });

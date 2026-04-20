@@ -8852,9 +8852,6 @@
           "phone": {
             "type": "string"
           },
-          "googleId": {
-            "type": "string"
-          },
           "providers": {
             "type": "array",
             "items": {
@@ -9115,9 +9112,6 @@
             "type": "string"
           },
           "phone": {
-            "type": "string"
-          },
-          "googleId": {
             "type": "string"
           },
           "providers": {

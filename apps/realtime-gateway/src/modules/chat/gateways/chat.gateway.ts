@@ -37,7 +37,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
 
-            const userId = payload.id;
+            const userId = payload.sub;
             client.data.userId = userId;
 
             // Track socket

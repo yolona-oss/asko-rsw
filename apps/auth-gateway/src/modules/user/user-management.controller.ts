@@ -14,7 +14,6 @@ import { IsOptional, IsString } from 'class-validator';
 import {
     UserClientService,
     JwtAuthUser,
-    AuthUserDto,
     EmptyResponseDto,
     MessageResponseDto,
     OptionalAuth,
@@ -23,6 +22,7 @@ import {
 import { Permissions, Permission } from '@asko/authorization';
 
 import {
+    AccessTokenPayload,
     UpdateUserDto,
     ChangePasswordDto,
     PaginationDto,
@@ -86,18 +86,18 @@ export class UserManagementController {
 
     @ApiOkResponse({ type: UserResponseDto })
     @Get('/profile')
-    async getProfile(@JwtAuthUser() user: AuthUserDto) {
-        return this.userClient.getProfile({ id: user.id });
+    async getProfile(@JwtAuthUser() user: AccessTokenPayload) {
+        return this.userClient.getProfile({ id: user.sub });
     }
 
     @ApiOkResponse({ type: UserResponseDto })
     @Put('/')
     async updateProfile(
-        @JwtAuthUser() user: AuthUserDto,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() data: Partial<UpdateUserDto>,
     ) {
         return this.userClient.updateUser({
-            id: user.id,
+            id: user.sub,
             name: data.name ?? '',
             middleName: data.middleName ?? '',
             email: data.email ?? '',
@@ -118,11 +118,11 @@ export class UserManagementController {
     @ApiOkResponse({ type: UserResponseDto })
     @Put('/password')
     async changePassword(
-        @JwtAuthUser() user: AuthUserDto,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() data: ChangePasswordDto,
     ) {
         return this.userClient.changePassword({
-            id: user.id,
+            id: user.sub,
             oldPassword: data.oldPassword,
             newPassword: data.newPassword,
         });
@@ -131,11 +131,11 @@ export class UserManagementController {
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/request-email-change')
     async requestEmailChange(
-        @JwtAuthUser() user: AuthUserDto,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() data: RequestEmailChangeDto,
     ) {
         const result = await this.userClient.requestEmailChange({
-            id: user.id,
+            id: user.sub,
             newEmail: data.newEmail,
         });
         return { message: result.message, retryAfter: result.retryAfter };
@@ -145,8 +145,8 @@ export class UserManagementController {
 
     @ApiOkResponse()
     @Get('/privacy-settings')
-    async getPrivacySettings(@JwtAuthUser() user: AuthUserDto) {
-        const profile = await this.userClient.getProfile({ id: user.id });
+    async getPrivacySettings(@JwtAuthUser() user: AccessTokenPayload) {
+        const profile = await this.userClient.getProfile({ id: user.sub });
         const rules: PrivacyRules | null = profile.settings?.privacyRulesJson
             ? (() => { try { return JSON.parse(profile.settings!.privacyRulesJson!); } catch { return null; } })()
             : null;
@@ -156,14 +156,14 @@ export class UserManagementController {
     @ApiOkResponse()
     @Put('/privacy-settings')
     async updatePrivacySettings(
-        @JwtAuthUser() user: AuthUserDto,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() body: { privacyRules: PrivacyRules },
     ) {
         // Fetch current settings to avoid overriding other fields
-        const profile = await this.userClient.getProfile({ id: user.id });
+        const profile = await this.userClient.getProfile({ id: user.sub });
         const currentSettings = profile.settings;
         return this.userClient.updateUser({
-            id: user.id,
+            id: user.sub,
             name: '',
             email: '',
             phone: '',
@@ -187,7 +187,7 @@ export class UserManagementController {
     @ApiOkResponse()
     @Get('/:id/public-profile')
     async getPublicProfile(
-        @JwtAuthUser() user: AuthUserDto | undefined,
+        @JwtAuthUser() user: AccessTokenPayload | undefined,
         @Param('id') id: string,
     ) {
         return this.userClient.getUserProfile({
@@ -200,7 +200,7 @@ export class UserManagementController {
     @ApiOkResponse()
     @Post('/batch')
     async getUsersBatch(
-        @JwtAuthUser() user: AuthUserDto | undefined,
+        @JwtAuthUser() user: AccessTokenPayload | undefined,
         @Body() body: { ids: string[] },
     ) {
         const ids = (body.ids ?? []).slice(0, 100);

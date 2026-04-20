@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FileVisibility, msg } from '@asko/shared';
-import type { JwtPayload } from '@asko/shared';
+import type { AccessTokenPayload } from '@asko/shared';
 import type { FileAccessResponse } from '@asko/proto';
 import { AppErrors, AppError } from 'common/error';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
@@ -12,7 +12,7 @@ export class ParticipantsOnlyVisibilityHandler implements FileVisibilityHandler 
 
     constructor(private readonly chatClient: ChatClientService) {}
 
-    async authorize(access: FileAccessResponse, user?: JwtPayload): Promise<void> {
+    async authorize(access: FileAccessResponse, user?: AccessTokenPayload): Promise<void> {
         if (!user) throw AppErrors.unauthorized({ key: msg.file.authRequired });
         if (!access.conversationId) throw AppErrors.forbidden({ key: msg.file.accessDenied });
         try {

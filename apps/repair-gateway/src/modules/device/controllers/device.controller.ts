@@ -13,7 +13,7 @@ import {
     RegisterUserDeviceDto,
     UpdateUserDeviceDto,
     PaginationDto,
-    JwtPayload,
+    AccessTokenPayload,
     ImageTypeEnum,
     msg,
 } from '@asko/shared';
@@ -236,26 +236,26 @@ export class UserDeviceController {
 
     @Post()
     @ApiCreatedResponse({ type: UserDeviceRecordDto })
-    async register(@JwtAuthUser() user: JwtPayload, @Body() dto: RegisterUserDeviceDto) {
+    async register(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: RegisterUserDeviceDto) {
         return this.deviceClient.registerUserDevice(user.sub, dto);
     }
 
     @Get()
     @ApiOkResponse({ type: UserDeviceListResponseDto })
-    async findAll(@JwtAuthUser() user: JwtPayload) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload) {
         return this.deviceClient.getUserDevices(user.sub);
     }
 
     @Get(':id')
     @ApiOkResponse({ type: UserDeviceRecordDto })
-    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.deviceClient.getUserDevice(user.sub, id);
     }
 
     @Patch(':id')
     @ApiOkResponse({ type: UserDeviceRecordDto })
     async update(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: UpdateUserDeviceDto,
     ) {
@@ -264,7 +264,7 @@ export class UserDeviceController {
 
     @Delete(':id')
     @ApiOkResponse({ type: MessageResponseDto })
-    async remove(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async remove(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         await this.deviceClient.removeUserDevice(user.sub, id);
         return { message: msg.device.removedFromAccount };
     }

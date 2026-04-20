@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build:web": "turbo run build --filter=@asko/web",
-    "prod:web": "cd apps/web && pnpm run start",
+    "dev:web": "cd apps/web && pnpm run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

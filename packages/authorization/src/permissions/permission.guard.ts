@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AppErrors, REQUEST_USER_KEY } from '@asko/shared';
-import type { JwtPayload } from '@asko/shared';
+import type { AccessTokenPayload } from '@asko/shared';
 import type { MetricsService } from '@asko/observability';
 
 import { Permission } from './permission.enum.js';
@@ -33,7 +33,7 @@ export class PermissionGuard implements CanActivate {
         if (!required || required.length === 0) return true;
 
         const request = context.switchToHttp().getRequest();
-        const user: JwtPayload | undefined = request[REQUEST_USER_KEY];
+        const user: AccessTokenPayload | undefined = request[REQUEST_USER_KEY];
         if (!user) throw AppErrors.unauthorized('Требуется авторизация');
 
         const userPerms = resolvePermissions(user.roles);

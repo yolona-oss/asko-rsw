@@ -15,7 +15,7 @@ import {
     ReapplyCertificateDto,
     CertificateStatus,
     PaginationDto,
-    JwtPayload,
+    AccessTokenPayload,
     PaymentTargetType,
     PaymentProviderType,
     ImageTypeEnum,
@@ -55,7 +55,7 @@ export class CertificateController {
         private readonly fileService: RepairFileClientService,
     ) {}
 
-    private async enrichCertificates(certs: any[], requester?: JwtPayload): Promise<void> {
+    private async enrichCertificates(certs: any[], requester?: AccessTokenPayload): Promise<void> {
         const ctx = buildRequesterContext(requester);
         const enrichments: Promise<void>[] = [];
         for (const cert of certs) {
@@ -80,7 +80,7 @@ export class CertificateController {
     /** User adds a certificate they purchased */
     @ApiCreatedResponse({ type: CertificateResponseDto })
     @Post('add')
-    async addCertificate(@JwtAuthUser() user: JwtPayload, @Body() dto: AddCertificateDto) {
+    async addCertificate(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: AddCertificateDto) {
         return this.certificateClient.addCertificate(user.sub, {
             userDeviceId: dto.userDeviceId,
             certificateNumber: dto.certificateNumber,
@@ -92,7 +92,7 @@ export class CertificateController {
     @ApiCreatedResponse({ type: CertificateResponseDto })
     @Permissions(Permission.CERTIFICATE_CREATE)
     @Post('create')
-    async createByDealer(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateCertificateDto) {
+    async createByDealer(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateCertificateDto) {
         // Resolve dealer profile to get dealerId
         const { profile: dealerProfile } = await this.dealerClient.getProfile(user.sub);
 
@@ -142,7 +142,7 @@ export class CertificateController {
     /** User self-creates a certificate for one of their devices (PENDING_PAYMENT + invoice) */
     @ApiCreatedResponse({ type: CertificateResponseDto })
     @Post('self-create')
-    async selfCreate(@JwtAuthUser() user: JwtPayload, @Body() dto: SelfCreateCertificateDto) {
+    async selfCreate(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: SelfCreateCertificateDto) {
         const expiresAt = computeExpiresAt(dto.durationMonths).toISOString();
         return this.certificateClient.selfCreate(user.sub, {
             userDeviceId: dto.userDeviceId,
@@ -155,7 +155,7 @@ export class CertificateController {
     @ApiCreatedResponse({ type: CertificateResponseDto })
     @Post(':id/reassign')
     async reassign(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: AssignCertificateDto,
     ) {
@@ -166,7 +166,7 @@ export class CertificateController {
     @ApiCreatedResponse({ type: CertificateResponseDto })
     @Post(':id/reapply')
     async reapply(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: ReapplyCertificateDto,
     ) {
@@ -180,7 +180,7 @@ export class CertificateController {
     @ApiOkResponse({ type: CertificateResponseDto })
     @Post(':id/dismiss-reminder')
     async dismissReminder(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
     ) {
         return this.certificateClient.dismissExpiryReminder(user.sub, id);
@@ -208,7 +208,7 @@ export class CertificateController {
     /** User gets their certificates */
     @ApiOkResponse({ type: CertificateListResponseDto })
     @Get('my')
-    async findMy(@JwtAuthUser() user: JwtPayload) {
+    async findMy(@JwtAuthUser() user: AccessTokenPayload) {
         const result = await this.certificateClient.findByUser(user.sub);
         await this.enrichCertificates(result.certificates ?? [], user);
         return result;
@@ -219,7 +219,7 @@ export class CertificateController {
     @Permissions(Permission.CERTIFICATE_VIEW_OWN)
     @Get('dealer')
     async findDealerCerts(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query() query: FindDealerCertificatesDto,
     ) {
         const { status, ...pagination } = query;
@@ -235,7 +235,7 @@ export class CertificateController {
     @ApiOkResponse({ type: PaginatedCertificatesResponseDto })
     @Permissions(Permission.CERTIFICATE_MANAGE)
     @Get()
-    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: FindDealerCertificatesDto) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload, @Query() query: FindDealerCertificatesDto) {
         const result = await this.certificateClient.findAll(query);
         result.data = result.data ?? [];
         await this.enrichCertificates(result.data, user);
@@ -245,7 +245,7 @@ export class CertificateController {
     /** Pay for a certificate */
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @Post(':id/pay')
-    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async pay(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
             user.sub,
             PaymentTargetType.CERTIFICATE,
@@ -256,7 +256,7 @@ export class CertificateController {
     /** Dummy pay for a certificate (testing) */
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @Post(':id/dummy-pay')
-    async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async dummyPay(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
             user.sub,
             PaymentTargetType.CERTIFICATE,
@@ -291,7 +291,7 @@ export class CertificateController {
     @ApiCreatedResponse()
     @Post(':id/pdf/generate')
     async generatePdf(
-        @JwtAuthUser() _user: JwtPayload,
+        @JwtAuthUser() _user: AccessTokenPayload,
         @Param('id') id: string,
         @Query('force') force?: string,
     ) {
@@ -391,7 +391,7 @@ export class CertificateController {
     @ApiOkResponse({ type: CertificateResponseDto })
     @CheckPolicy(CertificateOwnerPolicy)
     @Get(':id')
-    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const cert = await this.certificateClient.findById(id);
         await this.enrichCertificates([cert], user);
         return cert;

@@ -6,17 +6,17 @@ const cache = new Map<string, ReadonlySet<Permission>>();
 
 /**
  * Resolve the union of all permissions granted to a set of roles.
- * Called at request time by {@link PermissionGuard} using `JwtPayload.roles`.
+ * Called at request time by {@link PermissionGuard} using `AccessTokenPayload.roles`.
  * Results are memoized by sorted role set (only ~6 distinct roles).
  */
-export function resolvePermissions(roles: string[]): ReadonlySet<Permission> {
+export function resolvePermissions(roles: Role[]): ReadonlySet<Permission> {
     const key = roles.slice().sort().join(',');
     const cached = cache.get(key);
     if (cached) return cached;
 
     const result = new Set<Permission>();
     for (const role of roles) {
-        const perms = ROLE_PERMISSIONS.get(role as Role);
+        const perms = ROLE_PERMISSIONS.get(role);
         if (perms) {
             for (const p of perms) result.add(p);
         }
@@ -26,9 +26,9 @@ export function resolvePermissions(roles: string[]): ReadonlySet<Permission> {
 }
 
 /** Check if a set of roles grants a specific permission. */
-export function hasPermission(roles: string[], permission: Permission): boolean {
+export function hasPermission(roles: Role[], permission: Permission): boolean {
     for (const role of roles) {
-        const perms = ROLE_PERMISSIONS.get(role as Role);
+        const perms = ROLE_PERMISSIONS.get(role);
         if (perms?.has(permission)) return true;
     }
     return false;

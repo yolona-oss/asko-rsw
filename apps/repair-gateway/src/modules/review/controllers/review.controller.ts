@@ -6,7 +6,7 @@ import { RepairClientService } from 'modules/repair-client/repair-client.service
 import { RepairerClientService } from 'modules/repair-client/repairer-client.service';
 import { ChatClientService } from 'modules/chat-client/chat-client.service';
 import { RepairFileClientService } from 'modules/repair/services/repair-file-client.service';
-import { CreateReviewDto, PaginationDto, JwtPayload, ImageTypeEnum } from '@asko/shared';
+import { CreateReviewDto, PaginationDto, AccessTokenPayload, ImageTypeEnum } from '@asko/shared';
 import { Permissions, Permission } from '@asko/authorization';
 import { JwtAuthUser, Public } from '@asko/gateway-common';
 import { EmptyResponseDto, ImageListResponseDto } from 'common/dto/responses';
@@ -29,7 +29,7 @@ export class ReviewController {
 
     @ApiCreatedResponse({ type: ReviewResponseDto })
     @Post()
-    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateReviewDto) {
+    async create(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateReviewDto) {
         const result = await this.repairerClient.createReview(
             dto.repairRequestId,
             user.sub,
@@ -48,14 +48,14 @@ export class ReviewController {
 
     @ApiOkResponse({ type: ReviewListResponseDto })
     @Get('my')
-    async findMy(@JwtAuthUser() user: JwtPayload) {
+    async findMy(@JwtAuthUser() user: AccessTokenPayload) {
         return this.repairerClient.findReviewsByUser(user.sub);
     }
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete(':id/images/:imageId')
     async removeImage(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('imageId') imageId: string,
     ) {
@@ -73,7 +73,7 @@ export class ReviewController {
     @ApiOkResponse({ type: RatingResponseDto })
     @Permissions(Permission.REVIEW_VIEW)
     @Get('rating/my')
-    async findMyRating(@JwtAuthUser() user: JwtPayload) {
+    async findMyRating(@JwtAuthUser() user: AccessTokenPayload) {
         const { repairer } = await this.repairerClient.getMyProfile(user.sub);
         return this.repairerClient.getRepairerRating(repairer.id);
     }

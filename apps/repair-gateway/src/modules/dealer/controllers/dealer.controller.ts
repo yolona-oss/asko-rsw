@@ -12,7 +12,7 @@ import {
     PaginationDto,
     PaymentTargetType,
     PaymentProviderType,
-    JwtPayload,
+    AccessTokenPayload,
     WithdrawalStatus,
 } from '@asko/shared';
 import { Permissions, Permission } from '@asko/authorization';
@@ -70,7 +70,7 @@ export class DealerController {
     @Permissions(Permission.DEALER_MANAGE)
     @Post('withdrawals/:id/process')
     async processWithdrawal(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: ProcessWithdrawalDto,
     ) {
@@ -80,21 +80,21 @@ export class DealerController {
     @ApiCreatedResponse({ type: WithdrawalResponseDto })
     @Permissions(Permission.DEALER_MANAGE)
     @Post('withdrawals/:id/approve')
-    async approveWithdrawal(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async approveWithdrawal(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.dealerClient.processWithdrawal(id, user.sub, WithdrawalStatus.APPROVED);
     }
 
     @ApiCreatedResponse({ type: WithdrawalResponseDto })
     @Permissions(Permission.DEALER_MANAGE)
     @Post('withdrawals/:id/reject')
-    async rejectWithdrawal(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async rejectWithdrawal(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.dealerClient.processWithdrawal(id, user.sub, WithdrawalStatus.REJECTED);
     }
 
     @ApiCreatedResponse({ type: PayoutResponseDto })
     @Permissions(Permission.DEALER_MANAGE)
     @Post('withdrawals/:id/mark-paid')
-    async markPaid(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async markPaid(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const withdrawal = await this.dealerClient.getWithdrawalForPayout(id);
         return this.paymentService.processPayout(user.sub, {
             targetType: PaymentTargetType.DEALER_WITHDRAWAL,
@@ -114,7 +114,7 @@ export class DealerController {
     @ApiOkResponse({ type: UserResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('search-user')
-    async searchUser(@JwtAuthUser() user: JwtPayload, @Query('email') email: string) {
+    async searchUser(@JwtAuthUser() user: AccessTokenPayload, @Query('email') email: string) {
         const found = await this.userClient.findUserByEmail(email);
         return this.userClient.getUserProfile({
             id: found.id,
@@ -125,21 +125,21 @@ export class DealerController {
     @ApiOkResponse({ type: DealerProfileResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('profile')
-    async getProfile(@JwtAuthUser() user: JwtPayload) {
+    async getProfile(@JwtAuthUser() user: AccessTokenPayload) {
         return this.dealerClient.getProfile(user.sub);
     }
 
     @ApiOkResponse({ type: DealerProfileResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Patch('profile')
-    async updateProfile(@JwtAuthUser() user: JwtPayload, @Body() dto: UpdateDealerProfileDto) {
+    async updateProfile(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: UpdateDealerProfileDto) {
         return this.dealerClient.updateProfile(user.sub, dto);
     }
 
     @ApiOkResponse({ type: DealerClientListResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('clients')
-    async getClients(@JwtAuthUser() user: JwtPayload) {
+    async getClients(@JwtAuthUser() user: AccessTokenPayload) {
         return this.dealerClient.getClients(user.sub);
     }
 
@@ -153,28 +153,28 @@ export class DealerController {
     @ApiCreatedResponse({ type: DealerClientResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Post('clients')
-    async addClient(@JwtAuthUser() user: JwtPayload, @Body() dto: AddDealerClientDto) {
+    async addClient(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: AddDealerClientDto) {
         return this.dealerClient.addClient(user.sub, dto.clientUserId);
     }
 
     @ApiOkResponse({ type: PaginatedPointsResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('points')
-    async getPointsHistory(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
+    async getPointsHistory(@JwtAuthUser() user: AccessTokenPayload, @Query() pagination: PaginationDto) {
         return this.dealerClient.getPointsHistory(user.sub, pagination);
     }
 
     @ApiCreatedResponse({ type: WithdrawalResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Post('withdraw')
-    async requestWithdrawal(@JwtAuthUser() user: JwtPayload, @Body() dto: RequestPointsWithdrawalDto) {
+    async requestWithdrawal(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: RequestPointsWithdrawalDto) {
         return this.dealerClient.requestWithdrawal(user.sub, dto.amount, dto.cardNumber, dto.cardHolderName);
     }
 
     @ApiOkResponse({ type: WithdrawalListResponseDto })
     @Permissions(Permission.DEALER_OWN_PROFILE)
     @Get('withdrawals')
-    async getWithdrawals(@JwtAuthUser() user: JwtPayload) {
+    async getWithdrawals(@JwtAuthUser() user: AccessTokenPayload) {
         return this.dealerClient.getWithdrawals(user.sub);
     }
 }

@@ -6,7 +6,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AppErrors, FileVisibility, ImageTypeEnum, JwtPayload, UPLOAD_LIMITS, msg } from '@asko/shared';
+import { AppErrors, FileVisibility, ImageTypeEnum, AccessTokenPayload, UPLOAD_LIMITS, msg } from '@asko/shared';
 import { CheckPolicy, isAdmin } from '@asko/authorization';
 import {
     JwtAuthUser,
@@ -74,7 +74,7 @@ export class RepairUploadController {
     @Post('repair-requests/:id/documents')
     @UseInterceptors(new StreamingUploadInterceptor(DOCUMENT_MAX_SIZE))
     async uploadRepairRequestDocument(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @StreamingFile() upload: StreamingUploadPayload,
         @Param('id') id: string,
     ) {
@@ -111,7 +111,7 @@ export class RepairUploadController {
     @Post('repair-requests/broken-parts/:partId/documents')
     @UseInterceptors(new StreamingUploadInterceptor(DOCUMENT_MAX_SIZE))
     async uploadBrokenPartDocument(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @StreamingFile() upload: StreamingUploadPayload,
         @Param('partId') partId: string,
     ) {
@@ -126,7 +126,7 @@ export class RepairUploadController {
 
     @ApiOkResponse({ type: EmptyResponseDto })
     @Delete('repair-requests/documents/:documentId')
-    async deleteDocument(@JwtAuthUser() user: JwtPayload, @Param('documentId') documentId: string) {
+    async deleteDocument(@JwtAuthUser() user: AccessTokenPayload, @Param('documentId') documentId: string) {
         if (isAdmin(user)) {
             return this.fileService.deleteDocument(documentId);
         }

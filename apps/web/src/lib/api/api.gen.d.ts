@@ -4018,7 +4018,6 @@ export interface components {
             middleName?: string;
             email?: string;
             phone?: string;
-            googleId?: string;
             providers: components["schemas"]["AuthProvider"][];
             roles: components["schemas"]["Role"][];
             isActive: boolean;
@@ -4084,7 +4083,6 @@ export interface components {
             middleName?: string;
             email?: string;
             phone?: string;
-            googleId?: string;
             providers: components["schemas"]["AuthProvider"][];
             roles: components["schemas"]["Role"][];
             isActive: boolean;

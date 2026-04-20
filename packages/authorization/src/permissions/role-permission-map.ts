@@ -9,7 +9,7 @@ const ALL_PERMISSIONS = new Set(Object.values(Permission));
  *
  * This map is the single source of truth for "which role can do what".
  * Guards resolve user permissions at request time by unioning the sets
- * for each role in `JwtPayload.roles`.
+ * for each role in `AccessTokenPayload.roles`.
  */
 export const ROLE_PERMISSIONS: ReadonlyMap<Role, ReadonlySet<Permission>> = new Map([
     [Role.SUPER_ADMIN, ALL_PERMISSIONS],

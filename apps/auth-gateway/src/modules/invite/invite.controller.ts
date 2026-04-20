@@ -5,13 +5,12 @@ import {
     UserClientService,
     Public,
     JwtAuthUser,
-    AuthUserDto,
     InviteCreatedResponseDto,
     InviteLinkResponseDto,
     MessageResponseDto,
 } from '@asko/gateway-common';
 import { Permissions, Permission } from '@asko/authorization';
-import { CreateInvitationLinkDto, msg } from '@asko/shared';
+import { AccessTokenPayload, CreateInvitationLinkDto, msg } from '@asko/shared';
 
 @ApiTags('Invitations')
 @Controller('invite')
@@ -23,12 +22,12 @@ export class InviteController {
     @Post('/')
     async create(
         @Body() dto: CreateInvitationLinkDto,
-        @JwtAuthUser() user: AuthUserDto,
+        @JwtAuthUser() user: AccessTokenPayload,
     ) {
         return this.userClient.createInvite({
             role: dto.role,
             ttl: dto.ttl ?? 0,
-            creatorId: user.id,
+            creatorId: user.sub,
         });
     }
 

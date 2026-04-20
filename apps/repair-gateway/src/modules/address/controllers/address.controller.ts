@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
-import { CreateAddressDto, UpdateAddressDto, JwtPayload } from '@asko/shared';
+import { CreateAddressDto, UpdateAddressDto, AccessTokenPayload } from '@asko/shared';
 import { Permissions, Permission, isStaff } from '@asko/authorization';
 import { JwtAuthUser, AddressClientService } from '@asko/gateway-common';
 import { AddressResponseDto, AddressListResponseDto, AddressRecordDto } from 'modules/device/dto/device.response.dto';
@@ -12,35 +12,35 @@ export class AddressController {
 
     @ApiCreatedResponse({ type: AddressResponseDto })
     @Post()
-    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateAddressDto) {
+    async create(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateAddressDto) {
         const result = await this.addressClient.createAddress(user.sub, dto);
         return result.address;
     }
 
     @ApiOkResponse({ type: AddressResponseDto })
     @Put(':id')
-    async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateAddressDto) {
+    async update(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateAddressDto) {
         const result = await this.addressClient.updateAddress(user.sub, id, dto);
         return result.address;
     }
 
     @ApiOkResponse()
     @Delete(':id')
-    async remove(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async remove(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         await this.addressClient.deleteAddress(user.sub, id);
         return {};
     }
 
     @ApiOkResponse({ type: AddressResponseDto })
     @Patch(':id/primary')
-    async setPrimary(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async setPrimary(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const result = await this.addressClient.setPrimaryAddress(user.sub, id);
         return result.address;
     }
 
     @ApiOkResponse({ type: AddressListResponseDto })
     @Get()
-    async findAll(@JwtAuthUser() user: JwtPayload) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload) {
         const result = await this.addressClient.findUserAddresses(user.sub);
         return result.addresses;
     }
@@ -55,7 +55,7 @@ export class AddressController {
 
     @ApiOkResponse({ type: AddressRecordDto })
     @Get(':id')
-    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         if (!isStaff(user)) {
             const { addresses } = await this.addressClient.findUserAddresses(user.sub);
             if (!addresses?.some(a => a.id === id)) {

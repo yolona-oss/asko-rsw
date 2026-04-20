@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, Optional } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import { AppErrors, REQUEST_USER_KEY } from '@asko/shared';
-import type { JwtPayload } from '@asko/shared';
+import type { AccessTokenPayload } from '@asko/shared';
 import type { MetricsService } from '@asko/observability';
 
 import type { Policy, PolicyContext } from './policy.interface.js';
@@ -31,7 +31,7 @@ export class PolicyGuard implements CanActivate {
         if (!meta) return true;
 
         const request = context.switchToHttp().getRequest();
-        const user: JwtPayload | undefined = request[REQUEST_USER_KEY];
+        const user: AccessTokenPayload | undefined = request[REQUEST_USER_KEY];
         if (!user) throw AppErrors.unauthorized('Требуется авторизация');
 
         const policy: Policy = this.moduleRef.get(meta.policyClass, { strict: false });

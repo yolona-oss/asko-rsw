@@ -74,11 +74,11 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayInit, 
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
 
-            if (!payload?.id) {
+            if (!payload?.sub) {
                 throw new Error('Invalid payload');
             }
 
-            const userId = payload.id;
+            const userId = payload.sub;
             client.data.userId = userId;
 
             // check existed conn

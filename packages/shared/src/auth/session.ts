@@ -1,6 +1,8 @@
-import { AuthProvider, IUser } from '@asko/shared';
+import { AuthProvider } from './auth-provider.enum.js';
+import { Role } from '../user/roles.type.js';
+import type { IUser } from '../user/user.type.js';
 
-export interface IAuthUser {
+export interface AuthUser {
     id: string;
     firstName?: string;
     lastName?: string;
@@ -10,26 +12,25 @@ export interface IAuthUser {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
-    googleId?: string;
     providers: AuthProvider[];
-    roles: string[];
+    roles: Role[];
 }
 
-export interface IAuthSession {
-    user: IAuthUser;
+export interface AuthSession {
+    user: AuthUser;
     access_token: string;
     refresh_token?: string;
 }
 
-export interface IAccessToken {
+export interface AccessToken {
     access_token: string;
 }
 
-export interface IRefreshToken {
+export interface RefreshToken {
     refresh_token: string;
 }
 
-export const toAuthUser = (user: IUser): IAuthUser => ({
+export const toAuthUser = (user: IUser): AuthUser => ({
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
@@ -39,7 +40,6 @@ export const toAuthUser = (user: IUser): IAuthUser => ({
     isActive: user.isActive,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    googleId: user.googleId,
     providers: user.providers,
     roles: user.roles,
 });

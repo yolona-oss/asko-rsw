@@ -31,7 +31,7 @@ import {
     MFA_TRUSTED_DEVICE_COOKIE,
     extractToken,
     getHostUrl,
-    JwtPayload,
+    AccessTokenPayload,
     msg,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
@@ -210,10 +210,10 @@ export class AuthController {
 
     @Post('/master-logout')
     async logoutAll(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Res() response: Response,
     ) {
-        await this.userClient.masterLogout({ id: user.id });
+        await this.userClient.masterLogout({ id: user.sub });
 
         const expireCookieOptions = Object.assign(
             {},
@@ -230,17 +230,17 @@ export class AuthController {
     // ─── Sessions ─────────────────────────────────────────────────────────
 
     @Get('/sessions')
-    async listSessions(@JwtAuthUser() user: JwtPayload) {
-        const result = await this.userClient.listSessions({ id: user.id });
+    async listSessions(@JwtAuthUser() user: AccessTokenPayload) {
+        const result = await this.userClient.listSessions({ id: user.sub });
         return { sessions: result.sessions };
     }
 
     @Delete('/sessions/:id')
     async revokeSession(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') sessionId: string,
     ) {
-        await this.userClient.revokeSession({ userId: user.id, sessionId });
+        await this.userClient.revokeSession({ userId: user.sub, sessionId });
         return { message: msg.auth.sessionTerminated };
     }
 
@@ -325,36 +325,36 @@ export class AuthController {
 
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable')
-    async enableMfa(@JwtAuthUser() user: JwtPayload) {
-        const result = await this.userClient.enableMfa({ userId: user.id });
+    async enableMfa(@JwtAuthUser() user: AccessTokenPayload) {
+        const result = await this.userClient.enableMfa({ userId: user.sub });
         return { message: result.message, retryAfter: result.retryAfter };
     }
 
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/enable/verify')
-    async verifyEnableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: VerifyEnableMfaDto) {
-        const result = await this.userClient.verifyEnableMfa({ userId: user.id, code: dto.code });
+    async verifyEnableMfa(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: VerifyEnableMfaDto) {
+        const result = await this.userClient.verifyEnableMfa({ userId: user.sub, code: dto.code });
         return { message: result.message };
     }
 
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable')
-    async initiateDisableMfa(@JwtAuthUser() user: JwtPayload) {
-        const result = await this.userClient.initiateDisableMfa({ userId: user.id });
+    async initiateDisableMfa(@JwtAuthUser() user: AccessTokenPayload) {
+        const result = await this.userClient.initiateDisableMfa({ userId: user.sub });
         return { message: result.message, retryAfter: result.retryAfter };
     }
 
     @ApiOkResponse({ type: MessageResponseDto })
     @Post('/mfa/disable/verify')
-    async confirmDisableMfa(@JwtAuthUser() user: JwtPayload, @Body() dto: DisableMfaDto) {
-        const result = await this.userClient.confirmDisableMfa({ userId: user.id, code: dto.code });
+    async confirmDisableMfa(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: DisableMfaDto) {
+        const result = await this.userClient.confirmDisableMfa({ userId: user.sub, code: dto.code });
         return { message: result.message };
     }
 
     @ApiOkResponse({ type: MessageResponseDto })
     @Get('/mfa/status')
-    async getMfaStatus(@JwtAuthUser() user: JwtPayload) {
-        return await this.userClient.getMfaStatus({ userId: user.id });
+    async getMfaStatus(@JwtAuthUser() user: AccessTokenPayload) {
+        return await this.userClient.getMfaStatus({ userId: user.sub });
     }
 
     @Public()
@@ -407,35 +407,35 @@ export class AuthController {
     // ─── Phone Verification (authenticated) ─────────────────────────────
 
     @Post('/phone/send-verification')
-    async sendPhoneVerification(@JwtAuthUser() user: JwtPayload) {
-        return await this.userClient.sendPhoneVerification({ userId: user.id });
+    async sendPhoneVerification(@JwtAuthUser() user: AccessTokenPayload) {
+        return await this.userClient.sendPhoneVerification({ userId: user.sub });
     }
 
 
     @Post('/phone/confirm-verification')
     async confirmPhoneVerification(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() dto: { code: string },
     ) {
-        return await this.userClient.confirmPhoneVerification({ userId: user.id, code: dto.code });
+        return await this.userClient.confirmPhoneVerification({ userId: user.sub, code: dto.code });
     }
 
 
     @Post('/phone/request-change')
     async requestPhoneChange(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() dto: { newPhone: string },
     ) {
-        return await this.userClient.requestPhoneChange({ userId: user.id, newPhone: dto.newPhone });
+        return await this.userClient.requestPhoneChange({ userId: user.sub, newPhone: dto.newPhone });
     }
 
 
     @Post('/phone/confirm-change')
     async confirmPhoneChange(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() dto: { code: string },
     ) {
-        return await this.userClient.confirmPhoneChange({ userId: user.id, code: dto.code });
+        return await this.userClient.confirmPhoneChange({ userId: user.sub, code: dto.code });
     }
 
     @ApiOkResponse({ type: AuthUserDto })

@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { OptionalAuth, JwtAuthUser } from '@asko/gateway-common';
-import { JwtPayload, msg } from '@asko/shared';
+import { AccessTokenPayload, msg } from '@asko/shared';
 import { AppErrors } from 'common/error';
 import { FileAccessService } from './file-access.service';
 
@@ -32,7 +32,7 @@ export class FileAccessController {
     @Get('image/:id')
     async getImage(
         @Param('id') id: string,
-        @JwtAuthUser() user?: JwtPayload,
+        @JwtAuthUser() user?: AccessTokenPayload,
         @Res() res?: Response,
     ) {
         return this.handle(id, 'image', user, res!);
@@ -42,7 +42,7 @@ export class FileAccessController {
     @Get('video/:id')
     async getVideo(
         @Param('id') id: string,
-        @JwtAuthUser() user?: JwtPayload,
+        @JwtAuthUser() user?: AccessTokenPayload,
         @Res() res?: Response,
     ) {
         return this.handle(id, 'video', user, res!);
@@ -52,13 +52,13 @@ export class FileAccessController {
     @Get('document/:id')
     async getDocument(
         @Param('id') id: string,
-        @JwtAuthUser() user?: JwtPayload,
+        @JwtAuthUser() user?: AccessTokenPayload,
         @Res() res?: Response,
     ) {
         return this.handle(id, 'document', user, res!);
     }
 
-    private async handle(id: string, type: string, user: JwtPayload | undefined, res: Response) {
+    private async handle(id: string, type: string, user: AccessTokenPayload | undefined, res: Response) {
         const access = await this.fileAccess.assertReadable(id, type, user);
 
         const url = access.storageUrl;

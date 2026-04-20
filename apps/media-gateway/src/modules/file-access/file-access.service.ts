@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { JwtPayload, msg } from '@asko/shared';
+import { AccessTokenPayload, msg } from '@asko/shared';
 import { FileClientService } from '@asko/gateway-common';
 import { MetricsService } from '@asko/observability';
 import type { FileAccessResponse } from '@asko/proto';
@@ -34,7 +34,7 @@ export class FileAccessService {
      * user isn't permitted to read it. Returns the record on success so
      * the controller can serve the bytes without a second fetch.
      */
-    async assertReadable(id: string, type: string, user?: JwtPayload): Promise<FileAccessResponse> {
+    async assertReadable(id: string, type: string, user?: AccessTokenPayload): Promise<FileAccessResponse> {
         let access: FileAccessResponse;
         try {
             access = await this.fileClient.getFileAccess(id, type);

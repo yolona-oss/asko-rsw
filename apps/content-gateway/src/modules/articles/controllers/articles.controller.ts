@@ -15,7 +15,7 @@ import {
     Public, OptionalAuth, JwtAuthUser,
     FileClientService,
 } from '@asko/gateway-common';
-import { JwtPayload } from '@asko/shared';
+import { AccessTokenPayload } from '@asko/shared';
 import {
     ArticleResponseDto,
     PaginatedArticlesResponseDto,
@@ -168,8 +168,8 @@ export class ArticlesController {
     @OptionalAuth()
     @Get('recommended')
     @ApiOkResponse({ type: RecommendedArticlesResponseDto })
-    async recommended(@JwtAuthUser() user?: JwtPayload) {
-        const result = await this.contentClient.findRecommendedArticles(user?.id, 8);
+    async recommended(@JwtAuthUser() user?: AccessTokenPayload) {
+        const result = await this.contentClient.findRecommendedArticles(user?.sub, 8);
         return { data: (result.data ?? []).map(parseArticleRecord) };
     }
 
@@ -214,9 +214,9 @@ export class ArticlesController {
         @Param('slug') slug: string,
         @Body() dto: RecordArticleViewDto,
         @Headers('user-agent') userAgent: string,
-        @JwtAuthUser() user?: JwtPayload,
+        @JwtAuthUser() user?: AccessTokenPayload,
     ) {
-        await this.contentClient.recordView(slug, user?.id, dto.sessionId, dto.readTime, userAgent);
+        await this.contentClient.recordView(slug, user?.sub, dto.sessionId, dto.readTime, userAgent);
         return { message: 'View recorded' };
     }
 

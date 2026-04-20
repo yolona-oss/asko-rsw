@@ -1,4 +1,4 @@
-import type { JwtPayload } from '@asko/shared';
+import type { AccessTokenPayload } from '@asko/shared';
 
 /**
  * Context passed to every {@link Policy.authorize} call. Built from the
@@ -6,7 +6,7 @@ import type { JwtPayload } from '@asko/shared';
  */
 export interface PolicyContext {
     /** Authenticated user from JWT. Always present (PolicyGuard rejects unauthenticated). */
-    user: JwtPayload;
+    user: AccessTokenPayload;
     /** Route parameters (e.g. `{ id: '...', partId: '...' }`). */
     params: Record<string, string>;
     /** Request body (may be undefined for GET routes). */

@@ -12,7 +12,7 @@ import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN, msg } from '@asko/shared';
-import type { JwtPayload } from '@asko/shared';
+import type { AccessTokenPayload } from '@asko/shared';
 
 import {
     Public,
@@ -54,8 +54,8 @@ export class OAuthController {
 
     @ApiOkResponse({ type: OAuthLinksResponseDto })
     @Get('links')
-    async getOAuthLinks(@JwtAuthUser() user: JwtPayload) {
-        const result = await this.userClient.getOAuthLinks({ id: user.id });
+    async getOAuthLinks(@JwtAuthUser() user: AccessTokenPayload) {
+        const result = await this.userClient.getOAuthLinks({ id: user.sub });
         return { links: result.links ?? [] };
     }
 
@@ -205,10 +205,10 @@ export class OAuthController {
     @Delete(':provider')
     async unlinkOAuth(
         @Param('provider') provider: string,
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
     ) {
         await this.userClient.unlinkOAuth({
-            userId: user.id,
+            userId: user.sub,
             provider,
         });
         return { message: msg.auth.oauthUnlinked };

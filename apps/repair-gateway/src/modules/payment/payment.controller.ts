@@ -6,7 +6,7 @@ import { RepairerClientService } from 'modules/repair-client/repairer-client.ser
 import { UserClientService, buildRequesterContext } from '@asko/gateway-common';
 import {
     CreatePaymentDto,
-    JwtPayload,
+    AccessTokenPayload,
     PaymentTargetType,
     msg,
 } from '@asko/shared';
@@ -30,7 +30,7 @@ export class PaymentController {
         private readonly repairerClient: RepairerClientService,
     ) {}
 
-    private async enrichPayments(payments: any[], requester?: JwtPayload): Promise<void> {
+    private async enrichPayments(payments: any[], requester?: AccessTokenPayload): Promise<void> {
         const ctx = buildRequesterContext(requester);
         await Promise.all(payments.map(async (p) => {
             if (!p.userId) return;
@@ -49,7 +49,7 @@ export class PaymentController {
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @Post('create')
-    async createPayment(@JwtAuthUser() user: JwtPayload, @Body() dto: CreatePaymentDto) {
+    async createPayment(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreatePaymentDto) {
         return this.paymentService.createPayment(user.sub, dto);
     }
 
@@ -57,7 +57,7 @@ export class PaymentController {
     @Permissions(Permission.PAYMENT_CONFIRM_CASH)
     @Post('confirm-cash')
     async confirmCashPayment(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Body() body: { paymentId: string; confirmCode: string; amount: number },
     ) {
         if (!body.confirmCode || typeof body.confirmCode !== 'string') {
@@ -87,7 +87,7 @@ export class PaymentController {
     @Permissions(Permission.PAYMENT_VIEW_ALL)
     @Get('list')
     async listPayments(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,
@@ -110,7 +110,7 @@ export class PaymentController {
     @ApiOkResponse({ type: PaymentStatsResponseDto })
     @Get('my/stats')
     async getMyStats(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('dateFrom') dateFrom?: string,
         @Query('dateTo') dateTo?: string,
     ) {
@@ -120,7 +120,7 @@ export class PaymentController {
     @ApiOkResponse({ type: PaginatedPaymentsResponseDto })
     @Get('my')
     async getMyPayments(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Query('page') page?: number,
         @Query('limit') limit?: number,
         @Query('status') status?: string,

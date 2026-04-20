@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
-import { REQUEST_USER_KEY, JwtPayload, extractToken, AppErrors, msg } from '@asko/shared';
+import { REQUEST_USER_KEY, AccessTokenPayload, extractToken, AppErrors, msg } from '@asko/shared';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IS_OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
@@ -54,7 +54,7 @@ export class JwtGuard implements CanActivate {
         }
 
         try {
-            const payload: JwtPayload = this.jwtService.verify(accessToken, {
+            const payload: AccessTokenPayload = this.jwtService.verify(accessToken, {
                 publicKey: Buffer.from(this.config.jwt.access_token.public_key, 'base64').toString('utf-8'),
             });
 

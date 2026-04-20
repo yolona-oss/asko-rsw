@@ -28,7 +28,7 @@ import {
     PaymentTargetType,
     PaymentProviderType,
     ImageTypeEnum,
-    JwtPayload,
+    AccessTokenPayload,
     msg,
 } from '@asko/shared';
 import { AppErrors } from 'common/error';
@@ -90,7 +90,7 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Post()
-    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairRequestDto) {
+    async create(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateRepairRequestDto) {
         const result = await this.repairClient.createRequest(user.sub, dto);
         // Create group conversation linked to repair request
         try {
@@ -107,7 +107,7 @@ export class RepairRequestController {
 
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @Get('my')
-    async findMy(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
+    async findMy(@JwtAuthUser() user: AccessTokenPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findByUser(user.sub, query);
         for (const req of result.data ?? []) parseRepairTimestamps(req);
         return result;
@@ -115,13 +115,13 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Post(':id/cancel')
-    async cancel(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async cancel(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.cancelRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Post(':id/request-refund')
-    async requestRefund(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RequestRefundDto) {
+    async requestRefund(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: RequestRefundDto) {
         return this.repairClient.requestRefund(user.sub, id, dto.reason);
     }
 
@@ -129,7 +129,7 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @Post(':id/pay')
-    async pay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async pay(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
             user.sub,
             PaymentTargetType.REPAIR_REQUEST,
@@ -139,7 +139,7 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: ProcessInvoiceResponseDto })
     @Post(':id/dummy-pay')
-    async dummyPay(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async dummyPay(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.paymentService.processInvoice(
             user.sub,
             PaymentTargetType.REPAIR_REQUEST,
@@ -151,7 +151,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaymentListResponseDto })
     @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/payments')
-    async getPayments(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
+    async getPayments(@JwtAuthUser() _user: AccessTokenPayload, @Param('id') id: string) {
         return this.paymentService.getPaymentsByTarget('repairRequest', id);
     }
 
@@ -160,7 +160,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_VIEW_ALL)
     @Get()
-    async findAll(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findAll(query);
         result.data = result.data ?? [];
         const requester = buildRequesterContext(user);
@@ -190,7 +190,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/assign')
-    async assign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
+    async assign(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         const result = await this.repairClient.assignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
         // Add repairer to conversation
         if (result.request.conversationId) {
@@ -226,7 +226,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/chat/accept')
-    async acceptChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async acceptChat(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.addParticipant(request.conversationId, user.sub, user.sub, true);
@@ -238,7 +238,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/chat/detach')
-    async detachChat(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async detachChat(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const { request } = await this.repairClient.findById(id);
         if (request.conversationId) {
             await this.chatClient.removeParticipant(request.conversationId, user.sub, user.sub);
@@ -250,7 +250,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/reassign')
-    async reassign(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
+    async reassign(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AssignRepairerDto) {
         // Get old repairer before reassign
         const before = await this.repairClient.findById(id);
         const result = await this.repairClient.reassignRepairer(user.sub, id, dto.repairerId, dto.allowCrossCity);
@@ -280,7 +280,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('paused')
-    async findPaused(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
+    async findPaused(@JwtAuthUser() user: AccessTokenPayload, @Query() pagination: PaginationDto) {
         const result = await this.repairClient.findPausedByRepairer(user.sub, pagination);
         for (const req of result.data ?? []) parseRepairTimestamps(req);
         return result;
@@ -289,7 +289,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: RepairRequestRecordDto })
     @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('active')
-    async findActive(@JwtAuthUser() user: JwtPayload) {
+    async findActive(@JwtAuthUser() user: AccessTokenPayload) {
         try {
             const result = await this.repairClient.findActiveByRepairer(user.sub);
             if (result?.request) parseRepairTimestamps(result.request);
@@ -302,7 +302,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: PaginatedRepairRequestsResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_VIEW_OWN)
     @Get('assigned')
-    async findAssigned(@JwtAuthUser() user: JwtPayload, @Query() query: RepairQueryDto) {
+    async findAssigned(@JwtAuthUser() user: AccessTokenPayload, @Query() query: RepairQueryDto) {
         const result = await this.repairClient.findByRepairerFiltered(user.sub, query, query.status, query.search);
         for (const req of result.data ?? []) parseRepairTimestamps(req);
         return result;
@@ -310,28 +310,28 @@ export class RepairRequestController {
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Post(':id/accept-completion')
-    async acceptCompletion(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async acceptCompletion(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.acceptCompletion(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_ACCEPT)
     @Post(':id/accept')
-    async accept(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async accept(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.acceptRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_DEPART)
     @Post(':id/depart')
-    async depart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async depart(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.depart(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_REFUSE)
     @Post(':id/refuse')
-    async refuse(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
+    async refuse(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: RefuseRequestDto) {
         const result = await this.repairClient.refuseRequest(user.sub, id, dto.reason);
         // Remove repairer from conversation
         if (result.request.conversationId) {
@@ -345,35 +345,35 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_PAUSE)
     @Post(':id/pause')
-    async pause(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async pause(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.pauseRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_RESUME)
     @Post(':id/resume')
-    async resume(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async resume(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.resumeRequest(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_CONFIRM_PRESENCE)
     @Post(':id/confirm-presence')
-    async confirmSchedulePresence(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async confirmSchedulePresence(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.confirmSchedulePresence(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_START_WORK)
     @Post(':id/start')
-    async start(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async start(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.startWork(user.sub, id);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_SET_PRICE)
     @Post(':id/set-price')
-    async setPrice(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
+    async setPrice(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: SetRepairPriceDto) {
         return this.repairClient.setPrice(user.sub, id, dto.amount);
     }
 
@@ -383,7 +383,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/generate')
     async generateAvr(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: GenerateAvrDto,
     ) {
@@ -423,7 +423,7 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/reset')
-    async resetAvr(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async resetAvr(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.resetAvr(user.sub, id);
     }
 
@@ -431,7 +431,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)
     @Post(':id/avr/remove')
-    async removeAvrByManager(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async removeAvrByManager(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.removeAvrByManager(user.sub, id);
     }
 
@@ -477,7 +477,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_AVR)
     @Post(':id/avr/offline/confirm')
     async confirmAvrOffline(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
     ) {
         return this.repairClient.uploadAvrScan(id, user.sub);
@@ -488,7 +488,7 @@ export class RepairRequestController {
     @Post(':id/avr/scan/upload')
     @UseInterceptors(FilesInterceptor('file', 1))
     async uploadAvrScan(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @UploadedFiles() files?: Express.Multer.File[],
     ) {
@@ -512,14 +512,14 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: WorkStepResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps')
-    async addStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddWorkStepDto) {
+    async addStep(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AddWorkStepDto) {
         return this.repairClient.addStep(user.sub, id, dto);
     }
 
     @ApiCreatedResponse({ type: RepairRequestResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/lock')
-    async lockSteps(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async lockSteps(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.lockSteps(user.sub, id);
     }
 
@@ -527,7 +527,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/update')
     async updateStep(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('stepId') stepId: string,
         @Body() dto: UpdateWorkStepDto,
@@ -538,28 +538,28 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: CompleteStepResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/complete')
-    async completeStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
+    async completeStep(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.completeStep(user.sub, id, stepId);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/:stepId/delete')
-    async deleteStep(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
+    async deleteStep(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Param('stepId') stepId: string) {
         return this.repairClient.deleteStep(user.sub, id, stepId);
     }
 
     @ApiOkResponse({ type: WorkStepListResponseDto })
     @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/steps')
-    async getSteps(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
+    async getSteps(@JwtAuthUser() _user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.getSteps(id);
     }
 
     @ApiCreatedResponse({ type: EmptyResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/diagnostics/approve')
-    async approveDiagnostics(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async approveDiagnostics(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.approveDiagnostics(user.sub, id);
     }
 
@@ -567,7 +567,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_STEPS)
     @Post(':id/steps/diagnostics/decline')
     async declineDiagnostics(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Body() dto: DeclineDiagnosticsDto,
     ) {
@@ -579,14 +579,14 @@ export class RepairRequestController {
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts')
-    async addBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
+    async addBrokenPart(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, user.roles, id, { ...dto, isSuggestion: false });
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_SUGGEST_PART)
     @Post(':id/broken-parts/suggest')
-    async suggestBrokenPart(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
+    async suggestBrokenPart(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
         return this.repairClient.addBrokenPart(user.sub, user.roles, id, { name: dto.name, note: dto.note, isSuggestion: true });
     }
 
@@ -594,7 +594,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('partId') partId: string,
         @Body() dto: UpdateBrokenPartDto,
@@ -606,7 +606,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/status')
     async updateBrokenPartStatus(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('partId') partId: string,
         @Body() dto: UpdateBrokenPartStatusDto,
@@ -618,7 +618,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/delete')
     async deleteBrokenPart(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('partId') partId: string,
     ) {
@@ -630,7 +630,7 @@ export class RepairRequestController {
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/order')
     async orderBrokenPart(
-        @JwtAuthUser() user: JwtPayload,
+        @JwtAuthUser() user: AccessTokenPayload,
         @Param('id') id: string,
         @Param('partId') partId: string,
         @Body() dto: OrderBrokenPartDto,
@@ -641,7 +641,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: BrokenPartListResponseDto })
     @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/broken-parts')
-    async getBrokenParts(@JwtAuthUser() _user: JwtPayload, @Param('id') id: string) {
+    async getBrokenParts(@JwtAuthUser() _user: AccessTokenPayload, @Param('id') id: string) {
         return this.repairClient.getBrokenParts(id);
     }
 
@@ -650,7 +650,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: ImageListResponseDto })
     @CheckPolicy(RepairParticipantPolicy)
     @Get(':id/broken-parts/:partId/images')
-    async findBrokenPartImages(@JwtAuthUser() _user: JwtPayload, @Param('partId') partId: string) {
+    async findBrokenPartImages(@JwtAuthUser() _user: AccessTokenPayload, @Param('partId') partId: string) {
         return this.fileService.findAttachedImages(ImageTypeEnum.BrokenPart, partId);
     }
 
@@ -666,7 +666,7 @@ export class RepairRequestController {
     @ApiOkResponse({ type: RepairRequestResponseDto })
     @CheckPolicy(RepairParticipantPolicy)
     @Get(':id')
-    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const result = await this.repairClient.findById(id);
         const req = result.request;
         if (!req) return result;

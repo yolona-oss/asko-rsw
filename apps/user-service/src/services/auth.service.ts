@@ -18,8 +18,8 @@ import crypto from 'crypto'
 import {
     LoginCredentials,
     CreateUserDto,
-    JwtPayload,
-    JwtRefreshPayload,
+    AccessTokenPayload,
+    RefreshTokenPayload,
     Role,
     DEFAULT_USER_ROLE,
     TokenType,
@@ -29,18 +29,16 @@ import {
     MFA_CHALLENGE_TOKEN_EXPIRY,
     PHONE_OTP_PENDING_REG_PREFIX,
     msg,
-} from '@asko/shared';
-import {
     toAuthUser,
-    IAuthSession,
-    IAuthUser,
-    IRefreshToken,
-    IAccessToken,
-} from 'types/auth.types';
+    AuthSession,
+    AuthUser,
+    RefreshToken,
+    AccessToken,
+} from '@asko/shared';
 import { parseSleepTimeToMs } from 'utils';
 import Redis from 'ioredis';
 
-export type UserIdentificationData = Pick<JwtPayload, 'email' | 'phone' | 'googleId' | 'authProvider'>
+type UserIdentityFields = Pick<AccessTokenPayload, 'email' | 'phone' | 'authProvider'>
 
 interface LoginParams extends LoginCredentials {
     deviceInfo: string;
@@ -52,7 +50,7 @@ export interface LoginResult {
     status: 'SUCCESS' | 'MFA_REQUIRED';
     access_token?: string;
     refresh_token?: string;
-    user?: IAuthUser;
+    user?: AuthUser;
     mfa_token?: string;
     mfa_method?: string;
 }
@@ -151,8 +149,8 @@ export class AuthService {
 
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
-            <Role[]>user.roles,
-            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: AuthProvider.EMAIL },
+            user.roles,
+            { email: user.email, phone: user.phone, authProvider: AuthProvider.EMAIL },
             { deviceInfo: params.deviceInfo, ipAddress: params.ipAddress },
             user.isActive,
         )
@@ -199,7 +197,7 @@ export class AuthService {
         };
     }
 
-    async GoogleLogin(params: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<IAuthSession> {
+    async GoogleLogin(params: LoginParams & Required<Pick<LoginCredentials, 'googleId'>>): Promise<AuthSession> {
         // Legacy stub — delegate to oauthLogin for backward compatibility
         const result = await this.oauthLogin({
             provider: AuthProvider.GOOGLE,
@@ -238,11 +236,10 @@ export class AuthService {
 
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
-            <Role[]>user.roles,
+            user.roles,
             {
                 email: user.email,
                 phone: user.phone,
-                googleId: data.provider === AuthProvider.GOOGLE ? data.providerId : undefined,
                 authProvider: data.provider as AuthProvider,
             },
             { deviceInfo: data.deviceInfo, ipAddress: data.ipAddress },
@@ -257,7 +254,7 @@ export class AuthService {
         };
     }
 
-    async register(params: RegisterParams): Promise<(IAuthSession & { roles: Role[] }) | { status: 'OTP_REQUIRED'; pendingToken: string }> {
+    async register(params: RegisterParams): Promise<(AuthSession & { roles: Role[] }) | { status: 'OTP_REQUIRED'; pendingToken: string }> {
         const { dto, inviteToken, deviceInfo, ipAddress } = params;
         if (dto.email && dto.password) {
             return await this.emailPasswordRegister(dto, deviceInfo, ipAddress, inviteToken)
@@ -270,7 +267,7 @@ export class AuthService {
         }
     }
 
-    private async emailPasswordRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string, inviteToken?: string): Promise<IAuthSession & { roles: Role[] }> {
+    private async emailPasswordRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string, inviteToken?: string): Promise<AuthSession & { roles: Role[] }> {
         let roles: Role[] = [DEFAULT_USER_ROLE];
 
         if (inviteToken) {
@@ -289,7 +286,7 @@ export class AuthService {
         const { access_token, refresh_token } = await this.generateTokens(
             newUser.id,
             roles,
-            { email: newUser.email, phone: newUser.phone, googleId: newUser.googleId, authProvider: AuthProvider.EMAIL },
+            { email: newUser.email, phone: newUser.phone, authProvider: AuthProvider.EMAIL },
             { deviceInfo, ipAddress },
             newUser.isActive,
         )
@@ -350,7 +347,7 @@ export class AuthService {
         return { status: 'OTP_REQUIRED', pendingToken };
     }
 
-    private async GoogleRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string): Promise<IAuthSession & { roles: Role[] }> {
+    private async GoogleRegister(dto: CreateUserDto, deviceInfo: string, ipAddress: string): Promise<AuthSession & { roles: Role[] }> {
         const result = await this.oauthLogin({
             provider: AuthProvider.GOOGLE,
             providerId: dto.googleId!,
@@ -443,13 +440,13 @@ export class AuthService {
         await this.userService.removeToken(rTknHash)
     }
 
-    async refreshAccessToken(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<IAccessToken & Partial<IRefreshToken>> {
+    async refreshAccessToken(refreshToken: string, deviceInfo: string, ipAddress: string): Promise<AccessToken & Partial<RefreshToken>> {
         try {
             if (!refreshToken) {
                 throw AppErrors.unauthorized({ key: msg.auth.refreshTokenNotFound })
             }
 
-            const rTknPayload = this.jwtService.verify<JwtRefreshPayload>(
+            const rTknPayload = this.jwtService.verify<RefreshTokenPayload>(
                 refreshToken,
                 { publicKey: Buffer.from(this.config.jwt.refresh_token.public_key, 'base64').toString('utf-8') }
             );
@@ -469,8 +466,8 @@ export class AuthService {
             // Generate new access token
             const newATkn = this.generateAccessToken(
                 user.id,
-                <Role[]>user.roles,
-                { email: user.email, phone: user.phone, googleId: user.googleId, authProvider: rTknPayload.authProvider },
+                user.roles,
+                { email: user.email, phone: user.phone, authProvider: rTknPayload.authProvider },
                 user.isActive,
             );
 
@@ -520,7 +517,7 @@ export class AuthService {
         return user;
     }
 
-    async findUserByAccessToken(token: string): Promise<IAuthUser> {
+    async findUserByAccessToken(token: string): Promise<AuthUser> {
         const decode = this.jwtService.verify(token,
             {
                 publicKey: Buffer.from(
@@ -545,9 +542,8 @@ export class AuthService {
         return toAuthUser(user);
     }
 
-    private generateAccessToken(userId: string, roles: string[], userIdentityData: UserIdentificationData, isActive: boolean = true): IAccessToken {
-        const access_token_payload: JwtPayload = {
-            id: userId,
+    private generateAccessToken(userId: string, roles: Role[], userIdentityData: UserIdentityFields, isActive: boolean = true): AccessToken {
+        const access_token_payload: AccessTokenPayload = {
             sub: userId,
             ...userIdentityData,
             roles,
@@ -558,11 +554,10 @@ export class AuthService {
         return { access_token }
     }
 
-    private async generateRefreshToken(userId: string, authProvider: AuthProvider, params: { deviceInfo: string, ipAddress: string }): Promise<IRefreshToken> {
+    private async generateRefreshToken(userId: string, authProvider: AuthProvider, params: { deviceInfo: string, ipAddress: string }): Promise<RefreshToken> {
         const refresh_token = this.jwtService.sign(
             {
                 sub: userId.toString(),
-                id: userId.toString(),
                 authProvider,
             },
             {
@@ -583,7 +578,7 @@ export class AuthService {
         }
     }
 
-    private async generateTokens(userId: string, roles: string[], params: UserIdentificationData, hostInfo: { deviceInfo: string, ipAddress: string }, isActive: boolean = true): Promise<IRefreshToken & IAccessToken> {
+    private async generateTokens(userId: string, roles: Role[], params: UserIdentityFields, hostInfo: { deviceInfo: string, ipAddress: string }, isActive: boolean = true): Promise<RefreshToken & AccessToken> {
         const { access_token } = this.generateAccessToken(userId, roles, params, isActive)
         const { refresh_token } = await this.generateRefreshToken(userId, params.authProvider, hostInfo)
         return {
@@ -780,7 +775,7 @@ export class AuthService {
     ): Promise<{
         access_token: string;
         refresh_token: string;
-        user: IAuthUser;
+        user: AuthUser;
         trusted_device_token?: string;
     }> {
         const { userId, method: tokenMethod } = this.mfaService.verifyMfaChallengeToken(mfaToken);
@@ -798,8 +793,8 @@ export class AuthService {
         const authProvider = method === MfaMethod.PHONE ? AuthProvider.PHONE : AuthProvider.EMAIL;
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
-            <Role[]>user.roles,
-            { email: user.email, phone: user.phone, googleId: user.googleId, authProvider },
+            user.roles,
+            { email: user.email, phone: user.phone, authProvider },
             { deviceInfo, ipAddress },
             user.isActive,
         );
@@ -824,7 +819,7 @@ export class AuthService {
         code: string,
         deviceInfo: string,
         ipAddress: string,
-    ): Promise<IAuthSession & { roles: Role[] }> {
+    ): Promise<AuthSession & { roles: Role[] }> {
         // Verify pending token
         let phone: string;
         try {
@@ -862,7 +857,7 @@ export class AuthService {
         const { access_token, refresh_token } = await this.generateTokens(
             user.id,
             roles,
-            { phone: user.phone, authProvider: AuthProvider.PHONE },
+            { email: user.email, phone: user.phone, authProvider: AuthProvider.PHONE },
             { deviceInfo, ipAddress },
             user.isActive,
         );

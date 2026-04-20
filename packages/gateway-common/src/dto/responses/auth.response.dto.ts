@@ -20,9 +20,6 @@ export class AuthUserDto {
     @ApiPropertyOptional()
     phone?: string;
 
-    @ApiPropertyOptional()
-    googleId?: string;
-
     @ApiProperty({ enum: AuthProvider, enumName: 'AuthProvider', isArray: true })
     providers!: AuthProvider[];
 

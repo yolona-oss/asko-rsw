@@ -8,7 +8,7 @@ import {
     UpdateRepairerDto,
     UpdateLocationDto,
     PaginationDto,
-    JwtPayload,
+    AccessTokenPayload,
 } from '@asko/shared';
 import { Permissions, Permission } from '@asko/authorization';
 import {
@@ -36,7 +36,7 @@ export class RepairerController {
         private readonly userClient: UserClientService,
     ) {}
 
-    private async enrichRepairer(repairer: any, requester?: JwtPayload): Promise<void> {
+    private async enrichRepairer(repairer: any, requester?: AccessTokenPayload): Promise<void> {
         if (!repairer?.userId) return;
         try {
             const userData = await this.userClient.getUserProfile({
@@ -50,7 +50,7 @@ export class RepairerController {
     @ApiCreatedResponse({ type: RepairerResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Post()
-    async create(@JwtAuthUser() user: JwtPayload, @Body() dto: CreateRepairerDto) {
+    async create(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: CreateRepairerDto) {
         const result = await this.repairerClient.createRepairer(dto.userId, dto.city, dto.specializations ?? []);
         await this.enrichRepairer(result.repairer, user);
         return result;
@@ -59,7 +59,7 @@ export class RepairerController {
     @ApiOkResponse({ type: RepairerResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Patch(':id')
-    async update(@JwtAuthUser() user: JwtPayload, @Param('id') id: string, @Body() dto: UpdateRepairerDto) {
+    async update(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: UpdateRepairerDto) {
         const result = await this.repairerClient.updateRepairer(id, dto);
         await this.enrichRepairer(result.repairer, user);
         return result;
@@ -68,7 +68,7 @@ export class RepairerController {
     @ApiCreatedResponse({ type: RepairerResponseDto })
     @Permissions(Permission.REPAIRER_OWN_PROFILE)
     @Post('location')
-    async updateLocation(@JwtAuthUser() user: JwtPayload, @Body() dto: UpdateLocationDto) {
+    async updateLocation(@JwtAuthUser() user: AccessTokenPayload, @Body() dto: UpdateLocationDto) {
         const result = await this.repairerClient.updateLocation(user.sub, dto.latitude, dto.longitude);
         await this.enrichRepairer(result.repairer, user);
         return result;
@@ -77,7 +77,7 @@ export class RepairerController {
     @ApiOkResponse({ type: RepairerResponseDto })
     @Permissions(Permission.REPAIRER_OWN_PROFILE)
     @Get('me')
-    async getMyProfile(@JwtAuthUser() user: JwtPayload) {
+    async getMyProfile(@JwtAuthUser() user: AccessTokenPayload) {
         const result = await this.repairerClient.getMyProfile(user.sub);
         await this.enrichRepairer(result.repairer, user);
         return result;
@@ -86,7 +86,7 @@ export class RepairerController {
     @ApiOkResponse({ type: PaginatedRepairersResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Get()
-    async findAll(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
+    async findAll(@JwtAuthUser() user: AccessTokenPayload, @Query() pagination: PaginationDto) {
         const result = await this.repairerClient.findAllRepairers(pagination);
         result.data = result.data ?? [];
         await Promise.all(result.data.map((r) => this.enrichRepairer(r, user)));
@@ -96,7 +96,7 @@ export class RepairerController {
     @ApiOkResponse({ type: RepairerListResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Get('city/:city')
-    async findByCity(@JwtAuthUser() user: JwtPayload, @Param('city') city: string) {
+    async findByCity(@JwtAuthUser() user: AccessTokenPayload, @Param('city') city: string) {
         const result = await this.repairerClient.findActiveInCity(city);
         result.repairers = result.repairers ?? [];
         await Promise.all(result.repairers.map((r) => this.enrichRepairer(r, user)));
@@ -106,7 +106,7 @@ export class RepairerController {
     @ApiOkResponse({ type: PaginatedRepairersResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Get('for-assignment')
-    async findForAssignment(@JwtAuthUser() user: JwtPayload, @Query() pagination: PaginationDto) {
+    async findForAssignment(@JwtAuthUser() user: AccessTokenPayload, @Query() pagination: PaginationDto) {
         const result = await this.repairerClient.findAllRepairers(pagination);
         result.data = result.data ?? [];
         await Promise.all(result.data.map((r) => this.enrichRepairer(r, user)));
@@ -128,7 +128,7 @@ export class RepairerController {
     @ApiOkResponse({ type: RepairerResponseDto })
     @Permissions(Permission.REPAIRER_MANAGE)
     @Get(':id')
-    async findOne(@JwtAuthUser() user: JwtPayload, @Param('id') id: string) {
+    async findOne(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
         const result = await this.repairerClient.findRepairerById(id);
         await this.enrichRepairer(result.repairer, user);
         return result;
