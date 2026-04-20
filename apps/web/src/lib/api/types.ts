@@ -116,32 +116,55 @@ export type MessageResponse = components['schemas']['MessageResponseDto'];
 export type DeleteCount = components['schemas']['DeleteCountResponseDto'];
 export type EmptyResponse = components['schemas']['EmptyResponseDto'];
 
+// ── Videos ──
+export type VideoRecord = components['schemas']['VideoRecordDto'];
+export type VideoResponse = components['schemas']['VideoResponseDto'];
+export type VideoList = components['schemas']['VideoListResponseDto'];
+export type VideoMetadata = components['schemas']['VideoMetadataDto'];
+
 // ── Image sub-types ──
 export type CloudinaryImage = components['schemas']['CloudinaryImageDto'];
 export type ImageObj = components['schemas']['ImageObjDto'];
 
-// ── Backward-compatible aliases (still used across consumers) ──
-export type IAuthUser = AuthUser;
-export type IAuthSession = AuthSession;
-export type IAccessToken = AccessToken;
-export type IDevice = DeviceRecord;
-export type IDevicePart = DevicePartRecord;
-export type IUserDevice = UserDeviceRecord;
-export type IArticle = ArticleResponse;
-export type ICertificate = CertificateRecord;
-export type IRepairer = RepairerRecord;
-export type IReview = ReviewRecord;
-export type IImageAttachment = ImageRecord;
-export type IInvitationLink = InviteLinkResponse;
-export type IRepairPayment = PaymentRecord;
-export type IDealerProfile = DealerProfileRecord;
-export type IDealerClient = DealerClientRecord;
-export type IPointsTransaction = PointsTransactionRecord;
-export type IPointsWithdrawal = WithdrawalRecord;
+// ── Chat ──
+export type ChatParticipantRecord = components['schemas']['ParticipantRecordDto'];
+export type ChatMessageRecord = components['schemas']['ChatMessageRecordDto'];
+export type ConversationRecord = components['schemas']['ConversationRecordDto'];
+export type ConversationResponse = components['schemas']['ConversationResponseDto'];
+export type PaginatedConversations = components['schemas']['PaginatedConversationsResponseDto'];
+export type ParticipantList = components['schemas']['ParticipantListResponseDto'];
+export type ChatMessageResponse = components['schemas']['ChatMessageResponseDto'];
+export type PaginatedMessages = components['schemas']['PaginatedMessagesResponseDto'];
+export type ChatUnreadCount = components['schemas']['ChatUnreadCountResponseDto'];
+export type PresenceRecord = components['schemas']['PresenceRecordDto'];
+export type PresenceResponse = components['schemas']['PresenceResponseDto'];
+export type BulkPresenceResponse = components['schemas']['BulkPresenceResponseDto'];
 
-export type ProcessInvoiceResult = ProcessInvoice;
-export type PaymentOptionsDto = PaymentOptions;
-export type PaymentStatsDto = PaymentStats;
+// ── OAuth ──
+export type OAuthLinkRecord = components['schemas']['OAuthLinkRecordDto'];
+export type OAuthLinksResponse = components['schemas']['OAuthLinksResponseDto'];
+
+// ── Device Categories ──
+export type DeviceCategoryRecord = components['schemas']['DeviceCategoryRecordDto'];
+export type DeviceCategoryList = components['schemas']['DeviceCategoryListResponseDto'];
+
+// ── Schedule ──
+export type VacationRecord = components['schemas']['VacationRecordDto'];
+export type SickLeaveRecord = components['schemas']['SickLeaveRecordDto'];
+export type OvertimeRecord = components['schemas']['OvertimeRecordDto'];
+export type ScheduleOverrideRecord = components['schemas']['ScheduleOverrideRecordDto'];
+export type ScheduleEntryRecord = components['schemas']['ScheduleEntryRecordDto'];
+export type PaginatedSchedules = components['schemas']['PaginatedScheduleResponseDto'];
+export type PatternSlot = components['schemas']['PatternSlotDto'];
+export type PatternPending = components['schemas']['PatternPendingDto'];
+export type SchedulePatternRecord = components['schemas']['SchedulePatternRecordDto'];
+export type SchedulePatternList = components['schemas']['SchedulePatternListResponseDto'];
+
+// ── Notification Preferences ──
+export type GroupPreference = components['schemas']['GroupPreferenceDto'];
+export type NotificationPreferencesResponse = components['schemas']['NotificationPreferencesResponseDto'];
+export type PushSubscriptionResponse = components['schemas']['PushSubscriptionResponseDto'];
+export type PushSubscriptionList = components['schemas']['PushSubscriptionListResponseDto'];
 
 // ── Paths (for openapi-fetch client) ──
 export type { paths } from './api.gen';

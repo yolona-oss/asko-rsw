@@ -8,7 +8,7 @@ import {
 } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import type { IInvitationLink } from '@/lib/api/types';
+import type { InviteLinkResponse } from '@/lib/api/types';
 import { formatDateTimeCompact } from '@asko/shared/client';
 import { ROLE_LABELS, isExpired } from './constants';
 
@@ -19,7 +19,7 @@ export function InvitationCard({
   deleteLoading,
   onClick,
 }: {
-  invitation: IInvitationLink;
+  invitation: InviteLinkResponse;
   link?: string;
   onDelete: (id: string) => void;
   deleteLoading: string | null;

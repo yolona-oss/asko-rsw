@@ -1,13 +1,15 @@
 'use client';
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { paymentApi, type PaymentOptions, type CreatePaymentParams, type CreatePaymentResult } from '@/lib/api/payment';
+import type { CreatePaymentDto } from '@asko/shared/client';
+import type { PaymentOptions, ProcessInvoice } from '@/lib/api/types';
+import { paymentApi } from '@/lib/api/payment';
 
 export interface PaymentState {
   options: PaymentOptions | null;
   optionsLoading: boolean;
   creating: boolean;
-  result: CreatePaymentResult | null;
+  result: ProcessInvoice | null;
   error: string | null;
 }
 
@@ -29,7 +31,7 @@ export const fetchPaymentOptions = createAsyncThunk(
 
 export const createPayment = createAsyncThunk(
   'payment/create',
-  async (params: CreatePaymentParams) => {
+  async (params: CreatePaymentDto) => {
     const { data } = await paymentApi.createPayment(params);
     return data;
   },

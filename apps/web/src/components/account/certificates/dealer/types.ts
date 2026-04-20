@@ -1,8 +1,8 @@
 import { CertificateStatus } from '@asko/shared/client';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 
 export type StatusFilter = 'all' | CertificateStatus;
 
 export type SortField = 'createdAt' | 'expiresAt' | 'certificateNumber';
 
-export type Certificate = ICertificate;
+export type Certificate = CertificateRecord;

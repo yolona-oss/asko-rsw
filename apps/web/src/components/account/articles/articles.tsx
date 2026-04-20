@@ -21,15 +21,15 @@ import type { DataGridColumn, DropdownMenuEntry, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { articleApi } from '@/lib/api/article';
-import type { IArticle } from '@/lib/api/types';
+import type { ArticleResponse } from '@/lib/api/types';
 import { ArticleCard } from './article-card';
 
 const PAGE_SIZE = 20;
 
 export function AdminArticles() {
   const router = useRouter();
-  const detail = useEntityDetail<IArticle>();
-  const [articles, setArticles] = useState<IArticle[]>([]);
+  const detail = useEntityDetail<ArticleResponse>();
+  const [articles, setArticles] = useState<ArticleResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -93,7 +93,7 @@ export function AdminArticles() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const columns: DataGridColumn<IArticle>[] = useMemo(() => [
+  const columns: DataGridColumn<ArticleResponse>[] = useMemo(() => [
     {
       key: 'title',
       header: 'Название',
@@ -127,7 +127,7 @@ export function AdminArticles() {
     },
   ], []);
 
-  const rowMenu = (article: IArticle): DropdownMenuEntry[] => [
+  const rowMenu = (article: ArticleResponse): DropdownMenuEntry[] => [
     { key: 'delete', label: 'Удалить', variant: 'danger', onClick: () => handleDelete(article.id) },
   ];
 

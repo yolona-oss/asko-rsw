@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button, FormField, Select, Input, Modal, SkeletonBlock } from '@asko/ui';
 import { CERTIFICATE_DURATION_OPTIONS, CERTIFICATE_DURATION_LABELS } from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 
 const priceFormatter = new Intl.NumberFormat('ru-RU', {
   style: 'currency',
@@ -21,7 +21,7 @@ export function CreateCertificateModal({
   open: boolean;
   userDeviceId: string;
   onClose: () => void;
-  onSuccess: (cert: ICertificate) => void;
+  onSuccess: (cert: CertificateRecord) => void;
 }) {
   const [durationMonths, setDurationMonths] = useState<number>(12);
   const [description, setDescription] = useState('');

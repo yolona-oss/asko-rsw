@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { SpecRow } from '@/lib/devices';
+import type { SpecRow } from './types';
 
 interface ProductSpecsProps {
   specs: SpecRow[];

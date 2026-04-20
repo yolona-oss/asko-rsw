@@ -5,17 +5,17 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { chatApi } from '@/lib/api/chat';
 import { MessageBubble } from './message-bubble';
-import type { ChatMessage, ChatParticipant } from '@/lib/chat-types';
+import type { ChatMessageRecord, ChatParticipantRecord } from '@/lib/api/types';
 
 interface MessageListProps {
   conversationId: string;
   currentUserId: string;
   isGroup: boolean;
-  realtimeMessages: ChatMessage[];
+  realtimeMessages: ChatMessageRecord[];
   participantNames: Record<string, string>;
   participantRoles: Record<string, string>;
   readPositions: Record<string, string>;
-  participants: ChatParticipant[];
+  participants: ChatParticipantRecord[];
 }
 
 export function MessageList({
@@ -33,7 +33,7 @@ export function MessageList({
   const containerRef = useRef<HTMLDivElement>(null);
   const initialScrollDone = useRef(false);
   const loadingOlder = useRef(false);
-  const [olderMessages, setOlderMessages] = useState<ChatMessage[]>([]);
+  const [olderMessages, setOlderMessages] = useState<ChatMessageRecord[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -170,7 +170,7 @@ export function MessageList({
 
   // Build date separators as part of the message list without mutable variables
   const messagesWithSeparators = useMemo(() => {
-    return allMessages.reduce<Array<{ msg: ChatMessage; showSeparator: boolean; dateLabel: string }>>((acc, msg) => {
+    return allMessages.reduce<Array<{ msg: ChatMessageRecord; showSeparator: boolean; dateLabel: string }>>((acc, msg) => {
       const msgDate = new Date(msg.createdAt).toDateString();
       const prevDate = acc.length > 0 ? new Date(acc[acc.length - 1].msg.createdAt).toDateString() : '';
       const showSeparator = msgDate !== prevDate;

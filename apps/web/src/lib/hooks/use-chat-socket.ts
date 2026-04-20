@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAppSelector } from '@/store';
-import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
+import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 const { SOCKET_ORIGIN, SOCKET_PATH } = (() => {
@@ -18,14 +18,14 @@ const { SOCKET_ORIGIN, SOCKET_PATH } = (() => {
 })();
 
 export interface ChatSocketCallbacks {
-  onNewMessage?: (message: ChatMessage) => void;
-  onMessageUpdated?: (message: ChatMessage) => void;
+  onNewMessage?: (message: ChatMessageRecord) => void;
+  onMessageUpdated?: (message: ChatMessageRecord) => void;
   onMessageDeleted?: (data: { messageId: string }) => void;
   onUserTyping?: (data: { userId: string; conversationId: string }) => void;
   onUserStopTyping?: (data: { userId: string; conversationId: string }) => void;
   onUserPresence?: (data: { userId: string; status: string; activity: string }) => void;
   onMessageRead?: (data: { userId: string; conversationId: string; messageId: string }) => void;
-  onConversationNew?: (conversation: ChatConversation) => void;
+  onConversationNew?: (conversation: ConversationRecord) => void;
   onUserUploading?: (data: { userId: string; conversationId: string; type: 'image' | 'video' | 'document' }) => void;
 }
 
@@ -61,11 +61,11 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
 
     socketRef.current = socket;
 
-    socket.on('message:new', (data: ChatMessage) => {
+    socket.on('message:new', (data: ChatMessageRecord) => {
       cbRef.current.onNewMessage?.(data);
     });
 
-    socket.on('message:updated', (data: ChatMessage) => {
+    socket.on('message:updated', (data: ChatMessageRecord) => {
       cbRef.current.onMessageUpdated?.(data);
     });
 
@@ -89,7 +89,7 @@ export function useChatSocket(callbacks: ChatSocketCallbacks): ChatSocketActions
       cbRef.current.onMessageRead?.(data);
     });
 
-    socket.on('conversation:new', (data: ChatConversation) => {
+    socket.on('conversation:new', (data: ConversationRecord) => {
       cbRef.current.onConversationNew?.(data);
     });
 

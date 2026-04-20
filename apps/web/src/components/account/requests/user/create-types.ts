@@ -1,4 +1,4 @@
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 
 export interface UserDevice {
   id: string;
@@ -15,7 +15,7 @@ export interface UserDevice {
   };
 }
 
-export type Certificate = ICertificate;
+export type Certificate = CertificateRecord;
 
 export interface UploadedImage {
   id: string;

@@ -1,4 +1,4 @@
-import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
+import type { SchedulePatternRecord, ScheduleEntryRecord } from '@/lib/api/schedule';
 import type { RepairerScheduleInfo } from './detail-types';
 
 const MS_PER_DAY = 86_400_000;
@@ -14,7 +14,7 @@ function coversToday(entry: ScheduleEntryRecord, todayStart: number): boolean {
 }
 
 export function resolveScheduleForToday(
-  pattern: PatternRecordDto | null | undefined,
+  pattern: SchedulePatternRecord | null | undefined,
   entries?: ScheduleEntryRecord[] | null,
 ): RepairerScheduleInfo {
   const todayStart = utcDayStart(new Date());

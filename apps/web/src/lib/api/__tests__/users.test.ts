@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockApi, type MockApi } from './client-mock';
-import type { IImageAttachment } from '../types';
+import type { ImageRecord } from '../types';
 
 let mockApi: MockApi;
 vi.mock('../client', () => {
@@ -142,7 +142,7 @@ describe('getBatch', () => {
 
 describe('getAvatarUrl', () => {
   it('returns image URL on success', async () => {
-    const images: Partial<IImageAttachment>[] = [
+    const images: Partial<ImageRecord>[] = [
       { id: 'img-1', order: 0 },
     ];
     mockApi.get.mockResolvedValue({ data: { images } });

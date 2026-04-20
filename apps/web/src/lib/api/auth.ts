@@ -1,28 +1,28 @@
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
-import type { IAuthSession, IAuthUser } from './types';
+import type { AccessToken, AuthSession, AuthUser, MessageResponse, OAuthLinksResponse } from './types';
 import { api } from './client';
 
 /** Ensure gRPC repeated fields that may arrive as undefined are arrays. */
-function normalizeUser(user: IAuthUser): IAuthUser {
+function normalizeUser(user: AuthUser): AuthUser {
   user.roles ??= [];
   user.providers ??= [];
   return user;
 }
 
-function normalizeSession(session: IAuthSession): IAuthSession {
+function normalizeSession(session: AuthSession): AuthSession {
   if (session.user) normalizeUser(session.user);
   return session;
 }
 
 export const authApi = {
   async login(credentials: LoginCredentials) {
-    const res = await api.post<IAuthSession>('/auth/login', credentials);
+    const res = await api.post<AuthSession>('/auth/login', credentials);
     normalizeSession(res.data);
     return res;
   },
 
   async signup(data: CreateUserDto) {
-    const res = await api.post<IAuthSession>('/auth/signup', data);
+    const res = await api.post<AuthSession>('/auth/signup', data);
     normalizeSession(res.data);
     return res;
   },
@@ -32,13 +32,13 @@ export const authApi = {
   },
 
   async getSession() {
-    const res = await api.get<IAuthUser>('/auth/session');
+    const res = await api.get<AuthUser>('/auth/session');
     normalizeUser(res.data);
     return res;
   },
 
   refresh() {
-    return api.post<{ access_token: string }>('/auth/refresh');
+    return api.post<AccessToken>('/auth/refresh');
   },
 
   checkEmail(email: string) {
@@ -49,7 +49,7 @@ export const authApi = {
   },
 
   confirmEmail(token: string) {
-    return api.post<{ message: string }>('/auth/confirm-email', { token });
+    return api.post<MessageResponse>('/auth/confirm-email', { token });
   },
 
   resendConfirmation(email: string) {
@@ -58,7 +58,7 @@ export const authApi = {
 
   // MFA
   async verifyMfaOtp(data: { mfaToken: string; code: string; trustDevice?: boolean }) {
-    const res = await api.post<IAuthSession>('/auth/mfa/verify', data);
+    const res = await api.post<AuthSession>('/auth/mfa/verify', data);
     normalizeSession(res.data);
     return res;
   },
@@ -72,7 +72,7 @@ export const authApi = {
   },
 
   verifyEnableMfa(code: string) {
-    return api.post<{ message: string }>('/auth/mfa/enable/verify', { code });
+    return api.post<MessageResponse>('/auth/mfa/enable/verify', { code });
   },
 
   initiateDisableMfa() {
@@ -80,7 +80,7 @@ export const authApi = {
   },
 
   confirmDisableMfa(code: string) {
-    return api.post<{ message: string }>('/auth/mfa/disable/verify', { code });
+    return api.post<MessageResponse>('/auth/mfa/disable/verify', { code });
   },
 
   getMfaStatus() {
@@ -88,7 +88,7 @@ export const authApi = {
   },
 
   confirmEmailChange(token: string) {
-    return api.post<{ message: string }>('/auth/confirm-email-change', { token });
+    return api.post<MessageResponse>('/auth/confirm-email-change', { token });
   },
 
   forgotPassword(email: string) {
@@ -96,12 +96,12 @@ export const authApi = {
   },
 
   resetPassword(token: string, newPassword: string) {
-    return api.post<{ message: string }>('/auth/reset-password', { token, newPassword });
+    return api.post<MessageResponse>('/auth/reset-password', { token, newPassword });
   },
 
   // Phone register
   async verifyPhoneRegister(data: { pendingToken: string; code: string }) {
-    const res = await api.post<IAuthSession>('/auth/phone-register/verify', data);
+    const res = await api.post<AuthSession>('/auth/phone-register/verify', data);
     normalizeSession(res.data);
     return res;
   },
@@ -116,7 +116,7 @@ export const authApi = {
   },
 
   confirmPhoneVerification(code: string) {
-    return api.post<{ message: string }>('/auth/phone/confirm-verification', { code });
+    return api.post<MessageResponse>('/auth/phone/confirm-verification', { code });
   },
 
   // Phone change (verified phone)
@@ -125,7 +125,7 @@ export const authApi = {
   },
 
   confirmPhoneChange(code: string) {
-    return api.post<{ message: string }>('/auth/phone/confirm-change', { code });
+    return api.post<MessageResponse>('/auth/phone/confirm-change', { code });
   },
 
   // Sessions
@@ -134,7 +134,7 @@ export const authApi = {
   },
 
   revokeSession(sessionId: string) {
-    return api.delete<{ message: string }>(`/auth/sessions/${sessionId}`);
+    return api.delete<MessageResponse>(`/auth/sessions/${sessionId}`);
   },
 
   masterLogout() {
@@ -143,7 +143,7 @@ export const authApi = {
 
   // OAuth
   getOAuthLinks() {
-    return api.get<{ links: { id: string; provider: string; providerId: string; email?: string; avatarUrl?: string; createdAt: string }[] }>('/auth/oauth/links');
+    return api.get<OAuthLinksResponse>('/auth/oauth/links');
   },
 
   unlinkOAuth(provider: string) {

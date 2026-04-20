@@ -159,6 +159,10 @@ io(`${SOCKET_ORIGIN}/notifications`, {
 | `notification` | `notificationReceived(payload)`, `playSound('notification')`, `startReminder('notification')` |
 | `notification:count` | `unreadCountUpdated(delta)` |
 
+### Active Conversation Filter
+
+When a `notification` event arrives, the middleware checks if it's a chat notification for the currently active conversation (via `getActiveConversation()`). If yes, it calls `notificationApi.markAsRead(id)` silently and does **not** dispatch `notificationReceived` or `playSound`. This logic currently lives in `bell.tsx` and must move to the middleware.
+
 ### Token Refresh
 
 On `auth_error`, the middleware watches for a subsequent `setCredentials` with a new token and reconnects automatically.
@@ -246,6 +250,12 @@ export const store = configureStore({
 
 - Remove any notification React Query initialization
 - Socket middleware auto-connects on auth, no explicit init
+
+### `request-status.tsx` (minor)
+
+- Currently uses `useNotificationSocket` to refetch repair request data when a matching notification arrives
+- Replace with `useAppSelector(selectAllNotifications)` + `useEffect` that watches for new notifications where `targetType === 'repairRequest' && targetId === requestId`, then calls `fetchData()`
+- Alternative: use `useAppSelector` with a selector that picks the latest notification matching the request ID, and react to changes
 
 ### `notification-settings.tsx` — no changes
 

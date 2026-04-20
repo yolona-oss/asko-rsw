@@ -17,7 +17,7 @@ import { useUserAvatars } from '@/hooks/use-user-avatars';
 import { useAccount } from '@/components/account/layout/provider';
 import { displayName as buildDisplayName } from '@/lib/account';
 import type { NotificationRecord } from '@/lib/api/types';
-import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
+import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
 import type { ChatSocketActions } from '@/lib/hooks/use-chat-socket';
 
 const CHAT_NOTIFICATION_TYPES = new Set(['chat_message', 'chat_conversation_created', 'chat_participant_added']);
@@ -31,13 +31,13 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 interface ConversationPanelProps {
-  conversation: ChatConversation;
+  conversation: ConversationRecord;
   currentUserId: string;
   presenceMap: Record<string, boolean>;
   socketActions: ChatSocketActions;
   typingUsers: Map<string, string>;
   uploadingUsers: Map<string, { conversationId: string; type: string }>;
-  realtimeMessages: ChatMessage[];
+  realtimeMessages: ChatMessageRecord[];
   readPositions: Record<string, string>;
   onBack?: () => void;
   participantNames: Record<string, string>;

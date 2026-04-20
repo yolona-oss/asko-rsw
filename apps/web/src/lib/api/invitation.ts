@@ -1,14 +1,14 @@
 import type { CreateInvitationLinkDto } from '@asko/shared/client';
-import type { IInvitationLink } from './types';
+import type { InviteLinkResponse } from './types';
 import { api } from './client';
 
 export const invitationApi = {
   getAll() {
-    return api.get<IInvitationLink[]>('/invite/');
+    return api.get<InviteLinkResponse[]>('/invite/');
   },
 
   create(data: CreateInvitationLinkDto) {
-    return api.post<{ invite: IInvitationLink; link: string }>('/invite/', data);
+    return api.post<{ invite: InviteLinkResponse; link: string }>('/invite/', data);
   },
 
   delete(id: string) {

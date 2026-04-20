@@ -1,4 +1,4 @@
-import type { IDevice, IImageAttachment, PaginatedDevices } from './types';
+import type { DeviceRecord, ImageRecord, PaginatedDevices } from './types';
 import { serverGet } from './server-fetch';
 import { getPlaceholderSrc } from '@/lib/placeholders';
 import { getImageUrl } from '@/lib/image-url';
@@ -13,28 +13,28 @@ export async function fetchDevices(page: number, limit: number): Promise<Paginat
   };
 }
 
-export async function fetchFeaturedDevices(type?: string): Promise<IDevice[]> {
+export async function fetchFeaturedDevices(type?: string): Promise<DeviceRecord[]> {
   const params = new URLSearchParams({ isFeatured: 'true', limit: '20', page: '1' });
   if (type) params.set('type', type);
   const data = await serverGet<PaginatedDevices>(`/devices?${params}`);
   return data?.data ?? [];
 }
 
-export async function fetchDevice(id: string): Promise<IDevice | null> {
-  return serverGet<IDevice>(`/devices/${id}`);
+export async function fetchDevice(id: string): Promise<DeviceRecord | null> {
+  return serverGet<DeviceRecord>(`/devices/${id}`);
 }
 
-export async function fetchDeviceBySlug(slug: string): Promise<IDevice | null> {
-  return serverGet<IDevice>(`/devices/slug/${slug}`);
+export async function fetchDeviceBySlug(slug: string): Promise<DeviceRecord | null> {
+  return serverGet<DeviceRecord>(`/devices/slug/${slug}`);
 }
 
-export async function fetchDeviceImages(id: string): Promise<IImageAttachment[]> {
-  const data = await serverGet<{ images: IImageAttachment[] }>(`/devices/${id}/images`);
+export async function fetchDeviceImages(id: string): Promise<ImageRecord[]> {
+  const data = await serverGet<{ images: ImageRecord[] }>(`/devices/${id}/images`);
   return data?.images ?? [];
 }
 
-export async function fetchDeviceImagesBySlug(slug: string): Promise<IImageAttachment[]> {
-  const data = await serverGet<{ images: IImageAttachment[] }>(`/devices/slug/${slug}/images`);
+export async function fetchDeviceImagesBySlug(slug: string): Promise<ImageRecord[]> {
+  const data = await serverGet<{ images: ImageRecord[] }>(`/devices/slug/${slug}/images`);
   return data?.images ?? [];
 }
 

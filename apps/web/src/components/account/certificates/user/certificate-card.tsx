@@ -6,7 +6,7 @@ import type { DropdownMenuEntry } from '@asko/ui';
 import { CertificateStatus, formatDate, formatDateLong } from '@asko/shared/client';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { deviceApi } from '@/lib/api/device';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import { getPlaceholderSrc } from '@/lib/placeholders';
 import { STATUS_LABELS } from './constants';
 import { getImageUrl } from '@/lib/image-url';
@@ -17,9 +17,9 @@ export function CertificateCard({
   onExportPdf,
   onClick,
 }: {
-  cert: ICertificate;
-  onPay?: (cert: ICertificate) => void;
-  onExportPdf?: (cert: ICertificate) => void;
+  cert: CertificateRecord;
+  onPay?: (cert: CertificateRecord) => void;
+  onExportPdf?: (cert: CertificateRecord) => void;
   onClick?: () => void;
 }) {
   const { handleClick } = useClickHandlers(onClick);

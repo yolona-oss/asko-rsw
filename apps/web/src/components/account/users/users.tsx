@@ -19,7 +19,7 @@ import type { DataGridColumn, DropdownMenuEntry, FilterDefinition, FilterValues,
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { usersApi } from '@/lib/api/users';
-import type { IAuthUser } from '@/lib/api/types';
+import type { AuthUser } from '@/lib/api/types';
 import { ROLE_LABELS, ROLE_TAB_FILTER_DEF } from './constants';
 import { InviteDropdown } from './invite-dropdown';
 import { UserAvatar } from './user-avatar';
@@ -28,8 +28,8 @@ import { UserCard } from './user-card';
 const PAGE_SIZE = 20;
 
 export function AdminUsers() {
-  const detail = useEntityDetail<IAuthUser>();
-  const [users, setUsers] = useState<IAuthUser[]>([]);
+  const detail = useEntityDetail<AuthUser>();
+  const [users, setUsers] = useState<AuthUser[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ export function AdminUsers() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const columns: DataGridColumn<IAuthUser>[] = useMemo(() => [
+  const columns: DataGridColumn<AuthUser>[] = useMemo(() => [
     {
       key: 'user',
       header: 'Пользователь',
@@ -161,7 +161,7 @@ export function AdminUsers() {
     },
   ], [actionLoading]);
 
-  const rowMenu = (user: IAuthUser): DropdownMenuEntry[] => {
+  const rowMenu = (user: AuthUser): DropdownMenuEntry[] => {
     const isActive = user.isActive !== false;
     return [
       {

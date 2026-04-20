@@ -1,8 +1,8 @@
-import type { IArticle } from '@/lib/api/types';
+import type { ArticleResponse } from '@/lib/api/types';
 import { ArticlePreviewCard } from './article-preview-card';
 
 interface ArticleRecommendationsProps {
-    articles: IArticle[];
+    articles: ArticleResponse[];
     imageMap: Map<string, string | null>;
     title?: string;
 }

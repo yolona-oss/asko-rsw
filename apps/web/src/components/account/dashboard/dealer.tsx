@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { CTABanner } from '@/components/account/layout/cta-banner';
 import { dealerApi } from '@/lib/api/dealer';
 import { certificateApi } from '@/lib/api/certificate';
-import type { IPointsTransaction } from '@/lib/api/types';
+import type { PointsTransactionRecord } from '@/lib/api/types';
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
@@ -36,7 +36,7 @@ export function DealerDashboard() {
   const [s, setS] = useState({
     clients: 0, points: 0,
     certsTotal: 0, certsActive: 0, certsPending: 0,
-    pointsHistory: [] as IPointsTransaction[],
+    pointsHistory: [] as PointsTransactionRecord[],
   });
 
   const fetchData = useCallback(async (r: DateRange | null) => {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Product } from '@/lib/devices';
+import type { Product } from './types';
 import { ProductSpecs } from './product-specs';
 
 function ShieldIcon() {

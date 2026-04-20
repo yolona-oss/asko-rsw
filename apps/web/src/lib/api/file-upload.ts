@@ -1,28 +1,7 @@
 import type { AxiosProgressEvent, AxiosRequestConfig } from 'axios';
-import type { IImageAttachment, ImageResponse } from './types';
+import type { ImageRecord, ImageResponse, VideoList, VideoResponse } from './types';
 import { api } from './client';
 import { assertUploadLimit, type UploadKind } from './upload-limits';
-
-interface VideoResponse {
-    video: {
-        id: string;
-        videoJson: {
-            public_id: string;
-            format: string;
-            resource_type: string;
-            url: string;
-            secure_url: string;
-            original_filename: string;
-            duration?: number;
-            size?: number;
-        };
-        order: number;
-        ownerType?: string;
-        ownerId?: string;
-        createdAt?: string;
-        updatedAt?: string;
-    };
-}
 
 export interface DocumentAttachment {
     id: string;
@@ -253,7 +232,7 @@ export const fileUploadApi = {
     },
 
     getAttachedImages(ownerType: string, ownerId: string, silent?: boolean) {
-        return api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
+        return api.get<{ images: ImageRecord[] }>('/file-upload/image/attached', {
             params: { ownerType, ownerId },
             ...(silent ? { _silent: true } : {}),
         } as any);
@@ -272,7 +251,7 @@ export const fileUploadApi = {
     },
 
     getAttachedVideos(ownerType: string, ownerId: string, silent?: boolean) {
-        return api.get<{ videos: any[] }>('/file-upload/video/attached', {
+        return api.get<VideoList>('/file-upload/video/attached', {
             params: { ownerType, ownerId },
             ...(silent ? { _silent: true } : {}),
         } as any);

@@ -4,7 +4,7 @@ import type {
   UpdateLocationDto,
 } from '@asko/shared/client';
 import type {
-  IRepairer,
+  RepairerRecord,
   PaginatedRepairers,
 } from './types';
 import { api } from './client';
@@ -19,19 +19,19 @@ export const repairerApi = {
   },
 
   getOne(id: string) {
-    return api.get<IRepairer>(`/repairers/${id}`);
+    return api.get<RepairerRecord>(`/repairers/${id}`);
   },
 
   create(data: CreateRepairerDto) {
-    return api.post<IRepairer>('/repairers', data);
+    return api.post<RepairerRecord>('/repairers', data);
   },
 
   update(id: string, data: UpdateRepairerDto) {
-    return api.patch<IRepairer>(`/repairers/${id}`, data);
+    return api.patch<RepairerRecord>(`/repairers/${id}`, data);
   },
 
   getProfile() {
-    return api.get<{ repairer: IRepairer }>('/repairers/me');
+    return api.get<{ repairer: RepairerRecord }>('/repairers/me');
   },
 
   updateLocation(data: UpdateLocationDto) {
@@ -39,6 +39,6 @@ export const repairerApi = {
   },
 
   getInCity(city: string) {
-    return api.get<IRepairer[]>(`/repairers/city/${city}`);
+    return api.get<RepairerRecord[]>(`/repairers/city/${city}`);
   },
 };

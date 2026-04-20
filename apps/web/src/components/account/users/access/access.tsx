@@ -18,18 +18,18 @@ import { User } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { repairerApi } from '@/lib/api/repairer';
-import type { IRepairer } from '@/lib/api/types';
+import type { RepairerRecord } from '@/lib/api/types';
 import type { AccessTab } from './constants';
 import { formatDateTimeCompact } from '@asko/shared/client';
 import { TAB_FILTER, LIMIT, repairerName } from './constants';
 import { RepairerCard } from './repairer-card';
 
 export function ManagerAccess() {
-  const detail = useEntityDetail<IRepairer>();
+  const detail = useEntityDetail<RepairerRecord>();
   const [view, setView] = useState('table');
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'inactive' });
-  const [repairers, setRepairers] = useState<IRepairer[]>([]);
+  const [repairers, setRepairers] = useState<RepairerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -103,7 +103,7 @@ export function ManagerAccess() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
-  const repairerColumns: DataGridColumn<IRepairer>[] = useMemo(() => [
+  const repairerColumns: DataGridColumn<RepairerRecord>[] = useMemo(() => [
     {
       key: 'name',
       header: 'Имя',
@@ -168,7 +168,7 @@ export function ManagerAccess() {
       )}
 
       {view === 'table' ? (
-        <DataGrid<IRepairer>
+        <DataGrid<RepairerRecord>
           loading={loading}
           columns={repairerColumns}
           data={displayed}

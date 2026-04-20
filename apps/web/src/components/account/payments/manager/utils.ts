@@ -1,4 +1,4 @@
-import type { PaymentRecord } from '@/lib/api/payment';
+import type { PaymentRecord } from '@/lib/api/types';
 import type { ChartBucket, DateRange } from '@asko/ui';
 
 export { defaultRange, formatRangeLabel, toInputDate } from '@asko/ui';

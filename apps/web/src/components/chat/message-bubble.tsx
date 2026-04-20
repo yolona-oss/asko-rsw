@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect } fr
 import { createPortal } from 'react-dom';
 import { FileText, Download } from 'lucide-react';
 import { LightboxModal } from '@asko/ui';
-import type { ChatMessage } from '@/lib/chat-types';
+import type { ChatMessageRecord } from '@/lib/api/types';
 import { getImageUrl, getVideoUrl } from '@/lib/file-url';
 import { openDocument, downloadDocument } from '@/lib/file-url';
 import { MessageStatusIcon } from './message-status-icon';
@@ -70,7 +70,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 interface MessageBubbleProps {
-  message: ChatMessage;
+  message: ChatMessageRecord;
   isOwn: boolean;
   showSender?: boolean;
   senderName?: string;

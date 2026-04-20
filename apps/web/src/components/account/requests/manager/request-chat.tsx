@@ -6,16 +6,16 @@ import { useChatSocket } from '@/lib/hooks/use-chat-socket';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
-import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
+import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
 
 export function RequestChat({ conversationId, currentUserId }: { conversationId: string; currentUserId: string }) {
-  const [conversation, setConversation] = useState<ChatConversation | null>(null);
-  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
+  const [conversation, setConversation] = useState<ConversationRecord | null>(null);
+  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessageRecord[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const socketActions = useChatSocket({
-    onNewMessage: useCallback((message: ChatMessage) => {
+    onNewMessage: useCallback((message: ChatMessageRecord) => {
       if (message.conversationId === conversationId) {
         setRealtimeMessages(prev => [...prev, message]);
       }

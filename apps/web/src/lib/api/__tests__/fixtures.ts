@@ -3,11 +3,11 @@
  * Every fixture satisfies its corresponding `components['schemas'][…]` shape.
  */
 import type {
-  DeviceRecord, IImageAttachment, PaginatedDevices,
+  DeviceRecord, ImageRecord, PaginatedDevices,
   ArticleResponse, PaginatedArticles,
   CloudinaryImage, ImageObj,
 } from '../types';
-import type { DeviceCategoryRecord, DeviceCategoryListResponse } from '../device-category';
+import type { DeviceCategoryRecord, DeviceCategoryList } from '../device-category';
 
 // ── Cloudinary / Image primitives ──
 
@@ -34,7 +34,7 @@ export function makeImageObj(overrides: Partial<ImageObj> = {}): ImageObj {
   };
 }
 
-export function makeImageAttachment(overrides: Partial<IImageAttachment> = {}): IImageAttachment {
+export function makeImageAttachment(overrides: Partial<ImageRecord> = {}): ImageRecord {
   return {
     id: 'img-1',
     imageJson: makeImageObj(),
@@ -111,6 +111,6 @@ export function makeDeviceCategory(overrides: Partial<DeviceCategoryRecord> = {}
 
 export function makeCategoryListResponse(
   categories = [makeDeviceCategory()],
-): DeviceCategoryListResponse {
+): DeviceCategoryList {
   return { categories };
 }

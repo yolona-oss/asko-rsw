@@ -1,5 +1,5 @@
 import type { UpdateUserDto } from '@asko/shared/client';
-import type { IAuthUser, IImageAttachment, PaginatedUsers, UserResponse } from './types';
+import type { AuthUser, ImageRecord, PaginatedUsers, UserResponse } from './types';
 import { api } from './client';
 import { fileUploadApi } from './file-upload';
 import { getImageUrl } from '@/lib/file-url';
@@ -10,7 +10,7 @@ export const usersApi = {
   },
 
   updateProfile(data: Partial<UpdateUserDto>) {
-    return api.put<IAuthUser>('/users/', data);
+    return api.put<AuthUser>('/users/', data);
   },
 
   getAll(params?: { page?: number; limit?: number; search?: string; role?: string; status?: string; sortBy?: string; sortOrder?: string }) {
@@ -55,7 +55,7 @@ export const usersApi = {
 
   async getAvatarUrl(userId: string): Promise<string | null> {
     try {
-      const { data } = await api.get<{ images: IImageAttachment[] }>('/file-upload/image/attached', {
+      const { data } = await api.get<{ images: ImageRecord[] }>('/file-upload/image/attached', {
         params: { ownerType: 'user', ownerId: userId },
         _silent: true,
       } as any);

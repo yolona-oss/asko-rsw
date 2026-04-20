@@ -7,9 +7,19 @@ import type {
   ChatUnreadCount,
   PresenceResponse,
   BulkPresenceResponse,
-  ParticipantListResponse,
-  ChatUserSearchResponse,
-} from '@/lib/chat-types';
+  ParticipantList,
+} from './types';
+
+export interface ChatUserSearchResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface ChatUserSearchResponse {
+  users: ChatUserSearchResult[];
+}
 
 export const chatApi = {
   // ─── Conversations ──────────────────────────────────────────
@@ -53,7 +63,7 @@ export const chatApi = {
   // ─── Participants ───────────────────────────────────────────
 
   listParticipants(conversationId: string, silent?: boolean) {
-    return api.get<ParticipantListResponse>(`/chat/conversations/${conversationId}/participants`, {
+    return api.get<ParticipantList>(`/chat/conversations/${conversationId}/participants`, {
       ...(silent ? { _silent: true } : {}),
     } as any);
   },

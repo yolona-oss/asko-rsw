@@ -1,25 +1,14 @@
 import type { CreateDeviceCategoryDto, UpdateDeviceCategoryDto } from '@asko/shared/client';
 import { api } from './client';
+import type { DeviceCategoryRecord, DeviceCategoryList } from './types';
 
-export interface DeviceCategoryRecord {
-  id: string;
-  name: string;
-  label: string;
-  labelPlural: string;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DeviceCategoryListResponse {
-  categories: DeviceCategoryRecord[];
-}
+export type { DeviceCategoryRecord, DeviceCategoryList };
 
 // ── Client-side API (uses axios — requires Redux store) ──
 
 export const deviceCategoryApi = {
   getAll() {
-    return api.get<DeviceCategoryListResponse>('/device-categories');
+    return api.get<DeviceCategoryList>('/device-categories');
   },
 
   getOne(id: string) {

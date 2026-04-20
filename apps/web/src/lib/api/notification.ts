@@ -1,17 +1,5 @@
 import { api } from './client';
-import type { NotificationRecord, PaginatedNotifications, UnreadCount } from './types';
-import type { INotificationPreferences } from '@asko/shared/client';
-
-export interface NotificationPreferencesResponse {
-  globalMute: boolean;
-  groups: Array<{ group: string; in_app: boolean; push: boolean; email: boolean }>;
-}
-
-export interface PushSubscriptionRecord {
-  id: string;
-  endpoint: string;
-  createdAt: string;
-}
+import type { NotificationRecord, PaginatedNotifications, UnreadCount, NotificationPreferencesResponse, PushSubscriptionResponse } from './types';
 
 export const notificationApi = {
   list(params?: { page?: number; limit?: number; unreadOnly?: boolean; group?: string; readStatus?: string }) {
@@ -54,7 +42,7 @@ export const notificationApi = {
   // ─── Push Subscriptions ───────────────────────────────────────────
 
   registerPushSubscription(data: { endpoint: string; p256dh: string; auth: string }) {
-    return api.post<PushSubscriptionRecord>('/notifications/push-subscriptions', data);
+    return api.post<PushSubscriptionResponse>('/notifications/push-subscriptions', data);
   },
 
   unregisterPushSubscription(endpoint: string) {
@@ -62,8 +50,8 @@ export const notificationApi = {
   },
 
   listPushSubscriptions() {
-    return api.get<{ subscriptions: PushSubscriptionRecord[] }>('/notifications/push-subscriptions');
+    return api.get<{ subscriptions: PushSubscriptionResponse[] }>('/notifications/push-subscriptions');
   },
 };
 
-export type { NotificationRecord, PaginatedNotifications, UnreadCount, INotificationPreferences };
+export type { NotificationRecord, PaginatedNotifications, UnreadCount, NotificationPreferencesResponse, PushSubscriptionResponse };

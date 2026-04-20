@@ -2,7 +2,7 @@
 
 import { Card, ContextMenuArea, StatusBadge, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
-import type { IAuthUser } from '@/lib/api/types';
+import type { AuthUser } from '@/lib/api/types';
 import { ROLE_LABELS } from './constants';
 import { UserAvatar } from './user-avatar';
 
@@ -12,7 +12,7 @@ export function UserCard({
   onDelete,
   loading,
 }: {
-  user: IAuthUser;
+  user: AuthUser;
   onToggleActive: (id: string, active: boolean) => void;
   onDelete: (id: string) => void;
   loading: boolean;

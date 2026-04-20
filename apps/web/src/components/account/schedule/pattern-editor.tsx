@@ -60,8 +60,8 @@ function wrap(slots: PatternSlot[]): SlotEntry[] {
 function unwrap(entries: SlotEntry[]): PatternSlot[] {
   return entries.map((e) => ({
     work: !!e.slot.work,
-    startTime: e.slot.startTime || null,
-    endTime: e.slot.endTime || null,
+    startTime: e.slot.startTime || undefined,
+    endTime: e.slot.endTime || undefined,
   }));
 }
 
@@ -139,8 +139,8 @@ export function PatternEditor({ userId, onChanged }: PatternEditorProps) {
       const wrapped = wrap(
         source.slots.map((s) => ({
           work: !!s.work,
-          startTime: s.startTime || null,
-          endTime: s.endTime || null,
+          startTime: s.startTime || undefined,
+          endTime: s.endTime || undefined,
         })),
       );
       const snap = {

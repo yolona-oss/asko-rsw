@@ -9,7 +9,7 @@ import type {
 import type {
   PaymentList,
   PaginatedRepairRequests,
-  ProcessInvoiceResult,
+  ProcessInvoice,
   RepairRequestRecord,
   RepairRequestResponse,
   BrokenPartResponse,
@@ -135,11 +135,11 @@ export const repairRequestApi = {
 
   // Payments
   pay(requestId: string) {
-    return api.post<ProcessInvoiceResult>(`/repair-requests/${requestId}/pay`);
+    return api.post<ProcessInvoice>(`/repair-requests/${requestId}/pay`);
   },
 
   dummyPay(requestId: string) {
-    return api.post<ProcessInvoiceResult>(`/repair-requests/${requestId}/dummy-pay`);
+    return api.post<ProcessInvoice>(`/repair-requests/${requestId}/dummy-pay`);
   },
 
   async getPayments(requestId: string) {

@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, FormField } from '@asko/ui';
 import { deviceApi } from '@/lib/api/device';
-import type { IDevicePart } from '@/lib/api/types';
+import type { DevicePartRecord } from '@/lib/api/types';
 import type { PartFormData } from './types';
 import { EMPTY_PART_FORM } from './constants';
 
 export function DeviceParts({ deviceId }: { deviceId: string }) {
-  const [parts, setParts] = useState<IDevicePart[]>([]);
+  const [parts, setParts] = useState<DevicePartRecord[]>([]);
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export function DeviceParts({ deviceId }: { deviceId: string }) {
     }
   };
 
-  const startEdit = (part: IDevicePart) => {
+  const startEdit = (part: DevicePartRecord) => {
     setAdding(false);
     setEditingId(part.id);
     setForm({

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { PaginatedDevices, IImageAttachment } from '../types';
+import type { PaginatedDevices, ImageRecord } from '../types';
 import { makeDevice, makePaginatedDevices, makeImageAttachment } from './fixtures';
 
 vi.mock('server-only', () => ({}));
@@ -144,7 +144,7 @@ describe('fetchDeviceBySlug', () => {
 
 describe('fetchDeviceImages', () => {
   it('returns images on success', async () => {
-    const images: IImageAttachment[] = [
+    const images: ImageRecord[] = [
       makeImageAttachment({ id: 'img-1', order: 0 }),
       makeImageAttachment({ id: 'img-2', order: 1 }),
     ];
@@ -174,7 +174,7 @@ describe('fetchDeviceImages', () => {
 
 describe('fetchDeviceImagesBySlug', () => {
   it('returns images on success', async () => {
-    const images: IImageAttachment[] = [makeImageAttachment()];
+    const images: ImageRecord[] = [makeImageAttachment()];
     serverGetMock.mockResolvedValue({ images });
 
     expect(await fetchDeviceImagesBySlug('asko-w6098x')).toEqual(images);

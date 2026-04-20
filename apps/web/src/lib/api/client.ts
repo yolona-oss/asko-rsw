@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { IAccessToken } from './types';
+import type { AccessToken } from './types';
 import { store } from '@/store';
 import { setAccessToken, logout } from '@/store/auth-slice';
 import { errorStore, extractErrorMessage } from '../error-store';
@@ -76,7 +76,7 @@ api.interceptors.response.use(
 
 async function refreshAccessToken(): Promise<string | null> {
   try {
-    const { data } = await api.post<IAccessToken>('/auth/refresh');
+    const { data } = await api.post<AccessToken>('/auth/refresh');
     store.dispatch(setAccessToken(data.access_token));
     return data.access_token;
   } catch {

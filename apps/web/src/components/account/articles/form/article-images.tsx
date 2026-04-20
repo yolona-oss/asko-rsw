@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { Button, CropModal } from '@asko/ui';
 import { articleApi } from '@/lib/api/article';
 import { fileUploadApi } from '@/lib/api/file-upload';
-import type { IImageAttachment } from '@/lib/api/types';
+import type { ImageRecord } from '@/lib/api/types';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
 interface ArticleImagesProps {
@@ -17,7 +17,7 @@ interface ArticleImagesProps {
 }
 
 export function ArticleImages({ articleId, onInsertImage }: ArticleImagesProps) {
-  const [images, setImages] = useState<IImageAttachment[]>([]);
+  const [images, setImages] = useState<ImageRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);

@@ -6,7 +6,7 @@ import { chatApi } from '@/lib/api/chat';
 import { ConversationItem } from './conversation-item';
 import { Input, Button } from '@asko/ui';
 import { useUserAvatars } from '@/hooks/use-user-avatars';
-import type { ChatConversation } from '@/lib/chat-types';
+import type { ConversationRecord } from '@/lib/api/types';
 
 interface ConversationListProps {
   activeId: string | null;
@@ -14,7 +14,7 @@ interface ConversationListProps {
   presenceMap: Record<string, boolean>;
   participantNames: Record<string, string>;
   onRegisterParticipants: (ids: string[]) => void;
-  onSelect: (conversation: ChatConversation) => void;
+  onSelect: (conversation: ConversationRecord) => void;
   onNewChat: () => void;
 }
 

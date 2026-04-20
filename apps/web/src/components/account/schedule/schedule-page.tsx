@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto } from '@/lib/api/schedule';
+import type { SchedulePatternRecord } from '@/lib/api/schedule';
 import { usersApi } from '@/lib/api/users';
 import type { ScheduleEntry } from './types';
 import { TYPE_FILTER, STATUS_FILTER } from './constants';
@@ -31,7 +31,7 @@ export function SchedulePage() {
   const canDelete = role === 'admin';
 
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
-  const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
+  const [patterns, setPatterns] = useState<Record<string, SchedulePatternRecord>>({});
   const [users, setUsers] = useState<Record<string, RosterUser>>({});
   const [rosterIds, setRosterIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,11 +83,11 @@ export function SchedulePage() {
 
       const missingUserIds = unionIds.filter((id) => !rosterIdSet.has(id));
       const [patternsRes, missingUsersRes] = await Promise.all([
-        scheduleApi.patternGetMany(unionIds).catch(() => ({ data: { data: [] as PatternRecordDto[] } })),
+        scheduleApi.patternGetMany(unionIds).catch(() => ({ data: { data: [] as SchedulePatternRecord[] } })),
         missingUserIds.length > 0 ? usersApi.getBatch(missingUserIds) : Promise.resolve([] as RosterUser[]),
       ]);
 
-      const byUser: Record<string, PatternRecordDto> = {};
+      const byUser: Record<string, SchedulePatternRecord> = {};
       for (const p of patternsRes.data?.data ?? []) {
         byUser[p.userId] = p;
       }

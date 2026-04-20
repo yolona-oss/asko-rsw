@@ -3,7 +3,7 @@
 import { Avatar, Badge } from '@asko/ui';
 import { PresenceDot } from './presence-dot';
 import { MessageStatusIcon } from './message-status-icon';
-import type { ChatConversation } from '@/lib/chat-types';
+import type { ConversationRecord } from '@/lib/api/types';
 
 function getTimeLabel(dateStr: string): string {
   const date = new Date(dateStr);
@@ -22,7 +22,7 @@ function getTimeLabel(dateStr: string): string {
 }
 
 interface ConversationItemProps {
-  conversation: ChatConversation;
+  conversation: ConversationRecord;
   active: boolean;
   currentUserId: string;
   presenceMap: Record<string, boolean>;

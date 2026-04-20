@@ -1,5 +1,5 @@
 import type { CreateArticleDto, UpdateArticleDto } from '@asko/shared/client';
-import type { IArticle, IImageAttachment, PaginatedArticles } from './types';
+import type { ArticleResponse, DeleteCount, ImageRecord, MessageResponse, PaginatedArticles } from './types';
 import { api } from './client';
 
 // ── Client-side API (uses axios — requires Redux store) ──────────────
@@ -10,15 +10,15 @@ export const articleApi = {
   },
 
   getOne(id: string) {
-    return api.get<IArticle>(`/articles/${id}`);
+    return api.get<ArticleResponse>(`/articles/${id}`);
   },
 
   create(data: CreateArticleDto) {
-    return api.post<IArticle>('/articles', data);
+    return api.post<ArticleResponse>('/articles', data);
   },
 
   update(id: string, data: UpdateArticleDto) {
-    return api.patch<IArticle>(`/articles/${id}`, data);
+    return api.patch<ArticleResponse>(`/articles/${id}`, data);
   },
 
   delete(id: string) {
@@ -26,11 +26,11 @@ export const articleApi = {
   },
 
   deleteAll() {
-    return api.delete<{ count: number }>('/articles/all');
+    return api.delete<DeleteCount>('/articles/all');
   },
 
   getImages(articleId: string) {
-    return api.get<{ images: IImageAttachment[] }>(`/articles/${articleId}/images`);
+    return api.get<{ images: ImageRecord[] }>(`/articles/${articleId}/images`);
   },
 
   deleteImage(articleId: string, imageId: string) {
@@ -42,6 +42,6 @@ export const articleApi = {
   },
 
   recordView(slug: string, sessionId: string, readTime?: number) {
-    return api.post<{ message: string }>(`/articles/${slug}/view`, { sessionId, readTime });
+    return api.post<MessageResponse>(`/articles/${slug}/view`, { sessionId, readTime });
   },
 };

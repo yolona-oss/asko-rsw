@@ -24,7 +24,7 @@ import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { invitationApi } from '@/lib/api/invitation';
 import { Role } from '@asko/shared/client';
-import type { IInvitationLink } from '@/lib/api/types';
+import type { InviteLinkResponse } from '@/lib/api/types';
 import { formatDateTimeCompact } from '@asko/shared/client';
 import { ROLE_OPTIONS, TTL_OPTIONS, ROLE_LABELS, STATUS_FILTER, isExpired } from './constants';
 import { InvitationCard } from './invitation-card';
@@ -32,8 +32,8 @@ import { InvitationCard } from './invitation-card';
 const PAGE_SIZE = 20;
 
 export function AdminInvitations() {
-  const detail = useEntityDetail<IInvitationLink>();
-  const [invitations, setInvitations] = useState<IInvitationLink[]>([]);
+  const detail = useEntityDetail<InviteLinkResponse>();
+  const [invitations, setInvitations] = useState<InviteLinkResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState('table');
@@ -69,7 +69,7 @@ export function AdminInvitations() {
         role: role as Role,
         ttl: ttl !== '' ? ttl : undefined,
       });
-      const { invite, link } = data as { invite: IInvitationLink; link: string };
+      const { invite, link } = data as { invite: InviteLinkResponse; link: string };
       setInvitations((prev) => [invite, ...prev]);
       setNewLinks((prev) => ({ ...prev, [invite.id]: link }));
       setRole('');
@@ -135,7 +135,7 @@ export function AdminInvitations() {
 
   const totalPages = Math.ceil(sortedInvitations.length / PAGE_SIZE);
 
-  const columns: DataGridColumn<IInvitationLink>[] = useMemo(() => [
+  const columns: DataGridColumn<InviteLinkResponse>[] = useMemo(() => [
     {
       key: 'role',
       header: 'Роль',
@@ -197,7 +197,7 @@ export function AdminInvitations() {
     },
   ], [newLinks]);
 
-  const rowMenu = (inv: IInvitationLink): DropdownMenuEntry[] => {
+  const rowMenu = (inv: InviteLinkResponse): DropdownMenuEntry[] => {
     const expired = isExpired(inv.expiresAt);
     const inactive = inv.used || expired;
     const resolvedLink = newLinks[inv.id] ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/register?invite=${inv.token}`;

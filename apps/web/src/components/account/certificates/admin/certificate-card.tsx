@@ -9,7 +9,7 @@ import {
 import type { DropdownMenuEntry } from '@asko/ui';
 import { CertificateStatus, formatDate } from '@asko/shared/client';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import type { CertTab } from './types';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './constants';
 
@@ -18,7 +18,7 @@ export function CertificateCard({
   onRevoke,
   onClick,
 }: {
-  cert: ICertificate;
+  cert: CertificateRecord;
   onRevoke: (id: string) => void;
   onClick?: () => void;
 }) {

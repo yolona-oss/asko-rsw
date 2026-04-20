@@ -1,31 +1,19 @@
 import type { CreatePaymentDto } from '@asko/shared/client';
 import type {
   PaginatedPayments,
-  PaymentOptionsDto,
-  ProcessInvoiceResult,
-  PaymentStatsDto,
-  IRepairPayment,
+  PaymentOptions,
+  ProcessInvoice,
+  PaymentStats,
 } from './types';
 import { api } from './client';
 
-/** @deprecated Use `PaymentOptionsDto` from `@asko/shared/client` */
-export type PaymentOptions = PaymentOptionsDto;
-/** @deprecated Use `CreatePaymentDto` from `@asko/shared/client` */
-export type CreatePaymentParams = CreatePaymentDto;
-/** @deprecated Use `ProcessInvoiceResult` from `@asko/shared/client` */
-export type CreatePaymentResult = ProcessInvoiceResult;
-/** @deprecated Use `IRepairPayment` from `@asko/shared/client` */
-export type PaymentRecord = IRepairPayment;
-/** @deprecated Use `PaymentStatsDto` from `@asko/shared/client` */
-export type PaymentStats = PaymentStatsDto;
-
 export const paymentApi = {
   getOptions() {
-    return api.get<PaymentOptionsDto>('/payment/options');
+    return api.get<PaymentOptions>('/payment/options');
   },
 
   createPayment(data: CreatePaymentDto) {
-    return api.post<ProcessInvoiceResult>('/payment/create', data);
+    return api.post<ProcessInvoice>('/payment/create', data);
   },
 
   listPayments(params?: { page?: number; limit?: number; status?: string; provider?: string; search?: string; sortBy?: string; sortOrder?: string; dateFrom?: string; dateTo?: string }) {
@@ -37,11 +25,11 @@ export const paymentApi = {
   },
 
   getStats(params?: { dateFrom?: string; dateTo?: string }) {
-    return api.get<PaymentStatsDto>('/payment/stats', { params });
+    return api.get<PaymentStats>('/payment/stats', { params });
   },
 
   getMyStats(params?: { dateFrom?: string; dateTo?: string }) {
-    return api.get<PaymentStatsDto>('/payment/my/stats', { params });
+    return api.get<PaymentStats>('/payment/my/stats', { params });
   },
 
   confirmCashPayment(paymentId: string, confirmCode: string, amount: number) {

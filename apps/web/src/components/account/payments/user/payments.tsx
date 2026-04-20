@@ -19,7 +19,8 @@ import {
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { PaymentModal } from '@/components/account/payments/user/payment-modal';
-import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
+import { paymentApi } from '@/lib/api/payment';
+import type { PaymentRecord } from '@/lib/api/types';
 import { PaymentTargetGroup } from '@/components/account/payments/shared/payment-target-group';
 import { PaymentSummary } from '@/components/account/payments/shared/payment-summary';
 import { PAYMENT_TARGET_LABELS } from '@/components/account/payments/shared/payment-constants';

@@ -3,11 +3,12 @@
 import { useState, useCallback } from 'react';
 import { Modal, Input, Button, Avatar } from '@asko/ui';
 import { chatApi } from '@/lib/api/chat';
-import type { ChatConversation, ChatUserSearchResult } from '@/lib/chat-types';
+import type { ConversationRecord } from '@/lib/api/types';
+import type { ChatUserSearchResult } from '@/lib/api/chat';
 
 interface NewConversationDialogProps {
   onClose: () => void;
-  onCreated: (conversation: ChatConversation) => void;
+  onCreated: (conversation: ConversationRecord) => void;
 }
 
 export function NewConversationDialog({ onClose, onCreated }: NewConversationDialogProps) {

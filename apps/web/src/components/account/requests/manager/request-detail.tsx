@@ -20,7 +20,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { repairerApi } from '@/lib/api/repairer';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
+import type { SchedulePatternRecord, ScheduleEntryRecord } from '@/lib/api/schedule';
 import { chatApi } from '@/lib/api/chat';
 import { fileUploadApi } from '@/lib/api/file-upload';
 import { deviceApi } from '@/lib/api/device';
@@ -46,7 +46,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
 
   const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
-  const [patterns, setPatterns] = useState<Record<string, PatternRecordDto>>({});
+  const [patterns, setPatterns] = useState<Record<string, SchedulePatternRecord>>({});
   const [scheduleEntries, setScheduleEntries] = useState<Record<string, ScheduleEntryRecord[]>>({});
   const [selectedRepairer, setSelectedRepairer] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -94,7 +94,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
             }),
           ]);
           if (patternRes.status === 'fulfilled') {
-            const byUser: Record<string, PatternRecordDto> = {};
+            const byUser: Record<string, SchedulePatternRecord> = {};
             for (const p of patternRes.value.data?.data ?? []) byUser[p.userId] = p;
             setPatterns(byUser);
           }

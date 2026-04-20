@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Badge, Modal, DetailRow, DetailSection, SkeletonBlock } from '@asko/ui';
-import type { PaymentRecord } from '@/lib/api/payment';
+import type { PaymentRecord } from '@/lib/api/types';
 import { paymentApi } from '@/lib/api/payment';
 import { repairRequestApi } from '@/lib/api/repair-request';
 import { certificateApi } from '@/lib/api/certificate';

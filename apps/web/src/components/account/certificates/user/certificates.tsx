@@ -24,7 +24,7 @@ import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
 import { downloadDocument } from '@/lib/file-url';
 import { CertificateStatus, formatDate } from '@asko/shared/client';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import { CertificateCard } from './certificate-card';
 import { DeviceSlider } from './device-slider';
 import { AddDeviceForm } from './add-device-form';
@@ -36,8 +36,8 @@ import type { UserDevice } from './types';
 const PAGE_SIZE = 20;
 
 export function UserCertificates() {
-  const detail = useEntityDetail<ICertificate>();
-  const [certificates, setCertificates] = useState<ICertificate[]>([]);
+  const detail = useEntityDetail<CertificateRecord>();
+  const [certificates, setCertificates] = useState<CertificateRecord[]>([]);
   const [devices, setDevices] = useState<UserDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDevices, setLoadingDevices] = useState(true);
@@ -46,14 +46,14 @@ export function UserCertificates() {
   const [addFormRenewalMode, setAddFormRenewalMode] = useState<'extend' | 'new' | undefined>();
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [editDevice, setEditDevice] = useState<UserDevice | null>(null);
-  const [paymentCert, setPaymentCert] = useState<ICertificate | null>(null);
+  const [paymentCert, setPaymentCert] = useState<CertificateRecord | null>(null);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
-  const handlePay = (cert: ICertificate) => {
+  const handlePay = (cert: CertificateRecord) => {
     setPaymentCert(cert);
   };
 
@@ -121,7 +121,7 @@ export function UserCertificates() {
     return sortedCertificates.slice(start, start + PAGE_SIZE);
   }, [sortedCertificates, page]);
 
-  const exportPdf = useCallback(async (cert: ICertificate) => {
+  const exportPdf = useCallback(async (cert: CertificateRecord) => {
     try {
       const { data } = await certificateApi.generatePdf(cert.id);
       await downloadDocument(data.documentId, `cert-${cert.certificateNumber}.pdf`);
@@ -130,7 +130,7 @@ export function UserCertificates() {
     }
   }, []);
 
-  const certificateColumns: DataGridColumn<ICertificate>[] = [
+  const certificateColumns: DataGridColumn<CertificateRecord>[] = [
     {
       key: 'number',
       header: 'Номер',
@@ -279,7 +279,7 @@ export function UserCertificates() {
           />
         </>
       ) : (
-        <DataGrid<ICertificate>
+        <DataGrid<CertificateRecord>
           loading={loading}
           columns={certificateColumns}
           data={paginatedCertificates}

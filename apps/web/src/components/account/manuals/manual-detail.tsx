@@ -6,10 +6,10 @@ import { deviceApi } from '@/lib/api/device';
 import { Card, Button, Modal, Textarea, FormField, Toggle } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
-import type { IDevice } from '@/lib/api/types';
+import type { DeviceRecord } from '@/lib/api/types';
 
 export function RepairerManualDetail({ deviceId }: { deviceId: string }) {
-  const [device, setDevice] = useState<IDevice | null>(null);
+  const [device, setDevice] = useState<DeviceRecord | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [noteOpen, setNoteOpen] = useState(false);

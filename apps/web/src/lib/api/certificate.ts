@@ -5,10 +5,10 @@ import type {
   ReapplyCertificateDto,
 } from '@asko/shared/client';
 import type {
-  ICertificate,
+  CertificateRecord,
   CertificateResponse,
   PaginatedCertificates,
-  ProcessInvoiceResult,
+  ProcessInvoice,
 } from './types';
 import { api } from './client';
 
@@ -18,8 +18,8 @@ export const certificateApi = {
   },
 
   async getMy() {
-    const { data } = await api.get<{ certificates: ICertificate[] }>('/certificates/my');
-    return { data: (data?.certificates ?? []) as ICertificate[] };
+    const { data } = await api.get<{ certificates: CertificateRecord[] }>('/certificates/my');
+    return { data: (data?.certificates ?? []) as CertificateRecord[] };
   },
 
   getDealer(params?: { page?: number; limit?: number; search?: string; status?: string; dateFrom?: string; dateTo?: string }) {
@@ -31,19 +31,19 @@ export const certificateApi = {
   },
 
   add(data: AddCertificateDto) {
-    return api.post<ICertificate>('/certificates/add', data);
+    return api.post<CertificateRecord>('/certificates/add', data);
   },
 
   create(data: CreateCertificateDto) {
-    return api.post<ICertificate>('/certificates/create', data);
+    return api.post<CertificateRecord>('/certificates/create', data);
   },
 
   selfCreate(data: SelfCreateCertificateDto) {
-    return api.post<{ certificate: ICertificate }>('/certificates/self-create', data);
+    return api.post<{ certificate: CertificateRecord }>('/certificates/self-create', data);
   },
 
   reapply(id: string, data: ReapplyCertificateDto) {
-    return api.post<ICertificate>(`/certificates/${id}/reapply`, data);
+    return api.post<CertificateRecord>(`/certificates/${id}/reapply`, data);
   },
 
   calculatePrice(userDeviceId: string, durationMonths: number) {
@@ -53,15 +53,15 @@ export const certificateApi = {
   },
 
   revoke(id: string) {
-    return api.post<ICertificate>(`/certificates/${id}/revoke`);
+    return api.post<CertificateRecord>(`/certificates/${id}/revoke`);
   },
 
   pay(certId: string) {
-    return api.post<ProcessInvoiceResult>(`/certificates/${certId}/pay`);
+    return api.post<ProcessInvoice>(`/certificates/${certId}/pay`);
   },
 
   dummyPay(certId: string) {
-    return api.post<ProcessInvoiceResult>(`/certificates/${certId}/dummy-pay`);
+    return api.post<ProcessInvoice>(`/certificates/${certId}/dummy-pay`);
   },
 
   generatePdf(certId: string, force?: boolean) {

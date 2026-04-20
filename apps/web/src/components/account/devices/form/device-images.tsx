@@ -8,11 +8,11 @@ import { Loader2 } from 'lucide-react';
 import { Button, CropModal } from '@asko/ui';
 import { deviceApi } from '@/lib/api/device';
 import { fileUploadApi } from '@/lib/api/file-upload';
-import type { IImageAttachment } from '@/lib/api/types';
+import type { ImageRecord } from '@/lib/api/types';
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from './constants';
 
 export function DeviceImages({ deviceId }: { deviceId: string }) {
-  const [images, setImages] = useState<IImageAttachment[]>([]);
+  const [images, setImages] = useState<ImageRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);

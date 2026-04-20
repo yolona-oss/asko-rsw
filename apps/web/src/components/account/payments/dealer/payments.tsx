@@ -23,9 +23,9 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { useEntityDetail } from '@/hooks/use-entity-detail';
 import { EntityDetailModal } from '@/components/account/_shared/entity-detail-modal';
 import { WithdrawModal } from '@/components/account/payments/dealer/withdraw-modal';
-import { paymentApi, type PaymentRecord } from '@/lib/api/payment';
+import { paymentApi } from '@/lib/api/payment';
 import { dealerApi } from '@/lib/api/dealer';
-import type { IPointsTransaction } from '@/lib/api/types';
+import type { PointsTransactionRecord, PaymentRecord } from '@/lib/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getMyWithdraws } from '@/store/withdraw-slice';
 import {
@@ -50,7 +50,7 @@ function makeBuckets(range: DateRange): ChartBucket[] {
   return buckets;
 }
 
-function bucketPointsIncome(transactions: IPointsTransaction[], range: DateRange): ChartBucket[] {
+function bucketPointsIncome(transactions: PointsTransactionRecord[], range: DateRange): ChartBucket[] {
   const rangeMs = range.end.getTime() - range.start.getTime();
   const bucketMs = rangeMs <= 60 * 86400000 ? 86400000 : 7 * 86400000;
   const buckets = makeBuckets(range);
@@ -91,7 +91,7 @@ const PAYMENT_STATUS_FILTER = { key: 'status', label: 'Статус', type: 'sel
 
 // ─── Columns ───────────────────────────────────────────────────────────────
 
-const pointsColumns: DataGridColumn<IPointsTransaction>[] = [
+const pointsColumns: DataGridColumn<PointsTransactionRecord>[] = [
   { key: 'reason', header: 'Описание', sortable: false, mobileLabel: 'Описание:', render: (tx) => <span className="text-sm text-text-main">{tx.reason}</span> },
   { key: 'amount', header: 'Сумма', width: 120, mobileLabel: 'Сумма:', render: (tx) => <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-success' : 'text-brand-red'}`}>{tx.amount > 0 ? '+' : ''}{formatAmount(tx.amount)}</span> },
   { key: 'type', header: 'Тип', sortable: false, width: 130, mobileLabel: 'Тип:', render: (tx) => <Badge variant={POINTS_TX_BADGE_VARIANT[tx.type] ?? 'neutral'}>{POINTS_TX_LABELS[tx.type] ?? tx.type}</Badge> },
@@ -113,13 +113,13 @@ export function DealerPayments() {
 
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [paymentsTotal, setPaymentsTotal] = useState(0);
-  const [pointsHistory, setPointsHistory] = useState<IPointsTransaction[]>([]);
+  const [pointsHistory, setPointsHistory] = useState<PointsTransactionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [pointsBalance, setPointsBalance] = useState(0);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   // Detail modals
-  const pointsDetail = useEntityDetail<IPointsTransaction>();
+  const pointsDetail = useEntityDetail<PointsTransactionRecord>();
   const paymentDetail = useEntityDetail<PaymentRecord>();
 
   // Points view
@@ -243,7 +243,7 @@ export function DealerPayments() {
         viewSwitcher={<ViewSwitcher views={[VIEW_TABLE, VIEW_CARD]} activeView={pointsView} onViewChange={setPointsView} />}
       />
       {pointsView === 'table' ? (
-        <DataGrid<IPointsTransaction> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} onRowClick={pointsDetail.onRowClick} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
+        <DataGrid<PointsTransactionRecord> loading={loading} columns={pointsColumns} data={filteredPoints} keyExtractor={(tx) => tx.id} emptyContent="Нет операций" sortKey={pointsSortBy ?? undefined} sortOrder={pointsSortOrder ?? undefined} onSort={(k, o) => { setPointsSortBy(k); setPointsSortOrder(o); }} onRowClick={pointsDetail.onRowClick} footer={<>Показано {filteredPoints.length} из {pointsHistory.length}</>} />
       ) : loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-36" />)}

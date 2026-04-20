@@ -1,11 +1,11 @@
 'use client';
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { IAuthUser } from '@/lib/api/types';
+import type { AuthUser } from '@/lib/api/types';
 
 export interface AuthState {
   accessToken: string | null;
-  user: IAuthUser | null;
+  user: AuthUser | null;
 }
 
 const initialState: AuthState = {
@@ -17,7 +17,7 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials(state, action: PayloadAction<{ accessToken: string; user: IAuthUser }>) {
+    setCredentials(state, action: PayloadAction<{ accessToken: string; user: AuthUser }>) {
       state.accessToken = action.payload.accessToken;
       state.user = action.payload.user;
     },

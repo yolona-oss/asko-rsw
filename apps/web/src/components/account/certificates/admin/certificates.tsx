@@ -19,7 +19,7 @@ import { CertificateStatus, formatDate } from '@asko/shared/client';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { certificateApi } from '@/lib/api/certificate';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import { STATUS_FILTER, STATUS_BADGE_VARIANT, STATUS_LABELS } from './constants';
 import type { CertTab } from './types';
 import { CertificateCard } from './certificate-card';
@@ -27,9 +27,9 @@ import { CertificateCard } from './certificate-card';
 const PAGE_SIZE = 20;
 
 export function AdminCertificates() {
-  const detail = useEntityDetail<ICertificate>();
+  const detail = useEntityDetail<CertificateRecord>();
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'active' });
-  const [certificates, setCertificates] = useState<ICertificate[]>([]);
+  const [certificates, setCertificates] = useState<CertificateRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,7 @@ export function AdminCertificates() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const columns: DataGridColumn<ICertificate>[] = useMemo(() => [
+  const columns: DataGridColumn<CertificateRecord>[] = useMemo(() => [
     {
       key: 'certificateNumber',
       header: 'Номер',
@@ -138,7 +138,7 @@ export function AdminCertificates() {
     },
   ], []);
 
-  const rowMenu = (cert: ICertificate): DropdownMenuEntry[] => {
+  const rowMenu = (cert: CertificateRecord): DropdownMenuEntry[] => {
     const items: DropdownMenuEntry[] = [];
     if (cert.status === CertificateStatus.ACTIVE) {
       items.push({ key: 'revoke', label: 'Отозвать', variant: 'danger', onClick: () => handleRevoke(cert.id) });

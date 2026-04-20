@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { Product, SpecRow } from '@/lib/devices';
+import type { Product, SpecRow } from '@/components/devices/types';
 import type { DeviceRecord } from '@/lib/api/types';
 import { Container, SkeletonBlock } from '@asko/ui';
 import { ProductGallery } from '@/components/devices/product-gallery';

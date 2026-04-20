@@ -3,7 +3,7 @@
 import { Card, ContextMenuArea, buildCardMenuItems } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
-import type { IArticle } from '@/lib/api/types';
+import type { ArticleResponse } from '@/lib/api/types';
 
 export function ArticleCard({
   article,
@@ -11,7 +11,7 @@ export function ArticleCard({
   onClick,
   onDoubleClick,
 }: {
-  article: IArticle;
+  article: ArticleResponse;
   onDelete: (id: string) => void;
   onClick?: () => void;
   onDoubleClick?: () => void;

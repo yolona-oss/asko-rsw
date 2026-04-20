@@ -10,7 +10,7 @@ import { ConversationList } from './conversation-list';
 import { ConversationPanel } from './conversation-panel';
 import { ChatEmptyState } from './chat-empty-state';
 import { NewConversationDialog } from './new-conversation-dialog';
-import type { ChatConversation, ChatMessage } from '@/lib/chat-types';
+import type { ConversationRecord, ChatMessageRecord } from '@/lib/api/types';
 
 interface ChatLayoutProps {
   currentUserId: string;
@@ -20,12 +20,12 @@ interface ChatLayoutProps {
 export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [activeConversation, setActiveConversation] = useState<ChatConversation | null>(null);
+  const [activeConversation, setActiveConversation] = useState<ConversationRecord | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [uploadingUsers, setUploadingUsers] = useState<Map<string, { conversationId: string; type: string }>>(new Map());
-  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
+  const [realtimeMessages, setRealtimeMessages] = useState<ChatMessageRecord[]>([]);
   const [readPositions, setReadPositions] = useState<Record<string, string>>({});
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const uploadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -78,13 +78,13 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
   }, [initialConversationId, router]);
 
   const socketActions = useChatSocket({
-    onNewMessage: useCallback((message: ChatMessage) => {
+    onNewMessage: useCallback((message: ChatMessageRecord) => {
       setRealtimeMessages(prev => [...prev, message]);
       // Update conversations list
       queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });
     }, [queryClient]),
 
-    onMessageUpdated: useCallback((message: ChatMessage) => {
+    onMessageUpdated: useCallback((message: ChatMessageRecord) => {
       queryClient.invalidateQueries({ queryKey: ['chat-messages', message.conversationId] });
     }, [queryClient]),
 
@@ -178,7 +178,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
     }, [queryClient]),
   });
 
-  const handleSelectConversation = useCallback((conversation: ChatConversation) => {
+  const handleSelectConversation = useCallback((conversation: ConversationRecord) => {
     // Clear realtime messages and bootstrap read positions from participant data
     setRealtimeMessages([]);
     const positions: Record<string, string> = {};
@@ -193,7 +193,7 @@ export function ChatLayout({ currentUserId, initialConversationId }: ChatLayoutP
     setActiveConversation(null);
   }, []);
 
-  const handleConversationCreated = useCallback((conversation: ChatConversation) => {
+  const handleConversationCreated = useCallback((conversation: ConversationRecord) => {
     setShowNewChat(false);
     setActiveConversation(conversation);
     queryClient.invalidateQueries({ queryKey: ['chat-conversations'] });

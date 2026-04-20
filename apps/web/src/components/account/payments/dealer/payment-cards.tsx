@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge, Card } from '@asko/ui';
-import type { PaymentRecord } from '@/lib/api/payment';
+import type { PaymentRecord } from '@/lib/api/types';
 import { formatDateTime, formatAmount } from '@asko/shared/client';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS } from './constants';
 

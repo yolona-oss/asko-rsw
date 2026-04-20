@@ -9,7 +9,7 @@ import {
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { User } from 'lucide-react';
-import type { IRepairer } from '@/lib/api/types';
+import type { RepairerRecord } from '@/lib/api/types';
 import { repairerName } from './constants';
 
 export function RepairerCard({
@@ -17,7 +17,7 @@ export function RepairerCard({
   menuItems,
   onClick,
 }: {
-  repairer: IRepairer;
+  repairer: RepairerRecord;
   menuItems: DropdownMenuEntry[];
   onClick?: () => void;
 }) {

@@ -9,7 +9,7 @@ import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
 import { broadcastLogout } from './client';
 import type { LoginCredentials, CreateUserDto } from '@asko/shared/client';
-import type { IAuthSession } from './types';
+import type { AuthSession } from './types';
 
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 

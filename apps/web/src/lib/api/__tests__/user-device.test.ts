@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockApi, type MockApi } from './client-mock';
-import type { IUserDevice } from '../types';
+import type { UserDeviceRecord } from '../types';
 
 let mockApi: MockApi;
 vi.mock('../client', () => {
@@ -23,9 +23,9 @@ beforeEach(() => {
 
 describe('getMy', () => {
   it('returns unwrapped userDevices on success', async () => {
-    const devices: IUserDevice[] = [
-      { id: 'ud-1', deviceId: 'dev-1' } as IUserDevice,
-      { id: 'ud-2', deviceId: 'dev-2' } as IUserDevice,
+    const devices: UserDeviceRecord[] = [
+      { id: 'ud-1', deviceId: 'dev-1' } as UserDeviceRecord,
+      { id: 'ud-2', deviceId: 'dev-2' } as UserDeviceRecord,
     ];
     mockApi.get.mockResolvedValue({ data: { userDevices: devices } });
 

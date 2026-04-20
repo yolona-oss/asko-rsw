@@ -39,18 +39,18 @@ function SlotPopoverContent({ index, slot, defaultStart, defaultEnd, onClose, on
   const isWork = !!slot?.work;
 
   const handleMakeWork = () => {
-    onSave({ work: true, startTime: null, endTime: null });
+    onSave({ work: true });
     onClose();
   };
 
   const handleMakeRest = () => {
-    onSave({ work: false, startTime: null, endTime: null });
+    onSave({ work: false });
     onClose();
   };
 
   const handleSaveTimes = () => {
-    const startOverride = start === defaultStart ? null : start;
-    const endOverride = end === defaultEnd ? null : end;
+    const startOverride = start === defaultStart ? undefined : start;
+    const endOverride = end === defaultEnd ? undefined : end;
     onSave({ work: true, startTime: startOverride, endTime: endOverride });
     onClose();
   };

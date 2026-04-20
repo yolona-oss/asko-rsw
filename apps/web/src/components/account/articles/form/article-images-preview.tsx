@@ -5,10 +5,10 @@ import { getImageUrl } from '@/lib/image-url';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { articleApi } from '@/lib/api/article';
-import type { IImageAttachment } from '@/lib/api/types';
+import type { ImageRecord } from '@/lib/api/types';
 
 export function ArticleImagesPreview({ articleId }: { articleId: string }) {
-    const [images, setImages] = useState<IImageAttachment[]>([]);
+    const [images, setImages] = useState<ImageRecord[]>([]);
 
     useEffect(() => {
         (async () => {

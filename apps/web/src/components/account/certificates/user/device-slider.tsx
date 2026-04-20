@@ -7,12 +7,12 @@ import { CertificateStatus } from '@asko/shared/client';
 import { deviceApi } from '@/lib/api/device';
 import { getImageUrl } from '@/lib/image-url';
 import { getPlaceholderSrc } from '@/lib/placeholders';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import type { UserDevice } from './types';
 
 type DeviceCertKind = 'none' | 'active' | 'expired';
 
-function resolveKind(deviceId: string, certificates: ICertificate[]): DeviceCertKind {
+function resolveKind(deviceId: string, certificates: CertificateRecord[]): DeviceCertKind {
   const forDevice = certificates.filter(
     (c) =>
       c.userDeviceId === deviceId &&
@@ -44,7 +44,7 @@ export function DeviceSlider({
   onCreateCertificate,
 }: {
   devices: UserDevice[];
-  certificates: ICertificate[];
+  certificates: CertificateRecord[];
   loading: boolean;
   onEditAddress?: (device: UserDevice) => void;
   onCreateCertificate?: (device: UserDevice, mode?: 'create' | 'extend' | 'new') => void;
@@ -77,7 +77,7 @@ function DeviceSliderCard({
   onCreateCertificate,
 }: {
   device: UserDevice;
-  certificates: ICertificate[];
+  certificates: CertificateRecord[];
   onEditAddress?: (device: UserDevice) => void;
   onCreateCertificate?: (device: UserDevice, mode?: 'create' | 'extend' | 'new') => void;
 }) {

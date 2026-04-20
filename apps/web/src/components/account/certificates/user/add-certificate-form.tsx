@@ -18,24 +18,24 @@ import {
 } from '@asko/shared/client';
 import { certificateApi } from '@/lib/api/certificate';
 import { userDeviceApi } from '@/lib/api/user-device';
-import type { ICertificate } from '@/lib/api/types';
+import type { CertificateRecord } from '@/lib/api/types';
 import type { UserDevice } from './types';
 
 type DeviceCertState =
   | { kind: 'none' }
-  | { kind: 'active'; cert: ICertificate }
-  | { kind: 'expired'; cert: ICertificate };
+  | { kind: 'active'; cert: CertificateRecord }
+  | { kind: 'expired'; cert: CertificateRecord };
 
 type RenewalMode = 'extend' | 'new';
 
-function isExpired(cert: ICertificate): boolean {
+function isExpired(cert: CertificateRecord): boolean {
   return (
     cert.status === CertificateStatus.EXPIRED ||
     new Date(cert.expiresAt).getTime() < Date.now()
   );
 }
 
-function isActiveOrPending(cert: ICertificate): boolean {
+function isActiveOrPending(cert: CertificateRecord): boolean {
   return (
     (cert.status === CertificateStatus.ACTIVE ||
       cert.status === CertificateStatus.PENDING_PAYMENT) &&
@@ -49,7 +49,7 @@ function isActiveOrPending(cert: ICertificate): boolean {
  */
 function resolveDeviceCertState(
   deviceId: string,
-  certificates: ICertificate[],
+  certificates: CertificateRecord[],
 ): DeviceCertState {
   const forDevice = certificates.filter(
     (c) =>
@@ -93,9 +93,9 @@ export function AddCertificateForm({
 }: {
   open: boolean;
   onClose: () => void;
-  onSuccess: (cert: ICertificate) => void;
+  onSuccess: (cert: CertificateRecord) => void;
   onOpenAddDevice?: () => void;
-  certificates: ICertificate[];
+  certificates: CertificateRecord[];
   initialDeviceId?: string;
   initialRenewalMode?: RenewalMode;
 }) {
@@ -215,7 +215,7 @@ export function AddCertificateForm({
         const useExtend =
           selectedDeviceState.kind === 'expired' && renewalMode === 'extend';
 
-        let newCert: ICertificate;
+        let newCert: CertificateRecord;
         if (useExtend) {
           const { data } = await certificateApi.reapply(selectedDeviceState.cert.id, {
             durationMonths,

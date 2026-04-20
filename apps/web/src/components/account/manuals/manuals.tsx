@@ -18,13 +18,13 @@ import type { DataGridColumn, SortOrder } from '@asko/ui';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { useDeviceCategories, buildCategoryLabelMap } from '@/hooks/use-device-categories';
-import type { IDevice } from '@/lib/api/types';
+import type { DeviceRecord } from '@/lib/api/types';
 import Link from 'next/link';
 
 export function RepairerManuals() {
   const router = useRouter();
-  const detail = useEntityDetail<IDevice>();
-  const [devices, setDevices] = useState<IDevice[]>([]);
+  const detail = useEntityDetail<DeviceRecord>();
+  const [devices, setDevices] = useState<DeviceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('card');
   const [search, setSearch] = useState('');
@@ -61,7 +61,7 @@ export function RepairerManuals() {
     });
   }, [filteredDevices, sortBy, sortOrder]);
 
-  const columns: DataGridColumn<IDevice>[] = useMemo(() => [
+  const columns: DataGridColumn<DeviceRecord>[] = useMemo(() => [
     {
       key: 'name',
       header: 'Название',

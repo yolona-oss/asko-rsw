@@ -2,7 +2,7 @@
 
 import { DropdownMenu } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
-import type { IAuthUser } from '@/lib/api/types';
+import type { AuthUser } from '@/lib/api/types';
 
 export function SettingsDropdown({
   user,
@@ -10,7 +10,7 @@ export function SettingsDropdown({
   onDelete,
   loading,
 }: {
-  user: IAuthUser;
+  user: AuthUser;
   onToggleActive: (id: string, active: boolean) => void;
   onDelete: (id: string) => void;
   loading: boolean;

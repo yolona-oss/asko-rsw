@@ -3,8 +3,11 @@ import type {
   UpdateDeviceDto,
 } from '@asko/shared/client';
 import type {
-  IDevice,
-  IImageAttachment,
+  DeleteCount,
+  DevicePartList,
+  DevicePartResponse,
+  DeviceRecord,
+  ImageRecord,
   PaginatedDevices,
 } from './types';
 import { api } from './client';
@@ -15,11 +18,11 @@ export const deviceApi = {
   },
 
   getOne(id: string) {
-    return api.get<IDevice>(`/devices/${id}`);
+    return api.get<DeviceRecord>(`/devices/${id}`);
   },
 
   create(data: CreateDeviceDto) {
-    return api.post<IDevice>('/devices', data);
+    return api.post<DeviceRecord>('/devices', data);
   },
 
   importDevices(products: CreateDeviceDto[]) {
@@ -27,7 +30,7 @@ export const deviceApi = {
   },
 
   update(id: string, data: UpdateDeviceDto) {
-    return api.patch<IDevice>(`/devices/${id}`, data);
+    return api.patch<DeviceRecord>(`/devices/${id}`, data);
   },
 
   delete(id: string) {
@@ -35,20 +38,20 @@ export const deviceApi = {
   },
 
   deleteAll() {
-    return api.delete<{ count: number }>('/devices/all');
+    return api.delete<DeleteCount>('/devices/all');
   },
 
   // Parts
   getParts(deviceId: string) {
-    return api.get<{ parts: any[] }>(`/devices/${deviceId}/parts`);
+    return api.get<DevicePartList>(`/devices/${deviceId}/parts`);
   },
 
   createPart(deviceId: string, data: { name: string; partNumber?: string; price?: number; description?: string }) {
-    return api.post<{ part: any }>(`/devices/${deviceId}/parts`, data);
+    return api.post<DevicePartResponse>(`/devices/${deviceId}/parts`, data);
   },
 
   updatePart(deviceId: string, partId: string, data: { name?: string; partNumber?: string; price?: number; description?: string }) {
-    return api.patch<{ part: any }>(`/devices/${deviceId}/parts/${partId}`, data);
+    return api.patch<DevicePartResponse>(`/devices/${deviceId}/parts/${partId}`, data);
   },
 
   deletePart(deviceId: string, partId: string) {
@@ -57,7 +60,7 @@ export const deviceApi = {
 
   // Images
   getImages(deviceId: string) {
-    return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/images`);
+    return api.get<{ images: ImageRecord[] }>(`/devices/${deviceId}/images`);
   },
 
   deleteImage(deviceId: string, imageId: string) {
@@ -70,7 +73,7 @@ export const deviceApi = {
 
   // Part images
   getPartImages(deviceId: string, partId: string) {
-    return api.get<{ images: IImageAttachment[] }>(`/devices/${deviceId}/parts/${partId}/images`);
+    return api.get<{ images: ImageRecord[] }>(`/devices/${deviceId}/parts/${partId}/images`);
   },
 
   deletePartImage(deviceId: string, partId: string, imageId: string) {

@@ -4,10 +4,10 @@ import type {
   IUser,
 } from '@asko/shared/client';
 import type {
-  IDealerProfile,
-  IDealerClient,
-  ICertificate,
-  IPointsWithdrawal,
+  DealerProfileRecord,
+  DealerClientRecord,
+  CertificateRecord,
+  WithdrawalRecord,
   PaginatedPoints,
   PaginatedCertificates,
   PaginatedDevices,
@@ -19,11 +19,11 @@ export type SearchedUser = Pick<IUser, 'id' | 'firstName' | 'lastName' | 'email'
 
 export const dealerApi = {
   getProfile() {
-    return api.get<{ profile: IDealerProfile }>('/dealers/profile');
+    return api.get<{ profile: DealerProfileRecord }>('/dealers/profile');
   },
 
   getClients() {
-    return api.get<{ clients: IDealerClient[] }>('/dealers/clients');
+    return api.get<{ clients: DealerClientRecord[] }>('/dealers/clients');
   },
 
   searchUser(email: string) {
@@ -46,14 +46,14 @@ export const dealerApi = {
   },
 
   createCertificate(data: CreateCertificateDto) {
-    return api.post<ICertificate>('/certificates/create', data);
+    return api.post<CertificateRecord>('/certificates/create', data);
   },
 
   requestWithdraw(amount: number, cardNumber: string, cardHolderName: string) {
-    return api.post<IPointsWithdrawal>('/dealers/withdraw', { amount, cardNumber, cardHolderName } satisfies RequestPointsWithdrawalDto);
+    return api.post<WithdrawalRecord>('/dealers/withdraw', { amount, cardNumber, cardHolderName } satisfies RequestPointsWithdrawalDto);
   },
 
   getMyWithdrawals() {
-    return api.get<{ withdrawals: IPointsWithdrawal[] }>('/dealers/withdrawals');
+    return api.get<{ withdrawals: WithdrawalRecord[] }>('/dealers/withdrawals');
   },
 };

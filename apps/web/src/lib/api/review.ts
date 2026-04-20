@@ -1,17 +1,17 @@
 import type { CreateReviewDto } from '@asko/shared/client';
 import type {
-  IReview,
+  ReviewRecord,
   PaginatedReviews,
 } from './types';
 import { api } from './client';
 
 export const reviewApi = {
   create(data: CreateReviewDto) {
-    return api.post<IReview>('/reviews', data);
+    return api.post<ReviewRecord>('/reviews', data);
   },
 
   getMy() {
-    return api.get<IReview[]>('/reviews/my', { _silent: true } as any);
+    return api.get<ReviewRecord[]>('/reviews/my', { _silent: true } as any);
   },
 
   getByRepairer(repairerId: string) {
@@ -27,7 +27,7 @@ export const reviewApi = {
   },
 
   getByRequest(requestId: string) {
-    return api.get<{ review: IReview }>(`/reviews/request/${requestId}`, { _silent: true } as any);
+    return api.get<{ review: ReviewRecord }>(`/reviews/request/${requestId}`, { _silent: true } as any);
   },
 
 };

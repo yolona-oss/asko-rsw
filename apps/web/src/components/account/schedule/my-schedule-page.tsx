@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/account/layout/page-header';
 import { useAccount } from '@/components/account/layout/provider';
 import { primaryRole } from '@/lib/account';
 import { scheduleApi } from '@/lib/api/schedule';
-import type { PatternRecordDto, ScheduleEntryRecord } from '@/lib/api/schedule';
+import type { SchedulePatternRecord, ScheduleEntryRecord } from '@/lib/api/schedule';
 import { ScheduleFormModal } from './schedule-form-modal';
 import { ScheduleReportModal } from './schedule-report-modal';
 import { PatternEditor } from './pattern-editor';
@@ -37,7 +37,7 @@ export function MySchedulePage({ targetUserId, targetUserName, canEdit = true, c
   // Delete is restricted to admins (super_admin + admin map to 'admin' client-side).
   const canDelete = role === 'admin';
 
-  const [pattern, setPattern] = useState<PatternRecordDto | null>(null);
+  const [pattern, setPattern] = useState<SchedulePatternRecord | null>(null);
   const [dateEntries, setDateEntries] = useState<ScheduleEntryRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
