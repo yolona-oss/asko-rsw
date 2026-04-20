@@ -12,7 +12,7 @@ import { useAppSelector, useAppDispatch } from '@/store/index';
 import {
     selectTheme, toggleTheme as toggleThemeAction,
     selectLayout, toggleSidebarCollapsed, setMobileMenuOpen,
-} from '@/store/preferences-slice';
+} from '@/store/preferences';
 import { menuByRole, primaryRole } from '@/lib/account';
 import { useLogout } from '@/lib/api/use-auth';
 import { selectMenuBadges } from '@/store/notifications';

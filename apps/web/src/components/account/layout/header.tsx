@@ -6,7 +6,7 @@ import { Dialog, DropdownMenu, SkeletonCircle } from '@asko/ui';
 import type { DropdownMenuEntry } from '@asko/ui';
 import { useAccount } from './provider';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectLayout, setMobileMenuOpen } from '@/store/preferences-slice';
+import { selectLayout, setMobileMenuOpen } from '@/store/preferences';
 import { useFormGuardContext } from './form-guard-context';
 import { useLogout } from '@/lib/api/use-auth';
 import { useRouter } from 'next/navigation';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectLanguage, setLanguage } from '@/store/preferences-slice';
+import { selectLanguage, setLanguage } from '@/store/preferences';
 import { usersApi } from '@/lib/api/users';
 import type { Locale } from '@asko/shared/client';
 import { SUPPORTED_LOCALES } from '@asko/shared/client';

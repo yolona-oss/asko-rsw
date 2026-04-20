@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setCredentials, logout as logoutAction } from '@/store/auth-slice';
+import { setCredentials, logout as logoutAction } from '@/store/auth';
 import { AuthReadyContext } from '@/store/providers';
 import { authApi } from './auth';
 import { broadcastLogout } from './client';

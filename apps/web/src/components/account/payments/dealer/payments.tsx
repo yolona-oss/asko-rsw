@@ -27,7 +27,7 @@ import { paymentApi } from '@/lib/api/payment';
 import { dealerApi } from '@/lib/api/dealer';
 import type { PointsTransactionRecord, PaymentRecord } from '@/lib/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { getMyWithdraws } from '@/store/withdraw-slice';
+import { getMyWithdraws } from '@/store/withdraw';
 import {
   POINTS_TX_LABELS, POINTS_TX_BADGE_VARIANT,
   STATUS_LABELS, STATUS_BADGE_VARIANT, TARGET_LABELS,

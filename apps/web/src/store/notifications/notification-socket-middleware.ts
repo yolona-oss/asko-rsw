@@ -1,6 +1,6 @@
 import type { Middleware } from '@reduxjs/toolkit';
 import { io, type Socket } from 'socket.io-client';
-import { setCredentials, setAccessToken, logout } from '../auth-slice';
+import { setCredentials, setAccessToken, logout } from '../auth';
 import {
     notificationReceived,
     unreadCountUpdated,

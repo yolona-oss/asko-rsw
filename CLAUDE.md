@@ -145,6 +145,7 @@ Prometheus metrics + Pino logger. `collectDefaultMetrics()` in constructor.
 
 **Frontend**:
 * `'use client'`: Axios from `src/lib/api/client.ts`. Server: `serverGet()` from `server-fetch.ts`.
+* **Response types from OpenAPI only** — frontend uses auto-generated types from `api.gen.d.ts` (via `./scripts/openapi.sh`) for all API response shapes. Never replace generated DTO types with manual interfaces from `@asko/shared`. Enums and request DTOs may be imported from `@asko/shared/client`.
 * File uploads: use `fileUploadApi.uploadXxxImage(file, ownerId)` target-specific helpers. No domain-specific upload methods on other API modules.
 * OAuth: server-side redirect flow via `/auth/oauth/:provider`. Callback page at `/auth/callback` with Suspense boundary.
 * No backward compatibility unless requested — migrate consumers, delete old code.

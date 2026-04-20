@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/api/use-auth';
 import { authApi } from '@/lib/api/auth';
 import { useAppDispatch } from '@/store';
-import { setAccessToken, logout } from '@/store/auth-slice';
+import { setAccessToken, logout } from '@/store/auth';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 
 /**

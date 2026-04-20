@@ -4,8 +4,8 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, createContext, type ReactNode } from 'react';
 import { store, useAppDispatch, useAppSelector } from './index';
-import { setCredentials } from './auth-slice';
-import { fetchNotificationPreferences, selectTheme } from './preferences-slice';
+import { setCredentials } from './auth';
+import { fetchNotificationPreferences, selectTheme } from './preferences';
 import { authApi } from '@/lib/api/auth';
 import { ErrorModal } from '@/components/error-modal';
 

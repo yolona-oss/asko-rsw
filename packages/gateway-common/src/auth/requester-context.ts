@@ -9,7 +9,7 @@ export function buildRequesterContext(user?: AccessTokenPayload): RequesterConte
     if (!user) return undefined;
     return {
         requesterId: user.sub,
-        requesterRoles: user.roles?.map(String) ?? [],
+        requesterRoles: user.roles.map(String),
         isInternal: false,
     };
 }

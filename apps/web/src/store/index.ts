@@ -2,10 +2,10 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import authReducer from './auth-slice';
-import paymentReducer from './payment-slice';
-import withdrawReducer from './withdraw-slice';
-import preferencesReducer from './preferences-slice';
+import { authReducer } from './auth';
+import { paymentReducer } from './payment';
+import { withdrawReducer } from './withdraw';
+import { preferencesReducer } from './preferences';
 import { notificationReducer, notificationSocketMiddleware } from './notifications';
 import { soundListenerMiddleware } from './sound';
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Modal, SkeletonBlock } from '@asko/ui';
 import { Loader2, X, FlaskConical, CreditCard, Landmark, Banknote } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment-slice';
+import { fetchPaymentOptions, createPayment, resetPayment } from '@/store/payment';
 import { PaymentTargetType } from '@asko/shared/client';
 
 interface PaymentModalProps {

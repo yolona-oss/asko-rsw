@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store';
-import { setCredentials } from '@/store/auth-slice';
+import { setCredentials } from '@/store/auth';
 import { authApi } from '@/lib/api/auth';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 

@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Bell, X, ChevronDown, CheckCheck, PanelRightOpen, PanelRightClose, BellOff } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectLayout, setNotifPanelOpen, setNotifPanelMode } from '@/store/preferences-slice';
-import type { NotifPanelMode } from '@/store/preferences-slice';
+import { selectLayout, setNotifPanelOpen, setNotifPanelMode } from '@/store/preferences';
+import type { NotifPanelMode } from '@/store/preferences';
 import {
   selectUnreadNotifications,
   selectUnreadCount,

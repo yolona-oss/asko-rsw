@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal, Button, FormField } from '@asko/ui';
 import { X, CreditCard } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { requestWithdraw, resetWithdrawError } from '@/store/withdraw-slice';
+import { requestWithdraw, resetWithdrawError } from '@/store/withdraw';
 
 interface WithdrawModalProps {
   open: boolean;

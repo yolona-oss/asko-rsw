@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AccessToken } from './types';
 import { store } from '@/store';
-import { setAccessToken, logout } from '@/store/auth-slice';
+import { setAccessToken, logout } from '@/store/auth';
 import { errorStore, extractErrorMessage } from '../error-store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';

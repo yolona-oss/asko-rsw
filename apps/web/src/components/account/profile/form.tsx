@@ -18,7 +18,7 @@ import {
     setChatAcceptConversations as setChatAcceptAction,
     setChatSearchable as setChatSearchAction,
     setPrivacyRules as setPrivacyAction,
-} from '@/store/preferences-slice';
+} from '@/store/preferences';
 import { PageContainer } from '../layout/page-container';
 import { PageHeader } from '../layout/page-header';
 import { EditedMark } from '@/components/shared/edited-mark';

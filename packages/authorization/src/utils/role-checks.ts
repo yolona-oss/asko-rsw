@@ -4,15 +4,15 @@ const STAFF_ROLE_SET: ReadonlySet<Role> = new Set(STAFF_ROLES);
 const ADMIN_ROLE_SET: ReadonlySet<Role> = new Set(ADMIN_ROLES);
 
 export function isStaff(user: AccessTokenPayload): boolean {
-    return (user.roles ?? []).some((r) => STAFF_ROLE_SET.has(r));
+    return user.roles.some((r) => STAFF_ROLE_SET.has(r));
 }
 
 export function isAdmin(user: AccessTokenPayload): boolean {
-    return (user.roles ?? []).some((r) => ADMIN_ROLE_SET.has(r));
+    return user.roles.some((r) => ADMIN_ROLE_SET.has(r));
 }
 
 export function isSuperAdmin(user: AccessTokenPayload): boolean {
-    return (user.roles ?? []).includes(Role.SUPER_ADMIN);
+    return user.roles.includes(Role.SUPER_ADMIN);
 }
 
 export function isSelf(user: AccessTokenPayload, targetUserId: string): boolean {

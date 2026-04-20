@@ -28,7 +28,7 @@ import {
     updateNotificationPreferences,
     enableGroups as enableGroupsThunk,
     disableGroups as disableGroupsThunk,
-} from '@/store/preferences-slice';
+} from '@/store/preferences';
 import { usePushNotifications } from '@/lib/hooks/use-push-notifications';
 
 // ─── Helpers ────────────────────────────────────────────────────────

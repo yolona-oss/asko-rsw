@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Sun, Moon } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectTheme, toggleTheme } from '@/store/preferences-slice';
+import { selectTheme, toggleTheme } from '@/store/preferences';
 import { LandingHeader } from '@/components/landing/header';
 
 interface AuthImageShellProps {

@@ -8,7 +8,7 @@ import { Container } from '@asko/ui';
 import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/lib/api/use-auth';
 import { useAppSelector, useAppDispatch } from '@/store/index';
-import { selectTheme, toggleTheme as toggleThemeAction } from '@/store/preferences-slice';
+import { selectTheme, toggleTheme as toggleThemeAction } from '@/store/preferences';
 import { selectUnreadCount } from '@/store/notifications';
 
 const navLinks = [

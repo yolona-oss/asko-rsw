@@ -11,7 +11,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/index';
-import { selectTheme, selectLanguage, toggleTheme, setLanguage } from '@/store/preferences-slice';
+import { selectTheme, selectLanguage, toggleTheme, setLanguage } from '@/store/preferences';
 import { usersApi } from '@/lib/api/users';
 import { useFormGuardContext } from './form-guard-context';
 import { NotificationSettingsCompact } from '../notifications/notification-settings';

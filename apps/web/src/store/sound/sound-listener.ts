@@ -1,6 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
 import { playSound, startReminder, stopReminder } from './sound-actions';
-import { setSoundMuted, setReminderEnabled, setGlobalMute } from '../preferences-slice';
+import { setSoundMuted, setReminderEnabled, setGlobalMute } from '../preferences';
 import type { RootState } from '../index';
 
 const THROTTLE_MS = 2000;
