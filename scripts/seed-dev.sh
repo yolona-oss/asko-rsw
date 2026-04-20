@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Runs destructive dev seeders for core services. Wipes seeded tables and
-# reinserts a deterministic fixture set (10 users, devices, dealers, etc).
+# reinserts a deterministic fixture set (12 users, devices, dealers, etc).
 #
 # Uses NODE_ENV=dev so mikro-orm.config.ts loads apps/<svc>/.env.dev via
 # getEnvFilePath() — never .env.prod.
@@ -67,11 +67,28 @@ echo ""
 echo "Dev users (password: password123):"
 echo "  superadmin@asko.dev  — SUPER_ADMIN"
 echo "  admin@asko.dev       — ADMIN"
-echo "  dealer1@asko.dev     — DEALER"
-echo "  dealer2@asko.dev     — DEALER"
+echo "  dealer1@asko.dev     — DEALER      (ООО РемонтПро)"
+echo "  dealer2@asko.dev     — DEALER      (ИП Сервис+)"
 echo "  manager1@asko.dev    — MANAGER"
 echo "  manager2@asko.dev    — MANAGER"
-echo "  repairer1@asko.dev   — REPAIRER"
-echo "  repairer2@asko.dev   — REPAIRER"
-echo "  user1@asko.dev       — USER"
-echo "  user2@asko.dev       — USER"
+echo "  repairer1@asko.dev   — REPAIRER    (Москва, стиральные/посудомоечные)"
+echo "  repairer2@asko.dev   — REPAIRER    (СПб, холодильники/духовки)"
+echo "  user1@asko.dev       — USER        (Иван Иванов, Москва)"
+echo "  user2@asko.dev       — USER        (Петр Петров, СПб)"
+echo "  user3@asko.dev       — USER        (Мария Сидорова, Москва)"
+echo "  user4@asko.dev       — USER        (Алексей Козлов, Москва)"
+echo ""
+echo "Repair requests:"
+echo "  RR1  user1  PENDING                стиральная машина — не сливает воду"
+echo "  RR2  user2  ASSIGNED → repairer2   холодильник — посторонний гул"
+echo "  RR3  user3  IN_PROGRESS → rep1     посудомойка — протечка (4 шага, 3 детали)"
+echo "  RR4  user1  COMPLETED → rep1       духовой шкаф — не набирает температуру (отзыв 5★)"
+echo "  RR5  user4  CANCELLED              варочная панель — не включается конфорка"
+echo "  RR6  user2  AWAITING_COMPLETION    духовой шкаф — не реагирует на кнопки"
+echo ""
+echo "Certificates:"
+echo "  CERT-DEV-0001  user1  ACTIVE           стиральная машина"
+echo "  CERT-DEV-0002  user2  PENDING_PAYMENT  холодильник"
+echo "  CERT-DEV-0003  user3  ACTIVE           посудомоечная машина"
+echo ""
+echo "Content: 5 articles, tags, edges, views"
