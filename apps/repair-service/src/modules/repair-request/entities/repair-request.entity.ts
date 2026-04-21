@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum, OptionalProps } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum, OptionalProps, Index } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 import { RepairRequestStatus, AvrStatus, type ICertificateSnapshot, type IStatusTimestampEntry } from '@asko/shared';
 import { UserDevice } from 'modules/device/entities/user-device.entity';
@@ -10,7 +10,7 @@ import { BrokenPart } from './broken-part.entity';
 
 @Entity()
 export class RepairRequest {
-    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps' | 'scheduleEndNotifiedAt' | 'scheduleEndConfirmedAt' | 'isCrossCity' | 'timezoneOffsetHours';
+    [OptionalProps]?: 'status' | 'preferredDate' | 'totalCost' | 'refundRequested' | 'refundReason' | 'refuseReason' | 'completionNote' | 'statusBeforePause' | 'statusBeforeRefund' | 'conversationId' | 'chatCloseAt' | 'stepsLocked' | 'certificateValid' | 'certificateSnapshot' | 'certificateCoveredCost' | 'certificateCostOverridden' | 'repairer' | 'manager' | 'certificate' | 'address' | 'createdAt' | 'updatedAt' | 'completionSignature' | 'completionSignedPayload' | 'acceptanceSignature' | 'acceptanceSignedPayload' | 'avrStatus' | 'avrSigningMethod' | 'avrDocumentId' | 'avrSignedDocumentId' | 'avrSignedAt' | 'avrSignedPayload' | 'avrSignature' | 'statusTimestamps' | 'scheduleEndNotifiedAt' | 'scheduleEndConfirmedAt' | 'isCrossCity' | 'timezoneOffsetHours';
 
     @PrimaryKey()
     id: string = uuid();
@@ -28,6 +28,7 @@ export class RepairRequest {
     managerId?: string;
 
     @ManyToOne(() => Certificate, { nullable: true })
+    @Index()
     certificate?: Certificate;
 
     @ManyToOne(() => Address, { nullable: true })
@@ -61,6 +62,9 @@ export class RepairRequest {
     statusBeforePause?: string;
 
     @Property({ type: 'varchar', length: 255, nullable: true })
+    statusBeforeRefund?: string;
+
+    @Property({ type: 'varchar', length: 255, nullable: true })
     conversationId?: string;
 
     @Property({ type: 'datetime', nullable: true })
@@ -71,6 +75,12 @@ export class RepairRequest {
 
     @Property({ type: 'boolean', default: true })
     certificateValid: boolean = true;
+
+    @Property({ type: 'boolean', default: false })
+    certificateCoveredCost: boolean = false;
+
+    @Property({ type: 'boolean', default: false })
+    certificateCostOverridden: boolean = false;
 
     @Property({ type: 'jsonb', nullable: true })
     certificateSnapshot?: ICertificateSnapshot | null;

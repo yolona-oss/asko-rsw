@@ -3,13 +3,14 @@
 import { Card } from '@asko/ui';
 import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
-import type { RepairRequest, ConversationInfo } from './list-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
+import type { ConversationInfo } from './list-types';
 import { formatDateTime } from '@asko/shared/client';
 import { STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
 import { ChatStatusBadges } from './chat-status-badges';
 
 export function RequestCardItem({ request, convInfo, payments, currentUserId, onClick, onDoubleClick }: {
-  request: RepairRequest;
+  request: RepairRequestRecord;
   convInfo?: ConversationInfo;
   payments?: any[];
   currentUserId: string;

@@ -222,6 +222,37 @@ export class RepairRequestController {
         return this.repairClient.denyRefund(id);
     }
 
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_REFUND_CANCEL)
+    @Post(':id/cancel-refund')
+    async cancelRefund(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string) {
+        return this.repairClient.cancelRefund(user.sub, id);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_STAFF_SET_PRICE)
+    @CheckPolicy(RepairManagerPolicy)
+    @Post(':id/staff-set-price')
+    async staffSetPrice(@Param('id') id: string, @Body() dto: SetRepairPriceDto) {
+        return this.repairClient.staffSetPrice(id, dto.amount);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_OVERRIDE_CERT_PRICE)
+    @CheckPolicy(RepairManagerPolicy)
+    @Post(':id/override-cert-price')
+    async overrideCertificatePrice(@Param('id') id: string, @Body() dto: SetRepairPriceDto) {
+        return this.repairClient.overrideCertificatePrice(id, dto.amount);
+    }
+
+    @ApiCreatedResponse({ type: RepairRequestResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_OVERRIDE_CERT_PRICE)
+    @CheckPolicy(RepairManagerPolicy)
+    @Post(':id/revert-cert-price')
+    async revertCertificatePrice(@Param('id') id: string) {
+        return this.repairClient.revertCertificatePrice(id);
+    }
+
     @ApiCreatedResponse({ type: EmptyResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_ASSIGN)
     @CheckPolicy(RepairManagerPolicy)

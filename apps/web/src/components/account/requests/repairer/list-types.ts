@@ -1,3 +1,1 @@
-import type { RepairRequestRecord } from '@/lib/api/types';
-
-export type RepairRequest = RepairRequestRecord;
+// RepairRequest alias removed — use RepairRequestRecord from @/lib/api/types directly

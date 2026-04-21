@@ -985,6 +985,25 @@ export interface RepairDenyRefundRequest {
     requestId: string;
 }
 
+export interface RepairCancelRefundRequest {
+    userId: string;
+    requestId: string;
+}
+
+export interface RepairStaffSetPriceRequest {
+    requestId: string;
+    amount: number;
+}
+
+export interface RepairOverrideCertPriceRequest {
+    requestId: string;
+    amount: number;
+}
+
+export interface RepairRevertCertPriceRequest {
+    requestId: string;
+}
+
 export interface RepairPauseRequest {
     repairerUserId: string;
     requestId: string;
@@ -1257,6 +1276,10 @@ export interface RepairServiceClient {
     complete(request: RepairCompleteRequest): Observable<RepairRequestResponse>;
     approveRefund(request: RepairApproveRefundRequest): Observable<RepairRequestResponse>;
     denyRefund(request: RepairDenyRefundRequest): Observable<RepairRequestResponse>;
+    cancelRefund(request: RepairCancelRefundRequest): Observable<RepairRequestResponse>;
+    staffSetPrice(request: RepairStaffSetPriceRequest): Observable<RepairRequestResponse>;
+    overrideCertificatePrice(request: RepairOverrideCertPriceRequest): Observable<RepairRequestResponse>;
+    revertCertificatePrice(request: RepairRevertCertPriceRequest): Observable<RepairRequestResponse>;
     pauseRequest(request: RepairPauseRequest): Observable<RepairRequestResponse>;
     resumeRequest(request: RepairResumeRequest): Observable<RepairRequestResponse>;
     confirmSchedulePresence(request: RepairConfirmSchedulePresenceRequest): Observable<RepairRequestResponse>;

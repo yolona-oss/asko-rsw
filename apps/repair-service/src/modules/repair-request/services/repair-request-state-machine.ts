@@ -9,15 +9,14 @@ type TransitionRule =
     | { from?: never; notFrom: readonly Status[] };
 
 export const REPAIR_TRANSITIONS: Record<string, TransitionRule> = {
-    [S.PAID]: { from: [S.PENDING] },
-    [S.ASSIGNED]: { notFrom: [S.CANCELLED, S.COMPLETED, S.AWAITING_COMPLETION, S.REFUND_REQUESTED, S.REFUNDED] }, // from: [S.PENDING, S.PAID, S.ASSIGNED]
+    [S.ASSIGNED]: { notFrom: [S.CANCELLED, S.COMPLETED, S.AWAITING_COMPLETION, S.REFUND_REQUESTED, S.REFUNDED] },
     [S.ACCEPTED]: { from: [S.ASSIGNED] },
     [S.EN_ROUTE]: { from: [S.ACCEPTED] },
     [S.IN_PROGRESS]: { from: [S.EN_ROUTE] },
     [S.PAUSED]: { from: [S.ACCEPTED, S.EN_ROUTE, S.IN_PROGRESS] },
     [S.AWAITING_COMPLETION]: { from: [S.IN_PROGRESS] },
     [S.COMPLETED]: { from: [S.IN_PROGRESS, S.AWAITING_COMPLETION] },
-    [S.REFUND_REQUESTED]: { notFrom: [S.COMPLETED, S.REFUNDED] },
+    [S.REFUND_REQUESTED]: { notFrom: [S.REFUNDED, S.REFUND_REQUESTED, S.PENDING, S.CANCELLED, S.REFUSED] },
     [S.REFUNDED]: { from: [S.REFUND_REQUESTED] },
     [S.CANCELLED]: { notFrom: [S.COMPLETED, S.EN_ROUTE, S.IN_PROGRESS, S.AWAITING_COMPLETION] },
 };
@@ -28,13 +27,12 @@ type ActionTransitionRule =
 
 export const REPAIR_ACTION_TRANSITIONS: Record<string, ActionTransitionRule> = {
     refuse: { from: [S.ASSIGNED] as readonly Status[], to: S.REFUSED },
-    denyRefund: { from: [S.REFUND_REQUESTED] as readonly Status[], to: S.PAID },
+    denyRefund: { from: [S.REFUND_REQUESTED] as readonly Status[] },
+    cancelRefund: { from: [S.REFUND_REQUESTED] as readonly Status[] },
     resume: { from: [S.PAUSED] as readonly Status[] },
     reassign: {
-        // Transfer from any state where a repairer is attached and the job isn't terminal/refund-bound
         notFrom: [
             S.PENDING,
-            S.PAID,
             S.COMPLETED,
             S.CANCELLED,
             S.REFUNDED,

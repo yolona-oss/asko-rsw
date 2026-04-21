@@ -23,10 +23,10 @@ import { RepairRequestStatus } from '@asko/shared/client';
 import { formatDateTime } from '@asko/shared/client';
 import { TAB_FILTER, PAGE_SIZE, STATUS_BADGE_VARIANT, STATUS_LABELS } from './list-constants';
 import type { TabKey } from './list-constants';
-import type { RepairRequest } from './list-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
 import { RequestCard } from './request-card';
 
-function useRequestColumns(paymentsMap: Record<string, any[]>): DataGridColumn<RepairRequest>[] {
+function useRequestColumns(paymentsMap: Record<string, any[]>): DataGridColumn<RepairRequestRecord>[] {
   return useMemo(() => [
     {
       key: 'client',
@@ -100,11 +100,11 @@ function useRequestColumns(paymentsMap: Record<string, any[]>): DataGridColumn<R
 
 export function RepairerRequests() {
   const router = useRouter();
-  const detail = useEntityDetail<RepairRequest>();
+  const detail = useEntityDetail<RepairRequestRecord>();
   const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'active' });
   const activeTab = filterValues.tab as TabKey;
-  const [activeRequest, setActiveRequest] = useState<RepairRequest | null>(null);
-  const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const [activeRequest, setActiveRequest] = useState<RepairRequestRecord | null>(null);
+  const [requests, setRequests] = useState<RepairRequestRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);

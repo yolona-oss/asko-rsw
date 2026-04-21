@@ -30,6 +30,7 @@ export const NOTIFICATION_TYPE_TO_GROUP: Record<NotificationType, NotificationGr
     [NotificationType.REPAIR_SCHEDULE_ENDING]: NotificationGroup.REPAIR,
     [NotificationType.REPAIR_SCHEDULE_AUTO_PAUSED]: NotificationGroup.REPAIR,
     [NotificationType.REPAIR_PART_SHIPPED]: NotificationGroup.REPAIR,
+    [NotificationType.REPAIR_STALE]: NotificationGroup.REPAIR,
     [NotificationType.AVR_SIGNING_REQUESTED]: NotificationGroup.REPAIR,
     [NotificationType.AVR_SIGNED]: NotificationGroup.REPAIR,
 

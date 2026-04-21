@@ -270,6 +270,10 @@ export class CertificateService {
         });
         for (const req of openRequests) {
             req.certificateValid = true;
+            if (!req.certificateCostOverridden) {
+                req.totalCost = 0;
+                req.certificateCoveredCost = true;
+            }
         }
 
         // Auto-attach newly paid cert to open repair requests for the same device
@@ -291,6 +295,9 @@ export class CertificateService {
         for (const req of unattachedRequests) {
             req.certificate = cert;
             req.certificateValid = true;
+            req.totalCost = 0;
+            req.certificateCoveredCost = true;
+            req.certificateCostOverridden = false;
         }
 
         await this.em.flush();

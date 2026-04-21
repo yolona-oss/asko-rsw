@@ -96,6 +96,34 @@ export const repairRequestApi = {
     return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/set-price`, data);
   },
 
+  requestRefund(requestId: string, reason: string) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/request-refund`, { reason });
+  },
+
+  approveRefund(requestId: string) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/approve-refund`);
+  },
+
+  denyRefund(requestId: string) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/deny-refund`);
+  },
+
+  cancelRefund(requestId: string) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/cancel-refund`);
+  },
+
+  staffSetPrice(requestId: string, data: SetRepairPriceDto) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/staff-set-price`, data);
+  },
+
+  overrideCertPrice(requestId: string, data: SetRepairPriceDto) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/override-cert-price`, data);
+  },
+
+  revertCertPrice(requestId: string) {
+    return api.post<RepairRequestResponse>(`/repair-requests/${requestId}/revert-cert-price`);
+  },
+
   // AVR (Work Completion Act)
   generateAvr(requestId: string, data?: { completionNote?: string }) {
     return api.post<{ request: RepairRequestRecord; avrDocumentId: string }>(`/repair-requests/${requestId}/avr/generate`, data ?? {});

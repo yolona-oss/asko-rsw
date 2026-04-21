@@ -20,7 +20,6 @@ import type { RequestSummary } from './types';
 
 const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'В обработке',
-  [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначен мастер',
   [RepairRequestStatus.ACCEPTED]: 'Мастер выехал',
   [RepairRequestStatus.IN_PROGRESS]: 'В работе',
@@ -34,7 +33,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'bg-warning',
-  [RepairRequestStatus.PAID]: 'bg-warning',
   [RepairRequestStatus.ASSIGNED]: 'bg-info',
   [RepairRequestStatus.ACCEPTED]: 'bg-info',
   [RepairRequestStatus.IN_PROGRESS]: 'bg-info',

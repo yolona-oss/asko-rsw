@@ -86,6 +86,15 @@ export class AppConfig {
             repairStuckAfterMs: parseInt(
                 this.configService.get<string>('REMINDER_REPAIR_STUCK_AFTER_MS') ?? '28800000',
             ),
+            repairStaleFirstFireMs: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_STALE_FIRST_FIRE_MS') ?? '1800000', // 30min
+            ),
+            repairStaleIntervalMs: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_STALE_INTERVAL_MS') ?? '1800000', // 30min
+            ),
+            repairStaleMaxFires: parseInt(
+                this.configService.get<string>('REMINDER_REPAIR_STALE_MAX_FIRES') ?? '999',
+            ),
             sweepBatchSize: parseInt(
                 this.configService.get<string>('REMINDER_SWEEP_BATCH_SIZE') ?? '100',
             ),

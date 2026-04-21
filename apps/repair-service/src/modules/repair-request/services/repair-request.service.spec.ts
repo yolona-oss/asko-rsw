@@ -59,6 +59,7 @@ jest.mock('modules/shared-services/services/signature.service', () => ({ Signatu
 jest.mock('modules/schedule/services/schedule-rule.service', () => ({ ScheduleRuleService: jest.fn() }));
 jest.mock('modules/schedule/services/wschedule-pattern.service', () => ({ WSchedulePatternService: jest.fn() }));
 jest.mock('modules/payment-command.service', () => ({ PaymentCommandService: jest.fn() }));
+jest.mock('modules/shared-services/services/paid-payment.service', () => ({ PaidPaymentService: jest.fn() }));
 jest.mock('services/repair-event.service', () => ({
     RepairEventService: jest.fn(),
     RepairEventType: {
@@ -106,6 +107,9 @@ function createMockDeps() {
         certificateService: {
             validateCertificateForRequest: jest.fn(),
         },
+        paidPaymentService: {
+            hasPaid: jest.fn().mockResolvedValue(true),
+        },
         signatureService: {
             sign: jest.fn().mockReturnValue('mock-signature'),
         },
@@ -141,6 +145,9 @@ function makeRequest(overrides: Record<string, any> = {}) {
         totalCost: undefined,
         completionNote: undefined,
         statusBeforePause: undefined,
+        statusBeforeRefund: undefined,
+        certificateCoveredCost: false,
+        certificateCostOverridden: false,
         refundRequested: false,
         refundReason: undefined,
         refuseReason: undefined,
@@ -180,6 +187,7 @@ describe('RepairRequestService', () => {
             deps.brokenPartService as any,
             deps.certificateService as any,
             deps.signatureService as any,
+            deps.paidPaymentService as any,
             deps.scheduleService as any,
             { generate: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')) } as any,
         );
@@ -322,48 +330,30 @@ describe('RepairRequestService', () => {
         });
     });
 
-    // ── markPaid ──
-
-    describe('markPaid', () => {
-        it('transitions PENDING -> PAID', async () => {
-            const request = makeRequest({ status: S.PENDING });
-            mockEm.findOne.mockResolvedValue(request);
-
-            const result = await service.markPaid('req-1');
-
-            expect(result.status).toBe(S.PAID);
-            expect(mockEm.flush).toHaveBeenCalled();
-            expect(deps.repairEventService.emit).toHaveBeenCalledWith(
-                expect.objectContaining({ oldStatus: S.PENDING, newStatus: S.PAID }),
-            );
-        });
-
-        it('throws if request not found', async () => {
-            mockEm.findOne.mockResolvedValue(null);
-
-            await expect(service.markPaid('req-999')).rejects.toThrow('Repair request not found');
-        });
-
-        it('throws for invalid transition (e.g. COMPLETED -> PAID)', async () => {
-            const request = makeRequest({ status: S.COMPLETED });
-            mockEm.findOne.mockResolvedValue(request);
-
-            await expect(service.markPaid('req-1')).rejects.toThrow();
-        });
-    });
-
     // ── requestRefund ──
 
     describe('requestRefund', () => {
-        it('transitions to REFUND_REQUESTED and stores reason', async () => {
-            const request = makeRequest({ status: S.PAID });
+        it('transitions to REFUND_REQUESTED when payment exists', async () => {
+            const request = makeRequest({ status: S.COMPLETED });
             mockEm.findOne.mockResolvedValue(request);
+            deps.paidPaymentService.hasPaid.mockResolvedValue(true);
 
             const result = await service.requestRefund('user-1', 'req-1', 'Not satisfied');
 
             expect(result.status).toBe(S.REFUND_REQUESTED);
             expect(result.refundRequested).toBe(true);
             expect(result.refundReason).toBe('Not satisfied');
+            expect(result.statusBeforeRefund).toBe(S.COMPLETED);
+        });
+
+        it('throws if no payment exists', async () => {
+            const request = makeRequest({ status: S.COMPLETED });
+            mockEm.findOne.mockResolvedValue(request);
+            deps.paidPaymentService.hasPaid.mockResolvedValue(false);
+
+            await expect(service.requestRefund('user-1', 'req-1', 'reason')).rejects.toThrow(
+                'Refund is only available after payment',
+            );
         });
 
         it('throws if request not found', async () => {
@@ -374,9 +364,10 @@ describe('RepairRequestService', () => {
             );
         });
 
-        it('throws from COMPLETED status', async () => {
-            const request = makeRequest({ status: S.COMPLETED });
+        it('throws from PENDING status (not allowed)', async () => {
+            const request = makeRequest({ status: S.PENDING });
             mockEm.findOne.mockResolvedValue(request);
+            deps.paidPaymentService.hasPaid.mockResolvedValue(true);
 
             await expect(service.requestRefund('user-1', 'req-1', 'reason')).rejects.toThrow();
         });
@@ -398,7 +389,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws from non-REFUND_REQUESTED status', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.ASSIGNED });
             mockEm.findOne.mockResolvedValue(request);
 
             await expect(service.approveRefund('req-1')).rejects.toThrow();
@@ -408,21 +399,45 @@ describe('RepairRequestService', () => {
     // ── denyRefund ──
 
     describe('denyRefund', () => {
-        it('transitions REFUND_REQUESTED -> PAID and clears refundRequested', async () => {
-            const request = makeRequest({ status: S.REFUND_REQUESTED, refundRequested: true });
+        it('reverts to statusBeforeRefund and clears refundRequested', async () => {
+            const request = makeRequest({ status: S.REFUND_REQUESTED, refundRequested: true, statusBeforeRefund: S.COMPLETED });
             mockEm.findOne.mockResolvedValue(request);
 
             const result = await service.denyRefund('req-1');
 
-            expect(result.status).toBe(S.PAID);
+            expect(result.status).toBe(S.COMPLETED);
             expect(result.refundRequested).toBe(false);
+            expect(result.statusBeforeRefund).toBeUndefined();
         });
 
         it('throws from non-REFUND_REQUESTED status', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.ASSIGNED });
             mockEm.findOne.mockResolvedValue(request);
 
             await expect(service.denyRefund('req-1')).rejects.toThrow();
+        });
+    });
+
+    // ── cancelRefund ──
+
+    describe('cancelRefund', () => {
+        it('reverts to statusBeforeRefund and clears refund fields', async () => {
+            const request = makeRequest({ status: S.REFUND_REQUESTED, refundRequested: true, refundReason: 'reason', statusBeforeRefund: S.IN_PROGRESS });
+            mockEm.findOne.mockResolvedValue(request);
+
+            const result = await service.cancelRefund('user-1', 'req-1');
+
+            expect(result.status).toBe(S.IN_PROGRESS);
+            expect(result.refundRequested).toBe(false);
+            expect(result.refundReason).toBeUndefined();
+            expect(result.statusBeforeRefund).toBeUndefined();
+        });
+
+        it('throws from non-REFUND_REQUESTED status', async () => {
+            const request = makeRequest({ status: S.COMPLETED });
+            mockEm.findOne.mockResolvedValue(request);
+
+            await expect(service.cancelRefund('user-1', 'req-1')).rejects.toThrow();
         });
     });
 
@@ -430,7 +445,7 @@ describe('RepairRequestService', () => {
 
     describe('assignRepairer', () => {
         it('transitions to ASSIGNED and sets repairer + manager', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)    // request
@@ -451,7 +466,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws if repairer not found', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             mockEm.findOne
                 .mockResolvedValueOnce(request)
                 .mockResolvedValueOnce(null);
@@ -461,7 +476,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws if repairer is not active', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             const repairer = makeRepairer({ isActive: false });
             mockEm.findOne
                 .mockResolvedValueOnce(request)
@@ -472,7 +487,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws if repairer is on vacation', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)
@@ -492,7 +507,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws if repairer has too many active requests', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)
@@ -504,7 +519,7 @@ describe('RepairRequestService', () => {
         });
 
         it('throws if repairer is on a rest day', async () => {
-            const request = makeRequest({ status: S.PAID });
+            const request = makeRequest({ status: S.PENDING });
             const repairer = makeRepairer();
             mockEm.findOne
                 .mockResolvedValueOnce(request)
@@ -1114,11 +1129,11 @@ describe('RepairRequestService', () => {
         it('applies multi-status filter with comma separator', async () => {
             mockEm.findAndCount.mockResolvedValue([[], 0]);
 
-            await service.findByUser('user-1', { status: 'pending,paid' });
+            await service.findByUser('user-1', { status: 'pending,assigned' });
 
             expect(mockEm.findAndCount).toHaveBeenCalledWith(
                 expect.anything(),
-                expect.objectContaining({ status: { $in: ['pending', 'paid'] } }),
+                expect.objectContaining({ status: { $in: ['pending', 'assigned'] } }),
                 expect.anything(),
             );
         });
@@ -1242,14 +1257,9 @@ describe('RepairRequestService', () => {
     // ── Full lifecycle integration test ──
 
     describe('lifecycle: happy path', () => {
-        it('PENDING -> PAID -> ASSIGNED -> ACCEPTED -> EN_ROUTE -> IN_PROGRESS -> COMPLETED', async () => {
+        it('PENDING -> ASSIGNED -> ACCEPTED -> EN_ROUTE -> IN_PROGRESS -> COMPLETED', async () => {
             const repairer = makeRepairer();
             const request = makeRequest();
-
-            // markPaid
-            mockEm.findOne.mockResolvedValue(request);
-            await service.markPaid('req-1');
-            expect(request.status).toBe(S.PAID);
 
             // assignRepairer
             jest.clearAllMocks();
@@ -1366,13 +1376,15 @@ describe('RepairRequestService', () => {
     });
 
     describe('lifecycle: refund flow', () => {
-        it('PAID -> REFUND_REQUESTED -> REFUNDED', async () => {
-            const request = makeRequest({ status: S.PAID });
+        it('COMPLETED -> REFUND_REQUESTED -> REFUNDED', async () => {
+            const request = makeRequest({ status: S.COMPLETED });
+            deps.paidPaymentService.hasPaid.mockResolvedValue(true);
 
             // requestRefund
             mockEm.findOne.mockResolvedValue(request);
             await service.requestRefund('user-1', 'req-1', 'Too expensive');
             expect(request.status).toBe(S.REFUND_REQUESTED);
+            expect(request.statusBeforeRefund).toBe(S.COMPLETED);
 
             // approveRefund
             jest.clearAllMocks();
@@ -1381,8 +1393,9 @@ describe('RepairRequestService', () => {
             expect(request.status).toBe(S.REFUNDED);
         });
 
-        it('PAID -> REFUND_REQUESTED -> PAID (denied)', async () => {
-            const request = makeRequest({ status: S.PAID });
+        it('COMPLETED -> REFUND_REQUESTED -> COMPLETED (denied)', async () => {
+            const request = makeRequest({ status: S.COMPLETED });
+            deps.paidPaymentService.hasPaid.mockResolvedValue(true);
 
             // requestRefund
             mockEm.findOne.mockResolvedValue(request);
@@ -1393,8 +1406,27 @@ describe('RepairRequestService', () => {
             jest.clearAllMocks();
             mockEm.findOne.mockResolvedValue(request);
             await service.denyRefund('req-1');
-            expect(request.status).toBe(S.PAID);
+            expect(request.status).toBe(S.COMPLETED);
             expect(request.refundRequested).toBe(false);
+            expect(request.statusBeforeRefund).toBeUndefined();
+        });
+
+        it('IN_PROGRESS -> REFUND_REQUESTED -> IN_PROGRESS (user cancels refund)', async () => {
+            const request = makeRequest({ status: S.IN_PROGRESS });
+            deps.paidPaymentService.hasPaid.mockResolvedValue(true);
+
+            // requestRefund
+            mockEm.findOne.mockResolvedValue(request);
+            await service.requestRefund('user-1', 'req-1', 'Accidental');
+            expect(request.status).toBe(S.REFUND_REQUESTED);
+
+            // cancelRefund
+            jest.clearAllMocks();
+            mockEm.findOne.mockResolvedValue(request);
+            await service.cancelRefund('user-1', 'req-1');
+            expect(request.status).toBe(S.IN_PROGRESS);
+            expect(request.refundRequested).toBe(false);
+            expect(request.refundReason).toBeUndefined();
         });
     });
 

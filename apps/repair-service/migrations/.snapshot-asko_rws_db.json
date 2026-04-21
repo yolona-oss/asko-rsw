@@ -363,7 +363,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -681,7 +681,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -1151,7 +1151,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -1322,7 +1322,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -1559,7 +1559,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -1884,7 +1884,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -2099,7 +2099,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -2379,7 +2379,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -2668,7 +2668,233 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
+            "assigned",
+            "accepted",
+            "en_route",
+            "in_progress",
+            "awaiting_completion",
+            "completed",
+            "refused",
+            "cancelled",
+            "paused",
+            "refund_requested",
+            "refunded"
+          ]
+        },
+        "withdrawal_status": {
+          "name": "withdrawal_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "work_step_status": {
+          "name": "work_step_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "in_progress",
+            "completed",
+            "skipped",
+            "declined"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "payment_id": {
+          "name": "payment_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "varchar(50)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 50,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "target_id": {
+          "name": "target_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "float8",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 53,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "double"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(10)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 10,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "paid_at": {
+          "name": "paid_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "paid_payment",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "payment_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "paid_payment_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "target_type",
+            "target_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "paid_payment_target_type_id_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "target_type"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "paid_payment_target_type_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "broken_part_status": {
+          "name": "broken_part_status",
+          "schema": "public",
+          "items": [
+            "added",
+            "ordered",
+            "shipped",
+            "replaced"
+          ]
+        },
+        "certificate_status": {
+          "name": "certificate_status",
+          "schema": "public",
+          "items": [
+            "pending_payment",
+            "validation_error",
+            "active",
+            "expired",
+            "revoked"
+          ]
+        },
+        "points_transaction_type": {
+          "name": "points_transaction_type",
+          "schema": "public",
+          "items": [
+            "earned",
+            "spent",
+            "adjustment"
+          ]
+        },
+        "repair_request_status": {
+          "name": "repair_request_status",
+          "schema": "public",
+          "items": [
+            "pending",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -2905,7 +3131,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -3162,7 +3388,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -3329,7 +3555,7 @@
           "comment": null,
           "enumItems": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -3846,6 +4072,54 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "smallint"
+        },
+        "status_before_refund": {
+          "name": "status_before_refund",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "certificate_covered_cost": {
+          "name": "certificate_covered_cost",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "certificate_cost_overridden": {
+          "name": "certificate_cost_overridden",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "repair_request",
@@ -3953,7 +4227,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -4238,7 +4512,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -4470,7 +4744,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -4759,7 +5033,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -5032,7 +5306,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -5360,7 +5634,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -5533,7 +5807,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -5806,7 +6080,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -6144,7 +6418,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -6459,7 +6733,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -6792,7 +7066,7 @@
           "schema": "public",
           "items": [
             "pending",
-            "paid",
+            "__paid_deprecated",
             "assigned",
             "accepted",
             "en_route",
@@ -6867,7 +7141,7 @@
       "schema": "public",
       "items": [
         "pending",
-        "paid",
+        "__paid_deprecated",
         "assigned",
         "accepted",
         "en_route",

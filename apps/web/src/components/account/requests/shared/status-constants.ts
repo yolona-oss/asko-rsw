@@ -4,7 +4,6 @@ import type { BadgeVariant } from '@asko/ui';
 
 export const STATUS_TITLES: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'Заявка создана',
-  [RepairRequestStatus.PAID]: 'Оплата получена',
   [RepairRequestStatus.ASSIGNED]: 'Назначение мастера',
   [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку',
   [RepairRequestStatus.EN_ROUTE]: 'Мастер в пути',

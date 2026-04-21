@@ -25,15 +25,15 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import { formatDate } from '@asko/shared/client';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT, STATUS_FILTER, type StatusFilter } from './list-constants';
-import type { RepairRequest } from './list-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
 import { RequestCard } from './request-card';
 
 const PAGE_SIZE = 20;
 
 export function UserRequests() {
   const router = useRouter();
-  const detail = useEntityDetail<RepairRequest>();
-  const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const detail = useEntityDetail<RepairRequestRecord>();
+  const [requests, setRequests] = useState<RepairRequestRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ export function UserRequests() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const requestColumns: DataGridColumn<RepairRequest>[] = [
+  const requestColumns: DataGridColumn<RepairRequestRecord>[] = [
     {
       key: 'device',
       header: 'Устройство',
@@ -164,7 +164,7 @@ export function UserRequests() {
 
       {/* Data */}
       {view === 'table' ? (
-        <DataGrid<RepairRequest>
+        <DataGrid<RepairRequestRecord>
           loading={loading}
           columns={requestColumns}
           data={requests}

@@ -4,7 +4,8 @@ import { v4 as uuid } from 'uuid';
 export type ReminderKind =
     | 'payment_unpaid'
     | 'repair_assignment_pending'
-    | 'repair_in_progress_stuck';
+    | 'repair_in_progress_stuck'
+    | 'repair_stale';
 
 export type ReminderStatus = 'active' | 'cancelled' | 'exhausted';
 

@@ -3,7 +3,6 @@ import type { BadgeVariant, FilterDefinition } from '@asko/ui';
 
 export const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'В обработке',
-  [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначен мастер',
   [RepairRequestStatus.ACCEPTED]: 'Принята мастером',
   [RepairRequestStatus.EN_ROUTE]: 'Мастер выехал',
@@ -18,7 +17,6 @@ export const STATUS_LABELS: Record<string, string> = {
 
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PENDING]: 'warning',
-  [RepairRequestStatus.PAID]: 'warning',
   [RepairRequestStatus.ASSIGNED]: 'info',
   [RepairRequestStatus.ACCEPTED]: 'info',
   [RepairRequestStatus.EN_ROUTE]: 'info',
@@ -35,7 +33,6 @@ export type StatusFilter = '' | 'active' | 'completed' | 'cancelled';
 
 export const STATUS_TAB_MAP: Record<string, StatusFilter> = {
   [RepairRequestStatus.PENDING]: 'active',
-  [RepairRequestStatus.PAID]: 'active',
   [RepairRequestStatus.ASSIGNED]: 'active',
   [RepairRequestStatus.ACCEPTED]: 'active',
   [RepairRequestStatus.EN_ROUTE]: 'active',

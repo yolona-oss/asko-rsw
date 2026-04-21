@@ -1,3 +1,1 @@
-import type { RepairRequestRecord } from '@/lib/api/types';
-
-export type RepairRequest = RepairRequestRecord;
+// All types re-exported from generated OpenAPI types

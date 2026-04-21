@@ -1,6 +1,5 @@
 export enum RepairRequestStatus {
     PENDING = 'pending',
-    PAID = 'paid',
     ASSIGNED = 'assigned',
     ACCEPTED = 'accepted',
     EN_ROUTE = 'en_route',

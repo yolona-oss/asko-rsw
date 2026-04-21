@@ -97,6 +97,22 @@ export class RepairClientService implements OnModuleInit {
         return grpcCall(this.repairService.denyRefund({ requestId }));
     }
 
+    cancelRefund(userId: string, requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.cancelRefund({ userId, requestId }));
+    }
+
+    staffSetPrice(requestId: string, amount: number): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.staffSetPrice({ requestId, amount }));
+    }
+
+    overrideCertificatePrice(requestId: string, amount: number): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.overrideCertificatePrice({ requestId, amount }));
+    }
+
+    revertCertificatePrice(requestId: string): Promise<RepairRequestResponse> {
+        return grpcCall(this.repairService.revertCertificatePrice({ requestId }));
+    }
+
     pauseRequest(repairerUserId: string, requestId: string): Promise<RepairRequestResponse> {
         return grpcCall(this.repairService.pauseRequest({ repairerUserId, requestId }));
     }

@@ -45,6 +45,7 @@ export enum NotificationType {
     USER_DEVICE_VALIDATION_FAILED = 'user_device_validation_failed',
     CERTIFICATE_INTEGRITY_FAILED = 'certificate_integrity_failed',
     REPAIR_PART_SHIPPED = 'repair_part_shipped',
+    REPAIR_STALE = 'repair_stale',
 }
 
 export enum NotificationUrgency {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Textarea, SkeletonCard } from '@asko/ui';
+import { Badge, Button, Textarea, SkeletonCard, Modal, FormField } from '@asko/ui';
 import { Plus } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
@@ -32,7 +32,8 @@ import {
 } from './detail-constants';
 import { isTerminalStatus } from '@/components/account/requests/shared/status-constants';
 import { formatTimestamp } from '@asko/shared/client';
-import type { RepairRequest, WorkStep } from './detail-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
+import type { WorkStep } from './detail-types';
 import { StepCircle } from './step-circle';
 import { StepLine } from './step-line';
 import { StatusHistoryInline } from '@/components/account/requests/shared/status-history-inline';
@@ -42,7 +43,7 @@ import { SingleConversation } from '@/components/chat/single-conversation';
 import { MessageCircle } from 'lucide-react';
 
 export function UserRequestStatus({ requestId }: { requestId: string }) {
-  const [request, setRequest] = useState<RepairRequest | null>(null);
+  const [request, setRequest] = useState<RepairRequestRecord | null>(null);
   const [workSteps, setWorkSteps] = useState<WorkStep[]>([]);
   const [brokenParts, setBrokenParts] = useState<BrokenPart[]>([]);
   const [partImages, setPartImages] = useState<Record<string, any[]>>({});
@@ -61,6 +62,12 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [createCertOpen, setCreateCertOpen] = useState(false);
+
+  // Refund state
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [refundError, setRefundError] = useState('');
 
   // Review state
   const [reviewRating, setReviewRating] = useState(0);
@@ -135,6 +142,30 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
       fetchData();
     }
   }, [allNotifications, requestId, fetchData]);
+
+  const handleRequestRefund = async () => {
+    if (!request || !refundReason.trim()) return;
+    setRefundLoading(true);
+    setRefundError('');
+    try {
+      await repairRequestApi.requestRefund(request.id, refundReason);
+      setRefundOpen(false);
+      setRefundReason('');
+      await fetchData();
+    } catch (e: any) {
+      setRefundError(e?.response?.data?.message ?? 'Не удалось запросить возврат');
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
+  const handleCancelRefund = async () => {
+    if (!request) return;
+    try {
+      await repairRequestApi.cancelRefund(request.id);
+      await fetchData();
+    } catch { /* ignore */ }
+  };
 
   const handleReviewSubmit = async () => {
     if (reviewRating === 0) {
@@ -246,11 +277,6 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
             </Button>
           </>
         )}
-        {request.status === RepairRequestStatus.PAID && (
-          <div className="mt-4 px-4 py-3 bg-success-bg border border-success-border">
-            <p className="text-sm text-success-deep font-medium">Заявка оплачена</p>
-          </div>
-        )}
       </div>
 
       {/* Payment summary */}
@@ -273,6 +299,45 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
         targetId={requestId}
         amount={request.totalCost ?? 0}
       />
+
+      {/* Refund actions */}
+      {request.status === RepairRequestStatus.REFUND_REQUESTED && (
+        <div className="mt-4 px-4 py-3 bg-warning-bg border border-warning-border flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-sm text-warning-deep font-medium">Запрос на возврат отправлен. Ожидайте решения.</p>
+          <Button variant="secondary" size="sm" onClick={handleCancelRefund}>
+            Отменить запрос
+          </Button>
+        </div>
+      )}
+      {allPayments.length > 0 && !isTerminalStatus(request.status) && request.status !== RepairRequestStatus.REFUND_REQUESTED && (
+        <div className="mt-4">
+          <Button variant="ghost" size="sm" className="text-text-sub" onClick={() => setRefundOpen(true)}>
+            Запросить возврат
+          </Button>
+        </div>
+      )}
+
+      {/* Refund modal */}
+      <Modal open={refundOpen} onClose={() => setRefundOpen(false)} className="w-full max-w-md p-6">
+        <h2 className="text-base font-medium text-text-main mb-4">Запрос возврата</h2>
+        <div className="flex flex-col gap-4">
+          <FormField label="Причина возврата">
+            <Textarea
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="Опишите причину..."
+              rows={3}
+            />
+          </FormField>
+          {refundError && <p className="text-sm text-brand-red">{refundError}</p>}
+          <div className="flex gap-3">
+            <Button variant="danger" onClick={handleRequestRefund} disabled={!refundReason.trim() || refundLoading}>
+              {refundLoading ? 'Отправка...' : 'Запросить возврат'}
+            </Button>
+            <Button variant="secondary" onClick={() => setRefundOpen(false)}>Отмена</Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Certificate self-create modal */}
       {request.userDevice?.id && (

@@ -1,9 +1,4 @@
-import type { RepairRequestRecord, RepairerRecord } from '@/lib/api/types';
-
-export type RepairRequestDetail = RepairRequestRecord & {
-  isCrossCity?: boolean;
-  timezoneOffsetHours?: number;
-};
+import type { RepairerRecord } from '@/lib/api/types';
 
 export type RepairerOption = RepairerRecord;
 

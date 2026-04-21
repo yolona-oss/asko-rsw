@@ -59,6 +59,10 @@ import type {
     RepairGetBrokenPartByIdRequest,
     RepairOrderBrokenPartRequest,
     RepairAcceptCompletionRequest,
+    RepairCancelRefundRequest,
+    RepairStaffSetPriceRequest,
+    RepairOverrideCertPriceRequest,
+    RepairRevertCertPriceRequest,
     GenerateAvrRequest,
     ResetAvrRequest,
     RemoveAvrByManagerRequest,
@@ -382,6 +386,38 @@ export class RepairGrpcController {
     async denyRefund(data: RepairDenyRefundRequest) {
         try {
             const request = await this.repairRequestService.denyRefund(data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'CancelRefund')
+    async cancelRefund(data: RepairCancelRefundRequest) {
+        try {
+            const request = await this.repairRequestService.cancelRefund(data.userId, data.requestId);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'StaffSetPrice')
+    async staffSetPrice(data: RepairStaffSetPriceRequest) {
+        try {
+            const request = await this.repairRequestService.staffSetPrice(data.requestId, data.amount);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'OverrideCertificatePrice')
+    async overrideCertificatePrice(data: RepairOverrideCertPriceRequest) {
+        try {
+            const request = await this.repairRequestService.overrideCertificatePrice(data.requestId, data.amount);
+            return { request: requestToRecord(request) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'RevertCertificatePrice')
+    async revertCertificatePrice(data: RepairRevertCertPriceRequest) {
+        try {
+            const request = await this.repairRequestService.revertCertificatePrice(data.requestId);
             return { request: requestToRecord(request) };
         } catch (e) { throw toGrpcError(e); }
     }

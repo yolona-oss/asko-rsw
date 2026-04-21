@@ -36,6 +36,12 @@ export class RepairRequestRecordDto {
     completionNote?: string;
     stepsLocked: boolean;
     certificateValid?: boolean;
+    certificateCoveredCost?: boolean;
+    certificateCostOverridden?: boolean;
+    statusBeforeRefund?: string;
+    statusBeforePause?: string;
+    isCrossCity?: boolean;
+    timezoneOffsetHours?: number;
     completionSignature?: string;
     completionSignedPayload?: string;
     acceptanceSignature?: string;

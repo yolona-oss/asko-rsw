@@ -30,22 +30,9 @@ describe('repair-request-state-machine', () => {
     // ── canTransition ──
 
     describe('canTransition', () => {
-        // --- PAID ---
-        it('allows PENDING -> PAID', () => {
-            expect(canTransition(S.PENDING, S.PAID)).toBe(true);
-        });
-
-        it.each([
-            S.PAID, S.ASSIGNED, S.ACCEPTED, S.IN_PROGRESS,
-            S.AWAITING_COMPLETION, S.COMPLETED, S.REFUSED,
-            S.CANCELLED, S.PAUSED, S.REFUND_REQUESTED, S.REFUNDED,
-        ] as RepairRequestStatus[])('rejects %s -> PAID', (from) => {
-            expect(canTransition(from, S.PAID)).toBe(false);
-        });
-
         // --- ASSIGNED (notFrom rule) ---
         it.each([
-            S.PENDING, S.PAID, S.ASSIGNED, S.ACCEPTED,
+            S.PENDING, S.ASSIGNED, S.ACCEPTED,
             S.IN_PROGRESS, S.PAUSED, S.REFUSED,
         ] as RepairRequestStatus[])('allows %s -> ASSIGNED', (from) => {
             expect(canTransition(from, S.ASSIGNED)).toBe(true);
@@ -124,14 +111,17 @@ describe('repair-request-state-machine', () => {
             expect(canTransition(from, S.COMPLETED)).toBe(false);
         });
 
-        // --- REFUND_REQUESTED (notFrom rule) ---
-        it.each(
-            ALL_STATUSES.filter(s => s !== S.COMPLETED && s !== S.REFUNDED),
-        )('allows %s -> REFUND_REQUESTED', (from) => {
+        // --- REFUND_REQUESTED (notFrom: REFUNDED, REFUND_REQUESTED, PENDING, CANCELLED, REFUSED) ---
+        it.each([
+            S.ASSIGNED, S.ACCEPTED, S.EN_ROUTE, S.IN_PROGRESS,
+            S.PAUSED, S.AWAITING_COMPLETION, S.COMPLETED,
+        ] as RepairRequestStatus[])('allows %s -> REFUND_REQUESTED', (from) => {
             expect(canTransition(from, S.REFUND_REQUESTED)).toBe(true);
         });
 
-        it.each([S.COMPLETED, S.REFUNDED] as RepairRequestStatus[])('rejects %s -> REFUND_REQUESTED', (from) => {
+        it.each([
+            S.REFUNDED, S.REFUND_REQUESTED, S.PENDING, S.CANCELLED, S.REFUSED,
+        ] as RepairRequestStatus[])('rejects %s -> REFUND_REQUESTED', (from) => {
             expect(canTransition(from, S.REFUND_REQUESTED)).toBe(false);
         });
 
@@ -167,12 +157,12 @@ describe('repair-request-state-machine', () => {
 
     describe('assertTransition', () => {
         it('does not throw for valid transition', () => {
-            expect(() => assertTransition(S.PENDING, S.PAID)).not.toThrow();
+            expect(() => assertTransition(S.PENDING, S.ASSIGNED)).not.toThrow();
         });
 
         it('throws for invalid transition', () => {
-            expect(() => assertTransition(S.COMPLETED, S.PAID)).toThrow(
-                'Cannot transition from "completed" to "paid"',
+            expect(() => assertTransition(S.COMPLETED, S.ASSIGNED)).toThrow(
+                'Cannot transition from "completed" to "assigned"',
             );
         });
 
@@ -206,6 +196,17 @@ describe('repair-request-state-machine', () => {
             expect(() => assertActionTransition('denyRefund', from)).toThrow();
         });
 
+        // --- cancelRefund ---
+        it('allows cancelRefund from REFUND_REQUESTED', () => {
+            expect(() => assertActionTransition('cancelRefund', S.REFUND_REQUESTED)).not.toThrow();
+        });
+
+        it.each(
+            ALL_STATUSES.filter(s => s !== S.REFUND_REQUESTED),
+        )('rejects cancelRefund from %s', (from) => {
+            expect(() => assertActionTransition('cancelRefund', from)).toThrow();
+        });
+
         // --- resume ---
         it('allows resume from PAUSED', () => {
             expect(() => assertActionTransition('resume', S.PAUSED)).not.toThrow();
@@ -226,7 +227,7 @@ describe('repair-request-state-machine', () => {
         });
 
         it.each([
-            S.PENDING, S.PAID, S.COMPLETED,
+            S.PENDING, S.COMPLETED,
             S.CANCELLED, S.REFUNDED, S.REFUND_REQUESTED,
         ] as RepairRequestStatus[])('rejects reassign from %s', (from) => {
             expect(() => assertActionTransition('reassign', from)).toThrow();

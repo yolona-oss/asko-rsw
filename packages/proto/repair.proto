@@ -116,6 +116,10 @@ service RepairService {
     rpc ConfirmSchedulePresence(RepairConfirmSchedulePresenceRequest) returns (RepairRequestResponse);
     rpc ReassignRepairer(RepairReassignRepairerRequest) returns (RepairRequestResponse);
     rpc AcceptCompletion(RepairAcceptCompletionRequest) returns (RepairRequestResponse);
+    rpc CancelRefund(RepairCancelRefundRequest) returns (RepairRequestResponse);
+    rpc StaffSetPrice(RepairStaffSetPriceRequest) returns (RepairRequestResponse);
+    rpc OverrideCertificatePrice(RepairOverrideCertPriceRequest) returns (RepairRequestResponse);
+    rpc RevertCertificatePrice(RepairRevertCertPriceRequest) returns (RepairRequestResponse);
 
     // AVR (Work Completion Act)
     rpc GenerateAvr(GenerateAvrRequest) returns (GenerateAvrResponse);
@@ -917,6 +921,9 @@ message RepairRequestRecord {
     string scheduleEndConfirmedAt = 42;
     bool isCrossCity = 43;
     int32 timezoneOffsetHours = 44;
+    string statusBeforeRefund = 45;
+    bool certificateCoveredCost = 46;
+    bool certificateCostOverridden = 47;
 }
 
 message BrokenPartRecord {
@@ -1077,6 +1084,25 @@ message RepairApproveRefundRequest {
 }
 
 message RepairDenyRefundRequest {
+    string requestId = 1;
+}
+
+message RepairCancelRefundRequest {
+    string userId = 1;
+    string requestId = 2;
+}
+
+message RepairStaffSetPriceRequest {
+    string requestId = 1;
+    double amount = 2;
+}
+
+message RepairOverrideCertPriceRequest {
+    string requestId = 1;
+    double amount = 2;
+}
+
+message RepairRevertCertPriceRequest {
     string requestId = 1;
 }
 

@@ -30,6 +30,9 @@ export enum Permission {
     REPAIR_REQUEST_SUGGEST_PART    = 'repair-request:suggest-broken-part',
     REPAIR_REQUEST_ACCEPT_COMPLETION = 'repair-request:accept-completion',
     REPAIR_REQUEST_CONFIRM_PRESENCE  = 'repair-request:confirm-presence',
+    REPAIR_REQUEST_REFUND_CANCEL     = 'repair-request:cancel-refund',
+    REPAIR_REQUEST_STAFF_SET_PRICE   = 'repair-request:staff-set-price',
+    REPAIR_REQUEST_OVERRIDE_CERT_PRICE = 'repair-request:override-cert-price',
 
     // ── Schedule ──
     SCHEDULE_CREATE                = 'schedule:create',

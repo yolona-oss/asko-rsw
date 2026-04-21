@@ -5,10 +5,10 @@ import { useClickHandlers } from '@/hooks/use-click-handlers';
 import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
 import { formatDate } from '@asko/shared/client';
 import { STATUS_LABELS, STATUS_BADGE_VARIANT } from './list-constants';
-import type { RepairRequest } from './list-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
 
 export function RequestCard({ request, payments, onClick, onDoubleClick }: {
-  request: RepairRequest;
+  request: RepairRequestRecord;
   payments?: any[];
   onClick?: () => void;
   onDoubleClick?: () => void;

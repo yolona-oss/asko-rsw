@@ -27,7 +27,8 @@ import { deviceApi } from '@/lib/api/device';
 import { getImageUrl } from '@/lib/file-url';
 import { useAuth } from '@/lib/api/use-auth';
 import { RepairRequestStatus } from '@asko/shared/client';
-import type { RepairRequestDetail as RepairRequestDetailType, RepairerOption, RepairerScheduleInfo } from './detail-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
+import type { RepairerOption, RepairerScheduleInfo } from './detail-types';
 import { formatDateTime } from '@asko/shared/client';
 import { STATUS_BADGE_VARIANT, STATUS_LABELS } from './detail-constants';
 import { SingleConversation } from '@/components/chat/single-conversation';
@@ -44,7 +45,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
-  const [request, setRequest] = useState<RepairRequestDetailType | null>(null);
+  const [request, setRequest] = useState<RepairRequestRecord | null>(null);
   const [repairers, setRepairers] = useState<RepairerOption[]>([]);
   const [patterns, setPatterns] = useState<Record<string, SchedulePatternRecord>>({});
   const [scheduleEntries, setScheduleEntries] = useState<Record<string, ScheduleEntryRecord[]>>({});
@@ -61,12 +62,19 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [offDayConfirm, setOffDayConfirm] = useState<RepairerOption | null>(null);
   const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
   const [allPayments, setAllPayments] = useState<any[]>([]);
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [certPriceValue, setCertPriceValue] = useState('');
+  const [certPriceLoading, setCertPriceLoading] = useState(false);
+  const [certPriceError, setCertPriceError] = useState('');
+  const [staffPriceValue, setStaffPriceValue] = useState('');
+  const [staffPriceLoading, setStaffPriceLoading] = useState(false);
+  const [staffPriceError, setStaffPriceError] = useState('');
 
   useEffect(() => {
     async function fetchData() {
       try {
         const { data: res } = await repairRequestApi.getOne(requestId);
-        const req: RepairRequestDetailType = res.request;
+        const req: RepairRequestRecord = res.request;
         setRequest(req);
         setSelectedRepairer(req.repairer?.id ?? '');
 
@@ -165,7 +173,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     setAssignSuccess(false);
     setCrossCityPrompt(false);
     try {
-      const isReassign = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
+      const isReassign = request.status !== RepairRequestStatus.PENDING;
       if (isReassign) {
         await repairRequestApi.reassign(request.id, repairerId, allowCrossCity);
       } else {
@@ -238,6 +246,67 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     }
   };
 
+  const handleApproveRefund = async () => {
+    if (!request) return;
+    setRefundLoading(true);
+    try {
+      await repairRequestApi.approveRefund(request.id);
+      const { data } = await repairRequestApi.getOne(requestId);
+      setRequest(data.request);
+    } catch { } finally { setRefundLoading(false); }
+  };
+
+  const handleDenyRefund = async () => {
+    if (!request) return;
+    setRefundLoading(true);
+    try {
+      await repairRequestApi.denyRefund(request.id);
+      const { data } = await repairRequestApi.getOne(requestId);
+      setRequest(data.request);
+    } catch { } finally { setRefundLoading(false); }
+  };
+
+  const handleStaffSetPrice = async () => {
+    if (!request) return;
+    const amount = parseFloat(staffPriceValue);
+    if (!amount || amount <= 0) { setStaffPriceError('Введите корректную сумму'); return; }
+    setStaffPriceLoading(true);
+    setStaffPriceError('');
+    try {
+      await repairRequestApi.staffSetPrice(request.id, { amount });
+      setRequest({ ...request, totalCost: amount });
+      setStaffPriceValue('');
+    } catch (e: any) {
+      setStaffPriceError(e?.response?.data?.message ?? 'Ошибка');
+    } finally { setStaffPriceLoading(false); }
+  };
+
+  const handleOverrideCertPrice = async () => {
+    if (!request) return;
+    const amount = parseFloat(certPriceValue);
+    if (!amount || amount <= 0) { setCertPriceError('Введите корректную сумму'); return; }
+    setCertPriceLoading(true);
+    setCertPriceError('');
+    try {
+      await repairRequestApi.overrideCertPrice(request.id, { amount });
+      const { data } = await repairRequestApi.getOne(requestId);
+      setRequest(data.request);
+      setCertPriceValue('');
+    } catch (e: any) {
+      setCertPriceError(e?.response?.data?.message ?? 'Ошибка');
+    } finally { setCertPriceLoading(false); }
+  };
+
+  const handleRevertCertPrice = async () => {
+    if (!request) return;
+    setCertPriceLoading(true);
+    try {
+      await repairRequestApi.revertCertPrice(request.id);
+      const { data } = await repairRequestApi.getOne(requestId);
+      setRequest(data.request);
+    } catch { } finally { setCertPriceLoading(false); }
+  };
+
   const isTerminal = request?.status === RepairRequestStatus.COMPLETED
     || request?.status === RepairRequestStatus.CANCELLED
     || request?.status === RepairRequestStatus.REFUNDED;
@@ -260,8 +329,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     );
   }
 
-  const isAssigned = request.status !== RepairRequestStatus.PENDING && request.status !== RepairRequestStatus.PAID;
-  const canAssign = request.status === RepairRequestStatus.PENDING || request.status === RepairRequestStatus.PAID || isAssigned;
+  const isAssigned = request.status !== RepairRequestStatus.PENDING;
+  const canAssign = true;
   const clientName = [request.user?.lastName, request.user?.firstName].filter(Boolean).join(' ') || 'Пользователь';
   const clientPhone = request.user?.phone || '';
   const deviceName = request.userDevice?.device?.name || request.description;
@@ -462,6 +531,83 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               <p className="text-sm font-bold text-text-main">Платежи</p>
               <PaymentSummary payments={allPayments} />
               <PaymentTransactionList payments={allPayments} statusLabels={PAYMENT_STATUS_LABELS_MANAGER} />
+            </div>
+          )}
+
+          {/* Refund management */}
+          {request.status === RepairRequestStatus.REFUND_REQUESTED && (
+            <div className="flex flex-col gap-2 p-4 bg-warning-bg border border-warning-border">
+              <p className="text-sm font-medium text-warning-deep">
+                Запрос на возврат: {request.refundReason || 'Без причины'}
+              </p>
+              <div className="flex gap-3">
+                <Button variant="danger" size="sm" onClick={handleApproveRefund} disabled={refundLoading}>
+                  {refundLoading ? 'Обработка...' : 'Одобрить возврат'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleDenyRefund} disabled={refundLoading}>
+                  Отклонить
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Staff price / cert price override */}
+          {!isTerminal && request.status !== RepairRequestStatus.REFUND_REQUESTED && (
+            <div className="flex flex-col gap-3">
+              {request.certificateCoveredCost && (
+                <div className="flex flex-col gap-2 p-3 bg-success-bg border border-success-border">
+                  <p className="text-sm text-success-deep font-medium">
+                    Ремонт покрывается сертификатом (стоимость: 0 ₽)
+                    {request.certificateCostOverridden && (
+                      <span className="text-warning-deep ml-2">
+                        — переопределена: {request.totalCost?.toLocaleString('ru-RU')} ₽
+                      </span>
+                    )}
+                  </p>
+                  {!request.certificateCostOverridden ? (
+                    <div className="flex items-end gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={certPriceValue}
+                        onChange={(e) => setCertPriceValue(e.target.value)}
+                        placeholder="Сумма (₽)"
+                        className="w-32 px-2 py-1 text-sm border border-border bg-surface"
+                      />
+                      <Button variant="secondary" size="sm" onClick={handleOverrideCertPrice} disabled={certPriceLoading || !certPriceValue}>
+                        Переопределить
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" size="sm" className="w-fit" onClick={handleRevertCertPrice} disabled={certPriceLoading}>
+                      Вернуть нулевую стоимость
+                    </Button>
+                  )}
+                  {certPriceError && <p className="text-sm text-brand-red">{certPriceError}</p>}
+                </div>
+              )}
+
+              {!request.certificateCoveredCost && (
+                <div className="flex items-end gap-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-text-sub">Установить стоимость (менеджер)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={staffPriceValue}
+                      onChange={(e) => setStaffPriceValue(e.target.value)}
+                      placeholder="Сумма (₽)"
+                      className="w-32 px-2 py-1 text-sm border border-border bg-surface"
+                    />
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={handleStaffSetPrice} disabled={staffPriceLoading || !staffPriceValue}>
+                    Сохранить
+                  </Button>
+                  {staffPriceError && <p className="text-sm text-brand-red">{staffPriceError}</p>}
+                </div>
+              )}
             </div>
           )}
 

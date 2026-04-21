@@ -3410,6 +3410,146 @@
         ]
       }
     },
+    "/repair-requests/{id}/cancel-refund": {
+      "post": {
+        "operationId": "RepairRequestController_cancelRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/staff-set-price": {
+      "post": {
+        "operationId": "RepairRequestController_staffSetPrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRepairPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/override-cert-price": {
+      "post": {
+        "operationId": "RepairRequestController_overrideCertificatePrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRepairPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/revert-cert-price": {
+      "post": {
+        "operationId": "RepairRequestController_revertCertificatePrice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
     "/repair-requests/{id}/chat/accept": {
       "post": {
         "operationId": "RepairRequestController_acceptChat",
@@ -8770,7 +8910,7 @@
         ]
       }
     },
-    "/webhook/payment/{provider}": {
+    "/payment/webhook/{provider}": {
       "post": {
         "operationId": "WebhookController_handlePaymentWebhook",
         "parameters": [
@@ -8799,7 +8939,7 @@
           }
         },
         "tags": [
-          "Webhooks"
+          "Payment Webhooks"
         ]
       }
     }
@@ -9955,7 +10095,8 @@
           "user_device_validated",
           "user_device_validation_failed",
           "certificate_integrity_failed",
-          "repair_part_shipped"
+          "repair_part_shipped",
+          "repair_stale"
         ]
       },
       "NotificationTargetType": {
@@ -10187,7 +10328,6 @@
         "type": "string",
         "enum": [
           "pending",
-          "paid",
           "assigned",
           "accepted",
           "en_route",
@@ -10864,6 +11004,24 @@
           "certificateValid": {
             "type": "boolean"
           },
+          "certificateCoveredCost": {
+            "type": "boolean"
+          },
+          "certificateCostOverridden": {
+            "type": "boolean"
+          },
+          "statusBeforeRefund": {
+            "type": "string"
+          },
+          "statusBeforePause": {
+            "type": "string"
+          },
+          "isCrossCity": {
+            "type": "boolean"
+          },
+          "timezoneOffsetHours": {
+            "type": "number"
+          },
           "completionSignature": {
             "type": "string"
           },
@@ -11152,11 +11310,11 @@
         "type": "object",
         "properties": {}
       },
-      "RefuseRequestDto": {
+      "SetRepairPriceDto": {
         "type": "object",
         "properties": {}
       },
-      "SetRepairPriceDto": {
+      "RefuseRequestDto": {
         "type": "object",
         "properties": {}
       },

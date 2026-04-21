@@ -1700,6 +1700,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repair-requests/{id}/cancel-refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_cancelRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/staff-set-price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_staffSetPrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/override-cert-price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_overrideCertificatePrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/revert-cert-price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_revertCertificatePrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repair-requests/{id}/chat/accept": {
         parameters: {
             query?: never;
@@ -3986,7 +4050,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhook/payment/{provider}": {
+    "/payment/webhook/{provider}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4281,7 +4345,7 @@ export interface components {
             presences: components["schemas"]["PresenceRecordDto"][];
         };
         /** @enum {string} */
-        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed" | "repair_schedule_ending" | "repair_schedule_auto_paused" | "address_validated" | "address_validation_failed" | "user_device_validated" | "user_device_validation_failed" | "certificate_integrity_failed" | "repair_part_shipped";
+        NotificationType: "repair_status_changed" | "repair_assigned" | "repair_transferred_to_repairer" | "repair_transferred_from_repairer" | "repair_transferred_client" | "repair_diagnostics_declined" | "repair_completed" | "invoice_created" | "payment_paid" | "payment_failed" | "payment_refunded" | "invoice_unpaid_reminder" | "repair_assignment_reminder" | "repair_in_progress_stuck" | "certificate_issued" | "certificate_expiring_soon" | "certificate_expired" | "chat_message" | "chat_conversation_created" | "chat_participant_added" | "chat_participant_removed" | "message" | "system" | "schedule_created" | "schedule_approved" | "schedule_rejected" | "schedule_updated" | "schedule_deleted" | "schedule_extra_day_requested" | "schedule_extra_day_accepted" | "schedule_extra_day_rejected" | "schedule_pattern_created" | "schedule_pattern_updated" | "schedule_pattern_deleted" | "schedule_pattern_approved" | "schedule_pattern_rejected" | "avr_signing_requested" | "avr_signed" | "repair_schedule_ending" | "repair_schedule_auto_paused" | "address_validated" | "address_validation_failed" | "user_device_validated" | "user_device_validation_failed" | "certificate_integrity_failed" | "repair_part_shipped" | "repair_stale";
         /** @enum {string} */
         NotificationTargetType: "repairRequest" | "payment" | "certificate" | "conversation" | "schedule" | "address" | "userDevice" | "system";
         /** @enum {string} */
@@ -4334,7 +4398,7 @@ export interface components {
         };
         CreateRepairRequestDto: Record<string, never>;
         /** @enum {string} */
-        RepairRequestStatus: "pending" | "paid" | "assigned" | "accepted" | "en_route" | "in_progress" | "awaiting_completion" | "completed" | "refused" | "cancelled" | "paused" | "refund_requested" | "refunded";
+        RepairRequestStatus: "pending" | "assigned" | "accepted" | "en_route" | "in_progress" | "awaiting_completion" | "completed" | "refused" | "cancelled" | "paused" | "refund_requested" | "refunded";
         /** @enum {string} */
         WorkStepStatus: "pending" | "in_progress" | "completed" | "skipped" | "declined";
         WorkStepRecordDto: {
@@ -4512,6 +4576,12 @@ export interface components {
             completionNote?: string;
             stepsLocked: boolean;
             certificateValid?: boolean;
+            certificateCoveredCost?: boolean;
+            certificateCostOverridden?: boolean;
+            statusBeforeRefund?: string;
+            statusBeforePause?: string;
+            isCrossCity?: boolean;
+            timezoneOffsetHours?: number;
             completionSignature?: string;
             completionSignedPayload?: string;
             acceptanceSignature?: string;
@@ -4582,8 +4652,8 @@ export interface components {
             payments: components["schemas"]["PaymentRecordDto"][];
         };
         AssignRepairerDto: Record<string, never>;
-        RefuseRequestDto: Record<string, never>;
         SetRepairPriceDto: Record<string, never>;
+        RefuseRequestDto: Record<string, never>;
         GenerateAvrDto: Record<string, never>;
         VerifyAvrSigningDto: Record<string, never>;
         AddWorkStepDto: Record<string, never>;
@@ -7576,6 +7646,98 @@ export interface operations {
         };
     };
     RepairRequestController_denyRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_cancelRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_staffSetPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRepairPriceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_overrideCertificatePrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRepairPriceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairRequestResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_revertCertificatePrice: {
         parameters: {
             query?: never;
             header?: never;

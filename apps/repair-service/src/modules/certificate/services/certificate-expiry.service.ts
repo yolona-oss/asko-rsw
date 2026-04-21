@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { EntityManager, CreateRequestContext } from '@mikro-orm/postgresql';
 import { CertificateStatus } from '@asko/shared';
 import { Certificate } from 'modules/certificate/entities/certificate.entity';
 import { RepairEventService, RepairEventType } from 'services/repair-event.service';
+import { RepairRequestService } from 'modules/repair-request/services/repair-request.service';
 
 const REMINDER_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -15,6 +16,8 @@ export class CertificateExpiryService {
     constructor(
         private readonly em: EntityManager,
         private readonly events: RepairEventService,
+        @Inject(forwardRef(() => RepairRequestService))
+        private readonly repairRequestService: RepairRequestService,
     ) {}
 
     /**
@@ -106,6 +109,12 @@ export class CertificateExpiryService {
                 });
             } catch (err) {
                 this.logger.error(`Failed to emit expired event for cert ${cert.id}: ${err}`);
+            }
+
+            try {
+                await this.repairRequestService.handleCertificateInvalidated(cert.id);
+            } catch (err) {
+                this.logger.error(`Failed to invalidate open requests for cert ${cert.id}: ${err}`);
             }
         }
 

@@ -28,7 +28,6 @@ export const STEP_BLOCK_CLASS: Record<string, string> = {
 
 export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   [RepairRequestStatus.PENDING]: 'warning',
-  [RepairRequestStatus.PAID]: 'success',
   [RepairRequestStatus.ASSIGNED]: 'warning',
   [RepairRequestStatus.ACCEPTED]: 'warning',
   [RepairRequestStatus.EN_ROUTE]: 'info',
@@ -41,8 +40,7 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Ожидает оплаты',
-  [RepairRequestStatus.PAID]: 'Оплачена',
+  [RepairRequestStatus.PENDING]: 'Новая',
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
   [RepairRequestStatus.EN_ROUTE]: 'В пути',

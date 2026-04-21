@@ -15,8 +15,15 @@ import { WorkStep } from '../entities/work-step.entity';
 import { BrokenPartService } from './broken-part.service';
 import { CertificateService } from 'modules/certificate/services/certificate.service';
 import { SignatureService } from 'modules/shared-services/services/signature.service';
+import { PaidPaymentService } from 'modules/shared-services/services/paid-payment.service';
 import { ScheduleRuleService } from 'modules/schedule/services/schedule-rule.service';
 import { AvrPdfService, type AvrData } from './avr-pdf.service';
+
+const PRICE_ELIGIBLE_STATUSES = [
+    RepairRequestStatus.IN_PROGRESS,
+    RepairRequestStatus.AWAITING_COMPLETION,
+    RepairRequestStatus.COMPLETED,
+] as const;
 
 const REPAIR_REQUEST_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'status', 'totalCost'] as const;
 
@@ -35,9 +42,45 @@ export class RepairRequestService {
         private readonly brokenPartService: BrokenPartService,
         private readonly certificateService: CertificateService,
         private readonly signatureService: SignatureService,
+        private readonly paidPaymentService: PaidPaymentService,
         private readonly scheduleService: ScheduleRuleService,
         private readonly avrPdfService: AvrPdfService,
     ) {}
+
+    private assertNotRefundLocked(request: RepairRequest): void {
+        if (request.status === RepairRequestStatus.REFUND_REQUESTED) {
+            throw AppErrors.badRequest({ key: msg.repair.refundLocked });
+        }
+    }
+
+    private assertPriceEligible(request: RepairRequest): void {
+        if (!(PRICE_ELIGIBLE_STATUSES as readonly RepairRequestStatus[]).includes(request.status)) {
+            throw AppErrors.badRequest({ key: msg.repair.priceOnlyInProgress });
+        }
+    }
+
+    private async emitInvoiceIfNeeded(request: RepairRequest, amount: number): Promise<void> {
+        if (amount > 0) {
+            await this.paymentCommandService.emitCreateInvoice(
+                request.userId,
+                PaymentTargetType.REPAIR_REQUEST,
+                request.id,
+                amount,
+            );
+        }
+    }
+
+    private async assertPaymentSatisfied(request: RepairRequest): Promise<void> {
+        if (request.totalCost == null) {
+            throw AppErrors.badRequest({ key: msg.repair.mustSetPrice });
+        }
+        if (request.totalCost > 0) {
+            const hasPaid = await this.paidPaymentService.hasPaid(PaymentTargetType.REPAIR_REQUEST, request.id);
+            if (!hasPaid) {
+                throw AppErrors.badRequest({ key: msg.repair.mustBePaidBeforeCompletion });
+            }
+        }
+    }
 
     private recordStatusTimestamp(request: RepairRequest, status: RepairRequestStatus): void {
         request.statusTimestamps = [...request.statusTimestamps, { status, timestamp: new Date().toISOString() }];
@@ -192,11 +235,14 @@ export class RepairRequestService {
             ? this.em.getReference(Address, addressEntity.id)
             : undefined;
 
+        const certificateCoveredCost = !!(certificate && certificateValid);
         const request = this.em.create(RepairRequest, {
             userId,
             userDevice,
             certificate,
             certificateValid,
+            certificateCoveredCost,
+            totalCost: certificateCoveredCost ? 0 : undefined,
             description: dto.description,
             preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
             address: addressRef,
@@ -220,39 +266,21 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Mark repair request as paid after payment confirmation */
-    @CreateRequestContext()
-    async markPaid(requestId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
-        assertTransition(request.status, RepairRequestStatus.PAID);
-
-        const oldStatus = request.status;
-        request.status = RepairRequestStatus.PAID;
-        this.recordStatusTimestamp(request, RepairRequestStatus.PAID);
-        await this.em.flush();
-
-        await this.repairEventService.emit({
-            type: RepairEventType.STATUS_CHANGED,
-            repairId: request.id,
-            userId: request.userId,
-            oldStatus,
-            newStatus: RepairRequestStatus.PAID,
-            timestamp: new Date(),
-        });
-
-        return request;
-    }
-
-    /** User requests refund */
+    /** User requests refund — requires payment to exist */
     @CreateRequestContext()
     async requestRefund(userId: string, requestId: string, reason: string): Promise<RepairRequest> {
         const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
         if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
 
+        const hasPaid = await this.paidPaymentService.hasPaid(PaymentTargetType.REPAIR_REQUEST, requestId);
+        if (!hasPaid) {
+            throw AppErrors.badRequest({ key: msg.repair.refundRequiresPayment });
+        }
+
         assertTransition(request.status, RepairRequestStatus.REFUND_REQUESTED);
 
         const oldStatus = request.status;
+        request.statusBeforeRefund = request.status;
         request.refundRequested = true;
         request.refundReason = reason;
         request.status = RepairRequestStatus.REFUND_REQUESTED;
@@ -306,16 +334,13 @@ export class RepairRequestService {
         return request;
     }
 
-    /** Manager denies refund */
-    @CreateRequestContext()
-    async denyRefund(requestId: string): Promise<RepairRequest> {
-        const request = await this.em.findOne(RepairRequest, { id: requestId });
-        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
-        assertActionTransition('denyRefund', request.status);
-
+    private async revertRefund(request: RepairRequest, clearReason: boolean): Promise<RepairRequest> {
+        const revertTo = (request.statusBeforeRefund as RepairRequestStatus) ?? RepairRequestStatus.COMPLETED;
         request.refundRequested = false;
-        request.status = RepairRequestStatus.PAID; // revert to paid
-        this.recordStatusTimestamp(request, RepairRequestStatus.PAID);
+        request.statusBeforeRefund = undefined;
+        if (clearReason) request.refundReason = undefined;
+        request.status = revertTo;
+        this.recordStatusTimestamp(request, revertTo);
         await this.em.flush();
 
         await this.repairEventService.emit({
@@ -323,11 +348,29 @@ export class RepairRequestService {
             repairId: request.id,
             userId: request.userId,
             oldStatus: RepairRequestStatus.REFUND_REQUESTED,
-            newStatus: RepairRequestStatus.PAID,
+            newStatus: revertTo,
             timestamp: new Date(),
         });
 
         return request;
+    }
+
+    /** Manager denies refund — reverts to status before refund was requested */
+    @CreateRequestContext()
+    async denyRefund(requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        assertActionTransition('denyRefund', request.status);
+        return this.revertRefund(request, false);
+    }
+
+    /** User cancels their refund request — reverts to previous status */
+    @CreateRequestContext()
+    async cancelRefund(userId: string, requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId, userId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        assertActionTransition('cancelRefund', request.status);
+        return this.revertRefund(request, true);
     }
 
     /** Resolve device-address timezone from a loaded request, or by loading it. */
@@ -566,22 +609,104 @@ export class RepairRequestService {
 
         const request = await this.em.findOne(RepairRequest, { id: requestId, repairer: repairer.id });
         if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
-        if (![RepairRequestStatus.IN_PROGRESS, RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.COMPLETED].includes(request.status)) {
-            throw AppErrors.badRequest({ key: msg.repair.priceOnlyInProgress });
+        this.assertNotRefundLocked(request);
+        this.assertPriceEligible(request);
+
+        if (request.certificateCoveredCost && !request.certificateCostOverridden && amount > 0) {
+            throw AppErrors.badRequest({ key: msg.repair.certCoveredCannotSetPrice });
         }
 
         request.totalCost = amount;
         await this.em.flush();
-
-        // Create payment invoice via payment-service RabbitMQ (fire-and-forget)
-        await this.paymentCommandService.emitCreateInvoice(
-            request.userId,
-            PaymentTargetType.REPAIR_REQUEST,
-            request.id,
-            amount,
-        );
+        await this.emitInvoiceIfNeeded(request, amount);
 
         return request;
+    }
+
+    /** Staff sets price (same as repairer but without ownership check) */
+    @CreateRequestContext()
+    async staffSetPrice(requestId: string, amount: number): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        this.assertNotRefundLocked(request);
+        this.assertPriceEligible(request);
+
+        if (request.certificateCoveredCost && amount > 0) {
+            request.certificateCostOverridden = true;
+        }
+
+        request.totalCost = amount;
+        await this.em.flush();
+        await this.emitInvoiceIfNeeded(request, amount);
+
+        return request;
+    }
+
+    /** Staff overrides certificate zero-price to a custom amount */
+    @CreateRequestContext()
+    async overrideCertificatePrice(requestId: string, amount: number): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        this.assertNotRefundLocked(request);
+        if (!request.certificateCoveredCost) {
+            throw AppErrors.badRequest({ key: msg.repair.certNotCoveredCannotRevert });
+        }
+
+        request.totalCost = amount;
+        request.certificateCostOverridden = true;
+        await this.em.flush();
+        await this.emitInvoiceIfNeeded(request, amount);
+
+        return request;
+    }
+
+    /** Staff reverts certificate price back to zero */
+    @CreateRequestContext()
+    async revertCertificatePrice(requestId: string): Promise<RepairRequest> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+        this.assertNotRefundLocked(request);
+        if (!request.certificateCoveredCost) {
+            throw AppErrors.badRequest({ key: msg.repair.certNotCoveredCannotRevert });
+        }
+        if (!request.certificateCostOverridden) {
+            throw AppErrors.badRequest({ key: msg.repair.certNotOverriddenCannotRevert });
+        }
+
+        request.totalCost = 0;
+        request.certificateCostOverridden = false;
+        await this.em.flush();
+
+        return request;
+    }
+
+    /**
+     * Called when a certificate linked to open requests becomes invalid (expired/revoked).
+     * Reverts totalCost to null unless staff has overridden the cert price.
+     */
+    @CreateRequestContext()
+    async handleCertificateInvalidated(certificateId: string): Promise<void> {
+        const requests = await this.em.find(RepairRequest, {
+            certificate: certificateId,
+            status: {
+                $nin: [
+                    RepairRequestStatus.COMPLETED,
+                    RepairRequestStatus.CANCELLED,
+                    RepairRequestStatus.REFUNDED,
+                    RepairRequestStatus.REFUSED,
+                ],
+            },
+        });
+        for (const req of requests) {
+            req.certificateValid = false;
+            if (!req.certificateCostOverridden) {
+                req.totalCost = undefined;
+                req.certificateCoveredCost = false;
+            }
+        }
+        if (requests.length > 0) {
+            await this.em.flush();
+        }
     }
 
     /** Mark request as awaiting completion (last step done) */
@@ -612,9 +737,7 @@ export class RepairRequestService {
         if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
         const oldStatus = request.status;
         assertTransition(request.status, RepairRequestStatus.COMPLETED);
-        if (!request.totalCost) {
-            throw AppErrors.badRequest({ key: msg.repair.mustSetPrice });
-        }
+        await this.assertPaymentSatisfied(request);
 
         request.status = RepairRequestStatus.COMPLETED;
         this.recordStatusTimestamp(request, RepairRequestStatus.COMPLETED);
@@ -1236,7 +1359,7 @@ export class RepairRequestService {
         if (![RepairRequestStatus.AWAITING_COMPLETION, RepairRequestStatus.IN_PROGRESS].includes(request.status)) {
             throw AppErrors.badRequest({ key: msg.repair.avrRequiresSteps });
         }
-        if (!request.totalCost) {
+        if (request.totalCost == null) {
             throw AppErrors.badRequest({ key: msg.repair.avrRequiresPrice });
         }
 
@@ -1434,9 +1557,7 @@ export class RepairRequestService {
     private async applyCompletion(request: RepairRequest): Promise<void> {
         const oldStatus = request.status;
         assertTransition(request.status, RepairRequestStatus.COMPLETED);
-        if (!request.totalCost) {
-            throw AppErrors.badRequest({ key: msg.repair.mustSetPrice });
-        }
+        await this.assertPaymentSatisfied(request);
 
         request.status = RepairRequestStatus.COMPLETED;
         this.recordStatusTimestamp(request, RepairRequestStatus.COMPLETED);
@@ -1613,9 +1734,8 @@ export class RepairRequestService {
                 activeWorkCount++;
             }
 
-            // Time to assignment (PENDING/PAID → ASSIGNED)
-            const toAssign = this.computeFirstTransitionMinutes(entries, RepairRequestStatus.PENDING, RepairRequestStatus.ASSIGNED)
-                ?? this.computeFirstTransitionMinutes(entries, RepairRequestStatus.PAID, RepairRequestStatus.ASSIGNED);
+            // Time to assignment (PENDING → ASSIGNED)
+            const toAssign = this.computeFirstTransitionMinutes(entries, RepairRequestStatus.PENDING, RepairRequestStatus.ASSIGNED);
             if (toAssign !== null) {
                 assignmentSum += toAssign;
                 assignmentCount++;

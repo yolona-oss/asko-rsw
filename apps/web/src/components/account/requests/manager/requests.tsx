@@ -21,7 +21,8 @@ import { repairRequestApi } from '@/lib/api/repair-request';
 import { chatApi } from '@/lib/api/chat';
 import { useAuth } from '@/lib/api/use-auth';
 import { PaymentStatusBadge } from '@/components/account/payments/shared/payment-status-badge';
-import type { TabKey, RepairRequest, ConversationInfo } from './list-types';
+import type { RepairRequestRecord } from '@/lib/api/types';
+import type { TabKey, ConversationInfo } from './list-types';
 import { formatDateTime } from '@asko/shared/client';
 import { PAGE_SIZE, TAB_FILTER, STATUS_MAP, STATUS_COLORS, STATUS_LABELS } from './list-constants';
 import { RequestCardItem } from './request-card-item';
@@ -29,13 +30,13 @@ import { ChatStatusBadges } from './chat-status-badges';
 
 export function ManagerRequests() {
   const router = useRouter();
-  const detail = useEntityDetail<RepairRequest>();
+  const detail = useEntityDetail<RepairRequestRecord>();
   const { user: authUser } = useAuth();
   const currentUserId = authUser?.id ?? '';
 
   const [filterValues, setFilterValues] = useState<FilterValues>({ tab: 'all' });
   const activeTab = filterValues.tab as TabKey;
-  const [requests, setRequests] = useState<RepairRequest[]>([]);
+  const [requests, setRequests] = useState<RepairRequestRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ export function ManagerRequests() {
         sortBy: sortBy ?? undefined,
         sortOrder: sortOrder ?? undefined,
       });
-      const items = (data.data ?? []) as RepairRequest[];
+      const items = (data.data ?? []) as RepairRequestRecord[];
       setRequests(items);
       setTotal(data.overallCount ?? 0);
 
@@ -111,7 +112,7 @@ export function ManagerRequests() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const requestColumns: DataGridColumn<RepairRequest>[] = useMemo(() => [
+  const requestColumns: DataGridColumn<RepairRequestRecord>[] = useMemo(() => [
     {
       key: 'client',
       header: 'Клиент',
@@ -198,7 +199,7 @@ export function ManagerRequests() {
       {/* Request data */}
       {
         view === 'table' ? (
-          <DataGrid<RepairRequest>
+          <DataGrid<RepairRequestRecord>
             loading={loading}
             columns={requestColumns}
             data={requests}

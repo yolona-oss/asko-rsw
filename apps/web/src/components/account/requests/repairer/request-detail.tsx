@@ -28,7 +28,7 @@ import { STEP_STATUS_LABEL, STEP_STATUS_BADGE_VARIANT, STEP_BLOCK_CLASS, STATUS_
 import { AvrModal } from './avr-modal';
 import type { RepairRequestRecord, WorkStepRecord, PaymentRecord } from '@/lib/api/types';
 
-type RequestState = RepairRequestRecord & { statusBeforePause?: string };
+type RequestState = RepairRequestRecord;
 
 // ── Main Component ──
 

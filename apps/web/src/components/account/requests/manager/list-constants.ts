@@ -13,7 +13,6 @@ export const TABS: { key: TabKey; label: string }[] = [
 
 export const STATUS_MAP: Record<string, TabKey> = {
   [RepairRequestStatus.PENDING]: 'pending',
-  [RepairRequestStatus.PAID]: 'pending',
   [RepairRequestStatus.ASSIGNED]: 'assigned',
   [RepairRequestStatus.ACCEPTED]: 'assigned',
   [RepairRequestStatus.EN_ROUTE]: 'in_progress',
@@ -37,7 +36,6 @@ export const STATUS_COLORS: Record<string, string> = {
 
 export const STATUS_LABELS: Record<string, string> = {
   [RepairRequestStatus.PENDING]: 'Новая',
-  [RepairRequestStatus.PAID]: 'Оплачена',
   [RepairRequestStatus.ASSIGNED]: 'Назначена',
   [RepairRequestStatus.ACCEPTED]: 'Принята',
   [RepairRequestStatus.EN_ROUTE]: 'В пути',

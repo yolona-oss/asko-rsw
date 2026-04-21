@@ -43,9 +43,10 @@ export class PaymentEventConsumer {
                 this.logger.log(`Certificate ${data.targetId} marked as paid`);
             }
 
+            // Repair request payment is tracked in PaidPayment cache only —
+            // no status transition needed (PAID status removed).
             if (data.targetType === PaymentTargetType.REPAIR_REQUEST && data.targetId) {
-                await this.repairRequestService.markPaid(data.targetId);
-                this.logger.log(`RepairRequest ${data.targetId} marked as paid`);
+                this.logger.log(`RepairRequest ${data.targetId} payment cached`);
             }
 
             channel.ack(msg);
@@ -99,7 +100,8 @@ export class PaymentEventConsumer {
         try {
             if (data.targetType === PaymentTargetType.CERTIFICATE && data.targetId) {
                 await this.certificateService.revokeCertificate(data.targetId);
-                this.logger.log(`Certificate ${data.targetId} revoked after refund`);
+                await this.repairRequestService.handleCertificateInvalidated(data.targetId);
+                this.logger.log(`Certificate ${data.targetId} revoked after refund, open requests updated`);
             }
 
             // Drop the local PaidPayment cache row so downstream integrity

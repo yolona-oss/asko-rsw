@@ -4,13 +4,19 @@ import { NotificationService } from 'services/notification.service';
 import { ReminderService } from 'services/reminder.service';
 import { AudienceProjectionService, AudienceKey } from 'services/audience-projection.service';
 import { AppConfig } from '../app.config';
-import { NotificationType, NotificationTargetType, NotificationUrgency, Role, t, msg } from '@asko/shared';
+import { NotificationType, NotificationTargetType, NotificationUrgency, RepairRequestStatus, Role, t, msg } from '@asko/shared';
+
+const S = RepairRequestStatus;
 
 const STAFF_AUDIENCE_KEYS = [
     AudienceKey.role(Role.ADMIN),
     AudienceKey.role(Role.SUPER_ADMIN),
     AudienceKey.role(Role.MANAGER),
 ];
+
+const STALE_PRE_WORK_STATUSES = new Set([S.PENDING, S.ASSIGNED, S.ACCEPTED, S.EN_ROUTE]);
+const STALE_IN_WORK_STATUSES = new Set([S.IN_PROGRESS, S.AWAITING_COMPLETION, S.PAUSED]);
+const STALE_ELIGIBLE_STATUSES = new Set([...STALE_PRE_WORK_STATUSES, ...STALE_IN_WORK_STATUSES]);
 
 @Controller()
 export class RepairEventConsumer {
@@ -24,6 +30,61 @@ export class RepairEventConsumer {
     private async getStaffRecipients(excludeUserId?: string): Promise<string[]> {
         const ids = await this.audience.resolveMany(STAFF_AUDIENCE_KEYS);
         return excludeUserId ? ids.filter((id) => id !== excludeUserId) : ids;
+    }
+
+    private getStaleMessage(status: string, repairId: string, firstFireMs: number) {
+        const minutes = Math.round(firstFireMs / 60000);
+        if (STALE_PRE_WORK_STATUSES.has(status as RepairRequestStatus)) {
+            return {
+                title: t(msg.notify.title.repairStalePreWork),
+                body: t(msg.notify.body.repairStalePreWork, undefined, { repairId, status, minutes }),
+            };
+        }
+        return {
+            title: t(msg.notify.title.repairStaleInWork),
+            body: t(msg.notify.body.repairStaleInWork, undefined, { repairId, status, minutes }),
+        };
+    }
+
+    private async scheduleStaleReminder(data: {
+        repairId: string;
+        newStatus: string;
+        repairerUserId?: string;
+    }): Promise<void> {
+        if (!STALE_ELIGIBLE_STATUSES.has(data.newStatus as RepairRequestStatus)) return;
+
+        const firstFireMs = this.config.reminders.repairStaleFirstFireMs;
+        const intervalMs = this.config.reminders.repairStaleIntervalMs;
+        const maxFires = this.config.reminders.repairStaleMaxFires;
+
+        const recipients: string[] = [];
+        if (data.repairerUserId) recipients.push(data.repairerUserId);
+        const staff = await this.getStaffRecipients();
+        recipients.push(...staff);
+
+        const uniqueRecipients = Array.from(new Set(recipients.filter(Boolean)));
+        if (uniqueRecipients.length === 0) return;
+
+        const shortId = String(data.repairId).slice(0, 8);
+        const { title, body } = this.getStaleMessage(data.newStatus, shortId, firstFireMs);
+
+        await this.reminderService.scheduleReminder({
+            kind: 'repair_stale',
+            targetType: NotificationTargetType.REPAIR_REQUEST,
+            targetId: data.repairId,
+            recipientUserIds: uniqueRecipients,
+            notificationType: NotificationType.REPAIR_STALE,
+            title,
+            body,
+            metadata: {
+                repairId: data.repairId,
+                repairerUserId: data.repairerUserId,
+                status: data.newStatus,
+            },
+            intervalMs,
+            maxFires,
+            firstFireAt: new Date(Date.now() + firstFireMs),
+        });
     }
 
     @EventPattern('repair.status_changed')
@@ -85,6 +146,18 @@ export class RepairEventConsumer {
                     firstFireAt: new Date(Date.now() + stuckAfterMs),
                 });
             }
+
+            await this.reminderService.cancelReminder(
+                NotificationTargetType.REPAIR_REQUEST,
+                data.repairId,
+                `status_changed:${data.newStatus}`,
+                ['repair_stale'],
+            );
+            await this.scheduleStaleReminder({
+                repairId: data.repairId,
+                newStatus: data.newStatus,
+                repairerUserId: data.repairerUserId,
+            });
 
             channel.ack(rmqMsg);
         } catch (e) {
@@ -153,7 +226,7 @@ export class RepairEventConsumer {
                 NotificationTargetType.REPAIR_REQUEST,
                 data.repairId,
                 'repair.completed',
-                ['repair_assignment_pending', 'repair_in_progress_stuck'],
+                ['repair_assignment_pending', 'repair_in_progress_stuck', 'repair_stale'],
             );
             channel.ack(rmqMsg);
         } catch (e) {
@@ -210,7 +283,7 @@ export class RepairEventConsumer {
                 NotificationTargetType.REPAIR_REQUEST,
                 data.repairId,
                 'repair.transferred',
-                ['repair_assignment_pending'],
+                ['repair_assignment_pending', 'repair_stale'],
             );
 
             if (data.newRepairerUserId) {
@@ -230,6 +303,12 @@ export class RepairEventConsumer {
                     maxFires: this.config.reminders.repairAssignmentMaxFires,
                 });
             }
+
+            await this.scheduleStaleReminder({
+                repairId: data.repairId,
+                newStatus: S.ASSIGNED,
+                repairerUserId: data.newRepairerUserId,
+            });
 
             channel.ack(rmqMsg);
         } catch (e) {
@@ -533,8 +612,14 @@ export class RepairEventConsumer {
                 NotificationTargetType.REPAIR_REQUEST,
                 data.repairId,
                 'schedule_auto_paused',
-                ['repair_in_progress_stuck'],
+                ['repair_in_progress_stuck', 'repair_stale'],
             );
+
+            await this.scheduleStaleReminder({
+                repairId: data.repairId,
+                newStatus: S.PAUSED,
+                repairerUserId: data.repairerUserId,
+            });
 
             channel.ack(rmqMsg);
         } catch (e) {

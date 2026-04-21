@@ -12,8 +12,7 @@ export const STEPS = [
 ] as const;
 
 export const STATUS_DESCRIPTIONS: Record<string, string> = {
-  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку. Ожидайте оценки стоимости ремонта.',
-  [RepairRequestStatus.PAID]: 'Оплата получена. Ожидайте назначения мастера.',
+  [RepairRequestStatus.PENDING]: 'Мы получили вашу заявку. Ожидайте назначения мастера.',
   [RepairRequestStatus.ASSIGNED]: 'Мастер назначен и скоро свяжется с вами для согласования времени визита.',
   [RepairRequestStatus.ACCEPTED]: 'Мастер принял заявку и готовится к выезду.',
   [RepairRequestStatus.EN_ROUTE]: 'Мастер выехал к вам.',

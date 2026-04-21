@@ -1,5 +1,1 @@
-import type { RepairRequestRecord, WorkStepRecord } from '@/lib/api/types';
-
-export type WorkStep = WorkStepRecord;
-
-export type RepairRequest = RepairRequestRecord;
+export type { WorkStepRecord as WorkStep } from '@/lib/api/types';
