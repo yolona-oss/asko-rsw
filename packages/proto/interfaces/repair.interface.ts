@@ -1137,6 +1137,13 @@ export interface RepairOrderBrokenPartRequest {
     requesterRoles: string[];
 }
 
+export interface RepairUpgradeSuggestionRequest {
+    userId: string;
+    requestId: string;
+    partId: string;
+    requesterRoles: string[];
+}
+
 export interface RepairFindByIdRequest {
     id: string;
 }
@@ -1313,6 +1320,7 @@ export interface RepairServiceClient {
     getBrokenParts(request: RepairGetBrokenPartsRequest): Observable<BrokenPartListResponse>;
     getBrokenPartById(request: RepairGetBrokenPartByIdRequest): Observable<BrokenPartResponse>;
     orderBrokenPart(request: RepairOrderBrokenPartRequest): Observable<BrokenPartResponse>;
+    upgradeSuggestion(request: RepairUpgradeSuggestionRequest): Observable<BrokenPartResponse>;
 
     // Queries
     findById(request: RepairFindByIdRequest): Observable<RepairRequestResponse>;

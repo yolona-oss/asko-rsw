@@ -148,6 +148,7 @@ service RepairService {
     rpc GetBrokenParts(RepairGetBrokenPartsRequest) returns (BrokenPartListResponse);
     rpc GetBrokenPartById(RepairGetBrokenPartByIdRequest) returns (BrokenPartResponse);
     rpc OrderBrokenPart(RepairOrderBrokenPartRequest) returns (BrokenPartResponse);
+    rpc UpgradeSuggestion(RepairUpgradeSuggestionRequest) returns (BrokenPartResponse);
 
     // Queries
     rpc FindById(RepairFindByIdRequest) returns (RepairRequestResponse);
@@ -1237,6 +1238,13 @@ message RepairOrderBrokenPartRequest {
     string partId = 3;
     string supplier = 4;
     repeated string requesterRoles = 5;
+}
+
+message RepairUpgradeSuggestionRequest {
+    string userId = 1;
+    string requestId = 2;
+    string partId = 3;
+    repeated string requesterRoles = 4;
 }
 
 message RepairFindByIdRequest {
