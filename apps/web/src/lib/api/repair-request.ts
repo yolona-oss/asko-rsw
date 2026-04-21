@@ -220,10 +220,6 @@ export const repairRequestApi = {
     return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts`, data);
   },
 
-  suggestBrokenPart(requestId: string, data: { name?: string; note?: string }) {
-    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/suggest`, data);
-  },
-
   updateBrokenPart(requestId: string, partId: string, data: { name?: string; note?: string }) {
     return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/update`, data);
   },
@@ -242,6 +238,10 @@ export const repairRequestApi = {
 
   orderBrokenPart(requestId: string, partId: string, data?: { supplier?: string }) {
     return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/order`, data ?? {});
+  },
+
+  upgradeBrokenPartSuggestion(requestId: string, partId: string) {
+    return api.post<BrokenPartResponse>(`/repair-requests/${requestId}/broken-parts/${partId}/upgrade`);
   },
 
   // Stats

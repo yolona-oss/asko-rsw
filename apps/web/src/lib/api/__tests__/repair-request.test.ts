@@ -343,16 +343,10 @@ describe('addBrokenPart', () => {
   });
 });
 
-describe('suggestBrokenPart', () => {
-  it('calls POST /repair-requests/:id/broken-parts/suggest with body', () => {
-    const data = { name: 'Maybe pump', note: 'I think this is broken' };
-    repairRequestApi.suggestBrokenPart('req-1', data);
-    expect(mockApi.post).toHaveBeenCalledWith('/repair-requests/req-1/broken-parts/suggest', data);
-  });
-
-  it('calls POST /repair-requests/:id/broken-parts/suggest with only name', () => {
-    repairRequestApi.suggestBrokenPart('req-1', { name: 'Something' });
-    expect(mockApi.post).toHaveBeenCalledWith('/repair-requests/req-1/broken-parts/suggest', { name: 'Something' });
+describe('upgradeBrokenPartSuggestion', () => {
+  it('calls POST /repair-requests/:id/broken-parts/:partId/upgrade', () => {
+    repairRequestApi.upgradeBrokenPartSuggestion('req-1', 'part-1');
+    expect(mockApi.post).toHaveBeenCalledWith('/repair-requests/req-1/broken-parts/part-1/upgrade');
   });
 });
 
