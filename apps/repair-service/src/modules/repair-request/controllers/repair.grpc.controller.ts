@@ -58,6 +58,7 @@ import type {
     RepairGetBrokenPartsRequest,
     RepairGetBrokenPartByIdRequest,
     RepairOrderBrokenPartRequest,
+    RepairUpgradeBrokenPartSuggestionRequest,
     RepairAcceptCompletionRequest,
     RepairCancelRefundRequest,
     RepairStaffSetPriceRequest,
@@ -676,6 +677,19 @@ export class RepairGrpcController {
                 data.requestId,
                 data.partId,
                 data.supplier || undefined,
+            );
+            return { part: brokenPartToRecord(part) };
+        } catch (e) { throw toGrpcError(e); }
+    }
+
+    @GrpcMethod('RepairService', 'UpgradeBrokenPartSuggestion')
+    async upgradeBrokenPartSuggestion(data: RepairUpgradeBrokenPartSuggestionRequest) {
+        try {
+            const part = await this.brokenPartService.upgradeBrokenPartSuggestion(
+                data.userId,
+                data.requesterRoles ?? [],
+                data.requestId,
+                data.partId,
             );
             return { part: brokenPartToRecord(part) };
         } catch (e) { throw toGrpcError(e); }
