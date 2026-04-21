@@ -171,6 +171,8 @@ export const en = {
     'brokenPart.mustSelectFromCatalog': 'Part must be selected from the catalog',
     'brokenPart.cannotOrderCompleted': 'Cannot order parts for a completed request',
     'brokenPart.alreadyOrdered': 'Part has already been ordered',
+    'brokenPart.notASuggestion': 'This part is not a suggestion',
+    'brokenPart.suggestionNotFromCatalog': 'Only catalog-linked suggestions can be upgraded',
 
     // ── Repairer ─────────────────────────────────────────────────────────
     'repairer.notFound': 'Repairer not found',

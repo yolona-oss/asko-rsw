@@ -171,6 +171,8 @@ export const ru = {
     'brokenPart.mustSelectFromCatalog': 'Необходимо выбрать запчасть из каталога',
     'brokenPart.cannotOrderCompleted': 'Нельзя заказывать запчасти для завершённой заявки',
     'brokenPart.alreadyOrdered': 'Запчасть уже была заказана',
+    'brokenPart.notASuggestion': 'Эта запчасть не является предположением',
+    'brokenPart.suggestionNotFromCatalog': 'Можно подтвердить только предположения из каталога запчастей',
 
     // ── Repairer ─────────────────────────────────────────────────────────
     'repairer.notFound': 'Мастер не найден',
