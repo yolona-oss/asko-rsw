@@ -484,6 +484,16 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </div>
         )}
 
+        {/* User suggestions (read-only) */}
+        {brokenParts.filter((p) => p.isSuggestion).length > 0 && (
+          <div className="max-w-lg mt-6">
+            <BrokenPartsView
+              title="Ваши предположения"
+              parts={brokenParts.filter((p) => p.isSuggestion)}
+              partImages={partImages}
+            />
+          </div>
+        )}
 
         {/* Aggregate documents (read-only) */}
         <div className="max-w-lg mt-6">
