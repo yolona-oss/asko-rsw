@@ -148,7 +148,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!deviceId) return;
     deviceApi.getParts(deviceId).then(({ data }) => {
       setCatalogParts((data.parts ?? []).map((p) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
-    }).catch(() => {});
+    }).catch(() => { });
   }, [request?.userDevice?.device?.id]);
 
   // Fetch broken parts + suggestion images
@@ -644,7 +644,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               {!request.certificateCoveredCost && (
                 <div className="flex items-end gap-2">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-text-sub">Установить стоимость (менеджер)</span>
+                    <span className="text-xs text-text-sub">Установить стоимость</span>
                     <input
                       type="number"
                       min="0"

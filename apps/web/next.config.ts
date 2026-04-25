@@ -3,9 +3,17 @@ import path from 'node:path';
 import dotenv from 'dotenv';
 import { getEnvFilePath } from '@asko/shared/server';
 
-dotenv.config({ path: getEnvFilePath(), override: true });
-
 const isDev = process.env.NODE_ENV !== 'production';
+const useLocalGateways = isDev || process.env.LOCAL_GATEWAYS === '1';
+
+// When LOCAL_GATEWAYS=1 and we're running a production build against the local
+// dev backend (via ./scripts/web-prod-local.sh), force the dev env file even
+// though NODE_ENV=production — otherwise .env.prod (askoservis.ru) gets baked in.
+const envPath = useLocalGateways && !isDev
+    ? path.resolve(import.meta.dirname, '.env.dev')
+    : getEnvFilePath();
+
+dotenv.config({ path: envPath, override: true });
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -19,7 +27,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'askoservis.ru' },
     ],
   },
-  ...(isDev && {
+  ...(useLocalGateways && {
     rewrites: async () => [
       // Auth Gateway (:4001)
       { source: '/api/auth/:path*', destination: 'http://localhost:4001/auth/:path*' },
