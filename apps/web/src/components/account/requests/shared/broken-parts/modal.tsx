@@ -46,6 +46,7 @@ export interface BrokenPartModalProps {
   requestId: string;
   part?: BrokenPart | null;
   catalogParts?: CatalogPart[];
+  canUploadImages?: boolean;
   onClose: () => void;
   onSaved: (part: BrokenPart) => void;
   onDeleted?: (partId: string) => void;
@@ -57,6 +58,7 @@ export function BrokenPartModal({
   requestId,
   part,
   catalogParts = [],
+  canUploadImages = true,
   onClose,
   onSaved,
   onDeleted,
@@ -343,25 +345,29 @@ export function BrokenPartModal({
                     <Loader2 className="w-5 h-5 text-text-sub animate-spin" />
                   </div>
                 )}
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleUploadImage(f);
-                    e.target.value = '';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => imageInputRef.current?.click()}
-                  className="w-16 h-16 border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
-                  title="Добавить фото"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+                {canUploadImages && (
+                  <>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleUploadImage(f);
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="w-16 h-16 border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
+                      title="Добавить фото"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -389,14 +395,16 @@ export function BrokenPartModal({
                       >
                         {doc.filename ?? doc.id}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-text-sub hover:text-brand-red cursor-pointer flex-shrink-0"
-                        title="Удалить документ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canUploadImages && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          className="text-text-sub hover:text-brand-red cursor-pointer flex-shrink-0"
+                          title="Удалить документ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </li>
                   ))}
                   {uploadingDoc && (
@@ -407,25 +415,29 @@ export function BrokenPartModal({
                   )}
                 </ul>
               )}
-              <input
-                ref={docInputRef}
-                type="file"
-                accept=".pdf,image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadDocument(f);
-                  e.target.value = '';
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => docInputRef.current?.click()}
-                disabled={uploadingDoc}
-                className="text-sm text-brand-red hover:underline cursor-pointer text-left disabled:opacity-50"
-              >
-                + Загрузить документ (PDF или изображение)
-              </button>
+              {canUploadImages && (
+                <>
+                  <input
+                    ref={docInputRef}
+                    type="file"
+                    accept=".pdf,image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUploadDocument(f);
+                      e.target.value = '';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => docInputRef.current?.click()}
+                    disabled={uploadingDoc}
+                    className="text-sm text-brand-red hover:underline cursor-pointer text-left disabled:opacity-50"
+                  >
+                    + Загрузить документ (PDF или изображение)
+                  </button>
+                </>
+              )}
             </div>
 
             {status === 'added' && (

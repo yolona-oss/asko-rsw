@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import Script from 'next/script';
 import NextTopLoader from 'nextjs-toploader';
 import { AppProviders } from '@/store/providers';
 import { YandexMetrika } from '@/components/YandexMetrika';
@@ -34,6 +35,12 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script bodies — hardcoded string literals, no user input interpolation.
+// They run before hydration to set the theme class / html lang, preventing FOUC.
+// Key 'theme' must match STORAGE_KEYS.theme in lib/storage.ts.
+const THEME_INIT = `try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}`;
+const LANGUAGE_INIT = `try{var l=localStorage.getItem('language');if(l)document.documentElement.lang=l}catch{}`;
+
 export default function RootLayout({
   children,
 }: {
@@ -41,13 +48,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <head>
-        {/* Key 'theme' must match STORAGE_KEYS.theme in lib/storage.ts */}
-        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch{}` }} />
-        {/* Sync html lang from stored preference before hydration */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var l=localStorage.getItem('language');if(l)document.documentElement.lang=l}catch{}` }} />
-      </head>
       <body className="min-h-screen flex flex-col">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT}
+        </Script>
+        <Script id="language-init" strategy="beforeInteractive">
+          {LANGUAGE_INIT}
+        </Script>
         <NextTopLoader color="var(--color-brand-red)" height={3} showSpinner={false} />
         <AppProviders>{children}</AppProviders>
         <Suspense fallback={null}>

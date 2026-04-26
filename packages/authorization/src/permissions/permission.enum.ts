@@ -27,7 +27,6 @@ export enum Permission {
     REPAIR_REQUEST_AVR             = 'repair-request:avr',
     REPAIR_REQUEST_STEPS           = 'repair-request:steps',
     REPAIR_REQUEST_BROKEN_PARTS    = 'repair-request:broken-parts',
-    REPAIR_REQUEST_SUGGEST_PART    = 'repair-request:suggest-broken-part',
     REPAIR_REQUEST_ACCEPT_COMPLETION = 'repair-request:accept-completion',
     REPAIR_REQUEST_CONFIRM_PRESENCE  = 'repair-request:confirm-presence',
     REPAIR_REQUEST_REFUND_CANCEL     = 'repair-request:cancel-refund',

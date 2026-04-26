@@ -7,6 +7,8 @@ import { Badge, Button, ImageGallery, Modal, SkeletonCard } from '@asko/ui';
 import { ClipboardCopy, ArrowLeft, Globe, Check, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { BrokenPartsEditor } from '@/components/account/requests/shared/broken-parts/editor';
+import { SuggestionsPanel } from '@/components/account/requests/shared/broken-parts/suggestions-panel';
+import type { BrokenPart, BrokenPartImage } from '@/components/account/requests/shared/broken-parts/types';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
 import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
@@ -61,6 +63,8 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
   const [chatLoading, setChatLoading] = useState(false);
   const [offDayConfirm, setOffDayConfirm] = useState<RepairerOption | null>(null);
   const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
+  const [brokenParts, setBrokenParts] = useState<BrokenPart[]>([]);
+  const [partImages, setPartImages] = useState<Record<string, BrokenPartImage[]>>({});
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [refundLoading, setRefundLoading] = useState(false);
   const [certPriceValue, setCertPriceValue] = useState('');
@@ -144,8 +148,40 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
     if (!deviceId) return;
     deviceApi.getParts(deviceId).then(({ data }) => {
       setCatalogParts((data.parts ?? []).map((p) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
-    }).catch(() => {});
+    }).catch(() => { });
   }, [request?.userDevice?.device?.id]);
+
+  // Fetch broken parts + suggestion images
+  useEffect(() => {
+    if (!requestId) return;
+    let cancelled = false;
+    async function loadSuggestions() {
+      try {
+        const { data } = await repairRequestApi.getBrokenParts(requestId);
+        if (cancelled) return;
+        const list: BrokenPart[] = data.parts ?? [];
+        setBrokenParts(list);
+        const suggestions = list.filter((p) => p.isSuggestion);
+        if (suggestions.length > 0) {
+          const imgResults = await Promise.all(
+            suggestions.map((p) =>
+              repairRequestApi.getBrokenPartImages(requestId, p.id)
+                .then(({ data: imgs }) => ({ id: p.id, images: (imgs.images ?? []) as BrokenPartImage[] }))
+                .catch(() => ({ id: p.id, images: [] as BrokenPartImage[] })),
+            ),
+          );
+          if (cancelled) return;
+          const imgMap: Record<string, BrokenPartImage[]> = {};
+          imgResults.forEach((r) => { imgMap[r.id] = r.images; });
+          setPartImages(imgMap);
+        }
+      } catch {
+        // silent
+      }
+    }
+    loadSuggestions();
+    return () => { cancelled = true; };
+  }, [requestId]);
 
   const scheduleInfoByRepairer = useMemo(() => {
     const map: Record<string, RepairerScheduleInfo> = {};
@@ -520,7 +556,24 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
           />
 
           {/* Broken parts */}
-          {!isTerminal && <BrokenPartsEditor requestId={requestId} catalogParts={catalogParts} />}
+          {!isTerminal && (
+            <BrokenPartsEditor requestId={requestId} catalogParts={catalogParts} canUploadImages={false} />
+          )}
+
+          {/* Suggestions panel */}
+          {!isTerminal && brokenParts.filter((p) => p.isSuggestion).length > 0 && (
+            <SuggestionsPanel
+              requestId={requestId}
+              suggestions={brokenParts.filter((p) => p.isSuggestion)}
+              partImages={partImages}
+              onUpgraded={(upgraded) => {
+                setBrokenParts((prev) => prev.map((p) => p.id === upgraded.id ? upgraded : p));
+              }}
+              onRemoved={(partId) => {
+                setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
+              }}
+            />
+          )}
 
           {/* Aggregate documents */}
           <RepairRequestDocuments requestId={requestId} readOnly={isTerminal} />
@@ -591,7 +644,7 @@ export function ManagerRequestDetail({ requestId }: { requestId: string }) {
               {!request.certificateCoveredCost && (
                 <div className="flex items-end gap-2">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-text-sub">Установить стоимость (менеджер)</span>
+                    <span className="text-xs text-text-sub">Установить стоимость</span>
                     <input
                       type="number"
                       min="0"

@@ -98,7 +98,8 @@ export function ProfileForm() {
 
   // Load profile data once
   const profileLoaded = useRef(false);
-  if (!profileLoaded.current && authUser) {
+  useEffect(() => {
+    if (profileLoaded.current || !authUser) return;
     profileLoaded.current = true;
     Promise.all([
       usersApi.getProfile().then(({ data }) => {
@@ -139,7 +140,7 @@ export function ProfileForm() {
         if (url) setAvatarPreview(url);
       }),
     ]).finally(() => setLoaded(true));
-  }
+  }, [authUser, reduxDispatch]);
 
   const handleApplyDraft = useCallback((data: ProfileSnapshot) => {
     setFullName(data.fullName);

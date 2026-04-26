@@ -615,13 +615,6 @@ export class RepairRequestController {
     }
 
     @ApiCreatedResponse({ type: BrokenPartResponseDto })
-    @Permissions(Permission.REPAIR_REQUEST_SUGGEST_PART)
-    @Post(':id/broken-parts/suggest')
-    async suggestBrokenPart(@JwtAuthUser() user: AccessTokenPayload, @Param('id') id: string, @Body() dto: AddBrokenPartDto) {
-        return this.repairClient.addBrokenPart(user.sub, user.roles, id, { name: dto.name, note: dto.note, isSuggestion: true });
-    }
-
-    @ApiCreatedResponse({ type: BrokenPartResponseDto })
     @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
     @Post(':id/broken-parts/:partId/update')
     async updateBrokenPart(
@@ -667,6 +660,17 @@ export class RepairRequestController {
         @Body() dto: OrderBrokenPartDto,
     ) {
         return this.repairClient.orderBrokenPart(user.sub, user.roles, id, partId, dto.supplier);
+    }
+
+    @ApiCreatedResponse({ type: BrokenPartResponseDto })
+    @Permissions(Permission.REPAIR_REQUEST_BROKEN_PARTS)
+    @Post(':id/broken-parts/:partId/upgrade')
+    async upgradeBrokenPartSuggestion(
+        @JwtAuthUser() user: AccessTokenPayload,
+        @Param('id') id: string,
+        @Param('partId') partId: string,
+    ) {
+        return this.repairClient.upgradeBrokenPartSuggestion(user.sub, user.roles, id, partId);
     }
 
     @ApiOkResponse({ type: BrokenPartListResponseDto })

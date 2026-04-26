@@ -213,6 +213,35 @@ export class BrokenPartService {
         return this.em.nativeDelete(BrokenPart, { repairRequest: requestId, isSuggestion: true });
     }
 
+    /** Upgrade a catalog-linked suggestion to a real broken part (staff only) */
+    @CreateRequestContext()
+    async upgradeBrokenPartSuggestion(userId: string, roles: string[], requestId: string, partId: string): Promise<BrokenPart> {
+        const request = await this.em.findOne(RepairRequest, { id: requestId });
+        if (!request) throw AppErrors.dbEntityNotFound({ key: msg.repair.notFound });
+
+        if (TERMINAL_STATUSES.includes(request.status)) {
+            throw AppErrors.badRequest({ key: msg.brokenPart.cannotModifyCompleted });
+        }
+
+        const part = await this.em.findOne(BrokenPart, { id: partId, repairRequest: requestId }, { populate: ['devicePart'] });
+        if (!part) throw AppErrors.dbEntityNotFound({ key: msg.brokenPart.notFound });
+
+        if (!part.isSuggestion) {
+            throw AppErrors.badRequest({ key: msg.brokenPart.notASuggestion });
+        }
+
+        if (!part.devicePart) {
+            throw AppErrors.badRequest({ key: msg.brokenPart.suggestionNotFromCatalog });
+        }
+
+        // Only staff (assigned repairer or manager) can upgrade — pass forSuggestion=false to require staff path
+        await this.assertCanMutate(userId, roles, request, false);
+
+        part.isSuggestion = false;
+        await this.em.flush();
+        return part;
+    }
+
     /** Place a supplier order for a broken part. Transitions ADDED → ORDERED. */
     @CreateRequestContext()
     async orderFromSupplier(

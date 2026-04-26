@@ -193,6 +193,8 @@ export const msg = {
         mustSelectFromCatalog: 'brokenPart.mustSelectFromCatalog',
         cannotOrderCompleted: 'brokenPart.cannotOrderCompleted',
         alreadyOrdered: 'brokenPart.alreadyOrdered',
+        notASuggestion: 'brokenPart.notASuggestion',
+        suggestionNotFromCatalog: 'brokenPart.suggestionNotFromCatalog',
     },
 
     // ── Repairer ─────────────────────────────────────────────────────────

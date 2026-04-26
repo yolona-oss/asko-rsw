@@ -30,9 +30,10 @@ interface BrokenPartsEditorProps {
   requestId: string;
   title?: string;
   catalogParts?: CatalogPart[];
+  canUploadImages?: boolean;
 }
 
-export function BrokenPartsEditor({ requestId, title = 'Запчасти', catalogParts = [] }: BrokenPartsEditorProps) {
+export function BrokenPartsEditor({ requestId, title = 'Запчасти', catalogParts = [], canUploadImages = true }: BrokenPartsEditorProps) {
   const [parts, setParts] = useState<BrokenPart[]>([]);
   const [partImages, setPartImages] = useState<Record<string, BrokenPartImage[]>>({});
   const [loading, setLoading] = useState(true);
@@ -107,7 +108,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти', catal
       <h3 className="text-lg font-medium text-text-main">{title}</h3>
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
-        {parts.map((part) => {
+        {parts.filter((p) => !p.isSuggestion).map((part) => {
           const images = partImages[part.id] ?? [];
           const firstImg = images[0];
           const src = firstImg ? getImageSrc(firstImg) : undefined;
@@ -163,6 +164,7 @@ export function BrokenPartsEditor({ requestId, title = 'Запчасти', catal
         requestId={requestId}
         part={editingPart}
         catalogParts={catalogParts}
+        canUploadImages={canUploadImages}
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
         onDeleted={handleDeleted}

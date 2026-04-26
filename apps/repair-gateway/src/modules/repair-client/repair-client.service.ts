@@ -246,6 +246,15 @@ export class RepairClientService implements OnModuleInit {
         }));
     }
 
+    upgradeBrokenPartSuggestion(userId: string, requesterRoles: string[], requestId: string, partId: string): Promise<BrokenPartResponse> {
+        return grpcCall(this.repairService.upgradeBrokenPartSuggestion({
+            userId,
+            requesterRoles,
+            requestId,
+            partId,
+        }));
+    }
+
     // ── Queries ──
 
     findById(id: string): Promise<RepairRequestResponse> {

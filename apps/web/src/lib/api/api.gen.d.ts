@@ -2260,22 +2260,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/repair-requests/{id}/broken-parts/suggest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["RepairRequestController_suggestBrokenPart"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/repair-requests/{id}/broken-parts/{partId}/update": {
         parameters: {
             query?: never;
@@ -2334,6 +2318,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["RepairRequestController_orderBrokenPart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repair-requests/{id}/broken-parts/{partId}/upgrade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RepairRequestController_upgradeBrokenPartSuggestion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8480,31 +8480,6 @@ export interface operations {
             };
         };
     };
-    RepairRequestController_suggestBrokenPart: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddBrokenPartDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrokenPartResponseDto"];
-                };
-            };
-        };
-    };
     RepairRequestController_updateBrokenPart: {
         parameters: {
             query?: never;
@@ -8594,6 +8569,28 @@ export interface operations {
                 "application/json": components["schemas"]["OrderBrokenPartDto"];
             };
         };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrokenPartResponseDto"];
+                };
+            };
+        };
+    };
+    RepairRequestController_upgradeBrokenPartSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                partId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             201: {
                 headers: {

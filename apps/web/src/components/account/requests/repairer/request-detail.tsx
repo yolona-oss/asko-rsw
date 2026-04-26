@@ -14,6 +14,8 @@ import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/account/layout/page-container';
 import { PageHeader } from '@/components/account/layout/page-header';
 import { BrokenPartsEditor } from '@/components/account/requests/shared/broken-parts/editor';
+import { SuggestionsPanel } from '@/components/account/requests/shared/broken-parts/suggestions-panel';
+import type { BrokenPart, BrokenPartImage } from '@/components/account/requests/shared/broken-parts/types';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
 import { AvrStatusCard } from '@/components/account/requests/shared/avr-status-card';
 import { StatusHistoryModal } from '@/components/account/requests/shared/status-history-modal';
@@ -97,6 +99,10 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
   // Catalog parts for broken parts editor
   const [catalogParts, setCatalogParts] = useState<{ id: string; name: string; partNumber?: string }[]>([]);
 
+  // Broken parts (for suggestions panel)
+  const [brokenParts, setBrokenParts] = useState<BrokenPart[]>([]);
+  const [partImages, setPartImages] = useState<Record<string, BrokenPartImage[]>>({});
+
   // ── Data fetch ──
 
   useEffect(() => {
@@ -138,6 +144,38 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       setCatalogParts((data.parts ?? []).map((p) => ({ id: p.id, name: p.name, partNumber: p.partNumber })));
     }).catch(() => {});
   }, [request?.userDevice?.device?.id]);
+
+  // Fetch broken parts for suggestions panel
+  useEffect(() => {
+    if (!requestId) return;
+    let cancelled = false;
+    async function loadSuggestions() {
+      try {
+        const { data } = await repairRequestApi.getBrokenParts(requestId);
+        if (cancelled) return;
+        const list: BrokenPart[] = data.parts ?? [];
+        setBrokenParts(list);
+        const suggestions = list.filter((p) => p.isSuggestion);
+        if (suggestions.length > 0) {
+          const imgResults = await Promise.all(
+            suggestions.map((p) =>
+              repairRequestApi.getBrokenPartImages(requestId, p.id)
+                .then(({ data: imgs }) => ({ id: p.id, images: (imgs.images ?? []) as BrokenPartImage[] }))
+                .catch(() => ({ id: p.id, images: [] as BrokenPartImage[] })),
+            ),
+          );
+          if (cancelled) return;
+          const imgMap: Record<string, BrokenPartImage[]> = {};
+          imgResults.forEach((r) => { imgMap[r.id] = r.images; });
+          setPartImages(imgMap);
+        }
+      } catch {
+        // silent — panel just won't show
+      }
+    }
+    loadSuggestions();
+    return () => { cancelled = true; };
+  }, [requestId]);
 
   // ── Request actions ──
 
@@ -615,6 +653,23 @@ export function RepairerRequestDetail({ requestId }: { requestId: string }) {
       {!isTerminal && (
         <Card className="flex flex-col gap-4">
           <BrokenPartsEditor requestId={requestId} catalogParts={catalogParts} />
+        </Card>
+      )}
+
+      {/* ── Suggestions panel ── */}
+      {!isTerminal && brokenParts.filter((p) => p.isSuggestion).length > 0 && (
+        <Card className="flex flex-col gap-4">
+          <SuggestionsPanel
+            requestId={requestId}
+            suggestions={brokenParts.filter((p) => p.isSuggestion)}
+            partImages={partImages}
+            onUpgraded={(upgraded) => {
+              setBrokenParts((prev) => prev.map((p) => p.id === upgraded.id ? upgraded : p));
+            }}
+            onRemoved={(partId) => {
+              setBrokenParts((prev) => prev.filter((p) => p.id !== partId));
+            }}
+          />
         </Card>
       )}
 

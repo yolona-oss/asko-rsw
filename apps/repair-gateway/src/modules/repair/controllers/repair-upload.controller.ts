@@ -18,6 +18,7 @@ import {
 import { RepairFileClientService } from '../services/repair-file-client.service';
 import { RepairParticipantPolicy } from '../policies/repair-participant.policy';
 import { BrokenPartAccessPolicy } from '../policies/broken-part-access.policy';
+import { BrokenPartUploadPolicy } from '../policies/broken-part-upload.policy';
 import { EmptyResponseDto, ImageResponseDto, VideoResponseDto } from 'common/dto/responses';
 
 const { maxBytes: IMAGE_MAX_SIZE, mime: IMAGE_MIME } = UPLOAD_LIMITS.image;
@@ -90,7 +91,7 @@ export class RepairUploadController {
     // ── Broken-part images / documents ──
 
     @ApiCreatedResponse({ type: ImageResponseDto })
-    @CheckPolicy(BrokenPartAccessPolicy, { paramKey: 'partId' })
+    @CheckPolicy(BrokenPartUploadPolicy, { paramKey: 'partId' })
     @Post('repair-requests/broken-parts/:partId/images')
     @UseInterceptors(new StreamingUploadInterceptor(IMAGE_MAX_SIZE))
     async uploadBrokenPartImage(
@@ -107,7 +108,7 @@ export class RepairUploadController {
     }
 
     @ApiCreatedResponse()
-    @CheckPolicy(BrokenPartAccessPolicy, { paramKey: 'partId' })
+    @CheckPolicy(BrokenPartUploadPolicy, { paramKey: 'partId' })
     @Post('repair-requests/broken-parts/:partId/documents')
     @UseInterceptors(new StreamingUploadInterceptor(DOCUMENT_MAX_SIZE))
     async uploadBrokenPartDocument(

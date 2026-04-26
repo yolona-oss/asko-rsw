@@ -21,6 +21,7 @@ import {
   type DraftBrokenPart,
   type CatalogPart,
 } from '@/components/account/requests/shared/broken-parts/draft-editor';
+import type { BrokenPart } from '@/components/account/requests/shared/broken-parts/types';
 import { CreateCertificateModal } from './create-certificate-modal';
 import { isTerminalStatus } from './create-constants';
 import type { UserDevice, Certificate, UploadedImage } from './create-types';
@@ -327,7 +328,36 @@ export function CreateRequest() {
       }
       setUploadingImageId(null);
 
-      // 3. Redirect to the request status page (user pays from there)
+      // 3. Upload queued images for draft broken parts (suggestions)
+      if (selectedParts.some((p) => p.images.length > 0)) {
+        try {
+          const { data: partsData } = await repairRequestApi.getBrokenParts(request.id);
+          const createdParts: BrokenPart[] = partsData.parts ?? [];
+          const usedCreatedIds = new Set<string>();
+
+          for (const draft of selectedParts) {
+            if (draft.images.length === 0) continue;
+            // Match by name; skip already-matched parts so duplicate names pair up in order
+            const matched = createdParts.find(
+              (cp) => cp.name === draft.name && cp.isSuggestion && !usedCreatedIds.has(cp.id),
+            );
+            if (!matched) continue;
+            usedCreatedIds.add(matched.id);
+
+            for (const file of draft.images) {
+              try {
+                await fileUploadApi.uploadBrokenPartImage(file, matched.id);
+              } catch {
+                // Non-critical: continue with next image
+              }
+            }
+          }
+        } catch {
+          // Non-critical: suggestions created, images just didn't upload
+        }
+      }
+
+      // 4. Redirect to the request status page (user pays from there)
       router.push(`/account/requests/${request.id}`);
     } catch (err: any) {
       const status = err?.response?.status;

@@ -10,7 +10,6 @@ import { PaymentSummary } from '@/components/account/payments/shared/payment-sum
 import { PaymentTransactionList } from '@/components/account/payments/shared/payment-transaction-list';
 import { CreateCertificateModal } from '@/components/account/requests/user/create-certificate-modal';
 import { BrokenPartsView } from '@/components/account/requests/shared/broken-parts/view';
-import { BrokenPartSuggestSection } from '@/components/account/requests/shared/broken-parts/suggest';
 import { RepairRequestDocuments } from '@/components/account/requests/shared/repair-request-documents';
 import { CertificateWarningBadge } from '@/components/account/certificates/shared/certificate-warning-badge';
 import { CertificateAppliedBadge } from '@/components/account/certificates/shared/certificate-applied-badge';
@@ -485,22 +484,14 @@ export function UserRequestStatus({ requestId }: { requestId: string }) {
           </div>
         )}
 
-        {/* User suggestions */}
-        {!isTerminal && (
+        {/* User suggestions (read-only) */}
+        {brokenParts.filter((p) => p.isSuggestion).length > 0 && (
           <div className="max-w-lg mt-6">
-            <BrokenPartSuggestSection
-              requestId={requestId}
-              suggestions={brokenParts.filter((p) => p.isSuggestion)}
-              onSuggestionAdded={(part) => setBrokenParts((prev) => [...prev, part])}
+            <BrokenPartsView
+              title="Ваши предположения"
+              parts={brokenParts.filter((p) => p.isSuggestion)}
+              partImages={partImages}
             />
-          </div>
-        )}
-        {isTerminal && brokenParts.filter((p) => p.isSuggestion).length > 0 && (
-          <div className="max-w-lg mt-6">
-            <h3 className="text-sm font-medium text-text-main mb-2">Ваши предположения</h3>
-            {brokenParts.filter((p) => p.isSuggestion).map((s) => (
-              <div key={s.id} className="text-sm text-text-sub">{s.name}{s.note ? ` — ${s.note}` : ''}</div>
-            ))}
           </div>
         )}
 

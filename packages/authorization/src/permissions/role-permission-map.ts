@@ -128,11 +128,9 @@ export const ROLE_PERMISSIONS: ReadonlyMap<Role, ReadonlySet<Permission>> = new 
         Permission.REPAIR_REQUEST_REFUND_REQUEST,
         Permission.REPAIR_REQUEST_REFUND_CANCEL,
         Permission.REPAIR_REQUEST_UPLOAD,
-        Permission.REPAIR_REQUEST_SUGGEST_PART,
         Permission.REPAIR_REQUEST_ACCEPT_COMPLETION,
         Permission.REPAIR_REQUEST_AVR,
         Permission.REPAIR_REQUEST_STEPS,
-        Permission.REPAIR_REQUEST_BROKEN_PARTS,
         // Reviews
         Permission.REVIEW_CREATE,
         Permission.REVIEW_VIEW,

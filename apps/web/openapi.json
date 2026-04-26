@@ -4609,46 +4609,6 @@
         ]
       }
     },
-    "/repair-requests/{id}/broken-parts/suggest": {
-      "post": {
-        "operationId": "RepairRequestController_suggestBrokenPart",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddBrokenPartDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrokenPartResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Repair Requests"
-        ]
-      }
-    },
     "/repair-requests/{id}/broken-parts/{partId}/update": {
       "post": {
         "operationId": "RepairRequestController_updateBrokenPart",
@@ -4814,6 +4774,44 @@
             }
           }
         },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrokenPartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Repair Requests"
+        ]
+      }
+    },
+    "/repair-requests/{id}/broken-parts/{partId}/upgrade": {
+      "post": {
+        "operationId": "RepairRequestController_upgradeBrokenPartSuggestion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "",

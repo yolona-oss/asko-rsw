@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Badge, Button, FormField, Input, Modal, Select, Textarea } from '@asko/ui';
 import { Plus, X } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export interface DraftBrokenPart {
   devicePartId?: string;
   name: string;
   note?: string;
+  images: File[];
 }
 
 export interface CatalogPart {
@@ -82,12 +83,19 @@ export function BrokenPartsDraftEditor({
               {part.note && (
                 <span className="text-xs text-text-sub line-clamp-2">{part.note}</span>
               )}
-              <Badge
-                variant={part.devicePartId ? 'info' : 'neutral'}
-                className="self-start"
-              >
-                {part.devicePartId ? 'Из каталога' : 'Своя'}
-              </Badge>
+              <div className="flex items-center gap-1 flex-wrap">
+                <Badge
+                  variant={part.devicePartId ? 'info' : 'neutral'}
+                  className="self-start"
+                >
+                  {part.devicePartId ? 'Из каталога' : 'Своя'}
+                </Badge>
+                {part.images.length > 0 && (
+                  <span className="text-xs text-text-sub">
+                    {part.images.length} фото
+                  </span>
+                )}
+              </div>
             </div>
           </button>
         ))}
@@ -164,6 +172,8 @@ function BrokenPartDraftModalContent({
   const [name, setName] = useState(initialPart?.name ?? '');
   const [note, setNote] = useState(initialPart?.note ?? '');
   const [error, setError] = useState('');
+  const [images, setImages] = useState<File[]>(initialPart?.images ?? []);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleCatalogChange = (id: string) => {
     setDevicePartId(id);
@@ -183,6 +193,7 @@ function BrokenPartDraftModalContent({
       ...(devicePartId ? { devicePartId } : {}),
       name: trimmed,
       ...(note.trim() ? { note: note.trim() } : {}),
+      images,
     });
   };
 
@@ -236,6 +247,51 @@ function BrokenPartDraftModalContent({
             placeholder="Дополнительная информация"
           />
         </FormField>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium text-text-main">Фотографии</p>
+          <div className="flex flex-wrap gap-2">
+            {images.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="relative w-16 h-16 overflow-hidden border border-border-light group"
+              >
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                  className="absolute top-0 right-0 bg-surface/80 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  title="Удалить фото"
+                >
+                  <X className="w-3 h-3 text-text-main" />
+                </button>
+              </div>
+            ))}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setImages((prev) => [...prev, f]);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => imageInputRef.current?.click()}
+              className="w-16 h-16 border border-dashed border-border-light flex items-center justify-center text-text-sub hover:border-brand-red hover:text-brand-red transition-colors cursor-pointer"
+              title="Добавить фото"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
         {error && <p className="text-sm text-brand-red">{error}</p>}
 
