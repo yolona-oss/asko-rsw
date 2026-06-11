@@ -20,7 +20,7 @@
         "@asko/observability": "workspace:*",
         "@asko/proto": "workspace:*",
         "@asko/shared": "workspace:*",
-        "@grpc/grpc-js": "^1.12.6",
+        "@grpc/grpc-js": "^1.14.4",
         "@grpc/proto-loader": "^0.7.15",
         "@nestjs/common": "^11.1.5",
         "@nestjs/config": "^4.0.2",
